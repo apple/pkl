@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Module URI `package://localhost:12110/birds@0.5.0::invalidalgo:abc123#/catalog/Bird.pkl` has invalid syntax.
+
+x | res = import("package://localhost:12110/birds@0.5.0::invalidalgo:abc123#/catalog/Bird.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badImport10.error#res (file:///$snippetsDir/input/packages/badImport10.error.pkl)
+
+Unrecognized checksum algorithm: `invalidalgo`.
+
+The only supported checksum algorithm is sha256.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,31 @@
+import "pkl:test"
+
+class X {
+  hidden f: () -> Int
+  hidden g: (String) -> Int
+  hidden h: (String, String) -> Int
+}
+
+res1 = new X {
+  f = () -> 42
+  g = (str) -> str.length
+  h = (str1, str2) -> str1.length + str2.length
+}
+
+res2 = test.catch(() ->
+  new X {
+    f = (str) -> str.length
+  }.f
+)
+
+res3 = test.catch(() ->
+  new X {
+    g = () -> 42
+  }.g
+)
+
+res4 = test.catch(() ->
+  new X {
+    h = (str) -> str.length
+  }.h
+)

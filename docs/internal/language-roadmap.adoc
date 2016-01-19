@@ -1,0 +1,232 @@
+= Language Roadmap
+
+== Revise Name Resolution
+
+=== Background
+
+Pkl's name resolution is largely based on Newspeak's.
+The big idea is that changes to amended/extended/imported modules should not affect name resolution in the current module.
+(It's OK for name resolution to change between success and failure, or to bind to a different override in an inheritance hierarchy.
+But it's not OK to bind to a different element.)
+However, Newspeak doesn't have Pkl's nested object literals (which may override any subset of properties), which is where the problem lies.
+
+=== Problems
+
+* Given this nested object structure:
++
+----
+foo {
+  x = 42  // (1)
+  bar {
+    y = x // (2)
+  }
+}
+----
++
+If (1) is removed, (2) breaks even if `x` is defined in `foo` or an ancestor of `foo` (which for typed objects is always the case).
+This is unfortunate because the decision to reference `x` in (2) is completely independent of the decision to override `x` in (1).
+On the other hand, simply resolving `x` in (2) to `foo.x` violates the big idea (see "background") and can be hard to understand ("where does x come from?").
+* Too many things are accessible without qualification.
+This increases the chance of mistakes (e.g., user thinks they are acessing one `foo` when they are really accessing another) and may cause usability issues (e.g., too many code completion results).
+* Setting `x` to a lexically enclosing `x` (e.g., a method parameter) is more difficult than it should be.
+It often requires "renaming" the enclosing `x` by introducing a local property next to it.
+* `x = x` is a runtime error (stack overflow due to infinite recursion) which would be nice to prevent by design.
+
+==== Solution
+
+* Only members in the path of the current member, but not their siblings, can be accessed without qualification.
+** This completely solves the "removing override breaks reference" problem:
++
+----
+foo {
+  x = 42  // (1)
+  bar {
+    y = foo.x // `foo` is in `y`'s path (foo -> bar -> y); hence it can be accessed without qualification. The same holds for `bar`.
+              // `x` is not in `y`'s path and needs to be accessed via `foo`. `foo.x` will continue to work if (1) is removed.
+  }
+}
+----
+** Lexically enclosing `local` members (which includes imports), method/lambda/object-body parameters, and let/for variables remain accessible (only) without qualification.
+** Members of `pkl.base` remain accessible without qualification.
+* Consider to require explicit `this.`
+** Useful clarification in a nested object structure (and not used as much as one would think)
+** Gives a more useful meaning to `foo = foo`: being able to reference an enclosing `foo` (e.g., a method parameteer) without being forced to introduce an alias (e.g., `local _name = name`) is useful.
+** Achieves consistency between `this.otherProperty` and `this["otherEntry"]` (the latter has always required explicit qualification with `this` for syntactic reasons)
+* Consider to support implicit `module.`
+** Makes inherited module members accessible without qualification, which generally seems more useful than inherited members of the current object being accessible without qualification.
+(When a module amends a template, the template's top-level members form the "vocabulary" for the module.)
+** Makes inherited module classes (a special case of inherited module members) accessible without qualification in expressions, which is consistent with them being accessible without qualification in types (which is already the case today).
+** Open question: implicit `this.` works well for property type constraints, where `this` refers to the property value.
+Supporting both implicit `this.` and implicit `module.` in constraints violates the big idea (see "background") but is perhaps tolerable.
+(Almost all constraints are defined in modules or classes, which have at most one outer scope, reducing the chance for inadvertent binding changes.)
+
+If implicit `this.` is removed (and even if implicit `module.` is added), all unqualified names can be statically resolved, which is a good thing.
+
+Name resolution should be revised together with the introduction of "static" members, which will affect name resolution.
+Maybe there is something to learn from Grace: http://delivery.acm.org/10.1145/3140000/3133847/dls17-main9.pdf
+
+Changing name resolution is a significant breaking change, especially for template authors.
+We only have one chance to get it right.
+Consider to automate migration of user code via IntelliJ plugin.
+
+== Support "Static" Members
+
+=== Problem
+
+It would often be useful to "namespace" properties/methods by moving them from a module to a class.
+This is especially true for pkl.base members such as `MaxInt` that are rarely used and needlessly pollute the global scope.
+For the same reason, `List.of()` is preferable over `List()`.
+
+It is critical for classes to only exist once per module class.
+Currently this can only be achieved with an implementation hack (caching of `VmClass` in `ClassNode`).
+
+There are other module members besides classes (e.g., imports) that logically exist once per module class and don't currently have a good home.
+
+=== Solution
+
+* Introduce metaclasses a la Newspeak (1:1 relationship between classes and metaclasses, 1:1 relationship between metaclasses and metaclass instances, metaclass hierarchy mirrors class hierarchy).
+* Leverage metaclasses to systematically solve existing design/implementation hacks such as class definitions being module properties that aren't members of any class and whose values (i.e., class objects) are magically reused between module instances.
+* Classes, type aliases, and imports are instance members of the enclosing module's metaclass, as are user-defined module methods and properties with a `static` modifier.
+* Regular classes can also have `static` members, which are instance members of the class' metaclass.
+* Make pkl.base members that logically belong to a class a `static` member of that class: pkl.base#MaxInt -> Int.maxValue, pkl.base#List() -> List.of(), etc.
+This shrinks the global scope and decreases pressure to add new names to it, which is required to fully achieve the big idea (see "background").
+* Use same capitalization for `static` members as for instance members (cf. Dart 2.0), e.g., `Int.maxValue` instead of the current `pkl.base#MaxInt`.
+* `Static` members of a class are just instance members of its metaclass.
+Despite being called "static", they are dynamically bound.
+(Could call them `class members` (cf. Swift) instead of `static members`, but `static` seems attractive for familiarity reasons.)
+* Static module members must be accessible without qualification from within the module.
+Otherwise, classes and imports would require qualification.
+* Static class members must probably be accessible via `myInstance.` in addition to `MyClass.` (cf. Java).
+Otherwise, `moduleImport.ImportedClass` wouldn't work anymore.
+
+== Support Flattened Member Syntax
+
+This feature is required for pkl-newcastle 2.0.
+
+* Support `foo.bar["baz"] = 42` as syntax alternative to `foo { bar { ["baz"] = 42 } }`
+** Enables great migration story from flat formats (e.g., Newcastle Properties) while retaining the advantages of a nested format (can operate on both leaf and non-leaf nodes, can code-complete individual properties, etc.)
+* Support mixing flat and nested syntax
+** Helps to reduce excessive nesting with high indentation levels and closing brace cascades
+** repeating qualifier makes it easier to see what is being defined (e.g., `pipelines["main"] {...}; pipelines["dev"] {...}; ...`)
+** consider supporting `foo.new {...}; foo.new {...}` as flattened form of `foo { new {...}; new {...} }`
+(consistency between object elements and object entries, clarifies context of `new { ...}`)
+* Automatically format code in flat or nested style depending on whether one or multiple members are defined on a level (IntelliJ)
+
+Exacerbates the ambiguity between object properties and elements (`foo.bar.baz {...}` could be either an element or flattened property definition).
+Even if this ambiguity is resolved as proposed (change syntax for amend expressions from `<expr> {...}` to `new <expr> { ... }`), flattened syntax may cause parser perf issues.
+(Distinguishing between element definition `foo.bar.baz` and property definition `foo.bar.baz { ... }` may be expensive for long chains.)
+A possible solution to this (for now hypothetical) problem is to restrict expressions allowed in element definitions to, say, literals, new-expressions, and parenthesized expressions (as escape hatch for any expression).
+
+Another solution that has been discussed is to syntactically distinguish element definitions with a leading symbol, e.g., `*` (cf. Markdown) or `+`.
+However, this comes with its own problems: heavy syntax for simple cases such as listings of string literals, not clear how to extend this syntax to flattened syntax, unfamiliar syntax for a programming language, etc.
+
+== Improve Constraint Checking
+
+=== Problems
+* Property constraints that depend on other properties in the same class, e.g., `minValue: Int(this <= maxValue)`,
+  cause infinite recursion if the corresponding property values have a dependency in the other direction, e.g., `maxValue = minValue + 1`.
+* It isn't obvious where to put constraints that depend on other properties in the same class.
+  Is it `minValue: Int(this <= maxValue)`, or `maxValue: Int(this >= minValue)`, or both?
+
+=== Solution
+* Make it impossible, or at least difficult, for property constraints to depend on other properties in the same class.
+* Offer a way to specify class-level constraints that behave similar to introducing a type alias of the form `typealias MyAlias = MyClass(<constraint>)`.
+* Constraints should only be able to access "static" properties of the enclosing module.
+
+== Support Class Family Inheritance
+
+Could perhaps be done post 1.0.
+On the other hand, it is an important part of Pkl's vision and may affect other parts of the language.
+
+Templates/schemas should be incrementally extensible like classes:
+It should be possible to extend someone else's template and override (i.e., extend or possibly even replace) a class.
+For this to work as intended, class names in expressions and types (!) must be dynamically bound.
+
+When a module is extended, the inherited classes should probably not have an inheritance relationship with the base module's classes.
+(Even if a class is inherited as-is, types in its signature may now bind to overridden classes.)
+(Implementation note: This opens up the possibility to implement dynamic binding of class names by copying [ClassNode]s and their member nodes.
+This seems a lot easier than changing the current implementation to support dynamic binding of class names in [TypeNode]s.)
+
+Supporting incompatible changes when overriding a class can be useful (e.g., to update a third-party template without the maintenance nightmares of copy-paste) but breaks type safety.
+Newspeak makes this tradeoff.
+
+Open question: Can class family inheritance be made to work for schemas spanning multiple modules, e.g., Pkl's Kubernetes schema?
+This seems to require a module aggregation feature (cf. Dart's `part` directive), which may come with its own challenges (e.g., all aggregated modules may need to be downloaded at once).
+In academic literature, class family inheritance is almost always limited to a single module.
+Cue's "package" feature is a form of aggregation and seems to enable cross-file schema evolution.
+
+== Offer Unordered Variant of Listing
+
+=== Problem
+Enumerations of config values use class `Listing`, which implies an order.
+However, many enumerations of config values are logically unordered.
+(Example: enumeration of environment variable name/value pairs.)
+In such a case, the Pkl model isn't correctly modeling the domain, which may cause problems down the line (e.g., when diffing/comparing config in Pkl).
+
+A `Set` variant of `Listing` would work against the lazy nature of listings, and objects in general.
+Also, a custom definition of equality is often required; the existing `isDistinctBy` constraint handles this fairly well.
+
+=== Solution
+
+Introduce an unordered variant of `Listing` (name TBD).
+It should behave the same as `Listing` (e.g., wrt. iteration/rendering order) except that equality is order insensitive.
+Uniqueness can be enforced with the existing `isDistinct`/`isDistinctBy` constraints.
+
+== Improve Parser
+
+Pain points:
+* Bad error locality/recovery of ANTLR (even the current level could only be achieved by hacking the grammar, and there seems to be no better way)
+* Small change in ANTLR grammar can result in 1000 fold increase in memory and/or CPU usage.
+Optimizing ANTLR grammars is a dark art that requires researcher level knowledge of ANTLR's complex parsing algorithm according to its developers.
+* Current approach to separator inference isn't fully satisfactory
+** Examples for surprises with the current approach:
+*** `x = 100y = 200` parses fine
+*** `;` separator may occur almost anywhere, e.g., `function;;;;inc(;;;x) =;;;x +;;;1`
+** Current approach:
+*** Design grammar s.t. <expr> <expr> is (almost) never ambiguous with <expr> (this idea is stolen from Lua, as is the idea of a unified object property/eleement/entry syntax)
+** Treat both newlines and `;` mostly as whitespace (i.e., don't make them visible to parser)
+** In cases where "<expr> <expr>" is ambiguous with <expr>` (e.g., `foo { 42 -21 }` could be defining an object containing either one or two elements), distinguish by exposing newline and `;` separators to parser (e.g., binary minus operator must not be preceded by a separator)
+
+Possible solutions:
+* Switch to hand-rolled recursive decent parser
+* Use the same parser generator and grammar as pkl-intellij, which deals better with errors (but cutting intellij dependencies seems like a challenge)
+
+Based on the overall experience we've had with ANTLR 4 over the years
+(not very active/responsive project, poor error locality and recovery, hard to understand/optimize, designed for ease of (initial) use and ease of prototyping rather than production use in language implementations),
+we'd like to replace it in the long run.
+
+== Switch to Command Based CLI
+
+Switch to a command based CLI.
+Support two initial commands: `evaluate` and `validate`.
+`validate` is the same as `evaluate` except that it sends eval errors to stdout and doesn't output anything on successful evaluation.
+Consider supporting non-ambiguous command abbrevations, e.g., `pkl eval` instead of `pkl evaluate`.
+Consider supporting `pkl foo.pkl` as a shorthand for `pkl evaluate foo.pkl` (convenience, backwards compatibility).
+
+CLI libraries: https://github.com/ajalt/clikt (top candidate), https://picocli.info (alternative)
+Should avoid reflection based CLI implementation to simplify native compilation.
+
+== Update to GraalVM 20.0 (to be released mid February)
+
+Update to 19.3 blocked on: https://github.com/oracle/graal/issues/1933
+It may be possible to work around this by syntactically tweaking the annotation(s) causing this problem.
+
+== Update to Java 11
+
+This will enable improvements such as using Java's new HTTP Client instead of URL(Connection).
+Should probably wait a few months until all our customers have migrated.
+
+== Revise Sandboxing
+
+Revise and improve the existing security model, both conceptually and in terms of implementation.
+Consider to support memory boxing in addition to CPU boxing.
+(Truffle and Native Image at least have this on their roadmap.)
+
+== Internalize Collections
+
+Choose a Java persistent collection library (Paguro, Capsule, Bifurcan) and internalize it.
+This removes one layer (e.g., VmList over Paguro list) and gives more control over Truffle boundaries.
+
+== Implement Truffle Object Model
+
+Implement objects in an idiomatic Truffle way instead of storing property values in maps.

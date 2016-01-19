@@ -1,0 +1,11 @@
+–– Pkl Error ––
+Expected value of type `pkl.Project#Package`, but got type `Mapping`.
+Value: new Mapping { ["foo"] = ? }
+
+xx | package: Package?
+              ^^^^^^^
+at pkl.Project#package (pkl:Project)
+
+x | package = new Mapping {
+              ^^^^^^^^^^^^^
+at PklProject#package (file:///$snippetsDir/input/projects/badPklProject3/PklProject)

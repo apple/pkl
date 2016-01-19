@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `)` delimiter.
+
+x | res1: ((String) -> String | List<String>
+                                            ^
+at missingParenthesizedTypeDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingParenthesizedTypeDelimiter.pkl)

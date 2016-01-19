@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Expected a module as argument, but got an object that amends a module.
+
+x | hidden path: List<String> = import("moduleExpected.pkl").relativePathTo(module)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at moduleExpected#path (file:///$snippetsDir/input/errors/moduleExpected.pkl)
+
+x | result = (module) { dummy = 0 }.path
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at moduleExpected#result (file:///$snippetsDir/input/errors/moduleExpected.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

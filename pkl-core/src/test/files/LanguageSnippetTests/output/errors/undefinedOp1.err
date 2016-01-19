@@ -1,0 +1,11 @@
+–– Pkl Error ––
+Operator `!` is not defined for operand type `Int`.
+Operand: 1
+
+x | res1 = !1
+           ^^
+at undefinedOp1#res1 (file:///$snippetsDir/input/errors/undefinedOp1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

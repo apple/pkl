@@ -1,0 +1,31 @@
+amends "baseModule.pkl"
+
+import "pkl:test"
+
+local function f1(x: Int): Int = x + 1
+
+local x = f1(42)
+local y = test.catch(() -> f1("wrong type"))
+
+foo {
+  res1 = x
+  res2 = y
+  res3 = f1(42)
+  res4 = test.catch(() -> f1("wrong type"))
+  bar {
+    local function f1(x: Int): Int = x + 2
+    res5 = f1(42)
+    res6 = test.catch(() -> f1("wrong type"))
+  }
+  c = new C {}
+}
+
+local class C {
+  foo {
+    bar {
+      local function f1(x: Int): Int = x + 2
+      res7 = f1(42)
+      res8   = test.catch(() -> f1("wrong type"))
+    }
+  }
+}

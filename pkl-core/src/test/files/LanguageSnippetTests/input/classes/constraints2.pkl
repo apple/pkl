@@ -1,0 +1,15 @@
+import "pkl:test"
+
+class Person {
+  age: Int(this > 0)
+}
+
+res1 = new Person {
+  age = 30
+}
+
+res2 = test.catch(() ->
+  new Person {
+    age = -30
+  }.age
+)

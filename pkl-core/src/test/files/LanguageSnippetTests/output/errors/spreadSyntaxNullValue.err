@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot iterate over value of type `Null`.
+
+x | res { ...source }
+             ^^^^^^
+at spreadSyntaxNullValue#res (file:///$snippetsDir/input/errors/spreadSyntaxNullValue.pkl)
+
+To guard against a nullable value, use `...?` instead of `...`.
+Try: `...?source`
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="AllProjects" pattern="!file[pcl.pcl-core.test]:files//*&amp;&amp;!file[pcl.pcl-doc.test]:files//*&amp;&amp;!file[pcl.pcl-core.main]:antlr//*&amp;&amp;!file[pcl.pcl-core.main]:truffle//*&amp;&amp;!file[pcl.buildSrc.main]:*/" />
+</component>

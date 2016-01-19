@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot reference property `bar` from here because it is not `const`.
+
+x | _barr = bar
+            ^^^
+at constLexicalScope#Foo.foo._barr (file:///$snippetsDir/input/errors/const/constLexicalScope.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to property `bar`
+2. Self-import this module, and reference this property from the import.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

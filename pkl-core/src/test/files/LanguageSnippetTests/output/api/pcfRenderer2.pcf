@@ -1,0 +1,32 @@
+res1 = "gnirts"
+res2 = false
+res3 = 43
+res4 = 2.33
+res5 = 5.s
+res6 = 6.mb
+res8 = List(43, false, "gnirts")
+res9 = Set("gnirts", false, 43, 5)
+res10 = Map("eno", false, "owt", 2.33, "eerht", 5.s)
+res11 {
+    "gnirts"
+    false
+    43
+    5
+}
+res12 {
+    ["eman"] = "noegip"
+    ["ega"] = 31
+    ["eerht"] = 5.s
+}
+res13 {
+    name = "noegip"
+    age = 31
+    other = "rehto"
+}
+res14 {
+    name = "noegip"
+    age = 41
+}
+res15 = "String"
+res16 = Pair(2, 1)
+res17 = List(2, 5, 2)

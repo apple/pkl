@@ -1,0 +1,3 @@
+hidden abc = (a, b, c) -> new Dynamic { one = a; two = b; three = c }
+hidden amendAbc = (abc) { amended = "amended" }
+res1 = amendAbc.apply(1, 2)

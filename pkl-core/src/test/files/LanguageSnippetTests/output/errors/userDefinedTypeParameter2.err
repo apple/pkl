@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Only standard library members can have type parameters.
+
+x | function doit<A>(a: A): A = a
+                  ^
+at userDefinedTypeParameter2#DoIt (file:///$snippetsDir/input/errors/userDefinedTypeParameter2.pkl)

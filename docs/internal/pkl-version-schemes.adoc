@@ -1,0 +1,16 @@
+We distinguish between *release* versions built from tip of `main` branch
+and *dev* versions built from tip of `dev` branch.
+
+== preferred version scheme (semver)
+release version         : 0.9.0
+dev version (unique)    : 0.9.0-dev+6bd8216
+dev version (non-unique): 0.9.0-dev
+
+== version scheme for maven (gradle build's `project.version` is set to this)
+release version         : 0.9.0
+dev version (non-unique): 0.9.0-SNAPSHOT
+
+== version scheme for (doc) urls
+release version               : .../0.9.0/...
+last published release version: .../current/...
+last published dev version    : .../latest/...

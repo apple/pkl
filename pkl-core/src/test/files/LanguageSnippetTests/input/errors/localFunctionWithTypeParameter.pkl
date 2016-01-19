@@ -1,0 +1,1 @@
+local function x<T>() = x

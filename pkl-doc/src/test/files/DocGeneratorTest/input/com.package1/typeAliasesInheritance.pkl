@@ -1,0 +1,13 @@
+module com.package1.typeAliasInheritance
+
+extends "typeAliases.pkl"
+
+email2: Email
+
+emails2: List<Email>
+
+class Person2 extends Person {
+  email2: Email
+
+  emails2: List<Email>
+}

@@ -1,0 +1,28 @@
+res1 {
+  x = 1
+  y {
+    z = outer.x
+  }
+}
+
+res2 = (res1) {
+  x = 2
+}
+
+res3 {
+  x = 1
+  y {
+    x = 3
+    z = outer.x
+  }
+}
+
+res4 = (res3) {
+  x = 2
+  y {
+    x = 4
+  }
+}
+
+// chaining of outer (e.g. outer.outer) isn't currently supported,
+// and would need to be represented as a single GetEnclosingReceiverNode

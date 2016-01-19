@@ -1,0 +1,8 @@
+amends "pkl:Project"
+
+dependencies {
+  ["fruit"] {
+    // need to manually keep the checksum in `PklProject.deps.json` in sync
+    uri = "package://localhost:12110/fruit@1.0.5"
+  }
+}

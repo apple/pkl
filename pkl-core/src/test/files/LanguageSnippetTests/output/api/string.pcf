@@ -1,0 +1,400 @@
+facts {
+  ["isEmpty"] {
+    true
+    true
+  }
+  ["isBlank"] {
+    true
+    true
+    true
+    true
+  }
+  ["lastIndex"] {
+    true
+    true
+    true
+  }
+  ["base64Decoded"] {
+    true
+    true
+  }
+  ["contains()"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["matches()"] {
+    true
+    true
+    true
+  }
+  ["startsWith()"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["endsWith()"] {
+    true
+    true
+    true
+  }
+  ["isRegex"] {
+    true
+    true
+    true
+  }
+  ["toBoolean()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["capitalize()"] {
+    true
+    true
+    true
+    true
+  }
+  ["decapitalize()"] {
+    true
+    true
+    true
+    true
+  }
+}
+examples {
+  ["length"] {
+    7
+  }
+  ["indexOf()"] {
+    2
+    0
+    "String does not contain a match for literal pattern. String : \"abcdefg\" Pattern: \"cdx\""
+    0
+    "String does not contain a match for regex pattern. String : \"abcdefg\" Pattern: Regex(#\"\\d\"#)"
+  }
+  ["indexOfOrNull()"] {
+    2
+    0
+    null
+    0
+    null
+  }
+  ["reverse()"] {
+    "gfedcba"
+  }
+  ["lastIndexOf()"] {
+    6
+    9
+    "String does not contain a match for literal pattern. String : \"abxabyabz\" Pattern: \"cdx\""
+    6
+    9
+    "String does not contain a match for regex pattern. String : \"abxabyabz\" Pattern: Regex(\"b*c\")"
+  }
+  ["lastIndexOfOrNull()"] {
+    6
+    9
+    null
+  }
+  ["split()"] {
+    List("aa", "caa", "c")
+    List("aabb", "aabb")
+  }
+  ["replaceAll()"] {
+    "xxbbccxxbbcc"
+    "aa(bbc|bb)caa(bbc|bb)c"
+    "aabbxxaabbcc"
+    "xxxxxxxxxxxx"
+    "Error replacing matches for regex `cc` with `$4; no such group`: `No group 4`"
+  }
+  ["replaceFirst()"] {
+    "xxbbccaabbcc"
+    "aa(bbc|bb)caabbcc"
+    "aabbx.aabbcc"
+    "xabb..aabbcc"
+    "Error replacing matches for regex `cc` with `$4; no such group`: `No group 4`"
+  }
+  ["replaceLast()"] {
+    "aabbccxxbbcc"
+    "aabbccaa(bbc|bb)c"
+    "aabb.xaabbcc"
+    "aabb..aabbcx"
+    "Error replacing matches for regex `cc` with `$4; no such group`: `No group 4`"
+  }
+  ["replaceAllMapped()"] {
+    ">>aa<<bbcc>>aa<<bbcc"
+    "aa>>bbc<<caa>>bbc<<c"
+    "aabb>>.<<>>.<<aabbcc"
+    ">>a<<>>a<<>>b<<>>b<<>>.<<>>.<<>>a<<>>a<<>>b<<>>b<<>>c<<>>c<<"
+  }
+  ["replaceFirstMapped()"] {
+    ">>aa<<bbccaabbcc"
+    "aa>>bbc<<caabbcc"
+    "aabb>>.<<.aabbcc"
+    ">>a<<abb..aabbcc"
+  }
+  ["replaceLastMapped()"] {
+    "aabbcc>>aa<<bbcc"
+    "aabbccaa>>bbc<<c"
+    "aabb.>>.<<aabbcc"
+    "aabb..aabbc>>c<<"
+  }
+  ["replaceRange()"] {
+    "aabbcXXXcc"
+    "aabbccaabbextend beyond string end"
+    "Character index `100` is out of range `0`..`12`. String: \"aabbccaabbcc\""
+    "Character index `-10` is out of range `0`..`12`. String: \"aabbccaabbcc\""
+  }
+  ["toUpperCase()"] {
+    "ABCABCABC"
+  }
+  ["toLowerCase()"] {
+    "abcabcabc"
+  }
+  ["trim"] {
+    "abcdefg"
+  }
+  ["trimStart()"] {
+    """
+    abcdefg \t 
+    
+    """
+  }
+  ["trimEnd()"] {
+    " \t abcdefg"
+  }
+  ["chars"] {
+    List()
+    List("a", "b", "c", "d", "e", "f", "g")
+  }
+  ["codePoints"] {
+    List()
+    List(97, 98, 99, 100, 101, 102, 103)
+  }
+  ["toInt()"] {
+    123
+    -123
+    0
+    0
+    "Cannot parse string as `Int`. String: \"1.2\""
+    "Cannot parse string as `Int`. String: \"9223372036854775808\""
+    "Cannot parse string as `Int`. String: \"-9223372036854775809\""
+    "Cannot parse string as `Int`. String: \"abc\""
+  }
+  ["toIntOrNull()"] {
+    123
+    -123
+    0
+    0
+    null
+    null
+    null
+    null
+  }
+  ["toFloat()"] {
+    0.0
+    -0.0
+    0.0
+    -0.0
+    0.0
+    -0.0
+    123.0
+    -123.0
+    0.45
+    -0.45
+    0.45
+    -0.45
+    123.45
+    -123.45
+    1.23E11
+    1.23E11
+    -1.23E11
+    1.2345E11
+    -1.2345E11
+    4.5E8
+    -4.5E8
+    1.2345E11
+    -1.2345E11
+    -1.2345E11
+    -4.5E8
+    4.5E8
+    1.2345E-7
+    -1.2345E-7
+    -1.2345E-7
+    4.5E-10
+    -4.5E-10
+    Infinity
+    -Infinity
+    "Cannot parse string as `Float`. String: \"abc\""
+  }
+  ["toFloatOrNull()"] {
+    0.0
+    -0.0
+    null
+  }
+  ["take()"] {
+    ""
+    ""
+    ""
+    "abc"
+    "abcdefg"
+    "Expected a positive number, but got `-1`."
+  }
+  ["takeWhile()"] {
+    ""
+    ""
+    "abcdefg"
+    ""
+    "abc"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 42"
+  }
+  ["takeLast()"] {
+    ""
+    ""
+    ""
+    "efg"
+    "abcdefg"
+    "Expected a positive number, but got `-1`."
+  }
+  ["takeLastWhile()"] {
+    ""
+    ""
+    "abcdefg"
+    ""
+    "defg"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 42"
+  }
+  ["drop()"] {
+    ""
+    ""
+    "abcdefg"
+    "defg"
+    ""
+    "Expected a positive number, but got `-1`."
+  }
+  ["dropWhile()"] {
+    ""
+    ""
+    ""
+    "abcdefg"
+    "defg"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 42"
+  }
+  ["dropLast()"] {
+    ""
+    ""
+    "abcdefg"
+    "abcd"
+    ""
+    "Expected a positive number, but got `-1`."
+  }
+  ["dropLastWhile()"] {
+    ""
+    ""
+    ""
+    "abcdefg"
+    "abc"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 42"
+  }
+  ["substring()"] {
+    ""
+    "c"
+    "cd"
+    "abcdefg"
+    "Character index `-1` is out of range `0`..`7`. String: \"abcdefg\""
+    "Character index `8` is out of range `1`..`7`. String: \"abcdefg\""
+    "Character index `2` is out of range `3`..`7`. String: \"abcdefg\""
+  }
+  ["substringOrNull()"] {
+    ""
+    "c"
+    "cd"
+    "abcdefg"
+    null
+    null
+    null
+  }
+  ["getOrNull()"] {
+    null
+    "a"
+    "d"
+    "g"
+    null
+  }
+  ["toCodePoints()"] {
+    List(97, 98, 99, 100, 101, 102, 103)
+    List()
+  }
+  ["padStart()"] {
+    ""
+    "x"
+    "xxx"
+    "abcdefg"
+    "abcdefg"
+    "   abcdefg"
+    "Type constraint `this.length == 1` violated. Value: \"\""
+    "Type constraint `this.length == 1` violated. Value: \"aa\""
+  }
+  ["padEnd()"] {
+    ""
+    "x"
+    "xxx"
+    "abcdefg"
+    "abcdefg"
+    "abcdefg   "
+    "Type constraint `this.length == 1` violated. Value: \"\""
+    "Type constraint `this.length == 1` violated. Value: \"aa\""
+  }
+  ["toBooleanOrNull()"] {
+    true
+    true
+    true
+    false
+    false
+    false
+    null
+    null
+    null
+  }
+  ["repeat()"] {
+    ""
+    "abcdefg"
+    "abcdefgabcdefgabcdefgabcdefgabcdefg"
+    ""
+    ""
+    ""
+    "Type constraint `isPositive` violated. Value: -1"
+  }
+  ["sha1"] {
+    "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"
+  }
+  ["sha256"] {
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
+  }
+  ["sha256Int"] {
+    1449310910991872227
+    -7745954930992895785
+  }
+  ["md5"] {
+    "d41d8cd98f00b204e9800998ecf8427e"
+    "9e107d9d372bb6826bd81d3542a419d6"
+  }
+  ["base64"] {
+    ""
+    "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw=="
+  }
+  ["base64Decoded"] {
+    "Illegal base64 character 7e String: \"~~~\""
+  }
+}

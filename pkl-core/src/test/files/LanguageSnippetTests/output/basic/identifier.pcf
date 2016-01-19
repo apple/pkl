@@ -1,0 +1,22 @@
+examples {
+  ["variable"] {
+    42
+    43
+    44
+  }
+  ["property"] {
+    42
+    43
+    44
+  }
+  ["string interpolation"] {
+    "42"
+    "43"
+    "44"
+  }
+  ["multiline string interpolation"] {
+    "42"
+    "43"
+    "44"
+  }
+}

@@ -1,0 +1,8 @@
+class Foo {
+  bar: String = "bar"
+  const foo = new {
+    _barr = bar
+  }
+}
+
+foo: Foo = new {}

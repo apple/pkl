@@ -1,0 +1,40 @@
+constantSimpleValue = "constant"
+nonConstantSimpleValue = "NON-CONSTANT"
+constantNestedValue {
+  nestedSimpleValue = "constant"
+}
+constDyn {
+  prop = "2"
+  [1] = "1"
+}
+nonConstantNestedValue {
+  nestedSimpleValue = "constant"
+}
+constImport {
+  cst = 10
+  pi2 = 3.141592653589793
+  mod = "constant"
+  outr = "constant"
+  clocal = "const-local"
+  dynconst = "1"
+  dynconst2 = "2"
+  constAccess = 10
+  constAccess2 = 11
+}
+validOuter {
+  name = "Winner"
+  fancyName {
+    title = "The Winner"
+  }
+}
+res01 {
+  nested {
+    nestedSimpleValue = "constant"
+  }
+  simple = "constant"
+  dereferenced = "constant"
+}
+res02 = "Cannot reference property `nonConstantSimpleValue` from here because it is not `const`."
+res03 = "Cannot reference property `nonConstantNestedValue` from here because it is not `const`."
+res04 = "Cannot call method `nonConstFunction` from here because it is not `const`."
+res05 = "Cannot call method `nonConstFunction` from here because it is not `const`."

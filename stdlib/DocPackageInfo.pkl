@@ -1,0 +1,196 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2023 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Template for _doc-package-info.pkl_, the descriptor for a package.
+///
+/// _NOTE_: A doc package is a way to generate documentation for modules that are not published
+/// via the [Project.Package] mechanism.
+/// Packages published via the [Project.Package] mechanism can have their documentation
+/// generated directly by passing the resulting Package URI into Pkldoc. 
+///
+/// A documentation package is a set of related modules that are versioned together.
+/// Each package must have a descriptor that
+/// * amends this template
+/// * is named _doc-package-info.pkl_
+/// * is passed to the _pkldoc_ command together with the modules to generate documentation for.
+/// 
+/// Each module to generate documentation must declare a module name that starts with a package [name].
+/// For example, the following are valid module declarations for package _com.example_:
+/// * `module com.example.Birds`
+/// * `module com.example.Birds.Parrot`
+///
+/// The part of the module name that comes after the package name
+/// must match the module's relative path in its source code repository.
+/// For example, module _com.example.Birds.Parrot_
+/// is expected to exist at path _Birds/Parrot.pkl_ within the package root.
+///
+/// A typical descriptor for a package looks as follows:
+///
+/// ```
+/// /// The overview documentation for this package.
+/// /// The first paragraph is the mandatory _summary_.
+/// /// Try to keep the summary short; a single sentence is common.
+/// ///
+/// /// Subsequent paragraphs are separated by an empty line and collapsed by default.
+/// /// They can use *Markdown syntax* and Pkldoc links such as [String].
+/// amends "pkl:DocPackageInfo"
+///
+/// name = "com.example.Birds"
+/// importUri = "https://example.com/Birds"
+/// authors { "pigeon@example.com" }
+/// sourceCode = "https://github.com/pkl-lang/birds/"
+/// sourceCodeUrlScheme = "https://github.com/pkl-lang/birds/blob/\(version)%{path}#L%{line}-%{endLine}"
+/// issueTracker = "https://github.com/pkl-lang/birds/issues"
+/// version = "1.7.0"
+/// ```
+///
+/// To deprecate a package, deprecate its descriptor:
+///
+/// ```
+/// @Deprecated { message = "Use `com.example.Birds.Parrot` instead" }
+/// amends "pkl:PackageInfo"
+/// ```
+@ModuleInfo { minPklVersion = "0.24.0" }
+module pkl.DocPackageInfo
+
+import "pkl:reflect"
+import "pkl:semver"
+// used by doc comments
+import "pkl:Project"
+import "pkl:DocPackageInfo"
+
+/// The name of this package.
+name: PackageName
+
+/// The version of this package.
+///
+/// Use `"0.0.0"` for unversioned packages.
+version: PackageVersion
+
+/// The import base URI for modules in this package.
+///
+/// Module import URIs are constructed from this URI as follows:
+/// `"\(importUri)\(modulePath)"` where `modulePath` is
+/// `moduleName.removePrefix(name).replaceAll(".", "/")`.
+/// For example, if package name is `foo.bar` and module name is `foo.bar.baz.qux`,
+/// then `modulePath` is `baz/qux`.
+importUri: Uri(endsWith("/"))
+
+/// The URI representing the package itself, if exists.
+uri: Uri?
+
+/// The authors' emails for this package.
+///
+/// Email addresses must adhere to
+/// [RFC5322 mailbox](https://www.rfc-editor.org/rfc/rfc5322#section-3.4) specification.
+///
+/// Example:
+/// ```
+/// email { "Johnny Appleseed <johnny.appleseed@example.com>" }
+/// ```
+authors: Listing<String>
+
+/// The source code repository for this package.
+///
+/// Example:
+/// ```
+/// sourceCode = "https://github.com/myorg/myproject"
+/// ```
+sourceCode: Uri?
+
+/// The web URL of the source code for this package *version*.
+///
+/// The following placeholders are available:
+///
+/// - `%{path}`
+///   absolute file path of the file to open
+/// - `%{line}`
+///   start line number to navigate to
+/// - `%{endLine}`
+///   end line number to navigate to
+///
+/// The `%{path}` placeholder is derived from the module's name relative to the package name.
+/// The module's name is expected to be prefixed by the package name.
+/// In Pkl terms, `path` can be thought of as 
+/// `"/" + moduleName.replaceFirst(packageName).replaceAll(".", "/") + ".pkl"`.
+///
+/// For example, if package name is `foo.bar` and module name is `foo.bar.baz.qux`,
+/// then `%{path}` is `/baz/qux.pkl`.
+///
+/// Example:
+///
+/// ```
+/// sourceCodeUrlScheme = "https://github.com/user/repo/blob/v\(version)%{path}#L%{line}-L%{endLine}"`
+/// ```
+sourceCodeUrlScheme: String?
+
+/// The web URL of the issue tracker for this package.
+issueTracker: Uri
+
+/// The packages depended on by this package.
+///
+/// Used to display package dependencies and to create documentation links.
+/// Set automatically for Pkl Hub packages.
+dependencies: Listing<PackageDependency>(isDistinctBy((it) -> it.name))
+
+/// Any extra attributes to add to the documentation.
+extraAttributes: Mapping<String, String>
+
+/// A package depended on by this package.
+class PackageDependency {
+  /// The name of the depended-on package.
+  name: PackageName
+
+  /// The version of the depended-on package.
+  ///
+  /// Use `"0.0.0"` for unversioned packages.
+  version: PackageVersion
+
+  /// The source code repository of the depended-upon package.
+  sourceCode: Uri(endsWith("/"))
+
+  /// The source code scheme with placeholders.
+  ///
+  /// See [DocPackageInfo.sourceCodeUrlScheme] for more details.
+  sourceCodeUrlScheme: String?
+
+  /// The web URL of the Pkldoc page for the depended-on package *version*,
+  /// Only needs to be set if the depended-on package belongs to a different Pkldoc website.
+  documentation: Uri(endsWith("/"))?
+}
+
+/// A package name.
+typealias PackageName =
+  String(!contains("/"))
+
+/// A package version.
+typealias PackageVersion =
+  String(semver.isValid(this))
+
+@Unlisted
+fixed overview: String(!isBlank) = moduleMirror.docComment ??
+    throw("""
+      Missing overview documentation for package `\(name)`.
+      To fix this problem, add a doc comment to `doc-package-info.pkl` (above `amends "pkl:DocPackageInfo"`).
+      """)
+
+@Unlisted
+fixed overviewImports: Map<String, Uri> = moduleMirror.imports
+
+@Unlisted
+fixed annotations: List<Annotation> = moduleMirror.annotations
+
+local moduleMirror = reflect.Module(this)

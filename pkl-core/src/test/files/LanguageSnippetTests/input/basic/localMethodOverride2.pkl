@@ -1,0 +1,44 @@
+// try to override local function, referenced from nested scope, with local function in subclass
+
+open class Foo1 {
+  local function f() = "original"
+  foo {
+    x = f()
+  }
+}
+
+class Foo2 extends Foo1 {
+  local function f() = "override"
+}
+
+res1 = new Foo2 {}.foo.x
+
+// try to override local function, referenced from nested scope, with non-local function in subclass
+
+open class Foo3 {
+  local function f() = "original"
+  foo {
+    x = f()
+  }
+}
+
+class Foo4 extends Foo3 {
+  function f() = "override"
+}
+
+res2 = new Foo4 {}.foo.x
+
+// try to override non-local function, referenced from nested scope, with local function in subclass
+
+open class Foo5 {
+  function f() = "original"
+  foo {
+    x = f()
+  }
+}
+
+class Foo6 extends Foo5 {
+  local function f() = "override"
+}
+
+res3 = new Foo6 {}.foo.x

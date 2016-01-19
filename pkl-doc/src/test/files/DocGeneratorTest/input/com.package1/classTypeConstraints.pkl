@@ -1,0 +1,24 @@
+module com.package1.classTypeConstraints
+
+class Person1 {
+  name: String(length >= 3)
+  address: Address(street != city)
+}
+
+emailAddress = (str) -> str.matches(Regex(#".+@.+"#))
+
+class Person2 {
+  email: String(emailAddress)
+}
+
+class Address {
+  street: String(!isEmpty)
+  city: String = "San Francisco"
+}
+
+class Project {
+  // constraint for element type of optional type
+  type: String(oneOf(List("open-source", "closed-source")))?
+  // constraints for map type and its constituent key/value types
+  contacts: Map<String(!isEmpty), String(emailAddress)>(length > 10, length < 20)
+}

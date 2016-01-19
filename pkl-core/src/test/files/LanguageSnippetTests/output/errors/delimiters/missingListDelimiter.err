@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `)` delimiter.
+
+x | l = List("one", "two"
+                         ^
+at missingListDelimiter#l (file:///$snippetsDir/input/errors/delimiters/missingListDelimiter.pkl)

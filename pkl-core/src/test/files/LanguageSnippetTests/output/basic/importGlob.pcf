@@ -1,0 +1,127 @@
+examples {
+  ["import* clause keys"] {
+    new {
+      "../../input-helper/globtest/\\moduleC.pkl"
+      "../../input-helper/globtest/module with [weird] ~!characters.pkl"
+      "../../input-helper/globtest/moduleA.pkl"
+      "../../input-helper/globtest/moduleB.pkl"
+    }
+  }
+  ["import* inferred name"] {
+    new {
+      "../../input-helper/globtest/\\moduleC.pkl"
+      "../../input-helper/globtest/module with [weird] ~!characters.pkl"
+      "../../input-helper/globtest/moduleA.pkl"
+      "../../input-helper/globtest/moduleB.pkl"
+    }
+  }
+  ["globstar"] {
+    new {
+      "../../input-helper/globtest/\\moduleC.pkl"
+      "../../input-helper/globtest/module with [weird] ~!characters.pkl"
+      "../../input-helper/globtest/moduleA.pkl"
+      "../../input-helper/globtest/moduleB.pkl"
+      "../../input-helper/globtest/child/moduleC.pkl"
+    }
+  }
+  ["globstar then up one level"] {
+    new {
+      "../../input-helper/globtest/child/../\\moduleC.pkl"
+      "../../input-helper/globtest/child/../module with [weird] ~!characters.pkl"
+      "../../input-helper/globtest/child/../moduleA.pkl"
+      "../../input-helper/globtest/child/../moduleB.pkl"
+    }
+  }
+  ["empty glob matches current directory"] {
+    new {
+      ""
+    }
+    "I/O error loading module `file:///$snippetsDir/input/basic/`. IOException: Is a directory"
+  }
+  ["no wildcards"] {
+    new {
+      "../../input-helper/globtest/moduleA.pkl"
+    }
+  }
+  ["wildcard that does match"] {
+    new {
+      "../../input-helper/globtest/moduleA.pkl"
+    }
+  }
+  ["character classes"] {
+    new {
+      "../../input-helper/globtest/moduleA.pkl"
+      "../../input-helper/globtest/moduleB.pkl"
+    }
+  }
+  ["match directories"] {
+    "I/O error loading module `file:///$snippetsDir/input-helper/globtest`. IOException: Is a directory"
+  }
+  ["match literal backslash"] {
+    new {
+      "../../input-helper/globtest/\\moduleC.pkl"
+    }
+  }
+  ["import glob first segment is wildcard"] {
+    new {
+      "importGlob.pkl"
+      "readGlob.pkl"
+    }
+  }
+  ["import glob matching unsafe uri chars"] {
+    new {
+      ["../../input-helper/globtest/module with [weird] ~!characters.pkl"] {}
+    }
+    new {
+      ["../../input-helper/globtest/module with [weird] ~!characters.pkl"] {}
+    }
+  }
+  ["package"] {
+    new {
+      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
+        name = "Ostritch"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+    }
+    new {
+      "package://localhost:12110/birds@0.5.0#/Bird.pkl"
+      "package://localhost:12110/birds@0.5.0#/allFruit.pkl"
+      "package://localhost:12110/birds@0.5.0#/catalog.pkl"
+      "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+      "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+      "package://localhost:12110/birds@0.5.0#/some/dir/Bird.pkl"
+    }
+  }
+  ["globbing with absolute URIs and percent encoding"] {
+    new {
+      ["package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
+    }
+    new {
+      ["package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
+    }
+  }
+  ["package glob and up one level"] {
+    new {
+      ["package://localhost:12110/birds@0.5.0#/catalog/../catalog/Ostritch.pkl"] {
+        name = "Ostritch"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+      ["package://localhost:12110/birds@0.5.0#/catalog/../catalog/Swallow.pkl"] {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+facts {
+  ["package-relative dependency is not same import as absolute URI dependency"] {
+    true
+  }
+  ["package-relative dependency has scheme projectpackage"] {
+    true
+  }
+  ["transitive import resolves to same dependency as direct dependency import"] {
+    true
+  }
+  ["transitive import resolves to same dependency as projectpackage import"] {
+    true
+    true
+  }
+}
+examples {
+  ["import package"] {
+    new {
+      name = "Ostritch"
+      favoriteFruit {
+        name = "Orange"
+      }
+    }
+    new {
+      name = "Swallow"
+      favoriteFruit {
+        name = "Apple 🍎"
+      }
+    }
+  }
+  ["import module that uses triple-dot import"] {
+    new {
+      name = "Bird"
+      favoriteFruit {
+        name = "Fruit"
+      }
+    }
+  }
+  ["reading directories"] {
+    new {
+      uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog"
+      text = """
+        Ostritch.pkl
+        Swallow.pkl
+        
+        """
+      base64 = "T3N0cml0Y2gucGtsClN3YWxsb3cucGtsCg=="
+    }
+    new {
+      uri = "projectpackage://localhost:12110/birds@0.5.0#/"
+      text = """
+        Bird.pkl
+        allFruit.pkl
+        catalog
+        catalog.pkl
+        some
+        
+        """
+      base64 = "QmlyZC5wa2wKYWxsRnJ1aXQucGtsCmNhdGFsb2cKY2F0YWxvZy5wa2wKc29tZQo="
+    }
+  }
+}

@@ -1,0 +1,7 @@
+notConst = 10
+
+class Foo {
+  shouldBeConst = outer.notConst
+}
+
+foo = new Foo {}

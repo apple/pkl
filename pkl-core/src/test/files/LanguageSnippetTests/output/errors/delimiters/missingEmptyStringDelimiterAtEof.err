@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Mismatched input: `<EOF>`. Expected one of: SLEndQuote, SLInterpolation, SLUnicodeEscape, SLCharacterEscape, SLCharacters
+
+x | res1 = "
+            ^
+at missingEmptyStringDelimiterAtEof (file:///$snippetsDir/input/errors/delimiters/missingEmptyStringDelimiterAtEof.pkl)

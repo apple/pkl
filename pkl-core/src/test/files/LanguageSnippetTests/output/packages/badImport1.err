@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Module URI `package://localhost:12110/foo#/bar.pkl` has invalid syntax.
+
+x | res = import("package://localhost:12110/foo#/bar.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badImport1.error#res (file:///$snippetsDir/input/packages/badImport1.error.pkl)
+
+Invalid path `/foo`.
+
+A package URI must have its path suffixed by its version (e.g. `package://example.com/my/package@1.0.0`).
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

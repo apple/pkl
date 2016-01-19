@@ -1,0 +1,5 @@
+amends "baseModule.pkl"
+
+local object {
+  property = "value"
+}

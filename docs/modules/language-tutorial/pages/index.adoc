@@ -1,0 +1,18 @@
+= Language Tutorial
+include::ROOT:partial$component-attributes.adoc[]
+
+Welcome to the Pkl language tutorial. We will get you up and running quickly!
+If you are new to Pkl, we recommend that you follow along with the code examples.
+This tutorial describes interactions with the xref:pkl-cli:index.adoc#repl[REPL].
+For an even more interactive experience, we highly recommend you use xref:intellij:ROOT:index.adoc[our plugin for IntelliJ-family IDEs].
+
+
+For more comprehensive documentation, see xref:language-reference:index.adoc[Language Reference].
+For ready-to-go examples with full source code, see {uri-pkl-examples-repo}[Examples].
+For API documentation, see xref:ROOT:standard-library.adoc[Standard Library].
+
+Pick a tutorial by topic:
+
+1. xref:01_basic_config.adoc[Basic Configuration]
+2. xref:02_filling_out_a_template.adoc[Filling out a Template]
+3. xref:03_writing_a_template.adoc[Writing a Template]

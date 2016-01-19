@@ -1,0 +1,9 @@
+–– Pkl Error ––
+Cannot import dependency because there is no project found.
+
+If you meant to import a path that starts with `@`, prefix the path with `./` (e.g. `import "./@myPath").
+If you meant to import a dependency, ensure that this file is within a directory that contains a PklProject module.
+
+x | res = import("@child/theChild.pkl")
+                 ^^^^^^^^^^^^^^^^^^^^^
+at badImport.error#res (file:///$snippetsDir/input/projects/notAProject/badImport.error.pkl)

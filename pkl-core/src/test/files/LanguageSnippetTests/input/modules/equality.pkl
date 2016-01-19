@@ -1,0 +1,14 @@
+import "pkl:base"
+import "pkl:base" as base2
+
+res1 = this == this
+res2 = base == base
+res3 = this == base
+res4 = base == this
+res5 = base == base2
+
+res6 = this != this
+res7 = base != base
+res8 = this != base
+res9 = base != this
+res10 = base != base2

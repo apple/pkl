@@ -1,0 +1,800 @@
+= Pkl Style Guide
+:icons: font
+:source-highlighter: highlight.js
+:pkl-expr: pkl expression
+:pkl: pkl
+:sectnums:
+
+This document serves as the Pkl team's recommended coding standard for the Pkl configuration language.
+
+== Files
+
+=== Filename
+
+Use the `.pkl` extension for all files.
+
+Follow these rules for casing the file's name:
+
+[cols="1,3,1"]
+|===
+| Casing | Description | Example
+| PascalCase
+| It is designed to be used as a template, or used as a class (i.e. imported and instantiated).
+| `K8sResource.pkl`
+| camelCase
+| It is designed to be used as a value.
+| `myDeployment.pkl`
+| kebab-case
+| It is designed to be used as a CLI tool.
+| `do-convert.pkl`
+|===
+
+*Exception*: If a file is meant to render into a static configuration file, the filename should match the target file's name without the extension.
+For example, `config.pkl` turns into `config.yml`.
+
+=== File Encoding
+
+Encode all files using UTF-8.
+
+== Module Structure
+
+=== Header
+
+Separate each section of the module header by one blank line.
+
+A module header consists of the following clauses, each of which is optional:
+
+- Module clause
+- `amends` or `extends` clause
+- Import clauses
+
+.module.pkl
+[source%parsed,{pkl}]
+----
+module com.example.Foo // <1>
+
+extends "Bar.pkl" // <2>
+
+import "baz.pkl" // <3>
+import "Buz.pkl" // <3>
+----
+<1> Module clause
+<2> `extends` clause
+<3> Import clause
+
+==== Module name
+
+Match the name of the module with the name of the file.
+
+.MyModule.pkl
+[source%tested,{pkl}]
+----
+module MyModule
+
+----
+
+If a module is meant to be published, add a module clause, `@ModuleInfo` annotation, and doc comments.
+
+Modules that do not get published anywhere may omit a module clause.
+
+.MyModule.pkl
+[source%tested,{pkl}]
+----
+/// Used for some type of purpose. <1>
+@ModuleInfo { minPklVersion = "0.24.0" } // <2>
+module MyModule // <3>
+
+----
+<1> Doc comments
+<2> `@ModuleInfo` annotation
+<3> Module clause
+
+==== `amends` vs. `extends` clause
+
+A module that doesn't add new properties shouldn't use the `extends` clause.
+
+==== Imports
+
+Sort imports sections using https://en.wikipedia.org/wiki/Natural_sort_order[natural sorting] by their module URI.
+Relative path imports should be in their own section, separated by a newline.
+There should be no unused imports.
+
+[source%parsed,{pkl}]
+----
+import "modulepath:/foo.pkl"
+import "package://example.com/mypackage@1.0.0#/foo.pkl"
+
+import ".../my/file/bar2.pkl"
+import ".../my/file/bar11.pkl"
+----
+
+=== Module body
+
+Within a module body, define members in this order:
+
+1. Properties
+2. Methods
+3. Classes and type aliases
+4. The amended xref:language-reference:index.adoc#in-language[output] property.
+
+*Exception*: local members can be close to their usage.
+
+*Exception*: functions meant to be a class constructor can be next to the class declaration.
+
+.constructor.pkl
+[source%tested,{pkl}]
+----
+function MyClass(_name: String): MyClass = new { name = _name }
+
+class MyClass {
+  name: String
+}
+----
+
+=== Module URIs
+
+If possible, use xref:language-reference:index.adoc#triple-dot-module-uris[triple-dot Module URIs] to reference ancestor modules
+instead of multiple `../`.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+amends ".../ancestor.pkl"
+
+import ".../ancestor2.pkl"
+----
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+amends "../../../ancestor.pkl"
+
+import "../../../ancestor2.pkl"
+----
+
+== Objects
+
+=== Member spacing
+
+Object members (properties, elements, and entries) should be separated by at most one blank line.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+foo = "bar"
+
+baz = "buz"
+----
+
+.good.pkl
+[source%tested,{pkl}]
+----
+foo = "bar"
+baz = "buz"
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+foo = "bar"
+
+
+baz = "buz"
+----
+
+Too many lines separate `foo` and `baz`.
+
+=== Overridden properties
+
+Properties that override an existing property shouldn't have doc comments nor type annotations,
+unless the type is intentionally overridden via `extends`.
+
+[source%tested,{pkl}]
+----
+amends "myOtherModule.pkl"
+
+foo = "bar"
+----
+
+=== New property definitions
+
+Each property definition should have a type annotation and <<doc-comment,doc comment>>.
+Successive definitions should be separated by a blank line.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+/// Denotes something.
+myFoo: String
+
+/// Something else
+myOtherFoo: String
+----
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+/// Denotes something.
+myFoo: String
+/// Something else
+myOtherFoo: String
+----
+
+=== Objects with `new`
+
+When initializing a `Typed` object using `new`, omit the type.
+For example, use `new {}` instead of `new Foo {}`.
+
+This rule does not apply when initializing a property to a subtype of the property's declared type.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+myFoo: Foo = new { foo = "bar" }
+----
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+open class Foo {}
+class Bar extends Foo {}
+
+foo: Foo = new Bar {}
+----
+
+This is okay because this is meaning to initialize `Bar` instead of `Foo`.
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+myFoo1: Foo = new Foo { foo = "bar" } // <1>
+
+myFoo2 = new Foo { foo = "bar" } // <2>
+----
+<1> Unnecessary `new Foo { ... }`
+<2> Unless amending/extendinge a module where `myFoo2` is already defined, `myFoo2` is effectively the `unknown` type, i.e. `myFoo2: unknown`.
+
+== Comments
+
+Use doc comments to convey information to users of a module.
+Use line comments or block comments to convey implementation concerns to authors of a module, or to comment out code.
+
+[[doc-comment]]
+=== Doc comments
+
+Doc comments should start with a one sentence summary paragraph, followed by additional paragraphs if necessary.
+Start new sentences on their own line.
+Add a single space after `///`.
+
+[source%parsed,{pkl}]
+----
+/// The time alotted for eating lunch.
+///
+/// Note:
+/// * Hamburgers typically take longer to eat than salad.
+/// * Pizza gets prepared per-order.
+///
+/// Orders must be placed on-prem.
+/// See <https://cafeteria.com> for more details.
+lunchHours: Duration
+----
+
+=== Line comments
+
+If a comment relates to a property definition, place it after the property's doc comments.
+Add a single space after `//`.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+/// Designates whether it is zebra party time.
+// TODO: Add constraints here?
+partyTime: Boolean
+----
+
+A line comment may also be placed at the end of a line, as long as the line doesn't exceed 100 characters.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+/// Designates whether it is zebra party time.
+partyTime: Booleean // TODO: Add constraints here?
+----
+
+=== Block comments
+
+A single-line block comment should have a single space after `+++/*+++` and before `+++*/+++`.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+/* Let's have a zebra party */
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+/*Let's have a zebra party*/
+----
+
+== Classes
+
+=== Class names
+
+Name classes in PascalCase.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+class ZebraParty {}
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+class zebraParty {}
+class zebraparty {}
+----
+
+== Strings
+
+=== Custom String Delimiters
+
+Use xref:language-reference:index.adoc#custom-string-delimiters[custom string delimiters] to avoid the need for string escaping.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+myString = #"foo \ bar \ baz"#
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+myString = "foo \\ bar \\ baz"
+----
+
+NOTE: Sometimes, using custom string delimiters makes source code harder to read. For example, the `+\#+` literal reads better using escapes (`"\\#"`) than using custom string delimimters (`+##"\#"##+`).
+
+=== Interpolation
+
+Prefer interpolation to string concatenation.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+greeting = "Hello, \(name)"
+----
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+greeting = "Hello, " + name
+----
+
+== Formatting
+
+=== Line width
+
+Lines shouldn't exceed 100 characters.
+
+*Exceptions:*
+
+1. String literals
+2. Code snippets within doc comments
+
+=== Indentation
+
+Use two spaces per indentation level.
+
+==== Members within braces
+
+Members within braces should be indented one level deeper than their parents.
+
+[source%tested,{pkl}]
+----
+foo {
+  bar {
+    baz = "hi"
+  }
+}
+----
+
+==== Assignment operator (`=`)
+
+An assignee that starts after a newline should be indented.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+foo =
+  "foo"
+
+bar =
+  new {
+    baz = "baz"
+    biz = "biz"
+  }
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+foo =
+"foo"
+
+bar =
+new {
+  baz = "baz"
+  biz = "biz"
+}
+----
+
+An assignee that starts on the same line should not be indented.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+foo = new {
+  baz = "baz"
+  biz = "biz"
+}
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+foo = new {
+    baz = "baz"
+    biz = "biz"
+  }
+----
+
+==== `if` and `let` expressions
+
+`if` and `let` bodies that start on their own line should be indented.
+Child bodies may also be inline, and the `else` branch of `if` expressions may be inline of `if`.
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar)
+  bar
+else
+  foo
+----
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar) bar else foo
+----
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar) bar
+else foo
+----
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+let (foo = "bar")
+  foo.toUpperCase()
+----
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+let (foo = "bar") foo.toUpperCase()
+----
+
+.bad.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar)
+bar
+else
+foo
+----
+
+.bad.pkl
+[source%parsed,{pkl-expr}]
+----
+let (foo = "bar")
+foo.toUpperCase()
+----
+
+*Exception*: A nested `if` expression within the `else` branch should have the same indentation level as its parent, and start on the same line as the parent `else` keyword.
+
+.good.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar)
+  bar
+else if (baz)
+  baz
+else
+  foo
+----
+
+.bad.pkl
+[source%parsed,{pkl-expr}]
+----
+if (bar)
+  bar
+else
+  if (baz)
+    baz
+  else
+    foo
+----
+
+==== Multiline chained method calls
+
+Indent successive multiline chained method calls.
+
+[source%parsed,{pkl-expr}]
+----
+foo()
+  .bar()
+  .baz()
+  .biz()
+----
+
+==== Multiline binary operators
+
+Place operators after the newline, and indent successive lines to the same level.
+
+.good.pkl
+[source%parsed,{pkl}]
+----
+foo = bar
+  |> baz
+  |> biz
+
+myNum = 1
+  + 2
+  + 3
+  + 4
+----
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+foo = bar |>
+  baz |>
+  biz
+
+myNum = 1 +
+  2 +
+  3 +
+  4
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+foo = bar
+|> baz
+|> biz
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+foo = bar
+  |> baz
+    |> biz
+----
+
+*Exception*: the minus operator must come before the newline, because otherwise it is parsed as a unary minus.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+myNum = 1 -
+  2 -
+  3 -
+  4
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+myNum = 1
+  - 2
+  - 3
+  - 4
+----
+
+=== Spaces
+
+Add a space:
+
+[source%parsed,{pkl}]
+----
+amends "Foo.pkl" // <1>
+
+res1 { "foo" } // <2>
+res2 = 1 + 2 // <3>
+res3 = res2 as Number // <3>
+res4 = List(1, 2, 3) // <4>
+res5 = if (foo) bar else baz // <5>
+----
+<1> After keywords
+<2> Before and after braces
+<3> Around infix operators
+<4> After a comma
+<5> Before opening parentheses in control operators (`if`, `for`, `when` are control operators)
+
+NOTE: No spaces are added around the pipe symbol (`|`) in union types.
+
+[source%tested,{pkl}]
+----
+typealias Foo = "foo"|"bar"|"baz"
+----
+
+=== Object bodies
+
+==== Single line
+
+An object body may be a single line if it only consists of primitive elements, or if it contains two or fewer members.
+Otherwise, split them into multiple lines.
+
+Separate each member of a single line object with a semicolon and a space.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+res1 = new { bar = "bar"; baz = "baz" }
+res2 = new { 1; 2; 3; 4; 5; 6 }
+----
+
+.bad.pkl
+[source%parsed,{pkl}]
+----
+res1 = new { bar = "bar"; baz = "baz"; biz = "biz"; } // <1>
+
+res2 = new { 1 2 3 4 5 6 } // <2>
+----
+
+<1> Too many members and trailing `;`
+<2> No semicolon
+
+==== Multiline
+
+Multiline objects should have their members separated by at least one line break and at most one blank line.
+
+.good.pkl
+[source%tested,{pkl}]
+----
+res {
+  foo = "foo"
+  bar = "bar"
+}
+
+res2 {
+  ["foo"] = "foo"
+  ["bar"] = "bar"
+}
+
+res3 {
+  "foo"
+  "bar"
+}
+----
+
+.good.pkl
+[source%tested,{pkl}]
+----
+res {
+  foo = "foo"
+
+  bar = "bar"
+}
+
+res2 {
+  ["foo"] = "foo"
+
+  ["bar"] = "bar"
+}
+
+res3 {
+  "foo"
+
+  "bar"
+}
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+res {
+  foo = "foo"
+
+
+  bar = "bar" // <1>
+}
+
+res2 {
+  ["foo"] = "foo"
+
+
+  ["bar"] = "bar" // <1>
+}
+
+res3 {
+  "foo"
+
+
+  "bar" // <1>
+}
+
+res4 {
+  foo = "foo"; bar = "bar" // <2>
+}
+----
+<1> Too many blank lines between members
+<2> No line break separating members
+
+Put the opening brace on the same line.
+
+.good.pkl
+
+[source%tested,{pkl}]
+----
+res {
+  foo = "foo"
+  bar = "bar"
+}
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+res
+{
+  foo = "foo"
+  bar = "bar"
+}
+----
+
+== Programming Practices
+
+=== Prefer `for` generators
+
+When programmatically creating elements and entries, prefer
+xref:language-reference:index.adoc#for-generators[for generators] over using the collection API.
+Using for generators preserves xref:language-reference:index.adoc#late-binding[late binding].
+
+.good.pkl
+[source%tested,{pkl}]
+----
+numbers {
+  1
+  2
+  3
+  4
+}
+
+squares {
+  for (num in numbers) {
+    num ** 2
+  }
+}
+----
+
+.bad.pkl
+[source%tested,{pkl}]
+----
+numbers {
+  1
+  2
+  3
+  4
+}
+
+squares = numbers.toList().map((num) -> num ** 2).toListing()
+----

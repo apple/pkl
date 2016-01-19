@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "packageUri": "package://localhost:12110/fruit@1.0.5",
+  "name": "fruit",
+  "version": "1.0.5",
+  "packageZipUrl": "https://localhost:12110/fruit@1.0.5/fruit@1.0.5.zip",
+  "dependencies": {},
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  },
+  "sourceCode": "https://example.com/fruit",
+  "documentation": "https://example.com/fruit-docs",
+  "license": "UNLICENSED",
+  "authors": [
+    "apple-1@example.com",
+    "banana-2@example.com"
+  ],
+  "issueTracker": "https://example.com/fruit/issues"
+}

@@ -1,0 +1,74 @@
+open module constModifier
+
+import "pkl:test"
+import "pkl:math"
+
+const constantSimpleValue = "constant"
+
+local const constLocal = "const-local"
+
+nonConstantSimpleValue = "NON-CONSTANT"
+
+const constantNestedValue {
+  nestedSimpleValue = constantSimpleValue
+}
+
+const constDyn = new Dynamic {
+  [1] = "1"
+  prop = "2"
+}
+
+nonConstantNestedValue {
+  nestedSimpleValue = constantSimpleValue
+}
+
+function nonConstFunction() = nonConstantSimpleValue
+
+const function constFunctionCallingNonConst(): (String) -> String = (s) -> s + nonConstFunction()
+
+class ConstImport {
+  const cst = 10
+  local const lcst = 11
+  //pi1 = math.pi
+  pi2 = import("pkl:math").pi
+  mod = module.constantSimpleValue
+  outr = outer.constantSimpleValue
+  clocal = constLocal
+  dynconst = constDyn[1]
+  dynconst2 = constDyn.prop
+  constAccess = cst
+  constAccess2 = lcst
+}
+
+constImport = new ConstImport {}
+
+class ValidConstOuter {
+  name: String
+  fancyName = new { title = "The \(outer.name)" }
+}
+
+validOuter = new ValidConstOuter { name = "Winner" }
+
+class Valid {
+  nested = constantNestedValue
+  simple = constantSimpleValue
+  dereferenced = constantNestedValue.nestedSimpleValue
+}
+
+class BrokenSimple {
+  improperDefault = nonConstantSimpleValue
+}
+
+class BrokenNested {
+  improperNestedDefault = nonConstantNestedValue 
+}
+
+class BrokenFunction {
+  improperDefaultFromNonConstFunction = nonConstFunction()
+}
+
+res01 = new Valid {}
+res02 = test.catch(() -> "\(new BrokenSimple {})")
+res03 = test.catch(() -> "\(new BrokenNested {})")
+res04 = test.catch(() -> "\(new BrokenFunction {})")
+res05 = test.catch(() -> constFunctionCallingNonConst().apply("hello "))

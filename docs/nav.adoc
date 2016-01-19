@@ -1,0 +1,42 @@
+* xref:pkl-cli:index.adoc#installation[Installation]
+* xref:language-tutorial:index.adoc[Language Tutorial]
+** xref:language-tutorial:01_basic_config.adoc[Basic Configuration]
+** xref:language-tutorial:02_filling_out_a_template.adoc[Filling out a Template]
+** xref:language-tutorial:03_writing_a_template.adoc[Writing a Template]
+* xref:language-reference:index.adoc[Language Reference]
+
+* xref:introduction:index.adoc[Introduction]
+** xref:introduction:use-cases.adoc[Use Cases]
+** xref:introduction:concepts.adoc[Concepts]
+** xref:introduction:components.adoc[Components]
+** xref:introduction:comparison.adoc[Comparison]
+
+* xref:ROOT:language.adoc[Language]
+** xref:language-tutorial:index.adoc[Language Tutorial]
+** xref:language-reference:index.adoc[Language Reference]
+** xref:ROOT:standard-library.adoc[Standard Library]
+
+* xref:ROOT:tools.adoc[Tools]
+** xref:pkl-cli:index.adoc[CLI]
+** xref:pkl-doc:index.adoc[Pkldoc]
+** xref:pkl-gradle:index.adoc[Gradle Plugin]
+** Editor support
+*** xref:intellij:ROOT:index.adoc[IntelliJ]
+*** xref:vscode:ROOT:index.adoc[VSCode]
+*** xref:neovim:ROOT:index.adoc[Neovim]
+
+* xref:ROOT:language-bindings.adoc[Language Bindings]
+** xref:java-binding:index.adoc[Java]
+*** xref:java-binding:codegen.adoc[Code Generator]
+*** xref:pkl-core:index.adoc[pkl-core Library]
+*** xref:java-binding:pkl-config-java.adoc[pkl-config-java Library]
+
+** xref:kotlin-binding:index.adoc[Kotlin]
+*** xref:kotlin-binding:codegen.adoc[Code Generator]
+*** xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin Library]
+
+** xref:go:ROOT:index.adoc[Go]
+
+* xref:release-notes:index.adoc[Release Notes]
+** xref:release-notes:0.24.adoc[0.24 Release Notes]
+** xref:release-notes:changelog.adoc[Changelog]

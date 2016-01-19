@@ -1,0 +1,22 @@
+–– Pkl Error ––
+ouch
+
+x | hidden f1 = () -> (() -> (() -> throw("ouch")).apply()).apply()
+                                    ^^^^^^^^^^^^^
+at lambdaStackTrace2#f1.<function#3> (file:///$snippetsDir/input/lambdas/lambdaStackTrace2.pkl)
+
+x | hidden f1 = () -> (() -> (() -> throw("ouch")).apply()).apply()
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at lambdaStackTrace2#f1.<function#2> (file:///$snippetsDir/input/lambdas/lambdaStackTrace2.pkl)
+
+x | hidden f1 = () -> (() -> (() -> throw("ouch")).apply()).apply()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at lambdaStackTrace2#f1.<function#1> (file:///$snippetsDir/input/lambdas/lambdaStackTrace2.pkl)
+
+x | res1 = f1.apply()
+           ^^^^^^^^^^
+at lambdaStackTrace2#res1 (file:///$snippetsDir/input/lambdas/lambdaStackTrace2.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

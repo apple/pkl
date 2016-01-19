@@ -1,0 +1,110 @@
+package my;
+
+import java.lang.Object;
+import java.lang.Override;
+import java.lang.String;
+import java.lang.StringBuilder;
+import java.util.Objects;
+import org.pkl.config.java.mapper.Named;
+import org.pkl.config.java.mapper.NonNull;
+
+/**
+ * module comment.
+ * *emphasized* `code`.
+ */
+public final class Mod {
+  /**
+   * module property comment.
+   * *emphasized* `code`.
+   */
+  public final @NonNull Person pigeon;
+
+  public Mod(@Named("pigeon") @NonNull Person pigeon) {
+    this.pigeon = pigeon;
+  }
+
+  public Mod withPigeon(@NonNull Person pigeon) {
+    return new Mod(pigeon);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (this.getClass() != obj.getClass()) return false;
+    Mod other = (Mod) obj;
+    if (!Objects.equals(this.pigeon, other.pigeon)) return false;
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = 1;
+    result = 31 * result + Objects.hashCode(this.pigeon);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder(100);
+    builder.append(Mod.class.getSimpleName()).append(" {");
+    appendProperty(builder, "pigeon", this.pigeon);
+    builder.append("\n}");
+    return builder.toString();
+  }
+
+  private static void appendProperty(StringBuilder builder, String name, Object value) {
+    builder.append("\n  ").append(name).append(" = ");
+    String[] lines = Objects.toString(value).split("\n");
+    builder.append(lines[0]);
+    for (int i = 1; i < lines.length; i++) {
+      builder.append("\n  ").append(lines[i]);
+    }
+  }
+
+  /**
+   * class comment.
+   * *emphasized* `code`.
+   */
+  public static final class Person {
+    /**
+     * class property comment.
+     * *emphasized* `code`.
+     */
+    public final @NonNull String name;
+
+    public Person(@Named("name") @NonNull String name) {
+      this.name = name;
+    }
+
+    public Person withName(@NonNull String name) {
+      return new Person(name);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (this.getClass() != obj.getClass()) return false;
+      Person other = (Person) obj;
+      if (!Objects.equals(this.name, other.name)) return false;
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = 1;
+      result = 31 * result + Objects.hashCode(this.name);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder builder = new StringBuilder(100);
+      builder.append(Person.class.getSimpleName()).append(" {");
+      appendProperty(builder, "name", this.name);
+      builder.append("\n}");
+      return builder.toString();
+    }
+  }
+}

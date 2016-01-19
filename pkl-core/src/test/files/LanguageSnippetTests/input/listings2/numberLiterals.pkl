@@ -1,0 +1,18 @@
+// if a semicolon or newline occurs before a minus operator, the latter is interpreted as unary rather than binary minus.
+// in all other cases, semicolons and newlines are treated as whitespace and have no meaning.
+res1 = new Listing {
+  when (false) { 0 }
+  2
+  - 1    // unary minus
+  2; - 1 // unary minus
+  2 - 1  // binary minus
+
+  // chain of binary operators
+  2 -
+  1
+  + 2 *
+  3
+  / 4
+
+  1;; +; 2; // binary operator (semicolon is treated as whitespace and may occur anywhere)
+}

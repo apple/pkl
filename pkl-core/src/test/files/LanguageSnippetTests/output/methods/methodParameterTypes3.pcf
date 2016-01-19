@@ -1,0 +1,5 @@
+res1 = List("1", "2")
+res2 = Map("1", 1, "2", 2)
+res3 = "1"
+res4 = null
+res5 = 5

@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Module URI `package://localhost:12110/birds@0.5.0::boguschecksumpart#/catalog/Bird.pkl` has invalid syntax.
+
+x | res = import("package://localhost:12110/birds@0.5.0::boguschecksumpart#/catalog/Bird.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badImport11.error#res (file:///$snippetsDir/input/packages/badImport11.error.pkl)
+
+Invalid checksum specification: `boguschecksumpart`.
+
+Checksums in package uris must have form `sha256:<checksum>`.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

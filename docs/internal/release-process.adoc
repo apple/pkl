@@ -1,0 +1,86 @@
+= Pkl Release Process
+
+== Prerequisites
+
+* CI dev builds are green
+* release notes and changelog update have been merged
+
+== Before Release
+
+. pkl-lang/pkl.github.com (dev branch)
+.. run `gw validateLocalSite`.
+... It's okay if there are errors like `Unexpected HTTP status code 404 for external link https://pkl.apple.com/pkl/<new-version>-dev/...` because we do not publish docs for unreleased versions of Pkl.
+.. do a quick manual check of the generated site (esp. the release notes)
+. pkl-lang/pkl (dev branch)
+.. gradle.properties: update `version` as necessary
+.. docs/antora.yml: update `version` (no suffix for release, `-rc.n` suffix for RC) and `prerelease` properties (`true` -> `false`)
+.. docs/modules/ROOT/partials/component-attributes.adoc: update top two properties
+.. docs/modules/release-notes/<current>.adoc: update `:version-minor` as necessary
+.. pkl-core/src/main/java/org/pkl/core/runtime/VmLanguage.java: update `version` annotation attribute
+.. to be on the safe side, do a file search for latest dev version and replace as necessary
+.. build native binaries for macOS and linux/aarch64.
+... macOS: run `gw -DreleaseBuild=true buildNative` (on macOS) and make sure it succeeds.
+... linux/aarch64: run `docker/run --aarch64 4.2.1` to launch a docker shell. Within the shell, run `./gradlew -DreleaseBuild=true linuxExecutableAarch64`. If you've building on Intel, go on a nice walk, because this can take a while (takes about 80 minutes to complete on a maxed out Intel i9).
+.. commit "Prepare x.y.z release" but do not push yet
+... avoids issue where docs build fails because dev and main have same Antora component version
+
+== Perform/Validate Release
+
+. pkl-lang/pkl (main branch)
+.. run `git merge --ff-only dev`
+.. run `gw -DreleaseBuild=true stage` to stage the macOS and linux/aarch64 executables (this will rebuild the macOS executable right now)
+.. push to origin and wait for pkl-lang/pkl and pkl-lang/pkl.github.com release builds to finish
+. (if new major version) pkl-lang/pkl.github.com (dev branch)
+.. src/site-remote.yml: add previous release version to `tags` to keep its docs around
+.. commit "Keep x.y.z docs" and push to origin
+.. once CI build is complete, do a quick manual check of https://pkl.apple.com/main/current
+. pkl-lang/pkl-examples (main branch)
+.. update Pkl version (search and replace)
+.. make sure that `gw build` succeeds and push to origin
+. send Slack and email announcements (see below for templates)
+
+== After Release
+
+. pkl-lang/pkl (dev branch)
+.. docs/antora.yml: Update `version` (use -dev suffix) and `prerelease` properties (`false` -> `true`)
+.. docs/modules/ROOT/partials/component-attributes.adoc: update top two properties
+.. gradle.properties: set `version` to next dev version (do not use -dev or -SNAPSHOT suffix)
+.. pkl-core/src/main/java/org/pkl/core/runtime/VmLanguage.java: update `version` annotation attribute (use `-dev` suffix)
+.. stdlib/: update `minPklVersion` of all stdlib modules (do not use `-dev` suffix)
+.. changelog.adoc: add the next release version and date
+.. create a new release notes file in docs/modules/release-notes/pages/<next-version>.adoc
+.. update `docs/nav.adoc` and `docs/modules/release-notes/pages/index.adoc` to link to the next version
+.. to be on the safe side, do a file search for current release version and replace as necessary
+.. commit "Start next dev iteration" but don't push yet
+.. Build and stage the next dev version of the macOS and linux/aarch64 executables
+    1. Run `docker/run --aarch64 4.2.1` to spawn a shell. Then run `./gradlew linuxExecutableAarch64`
+    2. Exit docker, then run `gw stage` to build the macOS executable, and stage both the linux and mac executables
+.. push to origin
+. release new versions of pkl-spring, and pkl-intellij (update to latest version of Pkl)
+. release new versions of pkl-vscode, pkl-neovim if grammar has changed
+
+== Slack announcement template
+
+Replace `<>` placeholders.
+
+:announce: Pkl <X.Y.Z> has been released. :announce:
+This release <RELEASE_NOTES_SUMMARY>.
+For details see the <RELEASE_NOTES_LINK>.
+The next release (<X.Y.Z>) is scheduled for December <DD>, <YYYY>.
+
+== Email announcement template
+
+Replace `<>` placeholders.
+
+Subject: Pkl <X.Y.Z> has been released
+To: <TBD>
+
+Pkl <X.Y.Z> has been released.
+
+This release <RELEASE_NOTES_SUMMARY>.
+
+For details see the <RELEASE_NOTES_LINK>.
+
+The next release (<X.Y.Z>) is scheduled for December <DD>, <YYYY>.
+
+-<FIRST_NAME> (on behalf of the Pkl team)

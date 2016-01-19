@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot amend fixed property `res3`.
+
+x | res3 {
+    ^^^^
+at cannotAmendFixedProperty2 (file:///$snippetsDir/input/errors/cannotAmendFixedProperty2.pkl)

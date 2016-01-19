@@ -1,0 +1,89 @@
+res1 {}
+res2 {
+  [null] = null
+  [true] = true
+  [42] = 42
+  [1.23] = 1.23
+  ["foo"] = "foo"
+  [Regex("bar")] = Regex("bar")
+  [5.gb] = 5.gb
+  [3.min] = 3.min
+  [Pair(1, 2)] = Pair(1, 2)
+  [List(1, 2, 3)] = List(1, 2, 3)
+  [Set(1, 2, 3)] = Set(1, 2, 3)
+  [Map("one", 1, "two", 2)] = Map("one", 1, "two", 2)
+  [new {
+    name = "Pigeon"
+    age = 42
+  }] {
+    name = "Pigeon"
+    age = 42
+  }
+  [new {
+    name = "Pigeon"
+    age = 42
+  }] {
+    name = "Pigeon"
+    age = 42
+  }
+  [new {
+    1
+    2
+    3
+  }] {
+    1
+    2
+    3
+  }
+  [new {
+    ["one"] = 1
+    ["two"] = 2
+  }] {
+    ["one"] = 1
+    ["two"] = 2
+  }
+}
+res3 {
+  [null] = null
+  [true] = true
+  [42] = 42
+  [1.23] = 1.23
+  ["foo"] = "foo"
+  [Regex("bar")] = Regex("bar")
+  [5.gb] = 5.gb
+  [3.min] = 3.min
+  [Pair(1, 2)] = Pair(1, 2)
+  [List(1, 2, 3)] = List(1, 2, 3)
+  [Set(1, 2, 3)] = Set(1, 2, 3)
+  [Map("one", 1, "two", 2)] = Map("one", 1, "two", 2)
+  [new {
+    name = "Pigeon"
+    age = 42
+  }] {
+    name = "Pigeon"
+    age = 42
+  }
+  [new {
+    name = "Pigeon"
+    age = 42
+  }] {
+    name = "Pigeon"
+    age = 42
+  }
+  [new {
+    1
+    2
+    3
+  }] {
+    1
+    2
+    3
+  }
+  [new {
+    ["one"] = 1
+    ["two"] = 2
+  }] {
+    ["one"] = 1
+    ["two"] = 2
+  }
+}

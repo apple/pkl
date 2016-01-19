@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `outer` from here because it's not `const`.
+
+x | const prop = new { value = outer }
+                               ^^^^^
+at constOuter3#Foo.prop.value (file:///$snippetsDir/input/errors/const/constOuter3.pkl)

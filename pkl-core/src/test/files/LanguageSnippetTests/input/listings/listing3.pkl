@@ -1,0 +1,89 @@
+// subscript, this, super, dynamic binding
+
+import "pkl:test"
+import "pkl:math"
+
+local x = new Listing {
+  "one"
+  "two"
+  "th" + "ree"
+}
+
+res1 = x[0]
+res2 = x[1]
+res3 = x[2]
+res4 = test.catch(() -> x[-1])
+res5 = test.catch(() -> x[3])
+res6 = test.catch(() -> x[math.minInt])
+res7 = test.catch(() -> x[math.maxInt])
+
+local y = new Listing {
+  new Listing {
+    "one"
+  }
+ new Listing {
+    "two"
+    "th" + "ree"
+  }
+  new Mapping {
+    ["four"] = 4
+  }
+}
+
+res8 = y[0][0]
+res9 = y[1][0]
+res10 = y[1][1]
+res11 = y[2]["four"]
+res12 = test.catch(() -> y[3][0])
+res13 = test.catch(() -> y[1][2])
+res14 = test.catch(() -> y[2]["other"])
+
+res15 = new Listing {
+  "one"
+  this[0]
+  "two"
+  this[2]
+  this[1]
+}
+
+res16 = (res15) {
+  "three"
+  this[0]
+  this[5]
+}
+
+res17 = new Listing {
+  "item"
+  this[0] + "2"
+}
+
+res18 = (res17) {
+  [0] = "element"
+  this[0] + "3"
+}
+
+res19 = (res18) {
+  [0] = "object"
+  this[0] + "4"
+}
+
+res20 = (x) {
+  [0] = super[0] + "2"
+  [1] = super[0] + "3"
+  super[0] + "4"
+  this[0] + "4"
+}
+
+local err0 = new Listing {
+  "foo"
+  this[3]
+}
+res21 = test.catch(() -> err0[1])
+
+// currently, referencing a non-existing super element returns dynamic object
+res22 = new Listing {
+  super[0]
+  super[3]
+}
+
+

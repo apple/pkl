@@ -1,0 +1,5 @@
+// alias has a default
+typealias Foo = *"foo"|"bar"
+
+// but property doesn't
+foo: Foo|"baz"

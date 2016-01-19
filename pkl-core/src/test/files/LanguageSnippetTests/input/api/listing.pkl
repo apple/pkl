@@ -1,0 +1,141 @@
+amends "../snippetTest.pkl"
+
+local class Person { name: String }
+
+local empty = new Listing {}
+
+local empty2 = (empty) {}
+
+local base: Listing<Person> = new {
+  new { name = "Pigeon" }
+  new { name = "Barn Owl" }
+  new { name = "Parrot" }
+}
+
+local derived: Listing<Person> = (base) {
+  new { name = "Albatross" }
+  new { name = "Elf Owl" }
+}
+
+local duplicate: Listing<Person> = (base) {
+  new { name = "Albatross" }
+  new { name = "Parrot" }
+  new { name = "Elf Owl" }
+}
+
+facts {
+  ["isEmpty"] {
+    empty.isEmpty
+    empty2.isEmpty
+    !base.isEmpty
+    !derived.isEmpty
+  }
+
+  ["isDistinct"] {
+    empty.isDistinct
+    empty2.isDistinct
+    base.isDistinct
+    derived.isDistinct
+    !duplicate.isDistinct
+  }
+
+  ["isDistinctBy()"] {
+    empty.isDistinctBy((it) -> it)
+    empty2.isDistinctBy((it) -> it)
+    base.isDistinctBy((it) -> it)
+    derived.isDistinctBy((it) -> it)
+    !duplicate.isDistinctBy((it) -> it)
+
+    empty.isDistinctBy((it) -> it.name)
+    empty2.isDistinctBy((it) -> it.name)
+    base.isDistinctBy((it) -> it.name)
+    derived.isDistinctBy((it) -> it.name)
+    !duplicate.isDistinctBy((it) -> it.name)
+
+    empty.isDistinctBy((it) -> it.getClass())
+    empty2.isDistinctBy((it) -> it.getClass())
+    !base.isDistinctBy((it) -> it.getClass())
+    !derived.isDistinctBy((it) -> it.getClass())
+    !duplicate.isDistinctBy((it) -> it.getClass())
+  }
+}
+
+examples {
+  ["length"] {
+    empty.length
+    empty2.length
+    base.length
+    derived.length
+  }
+
+  ["toList()"] {
+    empty.toList()
+    empty2.toList()
+    base.toList()
+    derived.toList()
+    duplicate.toList()
+  }
+
+  ["toSet()"] {
+    empty.toSet()
+    empty2.toSet()
+    base.toSet()
+    derived.toSet()
+    duplicate.toSet()
+  }
+
+  ["distinct"] {
+    empty.distinct
+    empty2.distinct
+    base.distinct
+    derived.distinct
+    duplicate.distinct
+  }
+
+  ["distinctBy()"] {
+    empty.distinctBy((it) -> it)
+    empty2.distinctBy((it) -> it)
+    base.distinctBy((it) -> it)
+    derived.distinctBy((it) -> it)
+    duplicate.distinctBy((it) -> it)
+
+    empty.distinctBy((it) -> it.name)
+    empty2.distinctBy((it) -> it.name)
+    base.distinctBy((it) -> it.name)
+    derived.distinctBy((it) -> it.name)
+    duplicate.distinctBy((it) -> it.name)
+
+    empty.distinctBy((it) -> it.getClass())
+    empty2.distinctBy((it) -> it.getClass())
+    base.distinctBy((it) -> it.getClass())
+    derived.distinctBy((it) -> it.getClass())
+    duplicate.distinctBy((it) -> it.getClass())
+  }
+
+  ["fold"] {
+    empty.fold(List(), (l, e) -> l.add(e))
+    base.fold(List(), (l, e) -> l.add(e))
+    derived.fold(List(), (l, e) -> l.add(e))
+  }
+
+  ["foldIndexed"] {
+    empty.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
+    base.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
+    derived.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
+  }
+
+
+  local baseNum = new Listing { 1; 2; 3 }
+  local baseString = new Listing { "Pigeon"; "Barn Owl"; "Parrot" }
+  local derivedString = (baseString) { "Albatross"; "Elf Owl" }
+
+  ["join"] {
+    empty.join("")
+    baseNum.join("")
+    baseNum.join(", ")
+    baseString.join("")
+    baseString.join("---")
+    derivedString.join("")
+    derivedString.join("\n")
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://localhost:12110/birds@0": {
+      "type": "remote",
+      "uri": "projectpackage://localhost:12110/birds@0.5.0",
+      "checksums": {
+        "sha256": "$skipChecksumVerification"
+      }
+    },
+    "package://localhost:12110/fruit@1": {
+      "type": "remote",
+      "uri": "projectpackage://localhost:12110/fruit@1.1.0",
+      "checksums": {
+        "sha256": "$skipChecksumVerification"
+      }
+    },
+    "package://localhost:12110/project2@1": {
+      "type": "local",
+      "uri": "projectpackage://localhost:12110/project2@1.0.0",
+      "path": "../project2/"
+    },
+    "package://localhost:12110/badImportsWithinPackage@1": {
+      "type": "remote",
+      "uri": "projectpackage://localhost:12110/badImportsWithinPackage@1.0.0",
+      "checksums": {
+        "sha256": "$skipChecksumVerification"
+      }
+    }
+  }
+}

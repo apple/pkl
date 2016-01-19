@@ -1,0 +1,3 @@
+typealias Alias1 = String
+typealias Alias2 = Int
+res1: Alias1|Alias2 = new Dynamic { }

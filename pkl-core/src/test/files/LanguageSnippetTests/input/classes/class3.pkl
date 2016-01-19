@@ -1,0 +1,12 @@
+class Person {
+  name: String
+  age: Int
+  friends: List<Person>
+  address: String
+}
+
+person = new Person {
+  name = "Pigeon"
+  // typo
+  adress = "Howdy St."
+}

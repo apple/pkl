@@ -1,0 +1,214 @@
+examples {
+  ["Rendering primitive values"] {
+    "true"
+    "false"
+    "-42"
+    "-42"
+    "-42"
+    "-42"
+    "42"
+    "42"
+    "42"
+    "42"
+    "-13.37"
+    "-13.37"
+    "13.37"
+    "-42"
+    "42"
+    "\"Hello world\""
+    """
+    {
+      seconds: 600
+      nanos: 0
+    }
+    """
+    """
+    {
+      seconds: 0
+      nanos: 2000000
+    }
+    """
+    """
+    {
+      seconds: 0
+      nanos: 120
+    }
+    """
+    """
+    {
+      seconds: 5
+      nanos: 120
+    }
+    """
+  }
+  ["Collection types"] {
+    """
+    list: {
+      foo: "Bar"
+    }
+    list: {
+      foo: "test foo"
+    }
+    listing: {
+      foo: "listing bar"
+    }
+    listing: {
+      foo: "listing foo"
+    }
+    map: {
+      key: 1
+      value: {
+        foo: "first"
+      }
+    }
+    map: {
+      key: 2
+      value: {
+        foo: "second"
+      }
+    }
+    mapping: "Cannot call method `renderValue` from here because it is not `const`."
+    set: {
+      foo: "setOne"
+    }
+    set: {
+      foo: "setTwo"
+    }
+    mappingWithUnannotatedValueType: {
+      key: "some"
+      value: {
+        it: {
+          foo: "Bar"
+        }
+        it: {
+          foo: "Bar"
+        }
+      }
+    }
+    """
+  }
+  ["Typed objects rendered as protobuf.ProtoMessage"] {
+    "foo: \"new\""
+    "foo: \"Bar\""
+    "foo: \"Baz\""
+    """
+    foo: {
+      foo: "FOO"
+    }
+    bar: {
+      foo: "Bar"
+    }
+    foos: {
+      foo: "FOO"
+    }
+    foos: {
+      foo: "Bar"
+    }
+    bars: {
+      key: "default"
+      value: {
+        foo: "Bar"
+      }
+    }
+    bars: {
+      key: "amended"
+      value: {
+        foo: "Bars"
+      }
+    }
+    """
+    """
+    myDuration: {
+      seconds: 0
+      nanos: 42
+    }
+    """
+  }
+  ["Unsupported types"] {
+    "Cannot render value of type `Dynamic` as Protobuf. Value: new Dynamic {}"
+    "Cannot render value of type `DataSize` as Protobuf. Value: 10.kb"
+  }
+  ["Types not supported at top-level"] {
+    "The top-level value of a protobuf file must have type `Typed`, but got type `Map`."
+    "The top-level value of a protobuf file must have type `Typed`, but got type `Mapping`."
+  }
+  ["Keys in maps"] {
+    """
+    string: {
+      key: "Hello world"
+      value: {
+        foo: "Bar"
+      }
+    }
+    long: {
+      key: 1337
+      value: {
+        foo: "Bar"
+      }
+    }
+    int: {
+      key: 42
+      value: {
+        foo: "Bar"
+      }
+    }
+    short: {
+      key: 1
+      value: {
+        foo: "Bar"
+      }
+    }
+    boolean: {
+      key: false
+      value: {
+        foo: "Bar"
+      }
+    }
+    """
+    "Cannot render map with a non-scalar, floating point or byte array key type."
+  }
+  ["typealiases"] {
+    "doubleAlias: \"Qux\""
+  }
+  ["unions"] {
+    "theProperty: \"Qux\""
+    "theProperty: \"corge\""
+    """
+    theHeterogeneousUnion: {
+      it_String: "Grault"
+    }
+    """
+    """
+    theHeterogeneousUnion: {
+      it_String: "Grault"
+    }
+    theHeterogeneousUnion: {
+      it_Int: 0
+    }
+    theHeterogeneousUnion: {
+      it_Foo: {
+        foo: "Bar"
+      }
+    }
+    """
+    "Cannot render map with a non-scalar, floating point or byte array key type."
+  }
+  ["subtypes"] {
+    """
+    myFoo: {
+      foo: "renders"
+    }
+    """
+    "Can not render subtype protobuf#Foo of specified type protobuf#Bar in protobuf."
+    """
+    myFoo: {
+      foo: "renders"
+    }
+    myFooOrBar: {
+      it_Bar: {
+        foo: "also renders"
+      }
+    }
+    """
+  }
+}

@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot reference property `notConst` from here because it is not `const`.
+
+x | shouldBeConst = outer.notConst
+                    ^^^^^^^^^^^^^^
+at constOuter#Foo.shouldBeConst (file:///$snippetsDir/input/errors/const/constOuter.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to property `notConst`
+2. Self-import this module, and reference this property from the import.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

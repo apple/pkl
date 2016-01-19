@@ -1,0 +1,21 @@
+/// Class properties with different modifiers.
+module com.package1.classPropertyModifiers
+
+abstract class Modifiers {
+  /// Property with `local` modifier.
+  local property1 = 3.14159265359
+
+  /// Property with `hidden` modifier.
+  hidden property2: Float = 3.14159265359
+
+  /// Property with `abstract` modifier.
+  abstract property3: Float
+
+  /// Property with multiple modifiers.
+  abstract hidden property4: Float
+
+  /*
+  /// Property with `external` modifier.
+  external property5: Float
+  */
+}

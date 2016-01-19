@@ -1,0 +1,138 @@
+= Java Code Generator
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-codgen-java-maven-module: {uri-maven-plugins-repo}/org/pkl/pkl-codegen-java/{pkl-artifact-version}
+
+The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.
+
+The benefits of code generation are:
+
+* Configuration can be conveniently consumed as statically typed Java objects.
+* The entire configuration tree can be code-completed in Java IDEs.
+* Any drift between Java code and Pkl configuration structure is caught at compile time.
+
+The generated classes are immutable and have component-wise implementations of `equals()`, `hashCode()`, and `toString()`.
+
+== Installation
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#installation[Installation] in the Gradle plugin chapter.
+
+[[install-library]]
+=== Java Library
+
+The `pkl-codegen-java` library is available {uri-pkl-codgen-java-maven-module}[from Maven Central].
+It requires Java 11 or higher.
+
+==== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  compile "org.pkl.testMode.pkl:pkl-codegen-java:{pkl-artifact-version}"
+}
+----
+
+==== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>com.apple.pkl</groupId>
+  <artifactId>pkl-codegen-java</artifactId>
+  <version>{pkl-artifact-version}</version>
+</dependency>
+----
+
+[[install-cli]]
+=== CLI
+
+The CLI is bundled with the Java library.
+As we do not currently ship the CLI as a self-contained Jar, we recommend to provision it with a Maven compatible build tool as shown in <<install-library>>.
+
+[[codegen-java-usage]]
+== Usage
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#java-code-gen[Java Code Generation] in the Gradle plugin chapter.
+
+=== Java Library
+
+The Java library offers two APIs: a high-level API that corresponds to the CLI, and a lower-level API that provides additional features and control.
+The entry points for these APIs are `org.pkl.codegen.java.CliJavaCodeGenerator` and `org.pkl.codegen.java.JavaCodeGenerator`, respectively.
+For more information, refer to the Javadoc documentation.
+
+=== CLI
+
+As explained in <<install-cli,Installation>>, the CLI is bundled with the Java library.
+To run the CLI, execute the library Jar or its `org.pkl.codegen.java.Main` main class.
+
+*Synopsis:* `java -cp <classpath> -jar pkl-codegen-java.jar [<options>] <modules>`
+
+`<modules>`::
+The absolute or relative URIs of the modules to generate classes for.
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+.--generate-getters
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to generate private final fields and public getter methods instead of public final fields.
+====
+
+.--generate-javadoc
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to generate Javadoc based on doc comments for Pkl modules, classes, and properties.
+====
+
+.--params-annotation
+[%collapsible]
+====
+Default: `org.pkl.config.java.mapper.Named` +
+Fully qualified name of the annotation to use on constructor parameters.
+====
+
+.--non-null-annotation
+[%collapsible]
+====
+Default: `org.pkl.config.java.mapper.NonNull` +
+Fully qualified named of the annotation class to use for non-null types. +
+This annotation is required to have `java.lang.annotation.ElementType.TYPE_USE` as a `@Target`
+or it may generate code that does not compile.
+====
+
+.--implement-serializable
+[%collapsible]
+====
+Default: (flag not set) +
+Whether to make generated classes implement `java.io.Serializable`.
+====
+
+Common code generator options:
+
+include::{partialsdir}/cli-codegen-options.adoc[]
+
+Common CLI options:
+
+include::../../pkl-cli/partials/cli-common-options.adoc[]
+
+[[full-example]]
+== Full Example
+
+For a ready-to-go example with full source code,
+see link:{uri-codegen-java-example}[codegen-java] in the _pkl/pkl-examples_ repository.

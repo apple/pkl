@@ -1,0 +1,7 @@
+name = "pigeon"
+age = 40
+hobbies = List("swimming", "surfing")
+address {
+  street = "sesame street"
+  zip = 94105
+}

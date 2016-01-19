@@ -1,0 +1,74 @@
+import "pkl:test"
+
+local listing: Listing = new { 1; 2; 3 }
+local mapping: Mapping = new { ["a"] = 1; ["b"] = 2 }
+local list: List<Int> = List(1, 2, 3)
+local map: Map<String, Int> = Map("a", 1, "b", 2)
+local intseq: IntSeq = IntSeq(0, 5).step(2)
+local set: Set<Int> = Set(10, 20, 30)
+
+res1: Listing = new {
+  0
+  ...listing
+  4
+  5
+  6
+}
+
+res2 = res1.length == 7
+
+res3: Listing = (res1) {
+  ...listing
+}
+
+res4: Listing = (listing) {
+  for (_, _ in listing) {
+    ...listing
+  }
+}
+
+res5 = test.catch(() -> new Listing { ...d1 })
+
+local class Listings {
+  res1: Listing<String>
+}
+
+// spreading ints into a `Listing<String>` is an error
+res6 = test.catch(() -> new Listings { res1 { ...listing } }.res1[0])
+
+res7 = test.catch(() -> new Listing { ...mapping })
+
+local nested = new Listing {
+  new Listing { 1; 2; 3 }
+  new Listing { 4; 5; 6 }
+}
+
+res8: Listing = new {
+  for (elem in nested) { ...elem }
+}
+
+res9: Listing = new { ...listing; ...listing; ...listing }
+
+res10: Listing = new { ...listing; ...listing; ...listing; 10; 11; ...listing }
+
+res11: Listing = new { ...intseq }
+
+res12: Listing = new { ...list }
+
+res13 = test.catch(() -> new Listing { ...map })
+
+res14: Listing = new { ...set }
+
+res15 = new Listing {
+  ...listing
+}
+
+res16 = new Listing {
+  0
+  ...listing
+  0
+  0
+  0
+}
+
+res17 = res16.length

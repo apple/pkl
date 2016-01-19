@@ -1,0 +1,42 @@
+import "pkl:json"
+
+local parser = new json.Parser {
+  converters {
+    ["^firstName"] = (_) -> "changed"
+    ["^city"] = (_) -> "no match"
+    ["age"] = (_) -> 42
+    ["address.city"] = (it) -> it.reverse()
+    ["state"] = (_) -> "CA"
+    ["phoneNumber[*].type"] = (_) -> "mobile"
+    ["phoneNumber[*]"] = (it) -> it.type
+    ["gender.*"] = (_) -> "female"
+  }
+}
+
+// from: https://en.wikipedia.org/wiki/JSON#JSON_sample
+res1 = parser.parse("""
+  {
+    "firstName": "John",
+    "lastName": "Smith",
+    "age": 25,
+    "address": {
+      "streetAddress": "21 2nd Street",
+      "city": "New York",
+      "state": "NY",
+      "postalCode": "10021"
+    },
+    "phoneNumber": [
+      {
+        "type": "home",
+        "number": "212 555-1234"
+      },
+      {
+        "type": "fax",
+        "number": "646 555-4567"
+      }
+    ],
+    "gender": {
+      "type": "male"
+    }
+  }
+  """)

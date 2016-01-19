@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot reference `module` within a class body.
+
+x | foo = module
+          ^^^^^^
+at constModule2#Foo.foo (file:///$snippetsDir/input/errors/const/constModule2.pkl)

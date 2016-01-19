@@ -1,0 +1,30 @@
+open module com.package1.classAnnotations
+
+/// This [AnnotatedClss] thought to have a correctly spelled name.
+@Deprecated {
+  message = "Spelling mistake."
+  replaceWith = "AnnotatedClass"
+}
+@AlsoKnownAs {
+  names { "OtherName" }
+}
+class AnnotatedClss
+
+/// This [AnnotatedClssWithExpandableComment] thought to have a correctly spelled name.
+///
+/// Unfortunately, it did not, as we explain in this expandable comment.
+@Deprecated {
+  message = "Spelling mistake."
+  replaceWith = "AnnotatedClass"
+}
+@AlsoKnownAs {
+  names { "OtherName" }
+}
+class AnnotatedClssWithExpandableComment
+
+// This [AnnotatedClass] indeed has a properly spelled name, but no doc comment.
+@AlsoKnownAs {
+  names { "OtherName" }
+}
+@Deprecated // omit optional arguments
+class AnnotatedClass

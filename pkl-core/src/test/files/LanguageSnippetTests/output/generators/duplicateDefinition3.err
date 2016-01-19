@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Duplicate definition of member `y`.
+
+x | when (true) { y = 2 }
+                  ^
+at duplicateDefinition3#x (file:///$snippetsDir/input/generators/duplicateDefinition3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

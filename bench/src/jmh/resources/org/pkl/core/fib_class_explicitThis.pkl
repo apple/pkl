@@ -1,0 +1,4 @@
+class Fibonacci {
+  function fib(n) = if (n < 2) n else this.fib(n - 1) + this.fib(n - 2)
+}
+result = new Fibonacci {}.fib(35)

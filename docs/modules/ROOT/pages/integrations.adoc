@@ -1,0 +1,3 @@
+= Framework Integrations
+
+* xref:spring:ROOT:index.adoc[Spring (Boot) Integration]

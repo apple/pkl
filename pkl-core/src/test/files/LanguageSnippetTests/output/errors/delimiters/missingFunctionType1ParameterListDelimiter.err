@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `)` delimiter.
+
+x | f: (String -> String
+              ^
+at missingFunctionType1ParameterListDelimiter#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionType1ParameterListDelimiter.pkl)

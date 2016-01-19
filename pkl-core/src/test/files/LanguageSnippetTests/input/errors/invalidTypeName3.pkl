@@ -1,0 +1,2 @@
+class Foo
+bar = new Foo.Bar {}

@@ -1,0 +1,91 @@
+amends "../snippetTest.pkl"
+
+facts {
+  ["length()"] {
+    obj.length() == 2
+    ((obj) { "three"; "four" } { x = 1 } { "five" } {}).length() == 5
+    obj2.length() == 2
+    new Dynamic {}.length() == 0
+    new Dynamic { name = "Pigeon" }.length() == 0
+    new Dynamic { ["name"] = "Pigeon" }.length() == 0
+  }
+}
+
+examples {
+  ["getProperty()"] {
+    pigeon.getProperty("name")
+    pigeon.getProperty("na" + "me")
+    pigeon.getProperty("age")
+    module.catch(() -> pigeon.getProperty("other"))
+  }
+
+  ["getPropertyOrNull()"] {
+    pigeon.getPropertyOrNull("name")
+    pigeon.getPropertyOrNull("na" + "me")
+    pigeon.getPropertyOrNull("age")
+    pigeon.getPropertyOrNull("other")
+  }
+
+  ["hasProperty()"] {
+    pigeon.hasProperty("name")
+    pigeon.hasProperty("na" + "me")
+    pigeon.hasProperty("age")
+    pigeon.hasProperty("other")
+
+    futurePigeon.hasProperty("name")
+    pigeon.hasProperty("nostalgia")
+    futurePigeon.hasProperty("nostalgia")
+  }
+
+  ["toMap()"] {
+    pigeon.toMap()
+    obj.toMap()
+    obj2.toMap()
+  }
+
+  ["toList()"] {
+    pigeon.toList()
+    obj.toList()
+    obj2.toList()
+  }
+
+  ["toTyped()"] {
+    pigeon.toTyped(Person)
+    futurePigeon.toTyped(Person)
+    new Dynamic { age = 42 }.toTyped(Person)
+    new Dynamic { name = "Pigeon" }.toTyped(Person).name
+    module.catch(() -> new Dynamic { name = "Pigeon" }.toTyped(Person).age)
+    module.catch(() -> obj.toTyped(Pair)) // Pair is not a Typed
+    module.catch(() -> obj.toTyped(ValueRenderer)) // ValueRenderer is abstract
+  }
+}
+
+local obj = new Dynamic {
+  prop1 = "prop1"
+  prop2 = "prop2"
+  ["name"] = "Pigeon"
+  ["age"] = 42
+  "one"
+  "two"
+}
+
+local obj2 = (obj) {
+  [0] = "one one"
+  [1] = "two two"
+}
+
+local pigeon = new Dynamic {
+  local n = "Pigeon"
+  name = n
+  age = 42
+}
+
+local futurePigeon = (pigeon) {
+  age = 43
+  nostalgia = true
+}
+
+local class Person {
+  name: String = "Default"
+  age: UInt
+}

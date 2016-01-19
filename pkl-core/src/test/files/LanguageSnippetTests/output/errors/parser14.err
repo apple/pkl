@@ -1,0 +1,6 @@
+–– Pkl Error ––
+No viable alternative at input `///[1,2,3]\n`.
+
+x | 
+    ^
+at parser14 (file:///$snippetsDir/input/errors/parser14.pkl)

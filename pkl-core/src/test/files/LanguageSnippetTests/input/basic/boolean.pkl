@@ -1,0 +1,73 @@
+amends "../snippetTest.pkl"
+
+local x = true
+local y = false
+
+examples {
+  ["literal"] {
+    true
+    false
+  }
+
+  ["conjunction"] {
+    x && y
+    false && "short-circuited"
+    false && throw("short-circuited")
+
+    module.catch(() -> true && throw("not short-circuited"))
+    module.catch(() -> (throw("not short-circuited")) && false)
+    module.catch(() -> 1 && true)
+  }
+
+  ["disjunction"] {
+    x || y
+    true || "short-circuited"
+    true || throw("short-circuited")
+
+    module.catch(() -> false || throw("not short-circuited"))
+    module.catch(() -> (throw("not short-circuited")) || true)
+    module.catch(() -> 0 || true)
+  }
+
+  ["negation"] {
+    !x
+    !y
+  }
+
+  ["equality"] {
+    true == true
+    true == false
+    false == true
+    false == false
+  }
+
+  ["inequality"] {
+    true != true
+    true != false
+    false != true
+    false != false
+  }
+
+  ["xor()"] {
+    true.xor(true)
+    true.xor(false)
+    false.xor(true)
+    false.xor(false)
+
+    List().isEmpty.xor(List().isEmpty)
+    List().isEmpty.xor(List(1).isEmpty)
+    List(1).isEmpty.xor(List().isEmpty)
+    List(1).isEmpty.xor(List(1).isEmpty)
+
+    module.catch(() -> new Dynamic {}.xor(true))
+    module.catch(() -> true.xor(new Dynamic {}))
+  }
+
+  ["implies()"] {
+    true.implies(true)
+    true.implies(false)
+    false.implies(true)
+    false.implies(false)
+    module.catch(() -> false.implies(throw("not short-circuited")))
+  }
+}

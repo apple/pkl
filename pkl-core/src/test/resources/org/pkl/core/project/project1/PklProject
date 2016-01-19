@@ -1,0 +1,25 @@
+amends "pkl:Project"
+
+evaluatorSettings {
+  allowedResources {
+    "foo:"
+    "bar:"
+  }
+  allowedModules {
+    "baz:"
+    "biz:"
+  }
+  modulePath {
+    "buzzy"
+  }
+  externalProperties {
+    ["one"] = "1"
+  }
+  env {
+    ["two"] = "2"
+  }
+  moduleCacheDir = "my-cache-dir/"
+  noCache = false
+  rootDir = "my-root-dir/"
+  timeout = 5.min
+}

@@ -1,0 +1,117 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["construction"] {
+    1.b
+    2.kb
+    3.kib
+    4.mb
+    5.mib
+    6.gb
+    7.gib
+    8.tb
+    9.tib
+    10.pb
+    11.pib
+
+    1.1.b
+    2.2.kb
+    3.3.kib
+    4.4.mb
+    5.5.mib
+    6.6.gb
+    7.7.gib
+    8.8.tb
+    9.9.tib
+    10.10.pb
+    11.11.pib
+  }
+
+  ["addition"] {
+    2.kb + 4.kb
+    2.2.kb + 3.3.kb
+    2.kb + 3.kib
+    10.b + 11.pib
+
+    4.kb + 2.kb
+    3.3.kb + 2.2.kb
+    3.kib + 2.kb
+    11.pib + 10.b
+  }
+
+  ["subtraction"] {
+    2.kb - 4.kb
+    2.2.kb - 3.3.kb
+    2.kb - 3.kib
+    10.b - 11.pib
+
+    4.kb - 2.kb
+    3.3.kb - 2.2.kb
+    3.kib - 2.kb
+    11.pib - 10.b
+  }
+
+  ["multiplication"] {
+    2.kb * 3
+    2.kb * 3.3
+    2.2.kb * 3
+    2.2.kb * 3.3
+
+    3 * 2.kb
+    3.3 * 2.kb
+    3 * 2.2.kb
+    3.3 * 2.2.kb
+  }
+
+  ["division"] {
+    2.kb / 3
+    2.kb / 3.3
+    2.2.kb / 3
+    2.2.kb / 3.3
+
+    module.catch(() -> 3 / 2.kb)
+    module.catch(() -> 3.3 / 2.kb)
+    module.catch(() -> 3 / 2.2.kb)
+    module.catch(() -> 3.3 / 2.3.kb)
+  }
+
+  ["division by data size"] {
+    2.kb / 3.kb
+    2.kb / 3.3.kb
+    2.2.kb / 3.mb
+    2.2.mb / 3.3.b
+  }
+
+  ["negation"] {
+    local d = -4.mb
+    d
+    -d
+    --d
+
+    local d2 = -4.4.mb
+    d
+    -d
+    --d
+  }
+
+  ["truncating division"] {
+    5.kb ~/ 3
+    7.kb ~/ 3.3
+    6.2.kb ~/ 3
+    6.2.kb ~/ 3.3
+  }
+
+  ["truncating division by data size"] {
+    5.kb ~/ 3.kb
+    7.kb ~/ 3.3.kb
+    6.2.kb ~/ 3.mb
+    6.2.mb ~/ 3.3.b
+  }
+
+  ["power"] {
+    2.kb ** 3
+    2.kb ** 3.3
+    2.2.kb ** 3
+    2.2.kb ** 3.3
+  }
+}

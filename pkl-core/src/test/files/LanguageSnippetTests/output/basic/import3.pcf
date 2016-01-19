@@ -1,0 +1,11 @@
+foo {
+  bar {
+    foo = 6
+    bar = 3
+  }
+  baz {
+    foo = 6
+    bar = 3
+  }
+  bak = 6
+}

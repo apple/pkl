@@ -1,0 +1,33 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["file:"] {
+    // test globbing while going up levels
+    read*("../../input-helper/globtest/**.pkl")
+    // test globbing child directories
+    read*("globtest/*.txt")
+  }
+
+  ["env:"] {
+    // doesn't match names that include slashes
+    read*("env:*")
+    // matches all names including slashes
+    read*("env:**")
+    read*("env:NAME1")
+    read*("env:NAME[1-2]")
+    read*("env:*2")
+    read*("env:/foo/*")
+    // glob pattern should use percent-encoding if pattern is an absolute URI (same rules as `read`)
+    read*("env:foo%20bar")
+    read*("env:foo%20*")
+  }
+
+  ["prop:"] {
+    read*("prop:*")
+    read*("prop:**")
+  }
+
+  ["package:"] {
+    read*("package://localhost:12110/birds@0.5.0#/**.pkl")
+  }
+}

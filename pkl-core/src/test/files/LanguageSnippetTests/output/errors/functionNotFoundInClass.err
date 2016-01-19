@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot find method `baz` in class `functionNotFoundInClass#Foo`.
+
+x | res1 = new Foo {}.baz(42)
+           ^^^^^^^^^^^^^^^^^^
+at functionNotFoundInClass#res1 (file:///$snippetsDir/input/errors/functionNotFoundInClass.pkl)
+
+Did you mean any of the following?
+bar(x)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

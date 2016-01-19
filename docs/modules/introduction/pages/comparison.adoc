@@ -1,0 +1,97 @@
+= Comparison
+include::ROOT:partial$component-attributes.adoc[]
+:uri-jsonnet: https://jsonnet.org
+:uri-hcl: https://github.com/hashicorp/hcl
+:uri-dhall: https://dhall-lang.org
+:uri-pkl-spring: https://github.com/pkl-lang/pkl-spring
+:uri-graalvm: https://www.graalvm.org
+
+Configuration is often described in a static configuration format or is generated with a general-purpose programming language.
+This page lists shortcomings of these approaches and explains how Pkl addresses them.
+Also, Pkl's strong and weak points in comparison to other configuration languages are discussed in this document.
+
+[[static-config-formats]]
+== Pkl vs. Static Config Formats
+
+Static configuration formats such as JSON, YAML, and XML work reasonably well for simple configuration needs.
+However, they do have some shortcomings, including:
+
+. They are not very human-friendly to read and write. (JSON, XML)
+. They do not provide a way to split a large file into multiple smaller ones. (JSON, YAML)
+. They offer no way or very limited ways to abstract over repetitive configuration. (JSON, YAML, XML)
+. They do not offer standardized or widely available schema validators. (JSON, YAML)
+. They offer little or no schema-aware tooling. (JSON, YAML)
+
+Pkl addresses these shortcomings as follows:
+
+. It has a clutter-free and familiar syntax with nestable comments.
+. Modules can import other modules from local and remote locations.
+. Every object can act as a template for other objects.
+  The standard library offers strong support for data manipulation.
+. It has strong built-in support for describing and validating configuration schemas.
+. It is designed to enable schema-aware tooling, such as REPLs and editors with code completion support.
+
+[[general-purpose-langs]]
+== Pkl vs. General-purpose Languages
+
+When configuration needs outgrow the capabilities of static configuration formats,
+projects often turn to generate configuration with a general-purpose programming language such as Python.
+Given enough effort, this approach can satisfy complex configuration needs.
+However, expressing configuration in a full-blown programming language does have some shortcomings, including:
+
+. Reading, writing, and debugging configuration can become as challenging as reading, writing, and debugging application code.
+. The host language may not be a good fit for describing, manipulating, and abstracting over hierarchical configuration.
+. Configuration code may not visually resemble the configuration it generates.
+. The host language may not be a good fit for defining and validating configuration schemas.
+. Development environments may offer little help for developing and validating configuration written in the host language.
+. General-purpose languages are powerful and often difficult to sandbox.
+  Are you certain your configuration script isn't erasing your hard disk or launching a rocket?
+
+Pkl addresses these shortcomings as follows:
+
+. As an expression-oriented and side-effect free language, it eliminates many potential sources of errors.
+. It is specifically designed for describing, manipulating, and abstracting over hierarchical configuration.
+. Pkl code often resembles the configuration it generates.
+. It has strong built-in support for defining and validating configuration schemas.
+. It is designed to enable advanced and schema-aware tooling.
+. It is comparatively powerless and strictly sandboxed, making fatal configuration mistakes and exploits less likely.
+  Till now, we haven't spotted any Pkl script capable of erasing your hard disk.
+
+[[other-config-langs]]
+== Pkl vs. Other Config Languages
+
+Compared to open-source configuration languages such as link:{uri-jsonnet}[Jsonnet],
+link:{uri-hcl}[HCL], and link:{uri-dhall}[Dhall], Pkl's strong points are:
+
+General::
++
+* Pkl has a clean and familiar syntax, which makes it easier to read and learn.
+* Pkl supports writing sophisticated schemas, which enables config validation, code and documentation generation, and advanced IDE support.
+  This is Pkl's most significant differentiator, and is the main reason why we created it.
+* Pkl has stronger templating capabilities than other config languages, reducing user code to the absolute minimum.
+
+Embedding::
++
+* Pkl is great for embedding into JVM applications.
+* Pkl offers modern xref:java-binding:pkl-config-java.adoc[JVM libraries] for runtime application configuration.
+* Pkl supports xref:java-binding:codegen.adoc[code generation] to enable statically typed access to configuration from programming languages.
+* Pkl integrates with third-party (link:{uri-pkl-spring}[Spring Boot]) JVM libraries and frameworks.
+
+Tooling::
++
+* Pkl has a polished xref:pkl-doc:index.adoc[documentation generator] that produces highly navigable and searchable documentation.
+* Pkl offers a xref:pkl-gradle:index.adoc[Gradle plugin] to easily integrate code evaluation, documentation generation, and code generation into your builds.
+* Pkl's native executables have a link:{uri-graalvm}[JIT compiler] that can speed up evaluation up to hundred times.
+
+Support::
++
+* Pkl has two full-time Apple engineers who prioritize customer support.
+
+On the other hand, we believe that Pkl's weak points are:
+
+* Pkl's native binaries are larger than those of other config languages.
+* Pkl is less known and has a smaller community than some other config languages.
+
+We are working towards making Pkl overcome these weakness. Please support us in reaching this goal!
+
+We hope that you will enjoy Pkl, and that you trust us to gradually improve its weak points.

@@ -1,0 +1,199 @@
+= Pkldoc
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-doc-maven-module: {uri-maven-plugins-repo}/org/pkl/pkl-doc/{pkl-artifact-version}
+:uri-DocsiteInfo: {uri-pkl-stdlib-docs}/DocsiteInfo/
+:uri-DocPackageInfo: {uri-pkl-stdlib-docs}/DocPackageInfo/
+:uri-CliDocGenerator: {uri-pkl-doc-main-sources}/CliDocGenerator.kt
+:uri-DocGenerator: {uri-pkl-doc-main-sources}/DocGenerator.kt
+
+_Pkldoc_ is a documentation website generator that produces navigable and searchable API documentation for Pkl modules.
+
+Pkldoc's look and feel is inspired by Scaladoc.
+To get a first impression, browse the link:{uri-pkl-stdlib-docs-index}[Standard Library API Docs].
+
+== Features
+
+Pkldoc offers the following features:
+
+Code navigation::
+Easily navigate between hyperlinked modules, classes, functions, and properties.
+Member search::
+Search the entire documentation by member name.
+See the next section for details.
+Comment folding::
+Expand and collapse multi-paragraph doc comments.
+Markdown support::
+Write doc comments in Markdown.
+See xref:language-reference:index.adoc#doc-comments[Doc Comments] for details.
+Member links::
+Link to other members from your doc comments.
+See xref:language-reference:index.adoc#member-links[Member Links] for details.
+Member anchors::
+Get a member's deep link by clicking its anchor symbol and copying the URL in the address bar.
+Cross-site links::
+Enable cross-site member links simply by providing the URLs of other Pkldoc websites such as the standard library docs.
+
+[[member-search]]
+=== Member Search
+
+To get a first impression of Pkldoc's member search, let's try and find property `MinFiniteFloat` in the link:{uri-pkl-stdlib-docs-index}[standard library docs]:
+
+image::pkldoc-search.gif[title="Searching the standard library docs."]
+
+To start a search, press kbd:[s]. Search results are displayed as you type.
+
+To limit the search to a particular kind of member, prefix the search term with _m:_ for modules, _c:_ for classes, _f:_ for functions, or _p:_ for properties.
+For example, search term _p:min_ finds property `MinFiniteFloat` but not function `min()`.
+
+Camel case matching is always enabled and does not require capitalizing the search term.
+For example, search term _mff_ matches properties `MinFiniteFloat` and `MaxFiniteFloat`.
+
+Both search terms and member names may contain non-ASCII Unicode characters.
+As characters are normalized to their base form, search term _res_ matches `Réseau`.
+
+The `@AlsoKnownAs` annotation, defined and used throughout the _pkl.base_ module, documents alternative names for a member used in other programming languages or earlier versions of a module.
+Pkldoc's search takes these alternative names into account.
+For example, searching the standard library docs for _count_ or _size_ finds property `String.length`.
+Feel free to use `@AlsoKnownAs` in your own modules.
+
+Search results are categorized into _exact_ and _other_ (partial) matches.
+On module and class pages, additional categories show matches in the same module and class.
+Within a category, results are ranked by similarity with the search term.
+
+To navigate to a search result, either click the result or select it with the up/down arrow keys and press kbd:[Enter].
+
+== Installation
+
+Pkldoc is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#installation[Installation] in the _Gradle Plugin_ chapter.
+
+[[install-library]]
+=== Java Library
+
+The `pkl-doc` library is available {uri-pkl-doc-maven-module}[from Maven Central].
+It requires Java 11 or higher.
+
+==== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  compile "com.apple.pkl:pkl-doc:{pkl-artifact-version}"
+}
+----
+
+==== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>com.apple.pkl</groupId>
+  <artifactId>pkl-doc</artifactId>
+  <version>{pkl-artifact-version}</version>
+</dependency>
+----
+
+[[install-cli]]
+=== CLI
+
+The CLI is bundled with the library and does not currently ship as a native executable or a self-contained Jar.
+We recommend to provision it with a Maven compatible build tool as shown in <<install-library,Library Installation>>.
+
+[[usage]]
+== Usage
+
+The Pkldoc tool is offered as Gradle plugin, Java library, and CLI.
+It can generate documentation either for modules directly, or generate documentation for _package uris_.
+
+The tool requires an argument of a module named `_docsite-info.pkl`, that amends link:{uri-DocsiteInfo}[pkl.DocsiteInfo].
+
+[discrete]
+==== Generating documentation for modules directly
+
+Modules can be passed directly to Pkldoc for documentation generation.
+When generating documentation for these modules, there must also be a module named _doc-package-info.pkl_ that amends link:{uri-DocPackageInfo}[pkl.DocPackageInfo].
+
+The _doc-package-info.pkl_ module defines a _doc package_, which describes how modules are grouped and versioned together. 
+
+When generating documentation for modules, each such module must declare a module name that starts with a package name declared in a _doc-package-info.pkl_ module.
+For example, the following are valid module declarations for package _com.example_:
+
+* `module com.example.Birds`
+* `module com.example.Birds.Parrot`
+
+The part of the module name that comes after the package name
+must match the module's relative path in its source code repository.
+For example, module _com.example.Bird.Parrot_ is expected to be found at _$sourceCode/Bird/Parrot.pkl_,
+where _sourceCode_ is configured in _doc-package-info.pkl_.
+
+[discrete]
+==== Generating documentation for a _package_
+
+Pkldoc can alternatively generate documentation for a _package_.
+When generating documentation for a package, the URI of the package must be passed as an argument to Pkldoc.
+These packages must already be published and downloadable.
+
+When generating documentation for packages, modules within a package must declare a module name that is prefixed by the package's name declared in the `Package.name` property of its `PklProject` file.
+For example, the following are valid module declarations for package `com.example`:
+
+* `module com.example.Birds`
+* `module com.example.Birds.Parrot`
+
+The part of the module name that comes after the package name
+must match the module's relative path in its source code repository.
+For example, module _com.example.Bird.Parrot_ is expected to be found at _$sourceCode/Bird/Parrot.pkl_,
+where _sourceCode_ is configured in the `Package.sourceCode` property of its `PklProject` file.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#pkldoc-generation[Pkldoc Generation] in the _Gradle Plugin_ chapter.
+
+=== Java Library
+
+The Java library offers two APIs:
+
+* A high-level link:{uri-CliDocGenerator}[CliDocGenerator] API whose feature set corresponds to the CLI.
+* A low-level link:{uri-DocGenerator}[DocGenerator] API that offers additional features and control.
+
+For more information, refer to the Javadoc documentation.
+
+=== CLI
+
+As mentioned in <<install-cli,CLI Installation>>, the CLI is bundled with the library.
+To run the CLI, execute the library Jar or its `org.pkl.doc.Main` class.
+
+*Synopsis:* `java -cp <classpath> -jar pkl-doc.jar [<options>] <modules>`
+
+`<modules>`::
+The absolute or relative URIs of docsite descriptors, package descriptors, and the modules for which to generate documentation.
+
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+.-o, --output-dir
+[%collapsible]
+====
+Default: (none) +
+Example: `pkldoc`
+The directory where generated documentation is placed.
+====
+
+Common CLI options:
+
+include::../../pkl-cli/partials/cli-common-options.adoc[]
+
+[[full-example]]
+== Full Example
+
+For a ready-to-go example with full source code and detailed walkthrough,
+see link:{uri-pkldoc-example}[pkldoc] in the _pkl/pkl-examples_ repository.

@@ -1,0 +1,43 @@
+class Person {
+  name: String
+  age: Int
+}
+
+res1: Mapping<String, Person> = new {
+  when (false) { [0] = 0 }
+  default {
+    age = 42
+  }
+  ["pigeon"] {
+    name = "Pigeon"
+  }
+  ["parrot"] {
+    name = "Parrot"
+    age = 50
+  }
+}
+
+res2 = (res1) {
+  when (false) { [0] = 0 }
+  default {
+    age = 45
+  }
+}
+
+res3: Mapping<String, Person> = new {
+  when (false) { [0] = 0 }
+  default { key ->
+    name = key
+  }
+  ["pigeon"] {
+    age = 40
+  }
+  ["parrot"] {
+    name = "PARROT"
+    age = 50
+  }
+  ["susan"] {
+    name = super.name + "!!!"
+    age = 60
+  }
+}

@@ -1,0 +1,38 @@
+/// Class properties whose types reference classes from
+/// the same module, a different module, and external modules.
+module com.package1.classPropertyTypeReferences
+
+import "shared.pkl"
+
+import "../com.externalpackage/external1.pkl"
+
+class MyClass
+
+class TypeReferences {
+  /// Property with intra-module simple type.
+  property1: MyClass = new MyClass {}
+
+  /// Property with inter-module list type.
+  property2: List<shared.MyClass> = List(new shared.MyClass {})
+
+  /// Property with external-module set type.
+  property3: Set<external1.MyClass> = Set(new external1.MyClass {})
+
+  /// Property with intra-module and inter-module map type.
+  property4: Map<MyClass, shared.MyClass> = Map(new MyClass {}, new shared.MyClass {})
+
+  /// Property with external-module optional type.
+  property5: external1.MyClass? = new external1.MyClass {}
+
+  /// Property with zero-arg intra-module function type.
+  property6: () -> MyClass = () -> new MyClass {}
+
+  /// Property with one-arg inter-module and external-module function type.
+  property7: (shared.MyClass) -> external1.MyClass = (myClass) -> new external1.MyClass {}
+
+  /// Property with two-arg intra-module, inter-module, and external-module function type.
+  property8: (MyClass, shared.MyClass) -> external1.MyClass = (myClass1, myClass2) -> new external1.MyClass {}
+
+  /// Property with intra-module mapping type.
+  property9: Mapping<String, MyClass>
+}

@@ -1,0 +1,22 @@
+/// comment
+module test extends "EvaluateSchemaTestBaseModule.pkl"
+
+/// comment
+propertyb1 = "parrot"
+
+/// comment
+propertyb2: Int =
+  42
+
+/// comment
+function methodb1() = "parrot"
+
+/// comment
+function methodb2(str: String(!isEmpty, startsWith("a"))): Int(isPositive) =
+  str.length
+
+/// comment
+class Classb1 extends Classa1 {
+  name: String
+  age: Int
+}

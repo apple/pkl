@@ -1,0 +1,4 @@
+org.pkl.core.LanguageSnippetTestsEngine
+org.pkl.core.MacLanguageSnippetTestsEngine
+org.pkl.core.LinuxLanguageSnippetTestsEngine
+org.pkl.core.AlpineLanguageSnippetTestsEngine

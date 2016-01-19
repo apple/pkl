@@ -1,0 +1,22 @@
+Command-line interface for Pkl.
+
+The CLI provides the following tools:
+
+* Batch evaluator
+* REPL
+
+== Native CLI Executables
+
+Native CLI executables are powered by https://github.com/oracle/graal/tree/master/substratevm[Substrate VM].
+The Substrate VM runtime (JIT, GC, etc.) contained in the executables is licensed under GPL v2 with Classpath exception.
+All of the runtime's source files have the Classpath exception:
+https://github.com/oracle/graal/commit/079591ab18a5694a8ba5cf630ed4f76d3442fe21#diff-dc139d07ce99ede7e81890b78a33b5ca
+
+We received OSS approval for internal use of Substrate VM and were asked to put up the following related notice:
+
+IMPORTANT NOTICE::
+*This GPL v2 code may only be used for Apple internal use.*
+No portion of this code may be included or used in shipping software or product.
+*In addition, before downloading any new/updated versions of this code, you must verify that its licensing terms are the same, i.e. still under GPL v2 with “classpath” exception (and not GPL v3).*
++
+If you ever need to provide any of this Substrate VM code to external (non-Apple) vendors or consultants, please email darwin-mgmt <darwin-mgt@group.apple.com> *first*, as that could = a distribution triggering event.

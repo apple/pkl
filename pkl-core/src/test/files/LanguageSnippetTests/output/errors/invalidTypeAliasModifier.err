@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `abstract` is not applicable to type aliases.
+
+x | abstract typealias Foo = Int
+    ^^^^^^^^
+at invalidTypeAliasModifier (file:///$snippetsDir/input/errors/invalidTypeAliasModifier.pkl)

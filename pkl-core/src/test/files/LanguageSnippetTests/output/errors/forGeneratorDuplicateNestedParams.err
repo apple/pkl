@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `_`.
+
+x | for (_, j in b) {
+         ^
+at forGeneratorDuplicateNestedParams#foo (file:///$snippetsDir/input/errors/forGeneratorDuplicateNestedParams.pkl)

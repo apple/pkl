@@ -1,0 +1,38 @@
+foo {
+  bar {
+    new {
+      name = "res1Name"
+      value = "res1Value"
+    }
+    new {
+      name = "res2Name"
+      value = "res2Value"
+    }
+    new {
+      name = "res1Name 2"
+      value = "res1Value 2"
+    }
+    new {
+      name = "res2Name 2"
+      value = "res2Value 2"
+    }
+  }
+  baz {
+    new {
+      name = "res3Name"
+      value = "res3Value"
+    }
+    new {
+      name = "res4Name"
+      value = "res4Value"
+    }
+    new {
+      name = "res3Name 2"
+      value = "res3Value 2"
+    }
+    new {
+      name = "res4Name 2"
+      value = "res4Value 2"
+    }
+  }
+}

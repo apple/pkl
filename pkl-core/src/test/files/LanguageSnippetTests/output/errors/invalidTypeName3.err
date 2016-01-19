@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Cannot find module import `Foo`.
+
+x | bar = new Foo.Bar {}
+              ^^^
+at invalidTypeName3#bar (file:///$snippetsDir/input/errors/invalidTypeName3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

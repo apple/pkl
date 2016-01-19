@@ -1,0 +1,52 @@
+import "pkl:test"
+
+class Numbers {
+  xs: Set<Int>
+  ys: Set<Int(this < 0)>
+  zs: Set<Int(this < 0)>(length >= 5)
+}
+
+class Numbers2 {
+  // type constraint but no type parameter
+  ys: Set(every((it) -> it is Int(this < 0)))
+}
+
+res1 = new Numbers {
+  xs = Set(1, 2, 3)
+  ys = Set(-1, -2, -3)
+  zs = Set(-1, -2, -3, -4, -5)
+}
+
+res1b = new Numbers2 {
+  ys = Set(-1, -2, -3)
+}
+
+res2 = test.catch(() ->
+  new Numbers {
+    xs = "one"
+  }.xs
+)
+
+res3 = test.catch(() ->
+  new Numbers {
+    xs = Set("one")
+  }.xs
+)
+
+res4 = test.catch(() ->
+  new Numbers {
+    ys = Set(1, 2, 3)
+  }.ys
+)
+
+res4b = test.catch(() ->
+  new Numbers2 {
+    ys = Set(1, 2, 3)
+  }.ys
+)
+
+res5 = test.catch(() ->
+  new Numbers {
+    zs = Set(-1, -2, -3)
+  }.zs
+)

@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot find method `listing`.
+
+x | call = listing(10)
+           ^^^^^^^^^^^
+at functionNotFoundMaybeLambda#call (file:///$snippetsDir/input/errors/functionNotFoundMaybeLambda.pkl)
+
+Did you mean any of the following?
+listing.apply(...)
+Listing
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

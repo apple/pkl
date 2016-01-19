@@ -1,0 +1,10 @@
+import "pkl:reflect"
+
+class Ann extends Annotation {
+  foo: Int
+}
+
+@Ann { foo = module }
+class Foo {}
+
+ann = reflect.Class(Foo).annotations[0]

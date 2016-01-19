@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `fixed` is not applicable to methods.
+
+x | fixed function foo() = 5
+    ^^^^^
+at fixedProperty6 (file:///$snippetsDir/input/basic/fixedProperty6.pkl)

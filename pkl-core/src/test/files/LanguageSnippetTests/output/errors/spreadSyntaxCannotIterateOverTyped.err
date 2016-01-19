@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot iterate over value of type `spreadSyntaxCannotIterateOverTyped#Person`.
+Value: new Person { name = ? }
+
+x | ...person
+       ^^^^^^
+at spreadSyntaxCannotIterateOverTyped#result (file:///$snippetsDir/input/errors/spreadSyntaxCannotIterateOverTyped.pkl)
+
+`Typed` values are not iterable. If you mean to spread its members, convert it to `Dynamic` using `toDynamic()`.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

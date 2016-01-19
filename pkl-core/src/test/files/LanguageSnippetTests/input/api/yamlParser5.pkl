@@ -1,0 +1,25 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:yaml"
+
+local parser: yaml.Parser = new {
+  maxCollectionAliases = 1
+}
+
+examples {
+  ["maxCollectionAliases -- happy path"] {
+    parser.parse("""
+      lol1: &lol1 ["lol"]
+      lol2: *lol1
+      """
+    )
+  }
+  ["maxCollectionAliases -- failing"] {
+    module.catch(() -> parser.parse("""
+      lol1: &lol1 ["lol"]
+      lol2: *lol1
+      lol3: *lol1
+      """))
+  }
+}
+

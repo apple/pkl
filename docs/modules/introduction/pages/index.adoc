@@ -1,0 +1,14 @@
+= Introduction
+include::ROOT:partial$component-attributes.adoc[]
+
+Pkl -- pronounced _Pickle_ -- is a configuration-as-code language with rich validation and tooling.
+It can be used as a command line tool, software library, or build plugin.
+Pkl scales from small to large, simple to complex, ad-hoc to recurring configuration tasks.
+
+We created Pkl because we believe that configuration is best expressed in a special-purpose configuration language;
+a middle ground between a static configuration format, and a general-purpose programming language.
+
+* xref:use-cases.adoc[Use Cases]
+* xref:concepts.adoc[Concepts]
+* xref:components.adoc[Components]
+* xref:comparison.adoc[Comparison]

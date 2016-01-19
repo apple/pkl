@@ -1,0 +1,16 @@
+{
+  name: 'noegip',
+  age: 42,
+  friends: [
+    'barn owlx',
+    'parrotx',
+  ],
+  hobbies: {
+    surfing: 'low',
+    firemaking: 'high',
+  },
+  address: {
+    street: 'Other St.',
+    zip: 'changed',
+  },
+}

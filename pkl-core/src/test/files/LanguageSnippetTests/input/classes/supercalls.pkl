@@ -1,0 +1,38 @@
+open class One {
+  prefix = ""
+  function say(msg) = prefix + msg
+}
+
+open class Two extends One {
+  pigeon = super.say("Pigeon")
+  function barnOwl() = super.say("Barn Owl")
+  function say2(msg) = super.say(msg) + super.say(msg)
+}
+
+class Three extends Two {
+  pigeonBarnOwl = super.pigeon + super.barnOwl()
+  function barnOwlPigeon() = super.barnOwl() + super.pigeon
+  parrot = super.say("Parrot")
+}
+
+local two = new Two {}
+local three = new Three {}
+
+res1 = two.pigeon
+res2 = two.barnOwl()
+res3 = two.say2("Parrot")
+
+res4 = three.pigeonBarnOwl
+res5 = three.barnOwlPigeon()
+res6 = three.parrot
+
+local two2 = new Two { prefix = "Oh " }
+local three2 = new Three { prefix = "Oh " }
+
+res7 = two2.pigeon
+res8 = two2.barnOwl()
+res9 = two2.say2("Parrot")
+
+res10 = three2.pigeonBarnOwl
+res11 = three2.barnOwlPigeon()
+res12 = three2.parrot

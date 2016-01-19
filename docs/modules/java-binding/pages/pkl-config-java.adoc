@@ -1,0 +1,174 @@
+= pkl-config-java Library
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-core-EvalException: {uri-pkl-core-main-sources}/EvalException.java
+
+:uri-pkl-config-java-maven-module: {uri-maven-plugins-repo}/org/pkl/pkl-config-java-all/{pkl-artifact-version}
+:uri-pkl-config-java-main-sources: {uri-github-tree}/pkl-config-java/src/main/java/org/pkl/config/java
+:uri-pkl-config-java-test-sources: {uri-github-tree}/pkl-config-java/src/test/java/org/pkl/config/java
+:uri-pkl-config-java-test-resources: {uri-github-tree}/pkl-config-java/src/test/resources/org/pkl/config/java
+:uri-pkl-config-java-ConfigEvaluator: {uri-pkl-config-java-main-sources}/ConfigEvaluator.java
+:uri-pkl-config-java-Config: {uri-pkl-config-java-main-sources}/Config.java
+:uri-pkl-config-java-ValueMapper: {uri-pkl-config-java-main-sources}/mapper/ValueMapper.java
+:uri-pkl-config-java-Named: {uri-pkl-config-java-main-sources}/mapper/Named.java
+:uri-pkl-config-java-Conversion: {uri-pkl-config-java-main-sources}/mapper/Conversion.java
+:uri-pkl-config-java-Conversions: {uri-pkl-config-java-main-sources}/mapper/Conversions.java
+:uri-pkl-config-java-ConverterFactories: {uri-pkl-config-java-main-sources}/mapper/ConverterFactories.java
+:uri-pkl-config-java-Converter: {uri-pkl-config-java-main-sources}/mapper/Converter.java
+:uri-pkl-config-java-ConverterFactory: {uri-pkl-config-java-main-sources}/mapper/ConverterFactory.java
+:uri-pkl-config-java-PObjectToObjectByCtorTestJava: {uri-pkl-config-java-test-sources}/mapper/PObjectToObjectByCtorTest.java
+:uri-pkl-config-java-PObjectToObjectByCtorTestPkl: {uri-pkl-config-java-test-resources}/mapper/PObjectToObjectByCtorTest.pkl
+
+The _pkl-config-java_ library builds upon xref:pkl-core:index.adoc[pkl-core].
+It offers a higher-level API specifically designed for consuming application runtime configuration.
+
+== Installation
+
+The _pkl-config-java_ library is available {uri-pkl-config-java-maven-module}[from Maven Central].
+It requires Java 11 or higher.
+
+=== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  implementation "com.apple.pkl:pkl-config-java-all:{pkl-artifact-version}"
+}
+----
+
+Unlike `pkl-config-java`, `pkl-config-java__-all__` is a fat Jar with renamed third-party packages to avoid version conflicts.
+
+=== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>com.apple.pkl</groupId>
+  <artifactId>pkl-config-java-all</artifactId>
+  <version>{pkl-artifact-version}</version>
+</dependency>
+----
+
+Unlike `pkl-config-java`, `pkl-config-java__-all__` is a fat Jar with renamed third-party packages to avoid version conflicts.
+
+== Usage
+
+=== Consuming Configuration
+
+The {uri-pkl-config-java-ConfigEvaluator}[`ConfigEvaluator`] class loads and evaluates Pkl modules.
+If evaluation succeeds, a {uri-pkl-config-java-Config}[`Config`] object is returned.
+Otherwise, an {uri-pkl-core-EvalException}[`EvalException`] with error details is thrown.
+
+The returned `Config` object represents the root of the Pkl configuration tree.
+Intermediate and leaf nodes are also represented as `Config` objects.
+
+`Config` objects offer methods to
+
+* convert their Pkl value to a Java value of the specified type.
+* navigate to child nodes.
+
+Let's see this in action:
+
+[[config-evaluator-java-example]]
+[source,java,indent=0]
+----
+include::{examplesdir}/JavaConfigExample.java[tags=usage]
+----
+<1> Create a preconfigured `ConfigEvaluator`.
+To create a customized evaluator, start from `ConfigEvaluatorBuilder.preconfigured()` or `ConfigEvaluatorBuilder.unconfigured()`.
+The evaluator should be closed once it is no longer needed.
+In this example, this is done with a try-with-resources statement.
+Note that objects returned by the evaluator remain valid after calling `close()`.
+<2> Evaluate the given text.
+Other `evaluate` methods read from files, URLs, and other sources.
+If evaluation fails, an {uri-pkl-core-EvalException}[`EvalException`] is thrown.
+<3> Navigate from the config root to its `"pigeon"` child.
+<4> Navigate from `"pigeon"` to `"age"` and get the latter's value as an `int`.
+If conversion to the requested type fails, a `ConversionException` is thrown.
+<5> Navigate from `"pigeon"` to `"diet"` and get the latter's value as a `List<String>`.
+Note the use of `JavaType.listOf()` for creating a parameterized type literal.
+Similar methods exist for sets, maps, and other generic types.
+
+A `ConfigEvaluator` caches module sources and evaluation results.
+To clear the cache, for example to evaluate the same module again, close the evaluator and create a new one.
+
+For a ready-to-go example with full source code,
+see link:{uri-config-java-example}[config-java] in the _pkl/pkl-examples_ repository.
+
+[[object-mapping]]
+=== Object Mapping
+
+When a `Config` object needs to convert its Pkl value to a Java value, it delegates the conversion to {uri-pkl-config-java-ValueMapper}[`ValueMapper`].
+`ValueMapper` can convert an entire `PModule` or any part thereof.
+
+A `ValueMapper` instance can be configured with many different Pkl-to-Java value conversions.
+`ValueMapper.preconfigured()` creates an instance configured with conversions from Pkl values to:
+
+* Number types
+* Strings
+* Enums
+* Collections
+* Arrays
+* `java.util.Optional`
+* `java.time.Duration`
+* `java.net.URI/URL`
+* etc.
+
+Additionally, a preconfigured `ValueMapper` instance can convert Pkl objects to Java objects with equally named properties that are settable through a constructor.
+This conversion works as follows:
+
+. Find the Java class constructor with the highest number of parameters.
+. Match constructor parameters with Pkl object properties by name.
++
+Unmatched constructor parameters result in a conversion error.
+Unmatched Pkl object properties are ignored.
++
+. Convert each Pkl property value to the corresponding constructor parameter's type.
+. Invoke the constructor.
+
+The Pkl object's runtime type is irrelevant to this conversion.
+Hence, typed and dynamic Pkl objects are equally supported.
+
+To perform this conversion, `ValueMapper` needs a way to obtain the Java constructor's parameter names.
+They need to be provided in one of the following ways:
+
+* Annotate constructor with `java.beans.ConstructorProperties`.
+* Annotate parameters with {uri-pkl-config-java-Named}[`Named`].
+* Annotate parameters with `javax.inject.Named`.
+* Set the Java compiler flag `-parameters`.
+
+For a complete object mapping example, see:
+
+* {uri-pkl-config-java-PObjectToObjectByCtorTestJava}[`PObjectToObjectByCtorTest.java`]
+
+TIP: Together with xref:java-binding:codegen.adoc[code generation], object mapping provides a complete solution for consuming Pkl configuration as statically typed Java objects.
+Java code never drifts from the configuration structure defined in Pkl, and the entire configuration tree can be code-completed in Java IDEs.
+
+==== Value Conversions
+
+The Pkl-to-Java value conversions that ship with the library are defined in {uri-pkl-config-java-Conversions}[`Conversions`] (for individual conversions) and {uri-pkl-config-java-ConverterFactories}[`ConverterFactories`] (for families of conversions).
+To implement and register your own conversions, follow these steps:
+
+. For conversions from a single source type to a single target type, implement a {uri-pkl-config-java-Conversion}[`Conversion`].
++
+Example: `Conversions.pStringToCharacter` converts a single-character `pkl.base#String` to `java.lang.Character`.
+
+. For conversions from one or multiple source types to one or multiple target types, implement a {uri-pkl-config-java-ConverterFactory}[`ConverterFactory`].
++
+Example: `ConverterFactories.pCollectionToCollection` converts any `pkl.base#Collection` to any implementation of `java.util.Collection<E>`, for any `E`.
++
+Converter factories are called once per combination of source type and (possibly parameterized) target type.
+The returned `Converter`s are cached.
+
+. Create a `ValueMapperBuilder`, add all desired conversions, and build a `ValueMapper`.
+
+. Either use the `ValueMapper` directly, or connect it to a `ConfigEvaluator` through `ConfigEvaluatorBuilder`.
+
+== Further Information
+
+Refer to the Javadoc and sources published with the library, or browse the library's {uri-pkl-config-java-main-sources}[main] and {uri-pkl-config-java-test-sources}[test] sources.

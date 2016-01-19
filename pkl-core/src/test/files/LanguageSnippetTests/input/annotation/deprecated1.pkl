@@ -1,0 +1,43 @@
+open module deprecated1
+
+function f1(n) = n * 1000 + 1
+
+@Deprecated
+function f2(n) = n * 1000 + 2
+
+class A {
+  @Deprecated
+  function f(n) = n * 1000 + 101
+}
+
+open class B {
+  function f1(n) = n * 1000 + 201
+  @Deprecated
+  function f2(n) = n * 1000 + 202
+}
+
+class C extends B {
+  @Deprecated
+  function f1(n) = n * 1000 + 301
+}
+
+res1 = f1(100)
+res1b = List(1, 2, 3).map((n) -> f1(n))
+
+res2 = f2(200)
+res2b = List(4, 5, 6).map((n) -> f2(n))
+
+res3 = new A {}.f(300)
+res3b = List(7, 8, 9).map((n) -> new A {}.f(n))
+
+res4 = new B {}.f1(400)
+res4b = List(10, 11, 12).map((n) -> new B {}.f1(n))
+
+res5 = new B {}.f2(500)
+res5b = List(13, 14, 15).map((n) -> new B {}.f2(n))
+
+res6 = new C {}.f1(600)
+res6b = List(16, 17, 18).map((n) -> new C {}.f1(n))
+
+res7 = new C {}.f2(700)
+res7b = List(19, 20, 21).map((n) -> new C {}.f2(n))

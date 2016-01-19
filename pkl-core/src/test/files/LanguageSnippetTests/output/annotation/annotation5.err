@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Expected `integer` to be a type, but it is not.
+
+x | @integer someProperty: String = "hi"
+     ^^^^^^^
+at annotation5 (file:///$snippetsDir/input/annotation/annotation5.pkl)

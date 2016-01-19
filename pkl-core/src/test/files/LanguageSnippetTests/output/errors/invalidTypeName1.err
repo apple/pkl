@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Expected `base` to be a module import, but it is not.
+
+x | listing = new base.Listing {}
+                  ^^^^
+at invalidTypeName1#listing (file:///$snippetsDir/input/errors/invalidTypeName1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

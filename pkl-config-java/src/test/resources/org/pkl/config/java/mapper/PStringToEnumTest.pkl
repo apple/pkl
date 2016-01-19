@@ -1,0 +1,12 @@
+ex1 = "couch surfing"
+ex2 = "couch_surfing"
+ex3 = "COUCH SURFING"
+ex4 = "COUCH_SURFING"
+ex5 = "couchSurfing"
+ex6 = "couch Surfing"
+ex7 = List("swimming", "reading", "couch surfing")
+ex8 = List("couch surfing", "COUCH_SURFING")
+ex9 = List("couch surfing", "other")
+ex10 = "couchSurfing"
+ex11 = "min"
+ex12 = "gb"

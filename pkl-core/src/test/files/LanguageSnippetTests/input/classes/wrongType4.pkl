@@ -1,0 +1,17 @@
+class Person {
+  name: String
+  age: Int
+  address: Address
+}
+
+class Address {
+  street: String
+}
+
+person = new Person {
+  name = "Pigeon"
+  age = 42
+  address {
+    street = 4.gb
+  }
+}

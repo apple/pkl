@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Cannot instantiate, or amend an instance of, external class `List`.
+
+x | hidden amendAb = (ab) { amended = "amended" }
+                      ^^
+at amendLambdaExternalClassError#amendAb.<function> (file:///$snippetsDir/input/lambdas/amendLambdaExternalClassError.pkl)
+
+To create an instance of an external class, use its literal syntax or constructor method.
+Examples:
+* `123` uses literal syntax to create an instance of class `Int`.
+* `Pair(1, 2)` uses the `Pair()` constructor method to create an instance of class `Pair`.
+
+x | res1 = amendAb.apply(1, 2)
+           ^^^^^^^^^^^^^^^^^^^
+at amendLambdaExternalClassError#res1 (file:///$snippetsDir/input/lambdas/amendLambdaExternalClassError.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

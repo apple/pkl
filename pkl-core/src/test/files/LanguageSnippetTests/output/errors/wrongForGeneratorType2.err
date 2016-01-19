@@ -1,0 +1,11 @@
+–– Pkl Error ––
+Expected value of type `Int`, but got type `String`.
+Value: "other"
+
+x | for (n: Int in List(1, "other", 2)) { [n] = n }
+            ^^^
+at wrongForGeneratorType2#res1 (file:///$snippetsDir/input/errors/wrongForGeneratorType2.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

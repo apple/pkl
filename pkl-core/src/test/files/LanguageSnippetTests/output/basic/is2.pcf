@@ -1,0 +1,54 @@
+facts {
+  ["List"] {
+    true
+    true
+    true
+  }
+  ["Set"] {
+    true
+    true
+    true
+  }
+  ["Map"] {
+    true
+    true
+  }
+  ["Listing"] {
+    true
+    true
+  }
+  ["Mapping"] {
+    true
+    true
+    true
+  }
+  ["union type"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["nullable type"] {
+    true
+    true
+    true
+  }
+  ["function type"] {
+    true
+    true
+    true
+  }
+  ["string literal type"] {
+    true
+    true
+  }
+  ["constraint"] {
+    true
+    true
+    true
+    true
+  }
+}

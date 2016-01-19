@@ -1,0 +1,10 @@
+// we don't expect a path to be shown in the error message, because we cannot tell if the error came
+// from reading the `res1` member or not.
+
+class Person {
+  name: String
+}
+
+local person: Person = new {}
+
+res1 = person.name

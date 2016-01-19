@@ -1,0 +1,7 @@
+= Resources
+include::../partials/component-attributes.adoc[]
+
+There's more to explore!
+
+* Visit Pkl's https://github.com/pkl-lang[GitHub Organization]
+* Browse the standard library's https://pkl.apple.com/package-docs/pkl/{pkl-version}/[API Docs]

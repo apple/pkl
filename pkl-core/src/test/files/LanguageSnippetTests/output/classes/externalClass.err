@@ -1,0 +1,6 @@
+–– Pkl Error ––
+External members can only be defined by standard library modules.
+
+x | external class Foo
+    ^^^^^^^^
+at externalClass (file:///$snippetsDir/input/classes/externalClass.pkl)

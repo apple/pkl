@@ -1,0 +1,4 @@
+res1 {}
+res2 = "Expected value of type `Function0`, but got type `Function1`. Value: new Function1 {}"
+res3 = "Expected value of type `Function1`, but got type `Function0`. Value: new Function0 {}"
+res4 = "Expected value of type `Function2`, but got type `Function1`. Value: new Function1 {}"

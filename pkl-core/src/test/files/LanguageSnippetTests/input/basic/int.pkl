@@ -1,0 +1,220 @@
+amends "../snippetTest.pkl"
+
+import "pkl:math"
+
+facts {
+  ["equality"] {
+    2 == 2
+    2 == 2.0
+    !(2 == 3)
+  }
+
+  ["inequality"] {
+    2 != 3
+    !(2 != 2)
+    !(2 != 2.0)
+  }
+  ["underscore - digits"] {
+    1_000 == 1000
+    1_000__000 == 1000000
+    1___ == 1
+    1___1 == 11
+    1__000_0 == 10000
+    -10_000 == -10000
+  }
+  ["underscore - hex"] {
+    0x42_ab_AB_de_12 == 0x42ababde12
+    0x41__ == 0x42
+    0x59__9 == 0x599
+    -0x59__9 == -0x599
+  }
+  ["underscore - binary"] {
+    0b1011_0110 == 0b10110110
+    0b01__10 == 0b0110
+    0b1____0 == 0b10
+    -0b1_____ == -0b1
+  }
+  ["underscore - octal"] {
+    0o23 == 0o23
+    0o4_162_376_1 == 0o41623761
+    0o41__ == 0o41
+    0o56__6 == 0o566
+    -0o57__7 == -0o577
+  }
+}
+
+examples {
+  ["literal"] {
+    42
+    00042
+    123456789123456789
+    
+    -42
+    -00042
+    -123456789123456789
+
+    -9223372036854775808
+    9223372036854775807
+    
+    1_000
+    1_000__000
+    1___
+    1___1
+    1__000_0
+    -10_000
+  }
+
+  ["hex literal"] {
+    0x42
+    0x123456789abcdef
+    0x123456789ABCDEF
+    0x123456789aBcDeF
+    0x000123456789abcdef
+    
+    0x42
+    -0x123456789abcdef
+    -0x123456789ABCDEF
+    -0x123456789aBcDeF
+    -0x000123456789abcdef
+    
+    0x42_ab_AB_de_12
+    0x41__
+    0x59__9
+    -0x59__9
+  }
+
+  ["binary literal"] {
+    0b101101
+    0b000101101
+    
+    -0b101101
+    -0b000101101
+    
+    0b1011_0110
+    0b01__10
+    0b1____0
+    -0b1_____
+  }
+
+  ["octal literal"] {
+    0o01234567
+    0o76543210
+
+    -0o01234567
+    -0o76543210
+
+    0o1234_5670
+    0o45__67
+    0o7____0
+    -0o7_____
+    
+    0o644
+    0o755
+  }
+
+  ["addition"] {
+    1 + 2
+    0x1 + 0b10
+  }
+  
+  ["subtraction"] {
+    2 - 3
+    0x2 - 0b11
+  }
+  
+  ["multiplication"] {
+    3 * 4
+    0x3 * 0b100
+  }
+  
+  ["division"] {
+    4 / 3
+    0x4 / 0b11
+  }
+  
+  ["integer division"] {
+    4 ~/ 3
+    0x4 ~/ 0b11
+  }
+  
+  ["remainder"] {
+    5 % 6
+    0x5 % 0b110
+  }
+  
+  ["negation"] {
+    // pkl, js, dart, and kotlin use #1; their grammar has no negative numeric literals
+    // ruby and scala use #2 (scala switched from #1 around version 2.8)
+    //
+    // 1.
+    // local x = 1
+    // -1.abs == -(1.abs)
+    // -x.abs == -(x.abs)
+    //
+    // 2.
+    // local x = 1
+    // -1.abs == (-1).abs
+    // -x.abs == -(x.abs)
+    //
+    // #2 is more intuitive for negative numeric literals, but less consistent
+
+    -1.abs
+    -0x2.abs
+    -0b11.abs
+    local x = 4
+    -x.abs
+  }
+
+  ["power"] {
+    2 ** 4
+    2 ** 0
+    2 ** -4
+
+    0 ** 0
+    1 ** 0
+    -1 ** 0
+
+    0 ** 1
+    1 ** 1
+    -1 ** 1
+
+    0 ** -1
+    1 ** -1
+    -1 ** -1
+
+    0 ** 42
+    1 ** 42
+    -1 ** 42
+
+    0 ** -42
+    1 ** -42
+    -1 ** -42
+
+    0 ** math.maxInt
+    1 ** math.maxInt
+    -1 ** math.maxInt
+
+    0 ** math.minInt
+    1 ** math.minInt
+    -1 ** math.minInt
+
+    module.catch(() -> 2 ** math.maxInt8)
+    module.catch(() -> 2 ** math.maxInt16)
+    module.catch(() -> 2 ** math.maxInt32)
+    module.catch(() -> 2 ** math.maxInt)
+    module.catch(() -> -2 ** math.maxInt8)
+    module.catch(() -> -2 ** math.maxInt16)
+    module.catch(() -> -2 ** math.maxInt32)
+    module.catch(() -> -2 ** math.maxInt)
+
+    math.maxInt ** 0
+    math.maxInt ** 1
+    module.catch(() -> math.maxInt ** 2)
+
+    4 ** 3 ** 2 == 4 ** (3 ** 2)
+    1 + 2 ** 3 == 1 + (2 ** 3)
+    2 * 2 ** 3 == 2 * (2 ** 3)
+    2 ** 3 + 1 == (2 ** 3) + 1
+    2 ** 3 * 2 == (2 ** 3) * 2
+  }
+}

@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Evaluate Pcl File" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.apple.pcl.cli.Main" />
+    <module name="pcl.pcl-cli.main" />
+    <option name="PROGRAM_PARAMETERS" value="&quot;$FileDir$/$FileName$&quot;" />
+    <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

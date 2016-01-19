@@ -1,0 +1,37 @@
+module com.package1.moduleTypes2
+
+import "moduleTypes1.pkl"
+
+x1: moduleTypes1
+
+x2: moduleTypes1?
+
+x3: Listing<moduleTypes1>
+
+x4: Mapping<moduleTypes1, moduleTypes1>
+
+x5: String|moduleTypes1|Int
+
+x6: module
+
+x7: List<module>
+
+x8: String|module|Int
+
+class Foo {
+  x1: moduleTypes1
+
+  x2: moduleTypes1?
+
+  x3: Listing<moduleTypes1>
+
+  x4: Mapping<moduleTypes1, moduleTypes1>
+
+  x5: String|moduleTypes1|Int
+
+  x6: module
+
+  x7: List<module>
+
+  x8: String|module|Int
+}

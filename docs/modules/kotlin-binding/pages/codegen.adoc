@@ -1,0 +1,103 @@
+= Kotlin Code Generator
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-codegen-kotlin-maven-module: {uri-maven-plugins-repo}/org/pkl/pkl-codegen-kotlin/{pkl-artifact-version}
+
+The Kotlin source code generator reads Pkl classes and generates corresponding Kotlin classes with equally named properties.
+
+Together with xref:java-binding:pkl-config-java.adoc#object-mapping[Object Mapping], code generation provides a complete solution for consuming Pkl configuration as statically typed Kotlin objects.
+Kotlin code never drifts from the configuration structure defined in Pkl, and the entire configuration tree can be code-completed in Kotlin IDEs.
+
+== Installation
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#installation[Installation] in the Gradle plugin chapter.
+
+[[install-library]]
+=== Java Library
+
+The `pkl-codegen-kotlin` library is available {uri-pkl-codegen-kotlin-maven-module}[from Maven Central].
+It requires Java 8 or higher and Kotlin 1.3 or higher.
+
+==== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  compile "com.apple.pkl:pkl-codegen-kotlin:{pkl-artifact-version}"
+}
+----
+
+==== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>com.apple.pkl</groupId>
+  <artifactId>pkl-codegen-kotlin</artifactId>
+  <version>{pkl-artifact-version}</version>
+</dependency>
+----
+
+[[install-cli]]
+=== CLI
+
+The CLI is bundled with the library.
+As we do not currently ship the CLI as a self-contained Jar, we recommend to provision it with a Maven compatible build tool as shown in <<install-library>>.
+
+[[usage]]
+== Usage
+
+The code generator is offered as Gradle plugin, Java library, and CLI.
+
+=== Gradle Plugin
+
+See xref:pkl-gradle:index.adoc#kotlin-code-gen[Kotlin Code Generation] in the Gradle plugin chapter.
+
+=== Java Library
+
+The library offers two APIs: a high-level API that corresponds to the CLI, and a lower-level API that provides additional features and control.
+The entry points for these APIs are `org.pkl.codegen.kotlin.CliKotlinCodeGenerator` and `org.pkl.codegen.kotlin.KotlinCodeGenerator`, respectively.
+For more information, refer to the KDoc documentation.
+
+=== CLI
+
+As mentioned in <<install-cli,Installation>>, the CLI is bundled with the library.
+To run the CLI, execute the library Jar or its `org.pkl.codegen.kotlin.Main` main class.
+
+*Synopsis:* `java -cp <classpath> -jar pkl-codegen-kotlin.jar [<options>] <modules>`
+
+`<modules>`::
+The absolute or relative URIs of the modules to generate classe for.
+Relative URIs are resolved against the working directory.
+
+==== Options
+
+.--generate-kdoc
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to generate Kdoc based on doc comments for Pkl modules, classes, and properties.
+====
+
+Common code generator options:
+
+include::../../java-binding/partials/cli-codegen-options.adoc[]
+
+Common CLI options:
+
+include::../../pkl-cli/partials/cli-common-options.adoc[]
+
+[[full-example]]
+== Full Example
+
+For a ready-to-go example with full source code,
+see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl/pkl-examples_ repository.

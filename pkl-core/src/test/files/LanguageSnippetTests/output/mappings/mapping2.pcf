@@ -1,0 +1,117 @@
+res1 {
+  ["one"] = 1
+  ["two"] = 2
+}
+res2 {
+  ["one"] = 1
+  ["two"] = 2
+}
+res3 {
+  ["item one"] = 1
+  ["two"] = 2
+}
+res4 {
+  ["one"] = 2
+  ["two"] = 3
+}
+res5 {
+  ["one"] {
+    ["a"] {
+      ["x"] = 1
+    }
+    ["b"] {
+      ["y"] = 2
+    }
+  }
+  ["two"] {
+    ["c"] {
+      ["z"] = 3
+    }
+  }
+}
+res5a {
+  ["a"] {
+    ["x"] = 1
+  }
+  ["b"] {
+    ["y"] = 2
+  }
+}
+res5b {
+  ["x"] = 1
+}
+res5c = 1
+res5d {
+  ["y"] = 2
+}
+res5e = 2
+res5f {
+  ["c"] {
+    ["z"] = 3
+  }
+}
+res5g {
+  ["z"] = 3
+}
+res5h = 3
+res5i = "Cannot find key `\"three\"`."
+res6 {
+  ["one"] = List(1, 2, 3)
+  ["two"] = List(1, 2, 3, 4, 5, 6)
+  ["three"] = 3
+}
+res7 {
+  ["one"] = List(1, 2, 3, 4, 5, 6)
+  ["two"] = List(1, 2, 3, 4, 5, 6, 4, 5, 6)
+  ["three"] = 6
+}
+res8 {
+  ["pigeon"] {
+    name = "pigeon"
+    age = 42
+  }
+  ["barn owl"] {
+    name = "barn owl"
+    age = 42
+  }
+  ["parrot"] {
+    name = "parrot"
+    age = 42
+  }
+}
+res9 {
+  ["pigeon"] {
+    name = "pigeon"
+    age = 42
+  }
+  ["barn owl"] {
+    name = "barn owl"
+    age = 42
+  }
+  ["parrot"] {
+    name = "parrot"
+    age = 32
+  }
+}
+res10 {
+  ["pigeon"] {
+    name = "pigeon"
+    age = 42
+  }
+  ["barn owl"] {
+    name = "barn owl"
+    age = 22
+  }
+  ["parrot"] {
+    name = "parrot"
+    age = 32
+  }
+  ["elf owl"] {
+    name = "elf owl"
+    age = 42
+  }
+}
+res11 {
+  ["one"] = 1
+  ["two"] = 2
+}

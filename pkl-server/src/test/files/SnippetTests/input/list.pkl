@@ -1,0 +1,6 @@
+res1: List<Int> = List(1, 3, 5, 7)
+res2: Listing<Int> = new { 2; 4; 6; 8 }
+res3: List<Int> = List()
+res4: Listing<Int> = new {}
+res5: List<List<Int>> = List(List(1, 2))
+res6: Listing<Listing<Int>> = new { new { 1; 2 } }

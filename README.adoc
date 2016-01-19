@@ -1,0 +1,153 @@
+= Pkl
+
+:uri-docs: https://pkl.apple.com/pkl/main/current
+:uri-docs-introduction: {uri-docs}/introduction
+:uri-docs-release-notes: {uri-docs}/release-notes
+:uri-docs-language: {uri-docs}/language
+:uri-docs-libraries: {uri-docs}/libraries
+:uri-docs-tools: {uri-docs}/tools
+:uri-github-issue: https://github.com/pkl-lang/pkl/issues
+:uri-stackoverflow: https://stackoverflow.com/questions/tagged/pkl
+:uri-pkl-examples-repo: https://github.com/pkl-lang/pkl-examples
+:uri-installation: https://pkl.apple.com/pkl/main/current/pkl-cli/index.html#installation
+:uri-lang-reference: https://pkl.apple.com/pkl/main/current/language-reference/index.html
+:uri-gng: https://gng.dsun.org
+:uri-intellij: https://www.jetbrains.com/idea/download/
+:uri-jdk: https://adoptopenjdk.net/releases.html
+:uri-jenv: https://www.jenv.be
+
+A configuration as code language with rich validation and tooling.
+
+== Quick Links
+
+* {uri-installation}[Installation]
+* {uri-lang-reference}[Language Reference]
+
+== Documentation
+
+* {uri-docs}[Documentation Website]
+** {uri-docs-introduction}[Introduction]
+** {uri-docs-language}[Language]
+** {uri-docs-libraries}[Libraries]
+** {uri-docs-tools}[Tools]
+** {uri-pkl-examples-repo}[Examples]
+** {uri-docs-release-notes}[Release Notes]
+
+== Community
+
+We'd love to hear from you!
+
+* Create an {uri-github-issue}[issue]
+* Ask a question on {uri-stackoverflow}[Stack Overflow]
+
+== Development
+
+=== Setup
+
+. (mandatory) Install {uri-jdk}[OpenJDK 11 HotSpot]
+. (mandatory) Setup Gradle on your system
+. (recommended) Install {uri-intellij}[IntelliJ IDEA 2021.x] +
+  To import the project into IntelliJ, go to File->Open and select the project's root directory.
+  If the project is opened but not imported, look for a popup in the lower right corner
+and click its "Import Gradle Project" link.
+. (recommended) Set up Git ignore-revs +
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+. (recommended) Install {uri-gng}[gng] +
+  _gng_ enables to run Gradle commands with `gw` (instead of `./gradlew`) from any subdirectory.
+. (recommended) Install {uri-jenv}[jenv] and plugins +
+  _jenv_ use specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 17. +
+  Enable _jenv_ plugins for better handling by `gradle`:
++
+[source,shell]
+----
+jenv enable-plugin gradle
+jenv enable-plugin export
+----
+
+=== Common Build Commands
+
+[source,shell]
+----
+gw clean
+gw test
+gw build         # build everything except native executables
+gw buildNative   # build macOS executable on macOS,
+                 # Linux and Alpine executables on Linux
+gw pkldoc        # generate standard library docs
+
+pkl-cli/build/executable/jpkl                # run Java executable
+pkl-cli/build/executable/pkl-macos-amd64     # run Mac executable
+----
+
+=== Update Gradle
+
+. Go to https://gradle.org/release-checksums/ and copy the checksum for the new Gradle version
+. Run the following command *twice* (until it prints UP-TO-DATE):
++
+[source,shell]
+----
+gw wrapper --gradle-version [version] --gradle-distribution-sha256-sum [sha]
+----
+. Commit the updated wrapper files
+
+=== Update Dependencies
+
+. (optional) Update _gradle/libs.version.toml_
+  based on version information from https://search.maven.org, https://plugins.gradle.org, and GitHub repos
+. Run `gw updateDependencyLocks`
+. Validate changes with `gw build buildNative`
+. Review and commit the updated dependency lock files
+
+=== Code Generation
+
+* Truffle code generation is performed by Truffle's annotation processor, which runs as part of task `:pkl-core:compileJava`
+** Output dir is `generated/truffle/`
+* ANTLR code generation is performed by task `:pkl-core:generateGrammarSource`
+** Output dir is `generated/antlr/`
+
+=== Evaluating Pkl files in IntelliJ
+
+There is a Run Configuration checked into the `.idea/runConfigurations` directory that allows you to debug the evaluation of a Pkl file.
+
+To debug the evaluation of a Pkl file:
+
+1. Ensure that the file is the current active file in the editor.
+2. Select "Evaluate Pkl File" within the Configurations dropdown.
+3. Use either the run or debug icons to evaluate that file.
+
+image:images/debug-bar.png[]
+
+=== Resources
+
+==== ANTLR
+
+* https://github.com/antlr/antlr4/blob/main/doc/index.md[Documentation]
+* https://groups.google.com/forum/#!forum/antlr-discussion[Forums]
+* https://github.com/mobileink/lab.clj.antlr/tree/main/doc[Some third-party docs]
+
+==== Truffle
+
+* http://ssw.jku.at/Research/Projects/JVM/Truffle.html[Homepage]
+* https://github.com/graalvm/truffle[GitHub]
+* http://lafo.ssw.uni-linz.ac.at/javadoc/truffle/latest/[Javadoc]
+* http://mail.openjdk.java.net/pipermail/graal-dev/[Mailing List]
+* https://medium.com/@octskyward/graal-truffle-134d8f28fb69#.2db370y2g[Graal & Truffle (Article)]
+* https://comserv.cs.ut.ee/home/files/Pool_ComputerScience_2016.pdf?study=ATILoputoo&reference=6319668E7151D556131810BC3F4A627D7FEF5F3B[Truffle Overview (see chapter 1)]
+* https://gist.github.com/smarr/d1f8f2101b5cc8e14e12[Truffle: Languages and Material]
+* https://github.com/smarr/truffle-notes[Truffle Notes]
+* https://wiki.openjdk.java.net/display/Graal/Truffle+FAQ+and+Guidelines[Truffle FAQ]
+
+==== Other Config Languages
+* https://github.com/google/jsonnet[Jsonnet]
+* https://github.com/dhall-lang/dhall-lang[Dhall]
+* https://cuelang.org[CUE]
+* https://github.com/tweag/nickel[Nickel]
+* https://github.com/google/skylark[Skylark]
+* https://github.com/typesafehub/config[Typesafe Config]
+* https://recordnotfound.com/flabbergast-flabbergast-config-85802[Flabbergast] 
+  (defunct, http://artefacts.masella.name/2015-srecon-andre_masella.pdf[paper])
+* https://medium.com/@MrJamesFisher/nix-by-example-a0063a1a4c55[Nix by example: The Nix expression language]
+* http://lethalman.blogspot.co.at/2014/07/nix-pill-4-basics-of-language.html[Nix pill 4: the basics of the language]
+* https://docs.puppetlabs.com/puppet/latest/reference/lang_summary.html[Puppet Configuration Language]
+
+See https://connectme.apple.com/docs/DOC-428898[ConnectMe] for further resources.

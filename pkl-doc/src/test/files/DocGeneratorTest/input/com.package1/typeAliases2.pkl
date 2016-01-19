@@ -1,0 +1,32 @@
+module com.package1.typealiases2
+
+class Person { name: String }
+
+typealias List2<E> = List<E>
+typealias Map2<V, K> = Map<K, V>
+typealias StringMap<V> = Map<String, V>
+typealias MMap<X> = Map<X, X>
+
+res1: List2<Int>
+res2: List2<List2<String>>
+res3: Map2<String, Int>
+res4: StringMap<Duration>
+res5: MMap<Person?>
+
+res6: List2
+res7: Map2
+res8: StringMap
+res9: MMap
+
+class Foo {
+  res1: List2<Int>
+  res2: List2<List2<String>>
+  res3: Map2<String, Int>
+  res4: StringMap<Duration>
+  res5: MMap<Person?>
+
+  res6: List2
+  res7: Map2
+  res8: StringMap
+  res9: MMap
+}

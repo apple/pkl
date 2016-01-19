@@ -1,0 +1,24 @@
+/// Gets generated into a Java via Gradle task `generateTestConfigClasses`.
+module com.example.PolymorphicModuleTest
+
+import "PolymorphicLib.pkl"
+
+abstract class Dessert
+
+class Strudel extends Dessert {
+  numberOfRolls: Int
+}
+
+class TurkishDelight extends Dessert {
+  isOfferedToEdmund: Boolean
+}
+
+desserts: Listing<Dessert> = new {
+  new Strudel { numberOfRolls = 3 }
+  new TurkishDelight { isOfferedToEdmund = true }
+}
+
+planes: Listing<PolymorphicLib.Airplane> = new {
+  new PolymorphicLib.Jet { name = "Concorde"; numSeats = 128; isSuperSonic = true }
+  new PolymorphicLib.Propeller { name = "Cessna 172"; numSeats = 4; isTurboprop = true }
+}

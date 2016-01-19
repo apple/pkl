@@ -1,0 +1,10 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+# don't trim whitespace within (say) a Pkl multiline string
+trim_trailing_whitespace = false
+insert_final_newline = true
+max_line_length = 100

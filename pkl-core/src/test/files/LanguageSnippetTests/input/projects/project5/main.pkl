@@ -1,0 +1,8 @@
+import "@birds/Bird.pkl"
+
+bird: Bird = new {
+  name = "Finch"
+  favoriteFruit {
+    name = "Nuts"
+  }
+}

@@ -1,0 +1,8 @@
+amends "pkl:Project"
+
+dependencies {
+  ["birds"] {
+    // Should fail because dependency is out of date (PklProject.deps.json version is older)
+    uri = "package://localhost:12110/birds@0.5.0"
+  }
+}

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Mismatched input: `<EOF>`. Expected one of: MLEndQuote, MLInterpolation, MLUnicodeEscape, MLCharacterEscape, MLNewline, MLCharacters
+
+x | res1 = """
+              ^
+at missingEmptyMultiLineStringDelimiterAtEof (file:///$snippetsDir/input/errors/delimiters/missingEmptyMultiLineStringDelimiterAtEof.pkl)

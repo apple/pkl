@@ -1,0 +1,4 @@
+foo {
+  bar = this.baz + 1
+  baz = 3
+}

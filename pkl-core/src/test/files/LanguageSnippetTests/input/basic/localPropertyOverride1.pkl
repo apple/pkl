@@ -1,0 +1,38 @@
+// try to override local property, referenced from same scope, with local property on amend
+
+foo1 {
+  local l = "original"
+  x = l
+}
+
+foo2 = (foo1) {
+  local l = "override"
+}
+
+res1 = foo2.x
+
+// try to override local property, referenced from same scope, with non-local property on amend
+
+foo3 {
+  local l = "original"
+  x = l
+}
+
+foo4 = (foo3) {
+  l = "override"
+}
+
+res2 = foo4.x
+
+// try to override non-local property, referenced from same scope, with local property on amend
+
+foo5 {
+  l = "original"
+  x = l
+}
+
+foo6 = (foo5) {
+  local l = "override"
+}
+
+res3 = foo6.x

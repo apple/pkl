@@ -1,0 +1,3 @@
+import* "\\foo.pkl" as invalidGlob
+
+res = invalidGlob

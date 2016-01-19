@@ -1,0 +1,25 @@
+examples {
+  ["accessing for-bound variable from a lambda in a nested for"] {
+    new {
+      "aa"
+    }
+  }
+  ["accessing for-bound variable from a lambda in a nested when"] {
+    new {
+      "a"
+    }
+  }
+  ["accessing for-bound variable from an expression inside a nested for"] {
+    new {
+      1
+      1
+      1
+      2
+      2
+      2
+      3
+      3
+      3
+    }
+  }
+}

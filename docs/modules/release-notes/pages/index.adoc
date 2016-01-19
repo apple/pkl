@@ -1,0 +1,4 @@
+= Release Notes
+
+* xref:0.24.adoc[0.24 Release Notes]
+* xref:changelog.adoc[Changelog]

@@ -1,0 +1,5 @@
+import "recursiveModule1.pkl"
+
+class Bar {
+  foo: recursiveModule1.Foo
+}

@@ -1,0 +1,9 @@
+open module snippetTest
+
+extends "pkl:test"
+
+output {
+  renderer = new PcfRenderer {
+    omitNullProperties = true
+  }
+}

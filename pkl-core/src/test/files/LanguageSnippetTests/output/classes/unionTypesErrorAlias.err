@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Expected value of type `"aaaaaaaaaaaaaaa"|"bbbbbbbbbbbbb"|"ccccccccccccc"|"ddddddddddddd"|"eeeeeeeeeeeee"|"fffffffffffff"|"ggggggggggggg"|"hhhhhhhhhhhhh"|"iiiiiiiiiiiii"|"jjjjjjjjjjjjj"|"kkkkkkkkkkkkk"`, but got `"other"`.
+
+x | "aaaaaaaaaaaaaaa"
+    ^^^^^^^^^^^^^^^^^
+at unionTypesErrorAlias#X.a (file:///$snippetsDir/input/classes/unionTypesErrorAlias.pkl)
+
+xx | a = "other"
+         ^^^^^^^
+at unionTypesErrorAlias#res1.a (file:///$snippetsDir/input/classes/unionTypesErrorAlias.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

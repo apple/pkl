@@ -1,0 +1,6 @@
+–– Pkl Error ––
+No viable alternative at input `foo = 42 ]`.
+
+x | res1 = new { foo = 42 ]
+                          ^
+at parser11 (file:///$snippetsDir/input/errors/parser11.pkl)

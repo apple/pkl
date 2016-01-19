@@ -1,0 +1,8 @@
+// Test that unrenderable types do have an informative location in the error message.
+import "pkl:jsonnet"
+
+m = new Mixin {}
+
+output {
+  renderer = new jsonnet.Renderer {}
+}

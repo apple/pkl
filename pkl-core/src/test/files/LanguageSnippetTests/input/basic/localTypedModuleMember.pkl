@@ -1,0 +1,27 @@
+import "pkl:test"
+
+class Foo { x: Int }
+
+local p1: Int = 42
+local p2: Int = "foo"
+local p3: List<String> = List("foo", "bar")
+local p4: List<String> = List("foo", 42)
+local p6: Foo = new { x = 10 }
+
+res1 = p1
+res2 = test.catch(() -> p2)
+res3 = p3
+res4 = test.catch(() -> p4)
+res6 = p6
+
+local function f1(x: Int): Int = x
+local function f2(x: Int): String = x
+local function f3(x: List<String>): Int = x.length
+
+res7 = f1(42)
+res8 = test.catch(() -> f1("foo"))
+res9 = test.catch(() -> f2(42))
+res10 = f3(List("foo", "bar"))
+res11 = test.catch(() -> f3(List("foo", 42)))
+
+

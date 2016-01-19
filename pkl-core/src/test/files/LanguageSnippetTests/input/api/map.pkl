@@ -1,0 +1,139 @@
+amends "../snippetTest.pkl"
+
+local map1: Map<String, Int> = Map("one", 1, "two", 2, "three", 3)
+
+facts {
+  ["isEmpty"] {
+    Map().isEmpty
+    !map1.isEmpty
+  }
+
+  ["containsKey()"] {
+    map1.containsKey("two")
+    !Map().containsKey("two")
+    !map1.containsKey("other")
+  }
+
+  ["containsValue()"] {
+    map1.containsValue(3)
+    !Map().containsValue(3)
+    !map1.containsValue(4)
+  }
+
+  ["every()"] {
+    Map().every((k, v) -> throw("unreachable code"))
+    map1.every((k, v) -> v < 10)
+    !map1.every((k, v) -> k.contains("o"))
+  }
+
+  ["any()"] {
+    map1.any((k, v) -> k.contains("o"))
+    !Map().any((k, v) -> throw("unreachable code"))
+    !map1.any((k, v) -> false)
+  }
+}
+
+examples {
+  ["length"] {
+    Map().length
+    map1.length
+  }
+
+  ["getOrNull()"] {
+    map1.getOrNull("one")
+    map1.getOrNull("five")
+  }
+
+  ["keys"] {
+    Map().keys
+    map1.keys
+    (Map("one", 1, "two", 2) + Map("three", 3, "four", 4)).keys
+  }
+
+  ["values"] {
+    Map().values
+    map1.values
+    (Map("one", 1, "two", 2) + Map("three", 3, "four", 4)).values
+  }
+
+  ["remove()"] {
+    Map().remove("two")
+    map1.remove("two")
+    map1.remove(2)
+  }
+
+  ["filter()"] {
+    Map().filter((k, v) -> throw("unreachable"))
+    map1.filter((k, v) -> k.contains("o"))
+    map1.filter((k, v) -> v.isEven)
+  }
+
+  ["mapKeys()"] {
+    Map().mapKeys((k, v) -> throw("unreachable"))
+    map1.mapKeys((k, v) -> k.toUpperCase() + v.toString())
+    map1.mapKeys((k, v) -> k)
+  }
+
+  ["mapValues()"] {
+    Map().mapValues((k, v) -> throw("unreachable"))
+    map1.mapValues((k, v) -> k.length + v * 3)
+    map1.mapValues((k, v) -> v)
+  }
+
+  ["map()"] {
+    Map().map((k, v) -> throw("unreachable"))
+    map1.map((k, v) -> Pair(k, v * 3))
+    map1.map((k, v) -> Pair(v, k))
+    module.catch(() -> map1.map((k, v) -> 42))
+  }
+
+  ["flatMap()"] {
+    Map().flatMap((k, v) -> throw("unreachable"))
+    map1.flatMap((k, v) -> Map(v, v * 3))
+    map1.flatMap((k, v) -> Map(k, k.reverse()))
+    module.catch(() -> map1.flatMap((k, v) -> 42))
+  }
+
+  ["entries"] {
+    Map().entries
+    map1.entries
+    (Map("one", 1, "two", 2) + Map("three", 3, "four", 4)).entries
+  }
+
+  ["toMap()"] {
+    Map().toMap()
+    map1.toMap()
+  }
+
+  ["toDynamic()"] {
+    Map().toDynamic()
+    map1.toDynamic()
+  }
+
+  ["toMapping()"] {
+    Map().toMapping()
+    map1.toMapping()
+  }
+
+  ["put()"] {
+    Map().put("one", 1)
+    map1.put("one", 1)
+    map1.put("four", 4)
+    map1.put("one", 4)
+  }
+
+  ["toTyped()"] {
+    Map("name", "Pigeon", "age", 42).toTyped(Person)
+    Map("age", 42, "name", "Pigeon").toTyped(Person)
+    Map("age", 42).toTyped(Person).name
+    Map("name", "Pigeon").toTyped(Person).hasProperty("name")
+    Map("name", "Pigeon").toTyped(Person).hasProperty("age")
+    Map("name", "Pigeon", "age", 42, "hobby", "surfing").toTyped(Person)
+    module.catch(() -> Map("name", "Pigeon").toTyped(Person).age)
+    module.catch(() -> Map().toTyped(Int))
+    module.catch(() -> Map().toTyped(Abstract))
+  }
+}
+
+local class Person { name: String = "Default"; age: Int }
+local abstract class Abstract

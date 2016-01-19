@@ -1,0 +1,6 @@
+class Ann1 extends Annotation
+
+class Ann2 extends Annotation
+
+@Ann1|Ann2
+foo = 1

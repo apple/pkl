@@ -1,0 +1,120 @@
+a1: |+
+
+a2: |+
+
+
+a3: |+
+
+
+
+b1: |-
+
+  one
+b2: |-
+
+
+  one
+b3: |-
+
+
+
+  one
+c1: |-
+  one
+  two
+c2: |-
+  one
+
+  two
+c3: |-
+  one
+
+
+  two
+d1: |
+  one
+d2: |+
+  one
+
+d3: |+
+  one
+
+
+e1: ''
+e2: ' '
+e3: '   '
+f1: ' one'
+f2: '   one'
+g1: 'one '
+g2: 'one   '
+h1: "\t"
+h2: "one\ttwo"
+h3: "\r"
+h4: "one\rtwo"
+h5: "\a"
+h6: "one\atwo"
+i1: "one\ttwo\nthree"
+i2: "one\rtwo\nthree"
+i3: "one\atwo\nthree"
+j1: |2-
+   one
+  two
+j2: |2-
+     one
+  two
+j3: |-
+  one
+     two
+k1: |-
+  one
+  two 
+k2: |-
+  one
+  two   
+k3: |-
+  one   
+  two
+l1: |-
+
+     
+l2: |2
+     
+l3: |2-
+     
+     
+l4: |
+
+     
+m1: 'foo:'
+m2: 'foo::'
+m3: foo:foo
+n1:
+  a:
+    b:
+      c: |2-
+          my
+        multiline
+        string
+'o1': '%'
+'o2': '%hello'
+'o3': |-
+  %
+  hello there
+p1: '-'
+p2: '?'
+p3: ':'
+p4: '? apple'
+p5: ': banana'
+p6: '- orange'
+p7: |-
+  ?
+  apple
+p8: |-
+  :
+  banana
+p9: |-
+  -
+  orange
+p10: ?apple
+p11: :banana
+p12: -orange

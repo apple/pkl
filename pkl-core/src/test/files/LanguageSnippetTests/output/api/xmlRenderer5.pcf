@@ -1,0 +1,76 @@
+res1 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>123</root>
+  
+  """
+res2 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>1.23</root>
+  
+  """
+res3 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>false</root>
+  
+  """
+res4 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>pigeon</root>
+  
+  """
+res6 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>pigeonparrot</root>
+  
+  """
+res7 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>pigeonparrot</root>
+  
+  """
+res8 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>
+    <name>pigeon</name>
+    <age>42</age>
+  </root>
+  
+  """
+res9 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>pigeonparrot</root>
+  
+  """
+res10 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>
+    <name>pigeon</name>
+    <age>42</age>
+  </root>
+  
+  """
+res11 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>
+    <name>pigeon</name>
+    <age>42</age>
+  </root>
+  
+  """
+res12 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <root>
+    <name>pigeon</name>
+    <age>42</age>
+  </root>
+  
+  """
+res14 = "Cannot render value of type `Null` as XML. Value: null"
+res15 = "Cannot render value of type `Duration` as XML. Value: 1.min"
+res16 = "Cannot render value of type `DataSize` as XML. Value: 1.mb"
+res17 = "Cannot render value of type `Class` as XML. Value: xmlRenderer5#Person"
+res18 = "Cannot render value of type `TypeAlias` as XML. Value: xmlRenderer5#Email"
+res19 = "Cannot render value of type `Function1` as XML. Value: new Function1 {}"
+res20 = "ouch"
+res21 = "Cannot render value of type `IntSeq` as XML. Value: IntSeq(1, 4)"
+res22 = "Cannot render value of type `Pair` as XML. Value: Pair(1, 2)"

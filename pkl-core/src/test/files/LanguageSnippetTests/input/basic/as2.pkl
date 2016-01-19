@@ -1,0 +1,65 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["list"] {
+    List(1, 2, 3) as List<Int>
+    module.catch(() -> List(1, 2, 3) as List<String>)
+    module.catch(() -> Set(1, 2, 3) as List<Int>)
+  }
+  
+  ["set"] {
+    module.catch(() -> List(1, 2, 3) as Set<Int>)
+    Set(1, 2, 3) as Set<Int>
+    module.catch(() -> Set(1, 2, 3) as Set<String>)
+  }
+  
+  ["map"] {
+    Map("Pigeon", 42, "Barn Owl", 21) as Map<String, Int>
+    module.catch(() -> Map("Pigeon", 42, "Barn Owl", 21) as Map<Int, String>)
+  }
+  
+  ["listing"] {
+    new Listing { 1; 2; 3 } as Listing<Int>
+    module.catch(() -> new Listing { 1; 2; 3 } as Listing<String>)
+  }
+  
+  ["mapping"] {
+    module.catch(() -> new Listing { 1; 2; 3 } as Mapping<Int, String>)
+    new Mapping { ["Pigeon"] = 42; ["Barn Owl"] = 21 } as Mapping<String, Int>
+    module.catch(() -> new Mapping { ["Pigeon"] = 42; ["Barn Owl"] = 21 } as Mapping<Int, String>)
+  }
+  
+  ["union type"] {
+    42 as Int|String
+    42 as String|Int
+    42 as Number|String
+    module.catch(() -> 42 as String|Duration)
+
+    List(1, 2, 3) as List<String>|List<Int>
+    List(1, 2, 3) as List<String|Int>
+    module.catch(() -> List(1, 2, 3) as List<String>|Set<Int>)
+  }
+  
+  ["nullable type"] {
+    null as String?
+    null as Map<String, Int>?
+    module.catch(() -> null as Map<String, Int?>)
+  }
+  
+  ["function type"] {
+    (((x) -> x) as (Int) -> Int).apply(42)
+    (((x) -> x) as (String) -> String).apply(42)
+    module.catch(() -> ((x, y) -> x) as (Int) -> Int)
+  }
+  
+  ["string literal type"] {
+    "Pigeon" as "Pigeon"|"Barn Owl"
+    module.catch(() -> "Pigeon" as "Piggy"|"Barn Owl")
+  }
+  
+  ["constrained type"] {
+    "abc" as String(length == 3)
+    module.catch(() -> "abc" as String(length == 4))
+    List("a", "b", "c") as List<String(length == 1)>
+  }
+}

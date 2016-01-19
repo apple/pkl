@@ -1,0 +1,3 @@
+hidden f = (a, b) -> a + b
+
+res1 = f.apply("Pigeon", 42)

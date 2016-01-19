@@ -1,0 +1,14 @@
+x = 2
+
+local addX = (y) -> y + x
+
+res1 = addX.apply(3)
+
+local a {
+  b = 2
+  c {
+    mulB = (x) -> x * b
+  }
+}
+
+res2 = a.c.mulB.apply(3)

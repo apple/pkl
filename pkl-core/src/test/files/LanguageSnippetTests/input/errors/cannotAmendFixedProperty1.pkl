@@ -1,0 +1,15 @@
+class Bird {
+  name: String
+}
+
+class Nest {
+  fixed bird = new Bird {
+    name = "Hawk"
+  }
+}
+
+n: Nest = new {
+  bird {
+    name = "Eagle"
+  }
+}

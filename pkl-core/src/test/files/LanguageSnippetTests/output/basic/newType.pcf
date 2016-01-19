@@ -1,0 +1,104 @@
+res1 {
+  name = "Pigeon"
+}
+res2 {
+  prop {
+    name = "Pigeon"
+  }
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+  new {
+    name = "Pigeon"
+  }
+}
+res3 {
+  new {
+    name = "Pigeon"
+  }
+}
+res4 {
+  new {
+    name = "Pigeon"
+  }
+}
+res5 {
+  new {
+    name = "Pigeon"
+  }
+  new {
+    name = "Barn Owl"
+  }
+}
+res6 {
+  new {
+    name = "Pigeon2"
+  }
+  new {
+    name = "Barn Owl2"
+  }
+}
+res7 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+  ["Barn Owl"] {
+    name = "Barn Owl"
+  }
+  ["Parrot"] {
+    name = "Parrot"
+  }
+}
+res8 {
+  ["Pigeon"] {
+    name = "Pigeon2"
+  }
+  ["Barn Owl"] {
+    name = "Barn Owl2"
+  }
+  ["Parrot"] {
+    name = "Parrot"
+  }
+}
+res9 {
+  name = "Other"
+}
+res9b = "Expected 1 function arguments but got 2."
+res9c {
+  name = "Override"
+}
+res9d = "Expected 1 function arguments but got 2."
+res10 {
+  name = "Other"
+}
+res10b = "Expected 1 function arguments but got 2."
+res10c = "Expected value of type `newType#Person`, but got type `Int`. Value: 1"
+res10d {
+  name = "Override"
+}
+res10e = "Expected 1 function arguments but got 2."
+res10f = "Expected value of type `newType#Person`, but got type `Int`. Value: 1"
+res11 {
+  name = "Pigeon"
+}
+res12 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+  ["Barn Owl"] {
+    name = "Barn Owl"
+  }
+  ["Parrot"] {
+    name = "Parrot"
+  }
+}
+res13 {
+  name = "Pigeon"
+}
+res14 {
+  name = "Pigeon"
+}
+res15 = "Cannot instantiate, or amend an instance of, external class `Int`."
+res16 = "Cannot instantiate, or amend an instance of, external class `Set`."
+res17 = "Cannot instantiate type `String|Person`."
+res18 = "Cannot instantiate, or amend an instance of, external class `String`."

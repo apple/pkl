@@ -1,0 +1,10 @@
+// amend an extended module
+amends "extendModule1.pkl"
+
+pigeon {
+  name = "pigeon4"
+}
+
+parrot {
+  name = "parrot4"
+}

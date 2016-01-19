@@ -1,0 +1,10 @@
+–– Pkl Error ––
+ouch
+
+x | four = throw("ouch")
+           ^^^^^^^^^^^^^
+at stackTraceWithQuotedMemberName#one.`two three`.four (file:///$snippetsDir/input/errors/stackTraceWithQuotedMemberName.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

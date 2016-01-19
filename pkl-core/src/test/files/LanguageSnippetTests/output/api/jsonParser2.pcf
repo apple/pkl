@@ -1,0 +1,54 @@
+res1 = null
+res2 = false
+res3 = true
+res4 = 124
+res8 = 124.686
+res9 = 12346.83
+res10 = "Error parsing JSON document."
+res11 = "Error parsing JSON document."
+res12 = "hellox"
+res13 = """
+  hello
+  worldx
+  """
+res14 {
+  "onex"
+  "twox"
+  "threex"
+  "other"
+}
+res15 {
+  name = "Pigeonx"
+  age = 43
+  other = "other"
+}
+res16 {
+  firstName = "Johnx"
+  lastName = "Smithx"
+  age = 26
+  address {
+    streetAddress = "21 2nd Streetx"
+    city = "New Yorkx"
+    state = "NYx"
+    postalCode = "10021x"
+    other = "other"
+  }
+  phoneNumber {
+    new {
+      type = "homex"
+      number = "212 555-1234x"
+      other = "other"
+    }
+    new {
+      type = "faxx"
+      number = "646 555-4567x"
+      other = "other"
+    }
+    "other"
+  }
+  gender {
+    type = "malex"
+    other = "other"
+  }
+  other = "other"
+}

@@ -1,0 +1,17 @@
+= Components
+include::ROOT:partial$component-attributes.adoc[]
+
+Pkl consists of several components that can be used independently:
+
+xref:pkl-cli:index.adoc[CLI]:: Command-line evaluator and Read-Eval-Print Loop (REPL).
+xref:pkl-doc:index.adoc[Pkldoc]:: Documentation generator that produces navigable and searchable API documentation for Pkl modules.
+xref:java-binding:codegen.adoc[Java Code Generator]:: Java source code generator that reads Pkl classes and generates corresponding Java classes.
+xref:kotlin-binding:codegen.adoc[Kotlin Code Generator]:: Kotlin source code generator that reads Pkl classes and generates corresponding Kotlin classes.
+Together with xref:java-binding:pkl-config-java.adoc#object-mapping[object mapping], code generation provides a complete solution for consuming configuration as statically typed Java objects.
+xref:pkl-gradle:index.adoc[Gradle Plugin]:: Plugin for integrating the command-line evaluator, Pkldoc, and Java code generator into Gradle builds.
+xref:pkl-core:index.adoc[pkl-core]:: Core language implementation used by other components and embeddable in any Java application.
+xref:java-binding:pkl-config-java.adoc[pkl-config-java]:: Java library for application runtime configuration with Pkl.
+xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin]:: Kotlin library for application runtime configuration with Pkl.
+
+All components are published as Maven modules, which makes them easy to use with many build tools.
+The CLI can be xref:pkl-cli:index.adoc#homebrew[installed] with Homebrew or xref:pkl-cli:index.adoc#download[downloaded] manually.

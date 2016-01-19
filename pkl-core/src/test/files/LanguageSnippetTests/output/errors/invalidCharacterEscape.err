@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Invalid character escape sequence `\a`.
+
+x | res1 = "xxx\axxx"
+               ^^
+at invalidCharacterEscape#res1 (file:///$snippetsDir/input/errors/invalidCharacterEscape.pkl)
+
+Valid character escape sequences are:  \n  \r  \t  \"  \\

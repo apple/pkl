@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `}` delimiter.
+
+x | x = 1
+         ^
+at missingObjectAmendExprDelimiter#foo (file:///$snippetsDir/input/errors/delimiters/missingObjectAmendExprDelimiter.pkl)

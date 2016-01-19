@@ -1,0 +1,7 @@
+module com.package1.nested.nested2.nestedModule
+
+myProperty = 42
+
+function myMethod() = 42
+
+class MyClass {}

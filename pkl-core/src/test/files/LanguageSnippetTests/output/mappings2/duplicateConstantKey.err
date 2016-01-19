@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Duplicate definition of member `"barn owl"`.
+
+x | ["barn owl"] = 3
+     ^^^^^^^^^^
+at duplicateConstantKey#res1 (file:///$snippetsDir/input/mappings2/duplicateConstantKey.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

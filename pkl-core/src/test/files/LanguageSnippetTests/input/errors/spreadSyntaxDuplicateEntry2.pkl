@@ -1,0 +1,8 @@
+local source {
+  ["foo"] = 1
+}
+
+res: Mapping = new {
+  ["foo"] = 2
+  ...source
+}

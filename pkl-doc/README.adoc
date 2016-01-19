@@ -1,0 +1,5 @@
+== Third Party Resources
+
+Material Icons:: https://github.com/google/material-design-icons
+Other fonts:: https://google-webfonts-helper.herokuapp.com
+scroll-into-view.min.js:: https://github.com/stipsan/scroll-into-view-if-needed

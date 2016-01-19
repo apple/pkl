@@ -1,0 +1,77 @@
+module com.package1.modulePropertyAnnotations
+
+/// This [prperty] thought to have a correctly spelled name.
+@Deprecated {
+  message = "Spelling mistake."
+  replaceWith = "property"
+}
+@AlsoKnownAs {
+  names { "field"; "item" }
+}
+hidden prperty = 42
+
+
+/// This [prperty] thought to have a correctly spelled name.
+///
+/// Unfortunately, it did not, as we explain in this expandable comment.
+@Deprecated {
+  message = "Spelling mistake."
+  replaceWith = "property"
+}
+@AlsoKnownAs {
+  names { "field"; "item" }
+}
+hidden prpertyWithExpandableComment = 42
+
+
+// This [property] indeed has a properly spelled name, but no doc comment.
+@AlsoKnownAs {
+  names { "field"; "item" }
+}
+hidden property = 42
+
+
+
+
+class UserDefinedAnnotation extends Annotation {
+  messageOpt: String?
+  messageReq: String
+}
+
+@UserDefinedAnnotation {
+  messageReq = "Hi!"
+}
+propertyUserDefinedAnnotation: Int = 42
+
+
+
+
+class UserDefinedAnnotation1 extends Annotation {
+  nested: UserDefinedAnnotation
+}
+
+@UserDefinedAnnotation1 {
+  nested = new UserDefinedAnnotation {
+    messageReq = "Hi!"
+  }
+}
+propertyUserDefinedAnnotation1: Int = 42
+
+
+
+
+class UserDefinedAnnotation2 extends Annotation {
+  nested: UserDefinedAnnotation2?
+}
+
+@UserDefinedAnnotation2 {
+  nested = new UserDefinedAnnotation2 {
+    nested = new UserDefinedAnnotation2 {
+      nested = new UserDefinedAnnotation2 {
+        nested = new UserDefinedAnnotation2 {
+        }
+      }
+    }
+  }
+}
+propertyUserDefinedAnnotation2: Int = 42

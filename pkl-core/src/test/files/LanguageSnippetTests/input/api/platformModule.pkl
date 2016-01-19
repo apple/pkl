@@ -1,0 +1,30 @@
+amends "../snippetTest.pkl"
+
+import "pkl:platform"
+
+local current = platform.current
+
+facts {
+  ["language"] {
+    current.language.version != ""
+  }
+
+  ["runtime"] {
+    current.runtime.name != ""
+    current.runtime.version != ""
+  }
+
+  ["virtualMachine"] {
+    current.virtualMachine.name != ""
+    current.virtualMachine.version != ""
+  }
+
+  ["operatingSystem"] {
+    current.operatingSystem.name != ""
+    current.operatingSystem.version != ""
+  }
+
+  ["processor"] {
+    current.processor.architecture != ""
+  }
+}

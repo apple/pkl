@@ -1,0 +1,33 @@
+foo {
+  bar { "Hello" }
+} {
+  bar { "World" }
+}
+  
+bar {
+  baz = new Listing {}
+} {
+  baz { "first" } { "second" "third" } { "forth" }
+}
+
+baz = new Listing<Listing<Listing<Number>>> {
+    new { new { 1 } }
+    new { new { 2 } new { 2 2 } }
+    new { new { 3 } new { 3 3 } new { 3 3 3 } }
+  } {
+    [[ length > 1 ]] {
+      [[ toList().first < 3 ]] {
+        -3
+      } {
+        -30
+      }
+    } {
+      new Listing { 1.1 }
+    }
+  }.fold(List(), (acc, middle: Listing<Listing<Number>>) ->
+    middle.fold(acc, (_acc, inner) ->
+      inner.fold(_acc, (__acc, it) -> __acc.add(it))))
+
+qux {
+  (foo.bar) { "world" "!" } { [0] = "Goodbye " [1] = "cruel " }.toList().join("")
+}

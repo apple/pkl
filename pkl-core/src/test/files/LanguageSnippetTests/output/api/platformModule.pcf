@@ -1,0 +1,20 @@
+facts {
+  ["language"] {
+    true
+  }
+  ["runtime"] {
+    true
+    true
+  }
+  ["virtualMachine"] {
+    true
+    true
+  }
+  ["operatingSystem"] {
+    true
+    true
+  }
+  ["processor"] {
+    true
+  }
+}

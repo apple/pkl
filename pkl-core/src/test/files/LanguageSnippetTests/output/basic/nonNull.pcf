@@ -1,0 +1,15 @@
+facts {
+  ["returns its non-null operand"] {
+    true
+    true
+    true
+    true
+    true
+  }
+}
+examples {
+  ["fails if operand is null"] {
+    "Expected a non-null value, but got `null`."
+    "Expected a non-null value, but got `null`."
+  }
+}

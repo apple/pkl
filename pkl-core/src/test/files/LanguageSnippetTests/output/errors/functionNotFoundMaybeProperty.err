@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot find method `prop`.
+
+x | call = prop()
+           ^^^^^^
+at functionNotFoundMaybeProperty#call (file:///$snippetsDir/input/errors/functionNotFoundMaybeProperty.pkl)
+
+Did you mean any of the following?
+prop
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

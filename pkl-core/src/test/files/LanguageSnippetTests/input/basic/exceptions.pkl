@@ -1,0 +1,3 @@
+foo {
+  bar = throw("Something went wrong")
+}

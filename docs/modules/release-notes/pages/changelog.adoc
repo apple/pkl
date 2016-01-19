@@ -1,0 +1,8 @@
+= Changelog
+include::ROOT:partial$component-attributes.adoc[]
+
+[[release-0.24.0]]
+== 0.24.0 (UNRELEASED)
+
+xref:0.24.adoc[Release notes]
+

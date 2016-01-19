@@ -1,0 +1,5 @@
+amends "pkl:Project"
+
+package = new Mapping {
+  ["foo"] = "bar"
+}

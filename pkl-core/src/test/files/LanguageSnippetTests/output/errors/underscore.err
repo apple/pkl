@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Keyword `_` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
+
+x | _ = 0
+    ^
+at underscore (file:///$snippetsDir/input/errors/underscore.pkl)

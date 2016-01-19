@@ -1,0 +1,22 @@
+x = 4
+pigeon {
+  name = "Pigeon"
+  age = 30
+}
+multiplier {}
+l = List(1, 2, 3)
+res1 = List(16, 16, 16)
+res2 = List(2, 4, 6)
+res3 = List(30, 60, 90)
+res4 = List(4, 8, 12)
+res5 = List(4, 8, 12)
+res6 = 18
+res7 = 11
+res8 = 180
+res9 = 27
+res10 = 0
+res11 = 4
+res12 = 8
+res13 = 30
+res14 = 16
+res15 = 6

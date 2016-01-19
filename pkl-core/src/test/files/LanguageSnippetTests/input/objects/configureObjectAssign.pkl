@@ -1,0 +1,23 @@
+x {
+  foo {
+    bar {
+      num1 = 1
+      num2 = 2
+    }
+    baz {
+      num3 = 3
+    }
+  }
+}
+
+y = (x) {
+  foo {
+    bar {
+      num1 = 11
+      str = "str"
+    }
+    baz2 {
+      num4 = 4
+    }
+  }
+}

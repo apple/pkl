@@ -1,0 +1,89 @@
+package my
+
+import java.util.Objects
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.String
+import kotlin.text.StringBuilder
+
+/**
+ * type alias comment.
+ * *emphasized* `code`.
+ */
+typealias Email = String
+
+/**
+ * module comment.
+ * *emphasized* `code`.
+ */
+data class Mod(
+  /**
+   * module property comment.
+   * *emphasized* `code`.
+   */
+  val pigeon: Person
+) {
+  /**
+   * class comment.
+   * *emphasized* `code`.
+   */
+  open class Product(
+    /**
+     * class property comment.
+     * *emphasized* `code`.
+     */
+    val price: String
+  ) {
+    open fun copy(price: String = this.price): Product = Product(price)
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (this.javaClass != other?.javaClass) return false
+      other as Product
+      if (this.price != other.price) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = 1
+      result = 31 * result + Objects.hashCode(this.price)
+      return result
+    }
+
+    override fun toString(): String {
+      val builder = StringBuilder(100)
+      builder.append(Product::class.java.simpleName).append(" {")
+      appendProperty(builder, "price", this.price)
+      builder.append("\n}")
+      return builder.toString()
+    }
+  }
+
+  /**
+   * class comment.
+   * *emphasized* `code`.
+   */
+  data class Person(
+    /**
+     * class property comment.
+     * *emphasized* `code`.
+     */
+    val name: String
+  )
+
+  companion object {
+    private fun appendProperty(
+      builder: StringBuilder,
+      name: String,
+      value: Any?
+    ) {
+      builder.append("\n  ").append(name).append(" = ")
+      val lines = value.toString().split("\n")
+      builder.append(lines[0])
+      for (i in 1..lines.lastIndex) {
+        builder.append("\n  ").append(lines[i])
+      }
+    }
+  }
+}

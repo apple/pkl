@@ -1,0 +1,20 @@
+import "pkl:xml"
+
+class Person {
+  name: String
+  age: Int
+}
+
+content {
+  xml.Inline(List("pigeon", "parrot"))
+  xml.Inline(Set("pigeon", "parrot"))
+  xml.Inline(new Listing { "pigeon"; "parrot" })
+  xml.Inline(Map("name", "pigeon", "age", 42))
+  xml.Inline(new Mapping { ["name"] = "pigeon"; ["age"] = 42 })
+  xml.Inline(new Dynamic { name = "pigeon"; age = 42 })
+  xml.Inline(new Person { name = "pigeon"; age = 42 })
+}
+
+output {
+  renderer = new xml.Renderer {}
+}

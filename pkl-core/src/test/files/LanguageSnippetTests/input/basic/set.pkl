@@ -1,0 +1,53 @@
+amends "../snippetTest.pkl"
+
+local set1 = Set(1, "two", 3)
+local set2 = Set("two", 3, 1)
+local set3 = Set(1, "two", 4)
+local emptySet = Set()
+
+facts {
+  ["equality"] {
+    set1 == set1
+    set1 == set2
+    !(set1 == set3)
+
+    !(set1 == set1.toList())
+    !(set1 == set2.toList())
+    !(set1 == set3.toList())
+  }
+
+  ["inequality"] {
+    set1 != set3
+    !(set1 != set1)
+    !(set1 != set2)
+
+    set1 != set1.toList()
+    set1 != set2.toList()
+    set1 != set3.toList()
+  }
+}
+
+examples {
+  ["construction"] {
+    Set(1, 2, 3, 1, 2, 4)
+  }
+
+  ["addition"] {
+    set1 + set1
+    set1 + set2
+    set1 + set3
+
+    set1 + set1.toList()
+    set1 + set2.toList()
+    set1 + set3.toList()
+    set1 + List(1, "two", 4, 1, "two", 4)
+
+    emptySet + emptySet
+    set1 + emptySet
+    emptySet + set3
+
+    emptySet + emptySet.toList()
+    set1 + emptySet.toList()
+    emptySet + set3.toList()
+  }
+}

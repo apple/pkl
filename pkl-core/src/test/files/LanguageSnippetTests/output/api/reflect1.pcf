@@ -1,0 +1,402 @@
+facts {
+  ["Reflecting a module"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Reflecting a module class"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Reflecting properties"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Reflecting a class"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Reflecting an annotation class"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Reflecting an alias"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Enclosing declarations"] {
+    true
+    true
+    true
+  }
+}
+examples {
+  ["Reflected module properties of unknown type metadata"] {
+    Set("int", "float", "string", "boolean", "duration", "dataSize", "pair", "list", "set", "map", "listing", "mapping", "dynamic", "typed", "int2", "float2", "string2", "boolean2", "duration2", "dataSize2", "pair2", "list2", "set2", "map2", "listing2", "mapping2", "dynamic2", "typed2", "any", "noth", "unkn", "union", "nullable", "stringLiteral", "constrained", "aliased")
+    new {
+      hasExpectedLocation = true
+      docComment = "module property doc comment"
+      annotations = List(new {
+        text = "module property annotation"
+      })
+      modifiers = Set()
+      name = "int"
+      defaultValue = 42
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "float"
+      defaultValue = 12.3
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "string"
+      defaultValue = "hello"
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "boolean"
+      defaultValue = true
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "duration"
+      defaultValue = 42.h
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "dataSize"
+      defaultValue = 12.3.gb
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "pair"
+      defaultValue = Pair(42, "hello")
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "list"
+      defaultValue = List(1, 2, 3)
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "set"
+      defaultValue = Set(1, 2, 3)
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "map"
+      defaultValue = Map(1, "one", 2, "two", 3, "three")
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "listing"
+      defaultValue {
+        1
+        2
+        3
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "mapping"
+      defaultValue {
+        [1] = "one"
+        [2] = "two"
+        [3] = "three"
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "dynamic"
+      defaultValue {
+        name = "Pigeon"
+        age = 42
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "typed"
+      defaultValue {
+        name = "Pigeon"
+        age = 42
+      }
+      hasExpectedType = true
+    }
+  }
+  ["Reflected module properties of known type metadata"] {
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "int2"
+      defaultValue = 42
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "float2"
+      defaultValue = 12.3
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "string2"
+      defaultValue = "hello"
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "boolean2"
+      defaultValue = true
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "duration2"
+      defaultValue = 42.h
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "dataSize2"
+      defaultValue = 12.3.gb
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "pair2"
+      defaultValue = Pair(42, "hello")
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "list2"
+      defaultValue = List(1, 2, 3)
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "set2"
+      defaultValue = Set(1, 2, 3)
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "map2"
+      defaultValue = Map(1, "one", 2, "two", 3, "three")
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "listing2"
+      defaultValue {
+        1
+        2
+        3
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "mapping2"
+      defaultValue {
+        [1] = "one"
+        [2] = "two"
+        [3] = "three"
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "dynamic2"
+      defaultValue {
+        name = "Pigeon"
+        age = 42
+      }
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "typed2"
+      defaultValue {
+        name = "Pigeon"
+        age = 42
+      }
+      hasExpectedType = true
+    }
+  }
+  ["Reflected module methods metadata"] {
+    Set("sing", "sing2")
+    new {
+      hasExpectedLocation = true
+      docComment = "module method doc comment"
+      annotations = List(new {
+        text = "module method annotation"
+      })
+      modifiers = Set()
+      name = "sing"
+      typeParameters = List()
+      parameterNames = Set("person", "songs")
+      hasExpectedParameterTypes = true
+      hasExpectedReturnType = true
+    }
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "sing2"
+      typeParameters = List()
+      parameterNames = Set("person", "songs")
+      hasExpectedParameterTypes = true
+      hasExpectedReturnType = true
+    }
+  }
+  ["Reflected class properties metadata"] {
+    Set("name", "age")
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "name"
+      defaultValue = "Pigeon"
+      hasExpectedType = true
+    }
+    new {
+      hasExpectedLocation = true
+      docComment = "class property doc comment"
+      annotations = List(new {
+        text = "class property annotation"
+      })
+      modifiers = Set()
+      name = "age"
+      defaultValue = 42
+      hasExpectedType = true
+    }
+  }
+  ["Reflected class methods metadata"] {
+    Set("sing")
+    new {
+      hasExpectedLocation = true
+      docComment = "class method doc comment"
+      annotations = List(new {
+        text = "class method annotation"
+      })
+      modifiers = Set()
+      name = "sing"
+      typeParameters = List()
+      parameterNames = Set("songs")
+      hasExpectedParameterTypes = true
+      hasExpectedReturnType = true
+    }
+  }
+  ["Reflected annotation class properties metadata"] {
+    new {
+      hasExpectedLocation = true
+      annotations = List()
+      modifiers = Set()
+      name = "text"
+      hasExpectedType = true
+    }
+  }
+}

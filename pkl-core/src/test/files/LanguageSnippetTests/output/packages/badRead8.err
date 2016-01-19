@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Cannot find module `package://localhost:12110/badImportsWithinPackage@1.0.0#/unknownDependencyReaad.pkl`.
+
+x | res = import("package://localhost:12110/badImportsWithinPackage@1.0.0#/unknownDependencyReaad.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badRead8.error#res (file:///$snippetsDir/input/packages/badRead8.error.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

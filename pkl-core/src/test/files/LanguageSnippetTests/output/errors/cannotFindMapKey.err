@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Cannot find key `"foo"`.
+
+x | res1 = x["foo"]
+           ^^^^^^^^
+at cannotFindMapKey#res1 (file:///$snippetsDir/input/errors/cannotFindMapKey.pkl)
+
+Did you mean any of the following?
+"fooz"
+"foyo"
+"xfoo"
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

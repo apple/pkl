@@ -1,0 +1,26 @@
+examples {
+  ["multiline string at end of document"] {
+    """
+    x: |-
+      one
+      two
+    ---
+    x: other
+    
+    """
+  }
+  ["multiline string at end of stream"] {
+    """
+    x: other
+    ---
+    x: |-
+      one
+      two
+    
+    """
+  }
+  ["invalid top level value"] {
+    "The top-level value of a YAML stream must have type `Listing`, `List`, or `Set`, but got type `Int`. Value: 5"
+    "The top-level value of a YAML stream must have type `Listing`, `List`, or `Set`, but got type `yamlRendererStream2#Foo`. Value: new Foo {}"
+  }
+}

@@ -1,0 +1,2 @@
+res1: ((String) -> String | List<String>
+res2 = 42

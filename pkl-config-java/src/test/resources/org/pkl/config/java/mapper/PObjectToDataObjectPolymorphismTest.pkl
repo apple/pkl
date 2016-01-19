@@ -1,0 +1,14 @@
+module org.pkl.test.PObjectToDataObject
+
+abstract class Thing {
+  isThing: Boolean
+}
+
+class Person extends Thing {
+  name: String
+}
+
+thing: Thing = new Person {
+  name = "Bob"
+  isThing = true
+}

@@ -1,0 +1,3 @@
+res1 =
+  let (x: Float = "abc")
+    x.reverse()

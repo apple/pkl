@@ -1,0 +1,98 @@
+res1 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Int`. Value: 123"
+res2 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Float`. Value: 1.23"
+res3 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Boolean`. Value: false"
+res4 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `String`. Value: \"pigeon\""
+res6 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  </plist>
+  
+  """
+res7 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  </plist>
+  
+  """
+res8 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  </plist>
+  
+  """
+res9 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <array>
+    <string>pigeon</string>
+    <string>parrot</string>
+  </array>
+  </plist>
+  
+  """
+res10 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  </plist>
+  
+  """
+res11 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  </plist>
+  
+  """
+res12 = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>name</key>
+    <string>pigeon</string>
+    <key>age</key>
+    <integer>42</integer>
+  </dict>
+  </plist>
+  
+  """
+res13 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Duration`. Value: 1.min"
+res14 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `DataSize`. Value: 1.mb"
+res15 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Class`. Value: pListRenderer5#Person"
+res16 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `TypeAlias`. Value: pListRenderer5#Email"
+res17 = "Cannot render value of type `Function1` as XML property list. Value: new Function1 {}"
+res18 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Null`. Value: null"
+res19 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `Pair`. Value: Pair(1, 2)"
+res20 = "ouch"
+res21 = "The top-level value of an XML property list must have type `Typed`, `Dynamic`, `Listing`, `Mapping`, `List`, `Set`, or `Map`, but got type `IntSeq`. Value: IntSeq(1, 4)"

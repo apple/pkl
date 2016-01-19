@@ -1,0 +1,19 @@
+amends "pkl:Project"
+
+evaluatorSettings {
+  env {
+    ["one"] = "1" 
+  }
+  externalProperties {
+    ["two"] = "2"
+  }
+  allowedModules {
+    "pkl:"
+    "repl:"
+    "file:"
+  }
+  allowedResources {
+    "prop:"
+    "env:"
+  }
+}

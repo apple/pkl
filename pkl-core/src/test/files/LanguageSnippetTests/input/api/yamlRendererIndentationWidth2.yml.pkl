@@ -1,0 +1,72 @@
+name = "pigeon"
+age = 42
+friends {
+  "barn owl"
+  "parrot"
+}
+nestedFriends {
+  new {
+    "barn owl"
+    "parrot"
+  }
+  new {
+    "elf owl"
+    "albatross"
+  }
+}
+nestedFriends2 {
+  new {
+    name = "barn owl"
+  }
+  new {
+    name = "parrot"
+  }
+}
+hobbies {
+  ["surfing"] {
+    skill = "low"
+  }
+  ["firemaking"] {
+    skill = "high"
+  }
+}
+nestedHobbies {
+  ["surfing"] {
+    ["waves"] {
+      skill = "low"
+    }
+  }
+  ["firemaking"] {
+    ["woods"] {
+      skill = "high"
+    }
+  }
+}
+address {
+  street = "Norton St."
+  zip = 12345
+}
+nestedAddress {
+  street {
+    name = "Norton St."
+  }
+  zip {
+    number = 12345
+  }
+}
+multiline = """
+  one
+  two
+  three
+  """
+
+multiline2 = """
+    one
+  two
+  three
+  """
+output {
+  renderer = new YamlRenderer {
+    indentWidth = 2
+  }
+}

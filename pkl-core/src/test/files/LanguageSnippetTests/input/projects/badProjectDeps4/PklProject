@@ -1,0 +1,5 @@
+amends "pkl:Project"
+
+dependencies {
+  ["badLocalProject"] = import("../badLocalProject/PklProject")
+}

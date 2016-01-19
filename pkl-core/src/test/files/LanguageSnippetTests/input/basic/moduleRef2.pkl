@@ -1,0 +1,15 @@
+amends "moduleRefLibrary.pkl"
+
+foo {
+  m1 = module.a
+  b = 43
+  m2 = module.foo.b
+  local c = () -> module.a
+  m3 = c.apply()
+  m4 = new Person {}
+}
+
+local class Person {
+  age: Int = module.a
+}
+

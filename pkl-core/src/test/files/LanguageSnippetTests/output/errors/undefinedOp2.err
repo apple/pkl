@@ -1,0 +1,12 @@
+–– Pkl Error ––
+Operator `+` is not defined for operand types `String` and `Int`.
+Left operand : "str"
+Right operand: 42
+
+x | res1 = "str" + 42
+           ^^^^^^^^^^
+at undefinedOp2#res1 (file:///$snippetsDir/input/errors/undefinedOp2.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

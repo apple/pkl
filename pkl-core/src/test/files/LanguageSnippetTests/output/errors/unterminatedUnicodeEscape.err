@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Unterminated Unicode escape sequence `\u{123`.
+
+x | res1 = "foo \u{123 bar"
+                ^^^^^^
+at unterminatedUnicodeEscape#res1 (file:///$snippetsDir/input/errors/unterminatedUnicodeEscape.pkl)
+
+Unicode escape sequences must end with `}`.

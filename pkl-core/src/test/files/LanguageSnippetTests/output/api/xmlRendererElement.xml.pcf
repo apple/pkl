@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<machine>
+  <diskSizes>
+    <disk>
+      <gb>1200</gb>
+    </disk>
+    <disk>
+      <tb>2</tb>
+    </disk>
+  </diskSizes>
+</machine>

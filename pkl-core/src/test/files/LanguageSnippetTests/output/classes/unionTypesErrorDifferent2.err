@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `Boolean|List<Int>(length > 3)`, but got a different `List`.
+Value: List(1, 2, 3)
+
+x | a: Boolean|List<Int>(length > 3)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at unionTypesErrorDifferent2#X.a (file:///$snippetsDir/input/classes/unionTypesErrorDifferent2.pkl)
+
+* Value is not of type `List<Int>(length > 3)` because:
+  Type constraint `length > 3` violated.
+  Value: List(1, 2, 3)
+
+x | a = List(1, 2, 3)
+        ^^^^^^^^^^^^^
+at unionTypesErrorDifferent2#res1.a (file:///$snippetsDir/input/classes/unionTypesErrorDifferent2.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

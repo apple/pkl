@@ -1,0 +1,9 @@
+open module fixedProperty1
+
+class Bird {
+  name: String
+}
+
+fixed res1: String = "hi"
+fixed res2: Boolean = true
+fixed res3: Bird = new { name = "Swallow" }

@@ -1,0 +1,31 @@
+name = "pigeon"
+age = 42
+friends = new Listing {
+  "barn owl"
+  "parrot"
+}
+hobbies {
+  ["surfing"] {
+    skill = "low"
+  }
+  ["firemaking"] {
+    skill = "high"
+  }
+}
+address {
+  street = "Norton St."
+  zip = 12345
+}
+
+output {
+  renderer = new JsonRenderer {
+    converters {
+      ["name"] = (it) -> it.reverse()
+      ["friends[*]"] = (it) -> it + "x"
+      ["hobbies[*]"] = (it) -> it.skill
+      ["address.street"] = (it) -> "Other St."
+      ["address.*"] = (it) -> "changed"
+      ["unmatched"] = (it) -> "unmatched"
+    }
+  }
+}
