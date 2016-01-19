@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Invalid glob pattern `foo.pkl\`.
+
+x | import* "foo.pkl\\" as invalidGlob
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobImport3#invalidGlob (file:///$snippetsDir/input/errors/invalidGlobImport3.pkl)
+
+The backslash (`\`) is the escape character, and cannot terminate a glob pattern.
+
+x | res = invalidGlob
+          ^^^^^^^^^^^
+at invalidGlobImport3#res (file:///$snippetsDir/input/errors/invalidGlobImport3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,134 @@
+res1 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res1b = "Expected value of type `String`, but got type `Int`. Value: 1"
+res1c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res1d = "Expected value of type `String`, but got type `Int`. Value: 1"
+res2 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res2b = "Expected value of type `Number`, but got type `String`. Value: \"other\""
+res2c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res2d = "Expected value of type `Number`, but got type `String`. Value: \"other\""
+res6 {
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+}
+res6b = "Expected value of type `String`, but got type `Int`. Value: 42"
+res6c {
+  ["ae"] = Pair(0, "ae")
+  ["af"] = Pair(1, "af")
+  ["be"] = Pair(1, "be")
+  ["bf"] = Pair(2, "bf")
+  ["ce"] = Pair(2, "ce")
+  ["cf"] = Pair(3, "cf")
+}
+res6d = "Expected value of type `String`, but got type `Int`. Value: 42"
+res7 {
+  ["one"] = 1
+  [2] = 2
+  [6] = 6
+  [10] = 10
+  ["two"] = 2
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+  ["three"] = 3
+}
+res7b = "Expected value of type `String`, but got type `Int`. Value: 42"
+res8 {
+  [1] = 1
+  [2] = 2
+  [3] = 3
+  ["a"] = "a"
+  ["b"] = "b"
+  ["c"] = "c"
+  [4] = 4
+  [5] = 5
+  [6] = 6
+}
+res8b = "Expected value of type `String`, but got type `Duration`. Value: 42.min"
+res8c {
+  [1] = Pair(0, 1)
+  [2] = Pair(1, 2)
+  [3] = Pair(2, 3)
+  ["a"] = Pair(0, "a")
+  ["b"] = Pair(1, "b")
+  ["c"] = Pair(2, "c")
+  [4] = Pair(0, 4)
+  [5] = Pair(1, 5)
+  [6] = Pair(2, 6)
+}
+res8d = "Expected value of type `String`, but got type `Duration`. Value: 42.min"
+forWithMultipleMembers {
+  ["a"] = "a"
+  ["ax"] = "ax"
+  ["ay"] = "ay"
+  ["b"] = "b"
+  ["bx"] = "bx"
+  ["by"] = "by"
+  ["c"] = "c"
+  ["cx"] = "cx"
+  ["cy"] = "cy"
+}
+forWithMultipleMembersNested {
+  ["ax1"] = "ax1"
+  ["1xa"] = "1xa"
+  ["ay2"] = "ay2"
+  ["2ya"] = "2ya"
+  ["axx11"] = "axx11"
+  ["11xxa"] = "11xxa"
+  ["ayy22"] = "ayy22"
+  ["22yya"] = "22yya"
+  ["bx1"] = "bx1"
+  ["1xb"] = "1xb"
+  ["by2"] = "by2"
+  ["2yb"] = "2yb"
+  ["bxx11"] = "bxx11"
+  ["11xxb"] = "11xxb"
+  ["byy22"] = "byy22"
+  ["22yyb"] = "22yyb"
+}
+whenWithMultipleMembers {
+  [1] = 1
+  [2] = 2
+  [9] = 9
+  [18] = 18
+  [25] = 25
+  [50] = 50
+}
+whenWithMultipleMembersNested {
+  [25] = 25
+  [50] = 50
+}
+whenWithElse {
+  [1] = 1
+  [2] = 2
+  ["4"] = "4"
+  ["8"] = "8"
+  [9] = 9
+  [18] = 18
+  ["16"] = "16"
+  ["32"] = "32"
+  [25] = 25
+  [50] = 50
+}

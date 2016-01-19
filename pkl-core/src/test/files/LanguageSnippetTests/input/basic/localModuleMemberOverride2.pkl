@@ -1,0 +1,43 @@
+extends "localModuleMemberOverride1.pkl"
+
+local class C1 {
+  x = "override"
+}
+class C2 {
+  x = "override"
+}
+local class C3 {
+  x = "override"
+}
+
+local p1 = "override"
+p2 = "override"
+local p3 = "override"
+
+local function f1() = "override"
+function f2() = "override"
+local function f3() = "override"
+
+res1 = c1
+res2 = c2
+res3 = c3
+
+res4 = pp1
+res5 = pp2
+res6 = pp3
+
+res7 = ff1
+res8 = ff2
+res9 = ff3
+
+res10 = foo.c1
+res11 = foo.c2
+res12 = foo.c3
+
+res13 = foo.pp1
+res14 = foo.pp2
+res15 = foo.pp3
+
+res16 = foo.ff1
+res17 = foo.ff2
+res18 = foo.ff3

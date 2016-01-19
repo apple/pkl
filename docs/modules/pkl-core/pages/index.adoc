@@ -1,0 +1,127 @@
+= pkl-core Library
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-core-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-core
+:uri-pkl-core-main-sources: {uri-github-tree}/pkl-core/src/main/java/org/pkl/core
+:uri-pkl-core-test-sources: {uri-github-tree}/pkl-core/src/test/java/org/pkl/core
+:uri-pkl-core-Evaluator: {uri-pkl-core-main-sources}/Evaluator.java
+:uri-pkl-core-PModule: {uri-pkl-core-main-sources}/PModule.java
+:uri-pkl-core-PklException: {uri-pkl-core-main-sources}/PklException.java
+:uri-pkl-core-ValueVisitor: {uri-pkl-core-main-sources}/ValueVisitor.java
+:uri-pkl-core-JsonRenderer: {uri-pkl-core-main-sources}/JsonRenderer.java
+:uri-pkl-core-PcfRenderer: {uri-pkl-core-main-sources}/PcfRenderer.java
+:uri-pkl-core-PListRenderer: {uri-pkl-core-main-sources}/PListRenderer.java
+:uri-pkl-core-YamlRenderer: {uri-pkl-core-main-sources}/YamlRenderer.java
+:uri-pkl-core-SecurityManagers: {uri-pkl-core-main-sources}/SecurityManagers.java
+:uri-pkl-core-ModuleKeyFactories: {uri-pkl-core-main-sources}/module/ModuleKeyFactories.java
+
+The _pkl-core_ library contains the Pkl parser, evaluator, REPL server, and xref:ROOT:standard-library.adoc[Standard Library].
+It is the foundation for most of Pkl's other libraries and tools.
+The library can also be used to embed Pkl in Java libraries and applications.
+
+[[pkl-core-installation]]
+== Installation
+
+The _pkl-core_ library is available {uri-pkl-core-maven-module}[from Maven Central].
+It requires Java 11 or higher.
+
+=== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+[tabs]
+====
+Groovy::
++
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  compile "org.pkl-lang:pkl-core:{pkl-artifact-version}"
+}
+
+ifndef::is-release-build[]
+repositories {
+  maven { url "{uri-sonatype}" }
+}
+endif::[]
+----
+
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+dependencies {
+  compile("org.pkl-lang:pkl-core:{pkl-artifact-version}")
+}
+
+ifndef::is-release-build[]
+repositories {
+  maven { url = uri("{uri-sonatype}") }
+}
+endif::[]
+----
+====
+
+=== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<project>
+  <dependency>
+    <groupId>org.pkl-lang</groupId>
+    <artifactId>pkl-core</artifactId>
+    <version>{pkl-artifact-version}</version>
+  </dependency>
+ifndef::is-release-build[]
+  <repositories>
+    <repository>
+      <id>sonatype-s01</id>
+      <name>Sonatype S01</name>
+      <url>{uri-sonatype}</url>
+    </repository>
+  </repositories>
+endif::[]
+</project>
+----
+
+== Usage
+
+{uri-pkl-core-Evaluator}[`Evaluator`] is the core evaluator that exposes multiple methods of evaluation.
+
+The main evaluation method is `evaluate`, which returns a Java representation of the Pkl module object.
+If evaluation succeeds, a {uri-pkl-core-PModule}[`PModule`] object representing the fully evaluated module is returned.
+Otherwise, an {uri-pkl-core-PklException}[`PklException`] with error details is thrown.
+
+Let's look at an example:
+
+[[config-evaluator-core-example]]
+[source,java,indent=0]
+----
+include::{examplesdir}/CoreEvaluatorExample.java[tags=usage]
+----
+<1> Build an `Evaluator` with default configuration.
+The evaluator should be closed once it is no longer needed.
+In this example, this is done with a try-with-resources statement.
+Note that objects returned by the evaluator remain valid after calling `close()`.
+<2> Build a `ModuleSource` using the given text as the module's contents. Evaluate the given module source. Alternatively, it's possible to build a `ModuleSource` from a file, path, uri, and other sources.
+<3> Get the module's `"pigeon"` property, which is represented as `PObject` in Java.
+<4> Get the class name for this object. In this example, the class name is `pkl.base#Dynamic`.
+<5> Get pigeon's `"diet"` property, which is represented as `List<String>` in Java.
+
+[[value-visitor]]
+Often, {uri-pkl-core-ValueVisitor}[`ValueVisitor`] is a better way to process a module.
+See {uri-pkl-core-PcfRenderer}[`PcfRenderer`], {uri-pkl-core-JsonRenderer}[`JsonRenderer`], {uri-pkl-core-YamlRenderer}[`YamlRenderer`] and {uri-pkl-core-PListRenderer}[`PListRenderer`] for examples.
+
+[[security-manager-spi]]
+The (Pkl, not Java) security manager can be configured and customized using {uri-pkl-core-SecurityManagers}[`SecurityManagers`] and related classes.
+
+[[module-loader-spi]]
+Module loaders can be configured and customized using {uri-pkl-core-ModuleKeyFactories}[`ModuleKeyFactories`] and related classes.
+
+== Further Information
+
+Refer to the Javadoc and sources published with the library, or browse the library's {uri-pkl-core-main-sources}[main] and {uri-pkl-core-test-sources}[test] sources.

@@ -1,0 +1,7 @@
+class Person {
+  name: String
+}
+
+pigeon = new Person {
+  name = 42
+}

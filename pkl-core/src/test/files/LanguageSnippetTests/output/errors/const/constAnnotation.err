@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot call method `f1` from here because it is not `const`.
+
+xx | @Ann { foo = f1() }
+                  ^^^^
+at constAnnotation#Foo.foo (file:///$snippetsDir/input/errors/const/constAnnotation.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to method `f1`
+2. Self-import this module, and reference this method from the import.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

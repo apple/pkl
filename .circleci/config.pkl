@@ -1,0 +1,154 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===// 
+// File gets rendered to .circleci/config.yml via git hook.
+amends ".../pkl-project-commons/packages/pkl.impl.circleci/PklCI.pkl"
+
+import "jobs/BuildNativeJob.pkl"
+import "jobs/GradleCheckJob.pkl"
+import "jobs/DeployJob.pkl"
+import "jobs/SimpleGradleJob.pkl"
+
+local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
+
+local buildAndTestJobs = (prbJobs) {
+  "bench"
+//   "gradle-compatibility"
+  ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
+}
+
+local releaseJobs = (prbJobs) {
+  "bench"
+//   "gradle-compatibility"
+  ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))
+}
+
+prb {
+  jobs = prbJobs
+}
+
+main {
+  jobs {
+    ...buildAndTestJobs
+    new {
+      ["deploy-snapshot"] {
+        requires = buildAndTestJobs
+        context = "pkl-maven-release"
+      }
+    }
+  }
+}
+
+release {
+  jobs {
+    ...releaseJobs
+    // do GitHub release first because we can overwrite the tag.
+    // publishing to Maven Central is final.
+    new {
+      ["github-release"] {
+        requires = releaseJobs
+        context = "pkl-github-release"
+      }
+    }
+    new {
+      ["deploy-release"] {
+        requires { "github-release" }
+        context = "pkl-maven-release"
+      }
+    }
+  }
+}
+
+triggerDocsBuild = "both"
+
+triggerPackageDocsBuild = "release"
+
+local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
+  for (_dist in List("release", "snapshot")) {
+    for (_arch in List("amd64", "aarch64")) {
+      for (_os in List("macOS", "linux")) {
+        ["pkl-cli-\(_os)-\(_arch)-\(_dist)"] {
+          arch = _arch 
+          os = _os
+          isRelease = _dist == "release"
+        }
+      }
+    }
+    ["pkl-cli-linux-alpine-amd64-\(_dist)"] {
+      arch = "amd64"
+      os = "linux"
+      musl = true
+      isRelease = _dist == "release"
+    }
+  }
+}
+
+local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
+  ["gradle-check-jdk11"] {
+    javaVersion = "11.0"
+    isRelease = false
+  }
+  ["gradle-check-jdk17"] {
+    javaVersion = "17.0"
+    isRelease = false
+  }
+}
+
+jobs {
+  for (jobName, job in buildNativeJobs) {
+    [jobName] = job.job
+  }
+  for (jobName, job in gradleCheckJobs) {
+    [jobName] = job.job
+  }
+  ["bench"] = new SimpleGradleJob { command = "bench:jmh" }.job
+  ["gradle-compatibility"] = new SimpleGradleJob {
+    name = "gradle compatibility"
+    command = #"""
+      :pkl-gradle:build \
+        :pkl-gradle:compatibilityTestReleases \
+        :pkl-gradle:compatibilityTestCandidate
+      """#
+  }.job
+  ["deploy-snapshot"] = new DeployJob {
+    command = "publishToSonatype"
+  }.job
+  ["deploy-release"] = new DeployJob {
+    isRelease = true
+    command = "publishToSonatype closeAndReleaseSonatypeStagingRepository"
+  }.job
+  ["github-release"] {
+    docker {
+      new {
+        image = "maniator/gh:v2.40.1"
+      }
+    }
+    steps {
+      new AttachWorkspaceStep { at = "." }
+      new RunStep {
+        name = "Publish release on GitHub"
+        command = #"""
+          gh release create "${CIRCLE_TAG}" \
+            --title "${CIRCLE_TAG}" \
+            --target "${CIRCLE_SHA1}" \
+            --verify-tag \
+            --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${CIRCLE_TAG}" \
+            --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+            pkl-cli/build/executable/*
+          """#
+      }
+    }
+  }
+}

@@ -1,0 +1,107 @@
+import "pkl:test"
+
+typealias Simple = String
+const function simple(arg: Simple): Simple = arg
+
+res1: Simple = "abc"
+res1b = simple("abc")
+
+typealias Parameterized = List<String>
+const function parameterized(arg: Parameterized): Parameterized = arg
+
+res2: Parameterized = List("abc")
+res2b: Parameterized = parameterized(List("abc"))
+
+typealias Constrained = String(length >= 3)
+const function constrained(arg: Constrained): Constrained = arg
+
+res3: Constrained = "abc"
+res3b: Constrained = constrained("abc")
+
+typealias Composite = Map<String, Parameterized>
+const function composite(arg: Composite): Composite = arg
+
+res4: Composite = Map("abc", List("def"))
+res4b: Composite = composite(Map("abc", List("def")))
+
+typealias Union = Int|Boolean
+const function union(arg: Union): Union = arg
+
+res5: Union = false
+res5b: Union = union(false)
+
+typealias Nullable = Duration?
+const function nullable(arg: Nullable): Nullable = arg
+
+res6: Nullable = null
+res6b: Nullable = nullable(null)
+
+class Good {
+  res7: Simple = "abc"
+  res7b = simple("abc")
+
+  res8: Parameterized = List("abc")
+  res8b: Parameterized = parameterized(List("abc"))
+
+  res9: Constrained = "abc"
+  res9b: Constrained = constrained("abc")
+
+  res10: Composite = Map("abc", List("def"))
+  res10b: Composite = composite(Map("abc", List("def")))
+
+  res11: Union = false
+  res11b: Union = union(false)
+
+  res12: Nullable = null
+  res12b: Nullable = nullable(null)
+}
+
+good = new Good {}
+
+class Bad {
+  res13: Simple = 42
+  res13b = simple(42)
+
+  res14: Parameterized = List(42)
+  res14b: Parameterized = parameterized(List(42))
+
+  res15: Constrained = 42
+  res15b: Constrained = constrained(42)
+
+  res16: Composite = Map("abc", List(42))
+  res16b: Composite = composite(Map("abc", List(42)))
+
+  res17: Union = "foo"
+  res17b: Union = union("foo")
+
+  res18: Nullable = 5.mb
+  res18b: Nullable = nullable(5.mb)
+}
+
+local bad = new Bad {}
+
+res13 = test.catch(() -> bad.res13)
+res13b = test.catch(() -> bad.res13b)
+
+res14 = test.catch(() -> bad.res14)
+res14b = test.catch(() -> bad.res14b)
+
+res15 = test.catch(() -> bad.res15)
+res15b = test.catch(() -> bad.res15b)
+
+res16 = test.catch(() -> bad.res16)
+res16b = test.catch(() -> bad.res16b)
+
+res17 = test.catch(() -> bad.res17)
+res17b = test.catch(() -> bad.res17b)
+
+res18 = test.catch(() -> bad.res18)
+res18b = test.catch(() -> bad.res18b)
+
+local typealias LocalTypeAlias = String
+
+res19: LocalTypeAlias = "abc"
+
+typealias VeryComposite = Pair<Composite, Composite>
+
+res20: VeryComposite = Pair(Map("abc", List("def")), Map("abc", List("def")))

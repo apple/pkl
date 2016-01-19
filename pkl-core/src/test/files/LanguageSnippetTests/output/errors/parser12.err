@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Extraneous input: `}`. Expected one of: <EOF>, `abstract`, `class`, `const`, `external`, `fixed`, `function`, `hidden`, `local`, `open`, `typealias`, `@`, Identifier, DocComment
+
+x | res1 = new { foo = 42 }}
+                           ^
+at parser12 (file:///$snippetsDir/input/errors/parser12.pkl)

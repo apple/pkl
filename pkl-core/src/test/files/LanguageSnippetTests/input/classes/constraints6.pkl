@@ -1,0 +1,19 @@
+import "pkl:test"
+
+class X {
+  y: Int(abs < 100)
+}
+
+res1 = new X {
+  y = 99
+}
+
+res2 = new X {
+  y = -99
+}
+
+res3 = test.catch(() ->
+  new X {
+    y = -100
+  }.y
+)

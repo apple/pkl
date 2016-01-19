@@ -1,0 +1,372 @@
+facts {
+  ["isEmpty"] {
+    true
+    true
+  }
+  ["every()"] {
+    true
+    true
+  }
+  ["any()"] {
+    true
+    true
+  }
+  ["contains()"] {
+    true
+    true
+  }
+  ["startsWith()"] {
+    true
+    true
+    true
+  }
+  ["endsWith()"] {
+    true
+    true
+    true
+  }
+}
+examples {
+  ["every"] {
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["any"] {
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["length"] {
+    3
+  }
+  ["filter()"] {
+    Set(2, 3)
+    Set()
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["map()"] {
+    Set(2, 4, 6)
+    Set(List(1, 1), List(2, 2), List(3, 3))
+  }
+  ["flatMap()"] {
+    Set(1, 2, 3, 4)
+    "Expected value of type `Collection`, but got type `String`. Value: \"wrong type\""
+  }
+  ["flatten()"] {
+    Set(1, 2, 3, 4, 5)
+    Set(1, 2, 3, 4, 5)
+    Set(1, 2, 3, 4, 5)
+    Set(1, 2, 3, 4, 5)
+    Set()
+  }
+  ["first"] {
+    1
+  }
+  ["rest"] {
+    Set(2, 3)
+  }
+  ["last"] {
+    3
+  }
+  ["single"] {
+    1
+  }
+  ["count()"] {
+    2
+    3
+    0
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["find()"] {
+    2
+    1
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["findLast()"] {
+    3
+    3
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["take()"] {
+    Set()
+    Set(1, 2)
+    Set(1, 2, 3)
+  }
+  ["takeWhile()"] {
+    Set(1, 2, 3)
+    Set()
+    Set(1, 2)
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["takeLast()"] {
+    Set()
+    Set(2, 3)
+    Set(1, 2, 3)
+  }
+  ["takeLastWhile()"] {
+    Set(1, 2, 3)
+    Set()
+    Set(2, 3)
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["drop()"] {
+    Set(1, 2, 3)
+    Set(3)
+    Set()
+  }
+  ["dropWhile()"] {
+    Set()
+    Set(1, 2, 3)
+    Set(3)
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["dropLast()"] {
+    Set(1, 2, 3)
+    Set(1)
+    Set()
+  }
+  ["dropLastWhile()"] {
+    Set()
+    Set(1, 2, 3)
+    Set(1)
+    "Expected value of type `Boolean`, but got type `String`. Value: \"wrong type\""
+  }
+  ["fold()"] {
+    6
+    List(1, 2, 3)
+    1
+    0
+  }
+  ["foldBack()"] {
+    6
+    List(3, 2, 1)
+    1
+    0
+  }
+  ["reduce()"] {
+    6
+    1
+    "Expected a non-empty collection. Collection: Set()"
+  }
+  ["groupBy()"] {
+    Map(1, Set(1), 2, Set(2), 3, Set(3), 4, Set(4), 5, Set(5))
+    Map(true, Set(1, 3, 5), false, Set(2, 4))
+    Map(true, Set(1, 2, 3, 4, 5))
+    Map()
+  }
+  ["sortWith()"] {
+    List()
+    List(1, 2, 3)
+    List(1, 2, 3, 4, 5)
+  }
+  ["sortWith() with deprecated 3-way comparator"] {
+    List()
+    List(1, 2, 3)
+    List(1, 2, 3, 4, 5)
+  }
+  ["toList()"] {
+    List(1, 2, 3)
+  }
+  ["toSet()"] {
+    Set(1, 2, 3)
+  }
+  ["intersect()"] {
+    Set()
+    Set()
+    Set(2, 3)
+    Set()
+  }
+  ["difference()"] {
+    Set(1, 2, 3)
+    Set()
+    Set(1)
+    Set(1, 2, 3)
+  }
+  ["toMap()"] {
+    Map(1, 2, 2, 4, 3, 6)
+    Map("Pigeon", new {
+      name = "Pigeon"
+      age = 40
+    }, "Parrot", new {
+      name = "Parrot"
+      age = 30
+    })
+  }
+  ["add()"] {
+    Set(1, 2, 3, 42)
+    Set(42)
+  }
+  ["minWith()"] {
+    1
+    1
+    "Expected a non-empty collection. Collection: List()"
+  }
+  ["minWith() with deprecated 3-way comparator"] {
+    1
+    1
+    "Expected a non-empty collection. Collection: List()"
+  }
+  ["maxWith()"] {
+    1
+    1
+    "Expected a non-empty collection. Collection: List()"
+  }
+  ["maxWith() with deprecated 3-way comparator"] {
+    1
+    1
+    "Expected a non-empty collection. Collection: List()"
+  }
+  ["zip()"] {
+    Set(Pair(1, 4), Pair(2, 5), Pair(3, 6))
+    Set(Pair(1, 4), Pair(2, 5), Pair(3, 6))
+  }
+  ["filterIndexed()"] {
+    Set(2)
+    Set(1, 3)
+    Set()
+    Set(3)
+  }
+  ["mapIndexed()"] {
+    Set(0, 2, 6)
+    Set(false, true)
+  }
+  ["flatMapIndexed()"] {
+    Set(0, 2, 6)
+    Set(false, true)
+  }
+  ["foldIndexed()"] {
+    9
+    1
+    0
+  }
+  ["toListing()"] {
+    new {
+      1
+      2
+      3
+    }
+    new {}
+  }
+  ["toDynamic()"] {
+    new {
+      1
+      2
+      3
+    }
+    new {}
+  }
+  ["filterNonNull()"] {
+    Set(1, 2, 3)
+    Set()
+    Set(1, 2, 3)
+    Set()
+  }
+  ["mapNonNull()"] {
+    Set(1, 2, 3)
+    Set()
+    Set()
+    Set(1, 2, 3)
+  }
+  ["filterIsInstance()"] {
+    Set(1, 2, 3)
+    Set(1, 2, 3)
+    Set(1, 2, 3)
+    Set()
+    Set()
+    Set("2", "4")
+    Set()
+  }
+  ["split()"] {
+    Pair(Set(), Set(1, 2, 3))
+    Pair(Set(1), Set(2, 3))
+    Pair(Set(1, 2), Set(3))
+    Pair(Set(1, 2, 3), Set())
+    Pair(Set(), Set())
+    "Element index `-1` is out of range `0`..`3`. Collection: Set(1, 2, 3)"
+    "Element index `4` is out of range `0`..`3`. Collection: Set(1, 2, 3)"
+  }
+  ["partition()"] {
+    Pair(Set(2), Set(1, 3))
+    Pair(Set(1, 3), Set(2))
+    Pair(Set(1, 2, 3), Set())
+    Pair(Set(), Set(1, 2, 3))
+    Pair(Set(), Set())
+  }
+  ["min"] {
+    1
+    "Barn Owl"
+    -99999
+    42
+    42.0
+    100.mb
+    100.ms
+    "Expected a non-empty collection. Collection: Set()"
+    "Operator `<` is not defined for operand types `String` and `Int`. Left operand : \"Pigeon\" Right operand: 1"
+  }
+  ["max"] {
+    3
+    "Pigeon"
+    42
+    42
+    42.0
+    12.tb
+    3.d
+    "Expected a non-empty collection. Collection: Set()"
+    "Operator `>` is not defined for operand types `String` and `Int`. Left operand : \"Pigeon\" Right operand: 1"
+  }
+  ["minBy()"] {
+    1
+    3
+    "Pigeon"
+    "Barn Owl"
+    11.gb
+    100.mb
+    11.s
+    100.ms
+    "Expected a non-empty collection. Collection: Set()"
+    "Operator `<` is not defined for operand types `String` and `Int`. Left operand : \"Pigeon\" Right operand: 1"
+  }
+  ["maxBy()"] {
+    3
+    1
+    "Barn Owl"
+    "Parrot"
+    100.mb
+    12.tb
+    100.ms
+    12.min
+    "Expected a non-empty collection. Collection: Set()"
+    "Operator `>` is not defined for operand types `String` and `Int`. Left operand : \"Pigeon\" Right operand: 1"
+  }
+  ["sort()"] {
+    List(1, 2, 3)
+    List(-99999, -8.4, 3.9, 42)
+    List("Barn Owl", "Parrot", "Pigeon")
+    List(100.mb, 11.gb, 12.tb)
+    List(100.ms, 11.s, 3.d)
+    List()
+    "Operator `<` is not defined for operand types `String` and `Int`. Left operand : \"Pigeon\" Right operand: 1"
+  }
+  ["sortBy()"] {
+    List(1, 2, 3)
+    List(3, 2, 1)
+    List("Pigeon", "Parrot", "Barn Owl")
+    List("Barn Owl", "Pigeon", "Parrot")
+    List(11.gb, 12.tb, 100.mb)
+    List(100.mb, 11.gb, 12.tb)
+    List()
+    List(0, -1, 2, -3, 4, -5, 6, -7, 8, -9, 10)
+  }
+  ["repeat()"] {
+    List()
+    List(1, 2, 3)
+    List(1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3)
+    List()
+    List()
+    List()
+    "Expected a positive number, but got `-1`."
+  }
+  ["reverse()"] {
+    List(3, 2, 1)
+    List(1, 2, 3)
+    List(3.d, "Pigeon", 1)
+    List()
+  }
+}

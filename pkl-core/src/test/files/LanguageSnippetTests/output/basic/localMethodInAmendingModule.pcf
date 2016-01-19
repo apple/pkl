@@ -1,0 +1,18 @@
+foo {
+  res1 = 43
+  res2 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  res3 = 43
+  res4 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  bar {
+    res5 = 44
+    res6 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+  }
+  c {
+    foo {
+      bar {
+        res7 = 44
+        res8 = "Expected value of type `Int`, but got type `String`. Value: \"wrong type\""
+      }
+    }
+  }
+}

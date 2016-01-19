@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Object of type `objectCannotHavePredicateMember#Foo` cannot have a predicate member.
+
+x | [[true]] = 42
+      ^^^^
+at objectCannotHavePredicateMember#res1 (file:///$snippetsDir/input/errors/objectCannotHavePredicateMember.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

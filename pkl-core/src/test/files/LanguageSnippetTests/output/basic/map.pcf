@@ -1,0 +1,46 @@
+facts {
+  ["equality"] {
+    true
+    true
+    true
+  }
+  ["inequality"] {
+    true
+    true
+    true
+  }
+}
+examples {
+  ["construction"] {
+    Map(1, 3, 2, 4)
+    Map(1, "three", 2, "four")
+  }
+  ["addition"] {
+    Map(1, 1, "two", 2, "three", 3)
+    Map(1, 1, "two", 2, "three", 3)
+    Map(1, 1, "two", 2, "three", 3, 30, new {
+      name = "Pigeon"
+    }, new {
+      name = "Pigeon"
+    }, 30)
+    Map()
+    Map(1, 1, "two", 2, "three", 3)
+    Map(1, 1, "two", 2, "three", 3)
+    Map(1, 1, 2, 2)
+    Map(1, 11, 2, 2)
+  }
+  ["subscript"] {
+    1
+    2
+    3
+    new {
+      name = "Pigeon"
+    }
+    30
+    1
+    "Cannot find key `\"hree\"`."
+    "Cannot find key `\"other\"`."
+    "Cannot find key `\"1111\"`."
+    "Cannot find key `11111`."
+  }
+}

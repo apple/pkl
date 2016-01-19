@@ -1,0 +1,3 @@
+hidden fs = List(() -> 42, () -> throw("ouch"))
+
+res1 = fs[1].apply()

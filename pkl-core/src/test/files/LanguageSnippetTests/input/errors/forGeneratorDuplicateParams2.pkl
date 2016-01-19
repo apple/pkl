@@ -1,0 +1,11 @@
+a = List(1, 2, 3, 4)
+
+b = List("a", "b", "c", "d")
+
+foo {
+  for (_dup, i in a) {
+    for (_dup, j in b) {
+      i + j
+    }
+  }
+}

@@ -1,0 +1,6 @@
+= Language Bindings
+
+* xref:java-binding:index.adoc[Java]
+* xref:kotlin-binding:index.adoc[Kotlin]
+* xref:swift:ROOT:index.adoc[Swift]
+* xref:go:ROOT:index.adoc[Go]

@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `this >= min` violated.
+Value: 3
+
+x | max: Int(this >= min)
+             ^^^^^^^^^^^
+at constraints5#Gauge.max (file:///$snippetsDir/input/classes/constraints5.pkl)
+
+xx | max = 3
+           ^
+at constraints5#res2.max (file:///$snippetsDir/input/classes/constraints5.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

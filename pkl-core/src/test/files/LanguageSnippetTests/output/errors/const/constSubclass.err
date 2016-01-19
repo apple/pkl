@@ -1,0 +1,12 @@
+–– Pkl Error ––
+Missing modifier `const`.
+
+x | x = 2
+    ^
+at constSubclass#Bar (file:///$snippetsDir/input/errors/const/constSubclass.pkl)
+
+Property `x` must be declared const, because it overrides a const property on parent class `constSubclass#Foo`.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,14 @@
+class X {
+  function int(int: Int(isPositive)): Int(isPositive) = int
+  function l(l: List<String(!isEmpty)>): List<String(!isEmpty)> = l
+  function map(map: Map<String(!isEmpty), Int(isPositive)>(!isEmpty)): Map<String(!isEmpty), Int(isPositive)>(!isEmpty) = map
+  function nullable(nullable: String(!isEmpty)?): String(!isEmpty)? = nullable
+}
+
+local x = new X {}
+
+res0 = x.int(3)
+res1 = x.l(List("1", "2"))
+res2 = x.map(Map("1", 1, "2", 2))
+res3 = x.nullable("1")
+res4 = x.nullable(null)

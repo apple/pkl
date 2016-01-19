@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot render value of type `Function1` as XML.
+Value: new Function1 {}
+
+x | m = new Mixin {}
+    ^^^^^^^^^^^^^^^^
+at pkl.xml#Renderer.renderDocument (file:///$snippetsDir/input/api/xmlRenderer8.pkl)
+
+Consider adding a converter to `output.converters`.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

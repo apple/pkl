@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "packageUri": "package://localhost:12110/packageContainingWildcardCharacters@1.0.0",
+  "name": "packageContainingWildcardCharacters",
+  "version": "1.0.0",
+  "packageZipUrl": "https://localhost:12110/packageContainingWildcardCharacters@1.0.0/packageContainingWildcardCharacters@1.0.0.zip",
+  "dependencies": {},
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  }
+}

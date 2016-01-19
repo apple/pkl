@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot reference property `notConstDyn` from here because it is not `const`.
+
+x | foo = notConstDyn.prop
+          ^^^^^^^^^^^
+at constQualified#Foo.foo (file:///$snippetsDir/input/errors/const/constQualified.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to property `notConstDyn`
+2. Self-import this module, and reference this property from the import.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

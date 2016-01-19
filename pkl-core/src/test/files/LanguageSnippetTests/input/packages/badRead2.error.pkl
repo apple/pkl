@@ -1,0 +1,2 @@
+// invalid semver
+res = read("package://localhost:12110/foo@notAVersion#/bar.pkl")

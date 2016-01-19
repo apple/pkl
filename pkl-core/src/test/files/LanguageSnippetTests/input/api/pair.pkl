@@ -1,0 +1,31 @@
+amends "../snippetTest.pkl"
+
+local pair = Pair("Pigeon", 42)
+local pair2 = Pair(new Dynamic { name = "Pigeon" }, List(1, 2, 3))
+local pair3 = Pair(null, Pair(Regex("Pigeon"), 42.ms))
+
+examples {
+  ["first"] {
+    pair.first
+    pair2.first
+    pair3.first
+  }
+
+  ["second"] {
+    pair.second
+    pair2.second
+    pair3.second
+  }
+
+  ["key"] {
+    pair.key
+    pair2.key
+    pair3.key
+  }
+
+  ["value"] {
+    pair.value
+    pair2.value
+    pair3.value
+  }
+}

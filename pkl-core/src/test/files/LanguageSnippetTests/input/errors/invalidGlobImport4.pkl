@@ -1,0 +1,3 @@
+import* ".../input-helper/**.pkl" as invalidGlob
+
+result = invalidGlob

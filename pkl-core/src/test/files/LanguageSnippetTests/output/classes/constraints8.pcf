@@ -1,0 +1,5 @@
+res1 {
+  a = 6
+  b = 11
+}
+res2 = "Type constraint `isGreaterThan(5)` violated. Value: 5"

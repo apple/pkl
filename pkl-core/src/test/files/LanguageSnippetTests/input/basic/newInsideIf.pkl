@@ -1,0 +1,126 @@
+class Person {
+  name: String
+}
+
+res1 = if (true) new { name = "Pigeon" } else null
+
+res2: Person = if (false) null else new { name = "Pigeon" }
+
+local localProperty: Person = if (true) new { name = "Pigeon" } else null
+res3 = localProperty
+
+dynamic {
+  res4 = if (false) null else new { name = "Pigeon" }
+
+  local localDynamic: Person = if (true) new { name = "Pigeon" } else null
+  res5 = localDynamic
+
+  if (false) null else new { name = "Pigeon" }
+
+  ["Pigeon"] = if (true) new { name = "Pigeon" } else null
+}
+
+open class Company {
+  ceo: Person = if (false) null else new { name = "Pigeon" }
+}
+
+class MyCompany extends Company {
+  ceo = if (true) new { name = "Pigeon" } else null
+}
+
+res6 = new Company {}
+
+res7 = new MyCompany {}
+
+res8 = new Company {
+  ceo = if (false) null else new { name = "Pigeon" }
+}
+
+res9 = new MyCompany {
+  ceo = if (true) new { name = "Pigeon" } else null
+}
+
+res10 = new Listing {
+  if (false) null else new { name = "Pigeon" }
+}
+res11 = (res10) {
+  [0] = if (true) new { name = "Pigeon" } else false
+}
+
+res12: Listing<Person> = new {
+  if (false) null else new { name = "Pigeon" }
+}
+res13 = (res12) {
+  [0] = if (true) new { name = "Pigeon" } else null
+}
+
+local localListing: Listing<Person> = new {
+  if (false) null else new { name = "Pigeon" }
+}
+res14 = localListing
+res15 = (res14) {
+  [0] = if (true) new { name = "Pigeon" } else false
+}
+
+res16 = new Mapping {
+  ["Pigeon"] = if (false) null else new { name = "Pigeon" }
+}
+res17 = (res16) {
+  ["Pigeon"] = if (true) new { name = "Pigeon" } else null
+}
+
+res18: Mapping<String, Person> = new {
+  ["Pigeon"] = if (false) null else new { name = "Pigeon" }
+}
+res19 = (res18) {
+  ["Pigeon"] = if (true) new { name = "Pigeon" } else null
+}
+
+local localMapping: Mapping<String, Person> = new {
+  ["Pigeon"] = if (false) null else new { name = "Pigeon" }
+}
+res20 = localMapping
+res21 = (res20) {
+  ["Pigeon"] = if (true) new { name = "Pigeon" } else null
+}
+
+// not yet implemented
+//res22 = let (x = if (false) null else new { name = "Pigeon" }) x
+//res23 = let (x: Person = if (true) new { name = "Pigeon" } else false) x
+
+res24 = f1("Pigeon")
+res24b = res24 is Person
+res25 = f2("Pigeon")
+res25b = res25 is Person
+res26 = new X {}.f1("Pigeon")
+res26b = res26 is Person
+res27 = new X {}.f2
+res27b = res27 is Person
+res28 = one.two.f1
+res28b = res28 is Person
+res29 = f3("Pigeon")
+res29b = res29 is Dynamic
+res30 = new Person2 {}.friend
+res30b = res30 is Dynamic
+
+function f1(_name): Person = if (true) new { name = _name } else null
+local function f2(_name): Person = if (true) new { name = _name } else null
+
+class X {
+  function f1(_name): Person = if (true) new { name = _name } else null
+  local function f2(_name): Person = if (true) new { name = _name } else null
+  f2 = f2("Pigeon")
+}
+
+one {
+  two {
+    local function f1(_name): Person = new { name = _name }
+    f1 = if (true) f1("Pigeon") else null
+  }
+}
+
+function f3(_name) = new { name = _name }
+
+class Person2 {
+  friend = new { name = "Pigeon" }
+}

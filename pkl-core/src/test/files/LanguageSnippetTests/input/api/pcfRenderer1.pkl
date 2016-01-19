@@ -1,0 +1,38 @@
+pigeon {
+  name = "pigeon"
+  age = 30
+}
+
+// dynamic object with properties and elements
+barnOwl {
+  name = "barn owl"
+  "surfing"
+  age = 42
+  "fire making"
+}
+
+parrot {
+  new {
+    // multiline string that is a property within an element
+    lastName = """
+      Flinstone
+
+      Flinstone
+      """
+    """
+    Flinstone
+
+    Flinstone
+    """
+  }
+  // multiline string that is an element
+  """
+  Flistone
+
+  Flistone
+  """
+}
+
+output {
+  renderer = new PcfRenderer {}
+}

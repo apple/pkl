@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `test`.
+
+x | test = "test" // duplicate
+    ^^^^
+at duplicateProperty1 (file:///$snippetsDir/input/modules/duplicateProperty1.pkl)

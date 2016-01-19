@@ -1,0 +1,50 @@
+res1 = null
+res2 = true
+res3 = false
+res4 = 123
+res5 = "Error parsing JSON document."
+res6 = "Error parsing JSON document."
+res7 = "Error parsing JSON document."
+res8 = 123.456
+res9 = 12345.6
+res10 = "Error parsing JSON document."
+res11 = "Error parsing JSON document."
+res12 = "hello"
+res13 = """
+  hello
+  world
+  """
+res14 {
+  "one"
+  "two"
+  "three"
+}
+res15 {
+  name = "Pigeon"
+  age = 42
+}
+res16 {
+  firstName = "John"
+  lastName = "Smith"
+  age = 25
+  address {
+    streetAddress = "21 2nd Street"
+    city = "New York"
+    state = "NY"
+    postalCode = "10021"
+  }
+  phoneNumber {
+    new {
+      type = "home"
+      number = "212 555-1234"
+    }
+    new {
+      type = "fax"
+      number = "646 555-4567"
+    }
+  }
+  gender {
+    type = "male"
+  }
+}
+res17 = "Error parsing JSON document."

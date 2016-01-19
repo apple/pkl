@@ -1,0 +1,17 @@
+c {
+  foo {
+    res1 = "Cannot find type `NonExistingType`."
+    res2 = "Cannot find type `NonExistingType`."
+    res3 = "Cannot find type `NonExistingType`."
+    bar {
+      res4 = "Cannot find type `NonExistingType`."
+      res5 = "Cannot find type `NonExistingType`."
+      res6 = "Cannot find type `NonExistingType`."
+      baz {
+        res7 = "Cannot find type `NonExistingType`."
+        res8 = "Cannot find type `NonExistingType`."
+        res9 = "Cannot find type `NonExistingType`."
+      }
+    }
+  }
+}

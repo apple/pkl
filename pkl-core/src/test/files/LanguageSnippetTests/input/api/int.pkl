@@ -1,0 +1,216 @@
+amends "../snippetTest.pkl"
+
+facts {
+  ["isEven"] {
+    (-124).isEven
+    0.isEven
+    !123.isEven
+  }
+
+  ["isOdd"] {
+    123.isOdd
+    !(-124).isOdd
+    !0.isOdd
+  }
+
+  ["isNaN"] {
+    !42.isNaN
+    !(-42).isNaN
+  }
+
+  ["isFinite"] {
+    42.isFinite
+    (-42).isFinite
+  }
+
+  ["isInfinite"] {
+    !42.isInfinite
+    !(-42).isInfinite
+  }
+
+  ["isPositive"] {
+    42.isPositive
+    0.isPositive
+    !(-42).isPositive
+  }
+
+  ["isBetween()"] {
+    3.isBetween(2, 4)
+    3.isBetween(2.2, 4.4)
+    3.isBetween(2.2, 4)
+    3.isBetween(2, 4.4)
+    3.isBetween(2, 3)
+    3.isBetween(3, 4)
+    3.isBetween(3, 3)
+    3.isBetween(3.0, 3.0)
+    !3.isBetween(1, 2)
+    !3.isBetween(4, 2)
+  }
+
+  ["isNonZero"] {
+    3.isNonZero
+    (-3).isNonZero
+    !0.isNonZero
+  }
+
+  ["toDuration()"] {
+    3.toDuration("min") == 3.min
+    -99.toDuration("ms") == -99.ms
+  }
+
+  ["toDataSize()"] {
+    3.toDataSize("kb") == 3.kb
+    -99.toDataSize("gib") == -99.gib
+  }
+}
+
+examples {
+  ["sign"] {
+    123.sign
+    (-123).sign
+    0.sign
+    (-0).sign
+  }
+
+  ["abs"] {
+    123.abs
+    (-123).abs
+    0.abs
+    (-0).abs
+  }
+
+  ["ceil"] {
+    123.ceil
+    (-123).ceil
+    0.ceil
+    (-0).ceil
+  }
+
+  ["floor"] {
+    123.floor
+    (-123).floor
+    0.floor
+    (-0).floor
+  }
+  
+  ["toRadixString()"] {
+    123.toRadixString(16)
+    123.toRadixString(2)
+    123.toRadixString(33)
+
+    (-123).toRadixString(16)
+    (-123).toRadixString(2)
+    (-123).toRadixString(33)
+    
+    0.toRadixString(16)
+    0.toRadixString(2)
+    0.toRadixString(33)
+    
+    (-0).toRadixString(16)
+    (-0).toRadixString(2)
+    (-0).toRadixString(33)
+    
+    module.catch(() -> (-123).toRadixString(-1))
+    module.catch(() -> (-123).toRadixString(64))
+  }
+
+  ["round()"] {
+    123.round()
+    (-123).round()
+    0.round()
+    (-0).round()
+  }
+
+  ["truncate()"] {
+    123.truncate()
+    (-123).truncate()
+    0.truncate()
+    (-0).truncate()
+  }
+
+  ["toInt()"] {
+    123.toInt()
+    (-123).toInt()
+    0.toInt()
+    (-0).toInt()
+  }
+
+  ["toFloat()"] {
+    123.toFloat()
+    (-123).toFloat()
+    0.toFloat()
+    (-0).toFloat()
+  }
+
+  ["toString()"] {
+    123.toString()
+    (-123).toString()
+    0.toString()
+    (-0).toString()
+  }
+
+  ["toFixed()"] {
+    123.toFixed(0)
+    (-123).toFixed(0)
+    0.toFixed(0)
+    (-0).toFixed(0)
+
+    123.toFixed(1)
+    (-123).toFixed(2)
+    0.toFixed(3)
+    (-0).toFixed(4)
+    
+    123456789.toFixed(1)
+    123456789.toFixed(2)
+    123456789.toFixed(3)
+    123456789.toFixed(4)
+
+    module.catch(() -> 123.toFixed(21))
+    module.catch(() -> (-123).toFixed(-1))
+  }
+
+  ["shl()"] {
+    123.shl(2)
+    (-123).shl(2)
+    0.shl(2)
+  }
+
+  ["shr()"] {
+    123.shr(2)
+    (-123).shr(2)
+    0.shr(2)
+  }
+
+  ["ushr()"] {
+    123.ushr(2)
+    (-123).ushr(2)
+    0.ushr(2)
+  }
+
+  ["and()"] {
+    123.and(456)
+    (-123).and(456)
+  }
+
+  ["or()"] {
+    123.or(456)
+    (-123).or(456)
+  }
+
+  ["xor()"] {
+    123.xor(456)
+    (-123).xor(456)
+  }
+
+  ["inv"] {
+    123.inv
+    (-123).inv
+  }
+
+  ["toChar()"] {
+    "a".codePoints.single.toChar()
+    "😊".codePoints.single.toChar()
+    module.catch(() -> (-1).toChar())
+    module.catch(() -> (0x110000).toChar())
+  }
+}

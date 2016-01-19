@@ -1,0 +1,10 @@
+module amendModule1
+
+// basic usage
+amends "library.pkl"
+
+pigeon {
+  name = "pigeon1"
+}
+
+name = "pigeon1"

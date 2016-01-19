@@ -1,0 +1,3 @@
+import "pkl:nonExisting"
+
+res1 = nonExisting.bar

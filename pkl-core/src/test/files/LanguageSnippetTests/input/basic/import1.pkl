@@ -1,0 +1,9 @@
+import "imported.pkl"
+import "imported.pkl" as other
+
+bar = 1
+res1 = imported.foo
+res2 = imported.bar
+
+res3 = other.foo
+res4 = other.bar

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Extraneous input: `"`. Expected one of: <EOF>, `abstract`, `class`, `const`, `external`, `fixed`, `function`, `hidden`, `local`, `open`, `typealias`, `@`, Identifier, DocComment
+
+x | res1 = "some string"""
+                        ^
+at parser5 (file:///$snippetsDir/input/errors/parser5.pkl)

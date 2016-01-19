@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot assign to const property `constantSimpleValue`.
+
+x | constantSimpleValue = "1"
+    ^^^^^^^^^^^^^^^^^^^
+at constAssign (file:///$snippetsDir/input/errors/const/constAssign.pkl)

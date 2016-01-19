@@ -1,0 +1,40 @@
+foo {
+  bar = new Listing {} |> mapEnv(new Dynamic {
+    res1Name = "res1Value"
+    res2Name = "res2Value"
+  })
+  baz = new Listing {} |> mapEnvLiteral(new Dynamic {
+    res3Name = "res3Value"
+    res4Name = "res4Value"
+  })
+}
+
+function mapEnv(_env: Dynamic) = new Mixin {
+  for (k, v in _env) {
+    new {
+      name = k
+      value = v
+    }
+  }
+  for (k, v in _env) {
+    new {
+      name = k + " 2"
+      value = v + " 2"
+    }
+  }
+}
+
+function mapEnvLiteral(_env: Dynamic) = (it) -> (it) {
+  for (k, v in _env) {
+    new {
+      name = k
+      value = v
+    }
+  }
+  for (k, v in _env) {
+    new {
+      name = k + " 2"
+      value = v + " 2"
+    }
+  }
+}

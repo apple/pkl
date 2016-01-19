@@ -1,0 +1,7 @@
+class X {
+  a: Boolean|List<Int>(length > 3)
+}
+
+res1 = new X {
+  a = List(1, 2, 3)
+}

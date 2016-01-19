@@ -1,0 +1,9 @@
+class Person {
+  name: String
+}
+
+person: Person = new { name = "Bob" }
+
+result {
+  ...person
+}

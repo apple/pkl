@@ -1,0 +1,3 @@
+integer: Int = 1
+
+@integer someProperty: String = "hi"

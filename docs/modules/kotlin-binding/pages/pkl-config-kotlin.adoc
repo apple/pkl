@@ -1,0 +1,117 @@
+= pkl-config-kotlin Library
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-config-kotlin-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-config-kotlin
+:uri-pkl-config-kotlin-main-sources: {uri-github-tree}/pkl-config-kotlin/src/main/kotlin/org/pkl/kotlin
+:uri-pkl-config-kotlin-test-sources: {uri-github-tree}/pkl-config-kotlin/src/test/kotlin/org/pkl/kotlin
+:uri-pkl-config-kotlin-ConverterFactories: {uri-pkl-config-kotlin-main-sources}/ConverterFactories.kt
+:uri-pkl-config-kotlin-ConfigExtensions: {uri-pkl-config-kotlin-main-sources}/ConfigExtensions.kt
+
+The _pkl-config-kotlin_ library extends xref:java-binding:pkl-config-java.adoc[pkl-config-java] with Kotlin specific extension methods and object converters.
+We recommend that Kotlin projects depend on this library instead of _pkl-config-java_.
+
+== Installation
+
+The _pkl-config-kotlin_ library is available {uri-pkl-config-kotlin-maven-module}[from Maven Central].
+It requires Java 11 or higher and Kotlin 1.5 or higher.
+
+=== Gradle
+
+To use the library in a Gradle project, declare the following dependency:
+
+[tabs]
+====
+Groovy::
++
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  compile "org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}"
+}
+
+ifndef::is-release-build[]
+repositories {
+  maven { url "{uri-sonatype}" }
+}
+endif::[]
+----
+
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+dependencies {
+  compile("org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}")
+}
+
+ifndef::is-release-build[]
+repositories {
+  maven { url = uri("{uri-sonatype}") }
+}
+endif::[]
+----
+====
+
+=== Maven
+
+To use the library in a Maven project, declare the following dependency:
+
+.pom.xml
+[source,xml,subs="+attributes"]
+----
+<project>
+  <dependency>
+    <groupId>org.pkl-lang</groupId>
+    <artifactId>pkl-config-kotlin</artifactId>
+    <version>{pkl-artifact-version}</version>
+  </dependency>
+ifndef::is-release-build[]
+  <repositories>
+    <repository>
+      <id>sonatype-s01</id>
+      <name>Sonatype S01</name>
+      <url>{uri-sonatype}</url>
+    </repository>
+  </repositories>
+endif::[]
+</project>
+----
+
+== Usage
+
+Below is the Kotlin version of the Java xref:java-binding:pkl-config-java.adoc#config-evaluator-java-example[ConfigEvaluator] example.
+Differences to the Java version are called out.
+
+[source,kotlin,indent=0]
+----
+include::{examplesdir}/KotlinConfigExample.kt[tags=usage]
+----
+<1> Use the `forKotlin()` method to preconfigure the builder with Kotlin specific conversions.
+In particular, `forKotlin()` eliminates the need to annotate constructor parameters of Kotlin classes and Kotlin data classes with `@Named`.
+<2> The evaluator should be closed once it is no longer needed.
+Here this is done with a Kotlin `use {}` expression.
+Any data returned by the evaluator before calling `close()` remains valid.
+<3> Navigate to the `"pigeon"` child.
+The subscript notation is shorthand for `config.get("pigeon")`.
+<4> Convert `"age"` to `Int` with the `Config.to()` extension method.
+The target type is provided as a type argument.
+Always use `Config.to()` instead of `Config.as()` in Kotlin.
+<5> `Config.to()` makes conversions to parameterized types straightforward:
+`to<List<String>>()` instead of `as(JavaType.listOf(String::class.java))`.
+
+For properties that are allowed to be `null`, convert to a nullable type:
+
+[source,kotlin,indent=0]
+----
+include::{examplesdir}/KotlinConfigExample.kt[tags=nullable]
+----
+<1> To indicate that `null` is an allowed value, convert to the nullable type `String?`.
+Converting to `String` would result in a `ConversionException`.
+
+For a ready-to-go example with full source code,
+see link:{uri-config-kotlin-example}[config-kotlin] in the _pkl/pkl-examples_ repository.
+
+== Further Information
+
+Refer to the Javadoc and sources published with the library, or browse the library's {uri-pkl-config-kotlin-main-sources}[main] and {uri-pkl-config-kotlin-test-sources}[test] sources.

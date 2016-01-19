@@ -1,0 +1,5 @@
+open module typeResolution1
+
+class Person1 { name = "person1" }
+
+p1: Person1

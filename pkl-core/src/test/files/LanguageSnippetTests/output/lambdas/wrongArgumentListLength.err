@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Expected 3 function arguments but got 6.
+
+x | f = (a1, a2, a3) -> a1
+        ^^^^^^^^^^^^^^^^^^
+at wrongArgumentListLength#f.<function#1> (file:///$snippetsDir/input/lambdas/wrongArgumentListLength.pkl)
+
+x | res = f.applyToList(List(1, 2, 3, 4, 5, 6))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at wrongArgumentListLength#res (file:///$snippetsDir/input/lambdas/wrongArgumentListLength.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Cannot find property `foo` in object of type `Resource`.
+
+x | foo = "bar"
+    ^^^
+at invalidAmend6#resource (file:///$snippetsDir/input/modules/invalidAmend6.pkl)
+
+Available properties:
+base64
+text
+uri
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

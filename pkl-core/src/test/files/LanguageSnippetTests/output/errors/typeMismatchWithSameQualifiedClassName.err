@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Module version conflict: Expected value of type `foo.bar#Baz` defined in module `file:///$snippetsDir/input/errors/typeMismatchWithSameQualifiedClassName.pkl`, but got type `foo.bar#Baz` defined in module `file:///$snippetsDir/input/errors/typeMismatchHelper.pkl`.
+
+
+x | baz: Baz = new typeMismatchHelper.Baz {}
+         ^^^
+at foo.bar#baz (file:///$snippetsDir/input/errors/typeMismatchWithSameQualifiedClassName.pkl)
+
+x | baz: Baz = new typeMismatchHelper.Baz {}
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at foo.bar#baz (file:///$snippetsDir/input/errors/typeMismatchWithSameQualifiedClassName.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

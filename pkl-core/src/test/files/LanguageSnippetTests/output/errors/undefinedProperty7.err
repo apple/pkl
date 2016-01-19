@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Tried to read property `name` but its value is undefined.
+
+x | name: String
+    ^^^^
+at undefinedProperty7#Person.name (file:///$snippetsDir/input/errors/undefinedProperty7.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

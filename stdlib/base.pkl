@@ -1,0 +1,3145 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Fundamental properties, methods, and classes for writing Pkl programs.
+///
+/// Members of this module are automatically available in every Pkl module.
+@ModuleInfo { minPklVersion = "0.25.0" }
+module pkl.base
+
+import "pkl:jsonnet"
+import "pkl:xml"
+import "pkl:protobuf"
+
+/// The top type of the type hierarchy.
+///
+/// Every type is a subtype of [Any].
+///
+/// The following operators are supported for all values:
+/// ```
+/// value1 == value2 // equality
+/// value1 != value2 // inequality
+/// value.member     // member access
+/// value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+/// value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+/// value is String  // type test
+/// value as String  // type cast; throws an error unless `value is String`
+/// ```
+abstract external class Any {
+  /// Returns the class of [this].
+  external function getClass(): Class
+
+  /// Returns a string representation of [this].
+  ///
+  /// This method is used to convert the values of string interpolation expressions to strings.
+  external function toString(): String
+
+  /// Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+  ///
+  /// This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+  external function ifNonNull<Result>(transform: (NonNull) -> Result): Result?
+}
+
+/// The type of [null] and null values created with [Null()].
+///
+/// All null values are pairwise equal according to `==`.
+external class Null extends Any
+
+/// A non-null value.
+typealias NonNull = Any(!(this is Null))
+
+/// The runtime representation of a class.
+external class Class<out Type> extends Any {
+  /// The unqualified name of this class.
+  external simpleName: String
+}
+
+/// The runtime representation of a type alias.
+external class TypeAlias extends Any
+
+/// Base class for modules.
+abstract external class Module {
+  /// Returns the relative, descendent directory path between this module and [other].
+  ///
+  /// Throws if no such path exists.
+  ///
+  /// For example, if module `mod1` has path `/dir1/mod1.pkl`, and module `mod2` has path `/dir1/dir2/dir3/mod2.pkl`,
+  /// then `mod1.relativePathTo(mod2)` will return `List("dir2", "dir3")`.
+  ///
+  /// A common use case is to compute the directory path between a template located at the root of a hierarchy
+  /// (say `rootModule.pkl`) and the currently evaluated module (accessible via the `module` keyword):
+  /// ```
+  /// import "rootModule.pkl" // self-import
+  /// path = rootModule.relativePathTo(module)
+  /// ```
+  external function relativePathTo(other: Module): List<String>
+
+  /// The output of this module.
+  ///
+  /// Defaults to all module properties rendered as either Pcf or the format specified on the command line.
+  hidden output: ModuleOutput = new {
+    value = outer
+    renderer =
+      let (format = read?("prop:pkl.outputFormat") ?? "pcf")
+        if (format == "json") new JsonRenderer {}
+        else if (format == "jsonnet") new jsonnet.Renderer {}
+        else if (format == "pcf") new PcfRenderer {}
+        else if (format == "plist") new PListRenderer {}
+        else if (format == "properties") new PropertiesRenderer {}
+        else if (format == "textproto") new protobuf.Renderer {}
+        else if (format == "xml") new xml.Renderer {}
+        else if (format == "yaml") new YamlRenderer {}
+        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`.")
+    text = renderer.renderDocument(value)
+  }
+}
+
+/// Base class for annotation types.
+abstract class Annotation
+
+/// Indicates that the annotated member was introduced in [version].
+class Since extends Annotation {
+  /// The version that the annotated member was introduced in.
+  version: String
+}
+
+/// Indicates that the annotated member is deprecated and will likely be removed in the future.
+class Deprecated extends Annotation {
+  /// The version in which the annotated member became deprecated.
+  since: String?
+
+  /// A message explaining how to deal with the deprecation.
+  ///
+  /// The message may contain member links, should end with a period, and should not contain line breaks.
+  ///
+  /// Example: `"Use [String.codePoints] instead."`
+  message: String?
+
+  /// The code fragment to replace usages of the deprecated member with.
+  ///
+  /// Setting this property instructs tools to automatically replace usages of the deprecated member.
+  /// For human instructions, use [message].
+  ///
+  /// Examples:
+  /// ```
+  /// // replace usages of a deprecated class or type alias with `Inventory`
+  /// replaceWith = "Inventory"
+  /// // replace usages of a deprecated property or method with `inventory`
+  /// replaceWith = "inventory"
+  /// // replace usages of a deprecated property or method with `store.inventory`
+  /// // and an import of `store`, which must resolve to an import of the current module
+  /// replaceWith = "store.inventory"
+  /// // replace usages of a deprecated property or method with `order(42)`
+  /// replaceWith = "order(42)"
+  /// // replace usages of a deprecated method (that has a parameter named `amount`) with `order(amount)`
+  /// replaceWith = "order(amount)"
+  /// ```
+  @SourceCode { language = "PklExpr" }
+  replaceWith: String?
+}
+
+/// Lists alternative names that the annotated member is known under.
+///
+/// The alternative names will be included in Pkldoc's search index.
+class AlsoKnownAs extends Annotation {
+  /// The alternative names for the annotated member.
+  names: Listing<String>
+}
+
+/// Indicates that the annotated member should not be advertised by Pkldoc and other tools.
+class Unlisted extends Annotation
+
+/// Indicates to Pkldoc that the annotated module is an example for how to use [subjects].
+class DocExample extends Annotation {
+  /// The fully qualified names of the modules that are the subjects of the example.
+  subjects: Listing<String>
+}
+
+/// Indicates that the annotated property's string value contains source code written in [language].
+class SourceCode extends Annotation {
+  /// The language that the source code is written in.
+  ///
+  /// Examples:
+  /// - `"x = 42"` is valid source code for language `"Pkl"`.
+  /// - `"42"` is valid source code for language `"PklExpr"`.
+  /// - `"42"` is valid source code for language `"Pkl"` with [prefix] `"x = "`.
+  language: "Go"|"HTML"|"Java"|"JavaScript"|"Markdown"|"Pkl"|"PklExpr"|"Python"|"Ruby"|"SQL"|"Swift"|String
+
+  /// A source code prefix to help tools understand the source code.
+  ///
+  /// For example, an expression may not be considered valid unless wrapped in a statement.
+  prefix: String?
+
+  /// A source code suffix to help tools understand the source code.
+  ///
+  /// For example, an expression may not be considered valid unless wrapped in a statement.
+  suffix: String?
+}
+
+/// Metadata for a module.
+///
+/// To annotate a module, place the annotation
+/// before the `module`, `amends`, or `extends` keyword, whichever comes first.
+///
+/// ```
+/// @ModuleInfo { minPklVersion = "1.2.3"; author = "author@apple.com" }
+/// module myModule
+/// ```
+///
+/// All library modules should have a [ModuleInfo] annotation.
+class ModuleInfo extends Annotation {
+  /// The minimum Pkl version required by this module.
+  ///
+  /// The expected format is `"major.minor.patch"`.
+  ///
+  /// This version constraint is enforced by the Pkl runtime.
+  minPklVersion: String(matches(Regex(#"\d{1,2}\.\d{1,2}\.\d{1,2}"#)))
+}
+
+/// A representation of a rendered output.
+open class FileOutput {
+  /// The value to render.
+  value: Any?
+
+  /// The renderer for [value].
+  renderer: ValueRenderer = new PcfRenderer {}
+
+  /// The final rendered output.
+  text: String = renderer.renderDocument(value)
+}
+
+/// The contents and appearance of a module's output.
+class ModuleOutput extends FileOutput {
+  /// The files to be produced by this module when rendering in multiple file output mode.
+  ///
+  /// Keys determine file paths, and may include subdirectories.
+  /// [FileOutput.text] determines file contents.
+  ///
+  /// Example:
+  /// ```
+  /// output {
+  ///   files {
+  ///     ["foo/bar.yml"] {
+  ///       value = new { bar = "bar" }
+  ///       renderer = new YamlRenderer {}
+  ///     }
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// A file can be set to the `output` of another module.
+  /// For example:
+  /// ```
+  /// output {
+  ///   files {
+  ///     ["foo.yml"] = import("foo.pkl").output
+  ///   }
+  /// }
+  /// ```
+  files: Mapping<String, FileOutput>?
+}
+
+/// Base class for rendering Pkl values in some output format.
+///
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+abstract class ValueRenderer {
+  /// Value converters to apply before values are rendered.
+  ///
+  /// A value converter is a function that converts a value to another value
+  /// immediately before the value is rendered (and after the value has been type-checked).
+  /// The converted value is then rendered by the renderer's hardwired rendering logic.
+  ///
+  /// When a converter returns a value of type [Object], [Collection], [Map], or [Pair],
+  /// converters are recursively applied to the returned value's components (object properties, list elements, etc.).
+  ///
+  /// At most one converter is applied per value.
+  /// If multiple converters are applicable, a winner is chosen as follows:
+  /// - A converter with [String] key wins over a converter with [Class] key.
+  /// - Between converters with same key type, the converter defined earlier
+  ///   (according to the mapping's definition order) wins.
+  ///
+  /// A converter's key specifies which values the converter should be applied to.
+  /// A converter with [Class] key is applied to values of that exact class (but not to values of subclasses).
+  /// A converter with [String] key is applied to values whose path matches the *path spec* described by the string.
+  ///
+  /// Path specs can have the following components:
+  /// - `^` matches the top-level value passed to `renderDocument()` or `renderValue()` (often the module object)
+  /// - `pigeon` matches property `pigeon` at any hierarchy level
+  /// - `[pigeon]` matches map(ping) entry with String key `"pigeon"` at any hierarchy level
+  /// - `*` matches any property
+  /// - `[*]` matches any list(ing) element or map(ping) entry
+  ///
+  /// Here are some examples of valid property paths:
+  /// - `"server"`
+  /// - `"server.timeout"`
+  /// - `"^server.timeout"` (matches `server.timeout`, but not `racks[12345].server.timeout`)
+  /// - `"racks[12345].server"`
+  /// - `"racks[*].server`
+  ///
+  /// Paths are matched against path specs component-wise in reverse order.
+  /// For example, paths `server.timeout` and `racks[*].server.timeout`
+  /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
+  converters: Mapping<Class|String, (unknown) -> Any>
+
+  /// The file extension associated with this output format,
+  /// or [null] if this format does not have an extension.
+  extension: String?
+
+  /// Renders [value] as a complete document.
+  ///
+  /// Some renderers impose restrictions on which types of values can be rendered as document.
+  ///
+  /// A typical implementation of this method renders a document header/footer
+  /// and otherwise delegates to [renderValue()].
+  abstract function renderDocument(value: Any): String
+
+  /// Renders [value].
+  abstract function renderValue(value: Any): String
+}
+
+/// Renders values as Pcf, a static subset of Pkl.
+class PcfRenderer extends ValueRenderer {
+  extension = "pcf"
+
+  /// The characters to use for indenting output.
+  /// Defaults to two spaces.
+  indent: String = "  "
+
+  /// Whether to skip rendering properties whose value is [null].
+  omitNullProperties: Boolean = false
+
+  /// Whether to use custom string delimiters for string values.
+  ///
+  /// If [true], custom string delimiters (such as `#"..."#`) are preferred
+  /// over escaping quotes and backslashes.
+  useCustomStringDelimiters: Boolean = false
+
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
+
+/// Directs a [ValueRenderer] to output [text] as-is in place of this directive.
+///
+/// [RenderDirective] is an escape hatch for exceptional cases.
+/// It gives full control over how a value is rendered
+/// without having to manipulate `output.text` as a whole.
+/// It is the user's responsibility to ensure that the resulting output is well-formed.
+///
+/// Example:
+/// ```
+/// name = "Pigeon"
+/// hobby = "singing"
+///
+/// output {
+///   renderer = new JsonRenderer {
+///     converters {
+///       // render String values without quotes (not valid JSON)
+///       [String] = (str) -> new RenderDirective { text = str }
+///     }
+///   }
+/// }
+/// ```
+///
+/// Output:
+/// ```
+/// {
+///   "name": Pigeon
+///   "hobby": singing
+/// }
+/// ```
+class RenderDirective {
+  /// The text to output as-is (without escaping or quoting).
+  text: String
+}
+
+/// Directs [PcfRenderer] to output additional text [before] and/or [after] rendering a [value].
+class PcfRenderDirective {
+  /// The text to output before rendering [value].
+  before: String?
+
+  /// The value to render.
+  value: Any
+
+  /// The text to output after rendering [value].
+  after: String?
+}
+
+/// Renders values as JSON.
+class JsonRenderer extends ValueRenderer {
+  extension = "json"
+
+  /// The characters to use for indenting output.
+  indent: String = "  "
+
+  /// Whether to omit JSON object fields whose value is `null`.
+  omitNullProperties: Boolean = true
+
+  /// Renders [value] as a JSON document.
+  ///
+  /// Every JSON value is a valid JSON document.
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
+
+/// Renders values as YAML.
+///
+/// To render a YAML stream, set [isStream] to [true].
+class YamlRenderer extends ValueRenderer {
+  extension = "yaml"
+
+  /// The YAML version used by consumers of the rendered documents.
+  ///
+  /// - `"compat"` - YAML 1.1 _or_ 1.2 (default)
+  /// - `"1.1"` - YAML 1.1
+  /// - `"1.2"` - YAML 1.2 (Core schema)
+  ///
+  /// At present, the mode only affects which String values are quoted in YAML.
+  /// For example, `x = "yes"` is rendered as `x: 'yes'` in modes `"compat"` and `"1.1"`,
+  /// and as `x: yes` in mode `"1.2"`.
+  mode: "compat"|"1.1"|"1.2" = "compat"
+
+  /// The number of spaces to use for indenting output.
+  indentWidth: Int(this > 1) = 2
+
+  /// Whether to skip rendering properties whose value is [null].
+  omitNullProperties: Boolean = true
+
+  /// If [true], [renderDocument] expects an argument of type [Listing] or [Collection]
+  /// and renders it as YAML stream.
+  isStream: Boolean = false
+
+  /// Renders [value] as a YAML document.
+  ///
+  /// Every YAML value is a valid YAML document.
+  external function renderDocument(value: Any): String
+
+  /// Renders [value] as YAML value.
+  external function renderValue(value: Any): String
+}
+
+/// Renders values as [XML property lists](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/PropertyLists/UnderstandXMLPlist/UnderstandXMLPlist.html).
+///
+/// XML property lists do not support [null] values.
+/// This renderer handles [null] values as follows:
+/// - Object and map properties whose value is [null] are skipped.
+/// - [null] values occurring in a list or set result in an error.
+class PListRenderer extends ValueRenderer {
+  extension = "plist"
+
+  /// The characters to use for indenting output.
+  indent: String = "  "
+
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
+
+/// Renders values as [Java Properties](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html).
+///
+/// Pkl object properties and keys of type [Boolean], [String], [Int], and [Float]
+/// are flattened into dot-separated Java property keys.
+///
+/// Pkl values of type [Boolean], [String], [Int], and [Float] are rendered as Java property values.
+///
+/// To render Pkl values of other types, convert them to one of the above types with [converters].
+///
+/// Example:
+/// ```
+/// person {
+///   name = "Pigeon"
+///   age = 42
+///   hobbies = List("surfing", "fire making")
+/// }
+///
+/// output {
+///   renderer = new PropertiesRenderer {
+///     converters {
+///       // render lists as comma-separated values
+///       [List] = (it) -> it.join(",")
+///     }
+///   }
+/// }
+/// ```
+///
+/// The above example produces the following output:
+/// ```
+/// person.name = Pigeon
+/// person.age = 42
+/// person.hobbies = surfing,fire making
+/// ```
+class PropertiesRenderer extends ValueRenderer {
+  extension = "properties"
+
+  /// Whether to skip rendering properties whose value is [null].
+  omitNullProperties: Boolean = true
+
+  /// Whether to render characters outside the printable US-ASCII charset range as
+  /// [Unicode escapes](https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.3).
+  restrictCharset: Boolean = false
+
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
+
+/// An external (file, HTTP, etc.) resource.
+///
+/// Usually, a [Resource] is obtained via a `read()` expression, such as `read("some/file")`.
+class Resource {
+  /// The URI of this resource.
+  uri: Uri
+
+  /// The text content of this resource.
+  text: String
+
+  /// The content of this resource in Base64.
+  base64: String
+
+  /// The [MD5](https://en.wikipedia.org/wiki/MD5)
+  /// hash of this resource as hexadecimal string.
+  ///
+  /// MD5 is cryptographically broken and should not be used for secure applications.
+  external md5: String
+
+  /// The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
+  /// hash of this resource as hexadecimal string.
+  ///
+  /// SHA-1 is cryptographically broken and should not be used for secure applications.
+  external sha1: String
+
+  /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this resource as hexadecimal string.
+  external sha256: String
+
+  /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this resource.
+  external sha256Int: Int
+}
+
+/// Common base class of [Int] and [Float].
+///
+/// ## Arithmetic Operators
+/// ```
+/// -a     // negation
+/// a + b  // addition
+/// a - b  // subtraction
+/// a * b  // multiplication
+/// a / b  // division
+/// a ~/ b // integer division
+/// a % b  // remainder
+/// a ** b // exponentiation
+/// ```
+///
+/// ## Comparison Operators
+/// ```
+/// a == b // equality
+/// a != b // inequality
+/// a < b  // less than
+/// a > b  // greater than
+/// a <= b // less than or equal
+/// a >= b // greater than or equal
+/// ```
+///
+/// ## Number vs. Float
+/// To allow transparent use of [Float] and [Int],
+/// use [Number] instead of [Float] in type annotations.
+abstract external class Number extends Any {
+  /// A [Duration] with value [this] and unit `"ns"` (nanoseconds).
+  abstract ns: Duration
+
+  /// A [Duration] with value [this] and unit `"us"` (microseconds).
+  abstract us: Duration
+
+  /// A [Duration] with value [this] and unit `"ms"` (milliseconds).
+  abstract ms: Duration
+
+  /// A [Duration] with value [this] and unit `"s"` (seconds).
+  abstract s: Duration
+
+  /// A [Duration] with value [this] and unit `"min"` (minutes).
+  abstract min: Duration
+
+  /// A [Duration] with value [this] and unit `"h"` (hours).
+  abstract h: Duration
+
+  /// A [Duration] with value [this] and unit `"d"` (days).
+  abstract d: Duration
+
+  /// A [DataSize] with value [this] and unit `"b"` (bytes).
+  abstract b: DataSize
+
+  /// A [DataSize] with value [this] and unit `"kb"` (kilobytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.kb == 1000.b
+  /// ```
+  abstract kb: DataSize
+
+  /// A [DataSize] with value [this] and unit `"mb"` (megabytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.mb == 1000.kb
+  /// ```
+  abstract mb: DataSize
+
+  /// A [DataSize] with value [this] and unit `"gb"` (gigabytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.gb == 1000.mb
+  /// ```
+  abstract gb: DataSize
+
+  /// A [DataSize] with value [this] and unit `"tb"` (terabytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.tb == 1000.gb
+  /// ```
+  abstract tb: DataSize
+
+  /// A [DataSize] with value [this] and unit `"pb"` (petabytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.pb == 1000.tb
+  /// ```
+  abstract pb: DataSize
+
+  /// A [DataSize] with value [this] and unit `"kib"` (kibibytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.kib == 1024.b
+  /// ```
+  abstract kib: DataSize
+
+  /// A [DataSize] with value [this] and unit `"mib"` (mebibytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.mib == 1024.kib
+  /// ```
+  abstract mib: DataSize
+
+  /// A [DataSize] with value [this] and unit `"gib"` (gibibytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.gib == 1024.mib
+  /// ```
+  abstract gib: DataSize
+
+  /// A [DataSize] with value [this] and unit `"tib"` (tebibytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.tib == 1024.gib
+  /// ```
+  abstract tib: DataSize
+
+  /// A [DataSize] with value [this] and unit `"pib"` (pebibytes).
+  ///
+  /// Facts:
+  /// ```
+  /// 1.pib == 1024.tib
+  /// ```
+  abstract pib: DataSize
+
+  /// The sign of this number.
+  ///
+  /// Returns `0` for `0`, `0.0`, `-0.0`, and [NaN],
+  /// `1` for positive numbers (including [Infinity]),
+  /// and `-1` for negative numbers (including `-`[Infinity]).
+  abstract sign: Number
+
+  /// The absolute value of this number.
+  ///
+  /// Facts:
+  /// ```
+  /// 42.abs == 42
+  /// -42.abs == 42
+  /// 0.0.abs == 0.0
+  /// (-0.0).abs == 0.0
+  /// Infinity.abs == Infinity
+  /// (-Infinity).abs == Infinity
+  /// NaN.abs == NaN
+  /// ```
+  abstract abs: Number
+
+  /// Rounds this number to the next mathematical integer towards [Infinity].
+  ///
+  /// If [this] is an [Int], returns [this].
+  /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
+  /// Otherwise, returns the smallest [Float] that is greater than or equal to [this]
+  /// and is equal to a mathematical integer.
+  abstract ceil: Number
+
+  /// Rounds this number to the next mathematical integer towards -[Infinity].
+  ///
+  /// If [this] is an [Int], returns [this].
+  /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
+  /// Otherwise, returns the largest [Float] that is less than or equal to [this]
+  /// and is equal to a mathematical integer.
+  abstract floor: Number
+
+  /// Rounds this number to the nearest mathematical integer, breaking ties in favor
+  /// of the even integer.
+  ///
+  /// If [this] is an [Int], returns [this].
+  /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
+  /// Otherwise, return the [Float] that is nearest to [this] and is equal to a
+  /// mathematical integer. If two mathematical integers are equally near, returns
+  /// the even integer.
+  abstract function round(): Number
+  // https://github.com/julialang/julia/issues/8750#issue-46387044
+
+  /// Rounds this number to the next mathematical integer towards zero.
+  ///
+  /// If [this] is an [Int], returns [this].
+  /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
+  /// If [this] is less than zero, returns the smallest [Float] that is greater than or equal to [this]
+  /// and is equal to a mathematical integer.
+  /// Otherwise, returns the largest [Float] that is less than or equal to [this]
+  /// and is equal to a mathematical integer.
+  abstract function truncate(): Number
+
+  /// Converts this number to an [Int].
+  ///
+  /// If [this] is an [Int], returns [this].
+  /// If [this] is [NaN], [Infinity], or -[Infinity], throws an error.
+  /// Otherwise, returns the [Int] representation for `this.truncate()`.
+  /// If `this.truncate()` is not representable in (that is, too large for) [Int], throws an error.
+  abstract function toInt(): Int
+
+  /// Converts this number to a [Float].
+  ///
+  /// If [this] is a [Float], returns [this].
+  /// Otherwise, returns the [Float] representation for [this].
+  /// If [this] is not representable in [Float], returns the [Float] nearest to [this].
+  abstract function toFloat(): Float
+
+  /// Converts this number to its decimal string representation.
+  abstract function toString(): String
+
+  /// Converts this number to a decimal fixed-point representation with [fractionDigits] digits after the decimal point.
+  abstract function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
+
+  /// Converts this number to a duration with [this] value and the given [unit].
+  abstract function toDuration(unit: DurationUnit): Duration
+
+  /// Converts this number to a data size with [this] value and the given [unit].
+  abstract function toDataSize(unit: DataSizeUnit): DataSize
+
+  /// Tells if this number is greater than or equal to zero.
+  ///
+  /// Facts:
+  /// ```
+  /// 0.isPositive
+  /// (-0).isPositive
+  /// 0.0.isPositive
+  /// (-0.0).isPositive
+  /// 3.isPositive
+  /// 3.14.isPositive
+  /// Infinity.isPositive
+  ///
+  /// !(-3).isPositive
+  /// !(-3.14).isPositive
+  /// !(-Infinity).isPositive
+  /// !NaN.isPositive
+  /// ```
+  abstract isPositive: Boolean
+
+  /// Tells if this number is neither [NaN] nor [isInfinite].
+  abstract isFinite: Boolean
+
+  /// Tells if this number is [Infinity] or -[Infinity].
+  abstract isInfinite: Boolean
+
+  /// Tells if this number is [NaN].
+  ///
+  /// Always use this method when testing for [NaN].
+  /// Note that `x == NaN` is *not* a correct way to test for [NaN] because `NaN != NaN` as per the IEEE spec.
+  abstract isNaN: Boolean
+
+  /// Tells if this number is not 0.
+  abstract isNonZero: Boolean
+
+  /// Tells if this number is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  ///
+  /// Facts:
+  /// ```
+  /// 3.2.isBetween(2.6, 4)
+  /// 3.2.isBetween(2.6, 3.2)
+  /// 3.2.isBetween(3.2, 4)
+  /// !3.2.isBetween(1, 3.1)
+  /// ```
+  abstract function isBetween(start: Number, inclusiveEnd: Number): Boolean
+}
+
+/// A 64-bit signed integer.
+///
+/// The following operators are supported for [Number]s:
+/// ```
+/// -a     // negation
+/// a + b  // addition
+/// a - b  // subtraction
+/// a * b  // multiplication
+/// a / b  // division
+/// a ~/ b // truncating division
+/// a % b  // remainder
+/// a ** b // exponentiation
+/// ```
+external class Int extends Number {
+  external ns: Duration
+  external us: Duration
+  external ms: Duration
+  external s: Duration
+  external min: Duration
+  external h: Duration
+  external d: Duration
+
+  external b: DataSize
+
+  external kb: DataSize
+  external mb: DataSize
+  external gb: DataSize
+  external tb: DataSize
+  external pb: DataSize
+
+  external kib: DataSize
+  external mib: DataSize
+  external gib: DataSize
+  external tib: DataSize
+  external pib: DataSize
+
+  external sign: Int
+
+  external abs: Int
+
+  external ceil: Int
+
+  external floor: Int
+
+  external function round(): Int
+
+  external function truncate(): Int
+
+  external function toInt(): Int
+
+  external function toFloat(): Float
+
+  external function toString(): String
+
+  /// Converts this number to a string representation in the given radix.
+  ///
+  /// Digits above 9 are converted to lowercase letters `a` to `z`.
+  /// To pad the resulting string with zeros, use [String.padStart()].
+  ///
+  /// Facts:
+  /// ```
+  /// (-1).toRadixString(20) == "-1"
+  /// 42.toRadixString(16) == "2a"
+  /// ```
+  external function toRadixString(radix: Int(this.isBetween(2, 36))): String
+
+  external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
+
+  external function toDuration(unit: DurationUnit): Duration
+
+  external function toDataSize(unit: DataSizeUnit): DataSize
+
+  /// Shifts this integer left by [n] bits.
+  external function shl(n: Int): Int
+
+  /// Shifts this integer right by [n] bits, preserving the sign bit.
+  external function shr(n: Int): Int
+
+  /// Shifts this integer right by [n] bits, setting the sign bit to zero.
+  ///
+  /// This operation is known as *unsigned right shift*.
+  external function ushr(n: Int): Int
+
+  /// Bitwise AND of this integer and [n].
+  external function and(n: Int): Int
+
+  /// Bitwise OR of this integer and [n].
+  external function or(n: Int): Int
+
+  /// Bitwise XOR of this integer and [n].
+  external function xor(n: Int): Int
+
+  /// Bitwise NOT (inverse) of this integer.
+  external inv: Int
+
+  external isPositive: Boolean
+
+  external isFinite: Boolean
+
+  external isInfinite: Boolean
+
+  external isNaN: Boolean
+
+  /// Tells if this integer is evenly divisible by two.
+  external isEven: Boolean
+
+  /// Tells if this number is not [isEven].
+  external isOdd: Boolean
+
+  external isNonZero: Boolean
+
+  external function isBetween(start: Number, inclusiveEnd: Number): Boolean
+
+  /// Returns the Unicode character with code point [this].
+  ///
+  /// Throws if [this] is not a valid code point.
+  external function toChar(): Char
+}
+
+/// An [Int] value in range [math.minInt8]..[math.maxInt8].
+typealias Int8 = Int(isBetween(-128, 127))
+
+/// An [Int] value in range [math.minInt16]..[math.maxInt16].
+typealias Int16 = Int(isBetween(-32768, 32767))
+
+/// An [Int] value in range [math.minInt32]..[math.maxInt32].
+typealias Int32 = Int(isBetween(-2147483648, 2147483647))
+
+/// An [Int] value in range `0`..[math.maxUInt8].
+typealias UInt8 = Int(isBetween(0, 255))
+
+/// An [Int] value in range `0`..[math.maxUInt16].
+typealias UInt16 = Int(isBetween(0, 65535))
+
+/// An [Int] value in range `0`..[math.maxUInt32].
+typealias UInt32 = Int(isBetween(0, 4294967295))
+
+/// An [Int] value in range `0`..[math.maxUInt].
+///
+/// Note that [math.maxUInt] is equal to [math.maxInt],
+/// not `maxInt * 2 + 1` as one might expect.
+/// That is, [UInt] has half the range of [Int].
+typealias UInt = Int(isPositive)
+
+/// A value that can be compared to another value of the same type with `<`, `>`, `<=`, and `>=`.
+typealias Comparable = String|Number|Duration|DataSize
+
+/// A 64-bit floating-point number conforming to the IEEE 754 binary64 format.
+///
+/// The following binary operators are supported for [Number]s:
+/// ```
+/// -a     // negative
+/// a + b  // addition
+/// a - b  // subtraction
+/// a * b  // multiplication
+/// a / b  // division
+/// a ~/ b // integer division
+/// a % b  // remainder
+/// a ** b // exponentiation
+/// ```
+///
+/// Tip: To allow transparent use of [Float] and [Int],
+/// use [Number] instead of [Float] in type annotations.
+external class Float extends Number {
+  external ns: Duration
+  external us: Duration
+  external ms: Duration
+  external s: Duration
+  external min: Duration
+  external h: Duration
+  external d: Duration
+
+  external b: DataSize
+
+  external kb: DataSize
+  external mb: DataSize
+  external gb: DataSize
+  external tb: DataSize
+  external pb: DataSize
+
+  external kib: DataSize
+  external mib: DataSize
+  external gib: DataSize
+  external tib: DataSize
+  external pib: DataSize
+
+  external sign: Float
+
+  external abs: Float
+
+  external ceil: Float
+
+  external floor: Float
+
+  external function round(): Float
+
+  external function truncate(): Float
+
+  external function toInt(): Int
+
+  external function toFloat(): Float
+
+  external function toString(): String
+
+  external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
+
+  external function toDuration(unit: DurationUnit): Duration
+
+  external function toDataSize(unit: DataSizeUnit): DataSize
+
+  external isPositive: Boolean
+
+  external isFinite: Boolean
+
+  external isInfinite: Boolean
+
+  external isNaN: Boolean
+
+  external isNonZero: Boolean
+
+  external function isBetween(start: Number, inclusiveEnd: Number): Boolean
+}
+
+/// The [Float] value that is not a number (NaN).
+external const NaN: Float
+
+/// The [Float] value that is positive Infinity. For negative infinity, use -[Infinity].
+external const Infinity: Float
+
+/// A boolean value, either [true] or [false].
+///
+/// The following operators are supported for booleans:
+/// ```
+/// !bool          // logical negation
+/// bool1 && bool2 // logical conjunction
+/// bool1 || bool2 // logical disjunction
+/// ```
+external class Boolean extends Any {
+  /// Tells if exactly one of [this] and [other] is [true] (exclusive or).
+  ///
+  /// Facts:
+  /// ```
+  /// !true.xor(true)
+  /// true.xor(false)
+  /// false.xor(true)
+  /// !false.xor(false)
+  /// ```
+  external function xor(other: Boolean): Boolean
+
+  /// Tells if [this] implies [other] (logical consequence).
+  ///
+  /// *Note*: This function does not short-circuit; [other] is always evaluated.
+  ///
+  /// Facts:
+  /// ```
+  /// true.implies(true)
+  /// !true.implies(false)
+  /// false.implies(true)
+  /// false.implies(false)
+  /// ```
+  external function implies(other: Boolean): Boolean
+}
+
+/// A Unicode character (code point).
+typealias Char = String(this.length == 1) // `this.` works around rdar://75074742
+
+/// A sequence of Unicode characters (code points).
+///
+/// The following operators are supported for strings:
+/// ```
+/// str[3]      // subscript
+/// str1 + str2 // concatenation
+/// ```
+external class String extends Any {
+  /// The number of characters in this string.
+  ///
+  /// *Note*: The runtime complexity of this operation is `O(n)`.
+  ///
+  /// Facts:
+  /// ```
+  /// "".length == 0
+  /// "abc".length == 3
+  /// ```
+  @AlsoKnownAs { names { "size"; "count" } }
+  external length: Int
+
+  /// The index of the last character in this string (same as `length - 1`).
+  ///
+  /// Returns `-1` for an empty string.
+  ///
+  /// *Note*: The runtime complexity of this operation is `O(n)`.
+  ///
+  /// Facts:
+  /// ```
+  /// "".lastIndex == -1
+  /// "abc".lastIndex == 2
+  /// ```
+  external lastIndex: Int
+
+  /// Tells whether this string is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// "".isEmpty
+  /// !("   ".isEmpty)
+  /// !("abc".isEmpty)
+  /// ```
+  external isEmpty: Boolean
+
+  /// Tells if all characters in this string have Unicode property "White_Space".
+  ///
+  /// Facts:
+  /// ```
+  /// "".isBlank
+  /// "   ".isBlank
+  /// "\t\n\r".isBlank
+  /// !("abc".isBlank)
+  /// ```
+  external isBlank: Boolean
+
+  /// Tells if this string is a valid regular expression according to [Regex].
+  external isRegex: Boolean
+
+  /// The [MD5](https://en.wikipedia.org/wiki/MD5)
+  /// hash of this string's UTF-8 byte sequence
+  /// as hexadecimal string.
+  ///
+  /// MD5 is cryptographically broken and should not be used for secure applications.
+  external md5: String
+
+  /// The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
+  /// hash of this string's UTF-8 byte sequence.
+  ///
+  /// SHA-1 is cryptographically broken and should not be used for secure applications.
+  external sha1: String
+
+  /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this string's UTF-8 byte sequence
+  /// as hexadecimal string.
+  external sha256: String
+
+  /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this string's UTF-8 byte sequence.
+  external sha256Int: Int
+
+  /// The Base64 encoding of this string's UTF-8 byte sequence.
+  external base64: String
+
+  /// The inverse of [base64].
+  ///
+  /// Facts:
+  /// ```
+  /// "abc".base64.base64Decoded == "abc"
+  /// ```
+  external base64Decoded: String
+
+  /// The Unicode characters in this string.
+  ///
+  /// Facts:
+  /// ```
+  /// "abc".chars == List("a", "b", "c")
+  /// ```
+  external chars: List<Char>(this.length == length)
+
+  /// The Unicode code points in this string.
+  ///
+  /// Facts:
+  /// ```
+  /// "abc".codePoints == List(0x61, 0x62, 0x63)
+  /// ```
+  external codePoints: List<Int(isBetween(0, 0x10FFFF))>(this.length == length)
+
+  /// Returns the character at [index], or [null] if [index] is out of range.
+  ///
+  /// Facts:
+  /// ```
+  /// "abcde".getOrNull(-1) == null
+  /// "abcde".getOrNull(0) == "a"
+  /// "abcde".getOrNull(2) == "c"
+  /// "abcde".getOrNull(4) == "e"
+  /// "abcde".getOrNull(5) == null
+  /// ```
+  external function getOrNull(index: Int): Char?
+
+  /// Returns the substring from [start] until [exclusiveEnd].
+  ///
+  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  ///
+  /// Facts:
+  /// ```
+  /// "abcde".substring(0, 0) == ""
+  /// "abcde".substring(0, 1) == "a"
+  /// "abcde".substring(1, 4) == "bcd"
+  /// "abcde".substring(4, 5) == "e"
+  /// "abcde".substring(5, 5) == ""
+  /// ```
+  external function substring(start: Int, exclusiveEnd: Int): String
+
+  /// Returns the substring from [start] until [exclusiveEnd].
+  ///
+  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  ///
+  /// Facts:
+  /// ```
+  /// "abcde".substringOrNull(0, 0) == ""
+  /// "abcde".substringOrNull(0, 1) == "a"
+  /// "abcde".substringOrNull(1, 4) == "bcd"
+  /// "abcde".substringOrNull(4, 5) == "e"
+  /// "abcde".substringOrNull(5, 5) == ""
+  ///
+  /// "abcde".substringOrNull(-1, 3) == null
+  /// "abcde".substringOrNull(0, 6) == null
+  /// "abcde".substringOrNull(3, 2) == null
+  /// ```
+  external function substringOrNull(start: Int, exclusiveEnd: Int): String?
+
+  /// Concatenates [count] copies of this string.
+  ///
+  /// Facts:
+  /// ```
+  /// "abc".repeat(0) == ""
+  /// "abc".repeat(1) == "abc"
+  /// "abc".repeat(3) == "abcabcabc"
+  /// ```
+  external function repeat(count: UInt): String
+
+  /// Tells whether this string contains [pattern].
+  external function contains(pattern: String|Regex): Boolean
+
+  /// Tells whether this string matches [regex] in its entirety.
+  @AlsoKnownAs { names { "test" } }
+  external function matches(regex: Regex): Boolean
+
+  /// Tells whether this string starts with [pattern].
+  external function startsWith(pattern: String|Regex): Boolean
+
+  /// Tells whether this string ends with [pattern].
+  external function endsWith(pattern: String|Regex): Boolean
+
+  /// Returns the zero-based index of the first occurrence of [pattern]
+  /// in this string.
+  ///
+  /// Throws if [pattern] does not occur in this string.
+  external function indexOf(pattern: String|Regex): Int
+
+  /// Returns the zero-based index of the first occurrence of [pattern]
+  /// in this string, or [null] if [pattern] does not occur in this string.
+  external function indexOfOrNull(pattern: String|Regex): Int?
+
+  /// Returns the zero-based index of the last occurrence of [pattern]
+  /// in this string.
+  ///
+  /// Throws if [pattern] does not occur in this string.
+  external function lastIndexOf(pattern: String|Regex): Int
+
+  /// Returns the zero-based index of the last occurrence of [pattern]
+  /// in this string, or [null] if [pattern] does not occur in this string.
+  external function lastIndexOfOrNull(pattern: String|Regex): Int?
+
+  /// Returns the first [n] characters of this string.
+  ///
+  /// Returns [this] if [n] is greater than or equal to [length].
+  @AlsoKnownAs { names { "limit" } }
+  external function take(n: Int): String
+
+  /// Returns the longest prefix of this string that satisfies [predicate].
+  external function takeWhile(predicate: (String) -> Boolean): String
+
+  /// Returns the last [n] characters of this string.
+  ///
+  /// Returns [this] if [n] is greater than or equal to [length].
+  external function takeLast(n: Int): String
+
+  /// Returns the longest suffix of this string that satisfies [predicate].
+  external function takeLastWhile(predicate: (String) -> Boolean): String
+
+  /// Removes the first [n] characters of this string.
+  ///
+  /// Returns the empty string if [n] is greater than or equal to [length].
+  @AlsoKnownAs { names { "skip" } }
+  external function drop(n: Int): String
+
+  /// Removes the longest prefix of this string that satisfies [predicate].
+  @AlsoKnownAs { names { "skipWhile" } }
+  external function dropWhile(predicate: (String) -> Boolean): String
+
+  /// Removes the last [n] characters of this string.
+  ///
+  /// Returns the empty string if [n] is greater than or equal to [length].
+  @AlsoKnownAs { names { "skipLast" } }
+  external function dropLast(n: Int): String
+
+  /// Removes the longest suffix of this string that satisfies [predicate].
+  @AlsoKnownAs { names { "skipLastWhile" } }
+  external function dropLastWhile(predicate: (String) -> Boolean): String
+
+  /// Replaces the first occurrence of [pattern] in this string with [replacement].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceFirst(pattern: String|Regex, replacement: String): String
+
+  /// Replaces the last occurrence of [pattern] in this string with [replacement].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceLast(pattern: String|Regex, replacement: String): String
+
+  /// Replaces all occurrences of [pattern] in this string with [replacement].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceAll(pattern: String|Regex, replacement: String): String
+
+  /// Replaces the first occurrence of [pattern] in this string with the return value of [mapper].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceFirstMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+
+  /// Replaces the last occurrence of [pattern] in this string with the return value of [mapper].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceLastMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+
+  /// Replaces all occurrences of [pattern] in this string with the return value of [mapper].
+  ///
+  /// Returns this string unchanged if [pattern] does not occur in this string.
+  external function replaceAllMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+
+  /// Replaces the characters between [start] and [exclusiveEnd] with [replacement].
+  ///
+  /// Inserts [replacement] at index [start] if `start == exclusiveEnd`.
+  external function replaceRange(start: Int, exclusiveEnd: Int, replacement: String): String
+
+  /// Performs a locale-independent character-by-character conversion of this string to uppercase.
+  external function toUpperCase(): String
+
+  /// Performs a locale-independent character-by-character conversion of this string to lowercase.
+  external function toLowerCase(): String
+
+  /// Reverses the order of characters in this string.
+  external function reverse(): String
+
+  /// Removes any leading and trailing characters with Unicode property "White_Space" from this string.
+  @AlsoKnownAs { names { "strip" } }
+  external function trim(): String
+
+  /// Removes any leading characters with Unicode property "White_Space" from this string.
+  @AlsoKnownAs { names { "stripLeft"; "stripStart"; "stripLeading"; "trimLeft"; "trimLeading" } }
+  external function trimStart(): String
+
+  /// Removes any trailing characters with Unicode property "White_Space" from this string.
+  @AlsoKnownAs { names { "stripRight"; "stripEnd"; "stripTrailing"; "trimRight"; "trimTrailin" } }
+  external function trimEnd(): String
+
+  /// Increases the length of this string to [width] by adding leading [char]s.
+  ///
+  /// Returns this string unchanged if its length is already equal to or greater than [width].
+  @AlsoKnownAs { names { "padLeft" } }
+  external function padStart(width: Int, char: Char)
+
+  /// Increases the length of this string to [width] by adding trailing [char]s.
+  ///
+  /// Returns this string unchanged if its length is already equal to or greater than [width].
+  @AlsoKnownAs { names { "padRight" } }
+  external function padEnd(width: Int, char: Char)
+
+  /// Splits this string around matches of [pattern].
+  external function split(pattern: String|Regex): List<String>
+
+  /// Converts the first character of this string to title case.
+  ///
+  /// Facts:
+  /// ```
+  /// "pigeon".capitalize() == "Pigeon"
+  /// "pigeon bird".capitalize() == "Pigeon bird"
+  /// "".capitalize() == ""
+  /// ```
+  external function capitalize(): String
+
+  /// Converts the first character of this string to lower case.
+  ///
+  /// Facts:
+  /// ```
+  /// "Pigeon".decapitalize() == "pigeon"
+  /// "Pigeon Bird".decapitalize() == "pigeon Bird"
+  /// "".decapitalize() == ""
+  /// ```
+  external function decapitalize(): String
+
+  /// Parses this string as a signed decimal (base 10) integer.
+  ///
+  /// Throws if this string cannot be parsed as a signed decimal integer,
+  /// or if the integer is too large to fit into [Int].
+  external function toInt(): Int
+
+  /// Parses this string as a signed decimal (base 10) integer.
+  ///
+  /// Returns [null] if this string cannot be parsed as a signed decimal integer,
+  /// or if the integer is too large to fit into [Int].
+  external function toIntOrNull(): Int?
+
+  /// Parses this string as a floating point number.
+  ///
+  /// Throws if this string cannot be parsed as a floating point number.
+  external function toFloat(): Float
+
+  /// Parses this string as a floating point number.
+  ///
+  /// Returns [null] if this string cannot be parsed as a floating point number.
+  external function toFloatOrNull(): Float?
+
+  /// Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
+  ///
+  /// Throws if this string is neither `"true"` nor `"false"` (case-insensitive).
+  external function toBoolean(): Boolean
+
+  /// Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
+  ///
+  /// Returns [null] if this string is neither `"true"` nor `"false"` (case-insensitive).
+  external function toBooleanOrNull(): Boolean?
+}
+
+/// A string representing a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
+typealias Uri = String
+
+/// Constructs a regular expression described by [pattern].
+///
+/// Throws if [pattern] is not a valid regular expression.
+///
+/// To test if [pattern] is a valid regular expression, use [String.isRegex].
+external const function Regex(pattern: String): Regex
+
+/// A regular expression to match strings against.
+external class Regex {
+  /// The pattern string of this regular expression.
+  ///
+  /// Facts:
+  /// ```
+  /// Regex("some pattern string").pattern == "some pattern string"
+  /// ```
+  external pattern: String
+
+  /// The number of capturing groups in this regular expression.
+  ///
+  /// Returns zero if this regular expression does not have any capturing groups.
+  ///
+  /// Facts:
+  /// ```
+  /// Regex(#"abc"#).groupCount == 0
+  /// Regex(#"a(\s*)b(\s*)c"#).groupCount == 2 // `()` denotes a capturing group
+  /// Regex(#"a(?:\s*)bc"#).groupCount == 0    // `(?:)` denotes a non-capturing group
+  /// ```
+  external groupCount: Int
+
+  /// Finds all matches of this regular expression in [input].
+  @AlsoKnownAs { names { "match" } }
+  external function findMatchesIn(input: String): List<RegexMatch>
+
+  /// Matches this regular expression against the entire [input].
+  external function matchEntire(input: String): RegexMatch?
+}
+
+/// A match of a regular expression in a string.
+class RegexMatch {
+  /// The string value of this match.
+  value: String
+
+  /// The start index of this match.
+  start: Int
+
+  /// The exclusive end index of this match.
+  end: Int
+
+  /// The capturing group matches within this match.
+  ///
+  /// If [this] is already a capturing group match, returns the empty list.
+  /// Otherwise, returns a list of length `regex.groupCount + 1`,
+  /// where `groups[0]` contains the entire match (for consistency with other regex APIs),
+  /// and `groups[1]` to `groups[regex.groupCount]` contain capturing group matches.
+  /// If a capturing group did not produce a match, the corresponding [RegexMatch] element is [null].
+  groups: List<RegexMatch?>
+
+  /// Returns [value].
+  function toString(): String = value
+}
+
+/// The unit of a [Duration].
+typealias DurationUnit = "ns"|"us"|"ms"|"s"|"min"|"h"|"d"
+
+/// A quantity of elapsed time, represented as a [value] (e.g. `30.5`) and [unit] (e.g. `min`).
+external class Duration extends Any {
+  /// The value of this duration.
+  ///
+  /// Returns [Int] if possible and [Float] otherwise.
+  ///
+  /// Facts:
+  /// ```
+  /// 1.min.value == 1
+  /// 2.2.h.value == 2.2
+  /// ```
+  external value: Number
+
+  /// An [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations) representation of this duration.
+  ///
+  /// The ISO representation has the format `[-]PT{hours}H{minutes}M{seconds}S`, where
+  ///
+  /// - negative durations have a leading minus sign,
+  /// - `{hours}` and `{minutes}` are positive integers,
+  /// - `{seconds}` is a positive integer or a positive decimal with decimal point (`.`),
+  /// - zero-valued components are omitted, and
+  /// - durations with length zero are represented as `PT0S`.
+  ///
+  /// Facts:
+  /// ```
+  /// 1.5.h.isoString == "PT1H30M"
+  /// -1.5.h.isoString == "-PT1H30M"
+  /// 1.23.s.isoString == "PT1.23S"
+  /// 0.ms.isoString == "PT0S"
+  /// ```
+  external isoString: String(matches(Regex(#"-?PT(\d+H)?(\d+M)?(\d+([.]\d+)?S)?"#)))
+
+  /// The unit of this duration.
+  ///
+  /// Facts:
+  /// ```
+  /// 1.min.unit == "min"
+  /// 2.2.h.unit == "h"
+  /// ```
+  external unit: DurationUnit
+
+  /// Tells if this duration has a value of zero or greater.
+  ///
+  /// Facts:
+  /// ```
+  /// 2.min.isPositive
+  /// !(-2.min.isPositive)
+  /// ```
+  external isPositive: Boolean
+
+  /// Tells if this duration is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  ///
+  /// Facts:
+  /// ```
+  /// 3.min.isBetween(120.s, 4.min)
+  /// 3.min.isBetween(180.s, 4.min)
+  /// 3.min.isBetween(120.s, 3.min)
+  /// !3.min.isBetween(1.min, 2.min)
+  /// ```
+  external function isBetween(start: Duration, inclusiveEnd: Duration): Boolean
+
+  /// Returns the equivalent duration with the given unit.
+  ///
+  /// Facts:
+  /// ```
+  /// 60.min.toUnit("h") == 1.h
+  /// 1.h.toUnit("min") == 60.min
+  /// ```
+  external function toUnit(unit: DurationUnit): Duration
+}
+
+/// The unit of a [DataSize].
+typealias DataSizeUnit = "b"|"kb"|"kib"|"mb"|"mib"|"gb"|"gib"|"tb"|"tib"|"pb"|"pib"
+
+/// A quantity of binary data, represented as a [value] (e.g. `30.5`) and [unit] (e.g. `mb`).
+external class DataSize extends Any {
+  /// The value of this data size.
+  ///
+  /// Returns [Int] if possible and [Float] otherwise.
+  ///
+  /// Facts:
+  /// ```
+  /// 1.mb.value == 1
+  /// 2.2.mib.value == 2.2
+  /// ```
+  external value: Number
+
+  /// The unit of this data size.
+  ///
+  /// Facts:
+  /// ```
+  /// 1.mb.unit == "mb"
+  /// 2.2.mib.unit == "mib"
+  /// ```
+  external unit: DataSizeUnit
+
+  /// Tells if this data size has a value of zero or greater.
+  ///
+  /// Facts:
+  /// ```
+  /// 2.mb.isPositive
+  /// !(-2.mb.isPositive)
+  /// ```
+  external isPositive: Boolean
+
+  /// Tells if this data size is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  ///
+  /// Facts:
+  /// ```
+  /// 3.kb.isBetween(2000.b, 4.kb)
+  /// 3.kb.isBetween(3000.b, 4.kb)
+  /// 3.kb.isBetween(2000.b, 3.kb)
+  /// !3.kb.isBetween(1.kb, 2.kb)
+  /// ```
+  external function isBetween(start: DataSize, inclusiveEnd: DataSize)
+
+  /// Returns the equivalent data size with the given unit.
+  ///
+  /// Facts:
+  /// ```
+  /// 1000.kb.toUnit("mb") == 1.mb
+  /// 1.mb.toUnit("kb") == 1000.kb
+  /// ```
+  external function toUnit(unit: DataSizeUnit): DataSize
+
+  /// Tells if this data size has a binary unit, for example `mib`.
+  ///
+  /// Returns [true] for unit `b` (bytes).
+  external isBinaryUnit: Boolean
+
+  /// Tells if this data size has a decimal unit, for example `mb`.
+  ///
+  /// Returns [true] for unit `b` (bytes).
+  external isDecimalUnit: Boolean
+
+  /// Returns the equivalent data size with a binary unit.
+  ///
+  /// Returns this data size unchanged if it already has a binary unit.
+  ///
+  /// Facts:
+  /// ```
+  /// 1024.kb.toBinaryUnit() == 1000.kib
+  /// 1024.mb.toBinaryUnit() == 1000.mib
+  ///
+  /// 1000.kib.toBinaryUnit() == 1000.kib
+  /// 1000.b.toBinaryUnit() == 1000.b
+  /// ```
+  external function toBinaryUnit(): DataSize
+
+  /// Returns the equivalent data size with a decimal unit.
+  ///
+  /// Returns this data size unchanged if it already has a decimal unit.
+  ///
+  /// Facts:
+  /// ```
+  /// 1000.kib.toDecimalUnit() == 1024.kb
+  /// 1000.mib.toDecimalUnit() == 1024.mb
+  ///
+  /// 1000.kb.toDecimalUnit() == 1000.kb
+  /// 1000.b.toDecimalUnit() == 1000.b
+  /// ```
+  external function toDecimalUnit(): DataSize
+}
+
+/// A composite value containing members (properties, elements, entries).
+///
+/// ```
+/// obj = new {
+///   name = "Pigeon" // property
+///   "Hello"       // element
+///   ["two"] = 2   // entry
+/// }
+///
+/// obj.name   // "Pigeon"
+/// obj[0]     // "Hello"
+/// obj["two"] // 2
+/// ```
+///
+/// An object can be *amended* to create variants of itself.
+/// This is similar to inheritance in prototype-oriented programming.
+///
+/// ```
+/// pigeon = new { name = "Pigeon"; age = 42 }
+/// barnOwl = (pigeon) { name = "Barn Owl" } // override property `name`
+/// oldPigeon = (pigeon) { age = 84 } // override property `age`
+/// ```
+///
+/// Object members may reference other members:
+///
+/// ```
+/// thresholds = new { lower = 10; upper = lower + 5 }
+/// ```
+///
+/// Object members are dynamically bound.
+/// This is similar to how computed cells in a spreadsheet work.
+///
+/// ```
+/// thresholds = new { lower = 10; upper = lower + 5 }
+/// thresholds2 = new { lower = 7 } // thresholds2.upper == 12
+/// ```
+///
+/// Objects have memberwise equality and hash code.
+///
+/// To arbitrarily manipulate an object, convert it to a [Collection].
+/// If necessary, the manipulated [Collection] can be converted back to an [Object].
+///
+/// ```
+/// pigeon = new { name = "Pigeon"; age = 42 }
+/// manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
+/// manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
+/// ```
+abstract external class Object extends Any
+
+/// Base class for objects whose members are described by a class definition.
+///
+/// User-defined classes (that is, classes without `external` modifier) implicitly extend this class.
+abstract class Typed extends Object {
+  /// Tells if this object has a property with the given [name].
+  external function hasProperty(name: String): Boolean
+
+  /// Returns the value of the property with the given [name].
+  ///
+  /// Throws if a property with this name does not exist.
+  external function getProperty(name: String): unknown
+
+  /// Returns the value of the property with the given [name].
+  ///
+  /// Returns [null] if a property with this name does not exist.
+  external function getPropertyOrNull(name: String): unknown?
+
+  /// Converts this object to a [Dynamic] object.
+  external function toDynamic(): Dynamic
+
+  /// Converts this object to a [Map].
+  external function toMap(): Map<String, unknown>
+}
+
+/// An object that can contain arbitrary properties, elements, and entries.
+///
+/// Example:
+/// ```
+/// obj = new Dynamic {
+///   propertyName = "propertyValue"
+///   "element"
+///   ["entryKey"] = "entryValue"
+/// }
+/// ```
+///
+/// Unlike a [Typed] object, a dynamic object does not have an associated class describing its shape.
+class Dynamic extends Object {
+  /// The function used to compute the default value for an object element or entry given its key.
+  hidden default: (unknown) -> Any = (_) -> new Dynamic {}
+
+  /// Returns the number of elements in this object.
+  external function length(): Int
+
+  /// Tells if this object has a property with the given [name].
+  external function hasProperty(name: String): Boolean
+
+  /// Returns the value of the property with the given [name].
+  ///
+  /// Throws if a property with this name does not exist.
+  external function getProperty(name: String): unknown
+
+  /// Returns the value of the property with the given [name].
+  ///
+  /// Returns [null] if a property with this name does not exist.
+  external function getPropertyOrNull(name: String): unknown
+
+  /// Converts the properties and/or entries of this dynamic object to a [Map].
+  external function toMap(): Map<unknown, unknown>
+
+  /// Converts the elements of this dynamic object to a [List].
+  external function toList(): List<unknown>
+
+  /// Converts this object to a typed object of class [clazz].
+  ///
+  /// Conforms to the semantics of the following manual conversion:
+  /// ```
+  /// class Person { name: String; age: Int }
+  /// dynamic = new Dynamic { name = "Pigeon"; age = 42 }
+  /// function toTyped(dynamic: Dynamic): Person = new {
+  ///   name = dynamic.getPropertyOrNull("name") ?? super.name
+  ///   age = dynamic.getPropertyOrNull("age") ?? super.age
+  /// }
+  /// ```
+  ///
+  /// Notable behavior:
+  /// - Elements and entries of [this] are ignored.
+  /// - Properties of [this] that have no corresponding property in [clazz] are ignored.
+  /// - [clazz] properties that have no corresponding property in [this] have their defaults preserved.
+  /// - [clazz] properties that have neither a default nor a corresponding property in [this]
+  ///   throw an "undefined property" error (only) when accessed.
+  ///
+  /// Throws if [clazz] is abstract or not a subclass of [Typed].
+  external function toTyped<Type>(clazz: Class<Type>): Type(this is Typed)
+}
+
+/// An object containing an ordered sequence of elements.
+///
+/// This class is the object equivalent of [List].
+class Listing<out Element> extends Object {
+  /// The function used to compute the default value for a listing element given its index.
+  hidden default: (Int) -> Element = (_) -> new Dynamic {}
+
+  /// The number of elements in this listing.
+  external length: Int
+
+  /// Tells if this listing is empty, that is, has zero elements.
+  external isEmpty: Boolean
+
+  /// Tells if this listing has no duplicate elements.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1; 2; 3 }.isDistinct
+  /// !new Listing { 1; 2; 1 }.isDistinct
+  /// ```
+  @AlsoKnownAs { names { "isUnique" } }
+  external isDistinct: Boolean
+
+  /// Tells if this listing has no elements that are duplicates after applying [selector].
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { "a"; "ab"; "abc" }.isDistinctBy((it) -> it.length)
+  /// !new Listing { "a"; "ab"; "c" }.isDistinctBy((it) -> it.length)
+  /// ```
+  @AlsoKnownAs { names { "isUniqueBy" } }
+  external function isDistinctBy(selector: (Element) -> Any): Boolean
+
+  /// Removes duplicate elements from this listing, preserving the first occurrence.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1; 2; 3 }.distinct == new Listing { 1; 2; 3 }
+  /// new Listing { 1; 2; 1 }.distinct == new Listing { 1; 2 }
+  /// ```
+  @AlsoKnownAs { names { "unique" } }
+  external distinct: Listing<Element>
+
+  /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { "a"; "ab"; "abc" }.distinctBy((it) -> it.length) == new Listing { "a"; "ab"; "abc" }
+  /// new Listing { "a"; "ab"; "c" }.distinctBy((it) -> it.length) == new Listing { "a"; "ab" }
+  /// ```
+  @AlsoKnownAs { names { "uniqueBy" } }
+  external function distinctBy(selector: (Element) -> Any): Listing<Element>
+
+  /// Folds this listing in iteration order using [operator], starting with [initial].
+  external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
+
+  /// Folds this listing in iteration order using [operator], starting with [initial].
+  ///
+  /// The first parameter of [operator] is the zero-based index of the current element.
+  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+
+  /// Converts the elements of this listing to strings and concatenates them inserting [separator] between elements.
+  external function join(separator: String): String
+
+  /// Converts this listing to a [List].
+  external function toList(): List<Element>
+
+  /// Converts this listing to a [Set].
+  external function toSet(): Set<Element>
+}
+
+/// An object containing an ordered sequence of key-value pairs.
+///
+/// This class is the object equivalent of [Map].
+///
+/// To retrieve a value given its key, use subscript notation (`object[key]`),
+/// which throws an error if no value is associated with the given key, or the `getOrNull` method.
+/* Note: [Key] can be co-variant as long as [getOrNull], [containsKey], and similar methods admit keys of type [Any]. */
+class Mapping<out Key, out Value> extends Object {
+  /// The function used to compute the default value for a mapping entry given its key.
+  hidden default: (Key) -> Value = (_) -> new Dynamic {}
+
+  /// Tells if this mapping is empty, that is, has zero entries.
+  external isEmpty: Boolean
+
+  /// The number of entries in this mapping.
+  external length: Int
+
+  /// The keys contained in this mapping.
+  external keys: Set<Key>
+
+  /// Tells if this mapping contains [key].
+  external function containsKey(key: Any): Boolean
+
+  /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
+  ///
+  /// This is the nullable equivalent of the subscript operator (`object[key]`).
+  external function getOrNull(key: Any): Value?
+
+  /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
+  external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
+
+  /// Converts this mapping to a [Map].
+  external function toMap(): Map<Key, Value>
+}
+
+/// Base class for function literals (also known as *lambda expressions*).
+abstract external class Function<out Result> extends Any {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function applyToList(argumentList: List<Any>): Result
+}
+
+/// A function literal with zero parameters.
+external class Function0<out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(): Result
+}
+
+/// A function literal with one parameter.
+external class Function1<in Param1, out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(p1: Param1): Result
+}
+
+/// A function literal with two parameters.
+external class Function2<in Param1, in Param2, out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(p1: Param1, p2: Param2): Result
+}
+
+/// A function literal with three parameters.
+external class Function3<in Param1, in Param2, in Param3, out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(p1: Param1, p2: Param2, p3: Param3): Result
+}
+
+/// A function literal with four parameters.
+external class Function4<in Param1, in Param2, in Param3, in Param4, out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(p1: Param1, p2: Param2, p3: Param3, p4: Param4): Result
+}
+
+/// A function literal with five parameters.
+external class Function5<in Param1, in Param2, in Param3, in Param4, in Param5, out Result> extends Function<Result> {
+  @AlsoKnownAs { names { "call"; "invoke" } }
+  external function apply(p1: Param1, p2: Param2, p3: Param3, p4: Param4, p5: Param5): Result
+}
+
+/// An anonymous function used to apply the same modification to different objects.
+///
+/// Even though mixins are regular [Function]s, they are best created with object syntax:
+/// ```
+/// withNamePigeon = new Mixin<Person> { name = "Pigeon" }  // explicit type
+/// withNamePigeon: Mixin<Person> = new { name = "Pigeon" } // inferred type
+/// ```
+///
+/// To apply a mixin to an object, use the `|>` (pipe) operator:
+/// ```
+/// pigeon = person |> withNamePigeon
+/// ```
+///
+/// Like all object-returning functions, mixins can be amended:
+/// ```
+/// withNamePigeonAndAge42 = (withNamePigeon) { age = 42 }
+/// pigeon42 = person |> withNamePigeonAndAge42
+/// ```
+typealias Mixin<Type> = (Type) -> Type
+
+/// Throws an error indicating that the requested value is undefined.
+external const function Undefined(): nothing
+
+/// Throws an error indicating that the requested functionality has not yet been implemented.
+const function TODO(): nothing = throw("TODO")
+
+/// Creates a null value that turns into [defaultValue] when amended.
+external const function Null(defaultValue: Object|Function<Object>): Null
+
+/// Constructs a [Pair].
+external const function Pair<First, Second>(first: First, second: Second): Pair<First, Second>
+
+/// An ordered pair of elements.
+///
+/// To construct a [Pair], use method [Pair()].
+external class Pair<out First, out Second> extends Any {
+  /// The first element of this pair.
+  external first: First
+
+  /// The second element of this pair.
+  external second: Second
+
+  /// Alias for [first].
+  external key: First
+
+  /// Alias for [second].
+  external value: Second
+}
+
+/// Common base class for [List] and [Set].
+///
+/// The following operators are supported for all collections:
+/// ```
+/// coll1 + coll2  // concatenation; result type is `Set` if `coll1` is a set and `List` otherwise
+/// ```
+///
+/// Additionally, the following operators are supported for [List]s:
+/// ```
+/// coll[3]    // subscript
+/// ```
+abstract external class Collection<out Element> extends Any {
+  /// The number of elements in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).length == 3
+  /// List().length == 0
+  /// ```
+  @AlsoKnownAs { names { "size"; "count" } }
+  abstract length: Int
+
+  /// Tells whether this collection is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// !List(1, 2, 3).isEmpty
+  /// List().isEmpty
+  /// ```
+  abstract isEmpty: Boolean
+
+  /// The first element in this collection.
+  ///
+  /// Throws if this collection is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).first == 1
+  /// (import "pkl:test").catch(() -> List().first)
+  /// ```
+  @AlsoKnownAs { names { "head" } }
+  abstract first: Element
+
+  /// Same as [first] but returns [null] if this collection is empty.
+  @AlsoKnownAs { names { "head" } }
+  abstract firstOrNull: Element?
+
+  /// The tail of this collection.
+  ///
+  /// Throws if this collection is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).rest == List(2, 3)
+  /// (import "pkl:test").catch(() -> List().rest)
+  /// ```
+  @AlsoKnownAs { names { "tail" } }
+  abstract rest: Collection<Element>
+
+  /// Same as [rest] but returns [null] if this collection is empty.
+  @AlsoKnownAs { names { "tail" } }
+  abstract restOrNull: Collection<Element>?
+
+  /// The last element in this collection.
+  ///
+  /// Throws if this collection is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).last == 3
+  /// (import "pkl:test").catch(() -> List().last)
+  /// ```
+  abstract last: Element
+
+  /// Same as [last] but returns [null] if this collection is empty.
+  abstract lastOrNull: Element?
+
+  /// The single element in this collection.
+  ///
+  /// Throws if this collection has zero or more than one element.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1).single == 1
+  /// throws(() -> List().single)
+  /// throws(() -> List(1, 2, 3).single)
+  /// ```
+  abstract single: Element
+
+  /// Same as [single] but returns [null] if this collection is empty or has more than one element.
+  abstract singleOrNull: Element?
+
+  /// Tests if [element] is contained in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).contains(1)
+  /// List(1, 2, 3).contains(2)
+  /// List(1, 2, 3).contains(3)
+  /// !List(1, 2, 3).contains(4)
+  /// ```
+  // TODO: add containsAll
+  abstract function contains(element: Element): Boolean
+
+  /// Tests if this collection starts with the elements in [coll].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).startsWith(List(1, 2))
+  /// List(1, 2, 3).startsWith(List())
+  /// !List(1, 2, 3).startsWith(List(2, 3))
+  /// ```
+  abstract function startsWith(coll: Collection<Any>): Boolean
+
+  /// Tests if this collection ends with the elements in [coll].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).endsWith(List(2, 3))
+  /// List(1, 2, 3).endsWith(List())
+  /// !List(1, 2, 3).endsWith(List(1, 2))
+  /// ```
+  abstract function endsWith(coll: Collection<Any>): Boolean
+
+  /// Splits this collection into two at split point [index].
+  ///
+  /// If [index] is zero or [length], one of the two collections is empty.
+  /// Throws if [index] is outside range `0`..[length].
+  abstract function split(index: Int): Pair<Collection<Element>, Collection<Element>>
+
+  /// Same as [split()] but returns [null] if [index] is outside range `0`..[length].
+  abstract function splitOrNull(index: Int): Pair<Collection<Element>, Collection<Element>>?
+
+  abstract function partition(predicate: (Element) -> Boolean): Pair<Collection<Element>, Collection<Element>>
+
+  /// The zero-based index of the first occurrence of [element] in this collection.
+  ///
+  /// Throws if this collection does not contains [element].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).indexOf(2) == 1
+  /// List(1, 2, 2).indexOf(2) == 1
+  /// (import "pkl:test").catch(() -> List(1, 2, 3).indexOf(4))
+  /// ```
+  abstract function indexOf(element: Any): Int
+
+  /// Same as [indexOf()] but returns [null] if this collection does not contain [element].
+  abstract function indexOfOrNull(element: Any): Int?
+
+  /// The zero-based index of the last occurrence of [element] in this collection.
+  ///
+  /// Throws if this collection does not contain [element].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).lastIndexOf(2) == 1
+  /// List(1, 2, 2).lastIndexOf(2) == 2
+  /// (import "pkl:test").catch(() -> List(1, 2, 3).lastIndexOf(4))
+  /// ```
+  abstract function lastIndexOf(element: Any): Int
+
+  /// Same as [lastIndexOf()] but returns [null] if this collection does not contain [element].
+  abstract function lastIndexOfOrNull(element: Any): Int?
+
+  /// The first element for which [predicate] returns [true].
+  ///
+  /// Throws if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).find((n) -> n.isEven) == 6
+  /// List(4, 6, 7).find((n) -> n.isEven) == 4
+  /// (import "pkl:test").catch(() -> List(5, 7, 9).find((n) -> n.isEven))
+  /// ```
+  abstract function find(predicate: (Element) -> Boolean): Element
+
+  /// Same as [find()] but returns [null] if [predicate] does not hold for any element in this collection.
+  abstract function findOrNull(predicate: (Element) -> Boolean): Element?
+
+  /// The last element for which [predicate] returns [true].
+  ///
+  /// Throws if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).findLast((n) -> n.isEven) == 6
+  /// List(4, 6, 8).findLast((n) -> n.isEven) == 8
+  /// List(5, 7, 9).findLast((n) -> n.isEven) == null
+  /// ```
+  abstract function findLast(predicate: (Element) -> Boolean): Any
+
+  /// Same as [findLast()] but returns [null] if [predicate] does not hold for any element in this collection.
+  abstract function findLastOrNull(predicate: (Element) -> Boolean): Element?
+
+  /// The index of the first element for which [predicate] returns [true].
+  ///
+  /// Throws  if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).findIndex((n) -> n.isEven) == 1
+  /// List(4, 6, 8).findIndex((n) -> n.isEven) == 0
+  /// (import "pkl:test").catch(() -> List(5, 7, 9).findLast((n) -> n.isEven))
+  /// ```
+  @AlsoKnownAs { names { "indexWhere" }}
+  abstract function findIndex(predicate: (Element) -> Boolean): Int
+
+  /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
+  @AlsoKnownAs { names { "indexWhere" }}
+  abstract function findIndexOrNull(predicate: (Element) -> Boolean): Int?
+
+  /// The index of the last element for which [predicate] returns [true].
+  ///
+  /// Throws if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).findLastIndex((n) -> n.isEven) == 1
+  /// List(4, 6, 8).findLastIndex((n) -> n.isEven) == 2
+  /// (import "pkl:test").catch(() -> List(5, 7, 9).findLastIndex((n) -> n.isEven))
+  /// ```
+  @AlsoKnownAs { names { "lastIndexWhere" }}
+  abstract function findLastIndex(predicate: (Element) -> Boolean): Int
+
+  /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
+  @AlsoKnownAs { names { "lastIndexWhere" }}
+  abstract function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
+
+  /// The number of elements for which [predicate] returns [true].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).count((n) -> n.isEven) == 1
+  /// List(1, 2, 3).count((n) -> n.isOdd) == 2
+  /// List(1, 2, 3).count((n) -> n > 9) == 0
+  /// ```
+  abstract function count(predicate: (Element) -> Boolean): Int
+
+  /// Tests whether [predicate] holds for every element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 3, 3).every((n) -> n.isOdd)
+  /// List().every((n) -> n.isOdd)
+  /// !List(1, 2, 3).every((n) -> n.isOdd)
+  /// ```
+  @AlsoKnownAs { names { "all"; "forall" } }
+  abstract function every(predicate: (Element) -> Boolean): Boolean
+
+  /// Tests whether [predicate] holds for at least one element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).any((n) -> n.isEven)
+  /// !List(1, 2, 3).any((n) -> n.isEven)
+  /// !List().any((n) -> n.isEven)
+  /// ```
+  @AlsoKnownAs { names { "exists" } }
+  abstract function any(predicate: (Element) -> Boolean): Boolean
+
+  /// Retains elements for which [predicate] holds.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).filter((n) -> n.isOdd) == List(1, 3)
+  /// List(1, 2, 3).filter((n) -> n.isEven) == List(2)
+  /// List(1, 2, 3).filter((n) -> n > 9) == List()
+  /// ```
+  @AlsoKnownAs { names { "findAll"; "where" } }
+  abstract function filter(predicate: (Element) -> Boolean): Collection<Element>
+
+  /// Retains non-null elements.
+  ///
+  /// Shorthand for `filter((it) -> it != null)`.
+  abstract function filterNonNull(): Collection<Element(this != null)>
+
+  /// Retains elements for which [predicate] holds.
+  ///
+  /// [predicate] takes two arguments: the index of the element, and the element itself.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).filterIndexed((i, n) -> i.isOdd) == List(2)
+  /// List(1, 2, 3).filterIndexed((i, n) -> i.isEven) == List(1, 3)
+  /// List(1, 2, 3).filterIndexed((i, n) -> i.isOdd && n > 2) == List()
+  /// List(1, 2, 3).filterIndexed((i, n) -> i.isEven && n > 2) == List(3)
+  /// ```
+  @AlsoKnownAs { names { "findAll"; "where" } }
+  abstract function filterIndexed(predicate: (Int, Element) -> Boolean): Collection<Element>
+
+  /// Retains elements whose class is a subclass of [clazz].
+  ///
+  /// Shorthand for `filter((it) -> it is X)`.
+  ///
+  /// Facts:
+  /// ```
+  /// List(42, "Pigeon", true, "Parrot").filterIsInstance(String) == List("Pigeon", "Parrot")
+  /// ```
+  @AlsoKnownAs { names { "whereType" } }
+  abstract function filterIsInstance<Type>(clazz: Class<Type>): Collection<Type>
+
+  /// Transforms this collection by applying [transform] to each element.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).map((n) -> n * 2) == List(2, 4, 6)
+  /// List(1, 2, 3).map((n) -> n.isEven) == List(false, true, false)
+  /// ```
+  abstract function map<Result>(transform: (Element) -> Result): Collection<Result>
+
+  /// Transforms this collection by applying [transform] to each element.
+  ///
+  /// [transform] takes two arguments: the index of the element, and the element itself.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).mapIndexed((i, n) -> n * i) == List(0, 2, 6)
+  /// List(1, 2, 3).mapIndexed((i, n) -> i.isOdd && n.isEven) == List(false, true, false)
+  /// ```
+  abstract function mapIndexed<Result>(transform: (Int, Element) -> Result): Collection<Result>
+
+  /// Transforms this collection by applying [transform] to each element and removing resulting [null] elements.
+  ///
+  /// Equivalent to `map(transform).filterNonNull()`.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).mapNonNull((n) -> if (n.isOdd) null else n + 2) == List(4)
+  /// ```
+  @AlsoKnownAs { names { "filterMap" } }
+  abstract function mapNonNull<Result>(transform: (Element) -> Result): Collection<Result(this != null)>
+
+  /// Applies a collection-generating [transform] to each element in this collection
+  /// and concatenates the resulting collections.
+  ///
+  /// Throws if [transform] produces a non-collection value.
+  abstract function flatMap<Result>(transform: (Element) -> Collection<Result>): Collection<Result>
+
+  /// Applies a collection-generating [transform] to each element in this collection
+  /// and concatenates the resulting collections.
+  ///
+  /// [transform] takes two arguments: the index of the element, and the element itself.
+  ///
+  /// Throws if [transform] produces a non-collection value.
+  abstract function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Collection<Result>
+
+  /// Concatenates the elements in this collection, each of which must itself be a collection.
+  ///
+  /// Throws if any element is not a collection.
+  /* Note: Can't specify return type precisely. */
+  abstract function flatten(): Collection
+
+  /// Adds [element] to this collection.
+  ///
+  /// For [List], [element] is appended.
+  abstract function add<Other>(element: Other): Collection<Element|Other>
+
+  /// Returns the first [n] elements in this collection.
+  @AlsoKnownAs { names { "limit" } }
+  abstract function take(n: Int): Collection<Element>
+
+  /// Returns the last [n] elements in this collection.
+  abstract function takeLast(n: Int): Collection<Element>
+
+  /// Returns the longest prefix of this collection that satisfies [predicate].
+  abstract function takeWhile(predicate: (Element) -> Boolean): Collection<Element>
+
+  /// Returns the longest suffix of this collection that satisfies [predicate].
+  abstract function takeLastWhile(predicate: (Element) -> Boolean): Collection<Element>
+
+  /// Removes the first [n] elements in this collection.
+  @AlsoKnownAs { names { "skip" } }
+  abstract function drop(n: Int): Collection<Element>
+
+  /// Removes the last [n] elements in this collection.
+  @AlsoKnownAs { names { "skipLast" } }
+  abstract function dropLast(n: Int): Collection<Element>
+
+  /// Removes the longest prefix of this collection that satisfies [predicate].
+  @AlsoKnownAs { names { "skipWhile" } }
+  abstract function dropWhile(predicate: (Element) -> Boolean): Collection<Element>
+
+  /// Removes the longest suffix of this collection that satisfies [predicate].
+  @AlsoKnownAs { names { "skipLastWhile" } }
+  abstract function dropLastWhile(predicate: (Element) -> Boolean): Collection<Element>
+
+  /// Folds this collection in iteration order using [operator], starting with [initial].
+  abstract function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
+
+  /// Folds this collection in reverse iteration order using [operator], starting with [initial].
+  @AlsoKnownAs { names { "foldRight" } }
+  abstract function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
+
+  /// Folds this collection in iteration order using [operator], starting with [initial].
+  ///
+  /// The first parameter of [operator] is the zero-based index of the current element.
+  abstract function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+
+  /// Folds this collection in iteration order using [operator], starting with the first element.
+  ///
+  /// Throws if this collection is empty.
+  abstract function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
+
+  /// Same as [reduce()] but returns [null] if this collection is empty.
+  abstract function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+
+  /// Groups the elements in this collection according to keys returned by [selector].
+  abstract function groupBy<Key>(selector: (Element) -> Key): Map<Key, Collection<Element>>
+
+  /// Concatenates this collection [n] times.
+  abstract function repeat(n: UInt): Collection<Element>
+
+  /// Returns the first element in this collection that is less than or equal to any other element.
+  ///
+  /// Shorthand for `minWith((a, b) -> a < b)`.
+  ///
+  /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
+  abstract min: Element
+
+  /// Same as [min] but returns [null] if this collection is empty.
+  abstract minOrNull: Element?
+
+  /// Returns the first element in this collection that is less than or equal to any other element after applying [selector].
+  ///
+  /// Shorthand for `minWith((a, b) -> selector.apply(a) < selector.apply(b))`.
+  ///
+  /// Throws if this collection is empty or if any two elements cannot be compared with `<`.
+  abstract function minBy(selector: (Element) -> Comparable): Element
+
+  /// Same as [minBy()] but returns [null] if this collection is empty.
+  abstract function minByOrNull(selector: (Element) -> Comparable): Element?
+
+  /// Returns the first element in this collection that is less than or equal to any other element according to [comparator].
+  ///
+  /// [comparator] should return [true] if its first argument is less than its second argument, and [false] otherwise.
+  ///
+  /// Throws if this collection is empty.
+  abstract function minWith(comparator: (Element, Element) -> Boolean): Element
+
+  /// Same as [minWith()] but returns [null] if this collection is empty.
+  abstract function minWithOrNull(comparator: (Element, Element) -> Boolean): Element?
+
+  /// Returns the first element in this collection that is greater than or equal to any other element.
+  ///
+  /// Shorthand for `maxWith((a, b) -> a < b)`.
+  ///
+  /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
+  abstract max: Element
+
+  /// Same as [max] but returns [null] if this collection empty.
+  abstract maxOrNull: Element
+
+  /// Returns the first element in this collection that is greater than or equal to any other element after applying [selector].
+  ///
+  /// Shorthand for `maxWith((a, b) -> selector.apply(a) < selector.apply(b))`.
+  ///
+  /// Throws if this collection is empty, or if any two elements cannot be compared with `<` after applying [selector].
+  abstract function maxBy(selector: (Element) -> Comparable): Element
+
+  /// Same as [maxBy()] but returns [null] if this collection is empty.
+  abstract function maxByOrNull(selector: (Element) -> Comparable): Element?
+
+  /// Returns the first element in this collection that is greater than or equal to any other element according to [comparator].
+  ///
+  /// [comparator] should return [true] if its first argument is less than its second argument, and [false] otherwise.
+  ///
+  /// Throws if this collection is empty.
+  abstract function maxWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
+
+  /// Same as [maxWith()] but returns [null] if this collection is empty.
+  abstract function maxWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+
+  /// Sorts this collection of [Comparable] elements in ascending order.
+  ///
+  /// Shorthand for `sortWith((a, b) -> a < b)`.
+  ///
+  /// Throws if any two elements in this collection cannot be compared with `<`.
+  abstract function sort(): List<Element>
+
+  /// Sorts this collection in ascending order after applying [selector].
+  ///
+  /// Shorthand for `sortWith((a, b) -> selector.apply(a) < selector.apply(b))`.
+  ///
+  /// Throws if any two elements in this collection cannot be compared with `<` after applying [selector].
+  abstract function sortBy(selector: (Element) -> Comparable): Collection<Element>
+
+  /// Sorts this collection according to [comparator].
+  ///
+  /// [comparator] should return [true] if its first argument
+  /// comes before its second argument in the sort order, and [false] otherwise.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).sortWith((a, b) -> a > b)) == List(3, 2, 1)
+  /// ```
+  abstract function sortWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Collection<Element>
+
+  /// Reverses the order of elements in this collection.
+  abstract function reverse(): Collection<Element>
+
+  /// Returns a collection that combines corresponding elements of [this] and [coll] in pairs.
+  ///
+  /// The returned collection's length is the minimum of `this.length` and `coll.length`.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).zip(List(4, 5, 6)) == List(Pair(1, 4), Pair(2, 5), Pair(3, 6))
+  /// List(1, 2, 3).zip(List(4, 5, 6, 7, 8)) == List(Pair(1, 4), Pair(2, 5), Pair(3, 6))
+  /// ```
+  abstract function zip<Other>(coll: Collection<Other>): Collection<Pair<Element, Other>>
+
+  /// Transposes this two-dimensional collection of collections.
+  ///
+  /// The *n*th row of the resulting collection corresponds to the
+  /// *n*th column of this collection.
+  /// Throws if an element of this collection is not itself a collection.
+  /* Note: Can't specify return type precisely. */
+  abstract function transpose(): Collection
+
+  /// Converts the elements of this collection to strings and concatenates them inserting [separator] between elements.
+  abstract function join(separator: String): String
+
+  /// Converts this collection to a list.
+  ///
+  /// Returns this collection if it already is a list.
+  abstract function toList(): List<Element>
+
+  /// Converts this collection to a set.
+  ///
+  /// Returns this collection if it already is a set.
+  abstract function toSet(): Set<Element>
+
+  /// Converts this collection to a map by extracting a key and value from each element using the given functions.
+  abstract function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+
+  /// Converts this collection to a [Listing].
+  abstract function toListing(): Listing<Element>
+
+  /// Converts this collection to a [Dynamic] object.
+  abstract function toDynamic(): Dynamic
+}
+
+/// Constructs an [IntSeq] with the given [start], [end], and step 1.
+///
+/// To set a step other than 1, use method [IntSeq.step()].
+external const function IntSeq(start: Int, end: Int): IntSeq
+
+/// A finite arithmetic sequence of integers.
+///
+/// A sequence has a [start], [end], and [step].
+/// It is either ascending ([step] > 0) or descending ([step] < 0).
+/// The default [step] is 1.
+///
+/// The members of a sequence are defined as:
+///
+/// - seq(0) = [start] + 0 * [step]
+/// - seq(1) = [start] + 1 * [step]
+/// - seq(2) = [start] + 2 * [step]
+/// - etc. where seq(n) <= [end] if [step] > 0, and seq(n) >= [end] if [step] < 0
+///
+/// ## Construction
+///
+/// To construct a sequence, use method [IntSeq()]:
+/// ```
+/// ascending = IntSeq(2, 5)
+/// empty = IntSeq(5, 2)
+/// ```
+///
+/// To set a step other than 1, use method [step()]:
+/// ```
+/// descending = IntSeq(5, 2).step(-2)
+/// ```
+///
+/// ## Iteration
+///
+/// To iterate over a sequence, use method [map()]:
+/// ```
+/// numbers = IntSeq(2, 5).map((n) -> n * 2)
+/// ```
+///
+/// A sequence can also be iterated over in a *for-generator*:
+/// ```
+/// numbers {
+///   for (n in IntSeq(2, 5)) {
+///     n * 2
+///   }
+/// }
+/// ```
+///
+/// ## Equality
+///
+/// Two sequences are equal if and only if they contain the same members in the same order.
+///
+/// Facts:
+/// ```
+/// IntSeq(2, 5) == IntSeq(2, 5)
+/// IntSeq(2, -3) == IntSeq(2, -2) // both empty
+/// IntSeq(2, 5).step(2) == IntSeq(2, 4).step(2)
+/// ```
+external class IntSeq extends Any {
+  /// The start of this sequence.
+  ///
+  /// Facts:
+  /// ```
+  /// IntSeq(2, 5).start == 2
+  /// ```
+  external start: Int
+
+  /// The inclusive end of this sequence.
+  ///
+  /// Note that [end] may or may not be a member of this sequence.
+  ///
+  /// Facts:
+  /// ```
+  /// IntSeq(2, 5).start == 5
+  /// ```
+  external end: Int
+
+  /// The common difference of successive members of this sequence.
+  ///
+  /// Facts:
+  /// ```
+  /// IntSeq(5, 2).step == 1
+  /// IntSeq(5, 2).step(-2).step == -2
+  /// ```
+  external step: Int(isNonZero)
+
+  /// Changes [step] to [newValue].
+  ///
+  /// Facts:
+  /// ```
+  /// IntSeq(5, 2).step == 1
+  /// IntSeq(5, 2).step(-2).step == -2
+  /// ```
+  external function step(newValue: Int(isNonZero)): IntSeq
+
+  /// Folds this sequence in iteration order using [operator], starting with [initial].
+  external function fold<Result>(initial: Result, operator: (Result, Int) -> Result): Result
+
+  /// Applies [mapper] to each member of this sequence and returns the resulting values as a list.
+  ///
+  /// Facts:
+  /// ```
+  /// IntSeq(2, 5).map((it) -> it) == List(2, 3, 4, 5)
+  /// IntSeq(5, 2).map((it) -> it) == List()
+  /// IntSeq(5, 2).step(-1).map((it) -> it * 2) == List(10, 8, 6, 4)
+  /// ```
+  external function map<Result>(mapper: (Int) -> Result): List<Result>
+
+  /// Converts the elements of this sequence to a [List].
+  external function toList(): List<Int>
+
+  /// Converts the elements of this sequence to a [Listing].
+  external function toListing(): Listing<Int>
+}
+
+/// A variable number of method arguments of type [Type].
+///
+/// The purpose of this class is to document methods that accept a variable number of arguments.
+/// Only standard library methods can accept a variable number of arguments.
+external class VarArgs<Type>
+
+/// Creates a list containing the given [elements].
+///
+/// This method accepts any number of arguments.
+///
+/// Facts:
+/// ```
+/// List().isEmpty
+/// List("one", "two", "three").contains("two")
+/// ```
+external const function List<Element>(elements: VarArgs<Element>): List<Element>
+
+/// An indexed sequence of elements.
+///
+/// The following operators are supported for lists:
+/// ```
+/// list[3]       // subscript
+/// list1 + list2 // concatenation
+/// ```
+external class List<out Element> extends Collection<Element> {
+  external length: Int
+
+  external isEmpty: Boolean
+
+  /// The index of the last element in this list (same as `length - 1`).
+  ///
+  /// Returns `-1` for an empty list.
+  external lastIndex: Int
+
+  /// Returns the element at [index].
+  ///
+  /// Returns [null] if [index] is outside the bounds of this list.
+  ///
+  /// Facts:
+  /// ```
+  /// List(3, 9, 6).getOrNull(0) == 3
+  /// List(3, 9, 6).getOrNull(1) == 9
+  /// List(3, 9, 6).getOrNull(2) == 6
+  /// List(3, 9, 6).getOrNull(-1) == null
+  /// List(3, 9, 6).getOrNull(3) == null
+  /// List(3, 9, 6).getOrNull(99) == null
+  /// ```
+  external function getOrNull(index: Int): Element?
+
+  /// Returns the sublist from [start] until [exclusiveEnd].
+  ///
+  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  ///
+  /// Facts:
+  /// ```
+  /// List(3, 9, 6).sublist(0, 1) == List(3)
+  /// List(3, 9, 6).sublist(0, 2) == List(3, 9)
+  /// List(3, 9, 6).sublist(1, 3) == List(9, 6)
+  /// List(3, 9, 6).sublist(0, 3) == List(3, 9, 6)
+  /// List(3, 9, 6).sublist(-1, 2) // error
+  /// List(3, 9, 6).sublist(1, 4)  // error
+  /// List(3, 9, 6).sublist(9, 99) // error
+  /// ```
+  external function sublist(start: Int, exclusiveEnd: Int): List<Element>
+
+  /// Returns the sublist from [start] until [exclusiveEnd].
+  ///
+  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  ///
+  /// Facts:
+  /// ```
+  /// List(3, 9, 6).sublistOrNull(0, 1) == List(3)
+  /// List(3, 9, 6).sublistOrNull(0, 2) == List(3, 9)
+  /// List(3, 9, 6).sublistOrNull(1, 3) == List(9, 6)
+  /// List(3, 9, 6).sublistOrNull(0, 3) == List(3, 9, 6)
+  /// List(3, 9, 6).sublistOrNull(-1, 2) == null
+  /// List(3, 9, 6).sublistOrNull(1, 4) == null
+  /// List(3, 9, 6).sublistOrNull(9, 99) == null
+  /// ```
+  external function sublistOrNull(start: Int, exclusiveEnd: Int): List<Element>?
+
+  external first: Element
+  external firstOrNull: Element?
+
+  external rest: List<Element>
+  external restOrNull: List<Element>?
+
+  external last: Element
+  external lastOrNull: Element?
+
+  external single: Element
+  external singleOrNull: Element?
+
+  external function contains(element: Any): Boolean
+  external function startsWith(coll: Collection<Any>): Boolean
+  external function endsWith(coll: Collection<Any>): Boolean
+
+  external function split(index: Int): Pair<List<Element>, List<Element>>
+  external function splitOrNull(index: Int): Pair<List<Element>, List<Element>>?
+  external function partition(predicate: (Element) -> Boolean): Pair<List<Element>, List<Element>>
+
+  external function filter(predicate: (Element) -> Boolean): List<Element>
+  external function filterNonNull(): List<Element(this != null)>
+  external function map<Result>(transform: (Element) -> Result): List<Result>
+  external function mapNonNull<Result>(transform: (Element) -> Result): List<Result(this != null)>
+  external function flatMap<Result>(transform: (Element) -> Collection<Result>): List<Result>
+
+  external function filterIndexed(predicate: (Int, Element) -> Boolean): List<Element>
+  external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
+  external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): List<Result>
+
+  external function filterIsInstance<Type>(clazz: Class<Type>): List<Type>
+
+  /// Tells whether this list contains no duplicate elements.
+  ///
+  /// Equivalent to `length == toSet().length`.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).isDistinct
+  /// !List(1, 2, 1).isDistinct
+  /// ```
+  @AlsoKnownAs { names { "isUnique" } }
+  external isDistinct: Boolean
+
+  /// Tells whether this list contains no duplicate elements after applying [selector].
+  ///
+  /// Facts:
+  /// ```
+  /// List("a", "b", "abc").isDistinctBy((it) -> it.length)
+  /// !List("a", "ab", "c").isDistinctBy((it) -> it.length)
+  /// ```
+  @AlsoKnownAs { names { "isUniqueBy" } }
+  external function isDistinctBy(selector: (Element) -> Any): Boolean
+
+  /// Removes duplicate elements from this list, preserving the first occurrence of each element.
+  ///
+  /// Equivalent to `toSet().toList()`.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).distinct == List(1, 2, 3)
+  /// List(1, 2, 1).distinct == List(1, 2)
+  /// ```
+  @AlsoKnownAs { names { "unique" } }
+  external distinct: List<Element>
+
+  /// Removes elements that are duplicates after applying [selector] from this list, preserving the first occurrence.
+  ///
+  /// Facts:
+  /// ```
+  /// List("a", "b", "abc").distinctBy((it) -> it.length) == List("a", "b", "abc")
+  /// List("a", "ab", "c").distinctBy((it) -> it.length) == List("a", "ab")
+  /// ```
+  @AlsoKnownAs { names { "uniqueBy" } }
+  external function distinctBy(selector: (Element) -> Any): List<Element>
+
+  external function flatten(): List
+
+  external function every(predicate: (Element) -> Boolean): Boolean
+  external function any(predicate: (Element) -> Boolean): Boolean
+
+  external function add<Other>(element: Other): List<Element|Other>
+
+  /// Replaces the element at [index] with [replacement].
+  ///
+  /// Throws if [index] is outside the bounds of this list.
+  external function replace<Other>(index: Int, replacement: Other): List<Element|Other>
+
+  /// Replaces the element at [index] with [replacement].
+  ///
+  /// Returns [null] if [index] is outside the bounds of this list.
+  external function replaceOrNull<Other>(index: Int, replacement: Other): List<Element|Other>?
+
+  /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
+  ///
+  /// Throws if [range] or [exclusiveEnd] is outside the bounds of this list.
+  external function replaceRange<Other>(start: Int, exclusiveEnd: Int, replacement: Collection<Other>): List<Element|Other>
+
+  /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
+  ///
+  /// Returns [null] if [range] or [exclusiveEnd] is outside the bounds of this list.
+  external function replaceRangeOrNull<Other>(start: Int, exclusiveEnd: Int, replacement: Collection<Other>): List<Element|Other>?
+
+  external function find(predicate: (Element) -> Boolean): Element
+  external function findOrNull(predicate: (Element) -> Boolean): Element?
+
+  external function findLast(predicate: (Element) -> Boolean): Element
+  external function findLastOrNull(predicate: (Element) -> Boolean): Element?
+
+  external function findIndex(predicate: (Element) -> Boolean): Int
+  external function findIndexOrNull(predicate: (Element) -> Boolean): Int?
+
+  external function findLastIndex(predicate: (Element) -> Boolean): Int
+  external function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
+
+  external function indexOf(element: Any): Int
+  external function indexOfOrNull(element: Any): Int?
+
+  external function lastIndexOf(element: Any): Int
+  external function lastIndexOfOrNull(element: Any): Int?
+
+  external function count(predicate: (Element) -> Boolean): Int
+
+  external function take(n: Int): List<Element>
+  external function takeWhile(predicate: (Element) -> Boolean): List<Element>
+  external function takeLast(n: Int): List<Element>
+  external function takeLastWhile(predicate: (Element) -> Boolean): List<Element>
+
+  external function drop(n: Int): List<Element>
+  external function dropWhile(predicate: (Element) -> Boolean): List<Element>
+  external function dropLast(n: Int): List<Element>
+  external function dropLastWhile(predicate: (Element) -> Boolean): List<Element>
+
+  external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
+  external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
+  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+
+  external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
+  external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+
+  external function groupBy<Key>(selector: (Element) -> Key): Map<Key, List<Element>>
+
+  external function repeat(n: Int): List<Element>
+
+  external min: Element
+  external minOrNull: Element
+
+  external function minBy(selector: (Element) -> Comparable): Element
+  external function minByOrNull(selector: (Element) -> Comparable): Element?
+
+  external function minWith(comparator: (Element, Element) -> Boolean): Element
+  external function minWithOrNull(comparator: (Element, Element) -> Boolean): Element?
+
+  external max: Element
+  external maxOrNull: Element?
+
+  external function maxBy(selector: (Element) -> Comparable): Element
+  external function maxByOrNull(selector: (Element) -> Comparable): Element?
+
+  external function maxWith(comparator: (Element, Element) -> Boolean): Element
+  external function maxWithOrNull(comparator: (Element, Element) -> Boolean): Element?
+
+  external function sort(): List<Element>
+  external function sortBy(selector: (Element) -> Comparable): List<Element>
+  external function sortWith(comparator: (Element, Element) -> Boolean): List<Element>
+
+  external function reverse(): List<Element>
+
+  external function zip<Other>(coll: Collection<Other>): List<Pair<Element, Other>>
+
+  external function join(separator: String): String
+
+  external function toList(): List<Element>
+
+  external function toSet(): Set<Element>
+
+  external function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+
+  external function toListing(): Listing<Element>
+
+  external function toDynamic(): Dynamic
+}
+
+/// Creates a set containing the given [elements].
+///
+/// This method accepts any number of arguments.
+///
+/// Facts:
+/// ```
+/// Set().isEmpty
+/// Set("one", "two", "three").contains("two")
+/// ```
+external const function Set<Element>(elements: VarArgs<Element>): Set<Element>
+
+/// An unordered collection of unique elements.
+///
+/// The following operators are supported for sets:
+/// ```
+/// set1 + set2  // union
+/// ```
+external class Set<out Element> extends Collection<Element> {
+  external length: Int
+  external isEmpty: Boolean
+
+  external first: Element
+  external firstOrNull: Element?
+
+  external rest: Set<Element>
+  external restOrNull: Set<Element>?
+
+  external last: Element
+  external lastOrNull: Element?
+
+  external single: Element
+  external singleOrNull: Element?
+
+  external function contains(element: Any): Boolean
+  external function startsWith(coll: Collection<Any>): Boolean
+  external function endsWith(coll: Collection<Any>): Boolean
+
+  external function split(index: Int): Pair<Set<Element>, Set<Element>>
+  external function splitOrNull(index: Int): Pair<Set<Element>, Set<Element>>?
+  external function partition(predicate: (Element) -> Boolean): Pair<Set<Element>, Set<Element>>
+
+  external function filter(predicate: (Element) -> Boolean): Set<Element>
+  external function filterNonNull(): Set<Element(this != null)>
+  external function map<Result>(transform: (Element) -> Result): Set<Result>
+  external function mapNonNull<Result>(transform: (Element) -> Result): Set<Result(this != null)>
+  external function flatMap<Result>(transform: (Element) -> Collection<Result>): Set<Result>
+
+  external function filterIndexed(predicate: (Int, Element) -> Boolean): Set<Element>
+  external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
+  external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Set<Result>
+
+  external function filterIsInstance<Type>(clazz: Class<Type>): Set<Type>
+
+  external function flatten(): Set
+
+  external function every(predicate: (Element) -> Boolean): Boolean
+  external function any(predicate: (Element) -> Boolean): Boolean
+
+  external function add<Other>(element: Other): Set<Element|Other>
+
+  external function find(predicate: (Element) -> Boolean): Element
+  external function findOrNull(predicate: (Element) -> Boolean): Element?
+
+  external function findLast(predicate: (Element) -> Boolean): Element
+  external function findLastOrNull(predicate: (Element) -> Boolean): Element?
+
+  external function count(predicate: (Element) -> Boolean): Int
+
+  external function take(n: Int): Set<Element>
+  external function takeWhile(predicate: (Element) -> Boolean): Set<Element>
+  external function takeLast(n: Int): Set<Element>
+  external function takeLastWhile(predicate: (Element) -> Boolean): Set<Element>
+
+  external function drop(n: Int): Set<Element>
+  external function dropWhile(predicate: (Element) -> Boolean): Set<Element>
+  external function dropLast(n: Int): Set<Element>
+  external function dropLastWhile(predicate: (Element) -> Boolean): Set<Element>
+
+  external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
+  external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
+  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+
+  external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
+  external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+
+  external function groupBy<Key>(selector: (Element) -> Key): Map<Key, Set<Element>>
+
+  external function repeat(n: Int): List<Element>
+
+  external min: Element
+  external minOrNull: Element
+
+  external function minBy(selector: (Element) -> Int): Element
+  external function minByOrNull(selector: (Element) -> Int): Element?
+
+  external function minWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
+  external function minWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+
+  external max: Element
+  external maxOrNull: Element?
+
+  external function maxBy(selector: (Element) -> Int): Element
+  external function maxByOrNull(selector: (Element) -> Int): Element?
+
+  external function maxWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
+  external function maxWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+
+  external function sort(): List<Element>
+  external function sortBy(selector: (Element) -> Comparable): List<Element>
+  external function sortWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): List<Element>
+
+  external function reverse(): List<Element>
+
+  external function zip<Other>(coll: Collection<Other>): Set<Pair<Element, Other>>
+
+  external function join(separator: String): String
+
+  external function toList(): List<Element>
+
+  external function toSet(): Set<Element>
+
+  external function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+
+  external function toListing(): Listing<Element>
+
+  external function toDynamic(): Dynamic
+
+  /// The intersection of this set and [other].
+  external function intersect(other: Set): Set<Element>
+  
+  /// The difference of this set and [other].
+  external function difference(other: Set): Set<Element>
+}
+
+/// Creates a map containing the given alternating [keysAndValues].
+///
+/// This method accepts any even number of arguments.
+/// Facts:
+/// ```
+/// Map().isEmpty
+/// Map("name", "Pigeon", "age", 42).keys == Set("name", "age")
+/// Map("name", "Pigeon", "age", 42).values == Set("Pigeon", 42)
+/// ```
+external const function Map<Key, Value>(keysAndValues: VarArgs<Key|Value>): Map<Key, Value>
+
+/// An unordered mapping from keys to values.
+///
+/// The following operators are supported for maps:
+/// ```
+/// map[key]     // subscript; similar to `getOrNull` but throws if key not found
+/// map1 + map2  // merge; if both maps have an entry with the same key, the entry in map2 wins
+/// ```
+/* Note: [Key] can be co-variant as long as [getOrNull], [containsKey], and similar methods admit keys of type [Any]. */
+external class Map<out Key, out Value> extends Any {
+  /// The number of entries in this map.
+  external length: Int
+
+  /// Tells whether this map is empty.
+  external isEmpty: Boolean
+
+  /// Returns the value for [key].
+  ///
+  /// Returns [null] if this map does not contain [key].
+  external function getOrNull(key: Any): Value?
+
+  /// The keys contained in this map.
+  external keys: Set<Key>
+
+  /// The values contained in this map.
+  external values: List<Value>
+
+  /// The entries contained in this map.
+  external entries: List<Pair<Key, Value>>
+
+  /// Tells if this map contains an entry with the given key.
+  external function containsKey(key: Any): Boolean
+
+  /// Tells if this map contains an entry with the given value.
+  external function containsValue(value: Any): Boolean
+
+  /// Adds or updates [key] to [value].
+  external function put<NewKey, NewValue>(key: NewKey, value: NewValue): Map<NewKey|Key, NewValue|Value>
+
+  /// Removes the map entry with the given key.
+  ///
+  /// Returns this map unchanged if it does not contain an entry with the given key.
+  external function remove(key: Any): Map<Key, Value>
+
+  /// Removes all entries for which [predicate] does not hold.
+  external function filter(predicate: (Key, Value) -> Boolean): Map<Key, Value>
+
+  /// Folds the entries of this map in iteration order using [operator], starting with [initial].
+  external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
+
+  /// Transforms the entries of this map using [transform].
+  external function map<NewKey, NewValue>(transform: (Key, Value) -> Pair<NewKey, NewValue>): Map<NewKey, NewValue>
+
+  /// Transforms the keys of this map using [transform].
+  external function mapKeys<NewKey>(transform: (Key, Value) -> NewKey): Map<NewKey, Value>
+
+  /// Transforms the values of this map using [transform].
+  external function mapValues<NewValue>(transform: (Key, Value) -> NewValue): Map<Key, NewValue>
+
+  /// Applies a map-generating [transform] to each map entry and concatenates the resulting maps.
+  external function flatMap<NewKey, NewValue>(transform: (Key, Value) -> Map<NewKey, NewValue>): Map<NewKey, NewValue>
+
+  /// Tells if [predicate] holds for every entry of this map.
+  ///
+  /// Returns [true] for an empty map.
+  external function every(predicate: (Key, Value) -> Boolean): Boolean
+
+  /// Tells if [predicate] holds for at least one entry of this map.
+  ///
+  /// Returns [false] for an empty map.
+  external function any(predicate: (Key, Value) -> Boolean): Boolean
+
+  /// Returns this map.
+  external function toMap(): Map
+
+  /// Converts this map to a [Dynamic] object.
+  external function toDynamic(): Dynamic
+
+  /// Converts this map to a typed object of class [clazz].
+  ///
+  /// Conforms to the semantics of the following manual conversion:
+  /// ```
+  /// class Person { name: String; age: Int }
+  /// map = Map(name, "Pigeon", age, 42)
+  /// function toTyped(map: Map): Person = new {
+  ///   name = map.getOrNull("name") ?? super.name
+  ///   age = map.getOrNull("age") ?? super.age
+  /// }
+  /// ```
+  ///
+  /// Notable behavior:
+  /// - Entries of [this] that have no corresponding property in [clazz] are ignored.
+  /// - [clazz] properties that have no corresponding entry in [this] have their defaults preserved.
+  /// - [clazz] properties that have neither a default nor a corresponding entry in [this]
+  ///   throw an "undefined property" error (only) when accessed.
+  ///
+  /// Throws if [clazz] is abstract or not a subclass of [Typed].
+  external function toTyped<Type>(clazz: Class<Type>): Type(this is Typed)
+
+  /// Converts this map to a [Mapping].
+  external function toMapping(): Mapping<Key, Value>
+}

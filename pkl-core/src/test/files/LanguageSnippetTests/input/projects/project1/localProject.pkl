@@ -1,0 +1,3 @@
+import "@project2/penguin.pkl"
+
+res = penguin

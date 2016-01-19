@@ -1,0 +1,3 @@
+res1: Set<Int> = Set(1, 3, 5, 7)
+res2: Set<Int> = Set()
+res3: Set<Any> = Set(1, true, "", null)

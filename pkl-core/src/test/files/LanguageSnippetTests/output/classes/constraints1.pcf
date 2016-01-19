@@ -1,0 +1,10 @@
+res1 {
+  name = "Linda Forth"
+}
+res2 = "Type constraint `length.isBetween(10, 20)` violated. Value: \"Pigeon\""
+res3 {
+  alternativeNames {
+    "Parrot"
+  }
+}
+res4 = "Type constraint `!isEmpty` violated. Value: new Listing {}"

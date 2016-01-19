@@ -1,0 +1,3 @@
+amends "../basic/fixedProperty1.pkl"
+
+res1 = "bye"

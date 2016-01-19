@@ -1,0 +1,15 @@
+// Test embedding a project definition
+import "pkl:Project"
+import "pkl:reflect"
+
+myProject: Project = (Project.newInstance(module)) {
+  dependencies {
+    ["birds"] {
+      uri = "package://localhost:12110/birds@0.5.0"
+    }
+  }
+}
+
+output {
+  value = myProject
+}

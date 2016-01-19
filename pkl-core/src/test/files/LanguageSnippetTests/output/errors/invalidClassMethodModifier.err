@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `open` is not applicable to methods.
+
+x | open function foo() = 42
+    ^^^^
+at invalidClassMethodModifier#Foo (file:///$snippetsDir/input/errors/invalidClassMethodModifier.pkl)

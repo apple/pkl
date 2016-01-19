@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Cannot amend fixed property `bird`.
+
+xx | bird {
+     ^^^^
+at cannotAmendFixedProperty1#n (file:///$snippetsDir/input/errors/cannotAmendFixedProperty1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

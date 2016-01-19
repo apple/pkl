@@ -1,0 +1,6 @@
+–– Pkl Error ––
+External members can only be defined by standard library modules.
+
+x | external function foo()
+    ^^^^^^^^
+at externalFunction (file:///$snippetsDir/input/modules/externalFunction.pkl)

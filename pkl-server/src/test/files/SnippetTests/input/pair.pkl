@@ -1,0 +1,2 @@
+res1 = Pair(1, 2)
+res2 = Pair("foo", "bar")

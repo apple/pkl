@@ -1,0 +1,57 @@
+res1 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res2 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res3 {
+  ["a"] = 1
+  ["b"] = 2
+  ["c"] = 1
+  ["d"] = 2
+}
+res4 = "Cannot spread object because the enclosing object already has a declaration of entry key `\"a\"`."
+res5 = "Duplicate definition of member `\"a\"`."
+res6 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res7 = "Expected value of type `Boolean`, but got type `String`. Value: \"a\""
+res8 = "Cannot spread object containing elements into object of type `Mapping`."
+res9 = "Cannot spread object containing properties into object of type `Mapping`."
+res10 = "Cannot spread value of type `List` into object of type `Mapping`. Value: List(1, 2, 3)"
+res11 = "Cannot spread value of type `Set` into object of type `Mapping`. Value: Set(10, 20, 30)"
+res12 = "Cannot spread value of type `IntSeq` into object of type `Mapping`. Value: IntSeq(0, 5).step(2)"
+res13 {
+  ["a"] = 1
+  ["b"] = 2
+  ["child"] {
+    ["a"] = 1
+    ["b"] = 2
+    ["child"] {
+      ["a"] = 1
+      ["b"] = 2
+    }
+  }
+}
+res14 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res15 {
+  ["a"] = 1
+  ["b"] = 2
+  ["c"] = 1
+  ["d"] = 2
+}
+res16 = "Duplicate definition of member `\"a\"`."
+res17 {
+  ["bar"] {
+    names {
+      "original-bar"
+      "new one"
+    }
+  }
+}

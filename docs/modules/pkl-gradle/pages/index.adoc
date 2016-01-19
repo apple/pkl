@@ -1,0 +1,693 @@
+= Gradle Plugin
+include::ROOT:partial$component-attributes.adoc[]
+:uri-pkl-gradle-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/org.pkl-lang.gradle.plugin
+:uri-pkl-gradle-main-sources: {uri-github-tree}/pkl-gradle/src/main/java/org/pkl/gradle
+:uri-pkl-gradle-Eval: {uri-pkl-gradle-main-sources}/Eval.java
+:uri-pkl-gradle-JavaCodeGen: {uri-pkl-gradle-main-sources}/JavaCodeGen.java
+:uri-pkl-gradle-KotlinCodeGen: {uri-pkl-gradle-main-sources}/KotlinCodeGen.java
+:uri-pkl-gradle-Pkldoc: {uri-pkl-gradle-main-sources}/Pkldoc.java
+
+The Gradle plugin offers the following features:
+
+* <<module-evaluation,Module evaluation>>
+* <<java-code-gen,Java code generation>>
+* <<kotlin-code-gen,Kotlin code generation>>
+* <<pkldoc-generation,Pkldoc generation>>
+
+Plugin versions coincide with Pkl versions.
+That is, plugin version `x.y.z` uses Pkl version `x.y.z`.
+
+[[installation]]
+== Installation
+
+The Gradle plugin is available {uri-pkl-gradle-maven-module}[from Maven Central].
+It requires Java 11 or higher and Gradle 6.8 or higher.
+Earlier Gradle versions are not supported.
+
+ifndef::is-release-version[]
+NOTE: Snapshots are published to repository `{uri-sonatype}`.
+endif::[]
+
+The plugin is applied as follows:
+
+[tabs]
+====
+Groovy::
++
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+plugins {
+  id "org.pkl-lang" version "{pkl-artifact-version}"
+}
+----
++
+.settings.gradle
+[source,groovy,subs="+attributes"]
+----
+pluginManagement {
+    repositories {
+ifdef::is-release-build[]
+        mavenCentral()
+endif::[]
+ifndef::is-release-build[]
+        maven { url "{uri-sonatype}" }
+endif::[]
+    }
+}
+----
+
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+plugins {
+  id("org.pkl-lang") version "{pkl-artifact-version}"
+}
+----
++
+.settings.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+pluginManagement {
+    repositories {
+ifdef::is-release-build[]
+        mavenCentral()
+endif::[]
+ifndef::is-release-build[]
+        maven { url = uri("{uri-sonatype}") }
+endif::[]
+    }
+}
+----
+====
+
+[[module-evaluation]]
+== Module Evaluation
+
+This feature integrates the xref:pkl-cli:index.adoc[Pkl evaluator] into Gradle builds.
+
+=== Usage
+
+To add an evaluator to the build, add a named configuration block inside `pkl.evaluators`:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  evaluators {
+    evalPkl {
+      sourceModules.add(file("module1.pkl"))
+      transitiveModules.from file("module2.pkl")
+      outputFile = layout.buildDirectory.file("module1.yaml")
+      outputFormat = "yaml"
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  evaluators {
+    register("evalPkl") {
+      sourceModules.add(file("module1.pkl"))
+      transitiveModules.from(file("module2.pkl"))
+      outputFile.set(layout.buildDirectory.file("module1.yaml"))
+      outputFormat.set("yaml")
+    }
+  }
+}
+----
+====
+
+To guarantee correct Gradle up-to-date behavior, 
+`transitiveModules` needs to contain all module files transitively referenced by `sourceModules`.
+
+For each declared evaluator, the Pkl plugin creates an equally named task.
+Hence the above evaluator can be run with:
+
+[source,shell script]
+----
+$ ./gradlew evalPkl
+----
+
+For a ready-to-go example with full source code,
+see link:{uri-build-eval-example}[codegen-java] in the _pkl/pkl-examples_ repository.
+
+=== Configuration Options
+
+[[output-format]]
+.outputFormat: Property<String>
+[%collapsible]
+====
+Default: `"pcf"` +
+Example: `outputFormat = "yaml"` +
+The output format to generate.
+The default output renderer for a module supports the following formats:
+
+* `"json"`
+* `"jsonnet"`
+* `"pcf"`
+* `"plist"`
+* `"properties"`
+* `"textproto"`
+* `"xml"`
+* `"yaml"`
+====
+
+[[output-file]]
+.outputFile: RegularFileProperty
+[%collapsible]
+====
+Default: `file("%\{moduleDir}/%\{moduleName}.%\{outputFormat}")` (places output files next to the source modules) +
+Example: `outputFile = layout.projectDirectory.file("config.yaml")` +
+The file path where the output file is placed.
+Relative paths are resolved against the project directory.
+
+If multiple source modules are given, placeholders can be used to map them to different output files.
+The following placeholders are supported:
+
+`%\{moduleDir}`:::
+The directory path of the module, relative to the working directory.
+Only available when evaluating file-based modules.
+
+`%\{moduleName}`:::
+The simple module name as inferred from the module URI.
+For hierarchical module URIs such as `+file:///foo/bar/baz.pkl+`, this is the last path segment without file extension.
+
+`%\{outputFormat}`:::
+The requested output format.
+Only available if `outputFormat` is set.
+
+If multiple sources modules are mapped to the same output file, their outputs are concatenated.
+By default, module outputs are separated with `---`, as in a YAML stream.
+// suppress inspection "AsciiDocLinkResolve"
+The separator can be customized using the link:#module-output-separator[`moduleOutputSeparator`] option.
+====
+
+[[multiple-file-output-dir]]
+.multipleFileOutputDir: DirectoryProperty
+[%collapsible]
+====
+Example 1: `multipleFileOutputDir = layout.projectDirectory.dir("output")` +
+Example 2: `+multipleFileOutputDir = layout.projectDirectory.file("%{moduleDir}/output")+`
+The directory where a module's output files are placed.
+
+Setting this option causes Pkl to evaluate a module's `output.files` property 
+and write the files specified therein.
+Within `output.files`, a key determines a file's path relative to `multipleFileOutputDir`,
+and a value determines the file's contents.
+
+This option cannot be used together with any of the following:
+
+* xref:output-file[outputFile]
+* xref:expression[expression]
+
+This option supports the same placeholders as xref:output-file[outputFile].
+
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output] 
+in the language reference.
+====
+
+[[module-output-separator]]
+.moduleOutputSeparator: Property<String>
+[%collapsible]
+====
+Default: `"---"` (as in a YAML stream) +
+The separator to use when multiple module outputs are written to the same file.
+====
+
+[[expression]]
+.expression: Property<String>
+[%collapsible]
+====
+Default: (none) +
+Example: `expression = "topLevelProperty.subValue"` +
+The expression to be evaluated within the module.
+
+This option causes Pkl to evaluate the provided expression instead of the module's `output.text` or `output.files` properties.
+The resulting value is then stringified, and written to the designated output file.
+
+For example, consider the following Pkl module:
+
+.my-pod.pkl
+[source%tested,{pkl}]
+----
+metadata {
+  name = "my-pod"
+}
+----
+
+The expression `metadata.name` evaluates to text `my-pod`.
+====
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]
+
+[[tests]]
+== Tests
+
+This feature integrates the xref:pkl-cli:index.adoc#usage[Pkl test evaluator] into Gradle builds.
+
+=== Usage
+
+To add tests to the build, add a named configuration block inside `pkl.tests`:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  tests {
+    testPkl {
+      sourceModules.add(files("module1_test.pkl", "module2_test.pkl"))
+      junitReportsDir = layout.buildDirectory.dir("reports")
+      overwrite = false
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  tests {
+    register("testPkl") {
+      sourceModules.addAll(files("module1_test.pkl", "module2_test.pkl"))
+      junitReportsDir.set(layout.buildDirectory.dir("reports"))
+      overwrite.set(false)
+    }
+  }
+}
+----
+====
+
+[[junit-reports-path]]
+.junitReportsDir: DirectoryProperty
+[%collapsible]
+====
+Default: `null` +
+Example: `junitReportsDir = layout.buildDirectory.dir("reports")` +
+Whether and where to generate JUnit XML reports.
+====
+
+[[overwrite]]
+.overwrite: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Whether to ignore expected example files and generate them again.
+====
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]
+
+[[java-code-gen]]
+== Java Code Generation
+
+This feature integrates the xref:java-binding:codegen.adoc[Java code generator] into Gradle builds.
+
+=== Usage
+
+To add a Java code generator to the build, add a named configuration block inside `pkl.javaCodeGenerators`:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  javaCodeGenerators {
+    genJava {
+      sourceModules.addAll(files("Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  javaCodeGenerators {
+    register("genJava") {
+      sourceModules.addAll(files("Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+====
+
+To compile generated classes together with test code rather than main code, use `sourceSet = sourceSets.test`.
+
+To generate getter methods instead of public final fields, use `generateGetters = true`.
+
+For each declared Java code generator, the Pkl plugin creates an equally named task.
+Hence, the above generator can be run with:
+
+[source,shell script]
+----
+$ ./gradlew genJava
+----
+
+For a ready-to-go example with full source code,
+see link:{uri-codegen-java-example}[codegen-java] in the _pkl/pkl-examples_ repository.
+
+=== Configuration Options
+
+.generateGetters: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `generateGetters = true` +
+Whether to generate private final fields and public getter methods rather than public final fields.
+====
+
+// TODO: fixme (paramsAnnotation, nonNullAnnotation)
+.preferJavaxInjectAnnotation: Boolean
+[%collapsible]
+====
+Default: `false` +
+Example: `preferJavaxInjectAnnotation = true` +
+Whether to annotate constructor parameters with `@javax.inject.Named` instead of `@org.pkl.config.java.mapper.Named`.
+If `true`, the generated code will have a compile dependency on `javax.inject:javax.inject:1`.
+====
+
+Common code generation properties:
+
+include::../partials/gradle-codegen-properties.adoc[]
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]
+
+[[kotlin-code-gen]]
+== Kotlin Code Generation
+
+This feature integrates the xref:kotlin-binding:codegen.adoc[Kotlin code generator] into Gradle builds.
+
+=== Usage
+
+To add a Kotlin code generator to the build, add a named configuration block inside `pkl.kotlinCodeGenerators`:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  kotlinCodeGenerators {
+    genKotlin {
+      sourceModules.addAll(files("Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl { 
+  kotlinCodeGenerators {
+    register("genKotlin") {
+      sourceModules.addAll(files("Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+====
+
+To compile generated classes together with test code rather than main code, use `sourceSet = sourceSets.test`.
+
+For each declared Kotlin code generator, the Pkl plugin creates an equally named task. Hence the above generator can be run with:
+
+[source,shell script]
+----
+$ ./gradlew genKotlin
+----
+
+For a ready-to-go example with full source code,
+see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl/pkl-examples_ repository.
+
+=== Configuration Options
+
+// TODO: fixme (generateKdoc)
+(None)
+
+Common code generation properties:
+
+include::../partials/gradle-codegen-properties.adoc[]
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]
+
+[[pkldoc-generation]]
+== Pkldoc generation
+
+This features integrates the xref:pkl-doc:index.adoc[Pkldoc] generator into Gradle builds.
+
+=== Usage
+
+To add a Pkldoc generator to the build, add a named configuration block inside `pkl.pkldocGenerators`:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  pkldocGenerators {
+    pkldoc {
+      sourceModules.addAll(files("doc-package-info.pkl", "Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  pkldocGenerators {
+    register("pkldoc") {
+      sourceModules.addAll(files("doc-package-info.pkl", "Template1.pkl", "Template2.pkl"))
+    }
+  }
+}
+----
+====
+
+For each declared Pkldoc generator, the Pkl plugin creates an equally named task.
+Hence, the above generator can be run with:
+
+[source,shell script]
+----
+$ ./gradlew pkldoc
+----
+
+For a ready-to-go example with full source code,
+see link:{uri-pkldoc-example}[pkldoc] in the _pkl/pkl-examples_ repository.
+
+=== Configuration Options
+
+The following properties can be configured inside a Pkldoc generator's configuration block:
+
+.outputDir: DirectoryProperty
+[%collapsible]
+====
+Default: `layout.buildDirectory.dir("pkldoc/<generator_name>")` +
+Example: `outputDir = layout.projectDirectory.dir("pkl-docs")` +
+The directory where generated documentation is placed.
+====
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]
+
+[[project-package]]
+== Project packaging
+This feature is the Gradle analogy for the xref:pkl-cli:index.adoc#command-project-package[project package] command in the CLI.
+It prepares package assets to be published from a project.
+
+There are two differences between this feature and the CLI:
+
+* Input project directories are required (the CLI determines a project from the current working directory if arguments are omitted).
+* Output directory defaults to a path within the build directory.
+
+=== Usage
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  project {
+    packagers {
+      makePackages {
+        projectDirectories.from(file("pkl-config/"))
+      }
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  project {
+    packagers {
+      register("makePackages") {
+        projectDirectories.from(file("pkl-config/"))
+      }
+    }
+  }
+}
+----
+====
+
+For each declared packager, the Pkl plugin creates an equally named task.
+Hence, the above packager can be run with:
+
+[source,shell]
+----
+$ ./gradlew makePackages
+----
+
+=== Configuration Options
+
+.projectDirectories: ConfigurableFileCollection
+[%collapsible]
+====
+Default: (none) +
+Example: `projectDirectories.from(file("pkl-config/""))` +
+The project directories to create packages for.
+====
+
+.skipPublishCheck: Property<Boolean>
+[%collapsible]
+====
+Default: (false) +
+Example: `skipPublishCheck.set(true)`
+
+Skips checking whether a package has already been published with different contents.
+
+By default, the packager will check whether a package at the same version has already been published.
+If the package has been published, it validates that the package's metadata is identical to the locally generated metadata.
+====
+
+.outputPath: DirectoryProperty
+[%collapsible]
+====
+Default: `project.getLayout().getBuildDirectory().dir("generated/pkl/packages")`
+
+The directory to write artifacts to.
+Accepts the following placeholders:
+
+`%\{name}`:: The name of the package
+`%\{version}`:: The version of the package
+====
+
+.junitReportsDir: DirectoryProperty
+[%collapsible]
+====
+Default: `null` +
+Example: `junitReportsDir = layout.buildDirectory.dir("reports")` +
+Whether and where to generate JUnit XML reports.
+====
+
+.overwrite: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Whether to ignore expected example files and generate them again.
+====
+
+Common propeties:
+
+include::../partials/gradle-common-properties.adoc[]
+
+== Project Resolving
+
+This feature is the Gradle analogy for the xref:pkl-cli:index.adoc#command-project-resolve[project resolve] command in the CLI.
+It takes the dependencies of a project, and writes the resolved versions a file at path `PklProject.deps.json`, within the root directory of the project.
+
+=== Usage
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  project {
+    resolvers {
+      resolvePklDeps {
+        projectDirectories.from(file("pkl-config/"))
+      }
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  project {
+    resolvers {
+      register("resolvePklDeps") {
+        projectDirectories.from(file("pkl-config/"))
+      }
+    }
+  }
+}
+----
+====
+
+For each declared resolver, the Pkl plugin creates an equally named task.
+Hence, the above resolver can be run with:
+
+[source,shell]
+----
+$ ./gradlew resolvePklDeps
+----
+
+=== Configuration Options
+
+.projectDirectories: ConfigurableFileCollection
+[%collapsible]
+====
+Default: (none) +
+Example: `projectDirectories.from(file("pkl-config/""))` +
+The project directories to create packages for.
+====
+
+Common propeties:
+
+include::../partials/gradle-common-properties.adoc[]

@@ -1,0 +1,9 @@
+examples {
+  ["escapeWithSingleQuotes()"] {
+    "'asdf'"
+    "'`@#$'"
+    "'abc\"abc'"
+    "'abc'\\''def'\\'\\''ghi'\\'\\'\\''jkl'"
+    "\\''abc'\\'"
+  }
+}

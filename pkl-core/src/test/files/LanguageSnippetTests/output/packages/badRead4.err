@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Resource URI `package://localhost:12110/birds@0.5.0#catalog/Swallow.pkl` has invalid syntax.
+
+x | res = read("package://localhost:12110/birds@0.5.0#catalog/Swallow.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badRead4.error#res (file:///$snippetsDir/input/packages/badRead4.error.pkl)
+
+Cannot have a relative fragment path `catalog/Swallow.pkl`.
+
+The fragment of this URI is interpreted as a path, and it must be absolute (it should start with `/`).
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

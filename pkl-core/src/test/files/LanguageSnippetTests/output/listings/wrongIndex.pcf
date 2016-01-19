@@ -1,0 +1,4 @@
+res1 = "Element index `3` is out of range `0`..`0`."
+res2 = "Element index `3` is out of range `0`..`0`."
+res3 = "Element index `-1` is out of range `0`..`0`."
+res4 = "Element index `-1` is out of range `0`..`0`."

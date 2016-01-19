@@ -1,0 +1,265 @@
+amends "../snippetTest.pkl"
+
+import "pkl:protobuf"
+
+local renderer = new protobuf.Renderer {}
+local function renderValue(it: Any): String =
+  renderer.renderValue(it)
+
+/// For testing inheritance; [Foo] is the _base_ class.
+local open class Foo {
+  foo: String
+}
+
+/// For testing inheritance; [Bar] is the _derived_ class.
+local class Bar extends Foo {
+  foo = "Bar"
+}
+
+/// For testing the rendering of types inside a `VmTyped`.
+local class Baz {
+  foo: Foo
+  bar: Bar
+  foos: Listing<Foo>
+  bars: Mapping<String, Bar>
+}
+
+/// For testing how rendering deals with _annotated_ (outer) collection types.
+local class CollectionTypes {
+  emptyList: List<Foo>
+  list: List<Foo> = List(new Bar {}, new Foo { foo = "test foo" })
+  emptyListing: Listing<Foo>
+  listing: Listing<Foo> = new {
+    new Bar { foo = "listing bar" }
+    new Foo { foo = "listing foo" }
+  }
+  emptyMap: Map<Int, String>
+  map: Map<Int, Foo> = Map(
+    1, new Bar { foo = "first" },
+    2, new Foo { foo = "second" }
+  )
+  emptyMapping: Mapping<Int, Bar>
+  mapping: String =
+    module.catch(() ->
+      renderValue(new Mapping<Foo, Bar> {
+        [new Foo { foo = "key foo" }] = new Bar { foo = "value bar" }
+      })
+    )
+  emptySet: Set<Foo>
+  set: Set<Foo> = Set(
+    new Bar { foo = "setOne" },
+    new Bar { foo = "setTwo" }
+  )
+  mappingWithUnannotatedValueType: Mapping<String, Listing> = new {
+    ["some"] {
+      new Bar {}
+      new Bar {}
+    }
+  }
+}
+
+/// For testing _admissable_ mapping key types.
+local class MappingKeys {
+  string: Mapping<String, Bar>
+  long: Mapping<Int, Bar>
+  int: Mapping<Int32, Bar>
+  short: Mapping<Int16, Bar>
+  boolean: Mapping<Boolean, Bar>
+}
+
+/// For testing that using _inadmissable_ mapping key types does indeed throw.
+local class InvalidMappingKey {
+  foo: Mapping<Bar, Bar>
+}
+
+local typealias StringLiteralUnion
+  = *"Qux"
+  | "quux"
+  | "QUUX"
+
+local typealias OpenEndedStringUnion
+  = *"corge"
+  | String // Not a union of string literals, although fully String-y.
+
+local typealias HeterogeneousUnion
+  = "Grault"
+  | "GRAULT"
+  | Int
+  | Foo
+
+local typealias SynonymPureEnum = StringLiteralUnion
+
+local class TypeAliasBehavior {
+  doubleAlias: SynonymPureEnum
+}
+
+local class StringLiteralUnionBehavior {
+  theProperty: StringLiteralUnion
+}
+
+local class OpenEndedStringUnionBehavior {
+  theProperty: OpenEndedStringUnion
+}
+
+local class HeterogeneousUnionBehavior {
+  theHeterogeneousUnion: Listing<HeterogeneousUnion>
+}
+
+local class HeterogeneousUnionBehaviorX {
+  theHeterogeneousUnion: HeterogeneousUnion
+}
+
+local class InvalidUnionBehavior {
+  myMapping: Mapping<HeterogeneousUnion, Int> = new {
+    [5] = 5
+  }
+}
+
+local class DynamicBehavior {
+  myDynamic: Dynamic
+}
+
+local class DurationBehavior {
+  myDuration: Duration = 42.ns
+}
+
+local class DataSizeBehavior {
+  myDataSize: DataSize
+}
+
+local class SubtypingBehavior {
+  myFoo: Foo
+  myFooOrBar: (Foo|Bar)?
+}
+
+examples {
+  ["Rendering primitive values"] {
+    for (v in new Listing {
+      true
+      false
+
+      -42 as Int8
+      -42 as Int16
+      -42 as Int32
+      -42 as Int
+
+      42 as UInt8
+      42 as UInt16
+      42 as UInt32
+      42 as UInt
+
+      -13.37 as Float
+
+      -13.37 as Number
+      13.37 as Number
+      -42 as Number
+      42 as Number
+
+      "Hello world"
+
+      10.min
+      2.ms
+      120.ns
+      5.s + 120.ns
+    }) {
+      renderValue(v)
+    }
+  }
+
+  ["Collection types"] {
+    renderValue(new CollectionTypes {})
+  }
+
+  ["Typed objects rendered as protobuf.ProtoMessage"] {
+    renderValue(new Foo { foo = "new" })
+    renderValue(new Bar {})
+    renderValue(new Bar { foo = "Baz" })
+    renderValue(
+      new Baz {
+        foo {
+          foo = "FOO"
+        }
+        foos {
+          foo
+          outer.bar
+        }
+        bars {
+          ["default"] {}
+          ["amended"] {
+            foo = "Bars"
+          }
+        }
+      }
+    )
+    renderValue(new DurationBehavior {})
+  }
+
+  ["Unsupported types"] {
+    module.catch(() -> throw(renderValue(new DynamicBehavior {})))
+    module.catch(() -> throw(renderValue(new DataSizeBehavior { myDataSize = 10.kb })))
+  }
+
+  ["Types not supported at top-level"] {
+    module.catch(() -> throw(renderValue(Map(3,4))))
+    module.catch(() -> throw(renderValue(new Mapping {[1] = 2})))
+  }
+
+  ["Keys in maps"] {
+    renderValue(new MappingKeys {
+      string {
+        ["Hello world"] {}
+      }
+      long {
+        [1337] {}
+      }
+      int {
+        [42] {}
+      }
+      short {
+        [1] {}
+      }
+      boolean {
+        [false] {}
+      }
+    })
+    module.catch(() -> throw(renderValue(new InvalidMappingKey {
+      foo {
+        [new Bar {}] {}
+      }
+    })))
+  }
+
+  ["typealiases"] {
+    renderValue(new TypeAliasBehavior {})
+  }
+
+  ["unions"] {
+    renderValue(new StringLiteralUnionBehavior {})
+    renderValue(new OpenEndedStringUnionBehavior {})
+    renderValue(new HeterogeneousUnionBehaviorX {
+      theHeterogeneousUnion = "Grault"
+    })
+    renderValue(new HeterogeneousUnionBehavior {
+      theHeterogeneousUnion {
+        "Grault"
+        0
+        new Bar {}
+      }
+    })
+    module.catch(() -> renderValue(new InvalidUnionBehavior {}))
+  }
+  ["subtypes"] {
+    renderValue(new SubtypingBehavior {
+      myFoo = new Foo { foo = "renders" }
+    })
+    module.catch(() -> 
+      renderValue(new SubtypingBehavior {
+        myFoo = new Bar { foo = "shouldn't render" }
+      })
+    )
+    renderValue(new SubtypingBehavior {
+      myFoo = new Foo { foo = "renders" }
+      myFooOrBar = new Bar { foo = "also renders" }
+    })
+  }
+}

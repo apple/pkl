@@ -1,0 +1,57 @@
+examples {
+  ["equality"] {
+    true
+    false
+  }
+  ["inequality"] {
+    false
+    true
+  }
+  ["interpolation"] {
+    "How are you today? Are you hungry?"
+    "Can you nest this for me?"
+    "Is Howyou a word?"
+    "Is soma a word?"
+    "Can you nest ((( for me?"
+    "Can you nest ))) for me?"
+    "Can you nest this for me?"
+  }
+  ["interpolation of different types"] {
+    "42"
+    "1.23"
+    "Pigeon"
+    "false"
+    "1.23.ns"
+    "1.23.mb"
+    "Pair(1, 2)"
+    "List(1, 2, 3)"
+    "Set(1, 2, 3)"
+    "Map(1, 2, 3, 4)"
+    "new Listing { 1; 2; 3 }"
+    "new Mapping { [\"Pigeon\"] = 42; [\"Barn Owl\"] = 21 }"
+    "new Dynamic { name = \"Pigeon\"; age = 42 }"
+    "new Person { name = \"Pigeon\"; age = 42 }"
+    "My name is Pigeon and I'm 42 years old."
+    "null"
+    "null"
+  }
+  ["escaping"] {
+    "\\\"\\("
+    """
+    \t\r
+    
+    """
+    "\t0Āက𐀀𐀀𐀀𐀀"
+  }
+  ["subscript"] {
+    "i"
+    "Character index `-1` is out of range `0`..`3`. String: \"this\""
+    "Character index `4` is out of range `0`..`3`. String: \"this\""
+  }
+  ["dollar sign has no special meaning"] {
+    "123$"
+    "$123"
+    "$&%"
+    "$"
+  }
+}

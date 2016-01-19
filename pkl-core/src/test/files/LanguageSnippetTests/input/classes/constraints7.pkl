@@ -1,0 +1,27 @@
+import "pkl:test"
+
+const function add(x, y) = x + y
+
+class X {
+  function subtract(x, y) = x - y
+  y: Y(multiply(subtract(add(5, 4), 3), 2) == z)
+}
+
+class Y {
+  function multiply(x, y) = x * y
+  z: Int
+}
+
+res1 = new X {
+  y {
+    z = 12
+  }
+}
+
+res2 = test.catch(() ->
+  new X {
+    y {
+      z = 13
+    }
+  }.y
+)

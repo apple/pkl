@@ -1,0 +1,6 @@
+amends "library.pkl"
+
+// use inherited type
+pigeon = new Person {
+  name = "pigeon2"
+}

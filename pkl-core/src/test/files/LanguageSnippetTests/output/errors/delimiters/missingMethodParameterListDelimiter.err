@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Missing `)` delimiter.
+
+x | function foo(arg1, arg2 = arg1 + arg2
+                           ^
+at missingMethodParameterListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingMethodParameterListDelimiter.pkl)

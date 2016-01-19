@@ -1,0 +1,26 @@
+examples {
+  ["first"] {
+    "Pigeon"
+    new {
+      name = "Pigeon"
+    }
+    null
+  }
+  ["second"] {
+    42
+    List(1, 2, 3)
+    Pair(Regex("Pigeon"), 42.ms)
+  }
+  ["key"] {
+    "Pigeon"
+    new {
+      name = "Pigeon"
+    }
+    null
+  }
+  ["value"] {
+    42
+    List(1, 2, 3)
+    Pair(Regex("Pigeon"), 42.ms)
+  }
+}

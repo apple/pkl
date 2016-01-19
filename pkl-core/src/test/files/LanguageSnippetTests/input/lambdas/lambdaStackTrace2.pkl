@@ -1,0 +1,3 @@
+hidden f1 = () -> (() -> (() -> throw("ouch")).apply()).apply()
+
+res1 = f1.apply()

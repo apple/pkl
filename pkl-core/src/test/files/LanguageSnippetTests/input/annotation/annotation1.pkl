@@ -1,0 +1,70 @@
+/// doc comment
+/// doc comment
+@Ann
+@Ann2 { x = "foo" }
+@Ann3 {
+  x = "foo"
+  y = 1
+}
+module some.mod
+
+/// doc comment
+/// doc comment
+@Ann
+@Ann2 { x = "foo" }
+@Ann3 {
+  x = "foo"
+  y = 1
+}
+class SomeClass {
+  /// doc comment
+  /// doc comment
+  @Ann
+  @Ann2 { x = "foo" }
+  @Ann3 {
+    x = "foo"
+    y = 1
+  }
+  function someMethod() = "hi"
+
+  /// doc comment
+  /// doc comment
+  @Ann
+  @Ann2 { x = "foo" }
+  @Ann3 {
+    x = "foo"
+    y = 1
+  }
+  someProperty: String = "hi"
+}
+
+/// doc comment
+/// doc comment
+@Ann
+@Ann2 { x = "foo" }
+@Ann3 {
+  x = "foo"
+  y = 1
+}
+function someMethod() = "hi"
+
+/// doc comment
+/// doc comment
+@Ann
+@Ann2 { x = "foo" }
+@Ann3 {
+  x = "foo"
+  y = 1
+}
+someProperty: String = "hi"
+
+class Ann extends Annotation
+
+class Ann2 extends Annotation {
+  x: String
+}
+
+class Ann3 extends Annotation {
+  x: String
+  y: Int
+}

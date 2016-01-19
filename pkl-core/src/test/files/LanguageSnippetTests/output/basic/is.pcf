@@ -1,0 +1,173 @@
+facts {
+  ["String"] {
+    true
+    true
+  }
+  ["Any"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Null"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Int"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Number"] {
+    true
+    true
+    true
+  }
+  ["Float"] {
+    true
+    true
+    true
+  }
+  ["Boolean"] {
+    true
+    true
+    true
+  }
+  ["Duration"] {
+    true
+    true
+    true
+    true
+  }
+  ["DataSize"] {
+    true
+    true
+    true
+    true
+  }
+  ["List"] {
+    true
+    true
+    true
+  }
+  ["Set"] {
+    true
+    true
+    true
+  }
+  ["Collection"] {
+    true
+    true
+    true
+  }
+  ["Map"] {
+    true
+    true
+    true
+  }
+  ["base class"] {
+    true
+    true
+    true
+  }
+  ["derived class"] {
+    true
+    true
+    true
+  }
+  ["other class"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Listing"] {
+    true
+    true
+    true
+  }
+  ["Mapping"] {
+    true
+    true
+    true
+  }
+  ["Module"] {
+    true
+    true
+    true
+  }
+  ["Class"] {
+    true
+    true
+    true
+  }
+  ["Function"] {
+    true
+    true
+    true
+    true
+  }
+}

@@ -1,0 +1,7 @@
+foo {}
+fooX = "Cannot find property `x` in object of type `Dynamic`."
+bar {
+  y = 3
+}
+barY = 3
+barX = "Cannot find property `x` in object of type `Dynamic`."

@@ -1,0 +1,8 @@
+–– Pkl Error ––
+A local property definition cannot be amended.
+
+x | local object {
+                 ^
+at localPropertyAmendInAmendingModule#object (file:///$snippetsDir/input/basic/localPropertyAmendInAmendingModule.pkl)
+
+Use definition syntax instead, for example `local person = new { ... }` instead of `local person { ... }`.

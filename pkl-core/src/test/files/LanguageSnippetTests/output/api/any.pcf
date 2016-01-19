@@ -1,0 +1,46 @@
+examples {
+  ["getClass()"] {
+    "Int"
+    "Float"
+    "Boolean"
+    "String"
+    "Duration"
+    "DataSize"
+    "List"
+    "Map"
+    "Listing"
+    "Mapping"
+    "Dynamic"
+    "Person"
+    "Class"
+    "Null"
+    "Pair"
+    "ModuleClass"
+  }
+  ["ifNonNull"] {
+    10
+    "foo"
+    null
+    null
+    null
+    null
+  }
+  ["toString()"] {
+    "Pigeon"
+    "42"
+    "1.23"
+    "true"
+    "1.23.ns"
+    "1.23.mb"
+    "Pair(1, 2)"
+    "List(1, 2, 3)"
+    "Set(1, 2, 3)"
+    "Map(1, 2, 3, 4)"
+    "new Listing { 1; 2; 3 }"
+    "new Mapping { [\"Pigeon\"] = 42; [\"Barn Owl\"] = 21 }"
+    "new Dynamic { name = \"Pigeon\"; age = 42 }"
+    "new Person2 { name = \"Pigeon\"; age = 42 }"
+    "null"
+    "null"
+  }
+}

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Mismatched input: `[`. Expected one of: `module`, `nothing`, `unknown`, `(`, `{`, `*`, SLQuote, Identifier
+
+x | res1 = new [ 42 }
+               ^
+at parser10 (file:///$snippetsDir/input/errors/parser10.pkl)

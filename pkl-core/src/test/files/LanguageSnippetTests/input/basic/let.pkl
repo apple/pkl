@@ -1,0 +1,87 @@
+import "pkl:test"
+
+res1 =
+  let (x = 42)
+    x + 1
+
+res2 =
+  let (res2 = 42)
+    res2 + 1
+
+res3 =
+  let (x = 1)
+    let (y = 2)
+      x + y + x
+
+res4 =
+  let (x = 1)
+    let (x = 2)
+      x + x
+
+res5 =
+  let (price = 500) new {
+    lowestPrice = price - 100
+    averagePrice = new {
+      price
+    }
+    highestPrice = new {
+      ["price"] = price + 100
+    }
+  }
+
+res6 =
+  let (str = "Pigeon".reverse())
+    str.reverse()
+
+local pigeon = "Pigeon"
+
+res7 =
+  let (str = pigeon.reverse())
+    str.reverse()
+
+function f(a) =
+  let (b = a * 2)
+    a + b
+
+res8 = f(3)
+
+local g = (a) ->
+  let (b = a * 2)
+    a + b
+
+res9 = g.apply(3)
+
+local h = let (b = 2)
+  (a) -> a + b
+
+res10 = h.apply(3)
+
+res11 = IntSeq(1, 5).map((n) -> let (x = n + 1) x + 1)
+
+class Lets {
+  x = 2
+  y = let (z = 2) z + x
+  function f(x) = let (z = 2) z + x
+  z = f(x)
+}
+
+res12 = new Lets {
+  x = 4
+}
+
+res13 =
+  let (x = 1)
+    let (y = x)
+      let (z = y)
+        x + y + z
+
+// x can't access y
+res14 = test.catch(() -> let (x = y) let (y = 2) x + y)
+
+res15 = test.catch(() -> let (x = throw("ouch")) x + 1)
+res16 = test.catch(() -> let (x = 1) throw("ouch"))
+res17 = test.catch(() -> let (x = 1) let (y = throw("ouch")) x + y)
+res18 = test.catch(() -> let (x = 1) let (y = 2) throw("ouch"))
+
+// doesn't change meaning of `this`
+res19 = let (x = this) let (y = this) x == y && y == this && this == module

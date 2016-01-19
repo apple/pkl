@@ -1,0 +1,54 @@
+- 1
+- com.foo.bar.MyModule
+- file:///$snippetsDir/input/classes.pkl
+- 
+  - 
+    - 16
+    - barnOwl
+    - 
+      - 1
+      - com.foo.bar.MyModule#Person
+      - file:///$snippetsDir/input/classes.pkl
+      - 
+        - 
+          - 16
+          - firstName
+          - Barn Owl
+        - 
+          - 16
+          - lastName
+          - Bird
+        - 
+          - 16
+          - age
+          - 38
+  - 
+    - 16
+    - pigeon
+    - 
+      - 1
+      - com.foo.bar.MyModule#Person
+      - file:///$snippetsDir/input/classes.pkl
+      - 
+        - 
+          - 16
+          - firstName
+          - Pigeon
+        - 
+          - 16
+          - lastName
+          - Bird
+        - 
+          - 16
+          - age
+          - 41
+  - 
+    - 16
+    - personClass
+    - 
+      - 12
+  - 
+    - 16
+    - personTypeAlias
+    - 
+      - 13

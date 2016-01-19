@@ -1,0 +1,37 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["glob-import within package"] {
+    // catalog is the result of a glob import within the @birds/catalog.pkl module
+    import("@birds/catalog.pkl").catalog
+  }
+
+  ["glob-import absolute package uri"] {
+    import*("package://localhost:12110/birds@0.5.0#/catalog/*.pkl")
+  }
+
+  ["glob-import local project"] {
+    import*("@project2/**.pkl")
+  }
+
+  ["glob-import using dependency notation"] {
+    import*("@birds/catalog/*.pkl").keys
+    import*("@birds/*.pkl").keys
+    import*("@birds/**.pkl").keys
+  }
+
+  ["glob-read using dependency notation"] {
+    read*("@birds/catalog/*.pkl")
+    read*("@birds/*.pkl")
+    read*("@birds/**.pkl")
+  }
+
+  ["glob-read within package"] {
+    // catalog is the result of a glob import within the @birds/catalog.pkl module
+    import("@birds/catalog.pkl").catalogFiles
+  }
+
+  ["glob-read absolute package uri"] {
+    read*("package://localhost:12110/birds@0.5.0#/catalog/*.pkl")
+  }
+}

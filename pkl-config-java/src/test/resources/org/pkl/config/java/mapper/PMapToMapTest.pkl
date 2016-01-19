@@ -1,0 +1,7 @@
+ex1 = Map()
+ex2 = Map(1, 2, 2, 4, 3, 6)
+ex3 = Map(1, 2, 2, 4, 3, 6.6)
+ex4 = Map("pigeon", Map("name", "pigeon", "age", 40), "parrot", Map("name", "parrot", "age", 30))
+ex5 = Map("pigeon", new Dynamic { name = "pigeon"; age = 40 }, "parrot", new Dynamic { name = "parrot"; age = 30 })
+ex6 = Map(new Dynamic { name = "pigeon"; age = 40 }, "pigeon", new Dynamic { name = "parrot"; age = 30 }, "parrot")
+ex7 = Map(1, 2, 2, 4)

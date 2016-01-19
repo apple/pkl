@@ -1,0 +1,96 @@
+hidden foo {
+  x = List(1, 2)
+  // polymorphic stdlib property call
+  y = x.isEmpty
+}
+
+hidden bar = (foo) {
+  x = Set(1, 2)
+}
+
+res1 = foo.y
+res2 = bar.y
+
+// polymorphic stdlib method call
+function f(x) = x.toSet()
+
+res3 = f(List(1, 2))
+res4 = f(Set(1, 2))
+
+abstract class Animal {
+  abstract size: String
+  abstract function walk(): String
+}
+
+class Cat extends Animal {
+  size = "cat size"
+  function walk() = "cat walks"
+}
+
+class Dog extends Animal {
+  size = "dog size"
+  function walk() = "dog walks"
+}
+
+class Bird extends Animal {
+  size = "bird size"
+  function walk() = "bird walks"
+}
+
+class Lion extends Animal {
+  size = "lion size"
+  function walk() = "lion walks"
+}
+
+class Turtle extends Animal {
+  size = "turtle size"
+  function walk() = "turtle walks"
+}
+
+// polymorphic user-defined property call
+function size(animal) = animal.size
+
+// polymorphic user-defined method call
+function walk(animal: Animal) = animal.walk()
+
+res5 = size(new Cat {})
+res6 = size(new Dog {})
+res7 = size(new Bird {})
+res8 = size(new Lion {})
+res9 = size(new Turtle {})
+
+res10 = walk(new Cat {})
+res11 = walk(new Dog {})
+res12 = walk(new Bird {})
+res13 = walk(new Lion {})
+res14 = walk(new Turtle {})
+
+open class Foo {
+  function speak() = "hi"
+  one {
+    two {
+      // polymorphic enclosing method call
+      three = speak()
+    }
+  }
+}
+
+class Bar extends Foo {
+  function speak() = "bye"
+}
+
+res15 = new Foo {}.one.two.three
+res16 = new Bar {}.one.two.three
+
+open class Foo2 {
+  function speak() = "hi"
+  // polymorphic implicit this method call
+  x: String = speak()
+}
+
+class Bar2 extends Foo2 {
+  function speak() = "bye"
+}
+
+res17 = new Foo2 {}.x
+res18 = new Bar2 {}.x

@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `open` is redundant here; just use `abstract`.
+
+x | abstract open class Person
+             ^^^^
+at abstractOpenMember (file:///$snippetsDir/input/errors/abstractOpenMember.pkl)

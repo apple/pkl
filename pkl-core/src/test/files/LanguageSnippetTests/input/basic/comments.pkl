@@ -1,0 +1,13 @@
+x = 10 // end-of-line comment
+
+y = 20 /*
+multi
+line
+/* nested */
+comment
+*/ z = 30
+
+/// documentation comment
+function myFun() = 0
+
+a = 20 // single-line comment running until EOF rather than newline

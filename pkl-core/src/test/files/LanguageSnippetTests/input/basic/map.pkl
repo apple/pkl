@@ -1,0 +1,51 @@
+amends "../snippetTest.pkl"
+
+local map1 = Map(1, 1, "two", 2, "three", 3)
+local map2 = Map(30, new Dynamic { name = "Pigeon" }, new Dynamic { name = "Pigeon" }, 30, 1, 1)
+
+facts {
+  ["equality"] {
+    map1 == map1
+    map1 == Map("three", 3, 1, 1, "two", 2)
+    !(map1 == map2)
+  }
+
+  ["inequality"] {
+    map1 != map2
+    !(map1 != map1)
+    !(map1 != Map("three", 3, 1, 1, "two", 2))
+  }
+}
+
+examples {
+  ["construction"] {
+    Map(1, 1, 2, 2, 1, 3, 2, 4)
+    Map(1, 1, 2, 2, 1, "three", 2, "four")
+  }
+
+  ["addition"] {
+    map1 + map1
+    map1 + Map("three", 3, 1, 1, "two", 2)
+    map1 + map2
+    Map() + Map()
+    map1 + Map()
+    Map() + map1
+    Map(1, 11) + Map(1, 1, 2, 2)
+    Map(1, 1, 2, 2) + Map(1, 11)
+  }
+
+  ["subscript"] {
+    map1[1]
+    map1["two"]
+    map1["three"]
+    map2[30]
+    map2[new Dynamic { name = "Pigeon" }]
+    map2[1]
+
+    local map3 = Map(1111, 1, "two", 2, "three", 3, "tree", 4)
+    module.catch(() -> map3["hree"])
+    module.catch(() -> map3["other"])
+    module.catch(() -> map3["1111"])
+    module.catch(() -> map3[11111])
+  }
+}

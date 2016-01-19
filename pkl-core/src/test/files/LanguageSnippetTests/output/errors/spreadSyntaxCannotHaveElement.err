@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot spread object containing elements into object of type `Mapping`.
+
+x | ...source
+    ^^^^^^^^^
+at spreadSyntaxCannotHaveElement#res (file:///$snippetsDir/input/errors/spreadSyntaxCannotHaveElement.pkl)
+
+x | 1
+    ^
+at spreadSyntaxCannotHaveElement#source[#1] (file:///$snippetsDir/input/errors/spreadSyntaxCannotHaveElement.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

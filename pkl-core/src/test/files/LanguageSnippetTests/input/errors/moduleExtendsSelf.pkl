@@ -1,0 +1,3 @@
+open module moduleExtendsSelf
+
+extends "moduleExtendsSelf.pkl"

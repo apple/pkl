@@ -1,0 +1,39 @@
+.indent: Property<String>
+[%collapsible]
+====
+Default: `"  "` (two spaces) +
+Example: `indent = "\t"` (one tab) +
+The characters to use for indenting generated source code.
+====
+
+.outputDir: DirectoryProperty
+[%collapsible]
+====
+Default: `layout.buildDirectory.dir("generated/pkl/<generator_name>")` +
+Example: `outputDir = layout.projectDirectory.dir("src/main/pkl")` +
+The directory where generated classes are placed.
+
+The default places generated sources within the build directory of the project, to avoid sources from being committed into the repository on accident.
+====
+
+.sourceSet: Property<SourceSet>
+[%collapsible]
+====
+Default: `sourceSets.main` (if it exists; no default otherwise) +
+Example: `sourceSet = sourceSets.test` +
+The Gradle source set that generated code is compiled together with.
+
+For the codegen tasks, the `modulePath` property defaults to the compilation classpath of this source set, as well as all of the source directories of the `resource` source directory set of this source set. This setup makes it possible to rely on modules defined in classpath dependencies of your project or in the resources of your project.
+
+For projects which apply the `idea` plugin and are opened in IntelliJ IDEA, this option determines whether generated sources are marked as test sources (if the source set's name contains the word "test") or regular sources (otherwise).
+====
+
+.generateSpringBootConfig: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `generateSpringBootConfig = true` +
+Whether to generate config classes for use with Spring Boot.
+====
+
+// TODO: fixme (implementSerializable)

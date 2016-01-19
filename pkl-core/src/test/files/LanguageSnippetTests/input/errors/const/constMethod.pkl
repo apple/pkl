@@ -1,0 +1,7 @@
+function fun() = 1
+
+class Foo {
+  foo = fun()
+}
+
+foo = new Foo {}

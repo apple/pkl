@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `"barn owl"`.
+
+x | ["barn owl"] = 3
+     ^^^^^^^^^^
+at duplicateConstantKey#res1 (file:///$snippetsDir/input/mappings/duplicateConstantKey.pkl)

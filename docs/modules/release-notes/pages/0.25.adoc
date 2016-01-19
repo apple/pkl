@@ -1,0 +1,8 @@
+= Pkl 0.25 Release Notes
+:version: 0.25
+:version-minor: 0.25.0
+:release-date: <TBD>
+
+This is the first release of Pkl!
+
+To learn more, refer to our xref:blog:introducing-pkl.adoc[blog post].

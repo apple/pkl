@@ -1,0 +1,35 @@
+= Use Cases
+include::ROOT:partial$component-attributes.adoc[]
+:uri-kotlin-homepage: https://kotlinlang.org
+:uri-xml-property-lists: https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/PropertyLists/UnderstandXMLPlist/UnderstandXMLPlist.html
+
+Pkl is a good fit for:
+
+Generating Static Configuration::
+Are you using a tool, service, or application that is configured with JSON, YAML, or any other static configuration format?
++
+By generating this configuration with Pkl, you can reduce verbosity and increase maintainability through xref:concepts.adoc#reuse[reuse], xref:concepts.adoc#template[templating], and xref:concepts.adoc#abstraction[abstraction].
+JSON, YAML, and {uri-xml-property-lists}[XML property lists] are supported out of the box; xref:concepts.adoc#rendering[renderers] for other configuration formats can be developed and shared by anyone.
+Automatic defaults, strong validation, and sensible error messages come in reach with configuration xref:concepts.adoc#schema[schemas].
++
+Generation can be triggered manually, by an automation pipeline, or by the target application.
+
+Application Runtime Configuration::
+Are you the author of a tool, service, or application that consumes configuration?
++
+By adopting Pkl as your "native" configuration solution (rather than, say, using it to generate JSON files), you benefit from a modern xref:java-binding:pkl-config-java.adoc[configuration library] that is safe, easy, and enjoyable to use.
+At the same time, anyone configuring your application -- whether that's your users, site reliability engineers (SREs), or yourself -- benefit from a well-defined, well-documented, and scalable configuration language.
++
+At the time of writing, Pkl offers configuration libraries for the JVM runtime, Swift, and also for Golang.
++
+We maintian the following libraries:
++
+* xref:java-binding:pkl-config-java.adoc[pkl-config-java] for Java compatible languages
+* xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin] for the {uri-kotlin-homepage}[Kotlin] language.
+* xref:swift:ROOT:index.adoc[pkl-swift] for the Swift language.
+* xref:go:ROOT:index.adoc[pkl-go] for the Go language.
+
+In the future, we hope to add support for other popular languages and platforms, realizing our vision of a polyglot config solution based on a single config language.
+
+<Your Use Case Here>::
+We are just getting started. Tell us about _your_ Pkl success story!

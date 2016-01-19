@@ -1,0 +1,2 @@
+res1 = outer.outer
+res2 = 42

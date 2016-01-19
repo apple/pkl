@@ -1,0 +1,5 @@
+local i = import("imported.pkl")
+
+bar = 1
+libFoo = i.foo
+libBar = i.bar

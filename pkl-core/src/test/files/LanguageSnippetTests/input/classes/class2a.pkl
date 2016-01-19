@@ -1,0 +1,24 @@
+class Person {
+  name: String = "X"
+  age: Int = 40
+  friends: Set
+  address: Address
+}
+
+class Address {
+  street: String = "Howdy St"
+}
+
+pigeon = new Person {
+  name = "Pigeon Who"
+  age = 30
+  friends = super.friends + List(
+    new Person {
+      name = "Emma"
+    }
+    // add another once we have sets with deterministic iteration order
+  )
+  address {
+    street = "Pigeon St."
+  }
+}

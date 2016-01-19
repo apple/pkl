@@ -1,0 +1,46 @@
+class Person {
+  name: String
+  age: Int
+}
+
+function id(x) = x
+
+res1 = new Listing {}
+
+res2 = new Listing {
+  null
+  true
+  42
+  1.23
+  "foo"
+  Regex("bar")
+  5.gb
+  3.min
+  Pair(1, 2)
+  List(1, 2, 3)
+  Set(1, 2, 3)
+  Map("one", 1, "two", 2)
+  new Dynamic { name = "Pigeon"; age = 42 }
+  new Person { name = "Pigeon"; age = 42 }
+  new Listing { 1; 2; 3 }
+  new Mapping { ["one"] = 1; ["two"] = 2 }
+}
+
+res3 = new Listing {
+  id(null)
+  id(true)
+  id(42)
+  id(1.23)
+  id("foo")
+  id(Regex("bar"))
+  id(5.gb)
+  id(3.min)
+  id(Pair(1, 2))
+  id(List(1, 2, 3))
+  id(Set(1, 2, 3))
+  id(Map("one", 1, "two", 2))
+  id(new Dynamic { name = "Pigeon"; age = 42 })
+  id(new Person { name = "Pigeon"; age = 42 })
+  id(new Listing { 1; 2; 3 })
+  id(new Mapping { ["one"] = 1; ["two"] = 2 })
+}

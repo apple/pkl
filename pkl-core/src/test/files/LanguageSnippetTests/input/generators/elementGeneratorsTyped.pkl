@@ -1,0 +1,210 @@
+import "pkl:test"
+
+res1 = new Listing {
+  for (n: Int in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+}
+
+res1b = test.catch(() -> new Listing {
+  for (n: String in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+})
+
+res1c = new Listing {
+  for (i: Int, n: Int in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      i * n
+    }
+  }
+}
+
+res1d = test.catch(() -> new Listing {
+  for (i: String, n: Int in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+})
+
+res2 = new Dynamic {
+  for (n: Number in List(1, 2, 3, 4, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+}
+
+res2b = test.catch(() -> new Dynamic {
+  for (n: Number in List(1, 2, "other", 4, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+})
+
+res2c = new Dynamic {
+  for (i: Number, n: Number in List(1, 2, 3, 4, 5)) {
+    when (n.isOdd) {
+      i * n
+    }
+  }
+}
+
+res2d = test.catch(() -> new Dynamic {
+  for (i: Number, n: Number in List(1, 2, "other", 4, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+})
+
+res6 = new Listing {
+  for (x: Any in List("a", "b", "c")) {
+    for (y: String in List("e", "f")) {
+      x + y
+    }
+  }
+}
+
+res6b = test.catch(() -> new Listing {
+  for (x: Any in List("a", "b", "c")) {
+    for (y: String in List("e", 42)) {
+      x + y
+    }
+  }
+})
+
+res6c = new Listing {
+  for (i1: Int, x: Any in List("a", "b", "c")) {
+    for (i2: Int, y: String in List("e", "f")) {
+      Pair(i1 + i2, x + y)
+    }
+  }
+}
+
+res6d = test.catch(() -> new Listing {
+  for (i1: Int, x: Any in List("a", "b", "c")) {
+    for (i2: Int, y: String in List("e", 42)) {
+      Pair(i1 + i2, x + y)
+    }
+  }
+})
+
+res7 = new Dynamic {
+  "one"
+  for (n: Int in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+  "two"
+  for (x: unknown in List("a", "b", "c")) {
+    for (y: String in List("e", "f")) {
+      x + y
+    }
+  }
+  "three"
+}
+
+res7b = test.catch(() -> new Dynamic {
+  "one"
+  for (n: Int in IntSeq(1, 5)) {
+    when (n.isOdd) {
+      n * 2
+    }
+  }
+  "two"
+  for (x: unknown in List("a", "b", "c")) {
+    for (y: String in List(42, "f")) {
+      x + y
+    }
+  }
+  "three"
+})
+
+// reuse same loop variable
+res8 = new Listing {
+  for (n: Int in IntSeq(1, 3)) { n }
+  for (n: String in List("a", "b", "c")) { n }
+  for (n: Number in IntSeq(1, 3)) { n }
+}
+
+// reuse same loop variable
+res8b = test.catch(() -> new Listing {
+  for (n: Int in IntSeq(1, 3)) { n }
+  for (n: String in List(42.min, "b", "c")) { n }
+  for (n: Number in IntSeq(1, 3)) { n }
+})
+
+// reuse same loop variable
+res8c = new Listing {
+  for (i: Int, n: Int in IntSeq(1, 3)) { Pair(i, n) }
+  for (i: Number, n: String in List("a", "b", "c")) { Pair(i, n) }
+  for (i: Int, n: Number in IntSeq(1, 3)) { Pair(i, n) }
+}
+
+// reuse same loop variable
+res8d = test.catch(() -> new Listing {
+  for (i: Int, n: Int in IntSeq(1, 3)) { Pair(i, n) }
+  for (i: Number, n: String in List(42.min, "b", "c")) { Pair(i, n) }
+  for (i: Int, n: Number in IntSeq(1, 3)) { Pair(i, n) }
+})
+
+forWithMultipleMembers = new Dynamic {
+  for (ch: String in List("a", "b", "c")) {
+    ch
+    ch + "x"
+    ch + "y"
+  }
+}
+
+forWithMultipleMembersNested = new Dynamic {
+  for (ch: String in List("a", "b")) {
+    for (k: String, v: Int in Map("x", 1, "y", 2)) {
+      ch + k + v.toString()
+      v.toString() + k + ch
+    }
+    for (k: String, v: Number in Map("xx", 11, "yy", 22)) {
+      ch + k + v.toString()
+      v.toString() + k + ch
+    }
+  }
+}
+
+whenWithMultipleMembers = new Dynamic {
+  for (i: Int, n: Int in new Listing { 1; 2; 3; 4; 5 }) {
+    when (n.isOdd) {
+      i * n
+      i * n * 2
+    }
+  }
+}
+
+whenWithMultipleMembersNested = new Listing {
+  for (i: Int, n: Int in new Listing { 1; 2; 3; 4; 5 }) {
+    when (n.isOdd) {
+      when (n > 3) {
+        i * n
+        i * n * 2
+      }
+    }
+  }
+}
+
+whenWithElse = new Dynamic {
+  for (i: Int, n: Int in new Listing { 1; 2; 3; 4; 5 }) {
+    when (n.isOdd) {
+      i * n
+      i * n * 2
+    } else {
+      (i * n).toString()
+      (i * n * 2).toString()
+    }
+  }
+}

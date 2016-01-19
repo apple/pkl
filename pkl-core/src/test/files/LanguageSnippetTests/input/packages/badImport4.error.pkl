@@ -1,0 +1,2 @@
+// fragment path must be absolute
+res = import("package://localhost:12110/birds@0.5.0#catalog/Swallow.pkl")

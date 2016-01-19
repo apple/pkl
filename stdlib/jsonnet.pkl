@@ -1,0 +1,108 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A [Jsonnet](https://jsonnet.org) renderer.
+@ModuleInfo { minPklVersion = "0.25.0" }
+module pkl.jsonnet
+
+/// Constructs an [ImportStr].
+function ImportStr(_path: String): ImportStr = new { path = _path }
+
+/// Constructs an [ExtVar].
+function ExtVar(_name: String): ExtVar = new { name = _name }
+
+/// Renders values as [Jsonnet](https://jsonnet.org).
+///
+/// Pkl values are mapped to Jsonnet values as follows:
+///
+/// | Pkl type       | Jsonnet type    |
+/// | -------------- | --------------- |
+/// | [Null]         | null            |
+/// | [Boolean]      | boolean         |
+/// | [Int]          | number          |
+/// | [Float]        | number          |
+/// | [String]       | string          |
+/// | [List]         | array           |
+/// | [Set]          | array           |
+/// | [Map]          | object          |
+/// | [Listing]      | array           |
+/// | [Mapping]      | object          |
+/// | [Dynamic]      | object or array |
+/// | [Typed]        | object          |
+///
+/// Some Pkl types, such as [Duration] and [DataSize], don't have a Jsonnet equivalent.
+/// To render values of such types, define _output converters_ (see [Renderer.converters]).
+///
+/// The output is formatted according to _jsonnetfmt_.
+/// To render an `importstr` construct, use [ImportStr()].
+/// To render an `std.extVar()` call, use [ExtVar()].
+///
+/// Example:
+/// ```
+/// import "pkl:jsonnet"
+///
+/// server {
+///   name = "Pigeon"
+///   port = jsonnet.ExtVar("port")
+///   message = jsonnet.ImportStr("/etc/motd")
+///   timeout = 5.min
+/// }
+///
+/// output {
+///   renderer = new jsonnet.Renderer {}
+///   converters {
+///     [Duration] = (it) -> it.value + it.unit
+///   }
+/// }
+/// ```
+class Renderer extends ValueRenderer {
+  extension = "jsonnet"
+
+  /// The characters to use for indenting output.
+  ///
+  /// If empty (`""`), renders everything on a single line.
+  ///
+  /// If non-empty, renders object fields and array elements on separate lines,
+  /// and strings containing newlines as `|||` multiline text blocks,
+  /// with the given leading line [indent].
+  indent: String|/*Deprecated*/Null = "  "
+
+  /// Whether to omit Jsonnet object fields whose value is `null`.
+  omitNullProperties: Boolean = true
+
+  /// Renders [value] as a Jsonnet document.
+  ///
+  /// Every Jsonnet value is a valid Jsonnet document.
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
+
+/// An `importstr` construct that, when evaluated by Jsonnet, returns the content of a UTF-8 text file.
+///
+/// To construct an [ImportStr], use method [ImportStr()].
+class ImportStr {
+  /// The path of the file to import.
+  path: String
+}
+
+/// A `std.extVar()` call that, when evaluated by Jsonnet, returns the value of an external Jsonnet variable.
+///
+/// To construct an [ExtVar], use method [ExtVar()].
+class ExtVar {
+  /// The external variable's name.
+  name: String
+}

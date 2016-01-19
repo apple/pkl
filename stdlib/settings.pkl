@@ -1,0 +1,80 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Configuration settings for Pkl itself.
+///
+/// Every settings file must amend this module.
+/// Unless CLI commands and build tool plugins are explicitly configured with a settings file,
+/// they will use `~/.pkl/settings.pkl` or the defaults specified in this module.
+@ModuleInfo { minPklVersion = "0.25.0" }
+module pkl.settings
+
+/// The editor for viewing and editing Pkl files.
+editor: Editor = System
+
+/// The editor associated with `file:` URLs ending in `.pkl`.
+hidden System: Editor = new {
+  urlScheme = "%{url}, line %{line}"
+}
+
+/// The [IntelliJ IDEA](https://www.jetbrains.com/idea) editor.
+hidden Idea: Editor = new {
+  urlScheme = "idea://open?file=%{path}&line=%{line}"
+}
+
+/// The [GoLand](https://www.jetbrains.com/go/) editor.
+hidden GoLand: Editor = new {
+  urlScheme = "goland://open?file=%{path}&line=%{line}"
+}
+
+/// The [TextMate](https://macromates.com) editor.
+hidden TextMate: Editor = new {
+  urlScheme = "txmt://open?url=%{url}&line=%{line}&column=%{column}"
+}
+
+/// The [Sublime Text](https://www.sublimetext.com) editor.
+hidden Sublime: Editor = new {
+  urlScheme = "subl://open?url=%{url}&line=%{line}&column=%{column}"
+}
+
+/// The [Atom](https://atom.io) editor.
+hidden Atom: Editor = new {
+  urlScheme = "atom://open?url=%{url}&line=%{line}&column=%{column}"
+}
+
+/// The [Visual Studio Code](https://code.visualstudio.com) editor.
+hidden VsCode: Editor = new {
+  urlScheme = "vscode://file/%{path}:%{line}:%{column}"
+}
+
+/// An editor for viewing and editing Pkl files.
+class Editor {
+  /// The URL scheme for opening files in this editor.
+  /// The following placeholders are supported:
+  /// - `%{url}`
+  ///   file URL of the file to open
+  /// - `%{path}`
+  ///   absolute file path of the file to open
+  /// - `%{line}`
+  ///   start line number to navigate to
+  /// - `%{endLine}`
+  ///   end line number to navigate to
+  /// - `%{column}`
+  ///   start column number to navigate to
+  /// - `%{endColumn}`
+  ///   end column number to navigate to
+  urlScheme: String
+}

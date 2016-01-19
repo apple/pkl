@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot render value of type `Function1` as Pcf.
+Value: new Function1 {}
+
+x | m: Mixin = new {
+    ^^^^^^^^^^^^^^^^
+at pkl.base#PcfRenderer.renderDocument (file:///$snippetsDir/input/errors/cannotRenderMixin.pkl)
+
+Consider adding a converter to `output.converters`.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

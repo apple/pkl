@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot find property `bar` in object of type `Dynamic`.
+
+x | res1 = foo.bar
+           ^^^^^^^
+at propertyNotFound1#res1 (file:///$snippetsDir/input/errors/propertyNotFound1.pkl)
+
+Did you mean any of the following?
+barx
+xbar
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

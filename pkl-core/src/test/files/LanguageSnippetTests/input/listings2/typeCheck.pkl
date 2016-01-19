@@ -1,0 +1,62 @@
+import "pkl:test"
+
+hidden x1: Listing<String> = new {
+  when (false) { 0 }
+  "pigeon"
+  42
+  "barn owl"
+}
+
+hidden x2: Listing<String(length > 3)> = new {
+  when (false) { 0 }
+  "pigeon"
+  "bob"
+}
+
+hidden x3: Listing<String>(!isEmpty)
+
+res1 = test.catch(() -> x1)
+res2 = test.catch(() -> x2)
+res3 = test.catch(() -> x3)
+
+hidden x4: Listing = new {
+  when (true) {
+    throw("element unnecessarily evaluated")
+  }
+  for (n in List(1)) {
+    throw("element unnecessarily evaluated")
+  }
+}
+
+hidden x5: Listing<Any> = new {
+  when (true) {
+    throw("element unnecessarily evaluated")
+  }
+  for (n in List(1)) {
+    throw("element unnecessarily evaluated")
+  }
+}
+
+hidden x6: Listing<unknown> = new {
+  when (true) {
+    throw("element unnecessarily evaluated")
+  }
+  for (n in List(1)) {
+    throw("element unnecessarily evaluated")
+  }
+}
+
+hidden x7 = new Listing {
+  when (true) {
+    throw("element unnecessarily evaluated")
+  }
+  42
+  for (n in List(1)) {
+    throw("element unnecessarily evaluated")
+  }
+}
+
+res4 = x4.length == 2
+res5 = x5.length == 2
+res6 = x6.length == 2
+res7 = x7[1] == 42

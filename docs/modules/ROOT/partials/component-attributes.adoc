@@ -1,0 +1,64 @@
+// TODO: move to antora.yml once supported
+
+// the following attributes must be updated immediately before a release
+
+// pkl version corresponding to current git commit without -dev suffix or git hash
+:pkl-version-no-suffix: 0.25.0
+// tells whether pkl version corresponding to current git commit
+// is a release version (:is-release-version: '') or dev version (:!is-release-version:)
+:!is-release-version:
+
+// the remaining attributes do not need to be updated regularly
+
+:pkl-version: {pkl-version-no-suffix}-dev
+ifdef::is-release-version[]
+:pkl-version: {pkl-version-no-suffix}
+endif::[]
+
+// use non-unique snapshot version because we have no way to determine unique snapshot version here
+:pkl-artifact-version: {pkl-version-no-suffix}-SNAPSHOT
+ifdef::is-release-version[]
+:pkl-artifact-version: {pkl-version}
+endif::[]
+
+:uri-maven-docsite: https://central.sonatype.com/
+
+:uri-sonatype: https://s01.oss.sonatype.org/service/local/repositories/snapshots/content/
+
+:symbolic-version-name: latest
+ifdef::is-release-version[]
+:symbolic-version-name: current
+endif::[]
+:uri-pkl-docs-base: https://pkl-lang.org/package-docs
+:uri-pkl-stdlib-docs-base: {uri-pkl-docs-base}/pkl
+:uri-pkl-stdlib-docs: {uri-pkl-stdlib-docs-base}/{pkl-version}
+:uri-pkl-stdlib-docs-index: {uri-pkl-stdlib-docs}/
+
+// TODO(oss): check these links when we have tags
+:github-branch: main
+ifdef::is-release-version[]
+:github-branch: v{pkl-version-no-suffix}
+endif::[]
+:uri-github-tree: https://github.com/apple/pkl/tree/{github-branch}
+:uri-pkl-stdlib-sources: {uri-github-tree}/stdlib
+
+:github-releases-base: https://github.com/apple/pkl/releases
+:github-releases: {github-releases-base}/download/{pkl-artifact-version}
+
+:uri-pkl-core-main-sources: {uri-github-tree}/pkl-core/src/main/java/org/pkl/core
+:uri-pkl-cli-main-sources: {uri-github-tree}/pkl-cli/src/main/kotlin/org/pkl/cli
+:uri-pkl-doc-main-sources: {uri-github-tree}/pkl-doc/src/main/kotlin/org/pkl/doc
+
+// This attribute is used as language for Pkl code blocks.
+// It can then be mapped to different languages in different environments (e.g., IntelliJ vs. Antora).
+:pkl: pkl
+:pkl-expr: pkl expression
+
+:uri-pkl-examples-repo: https://github.com/apple/pkl-jvm-examples
+:uri-pkl-examples-tree: {uri-pkl-examples-repo}/tree/main
+:uri-build-eval-example: {uri-pkl-examples-tree}/build-eval
+:uri-codegen-java-example: {uri-pkl-examples-tree}/codegen-java
+:uri-codegen-kotlin-example: {uri-pkl-examples-tree}/codegen-kotlin
+:uri-config-java-example: {uri-pkl-examples-tree}/config-java
+:uri-config-kotlin-example: {uri-pkl-examples-tree}/config-kotlin
+:uri-pkldoc-example: {uri-pkl-examples-tree}/pkldoc

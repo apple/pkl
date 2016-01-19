@@ -1,0 +1,34 @@
+res1 {
+  ["pigeon"] {
+    name = "Pigeon"
+    age = 42
+  }
+  ["parrot"] {
+    name = "Parrot"
+    age = 50
+  }
+}
+res2 {
+  ["pigeon"] {
+    name = "Pigeon"
+    age = 45
+  }
+  ["parrot"] {
+    name = "Parrot"
+    age = 50
+  }
+}
+res3 {
+  ["pigeon"] {
+    name = "pigeon"
+    age = 40
+  }
+  ["parrot"] {
+    name = "PARROT"
+    age = 50
+  }
+  ["susan"] {
+    name = "susan!!!"
+    age = 60
+  }
+}

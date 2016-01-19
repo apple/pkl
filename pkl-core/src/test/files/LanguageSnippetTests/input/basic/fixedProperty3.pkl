@@ -1,0 +1,5 @@
+extends "fixedProperty1.pkl"
+
+fixed res1 = "goodbye"
+
+fixed res4: String = "aloha"

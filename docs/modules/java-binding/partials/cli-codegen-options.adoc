@@ -1,0 +1,23 @@
+.--indent
+[%collapsible]
+====
+Default: `"  "` (two spaces) +
+Example: `"\t"` (one tab) +
+The characters to use for indenting generated source code.
+====
+
+.-o, --output-dir
+[%collapsible]
+====
+Default: (not set) +
+Example: `generated/` +
+The directory where generated source code is placed.
+Relative paths are resolved against the working directory.
+====
+
+.--generate-spring-boot
+[%collapsible]
+====
+Default: (not set) +
+Flag that indicates to generate config classes for use with Spring Boot.
+====

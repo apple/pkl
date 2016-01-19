@@ -1,0 +1,3 @@
+hidden path: List<String> = import("moduleExpected.pkl").relativePathTo(module)
+dummy = 42
+result = (module) { dummy = 0 }.path

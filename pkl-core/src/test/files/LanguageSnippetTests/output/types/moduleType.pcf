@@ -1,0 +1,11 @@
+res1 {
+  foo = "foo2"
+  bar = 42
+}
+res2 = true
+res3 {
+  new {
+    foo = "foo2"
+    bar = 42
+  }
+}

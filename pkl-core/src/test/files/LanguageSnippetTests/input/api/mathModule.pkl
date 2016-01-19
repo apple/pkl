@@ -1,0 +1,191 @@
+amends "../snippetTest.pkl"
+
+import "pkl:math"
+
+examples {
+  ["minInt"] {
+    math.minInt
+    math.minInt8
+    math.minInt16
+    math.minInt32
+  }
+
+  ["maxInt"] {
+    math.maxInt
+    math.maxInt8
+    math.maxInt16
+    math.maxInt32
+  }
+
+  ["maxUInt"] {
+    math.maxUInt
+    math.maxUInt8
+    math.maxUInt16
+    math.maxUInt32
+  }
+
+  ["e"] {
+    math.e
+  }
+
+  ["pi"] {
+    math.pi
+  }
+
+  ["exp"] {
+    math.exp(2)
+    math.exp(2.34)
+    math.exp(-2)
+    math.exp(-2.34)
+  }
+
+  ["sqrt"] {
+    math.sqrt(9)
+    math.sqrt(2)
+    math.sqrt(2.34)
+    math.sqrt(-2)
+    math.sqrt(-2.34)
+  }
+
+  ["cbrt"] {
+    math.cbrt(27)
+    math.cbrt(2)
+    math.cbrt(2.34)
+    math.cbrt(-2)
+    math.cbrt(-2.34)
+  }
+
+  ["log"] {
+    math.log(2)
+    math.log(2.34)
+    math.log(-2)
+    math.log(-2.34)
+  }
+
+  ["log2"] {
+    math.log2(2)
+    math.log2(2.34)
+    math.log2(-2)
+    math.log2(-2.34)
+  }
+
+  ["log10"] {
+    math.log10(2)
+    math.log10(2.34)
+    math.log10(-2)
+    math.log10(-2.34)
+  }
+
+  ["sin"] {
+    math.sin(0)
+    math.sin(math.pi)
+    math.sin(2)
+    math.sin(2.34)
+    math.sin(-2)
+    math.sin(-2.34)
+  }
+
+  ["cos"] {
+    math.cos(0)
+    math.cos(math.pi)
+    math.cos(2)
+    math.cos(2.34)
+    math.cos(-2)
+    math.cos(-2.34)
+  }
+
+  ["tan"] {
+    math.tan(0)
+    math.tan(math.pi)
+    math.tan(2)
+    math.tan(2.34)
+    math.tan(-2)
+    math.tan(-2.34)
+  }
+
+  ["asin"] {
+    math.asin(math.sin(0))
+    math.asin(math.sin(math.pi))
+    math.asin(math.sin(2))
+    math.asin(math.sin(2.34))
+    math.asin(math.sin(-2))
+    math.asin(math.sin(-2.34))
+  }
+
+  ["acos"] {
+    math.acos(math.cos(0))
+    math.acos(math.cos(math.pi))
+    math.acos(math.cos(2))
+    math.acos(math.cos(2.34))
+    math.acos(math.cos(-2))
+    math.acos(math.cos(-2.34))
+  }
+
+  ["atan"] {
+    math.atan(math.tan(0))
+    math.atan(math.tan(math.pi))
+    math.atan(math.tan(2))
+    math.atan(math.tan(2.34))
+    math.atan(math.tan(-2))
+    math.atan(math.tan(-2.34))
+  }
+
+  ["gcd"] {
+    math.gcd(0, 0)
+    math.gcd(4, 6)
+    module.catch(() -> math.gcd(-4, 6))
+    module.catch(() -> math.gcd(4, -6))
+    math.gcd(9999999999999999, 888888888888888888)
+    module.catch(() -> math.gcd(4, 6.1))
+  }
+
+  ["lcm"] {
+    math.lcm(0, 0)
+    math.lcm(4, 6)
+    module.catch(() -> math.lcm(-4, 6))
+    module.catch(() -> math.lcm(4, -6))
+    module.catch(() -> math.lcm(9999999999999999, 88888888888))
+    module.catch(() -> math.lcm(4, 6.1))
+  }
+
+  ["isPowerOfTwo"] {
+    math.isPowerOfTwo(0)
+    math.isPowerOfTwo(0.0)
+    math.isPowerOfTwo(1)
+    math.isPowerOfTwo(1.0)
+    math.isPowerOfTwo(2)
+    math.isPowerOfTwo(2.0)
+    math.isPowerOfTwo(4096)
+    math.isPowerOfTwo(4096.0)
+    math.isPowerOfTwo(4097)
+    math.isPowerOfTwo(4096.01)
+    math.isPowerOfTwo(-8)
+    math.isPowerOfTwo(-8.0)
+  }
+
+  ["max"] {
+    math.max(0, 0)
+    math.max(0, 0.0)
+    math.max(0, -0.0)
+    math.max(2, 4)
+    math.max(4, -2)
+    math.max(123, 123.456)
+    math.max(123.455, 123.456)
+    math.max(NaN, NaN)
+    math.max(NaN, 2)
+    math.max(Infinity, -Infinity)
+  }
+
+  ["min"] {
+    math.min(0, 0)
+    math.min(0, 0.0)
+    math.min(0, -0.0)
+    math.min(2, 4)
+    math.min(4, -2)
+    math.min(123, 123.456)
+    math.min(123.455, 123.456)
+    math.min(NaN, NaN)
+    math.min(NaN, 2)
+    math.min(Infinity, -Infinity)
+  }
+}

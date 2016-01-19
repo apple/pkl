@@ -1,0 +1,9 @@
+open class A {
+  function bar() = 5
+}
+
+class B extends A {
+  const foo = super.bar()
+}
+
+b: B

@@ -1,0 +1,41 @@
+/// Module methods with different kinds of type annotations.
+module com.package1.moduleMethodTypeAnnotations
+
+/// Zero-arg method without declared types.
+function method1() = Undefined()
+
+/// One-arg method without declared types.
+function method2(arg1) = Undefined()
+
+/// Two-arg method without declared types.
+function method3(arg1, arg2) = Undefined()
+
+/// Zero-arg method with simple types.
+function method4(): String = Undefined()
+
+/// One-arg method with simple types.
+function method5(arg1: Boolean): Int = Undefined()
+
+/// Two-arg method with simple types.
+function method6(arg1: Int, arg2: Float): Duration = Undefined()
+
+/// Two-arg method with list types.
+function method7(arg1: List<Int>, arg2: List<Float>): List<Duration> = Undefined()
+
+/// Two-arg method with set types.
+function method8(arg1: Set<Int>, arg2: Set<Float>): Set<Duration> = Undefined()
+
+/// Two-arg method with map types.
+function method9(arg1: Map<Int, Int>, arg2: Map<Float, Float>): Map<Duration, Duration> = Undefined()
+
+/// Two-arg method with optional types.
+function method10(arg1: Int?, arg2: Float?): Duration? = Undefined()
+
+/// Two-arg method with function types.
+function method11(arg1: () -> Int, arg2: (Int) -> Float): (Int, Float) -> Duration = Undefined()
+
+/// Two-arg method with partially declared types.
+function method12(arg1: String, arg2): Boolean = Undefined()
+
+/// One-arg method with complex types.
+function method13(arg1: Map<List<String?>?, (Boolean?) -> Map<Int, Float>>): Map<List<Duration?>?, (DataSize?) -> Map<Any, Number>> = Undefined()

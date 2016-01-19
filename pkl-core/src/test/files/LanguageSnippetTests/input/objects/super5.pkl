@@ -1,0 +1,11 @@
+res1 {
+  x = 42
+}
+
+res2 = (res1) {
+  x = (() -> super.x).apply() + 1
+}
+
+res3 = (res2) {
+  x = (() -> (() -> super.x).apply()).apply() + 1
+}

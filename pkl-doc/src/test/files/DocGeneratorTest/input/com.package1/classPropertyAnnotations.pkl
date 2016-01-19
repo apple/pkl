@@ -1,0 +1,13 @@
+module com.package1.classPropertyAnnotations
+
+class UserDefinedAnnotation extends Annotation {
+  messageOpt: String?
+  messageReq: String
+}
+
+class ClassWithAnnotatedProperty {
+  @UserDefinedAnnotation {
+    messageReq = "Hi!"
+  }
+  propertyUserDefinedAnnotation: Int = 42
+}

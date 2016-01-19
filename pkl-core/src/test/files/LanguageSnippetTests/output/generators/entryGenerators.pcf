@@ -1,0 +1,325 @@
+res1 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res1b {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res1c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res1d {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res2 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res2b {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res2c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res2d {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res3 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res3b {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res3c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res3d {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res4 {
+  [1] = 2
+}
+res4b {
+  [1] = 2
+}
+res4c {
+  ["eno"] = 2
+}
+res4d {
+  ["eno"] = 2
+}
+res5 {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res5b {
+  [2] = 2
+  [6] = 6
+  [10] = 10
+}
+res5c {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res5d {
+  [0] = 0
+  [6] = 6
+  [20] = 20
+}
+res6 {
+  [1] = 2
+}
+res6b {
+  [1] = 2
+}
+res6c {
+  ["eno"] = 2
+}
+res6d {
+  ["eno"] = 2
+}
+res7 {
+  [1] = 2
+}
+res7b {
+  [1] = 2
+}
+res7c {
+  ["eno"] = 2
+}
+res7d {
+  ["eno"] = 2
+}
+res8 {
+  ["one"] = 1
+  ["two"] = 2
+}
+res8b {
+  ["one"] = 1
+  ["two"] = 2
+}
+res9 {
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+}
+res9b {
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+}
+res9c {
+  ["ae"] = Pair(0, "ae")
+  ["af"] = Pair(1, "af")
+  ["be"] = Pair(1, "be")
+  ["bf"] = Pair(2, "bf")
+  ["ce"] = Pair(2, "ce")
+  ["cf"] = Pair(3, "cf")
+}
+res9d {
+  ["ae"] = Pair(0, "ae")
+  ["af"] = Pair(1, "af")
+  ["be"] = Pair(1, "be")
+  ["bf"] = Pair(2, "bf")
+  ["ce"] = Pair(2, "ce")
+  ["cf"] = Pair(3, "cf")
+}
+res10 {
+  ["one"] = 1
+  [2] = 2
+  [6] = 6
+  [10] = 10
+  ["two"] = 2
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+  ["three"] = 3
+}
+res10b {
+  ["one"] = 1
+  [2] = 2
+  [6] = 6
+  [10] = 10
+  ["two"] = 2
+  ["ae"] = "ae"
+  ["af"] = "af"
+  ["be"] = "be"
+  ["bf"] = "bf"
+  ["ce"] = "ce"
+  ["cf"] = "cf"
+  ["three"] = 3
+}
+res11 {
+  [1] = 1
+  [2] = 2
+  [3] = 3
+  ["a"] = "a"
+  ["b"] = "b"
+  ["c"] = "c"
+  [4] = 4
+  [5] = 5
+  [6] = 6
+}
+res11b {
+  [1] = 1
+  [2] = 2
+  [3] = 3
+  ["a"] = "a"
+  ["b"] = "b"
+  ["c"] = "c"
+  [4] = 4
+  [5] = 5
+  [6] = 6
+}
+res11c {
+  [1] = Pair(0, 1)
+  [2] = Pair(1, 2)
+  [3] = Pair(2, 3)
+  ["a"] = Pair(0, "a")
+  ["b"] = Pair(1, "b")
+  ["c"] = Pair(2, "c")
+  [4] = Pair(0, 4)
+  [5] = Pair(1, 5)
+  [6] = Pair(2, 6)
+}
+res11d {
+  [1] = Pair(0, 1)
+  [2] = Pair(1, 2)
+  [3] = Pair(2, 3)
+  ["a"] = Pair(0, "a")
+  ["b"] = Pair(1, "b")
+  ["c"] = Pair(2, "c")
+  [4] = Pair(0, 4)
+  [5] = Pair(1, 5)
+  [6] = Pair(2, 6)
+}
+valueForOverProperties {
+  ["Foo!"] = "Foo!"
+  [42] = 42
+  [Pair(1337, "zab")] = Pair(1337, "zab")
+}
+keyValueForOverProperties {
+  ["foo"] = "Foo!"
+  ["bar"] = 42
+  ["baz"] = Pair(1337, "zab")
+}
+valueForOverAllMembers {
+  ["foo"] = "foo"
+  [1337] = 1337
+  [42] = 42
+  ["corge"] = "corge"
+  ["elementBar"] = "elementBar"
+  ["elementQuux"] = "elementQuux"
+}
+keyValueForOverAllMembers {
+  ["propFoo"] = "foo"
+  ["propBaz"] = 1337
+  ["entryKeyQux"] = 42
+  ["entryKeyCorge"] = "corge"
+  [0] = "elementBar"
+  [1] = "elementQuux"
+}
+valueForOverTyped {
+  ["Pigeon"] = "Pigeon"
+  [42] = 42
+}
+keyValueForOverTyped {
+  ["name"] = "Pigeon"
+  ["age"] = 42
+}
+valueForOverConflictingPropertiesAndEntries = "Duplicate definition of member `\"can only discern by iteration order (properties before entries)\"`."
+keyValueForOverConflictingPropertiesAndEntries = "Duplicate definition of member `\"foo\"`."
+forWithMultipleMembers {
+  ["a"] = "a"
+  ["ax"] = "ax"
+  ["ay"] = "ay"
+  ["b"] = "b"
+  ["bx"] = "bx"
+  ["by"] = "by"
+  ["c"] = "c"
+  ["cx"] = "cx"
+  ["cy"] = "cy"
+}
+forWithMultipleMembersNested {
+  ["ax1"] = "ax1"
+  ["1xa"] = "1xa"
+  ["ay2"] = "ay2"
+  ["2ya"] = "2ya"
+  ["axx11"] = "axx11"
+  ["11xxa"] = "11xxa"
+  ["ayy22"] = "ayy22"
+  ["22yya"] = "22yya"
+  ["bx1"] = "bx1"
+  ["1xb"] = "1xb"
+  ["by2"] = "by2"
+  ["2yb"] = "2yb"
+  ["bxx11"] = "bxx11"
+  ["11xxb"] = "11xxb"
+  ["byy22"] = "byy22"
+  ["22yyb"] = "22yyb"
+}
+whenWithMultipleMembers {
+  [1] = 1
+  [2] = 2
+  [9] = 9
+  [18] = 18
+  [25] = 25
+  [50] = 50
+}
+whenWithMultipleMembersNested {
+  [25] = 25
+  [50] = 50
+}
+whenWithElse {
+  [1] = 1
+  [2] = 2
+  ["4"] = "4"
+  ["8"] = "8"
+  [9] = 9
+  [18] = 18
+  ["16"] = "16"
+  ["32"] = "32"
+  [25] = 25
+  [50] = 50
+}
+withinMethod {
+  ["a"] = 1
+  ["b"] = 2
+}
+withinLetExpr {
+  ["a"] = 1
+  ["b"] = 2
+}

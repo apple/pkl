@@ -1,0 +1,9 @@
+hidden x = new Mapping {
+  when (false) { [0] = 0 }
+  ["xfoo"] = "xfoo"
+  ["fooy"] = "fooy"
+  ["fozo"] = "fozo"
+  ["other"] = "other"
+}
+
+res1 = x["foo"]

@@ -1,0 +1,6 @@
+# linguist-generated would suppress files in diffs
+**/src/test/files/** linguist-vendored
+
+/docs/** linguist-documentation
+
+*.pkl linguist-language=Groovy

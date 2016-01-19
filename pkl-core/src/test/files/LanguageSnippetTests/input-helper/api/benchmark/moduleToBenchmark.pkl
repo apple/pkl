@@ -1,0 +1,1 @@
+result = IntSeq(1, 10).fold(0, (result, next) -> result + next)

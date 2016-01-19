@@ -1,0 +1,59 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A JSON parser.
+@ModuleInfo { minPklVersion = "0.25.0" }
+module pkl.json
+
+/// A JSON parser.
+///
+/// JSON values are mapped to Pkl values as follows:
+///
+/// | JSON type   | Pkl type                                                |
+/// | ----------- | ------------------------------------------------------- |
+/// | null        | [Null]                                                  |
+/// | Boolean     | [Boolean]                                               |
+/// | Number      | [Number]                                                |
+/// | String      | [String]                                                |
+/// | Array       | [Listing]                                               |
+/// | Object      | [Dynamic] or [Mapping] depending on [Parser.useMapping] |
+///
+/// The element order of JSON arrays and objects is maintained.
+class Parser {
+  /// Determines what the parser produces when parsing JSON objects.
+  ///
+  /// If [true], they turn into a [Mapping].
+  /// Otherwise, they turn into a [Dynamic].
+  ///
+  /// If [useMapping] is [false], JSON object properties named "default" will be shadowed by the
+  /// built-in [Dynamic.default] property.
+  useMapping: Boolean = false
+
+  /// Value converters to apply to parsed values.
+  ///
+  /// For further information see [PcfRenderer.converters].
+  converters: Mapping<Class|String(!isEmpty), (unknown) -> unknown>
+
+  /// Parses [source] as a JSON document.
+  ///
+  /// Throws if an error occurs during parsing.
+  ///
+  /// If [source] is a [Resource], the resource URI is included in parse error messages.
+  external function parse(source: Resource|String): Value
+}
+
+/// Pkl representation of a JSON value.
+typealias Value = Null|Boolean|Number|String|Listing|Dynamic|Mapping

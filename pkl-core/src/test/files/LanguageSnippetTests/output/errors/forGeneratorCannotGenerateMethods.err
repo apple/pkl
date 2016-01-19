@@ -1,0 +1,6 @@
+–– Pkl Error ––
+A for-generator cannot generate object methods (only entries and elements).
+
+x | for (n in List(1, 2, 3)) { local function foo() = "foo" }
+    ^^^
+at forGeneratorCannotGenerateMethods#foo (file:///$snippetsDir/input/errors/forGeneratorCannotGenerateMethods.pkl)

@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Invalid glob pattern `{foo{bar}}.pkl`.
+
+x | import* "{foo{bar}}.pkl" as invalidGlob
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobImport1#invalidGlob (file:///$snippetsDir/input/errors/invalidGlobImport1.pkl)
+
+Sub-patterns cannot be nested. To fix, remove or escape the inner `{` character.
+
+x | res = invalidGlob
+          ^^^^^^^^^^^
+at invalidGlobImport1#res (file:///$snippetsDir/input/errors/invalidGlobImport1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

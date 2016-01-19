@@ -1,0 +1,72 @@
+import "pkl:test"
+
+res1: UInt8 = 255
+res2: Int8 = -128
+
+res3: UInt16 = 65535
+res4: Int16 = -32768
+
+res5: UInt32 = 4294967295
+res6: Int32 = -2147483648
+
+res7: UInt = 9223372036854775807
+
+res8: Uri = "https://apple.com"
+
+res8b: NonNull = 42
+
+class Good {
+  res9: UInt8 = 255
+  res10: Int8 = -128
+
+  res11: UInt16 = 65535
+  res12: Int16 = -32768
+
+  res13: UInt32 = 4294967295
+  res14: Int32 = -2147483648
+
+  res15: UInt = 9223372036854775807
+
+  res16: Uri = "https://apple.com"
+
+  res16b: NonNull = 42
+}
+
+good = new Good {}
+
+class Bad {
+  res17: UInt8 = 256
+  res18: Int8 = -129
+
+  res19: UInt16 = 65536
+  res20: Int16 = -32769
+
+  res21: UInt32 = 4294967296
+  res22: Int32 = -2147483649
+
+  res23: UInt = -1
+
+  res24: Uri = 42
+
+  res24b: NonNull = null
+  res24c: NonNull = Null(new Bad {})
+}
+
+local bad = new Bad {}
+
+res17 = test.catch(() -> bad.res17)
+res18 = test.catch(() -> bad.res18)
+
+res19 = test.catch(() -> bad.res19)
+res20 = test.catch(() -> bad.res20)
+
+res21 = test.catch(() -> bad.res21)
+res22 = test.catch(() -> bad.res22)
+
+res23 = test.catch(() -> bad.res23)
+
+res24 = test.catch(() -> bad.res24)
+
+res24b = test.catch(() -> bad.res24b)
+res24c = test.catch(() -> bad.res24c)
+

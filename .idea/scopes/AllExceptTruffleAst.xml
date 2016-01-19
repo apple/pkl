@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="AllExceptTruffleAst" pattern="(src:*..*||test:*..*||lib:*..*)&amp;&amp;!src[pkl.pkl-core.main]:com.apple.pkl.core.ast..*&amp;&amp;!src[pkl.pkl-core.main]:com.apple.pkl.core.stdlib..*Nodes" />
+</component>

@@ -1,0 +1,12 @@
+–– Pkl Error ––
+Cannot find property `other` in module `my.library`.
+
+x | other = "parrot"
+    ^^^^^
+at invalidAmend2 (file:///$snippetsDir/input/modules/invalidAmend2.pkl)
+
+Available properties in module `my.library`:
+Person
+name
+output
+pigeon

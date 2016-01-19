@@ -1,0 +1,197 @@
+facts {
+  ["isNaN"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["isFinite"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["isInfinite"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["isPositive"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["isBetween()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["isNonZero"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["toDuration()"] {
+    true
+    true
+  }
+  ["toDataSize()"] {
+    true
+    true
+  }
+}
+examples {
+  ["sign"] {
+    1.0
+    -1.0
+    0.0
+    -0.0
+    NaN
+    1.0
+    -1.0
+  }
+  ["abs"] {
+    2.34
+    2.34
+    0.0
+    0.0
+    NaN
+    Infinity
+    Infinity
+  }
+  ["ceil"] {
+    3.0
+    3.0
+    -2.0
+    -2.0
+    0.0
+    -0.0
+    NaN
+    Infinity
+    -Infinity
+  }
+  ["floor"] {
+    2.0
+    2.0
+    -3.0
+    -3.0
+    0.0
+    -0.0
+    NaN
+    Infinity
+    -Infinity
+  }
+  ["round()"] {
+    2.0
+    3.0
+    -2.0
+    -3.0
+    0.0
+    -0.0
+    NaN
+    Infinity
+    -Infinity
+  }
+  ["truncate()"] {
+    2.0
+    2.0
+    -2.0
+    -2.0
+    0.0
+    -0.0
+    NaN
+    Infinity
+    -Infinity
+  }
+  ["toInt()"] {
+    2
+    2
+    -2
+    -2
+    0
+    0
+    "Cannot convert non-finite Float `Infinity` to Int."
+    "Cannot convert non-finite Float `-Infinity` to Int."
+    "Cannot convert non-finite Float `NaN` to Int."
+    "Cannot convert Float `9.223372036854776E18` to Int because it is too large."
+  }
+  ["toFloat()"] {
+    2.34
+    2.9
+    -2.34
+    -2.9
+    0.0
+    -0.0
+    NaN
+    Infinity
+    -Infinity
+  }
+  ["toString()"] {
+    "2.34"
+    "2.9"
+    "-2.34"
+    "-2.9"
+    "0.0"
+    "-0.0"
+    "NaN"
+    "Infinity"
+    "-Infinity"
+  }
+  ["toFixed()"] {
+    "2"
+    "3"
+    "-2"
+    "-3"
+    "0"
+    "-0"
+    "NaN"
+    "Infinity"
+    "-Infinity"
+    "2.3"
+    "2.90"
+    "-2.340"
+    "-2.9000"
+    "0.00000"
+    "-0.000000"
+    "NaN"
+    "Infinity"
+    "-Infinity"
+    "1.2"
+    "-1.23"
+    "1.235"
+    "-1.2346"
+    "1.23457"
+    "-1.234568"
+    "1.2345679"
+    "-1.23456789"
+    "1.234567890"
+    "123456789.1"
+    "123456789.12"
+    "123456789.123"
+    "123456789.1235"
+    "123456789.12346"
+    "123456789.123457"
+    "123456789.1234568"
+    "123456789.12345679"
+    "123456789.123456790"
+    "Type constraint `this.isBetween(0, 20)` violated. Value: -1"
+    "Type constraint `this.isBetween(0, 20)` violated. Value: 21"
+  }
+}

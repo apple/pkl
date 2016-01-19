@@ -1,0 +1,104 @@
+{
+  "int": 123,
+  "float": 1.23,
+  "bool": true,
+  "string": "Pigeon",
+  "unicodeString": "abc😀abc😎abc",
+  "multiLineString": "have a\ngreat\nday",
+  "list": [
+    123,
+    1.23,
+    true,
+    "Pigeon",
+    "abc😀abc😎abc",
+    "have a\ngreat\nday",
+    [
+      1,
+      2,
+      3
+    ],
+    [
+      1,
+      2,
+      3
+    ],
+    {
+      "one": 1
+    },
+    {
+      "name": "Pigeon"
+    }
+  ],
+  "set": [
+    123,
+    1.23,
+    true,
+    "Pigeon",
+    "abc😀abc😎abc",
+    "have a\ngreat\nday",
+    [
+      1,
+      2,
+      3
+    ],
+    [
+      1,
+      2,
+      3
+    ],
+    {
+      "one": 1
+    },
+    {
+      "name": "Pigeon"
+    }
+  ],
+  "map": {
+    "one": 123,
+    "two": 1.23,
+    "three": true,
+    "four": "Pigeon",
+    "five": "abc😀abc😎abc",
+    "six": "have a\ngreat\nday",
+    "seven": [
+      1,
+      2,
+      3
+    ],
+    "eight": [
+      1,
+      2,
+      3
+    ],
+    "nine": {
+      "one": 1
+    },
+    "ten": {
+      "name": "Pigeon"
+    }
+  },
+  "typedObject": {
+    "name": "Pigeon",
+    "age": 30,
+    "address": {
+      "street": "Folsom St."
+    },
+    "hobbies": [
+      "swimming",
+      "gardening",
+      "reading"
+    ]
+  },
+  "container": {
+    "name": "Pigeon",
+    "age": 30,
+    "address": {
+      "street": "Folsom St.",
+      "hobbies": [
+        "swimming",
+        "gardening",
+        "reading"
+      ]
+    }
+  }
+}

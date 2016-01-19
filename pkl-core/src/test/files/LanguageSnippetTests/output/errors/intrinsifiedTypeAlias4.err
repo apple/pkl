@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 42
+
+xxxx | typealias Uri = String
+                       ^^^^^^
+at intrinsifiedTypeAlias4#res1 (pkl:base)
+
+x | res1: Uri = 42
+                ^^
+at intrinsifiedTypeAlias4#res1 (file:///$snippetsDir/input/errors/intrinsifiedTypeAlias4.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

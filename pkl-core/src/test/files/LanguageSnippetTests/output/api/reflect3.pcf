@@ -1,0 +1,14 @@
+facts {
+  ["Reflecting an amended module"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}

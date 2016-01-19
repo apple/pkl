@@ -1,0 +1,14 @@
+amends "pkl:Project"
+
+package {
+  name = "project2"
+  baseUri = "package://localhost:12110/project2"
+  version = "1.0.0"
+  packageZipUrl = "https://localhost:12110/project2/project2-\(version).zip"
+}
+
+dependencies {
+  ["burds"] {
+    uri = "package://localhost:12110/birds@0.5.0"
+  }
+}

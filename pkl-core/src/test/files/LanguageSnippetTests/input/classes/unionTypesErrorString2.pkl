@@ -1,0 +1,17 @@
+class X {
+  a: "aaaaaaaaaaaaaaa"
+     | "bbbbbbbbbbbbb"
+     | "ccccccccccccc"
+     | "ddddddddddddd"
+     | "eeeeeeeeeeeee"
+     | "fffffffffffff"
+     | "ggggggggggggg"
+     | "hhhhhhhhhhhhh"
+     | "iiiiiiiiiiiii"
+     | "jjjjjjjjjjjjj"
+     | "kkkkkkkkkkkkk"
+}
+
+res1 = new X {
+  a = "other"
+}

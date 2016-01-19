@@ -1,0 +1,129 @@
+extends "../snippetTest.pkl"
+
+hidden renderer: YamlRenderer = new { mode = "compat" }
+
+local function render(value) = renderer.renderValue(value)
+
+examples {
+  ["null like strings"] {
+    render("null")
+    render("Null")
+    render("NULL")
+    render("NuLl") // never null
+  }
+
+  ["boolean like strings"] {
+    render("y")
+    render("Y")
+    render("yes")
+    render("Yes")
+    render("YES")
+    render("YeS")   // never boolean
+    render("n")
+    render("N")
+    render("no")
+    render("No")
+    render("NO")
+    render("nO")    // never boolean
+    render("true")
+    render("True")
+    render("TRUE")
+    render("TrUe")  // never boolean
+    render("false")
+    render("False")
+    render("FALSE")
+    render("FaLsE") // never boolean
+    render("on")
+    render("On")
+    render("ON")
+    render("oN")    // never boolean
+    render("off")
+    render("Off")
+    render("OFF")
+    render("OfF")   // never boolean
+  }
+
+  ["int like strings"] {
+    render("0")
+    render("1")
+    render("2")
+    render("9")
+    render("A")        // never int
+    render("-0")
+    render("+0")
+    render("123")
+    render("-123")
+    render("+123")
+    render("0b1001")    // binary (1.1)
+    render("-0b1001")   // neg. binary (1.1)
+    render("+0b1001")   // pos. binary (1.1)
+    render("0123")      // octal (1.1), decimal (1.2)
+    render("01234567")  // octal (1.1), decimal (1.2)
+    render("-0123")     // neg. octal (1.1), neg. decimal (1.2)
+    render("+0123")     // pos. octal (1.1), pos. decimal (1.2)
+    render("0o123")     // octal (1.2)
+    render("0o1234567") // octal (1.2)
+    render("-0o123")    // never int
+    render("+0o123")    // never int
+    render("0x1A3")     // hexadecimal
+    render("0xabcdef")  // hexadecimal
+    render("-0x1A3")    // neg. hexadecimal (1.1)
+    render("+0x1A3")    // pos. hexadecimal (1.1)
+    render("59:30:1")   // base 60 (1.1)
+    render("-59:30:1")  // neg. base 60 (1.1)
+    render("+59:30:1")  // pos. base 60 (1.1)
+    render("1_2_3")     // separator (1.1)
+  }
+
+  ["float like strings"] {
+    render("0.")
+    render(".0")
+    render("0.0")
+    render("123.456")
+    render("0123.456")    // leading zero (1.2)
+    render("-123.456")
+    render("+123.456")
+    render("123.456e2")
+    render("123.456E2")
+    render("123.456e-2")
+    render("123.456E+2")
+    render("-123.456e+2")
+    render("+123.456E+2")
+    render("59:30:1.234")  // base 60 (1.1)
+    render("-59:30:1.234") // neg. base 60 (1.1)
+    render("+59:30:1.234") // pos. base 60 (1.1)
+    render("1_2_3.456")    // separator (1.1)
+    render("1_2_3.4_5_6")  // separator (1.1 with our spec fix)
+    render(".")            // zero (1.1, no revision/erratum exists)
+    render(".___")         // zero (1.1 with our spec fix, no revision/erratum exists)
+
+    render(".inf")
+    render(".Inf")
+    render(".INF")
+    render(".InF")  // never float
+    render("+.inf")
+    render("+.Inf")
+    render("+.INF")
+    render("+.InF") // never float
+    render("-.inf")
+    render("-.Inf")
+    render("-.INF")
+    render("-.InF") // never float
+    render(".nan")
+    render(".NaN")
+    render(".NAN")
+    render(".nAn")  // never float
+  }
+  
+  ["tag like strings"] {
+    "!!bool true"
+    "!!str my string value"
+  }
+  
+  ["number like string keys"] {
+    render(new Dynamic {
+      `0` = "0"
+      `0.123` = "0.123"
+    })
+  }
+}

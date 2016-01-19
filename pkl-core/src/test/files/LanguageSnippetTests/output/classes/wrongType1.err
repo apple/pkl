@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 42
+
+x | name: String
+          ^^^^^^
+at wrongType1#Person.name (file:///$snippetsDir/input/classes/wrongType1.pkl)
+
+x | name = 42
+           ^^
+at wrongType1#pigeon.name (file:///$snippetsDir/input/classes/wrongType1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

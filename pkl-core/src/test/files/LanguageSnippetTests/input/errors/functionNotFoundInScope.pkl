@@ -1,0 +1,6 @@
+function fooa() = 42
+function foob(x) = 42
+fooc = 42
+function other() = 42
+
+res1 = foox()

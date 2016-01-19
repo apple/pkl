@@ -1,0 +1,110 @@
+import "pkl:test"
+
+local listing: Listing = new { 1; 2; 3 }
+local mapping: Mapping = new { ["a"] = 1; ["b"] = 2 }
+local dynamic: Dynamic = new {
+  1
+  2
+  3
+  ["foo"] = 0
+  ["bar"] = 1
+  foo = "foo"
+  bar = "bar"
+}
+local list: List<Int> = List(1, 2, 3)
+local map: Map<String, Int> = Map("a", 1, "b", 2)
+local intseq: IntSeq = IntSeq(0, 5).step(2)
+local set: Set<Int> = Set(10, 20, 30)
+
+class Foo {
+  names: Listing<String>
+}
+
+function makeFoos(names: List<String>) =
+  names.toMap((name) -> name, (name) -> new Foo {
+    names {
+      "original-\(name)"
+    }
+  }).toMapping()
+
+res1: Mapping = new {
+  ...mapping
+}
+
+res2: Mapping<String, Int> = new {
+  ...mapping
+}
+
+res3: Mapping = new {
+  ...mapping
+  ["c"] = 1
+  ["d"] = 2
+}
+
+res4 = test.catch(() -> new Mapping {
+  ...mapping
+  ...mapping
+})
+
+res5 = test.catch(() -> new Mapping {
+  ...mapping
+  ["a"] = 4
+})
+
+res6: Mapping = new {
+  ...map
+}
+
+class MyMappings {
+  mapping1: Mapping<Boolean, Boolean>
+}
+
+res7 = test.catch(() -> new MyMappings {
+  mapping1 {
+    ...mapping
+  }
+}.mapping1)
+
+res8 = test.catch(() -> new Mapping { ...listing })
+res9 = test.catch(() -> new Mapping { ...dynamic })
+res10 = test.catch(() -> new Mapping { ...list })
+res11 = test.catch(() -> new Mapping { ...set })
+res12 = test.catch(() -> new Mapping { ...intseq })
+
+res13: Mapping = new {
+  ...mapping
+  ["child"] = new Mapping {
+    ...mapping
+    ["child"] = new Mapping {
+      ...mapping
+    }
+  }
+}
+
+res14 = new Mapping {
+  ...mapping
+}
+
+res15 = new Mapping {
+  ...mapping
+  ["c"] = 1
+  ["d"] = 2
+}
+
+
+res16 = test.catch(() -> new Mapping {
+  ...mapping
+  ["a"] = 4
+})
+
+local foos = (makeFoos(List("bar"))) {
+  ["bar"] {
+    names {
+      "new one"
+    }
+  }
+}
+
+res17 = new Mapping {
+  ...foos
+}

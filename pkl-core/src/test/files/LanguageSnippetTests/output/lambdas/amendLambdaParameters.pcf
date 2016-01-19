@@ -1,0 +1,17 @@
+example1 {
+  result {
+    prop = 2
+  }
+}
+example2 {
+  result {
+    prop = 3
+  }
+}
+example3 {
+  result {
+    prop3 = 3
+    prop1 = 1
+    prop2 = 2
+  }
+}

@@ -1,0 +1,3 @@
+local x = Map("xfoo", "xfoo", "foyo", "foyo", "fooz", "fooz", "other", "other")
+
+res1 = x["foo"]

@@ -1,0 +1,34 @@
+import "pkl:test"
+
+class X {
+  a: String?
+  b: List<String?>
+  c: List<String>?
+  d: List<String?>?
+}
+
+res1 = new X {
+  a = "a"
+  b = List("b")
+  c = List("c")
+  d = List("d")
+}
+
+res2 = new X {
+  a = null
+  b = List(null)
+  c = null
+  d = List(null)
+}
+
+res3 = test.catch(() ->
+  new X {
+    b = null
+  }.b
+)
+
+res4 = test.catch(() ->
+  new X {
+    c = List(null)
+  }.c
+)

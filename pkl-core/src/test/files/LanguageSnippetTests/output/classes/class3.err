@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Cannot find property `adress` in object of type `class3#Person`.
+
+xx | adress = "Howdy St."
+     ^^^^^^
+at class3#person (file:///$snippetsDir/input/classes/class3.pkl)
+
+Did you mean any of the following?
+address
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

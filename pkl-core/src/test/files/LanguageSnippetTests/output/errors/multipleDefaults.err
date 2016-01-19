@@ -1,0 +1,6 @@
+–– Pkl Error ––
+A type union cannnot have more than one default type.
+
+x | foo: *Int|*String|*"foo"
+         ^^^^^^^^^^^^^^^^^^^
+at multipleDefaults#foo (file:///$snippetsDir/input/errors/multipleDefaults.pkl)

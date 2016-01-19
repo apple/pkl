@@ -1,0 +1,48 @@
+/// Docs for Package 1.
+///
+/// * [docLinks]
+/// * [docLinks.age]
+/// * [docLinks.sing()]
+/// * [docLinks.Person]
+/// * [docLinks.Person.name]
+/// * [docLinks.PersonList]
+///
+/// * [external1]
+/// * [external1.MyClass]
+@Deprecated { message = "com.package1 is deprecated" }
+amends "pkl:DocPackageInfo"
+
+import "docLinks.pkl"
+import "../com.externalpackage/external1.pkl"
+
+name = "com.package1"
+version = "1.2.3"
+importUri = "https://pkl.io/"
+authors {
+  "package1-publisher@group.apple.com"
+}
+sourceCode = "https://example.com/package1/"
+sourceCodeUrlScheme = "https://example.com/package1%{path}#L%{line}-L%{endLine}"
+issueTracker = "https://issues.apple.com/package1/"
+
+dependencies {
+  new {
+    name = "com.package2"
+    version = "4.5.6"
+    sourceCode = "https://example.com/package2/"
+  }
+  new {
+    name = "com.externalpackage"
+    version = "7.8.9"
+    sourceCode = "https://example.com/externalpackage/"
+    documentation = "https://example.com/docs/externalpackage/"
+  }
+  new {
+    name = "pkl"
+    // use fixed version to avoid churn in expected test outputs
+    version = "0.24.0"
+    sourceCode = "https://github.com/apple/pkl/blob/dev/stdlib/"
+    sourceCodeUrlScheme = "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
+    documentation = "https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/"
+  }
+}

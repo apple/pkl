@@ -1,0 +1,12 @@
+module deprecatedWithMessage2
+
+extends "deprecatedWithMessage1.pkl"
+
+@Deprecated { message = "avoid using f1" }
+function f1(n) = -1 * (n * 1000 + 1)
+
+res1 = f1(800)
+res1b = List(22, 23, 24).map((n) -> f1(n))
+
+res2 = f2(900)
+res2b = List(25, 26, 27).map((n) -> f2(n))

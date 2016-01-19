@@ -1,0 +1,1 @@
+res = import("package://localhost:12110/badImportsWithinPackage@1.0.0#/invalidPath.pkl")

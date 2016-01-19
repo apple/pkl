@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot combine glob imports with triple-dot module URIs.
+
+x | import* ".../input-helper/**.pkl" as invalidGlob
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidGlobImport4 (file:///$snippetsDir/input/errors/invalidGlobImport4.pkl)

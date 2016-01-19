@@ -1,0 +1,3 @@
+import "@fruit/Fruit.pkl"
+
+res = Fruit

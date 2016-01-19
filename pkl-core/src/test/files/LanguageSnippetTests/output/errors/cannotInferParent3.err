@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Cannot tell which parent to amend.
+
+x | [new { name = "Pigeon" }] = "Pigeon"
+     ^^^
+at cannotInferParent3#res1 (file:///$snippetsDir/input/errors/cannotInferParent3.pkl)
+
+Please specify a parent explicitly, for example `new Person { ... }` instead of `new { ... }`.

@@ -1,0 +1,6 @@
+res1 {
+  y {
+    z = 12
+  }
+}
+res2 = "Type constraint `multiply(subtract(add(5, 4), 3), 2) == z` violated. Value: new Y { z = 13 }"

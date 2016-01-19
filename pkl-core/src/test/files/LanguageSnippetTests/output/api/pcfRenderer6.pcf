@@ -1,0 +1,17 @@
+baz {
+  qux = 42
+  corge {
+    null
+    1337
+    null
+    "Hello World"
+  }
+  grault {
+    ["garply"] = null
+    ["waldo"] = 42
+    [new {
+      "pigeon"
+    }] = null
+  }
+  thud = Pair(new {}, new {})
+}

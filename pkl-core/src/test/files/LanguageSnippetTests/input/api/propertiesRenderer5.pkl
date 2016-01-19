@@ -1,0 +1,30 @@
+import "pkl:test"
+
+class Person {
+  name: String
+  age: Int
+}
+
+typealias Email = String
+
+res1 = new PropertiesRenderer {}.renderDocument(Map("name", "pigeon", "age", 42))
+res2 = new PropertiesRenderer {}.renderDocument(new Mapping { ["name"] = "pigeon"; ["age"] = 42 })
+res3 = new PropertiesRenderer {}.renderDocument(new Dynamic { name = "pigeon"; age = 42 })
+res4 = new PropertiesRenderer {}.renderDocument(new Person { name = "pigeon"; age = 42 })
+
+res5 = test.catch(() -> new PropertiesRenderer {}.renderDocument(Pair(1, 2)))
+res6 = test.catch(() -> new PropertiesRenderer {}.renderDocument(null))
+res7 = test.catch(() -> new PropertiesRenderer {}.renderDocument(123))
+res8 = test.catch(() -> new PropertiesRenderer {}.renderDocument(1.23))
+res9 = test.catch(() -> new PropertiesRenderer {}.renderDocument(false))
+res10 = test.catch(() -> new PropertiesRenderer {}.renderDocument("pigeon"))
+res11 = test.catch(() -> new PropertiesRenderer {}.renderDocument(List("pigeon", "parrot")))
+res12 = test.catch(() -> new PropertiesRenderer {}.renderDocument(Set("pigeon", "parrot")))
+res13 = test.catch(() -> new PropertiesRenderer {}.renderDocument(new Listing { "pigeon"; "parrot" }))
+res14 = test.catch(() -> new PropertiesRenderer {}.renderDocument(1.min))
+res15 = test.catch(() -> new PropertiesRenderer {}.renderDocument(1.mb))
+res16 = test.catch(() -> new PropertiesRenderer {}.renderDocument(Person))
+res17 = test.catch(() -> new PropertiesRenderer {}.renderDocument(Email))
+res18 = test.catch(() -> new PropertiesRenderer {}.renderDocument((x) -> x))
+res19 = test.catch(() -> new PropertiesRenderer { converters { [Int] = (_) -> throw("ouch") } }.renderDocument(42))
+res20 = test.catch(() -> new PropertiesRenderer {}.renderDocument(IntSeq(1, 4)))

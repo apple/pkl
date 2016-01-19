@@ -1,0 +1,149 @@
+examples {
+  ["String"] {
+    "abc"
+  }
+  ["Any"] {
+    "abc"
+    42
+    1.23
+    true
+    false
+    42.s
+    42.b
+    List(1, 2, 3)
+    Set(1, 2, 3)
+    Map(1, "one", 2, "two", 3, "three")
+    null
+    null
+    new {}
+    new {}
+    new {
+      ["name"] = "Pigeon"
+      ["age"] = 40
+    }
+  }
+  ["Null"] {
+    null
+    null
+    "Expected value of type `Null`, but got type `String`. Value: \"abc\""
+    "Expected value of type `Null`, but got type `Int`. Value: 42"
+    "Expected value of type `Null`, but got type `Float`. Value: 1.23"
+    "Expected value of type `Null`, but got type `Boolean`. Value: true"
+    "Expected value of type `Null`, but got type `Boolean`. Value: false"
+    "Expected value of type `Null`, but got type `Duration`. Value: 42.s"
+    "Expected value of type `Null`, but got type `DataSize`. Value: 42.b"
+    "Expected value of type `Null`, but got type `List`. Value: List(1, 2, 3)"
+    "Expected value of type `Null`, but got type `Set`. Value: Set(1, 2, 3)"
+    "Expected value of type `Null`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
+    "Expected value of type `Null`, but got type `as#Base`. Value: new Base {}"
+    "Expected value of type `Null`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `Null`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
+    "Expected value of type `Null`, but got type `Class`. Value: as#Base"
+    "Expected value of type `Null`, but got type `Listing`. Value: new Listing { null; null; \"Expected value of type `Null`, but got type `Strin..."
+    "Expected value of type `Null`, but got type `Function1`. Value: new Function1 {}"
+  }
+  ["Number"] {
+    42
+    1.23
+  }
+  ["Int"] {
+    42
+    "Expected value of type `Int`, but got type `String`. Value: \"abc\""
+    "Expected value of type `Int`, but got type `Float`. Value: 1.23"
+    "Expected value of type `Int`, but got type `Boolean`. Value: true"
+    "Expected value of type `Int`, but got type `Boolean`. Value: false"
+    "Expected value of type `Int`, but got type `Duration`. Value: 42.s"
+    "Expected value of type `Int`, but got type `DataSize`. Value: 42.b"
+    "Expected value of type `Int`, but got type `List`. Value: List(1, 2, 3)"
+    "Expected value of type `Int`, but got type `Set`. Value: Set(1, 2, 3)"
+    "Expected value of type `Int`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
+    "Expected value of type `Int`, but got `null`."
+    "Expected value of type `Int`, but got `null`."
+    "Expected value of type `Int`, but got type `as#Base`. Value: new Base {}"
+    "Expected value of type `Int`, but got type `Function1`. Value: new Function1 {}"
+    "Expected value of type `Int`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `Int`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
+    "Expected value of type `Int`, but got type `Class`. Value: as#Base"
+    "Expected value of type `Int`, but got type `Listing`. Value: new Listing { 42; \"Expected value of type `Int`, but got type `String`. Value..."
+  }
+  ["Float"] {
+    1.23
+    "Expected value of type `Float`, but got type `Int`. Value: 42"
+  }
+  ["Other"] {
+    "Expected value of type `as#Other`, but got type `String`. Value: \"abc\""
+    "Expected value of type `as#Other`, but got type `Int`. Value: 42"
+    "Expected value of type `as#Other`, but got type `Float`. Value: 1.23"
+    "Expected value of type `as#Other`, but got type `Boolean`. Value: true"
+    "Expected value of type `as#Other`, but got type `Boolean`. Value: false"
+    "Expected value of type `as#Other`, but got type `Duration`. Value: 42.s"
+    "Expected value of type `as#Other`, but got type `DataSize`. Value: 42.b"
+    "Expected value of type `as#Other`, but got type `List`. Value: List(1, 2, 3)"
+    "Expected value of type `as#Other`, but got type `Set`. Value: Set(1, 2, 3)"
+    "Expected value of type `as#Other`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
+    "Expected value of type `as#Other`, but got `null`."
+    "Expected value of type `as#Other`, but got `null`."
+    "Expected value of type `as#Other`, but got type `as#Base`. Value: new Base {}"
+    "Expected value of type `as#Other`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `as#Other`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
+    "Expected value of type `as#Other`, but got type `Class`. Value: as#Base"
+    "Expected value of type `as#Other`, but got type `Listing`. Value: new Listing { \"Expected value of type `as#Other`, but got type `String`. Valu..."
+    "Expected value of type `as#Other`, but got type `Function1`. Value: new Function1 {}"
+  }
+  ["Boolean"] {
+    true
+    false
+  }
+  ["Duration"] {
+    42.s
+    "Expected value of type `Duration`, but got type `DataSize`. Value: 42.b"
+  }
+  ["DataSize"] {
+    42.b
+    "Expected value of type `DataSize`, but got type `Duration`. Value: 42.s"
+  }
+  ["List"] {
+    List(1, 2, 3)
+    "Expected value of type `List`, but got type `Set`. Value: Set(1, 2, 3)"
+  }
+  ["Set"] {
+    "Expected value of type `Set`, but got type `List`. Value: List(1, 2, 3)"
+    Set(1, 2, 3)
+  }
+  ["Collection"] {
+    List(1, 2, 3)
+    Set(1, 2, 3)
+    "Expected value of type `Collection`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
+  }
+  ["Map"] {
+    Map(1, "one", 2, "two", 3, "three")
+  }
+  ["base class"] {
+    new {}
+    new {}
+  }
+  ["derived class"] {
+    new {}
+    "Expected value of type `as#Derived`, but got type `as#Base`. Value: new Base {}"
+  }
+  ["Mapping"] {
+    new {
+      ["name"] = "Pigeon"
+      ["age"] = 40
+    }
+  }
+  ["Function"] {
+    42
+    42
+    42
+    "Expected value of type `Function2`, but got type `Function1`. Value: new Function1 {}"
+  }
+  ["Class"] {
+    "Base"
+    "Base"
+  }
+  ["Module"] {
+    "abc"
+    "abc"
+  }
+}

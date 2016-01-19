@@ -1,0 +1,5 @@
+class Foo {
+  open function foo() = 42
+}
+
+res1 = Foo {}

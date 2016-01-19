@@ -1,0 +1,14 @@
+class Person
+
+coll: Collection<Person>
+list: List<Person>
+set: Set<Person>
+map: Map<String, Person>
+listing: Listing<Person>
+mapping: Mapping<String, Person>
+obj: Person
+nullable: Person?
+union: *Person|String
+stringLiteral: "Pigeon"
+nullish: Null
+

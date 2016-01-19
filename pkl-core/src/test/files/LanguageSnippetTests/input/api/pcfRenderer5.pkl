@@ -1,0 +1,34 @@
+import "pkl:test"
+
+class Person {
+  name: String
+  age: Int
+}
+
+typealias Email = String
+
+local renderer = new PcfRenderer {}
+
+res1 = test.catch(() -> renderer.renderDocument(123))
+res2 = test.catch(() -> renderer.renderDocument(1.23))
+res3 = test.catch(() -> renderer.renderDocument(false))
+res4 = test.catch(() -> renderer.renderDocument("pigeon"))
+res5 = test.catch(() -> renderer.renderDocument(List("pigeon", "parrot")))
+res6 = test.catch(() -> renderer.renderDocument(Set("pigeon", "parrot")))
+res7 = test.catch(() -> renderer.renderDocument(Map("name", "pigeon", "age", 42)))
+res8 = test.catch(() -> renderer.renderDocument(new Listing { "pigeon"; "parrot" }))
+res9 = test.catch(() -> renderer.renderDocument(new Mapping { ["name"] = "pigeon"; ["age"] = 42 }))
+
+res10 = renderer.renderDocument(new Dynamic { name = "pigeon"; age = 42 })
+res11 = renderer.renderDocument(new Person { name = "pigeon"; age = 42 })
+
+res12 = test.catch(() -> renderer.renderDocument(1.min))
+res13 = test.catch(() -> renderer.renderDocument(1.mb))
+res14 = test.catch(() -> renderer.renderDocument(null))
+res15 = test.catch(() -> renderer.renderDocument(Pair(1, 2)))
+
+res16 = test.catch(() -> renderer.renderDocument(Person))
+res17 = test.catch(() -> renderer.renderDocument(Email))
+res18 = test.catch(() -> renderer.renderDocument((x) -> x))
+res19 = test.catch(() -> new PcfRenderer { converters { [Int] = (_) -> throw("ouch") } }.renderDocument(42))
+res20 = test.catch(() -> renderer.renderDocument(IntSeq(1, 4)))

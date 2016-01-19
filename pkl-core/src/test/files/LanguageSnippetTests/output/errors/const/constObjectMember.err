@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Modifier `const` is not applicable to object members.
+
+x | const foo = 10
+    ^^^^^
+at constObjectMember#foo (file:///$snippetsDir/input/errors/const/constObjectMember.pkl)

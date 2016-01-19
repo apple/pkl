@@ -1,0 +1,183 @@
+amends "../snippetTest.pkl"
+
+local l = List(1, 2, 3)
+
+local set = Set(1, 2,3)
+
+local map = Map(1, "one", 2, "two", 3, "three")
+
+local open class Base
+local class Derived extends Base
+
+local base = new Base {}
+
+local derived = new Derived {}
+
+local pigeon = new Mapping { ["name"] = "Pigeon"; ["age"] = 40 }
+
+local f = (x) -> x
+
+local class Other
+
+examples {
+  ["String"] {
+    "abc" as String
+  }
+
+  ["Any"] {
+    "abc" as Any
+    42 as Any
+    1.23 as Any
+    true as Any
+    false as Any
+    42.s as Any
+    42.b as Any
+    l as Any
+    set as Any
+    map as Any
+    null as Any
+    Null(new Base {}) as Any
+    base as Any
+    derived as Any
+    pigeon as Any
+  }
+
+  ["Null"] {
+    null as Null
+    Null(new Base {}) as Null
+    module.catch(() -> "abc" as Null)
+    module.catch(() -> 42 as Null)
+    module.catch(() -> 1.23 as Null)
+    module.catch(() -> true as Null)
+    module.catch(() -> false as Null)
+    module.catch(() -> 42.s as Null)
+    module.catch(() -> 42.b as Null)
+    module.catch(() -> l as Null)
+    module.catch(() -> set as Null)
+    module.catch(() -> map as Null)
+    module.catch(() -> base as Null)
+    module.catch(() -> derived as Null)
+    module.catch(() -> pigeon as Null)
+    module.catch(() -> Base as Null)
+    module.catch(() -> this as Null)
+    module.catch(() -> f as Null)
+  }
+
+  ["Number"] {
+    42 as Number
+    1.23 as Number
+  }
+
+  ["Int"] {
+    42 as Int
+    module.catch(() -> "abc" as Int)
+    module.catch(() -> 1.23 as Int)
+    module.catch(() -> true as Int)
+    module.catch(() -> false as Int)
+    module.catch(() -> 42.s as Int)
+    module.catch(() -> 42.b as Int)
+    module.catch(() -> l as Int)
+    module.catch(() -> set as Int)
+    module.catch(() -> map as Int)
+    module.catch(() -> null as Int)
+    module.catch(() -> Null(new Base {}) as Int)
+    module.catch(() -> base as Int)
+    module.catch(() -> f as Int)
+    module.catch(() -> derived as Int)
+    module.catch(() -> pigeon as Int)
+    module.catch(() -> Base as Int)
+    module.catch(() -> this as Int)
+  }
+
+  ["Float"] {
+    1.23 as Float
+    module.catch(() -> 42 as Float)
+  }
+
+  ["Other"] {
+    module.catch(() -> "abc" as Other)
+    module.catch(() -> 42 as Other)
+    module.catch(() -> 1.23 as Other)
+    module.catch(() -> true as Other)
+    module.catch(() -> false as Other)
+    module.catch(() -> 42.s as Other)
+    module.catch(() -> 42.b as Other)
+    module.catch(() -> l as Other)
+    module.catch(() -> set as Other)
+    module.catch(() -> map as Other)
+    module.catch(() -> null as Other)
+    module.catch(() -> Null(new Base {}) as Other)
+    module.catch(() -> base as Other)
+    module.catch(() -> derived as Other)
+    module.catch(() -> pigeon as Other)
+    module.catch(() -> Base as Other)
+    module.catch(() -> this as Other)
+    module.catch(() -> f as Other)
+  }
+
+  ["Boolean"] {
+    true as Boolean
+    false as Boolean
+  }
+
+  ["Duration"] {
+    42.s as Duration
+    module.catch(() -> 42.b as Duration)
+  }
+
+  ["DataSize"] {
+    42.b as DataSize
+    module.catch(() -> 42.s as DataSize)
+  }
+
+  ["List"] {
+    l as List
+    module.catch(() -> set as List)
+  }
+
+  ["Set"] {
+    module.catch(() -> l as Set)
+    set as Set
+  }
+
+  ["Collection"] {
+    l as Collection
+    set as Collection
+    module.catch(() -> map as Collection)
+  }
+
+  ["Map"] {
+    map as Map
+  }
+
+  ["base class"] {
+    base as Base
+    derived as Base
+  }
+
+  ["derived class"] {
+    derived as Derived
+    module.catch(() -> base as Derived)
+  }
+
+  ["Mapping"] {
+    pigeon as Mapping
+  }
+
+  ["Function"] {
+    (f as Function).apply(42)
+    (f as Function1).apply(42)
+    (f as Any).apply(42)
+    module.catch(() -> f as Function2)
+  }
+
+  ["Class"] {
+    (Base as Class).simpleName
+    (Base as Any).simpleName
+  }
+
+  ["Module"] {
+    (module as Module).examples["String"][0]
+    (module as Any).examples["String"][0]
+  }
+}

@@ -1,0 +1,4 @@
+ex1 = null
+ex2 = "str"
+ex3 = List(1, 2, 3)
+

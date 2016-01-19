@@ -1,0 +1,56 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:xml"
+import "pkl:jsonnet"
+import "pkl:protobuf"
+
+examples {
+  for (format, renderer in new Mapping {
+    ["pcf"] = new PcfRenderer {}
+    ["json"] = new JsonRenderer {}
+    ["jsonnet"] = new jsonnet.Renderer {} 
+    ["plist"] = new PListRenderer {}
+    ["properties"] = new PropertiesRenderer {}
+    ["textproto"] = new protobuf.Renderer {}
+    ["xml"] = new xml.Renderer {}
+    ["yaml"] = new YamlRenderer {}
+  }) {
+    [format] {
+      renderer.renderValue(new RenderDirective { text = "1\"2\n3\t4'" })
+      renderer.renderValue(new RenderDirective { text = #"+* /\-;)❌#✅<>"# })
+      renderer.renderDocument(new NestedDirectives {
+        when (format == "properties") {
+          listing = null
+          mapping = null
+        }
+        when (format == "textproto") {
+          dynamic = null
+        }
+      })
+      renderer.renderDocument(new RenderDirective { text = #"✅\❌ /-#;)<>"# })
+    }
+  }
+}
+
+local class NestedDirectives {
+  directiveProperty: RenderDirective = new { text = #"✅/&\;)*❌"# }
+  normalProperty: Int = 42
+  dynamic: Dynamic? = new Dynamic {
+    foo {
+      bar {
+        baz = new RenderDirective { text = #"+#✅<;)❌* /\->"# }
+      }
+      qux = new RenderDirective { text = #"+\✅)❌#-;<* />"# }
+    }
+  }
+  listing: Listing? = new {
+    "foo"
+    new RenderDirective { text = "💰" }
+    "baz"
+  }
+  mapping: Mapping? = new {
+    ["key"] = "value"
+    [new RenderDirective { text = "🔑" }] = 42
+    ["other"] = new RenderDirective { text = "💰" }
+  }
+}

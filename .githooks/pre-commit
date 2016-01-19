@@ -1,0 +1,8 @@
+#!/bin/sh
+
+files=`git diff --cached --name-status`
+
+if [[ $files =~ .circleci/config.pkl ]]; then
+  pkl eval .circleci/config.pkl -o .circleci/config.yml
+  git add .circleci/config.yml
+fi

@@ -1,0 +1,11 @@
+class Dog {
+  age: Int
+}
+
+output {
+  renderer = new PcfRenderer {
+    converters {
+      [Any] = (o) -> o.getClass().toString()
+    }
+  }
+}

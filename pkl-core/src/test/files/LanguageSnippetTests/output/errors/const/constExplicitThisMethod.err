@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot call method `a` from here because it is not `const`.
+
+x | const b = this.a()
+              ^^^^^^^^
+at constExplicitThisMethod#B.b (file:///$snippetsDir/input/errors/const/constExplicitThisMethod.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to method `a`
+2. Self-import this module, and reference this method from the import.
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

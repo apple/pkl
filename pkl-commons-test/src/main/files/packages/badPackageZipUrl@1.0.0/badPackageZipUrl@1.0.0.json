@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "packageUri": "package://localhost:12110/badPackagezipUrl@1.1.0",
+  "name": "bugs",
+  "packageZipUrl": "ftp://wait/a/minute",
+  "dependencies": {},
+  "version": "1.0.0",
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  }
+}

@@ -1,0 +1,439 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A mirror-based reflection library.
+///
+/// The `pkl:reflect` module enables *introspection*,
+/// the subset of reflection by which a program can examine its own structure.
+///
+/// The API design is based on the concept of [mirrors](https://en.wikipedia.org/wiki/Mirror_(programming)).
+///
+/// With the help of this module, advanced tools can be written entirely in Pkl:
+///
+/// - Documentation generators (such as *Pkldoc*)
+/// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
+/// - Domain-specific schema validators
+@ModuleInfo { minPklVersion = "0.25.0" }
+module pkl.reflect
+
+import "pkl:base"
+
+/// A mirror for the [Any] type.
+const anyType: DeclaredType = DeclaredType(Class(Any))
+
+/// A mirror for the [Boolean] type.
+const booleanType: DeclaredType = DeclaredType(Class(Boolean))
+
+/// A mirror for the [Int] type.
+const intType: DeclaredType = DeclaredType(Class(Int))
+
+/// A mirror for the [Int8] type.
+const int8Type: DeclaredType = DeclaredType(TypeAlias(Int8))
+
+/// A mirror for the [Int16] type.
+const int16Type: DeclaredType = DeclaredType(TypeAlias(Int16))
+
+/// A mirror for the [Int32] type.
+const int32Type: DeclaredType = DeclaredType(TypeAlias(Int32))
+
+/// A mirror for the [UInt] type.
+const uintType: DeclaredType = DeclaredType(TypeAlias(UInt))
+
+/// A mirror for the [UInt8] type.
+const uint8Type: DeclaredType = DeclaredType(TypeAlias(UInt8))
+
+/// A mirror for the [UInt16] type.
+const uint16Type: DeclaredType = DeclaredType(TypeAlias(UInt16))
+
+/// A mirror for the [UInt32] type.
+const uint32Type: DeclaredType = DeclaredType(TypeAlias(UInt32))
+
+/// A mirror for the [Float] type.
+const floatType: DeclaredType = DeclaredType(Class(Float))
+
+/// A mirror for the [String] type.
+const stringType: DeclaredType = DeclaredType(Class(String))
+
+/// A mirror for the [Duration] type.
+const durationType: DeclaredType = DeclaredType(Class(Duration))
+
+/// A mirror for the [DataSize] type.
+const dataSizeType: DeclaredType = DeclaredType(Class(DataSize))
+
+/// A mirror for the `Pair<unknown, unknown>` type.
+const pairType: DeclaredType = DeclaredType(Class(Pair))
+
+/// A mirror for the `List<unknown>` type.
+const listType: DeclaredType = DeclaredType(Class(List))
+
+/// A mirror for the `Set<unknown>` type.
+const setType: DeclaredType = DeclaredType(Class(Set))
+
+/// A mirror for the `Map<unknown, unknown>` type.
+const mapType: DeclaredType = DeclaredType(Class(Map))
+
+/// A mirror for the [Object] type.
+const objectType: DeclaredType = DeclaredType(Class(Object))
+
+/// A mirror for the [Dynamic] type.
+const dynamicType: DeclaredType = DeclaredType(Class(Dynamic))
+
+/// A mirror for the [Typed] type.
+const typedType: DeclaredType = DeclaredType(Class(Type))
+
+/// A mirror for the `Listing<unknown>` type.
+const listingType: DeclaredType = DeclaredType(Class(Listing))
+
+/// A mirror for the `Mapping<unknown, unknown>` type.
+const mappingType: DeclaredType = DeclaredType(Class(Mapping))
+
+/// A mirror for the `module` type.
+external const moduleType: ModuleType
+
+/// A mirror for the `unknown` type.
+external const unknownType: UnknownType
+
+/// A mirror for the `nothing` type.
+external const nothingType: NothingType
+
+/// Returns a mirror for [mod].
+///
+/// When a module is amended like an object, it is no longer a module.
+/// In this case, [Module()] throws.
+/// In the following example, `barnOwl` is such an object, created by amending the module `pigeon.pkl`.
+///
+/// ```
+/// barnOwl = import("pigeon.pkl") {
+///   name = "Barn Owl"
+/// }
+/// ```
+external const function Module(mod: base.Module): Module
+
+/// Returns a mirror [mod] if it is a module, and otherwise its closest parent that is a module.
+///
+/// When a module is amended like an object, it is no longer a module.
+/// In this case, [moduleOf()] returns a mirror of the closest parent that is.
+/// In the following example, `barnOwl` is such an object, created by amending the module `pigeon.pkl`.
+///
+/// ```
+/// barnOwl = import("pigeon.pkl") {
+///   name = "Barn Owl"
+/// }
+/// ```
+external const function moduleOf(mod: base.Module): Module
+
+/// Returns a mirror for [clazz].
+external const function Class(clazz: base.Class): Class
+
+/// Returns a mirror for [typeAlias].
+external const function TypeAlias(typeAlias: base.TypeAlias): TypeAlias
+
+/// Returns a mirror for the declared type for [referent].
+external const function DeclaredType(referent: TypeDeclaration): DeclaredType
+
+/// Returns a mirror for the function type with the given [parameterTypes] and [returnType].
+external const function FunctionType(parameterTypes: List<Type>, returnType: Type): FunctionType
+
+/// Returns a mirror for the string literal type for [value].
+external const function StringLiteralType(value: String): StringLiteralType
+
+/// Returns a mirror for the union of [memberTypes].
+external const function UnionType(memberTypes: List<Type>): UnionType
+
+/// Returns a mirror for a type variable for [referent].
+external const function TypeVariable(referent: TypeParameter): TypeVariable
+
+/// A program declaration.
+abstract external class Declaration {
+  /// The source location of this declaration.
+  location: SourceLocation
+
+  /// The documentation comment for this declaration, if any.
+  docComment: String?
+
+  /// The annotations attached to this declaration.
+  annotations: List<Annotation>
+
+  /// The modifiers of this declaration.
+  modifiers: Set<Modifier>
+
+  /// The name of this declaration.
+  name: String
+}
+
+/// A module declaration.
+external class Module extends Declaration {
+  hidden reflectee: base.Module
+
+  /// The URI of this module.
+  uri: String
+
+  /// The class of this module.
+  moduleClass: Class(isSubclassOf(Class(base.Module)))
+
+  /// The module amended or extended by this module, if any.
+  supermodule: Module?
+
+  /// Tells whether this module amends another module (namely [supermodule]).
+  ///
+  /// [false] if [supermodule] is [null].
+  isAmend: Boolean
+
+  /// The imports declared in this module.
+  ///
+  /// Map keys are the identifiers by which imports are accessed within this module.
+  /// Map values are the URIs of the imported modules.
+  ///
+  /// Does not cover import expressions.
+  imports: Map<String, Uri>
+
+  /// The classes declared in this module.
+  ///
+  /// Does not contain [moduleClass].
+  classes: Map<String, Class>
+
+  /// The type aliases declared in this module.
+  typeAliases: Map<String, TypeAlias>
+}
+
+/// A class or type alias declaration.
+abstract external class TypeDeclaration extends Declaration {
+  /// The class or type alias reflected upon.
+  abstract hidden reflectee: base.Class|base.TypeAlias
+
+  /// The module enclosing this type declaration.
+  ///
+  /// If this type declaration is a module class, [enclosingDeclaration] is the corresponding module instance.
+  hidden enclosingDeclaration: Module
+
+  /// The type parameters of this type declaration.
+  abstract typeParameters: List<TypeParameter>
+}
+
+/// A class declaration.
+external class Class extends TypeDeclaration {
+  /// The class reflected upon.
+  hidden reflectee: base.Class
+
+  /// The type parameters of this class.
+  ///
+  /// Only standard library classes can have type parameters.
+  typeParameters: List<TypeParameter>
+
+  /// The superclass of this class.
+  ///
+  /// All classes except [Any] have a superclass.
+  superclass: Class?
+
+  /// The supertype of this class.
+  ///
+  /// All classes except [Any] have a supertype.
+  supertype: Type?
+
+  /// The properties declared in this class.
+  ///
+  /// Does not include properties declared in superclasses.
+  properties: Map<String, Property>
+
+  /// The methods declared in this class.
+  ///
+  /// Does not include methods declared in superclasses.
+  methods: Map<String, Method>
+
+  /// Tells if this class is a subclass of [other].
+  ///
+  /// Every class is a subclass of itself.
+  external function isSubclassOf(other: Class): Boolean
+}
+
+/// A type alias declaration.
+external class TypeAlias extends TypeDeclaration {
+  /// The type alias reflected upon.
+  hidden reflectee: base.TypeAlias
+
+  /// The type parameters of this type alias declaration.
+  typeParameters: List<TypeParameter>
+
+  /// The type that this type alias stands for.
+  referent: Type
+}
+
+/// A property declaration.
+external class Property extends Declaration {
+  /// The declared type of this property.
+  type: Type
+
+  /// The (explicit or implicit) default value of this property.
+  ///
+  /// [null] if this property does not have a default value.
+  hidden defaultValue: Any
+}
+
+/// A method declaration.
+external class Method extends Declaration {
+  /// The type parameters of this method.
+  ///
+  /// Only standard library methods can have type parameters.
+  typeParameters: List<TypeParameter>
+
+  /// The parameters of this method.
+  parameters: Map<String, MethodParameter>
+
+  /// The return type of this method.
+  returnType: Type
+}
+
+/// A method parameter.
+external class MethodParameter {
+  /// The name of this method parameter.
+  name: String
+
+  /// The type of this method parameter.
+  type: Type
+}
+
+/// A type parameter of a generic type or method declaration.
+///
+/// Example: `T` on the left-hand side of `typealias StringMapping<T> = Mapping<String, T>`.
+external class TypeParameter {
+  /// The name of this type parameter.
+  name: String
+
+  /// The variance of this type parameter.
+  ///
+  /// [null] if this type parameter is invariant.
+  variance: Variance?
+}
+
+/// A modifier of a [Declaration].
+typealias Modifier = "abstract"|"external"|"hidden"|"open"
+
+/// The variance of a [TypeParameter].
+///
+/// An "in" type parameter is contravariant.
+/// An "out" type parameter is covariant.
+typealias Variance = "in"|"out"
+
+/// A type as it occurs, say, in a type annotation.
+abstract external class Type {
+  /// The corresponding nullable type, or [this] if [this] is already a nullable type.
+  external nullable: NullableType
+}
+
+/// A declared type such as `String` or `Listing<String>`.
+///
+/// Use [DeclaredType()] to create an instance of this class.
+/// For common standard library classes, this module offers predefined type mirrors
+/// ([intType], [stringType], [listType], etc.).
+///
+/// If this type's [referent] has type parameters, the corresponding [typeArguments] default to [unknownType].
+/// To override this default, use [withTypeArgument()] or [withTypeArguments()].
+///
+/// Examples:
+/// ```
+/// import "pkl:reflect"
+///
+/// class Person
+/// pigeon: Person
+/// people: List<Person>
+///
+/// personClass = reflect.Class(Person)
+/// personType = reflect.DeclaredType(personClass)
+/// reflect.Module(this).properties["pigeon"].type == personType
+/// reflect.Module(this).properties["people"].type == listType.withTypeArgument(personType)
+/// ```
+external class DeclaredType extends Type {
+  /// The type declaration that this type refers to.
+  referent: TypeDeclaration
+
+  /// The type arguments of this type.
+  typeArguments: List<Type>(length == referent.typeParameters.length)
+
+  /// Returns a declared type with the same [referent] and the given [typeArgument].
+  external function withTypeArgument(typeArgument: Type): DeclaredType
+
+  /// Returns a declared type with the same [referent] and the given [typeArguments].
+  external function withTypeArguments(typeArguments: List<Type>): DeclaredType
+}
+
+/// A string literal type such as `"Pigeon"`.
+///
+/// Use [StringLiteralType()] to create an instance of this class.
+external class StringLiteralType extends Type {
+  /// The string value represented by this type.
+  value: String
+}
+
+/// A union type such as `String|Int`.
+///
+/// Use [UnionType()] to create an instance of this class.
+external class UnionType extends Type {
+  /// The members of this union type.
+  members: List<Type>
+}
+
+/// A nullable type such as `String?`.
+///
+/// Use [Type.nullable] to create an instance of this class.
+external class NullableType extends Type {
+  /// The member of this nullable type.
+  member: Type
+}
+
+/// A function type such as `(String, Int) -> Duration`.
+///
+/// Use [FunctionType()] to create an instance of this class.
+external class FunctionType extends Type {
+  /// The parameter types of this function type.
+  parameterTypes: List<Type>
+
+  /// The return type of this function type.
+  returnType: Type
+}
+
+/// The `module` type.
+///
+/// [moduleType] is an instance of this class.
+class ModuleType extends Type
+
+/// The `unknown` type.
+///
+/// [unknownType] is an instance of this class.
+class UnknownType extends Type
+
+/// The `nothing` type.
+///
+/// [nothingType] is an instance of this class.
+class NothingType extends Type
+
+/// A type variable that refers to a type parameter of a generic type or method declaration.
+///
+/// Example: `T` on the right-hand side of `typealias StringMapping<T> = Mapping<String, T>`.
+external class TypeVariable extends Type {
+  referent: TypeParameter
+}
+
+/// A source location within a module.
+external class SourceLocation {
+  /// The 1-based line number of this source location.
+  line: UInt
+
+  /// The 1-based column number of this source location.
+  column: UInt
+
+  /// The display URI of this source location.
+  displayUri: String
+}

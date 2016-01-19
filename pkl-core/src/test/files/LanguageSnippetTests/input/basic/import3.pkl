@@ -1,0 +1,6 @@
+foo {
+  bar = import("imported.pkl")
+  baz = import("imported.pkl")
+  bak = import("imported.pkl").foo
+}
+

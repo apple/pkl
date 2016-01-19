@@ -1,0 +1,8 @@
+= Community
+:uri-github-issue: https://github.com/apple/pkl/issues
+:uri-github-discussions: https://github.com/apple/pkl/discussions
+
+We'd love to hear from you!
+
+* Create an {uri-github-issue}[issue]
+* Ask questions on {uri-github-discussions}[GitHub Discussions]

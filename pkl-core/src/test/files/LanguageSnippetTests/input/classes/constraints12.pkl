@@ -1,0 +1,31 @@
+import "pkl:test"
+
+abstract class Base {
+  x: Int = 1
+}
+
+class Derived extends Base {
+  y: Int(this > super.x) = 2
+
+  yy: Int(isValid1) = 2
+  yyy: Int(isValid2) = 2
+
+  local isValid1 = (n) -> n > x
+  hidden isValid2 = (n) -> n > x
+}
+
+res1 = new Derived {}
+
+res2 = (res1) {
+  y = 3
+  yy = 3
+  yyy = 3
+}
+
+res3 = (res2) {
+  x = 2
+}
+
+res4 = test.catch(() -> (res3) { y = 0 }.y)
+res5 = test.catch(() -> (res3) { yy = 0 }.yy)
+res6 = test.catch(() -> (res3) { yyy = 0 }.yyy)

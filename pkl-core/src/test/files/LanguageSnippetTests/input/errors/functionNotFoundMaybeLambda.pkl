@@ -1,0 +1,2 @@
+listing = (it) -> it
+call = listing(10)

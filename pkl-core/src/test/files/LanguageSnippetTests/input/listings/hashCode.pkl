@@ -1,0 +1,25 @@
+amends "../snippetTest.pkl"
+
+facts {
+  local set: Set<Int> = IntSeq(1, 100).fold(Set(), (res, n) -> res.add(n))
+  
+  ["local members aren't included in hash code"] {
+    local listing1 = new Listing { "one" }
+    local listing2 = new Listing { x; local x = "one" }
+    local listing3 = new Listing { x; local x = "one" } { [0] = y; local y = "one" }
+    
+    set.add(listing1).contains(listing2)
+    set.add(listing2).contains(listing3)
+    set.add(listing3).contains(listing2)
+    set.add(listing1).add(listing2).add(listing3).length == 101
+  }
+  
+  ["hidden members aren't included in hash code"] {
+    local listing1 = new Listing { "one" }
+    local listing2 = new Listing { "one"; default = (_) -> 42 }
+
+    set.add(listing1).contains(listing2)
+    set.add(listing2).contains(listing1)
+    set.add(listing1).add(listing2).length == 101
+  }
+}

@@ -1,0 +1,11 @@
+= MAINTAINERS
+
+This page lists all active Maintainers of this repository.
+
+See link:CONTRIBUTING.adoc[] for general contribution guidelines.
+
+== Maintainers (in alphabetical order)
+
+* https://github.com/bioball[Daniel Chao]
+* https://github.com/stackoverflow[Islon Scherer]
+* https://github.com/holzensp[Philip Hölzenspies]

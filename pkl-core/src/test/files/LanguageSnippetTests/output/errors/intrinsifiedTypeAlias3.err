@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `!(this is Null)` violated.
+Value: null
+
+xx | typealias NonNull = Any(!(this is Null))
+                             ^^^^^^^^^^^^^^^
+at intrinsifiedTypeAlias3#res1 (pkl:base)
+
+x | res1: NonNull = null
+                    ^^^^
+at intrinsifiedTypeAlias3#res1 (file:///$snippetsDir/input/errors/intrinsifiedTypeAlias3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

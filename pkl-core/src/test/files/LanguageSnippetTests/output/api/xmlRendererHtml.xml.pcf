@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html>
+  <body>
+    <!--this is a comment-->
+    <h1>My 3 <strong>favorite</strong> hobbies:</h1>
+    <ul>
+      <li>swimming</li>
+      <li>surfing</li>
+      <li>fire making</li>
+    </ul>
+  </body>
+</html>

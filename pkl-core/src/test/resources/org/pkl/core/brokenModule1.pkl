@@ -1,0 +1,3 @@
+// module with syntax error
+
+x = {}

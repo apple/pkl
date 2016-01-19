@@ -1,0 +1,36 @@
+= Pkl
+
+:uri-homepage: https://pkl-lang.org
+:uri-docs: {uri-homepage}/main/current
+:uri-docs-introduction: {uri-docs}/introduction
+:uri-docs-release-notes: {uri-docs}/release-notes
+:uri-docs-language: {uri-docs}/language
+:uri-docs-tools: {uri-docs}/tools
+:uri-github-issue: https://github.com/apple/pkl/issues
+:uri-github-discussions: https://github.com/apple/pkl/discussions
+:uri-pkl-examples: https://pkl-lang.org/main/current/examples.html
+:uri-installation: https://pkl-lang.org/main/current/pkl-cli/index.html#installation
+:uri-lang-reference: https://pkl-lang.org/main/current/language-reference/index.html
+
+A configuration as code language with rich validation and tooling.
+
+== Quick Links
+
+* {uri-installation}[Installation]
+* {uri-lang-reference}[Language Reference]
+
+== Documentation
+
+* {uri-homepage}[Home Page]
+** {uri-docs-introduction}[Introduction]
+** {uri-docs-language}[Language]
+** {uri-docs-tools}[Tools]
+** {uri-pkl-examples}[Examples]
+** {uri-docs-release-notes}[Release Notes]
+
+== Community
+
+We'd love to hear from you!
+
+* Create an {uri-github-issue}[issue]
+* Ask a question on {uri-github-discussions}[GitHub Discussions]

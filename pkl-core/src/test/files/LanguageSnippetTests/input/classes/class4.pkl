@@ -1,0 +1,12 @@
+import "pkl:test"
+
+class Person {
+  foo = 1
+  function bar() = 2
+}
+
+// make sure that these invocations are dispatched to the
+// class object rather than the prototype, and that they
+// generate the usual "not found" error
+res1 = test.catch(() -> Person.foo)
+res2 = test.catch(() -> Person.bar())

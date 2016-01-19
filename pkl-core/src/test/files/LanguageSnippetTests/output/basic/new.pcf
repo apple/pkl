@@ -1,0 +1,156 @@
+res1 {
+  name = "Pigeon"
+}
+res2 {
+  name = "Pigeon"
+}
+res3 {
+  name = "Pigeon"
+}
+dynamic {
+  res4 {
+    name = "Pigeon"
+  }
+  res5 {
+    name = "Pigeon"
+  }
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+  new {
+    name = "Pigeon"
+  }
+}
+res6 {
+  ceo {
+    name = "Pigeon"
+  }
+}
+res7 {
+  ceo {
+    name = "Pigeon"
+  }
+}
+res8 {
+  ceo {
+    name = "Pigeon"
+  }
+}
+res9 {
+  ceo {
+    name = "Pigeon"
+  }
+}
+res10 {
+  new {
+    name = "Pigeon"
+  }
+}
+res11 {
+  new {
+    name = "Pigeon"
+  }
+}
+res12 {
+  new {
+    name = "Pigeon"
+  }
+}
+res13 {
+  new {
+    name = "Pigeon"
+  }
+}
+res14 {
+  new {
+    name = "Pigeon"
+  }
+}
+res15 {
+  new {
+    name = "Pigeon"
+  }
+}
+res16 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res17 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res18 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res19 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res20 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res21 {
+  ["Pigeon"] {
+    name = "Pigeon"
+  }
+}
+res24 {
+  name = "Pigeon"
+}
+res24b = true
+res25 {
+  name = "Pigeon"
+}
+res25b = true
+res26 {
+  name = "Pigeon"
+}
+res26b = true
+res27 {
+  name = "Pigeon"
+}
+res27b = true
+res28 {
+  name = "Pigeon"
+}
+res28b = true
+res29 {
+  name = "Pigeon"
+}
+res29b = true
+res30 {
+  name = "Pigeon"
+}
+res30b = true
+one {
+  two {
+    f1 {
+      name = "Pigeon"
+    }
+  }
+}
+res31 {
+  name = "Other"
+}
+res32 = "Expected 1 function arguments but got 2."
+res33 {
+  name = "Override"
+}
+res34 = "Expected 1 function arguments but got 2."
+res35 {
+  name = "Other"
+}
+res36 = "Expected 1 function arguments but got 2."
+res37 = "Expected value of type `new#Person`, but got type `Int`. Value: 1"
+res38 {
+  name = "Override"
+}
+res39 = "Expected 1 function arguments but got 2."
+res40 = "Expected value of type `new#Person`, but got type `Int`. Value: 1"

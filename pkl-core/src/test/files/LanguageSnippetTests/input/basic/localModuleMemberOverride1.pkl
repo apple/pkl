@@ -1,0 +1,45 @@
+open module localModuleMemberOverride1
+
+local class C1 {
+  x = "original"
+}
+local class C2 {
+  x = "original"
+}
+class C3 {
+  x = "original"
+}
+
+local p1 = "original"
+local p2 = "original"
+p3 = "original"
+
+local function f1() = "original"
+local function f2() = "original"
+function f3() = "original"
+
+c1 = new C1 {}.x
+c2 = new C2 {}.x
+c3 = new C3 {}.x
+
+pp1 = p1
+pp2 = p2
+pp3 = p3
+
+ff1 = f1()
+ff2 = f2()
+ff3 = f3()
+
+foo {
+  c1 = new C1 {}.x
+  c2 = new C2 {}.x
+  c3 = new C3 {}.x
+
+  pp1 = p1
+  pp2 = p2
+  pp3 = p3
+
+  ff1 = f1()
+  ff2 = f2()
+  ff3 = f3()
+}

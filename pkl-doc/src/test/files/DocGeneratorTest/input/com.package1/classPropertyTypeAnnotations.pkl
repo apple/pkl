@@ -1,0 +1,34 @@
+/// Class properties with different kinds of type annotations.
+module com.package1.classPropertyTypeAnnotations
+
+class TypeAnnotations {
+  /// Property without declared type.
+  property1 = 3.14159265359
+
+  /// Property with simple type.
+  property2: Float = 3.14159265359
+
+  /// Property with list type.
+  property3: List<String> = List("1", "2", "3")
+
+  /// Property with set type.
+  property4: Set<String> = Set("1", "2", "3")
+
+  /// Property with map type.
+  property5: Map<String, Duration> = Map("one", 1.s, "two", 2.min, "three", 3.h)
+
+  /// Property with optional type.
+  property6: String? = "string"
+
+  /// Property with zero-arg function type.
+  property7: () -> String = () -> "string"
+
+  /// Property with one-arg function type.
+  property8: (String) -> Int = (str) -> str.length
+
+  /// Property with two-arg function type.
+  property9: (String, String) -> Int = (str1, str2) -> str1.length + str2.length
+
+  /// Property with complex type.
+  property10: Map<List<String?>?, (Boolean?) -> Map<Int, Float>> = Map(List("str"), (b) -> Map(3, 3.0))
+}

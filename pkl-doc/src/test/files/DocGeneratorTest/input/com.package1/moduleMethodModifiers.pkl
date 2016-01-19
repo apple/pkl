@@ -1,0 +1,13 @@
+/// Module methods with different modifiers.
+module com.package1.moduleMethodModifiers
+
+/// Method with `abstract` modifier.
+abstract function method1(arg: String): Boolean
+
+/*
+/// Method with `external` modifier.
+external function method2(arg: String): Boolean
+
+/// Method with multiple modifiers.
+abstract external function method3(arg: String): Boolean
+*/

@@ -1,0 +1,217 @@
+package org.pkl.core
+
+import org.pkl.commons.createTempFile
+import org.pkl.core.ModuleSource.path
+import org.pkl.core.ModuleSource.text
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.createFile
+
+class EvaluateTestsTest {
+
+  private val evaluator = Evaluator.preconfigured()
+
+  @Test
+  fun `test successful module`() {
+    val results = evaluator.evaluateTest(text("""
+      amends "pkl:test"
+
+      facts {
+        ["should pass"] {
+          1 == 1
+          "foo" == "foo"
+        }
+      }
+    """.trimIndent()), true)
+
+    assertThat(results.moduleName).isEqualTo("text")
+    assertThat(results.displayUri).isEqualTo("repl:text")
+    assertThat(results.totalTests()).isEqualTo(1)
+    assertThat(results.failed()).isFalse
+    assertThat(results.results[0].name).isEqualTo("should pass")
+    assertThat(results.err.isBlank()).isTrue
+  }
+
+  @Test
+  fun `test module failure`() {
+    val results = evaluator.evaluateTest(
+      text(
+        """
+        amends "pkl:test"
+  
+        facts {
+          ["should fail"] {
+            1 == 2
+            "foo" == "bar"
+          }
+        }
+        """.trimIndent()
+      ),
+      true
+    )
+
+    assertThat(results.totalTests()).isEqualTo(1)
+    assertThat(results.totalFailures()).isEqualTo(2)
+    assertThat(results.failed()).isTrue
+    
+    val res = results.results[0]
+    assertThat(res.name).isEqualTo("should fail")
+    assertThat(res.errors).isEmpty()
+    
+    val fail1 = res.failures[0]
+    assertThat(fail1.rendered).isEqualTo("1 == 2 ❌ (repl:text)")
+
+    val fail2 = res.failures[1]
+    assertThat(fail2.rendered).isEqualTo(""""foo" == "bar" ❌ (repl:text)""")
+  }
+
+  @Test
+  fun `test module error`() {
+    val results = evaluator.evaluateTest(
+      text(
+        """
+        amends "pkl:test"
+  
+        facts {
+          ["should fail"] {
+            1 == 2
+            throw("got an error")
+          }
+        }
+        """.trimIndent()
+      ),
+      true
+    )
+
+    assertThat(results.totalTests()).isEqualTo(1)
+    assertThat(results.totalFailures()).isEqualTo(0)
+    assertThat(results.failed()).isTrue
+
+    val res = results.results[0]
+    assertThat(res.name).isEqualTo("text")
+    assertThat(res.failures).isEmpty()
+    assertThat(res.errors.size).isEqualTo(1)
+    
+    val error = res.errors[0]
+    assertThat(error.message).isEqualTo("got an error")
+    assertThat(error.exception.message).isEqualTo("""
+      –– Pkl Error ––
+      got an error
+
+      6 | throw("got an error")
+          ^^^^^^^^^^^^^^^^^^^^^
+      at text#facts["should fail"][#2] (repl:text)
+
+      3 | facts {
+          ^^^^^^^
+      at text#facts (repl:text)
+
+    """.trimIndent())
+  }
+  
+  @Test
+  fun `test successful example`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(file, """
+      amends "pkl:test"
+      
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """.trimIndent())
+    
+    Files.writeString(createExpected(file), """
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """.trimIndent())
+
+    val results = evaluator.evaluateTest(path(file), false)
+    assertThat(results.moduleName).startsWith("example")
+    assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
+    assertThat(results.totalTests()).isEqualTo(1)
+    assertThat(results.failed()).isFalse
+    assertThat(results.results[0].name).isEqualTo("user")
+  }
+
+  @Test
+  fun `test example failure`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(file, """
+      amends "pkl:test"
+      
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """.trimIndent())
+
+    Files.writeString(createExpected(file), """
+      examples {
+        ["user"] {
+          new {
+            name = "Alice"
+            age = 45
+          }
+        }
+      }
+    """.trimIndent())
+
+    val results = evaluator.evaluateTest(path(file), false)
+    assertThat(results.moduleName).startsWith("example")
+    assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
+    assertThat(results.totalTests()).isEqualTo(1)
+    assertThat(results.failed()).isTrue
+    assertThat(results.totalFailures()).isEqualTo(1)
+
+    val res = results.results[0]
+    assertThat(res.name).isEqualTo("user")
+    assertThat(res.errors.isEmpty()).isTrue
+
+    val fail1 = res.failures[0]
+    assertThat(fail1.rendered.stripFileAndLines(tempDir)).isEqualTo("""
+      (/tempDir/example.pkl)
+      Expected: (/tempDir/example.pkl-expected.pcf)
+      new {
+        name = "Alice"
+        age = 45
+      }
+      Actual: (/tempDir/example.pkl-actual.pcf)
+      new {
+        name = "Bob"
+        age = 33
+      }
+    """.trimIndent())
+  }
+  
+  companion object {
+    private fun createExpected(path: Path): Path {
+      return path
+        .parent
+        .resolve(path.fileName.toString() + "-expected.pcf")
+        .createFile()
+    }
+
+    private fun String.stripFileAndLines(tmpDir: Path) =
+      replace(tmpDir.toUri().toString(), "/tempDir/")
+        .replace(Regex("example\\d+"), "example")
+        .replace(Regex("line \\d+"), "line x")
+  }
+}

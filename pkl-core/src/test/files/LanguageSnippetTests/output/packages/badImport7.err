@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Received invalid dependency metadata for package `package://localhost:12110/badMetadataJson@1.0.0` when making request `GET https://localhost:12110/badMetadataJson@1.0.0`:
+Malformed JSON: Expected 'r' at 1:2.
+
+Original input:
+`this is not json
+`
+
+x | res = import("package://localhost:12110/badMetadataJson@1.0.0#/Bug.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at badImport7.error#res (file:///$snippetsDir/input/packages/badImport7.error.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

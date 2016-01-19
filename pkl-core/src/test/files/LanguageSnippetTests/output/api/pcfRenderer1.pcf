@@ -1,0 +1,29 @@
+pigeon {
+  name = "pigeon"
+  age = 30
+}
+barnOwl {
+  name = "barn owl"
+  age = 42
+  "surfing"
+  "fire making"
+}
+parrot {
+  new {
+    lastName = """
+      Flinstone
+      
+      Flinstone
+      """
+    """
+    Flinstone
+    
+    Flinstone
+    """
+  }
+  """
+  Flistone
+  
+  Flistone
+  """
+}

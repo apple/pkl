@@ -1,0 +1,26 @@
+/// Module methods whose types reference classes from
+/// the same module, a different module, and external modules.
+module com.package1.moduleMethodTypeReferences
+
+import "shared.pkl"
+
+import "../com.externalpackage/external1.pkl"
+
+import "../com.externalpackage/external2.pkl"
+
+class MyClass
+
+/// Method with intra-module types.
+function method1(arg1: MyClass, arg2: MyClass): MyClass = Undefined()
+
+/// Method with inter-module types.
+function method2(arg1: shared.MyClass, arg2: shared.MyClass): shared.MyClass = Undefined()
+
+/// Method with external-module types.
+function method3(arg1: external1.MyClass, arg2: external2.MyClass): List<external1.MyClass> = Undefined()
+
+/// Method with intra-module, inter-module, and external-module types.
+function method4(arg1: MyClass, arg2: shared.MyClass): external1.MyClass = Undefined()
+
+/// Method with complex intra-module, inter-module, and external-module types.
+function method5(arg1: MyClass?, arg2: Map<shared.MyClass, external1.MyClass>): (external1.MyClass) -> external2.MyClass = Undefined()

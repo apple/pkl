@@ -1,0 +1,4 @@
+res1 =
+  let (x = 1)
+    let (y = 2)
+      throw("ouch")

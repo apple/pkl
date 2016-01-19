@@ -1,0 +1,135 @@
+examples {
+  ["glob import"] {
+    new {
+      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
+        name = "Ostritch"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+    }
+  }
+  ["glob import within package"] {
+    new {
+      ["catalog/Ostritch.pkl"] {
+        name = "Ostritch"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+      ["catalog/Swallow.pkl"] {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+    }
+  }
+  ["glob import transitive dep within package"] {
+    new {
+      ["@fruities/catalog/apple.pkl"] {
+        name = "Apple"
+      }
+    }
+  }
+  ["glob read"] {
+    new {
+      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
+        uri = "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+        text = """
+          amends "../Bird.pkl"
+          
+          name = "Ostritch"
+          
+          favoriteFruit {
+            name = "Orange"
+          }
+          
+          """
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+      }
+      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
+        uri = "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+        text = """
+          amends "../Bird.pkl"
+          
+          import "@fruities/catalog/apple.pkl"
+          
+          name = "Swallow"
+          
+          favoriteFruit = apple
+          
+          """
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+      }
+    }
+  }
+  ["glob read within package"] {
+    new {
+      ["catalog/Ostritch.pkl"] {
+        uri = "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+        text = """
+          amends "../Bird.pkl"
+          
+          name = "Ostritch"
+          
+          favoriteFruit {
+            name = "Orange"
+          }
+          
+          """
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+      }
+      ["catalog/Swallow.pkl"] {
+        uri = "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+        text = """
+          amends "../Bird.pkl"
+          
+          import "@fruities/catalog/apple.pkl"
+          
+          name = "Swallow"
+          
+          favoriteFruit = apple
+          
+          """
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+      }
+    }
+  }
+  ["glob read transitive dep within package"] {
+    new {
+      ["@fruities/catalog/apple.pkl"] {
+        uri = "package://localhost:12110/fruit@1.0.5#/catalog/apple.pkl"
+        text = """
+          amends "../Fruit.pkl"
+          
+          name = "Apple"
+          
+          """
+        base64 = "YW1lbmRzICIuLi9GcnVpdC5wa2wiCgpuYW1lID0gIkFwcGxlIgo="
+      }
+    }
+  }
+  ["glob import while specifying checksum"] {
+    new {
+      ["package://localhost:12110/birds@0.5.0::sha256:3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118#/catalog/Ostritch.pkl"] {
+        name = "Ostritch"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+      ["package://localhost:12110/birds@0.5.0::sha256:3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118#/catalog/Swallow.pkl"] {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+    }
+  }
+}

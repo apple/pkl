@@ -1,0 +1,16 @@
+res1 {
+  xs = Map("one", 1, "two", 2, "three", 3)
+  ys = Map("-one", -1, "-two", -2, "-three", -3)
+  zs = Map("-one", -1, "-two", -2, "-three", -3, "-four", -4, "-five", -5)
+}
+res1b {
+  ys = Map("-one", -1, "-two", -2, "-three", -3)
+}
+res2 = "Expected value of type `Map`, but got type `String`. Value: \"numbers\""
+res3 = "Expected value of type `Int`, but got type `String`. Value: \"one\""
+res4 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res5 = "Type constraint `this < 0` violated. Value: 1"
+res5b = "Type constraint `every((key, value) -> key is String(!isEmpty) && value is Int(this < 0))` violated. Value: Map(\"one\", 1, \"two\", 2, \"three\", 3)"
+res6 = "Type constraint `!isEmpty` violated. Value: \"\""
+res6b = "Type constraint `every((key, value) -> key is String(!isEmpty) && value is Int(this < 0))` violated. Value: Map(\"\", -1, \"-two\", -2, \"-three\", -3)"
+res7 = "Type constraint `length >= 5` violated. Value: Map(\"-one\", -1, \"-two\", -2, \"-three\", -3)"
