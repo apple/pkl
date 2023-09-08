@@ -110,8 +110,8 @@ public final class MapNodes {
     protected VmMap eval(VmMap self, VmFunction function) {
       var builder = VmMap.builder();
       for (var entry : self) {
-        var key = entry.getKey();
-        var value = entry.getValue();
+        var key = VmUtils.getKey(entry);
+        var value = VmUtils.getValue(entry);
         if (applyLambdaNode.executeBoolean(function, key, value)) {
           builder.add(key, value);
         }
@@ -129,7 +129,8 @@ public final class MapNodes {
       var result = new MutableReference<>(initial);
       for (var entry : self) {
         result.set(
-            applyLambdaNode.execute(function, result.get(), entry.getKey(), entry.getValue()));
+            applyLambdaNode.execute(
+                function, result.get(), VmUtils.getKey(entry), VmUtils.getValue(entry)));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result.get();
@@ -143,7 +144,8 @@ public final class MapNodes {
     protected VmMap eval(VmMap self, VmFunction function) {
       var builder = VmMap.builder();
       for (var entry : self) {
-        var pair = applyLambdaNode.executePair(function, entry.getKey(), entry.getValue());
+        var pair =
+            applyLambdaNode.executePair(function, VmUtils.getKey(entry), VmUtils.getValue(entry));
         builder.add(pair.getFirst(), pair.getSecond());
       }
       LoopNode.reportLoopCount(this, self.getLength());
@@ -158,7 +160,8 @@ public final class MapNodes {
       var builder = VmMap.builder();
       for (var entry : self) {
         builder.add(
-            applyNode.execute(function, entry.getKey(), entry.getValue()), entry.getValue());
+            applyNode.execute(function, VmUtils.getKey(entry), VmUtils.getValue(entry)),
+            VmUtils.getValue(entry));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -171,7 +174,9 @@ public final class MapNodes {
         VmMap self, VmFunction function, @Cached("create()") ApplyVmFunction2Node applyNode) {
       var builder = VmMap.builder();
       for (var entry : self) {
-        builder.add(entry.getKey(), applyNode.execute(function, entry.getKey(), entry.getValue()));
+        builder.add(
+            VmUtils.getKey(entry),
+            applyNode.execute(function, VmUtils.getKey(entry), VmUtils.getValue(entry)));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -186,10 +191,10 @@ public final class MapNodes {
       var builder = VmMap.builder();
       for (var entry : self) {
         VmMap flatMapResult =
-            applyLambdaNode.executeMap(function, entry.getKey(), entry.getValue());
+            applyLambdaNode.executeMap(function, VmUtils.getKey(entry), VmUtils.getValue(entry));
 
         for (Map.Entry<Object, Object> flatMapEntry : flatMapResult) {
-          builder.add(flatMapEntry.getKey(), flatMapEntry.getValue());
+          builder.add(VmUtils.getKey(flatMapEntry), VmUtils.getValue(flatMapEntry));
         }
       }
       LoopNode.reportLoopCount(this, self.getLength());
@@ -203,8 +208,8 @@ public final class MapNodes {
     @Specialization
     protected boolean eval(VmMap self, VmFunction function) {
       for (var entry : self) {
-        if (!applyLambdaNode.executeBoolean(function, entry.getKey(), entry.getValue()))
-          return false;
+        if (!applyLambdaNode.executeBoolean(
+            function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return false;
       }
       return true;
     }
@@ -216,7 +221,8 @@ public final class MapNodes {
     @Specialization
     protected boolean eval(VmMap self, VmFunction function) {
       for (var entry : self) {
-        if (applyLambdaNode.executeBoolean(function, entry.getKey(), entry.getValue())) return true;
+        if (applyLambdaNode.executeBoolean(
+            function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return true;
       }
       return false;
     }
@@ -231,19 +237,21 @@ public final class MapNodes {
 
   public abstract static class toDynamic extends ExternalMethod0Node {
     @Specialization
-    @TruffleBoundary
     protected VmDynamic eval(VmMap self) {
       var members = EconomicMaps.<Object, ObjectMember>create(self.getLength());
 
       for (var entry : self) {
-        var key = entry.getKey();
+        var key = VmUtils.getKey(entry);
 
         if (key instanceof String) {
           var name = Identifier.get((String) key);
           EconomicMaps.put(
-              members, name, VmUtils.createSyntheticObjectProperty(name, "", entry.getValue()));
+              members,
+              name,
+              VmUtils.createSyntheticObjectProperty(name, "", VmUtils.getValue(entry)));
         } else {
-          EconomicMaps.put(members, key, VmUtils.createSyntheticObjectEntry("", entry.getValue()));
+          EconomicMaps.put(
+              members, key, VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry)));
         }
       }
 
@@ -283,7 +291,9 @@ public final class MapNodes {
 
       for (var entry : self) {
         EconomicMaps.put(
-            members, entry.getKey(), VmUtils.createSyntheticObjectEntry("", entry.getValue()));
+            members,
+            VmUtils.getKey(entry),
+            VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry)));
       }
 
       return new VmMapping(

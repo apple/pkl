@@ -929,8 +929,8 @@ public abstract class TypeNode extends PklNode {
       if (skipEntryTypeChecks) return;
 
       for (var entry : value) {
-        keyTypeNode.execute(frame, entry.getKey());
-        valueTypeNode.execute(frame, entry.getValue());
+        keyTypeNode.execute(frame, VmUtils.getKey(entry));
+        valueTypeNode.execute(frame, VmUtils.getValue(entry));
       }
 
       LoopNode.reportLoopCount(this, value.getLength());

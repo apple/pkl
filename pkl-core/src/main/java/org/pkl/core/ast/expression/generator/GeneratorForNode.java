@@ -111,7 +111,7 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmMap iterable) {
     initTypeNodes(frame);
     for (var entry : iterable) {
-      executeIteration(frame, parent, data, entry.getKey(), entry.getValue());
+      executeIteration(frame, parent, data, VmUtils.getKey(entry), VmUtils.getValue(entry));
     }
     resetFrameSlots(frame);
   }

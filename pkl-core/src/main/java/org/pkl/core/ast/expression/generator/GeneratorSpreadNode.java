@@ -254,9 +254,9 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .build();
     }
     for (var entry : iterable) {
-      var member = VmUtils.createSyntheticObjectEntry("", entry.getValue());
-      if (EconomicMaps.put(data.members, entry.getKey(), member) != null) {
-        duplicateMember(entry.getKey(), member);
+      var member = VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry));
+      if (EconomicMaps.put(data.members, VmUtils.getKey(entry), member) != null) {
+        duplicateMember(VmUtils.getKey(entry), member);
       }
     }
   }

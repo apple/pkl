@@ -722,6 +722,16 @@ public final class VmUtils {
     }
   }
 
+  @TruffleBoundary
+  public static <K, V> K getKey(Map.Entry<K, V> entry) {
+    return entry.getKey();
+  }
+
+  @TruffleBoundary
+  public static <K, V> V getValue(Map.Entry<K, V> entry) {
+    return entry.getValue();
+  }
+
   public static String getDisplayUri(SourceSection section, StackFrameTransformer transformer) {
     var sourceUri = section.getSource().getURI();
     var frame =
