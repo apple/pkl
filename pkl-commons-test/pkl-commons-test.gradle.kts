@@ -90,11 +90,11 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
   sourcesJar.dependsOn.add(copyTask)
 }
 
-val generateKeys by tasks.registering(Exec::class) {
+val generateKeys by tasks.registering(JavaExec::class) {
   val outputFile = file("$buildDir/keystore/localhost.p12")
   outputs.file(outputFile)
-  commandLine = listOf(
-    "keytool",
+  mainClass.set("sun.security.tools.keytool.Main")
+  args = listOf(
     "-genkeypair",
     "-keyalg", "RSA",
     "-alias", "integ_tests",
