@@ -149,5 +149,3 @@ image:images/debug-bar.png[]
 * https://medium.com/@MrJamesFisher/nix-by-example-a0063a1a4c55[Nix by example: The Nix expression language]
 * http://lethalman.blogspot.co.at/2014/07/nix-pill-4-basics-of-language.html[Nix pill 4: the basics of the language]
 * https://docs.puppetlabs.com/puppet/latest/reference/lang_summary.html[Puppet Configuration Language]
-
-See https://connectme.apple.com/docs/DOC-428898[ConnectMe] for further resources.

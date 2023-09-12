@@ -1,0 +1,141 @@
+/// Schema for CircleCI config.yml
+/// This module is a work in progress, if you find some unsuported feature
+/// feel free to add it.
+module CircleCI
+
+// no need to use olders versions
+version: Number(this == 2.1) = 2.1
+
+commands: Mapping<String, Command>?
+
+jobs: Mapping<String, Job>?
+
+workflows: Mapping<String, Workflow>?
+
+parameters: Mapping<String, Parameter>?
+
+class Job {
+  shell: String?
+  steps: Listing<Step>(!isEmpty)
+  working_directory: String?
+  parallelism: Int?
+  environment: Mapping<String, String>?
+  resource_class: String?
+  docker: Listing<DockerImage>?
+  macos: MacOSExecutor?
+}
+
+class MacOSExecutor {
+  xcode: String
+}
+
+class DockerImage {
+  image: String
+}
+
+class Workflow {
+  jobs: Listing<Mapping<String, WorkflowJob>(length == 1)|String>
+  `when`: LogicStatement?
+}
+
+class WorkflowJob {
+  filters: Filter?
+  requires: Listing<String>?
+}
+
+abstract class Filter
+
+class BranchFilter extends Filter {
+  branches: FilterSpec
+}
+
+class TagFilter extends Filter {
+  tags: FilterSpec
+}
+
+class FilterSpec {
+  only: String?(this != null || ignore != null)
+  ignore: String?(this != null || only != null)
+}
+
+typealias Step = StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"
+
+class StepConfig {
+  run: (RunConfig|String)?
+  store_test_results: Path?
+  setup_remote_docker: SetupRemoteDocker?
+  command: CalledCommand?
+}
+
+class RunConfig {
+  name: String
+  command: String
+  environment: Mapping<String, String>
+}
+
+class SetupRemoteDocker {
+  version: String
+  docker_layer_cacheing: Boolean
+}
+
+class Run {
+  run: String
+}
+
+class Command {
+  parameters: Mapping<String, Parameter>
+  steps: Listing<Step>(!isEmpty)
+}
+
+class Parameter {
+  description: String?
+  default: String|Number|Boolean
+  type: "string"|"integer"|"boolean"
+}
+
+class StoreTestResults {
+  store_test_results: Path
+}
+
+class Path {
+  path: String
+}
+
+typealias LogicStatement = Boolean|String|And|Or|Not|Equal|Matches
+
+class And {
+  and: Listing<Boolean|String|And|Or|Not|Equal|Matches>
+}
+
+class Or {
+  or: Listing<Boolean|String|And|Or|Not|Equal|Matches>
+}
+
+class Not {
+  not: Boolean|String|And|Or|Not|Equal|Matches
+}
+
+class Equal {
+  equals: Listing<Boolean|String|Number>
+}
+
+class Matches {
+  matches: Match
+}
+
+class Match {
+  value: String
+  pattern: String
+}
+
+typealias CalledCommand = Mapping<String, CommandCall>(length == 1)
+
+typealias CommandCall = Mapping<String, String|Number|Boolean>
+
+output {
+  renderer = new YamlRenderer {
+    converters {
+      [StepConfig] = (it) -> it.toMap().remove("command") + (it.command?.toMap() ?? Map())
+    }
+  }
+}
