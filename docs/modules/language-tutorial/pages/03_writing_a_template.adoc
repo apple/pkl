@@ -3,7 +3,7 @@ include::ROOT:partial$component-attributes.adoc[]
 
 In parts xref:01_basic_config.adoc[one] and xref:02_filling_out_a_template.adoc[two], you saw that Pkl provides _validation_ of our configurations.
 It checks syntax, types and constraints.
-As you saw in the Rio example, the template can provide informative error messages when an amending module violates a type constraint.
+As you saw in the `acmecicd` example xref:02_filling_out_a_template.adoc#amending-templates[here], the template can provide informative error messages when an amending module violates a type constraint.
 
 In this final part, you will see some of Pkl's techniques that are particularly relevant for writing a template.
 
