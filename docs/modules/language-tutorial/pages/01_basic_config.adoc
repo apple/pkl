@@ -275,7 +275,7 @@ birds {
   "falcon"
 }
 
-relatedToSnowOwl = birds[3]
+relatedToSnowOwl = birds[2]
 ----
 results in
 [source,{pkl}]
