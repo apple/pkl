@@ -34,7 +34,7 @@ jobs {
           // language=bash
           command = #"""
             #!/usr/bin/env bash
-            set -ex
+            set -ex -o pipefail
 
             export muslVersion=1.2.2
             export zlibVersion=1.2.13
@@ -67,7 +67,7 @@ jobs {
               && echo "musl-$muslVersion: make install..." && make -s install \
               && rm -rf /dep_musl-$muslVersion
 
-            curl -L https://zlib.net/zlib-$zlibVersion.tar.gz -o /tmp/zlib.tar.gz
+            curl -L https://github.com/madler/zlib/releases/download/v$zlibVersion/zlib-$zlibVersion.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /dep_zlib-$zlibVersion \
               && cd /dep_zlib-$zlibVersion \
@@ -76,7 +76,6 @@ jobs {
               && echo "zlib-$zlibVersion: make..." && make -s -j4 \
               && echo "zlib-$zlibVersion: make install..." && make -s install \
               && rm -rf /dep_zlib-$zlibVersion
-
 
             rm -f /tmp/*.tar.gz
 
@@ -87,6 +86,7 @@ jobs {
             """#
         }
       }
+      // This is only used s.t. we can get more RAM in CircleCI builds.
       new {
         setup_remote_docker {
           version = "20.10.14"

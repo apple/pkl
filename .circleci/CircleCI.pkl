@@ -64,6 +64,8 @@ class StepConfig {
   run: (*RunConfig|String)?
   store_test_results: Path?
   setup_remote_docker: SetupRemoteDocker?
+  persist_to_workspace: PersistToWorkspace?
+  attach_workspace: AttachWorkspace?
   command: CalledCommand?
 }
 
@@ -76,6 +78,37 @@ class RunConfig {
 class SetupRemoteDocker {
   version: String
   docker_layer_cacheing: Boolean
+}
+
+/// Special step used to persist a temporary file to be used by another job in the workflow.
+/// For more information on using workspaces, see the
+/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
+///
+/// `persist_to_workspace` adopts the storage settings from the storage customization controls on
+/// the CircleCI web app.
+/// If no custom setting is provided, `persist_to_workspace` defaults to 15 days.
+/// 
+/// Workspace storage retention can be customized on the CircleCI web app by navigating to Plan > Usage Controls.
+class PersistToWorkspace {
+  /// Either an absolute path or a path relative to `working_directory`
+  root: String
+
+  /// Glob identifying file(s), or a non-glob path to a directory to add to the shared workspace.
+  ///
+  /// Interpreted as relative to the workspace root.
+  /// Must not be the workspace root itself
+  paths: Listing<String>
+}
+
+/// Special step used to attach the workflow’s workspace to the current container.
+///
+/// The full contents of the workspace are downloaded and copied into the directory the workspace
+/// is being attached at.
+/// For more information on using workspaces, see the
+/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
+class AttachWorkspace {
+  /// Directory to attach the workspace to.
+  at: String
 }
 
 class Run {
