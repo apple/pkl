@@ -109,12 +109,12 @@ val generateKeys by tasks.registering(JavaExec::class) {
   }
 }
 
-val generateCerts by tasks.registering(Exec::class) {
+val generateCerts by tasks.registering(JavaExec::class) {
   dependsOn("generateKeys")
   val outputFile = file("$buildDir/keystore/localhost.pem")
   outputs.file(outputFile)
-  commandLine = listOf(
-    "keytool",
+  mainClass.set("sun.security.tools.keytool.Main")
+  args = listOf(
     "-exportcert",
     "-alias", "integ_tests",
     "-storepass", "password",
