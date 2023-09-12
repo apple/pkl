@@ -70,9 +70,34 @@ class StepConfig {
 }
 
 class RunConfig {
-  name: String
+  /// Command to run via the shell
   command: String
-  environment: Mapping<String, String>
+
+  /// Title of the step to be shown in the CircleCI UI (default: full `command`)
+  name: String?
+  
+  /// Shell to use for execution command (default: See [Default Shell Options](https://circleci.com/docs/configuration-reference/#default-shell-options))
+  shell: String?
+
+  /// Additional environmental variables, locally scoped to command
+  environment: Mapping<String, String>?
+
+  /// Whether or not this step should run in the background (default: `false`)
+  background: Boolean?
+
+  /// In which directory to run this step. Will be interpreted relative to the working_directory
+  /// of the job). (default: `.`)
+  working_directory: String?
+
+  /// Elapsed time the command can run without output.
+  ///
+  /// The default is 10 minutes and the maximum is governed by the maximum time a job is allowed to run.
+  no_output_timeout: Duration?
+
+  /// Specify when to enable or disable the step.
+  ///
+  /// Takes the following values: `always`, `on_success`, `on_fail` (default: on_success)
+  `when`: ("always", "on_success", "on_fail")? 
 }
 
 class SetupRemoteDocker {

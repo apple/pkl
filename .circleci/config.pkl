@@ -93,7 +93,19 @@ jobs {
           docker_layer_cacheing = true
         }
       }
-      gradle("buildNative")
+      (gradle("buildNative")) {
+        run {
+          working_directory = "workspace"
+        }
+      }
+      new {
+        persist_to_workspace {
+          root = "workspace"
+          paths {
+            "pcl-cli/build/executable/"
+          }
+        }
+      }
     }
   }
   ["dev-jdk11"] {
@@ -174,6 +186,7 @@ local function gradle(args: String): StepConfig = new {
       export PATH=/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(gradleJvmArgs) \(args)
       """
+    
   }
 }
 
