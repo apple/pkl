@@ -137,4 +137,4 @@ workflows:
     - build-ubuntu-amd64:
         filters:
           branches:
-            only: dev
+            only: main

@@ -34,7 +34,7 @@ class DockerImage {
 }
 
 class Workflow {
-  jobs: Listing<Mapping<String, WorkflowJob>(length == 1)|String>
+  jobs: Listing<*Mapping<String, WorkflowJob>(length == 1)|String>
   `when`: LogicStatement?
 }
 
@@ -58,10 +58,10 @@ class FilterSpec {
   ignore: String?(this != null || only != null)
 }
 
-typealias Step = StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"
+typealias Step = *StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"
 
 class StepConfig {
-  run: (RunConfig|String)?
+  run: (*RunConfig|String)?
   store_test_results: Path?
   setup_remote_docker: SetupRemoteDocker?
   command: CalledCommand?
