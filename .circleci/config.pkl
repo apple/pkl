@@ -160,7 +160,7 @@ workflows {
         ["build-ubuntu-amd64"] {
           filters = new BranchFilter {
             branches {
-              only = "dev"
+              only = "main"
             }
           }
         }
