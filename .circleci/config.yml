@@ -27,9 +27,7 @@ jobs:
 
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
             && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            && microdnf clean all \
-            && rm -rf /var/cache/dnf \
-            && update-ca-trust
+            && microdnf clean all
 
           curl -L https://github.com/adoptium/temurin11-binaries/releases/download/jdk-${jdk11Version}/OpenJDK11U-jdk_x64_linux_hotspot_${jdk11VersionAlt}.tar.gz -o /tmp/openjdk11.tar.gz
 

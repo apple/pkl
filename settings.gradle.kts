@@ -26,7 +26,6 @@ pluginManagement {
   }
 }
 
-// TODO: remove this when moving to the new CI
 // makes ~/.gradle/init.gradle unnecessary and ~/.gradle/gradle.properties optional
 dependencyResolutionManagement {
   @Suppress("UnstableApiUsage")
@@ -34,41 +33,7 @@ dependencyResolutionManagement {
     // only use repositories specified here
     // https://github.com/gradle/gradle/issues/15732
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-    maven {
-      url = uri("https://artifacts.apple.com/libs-release")
-      if (extra.has("artifactory_user")) {
-        credentials {
-          username = extra["artifactory_user"] as String
-          password = extra["artifactory_password"] as String
-        }
-      }
-      content {
-        excludeGroup("org.pkl.staging")
-      }
-    }
-    maven {
-      name = "stagedMacExecutable"
-      url = uri("https://artifacts.apple.com/pcl-modules-local/staging")
-      // look for artifact but not POM (required configuration since Gradle 6.0)
-      metadataSources {
-        artifact()
-      }
-      content {
-        includeGroup("org.pkl.staging")
-      }
-    }
-
-    maven {
-      name = "stagedLinuxExecutableAarch64"
-      url = uri("https://artifacts.apple.com/pcl-modules-local/staging")
-      // look for artifact but not POM (required configuration since Gradle 6.0)
-      metadataSources {
-        artifact()
-      }
-      content {
-        includeGroup("com.apple.pkl.staging")
-      }
-    }
+    mavenCentral()
   }
 }
 
