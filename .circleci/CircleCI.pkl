@@ -169,7 +169,7 @@ class WorkflowJob {
   /// Each context name must be unique.
   /// If using CircleCI Server, only a single Context per workflow is supported.
   /// Note: A maximum of 100 unique contexts across all workflows is allowed
-  context: String|Listing<String>?
+  context: (String|Listing<String>)?
 
   /// A job may have a type of `approval` indicating it must be manually approved before downstream
   /// jobs may proceed.
