@@ -45,30 +45,30 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
         name = "Set up environment"
         command = new Listing {
           #"""
-            #!/usr/bin/env bash
-            set -eo pipefail
+          #!/usr/bin/env bash
+          set -eo pipefail
 
-            # install jdk
-            curl -L \
-              https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+          # install jdk
+          curl -L \
+            https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
-            tar tf /tmp/jdk.tar.gz
-            mkdir ~/jdk \
-            && cd ~/jdk \
-            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+          tar tf /tmp/jdk.tar.gz
+          mkdir ~/jdk \
+          && cd ~/jdk \
+          && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
-            mkdir -p ~/staticdeps/bin
+          mkdir -p ~/staticdeps/bin
 
-            # install zlib
-            curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+          # install zlib
+          curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
 
-            mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
-            && cd /tmp/dep_zlib-\#(zlibVersion) \
-            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
-            && echo "zlib-\#(zlibVersion): make install..." && make -s install \
-            && rm -rf /tmp/dep_zlib-\#(zlibVersion)
+          mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
+          && cd /tmp/dep_zlib-\#(zlibVersion) \
+          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
+          && echo "zlib-\#(zlibVersion): make install..." && make -s install \
+          && rm -rf /tmp/dep_zlib-\#(zlibVersion)
           """#
           // don't need musl on arm because GraalVM only supports musl builds on x86
           when (arch == "x64") {
@@ -92,7 +92,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
       }
     }
 
-local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): Job = new {
+local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String, gradleCommand: String): Job = new {
   machine {
     image = "ubuntu-2204:current"
   }
@@ -106,7 +106,7 @@ local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): 
       }
     }
     setUpLinuxEnvironment(arch, javaVersion)
-    gradle("buildNative")
+    gradle(gradleCommand)
     new {
       save_cache {
         name = "Save Gradle Dependencies Cache"
@@ -121,9 +121,9 @@ local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): 
 }
 
 jobs {
-  ["build-linux-amd64"] = buildLinuxNativeImage("x64", JAVA_11)
-  ["build-linux-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
-  ["build-linux-alpine-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
+  ["build-linux-amd64"] = buildLinuxNativeImage("x64", JAVA_11, "pkl-cli:linuxExecutableAmd64")
+  ["build-linux-arm64"] = buildLinuxNativeImage("arm64", JAVA_11, "pkl-cli:linuxExecutableAarch64")
+  ["build-linux-alpine-arm64"] = buildLinuxNativeImage("arm64", JAVA_11, "pkl-cli:alpineExecutableAmd64")
 //   ["dev-jdk11"] {
 //     docker {
 //       image("cimg/openjdk:11.0")
@@ -183,17 +183,17 @@ workflows {
 
   ["build-native-images"] {
     jobs {
-//       new {
-//         ["build-ubuntu-arm64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
       new {
-        ["build-ubuntu-amd64"] {
+        ["build-linux-arm64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
+      new {
+        ["build-linux-amd64"] {
           filters {
             branches {
               only = "main"
