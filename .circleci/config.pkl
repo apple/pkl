@@ -16,6 +16,7 @@ local gradleBuildNative: Step = new {
     name = "gradle buildNative"
     command = """
       export PATH=/staticdeps/bin:$PATH
+      export JAVA_HOME=~/jdk/
       ./gradlew \(gradleArgs) buildNative
       """
   }
@@ -196,9 +197,6 @@ jobs {
   ["build-ubuntu-arm64"] {
     machine {
       image = "ubuntu-2204:current"
-    }
-    environment {
-      ["JAVA_HOME"] = "~/jdk"
     }
     resource_class = "arm.medium"
     steps {
