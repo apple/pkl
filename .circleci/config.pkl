@@ -43,6 +43,7 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
     new {
       run {
         name = "Set up environment"
+        shell = "#!/bin/bash -exo pipefail"
         command = new Listing {
           #"""
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \

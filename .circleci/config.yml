@@ -56,6 +56,7 @@ jobs:
             ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
           fi
         name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
     - save_cache:
         paths:
         - ~/staticdeps
@@ -124,6 +125,7 @@ jobs:
             && rm -rf /tmp/dep_zlib-1.2.13
           fi
         name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
     - save_cache:
         paths:
         - ~/staticdeps
@@ -208,6 +210,7 @@ jobs:
             ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
           fi
         name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
     - save_cache:
         paths:
         - ~/staticdeps
