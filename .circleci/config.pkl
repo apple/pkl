@@ -68,7 +68,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
             mkdir -p /tmp/dep_musl-\#(muslVersion) \
             && cd /tmp/dep_musl-\#(muslVersion) \
             && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=~/staticdeps > /dev/null \
+            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
             && echo "musl-\#(muslVersion): make..." && make -s -j4 \
             && echo "musl-\#(muslVersion): make install..." && make -s install \
             && rm -rf /tmp/dep_musl-\#(muslVersion)
@@ -81,68 +81,38 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
       }
     }
 
+local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): Job = new {
+  machine {
+    image = "ubuntu-2204:current"
+  }
+  resource_class = if (arch == "arm64") "arm.medium" else "medium"
+  steps {
+    "checkout"
+    new {
+      restore_cache {
+        name = "Restore Gradle Dependencies Cache"
+        key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+      }
+    }
+    setUpLinuxEnvironment(arch, javaVersion)
+    gradle("buildNative")
+    new {
+      save_cache {
+        name = "Save Gradle Dependencies Cache"
+        key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+        paths {
+          "~/.gradle/caches/modules-2/files-2.1/"
+        }
+      }
+    }
+    persistToWorkspace
+  }
+}
+
 jobs {
-  ["build-ubuntu-amd64"] {
-    machine {
-      image = "ubuntu-2204:current"
-    }
-    resource_class = "medium"
-    steps {
-      "checkout"
-      new {
-        restore_cache {
-          name = "Restore Gradle Dependencies Cache"
-          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-        }
-      }
-      setUpLinuxEnvironment("x64", JAVA_11)
-//       // This is only used s.t. we can get more RAM in CircleCI builds.
-//       new {
-//         setup_remote_docker {
-//           version = "20.10.14"
-//           docker_layer_cacheing = true
-//         }
-//       }
-      gradle("buildNative")
-      new {
-        save_cache {
-          name = "Save Gradle Dependencies Cache"
-          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-          paths {
-            "~/.gradle/caches/modules-2/files-2.1/"
-          }
-        }
-      }
-      persistToWorkspace
-    }
-  }
-  ["build-ubuntu-arm64"] {
-    machine {
-      image = "ubuntu-2204:current"
-    }
-    resource_class = "arm.medium"
-    steps {
-      "checkout"
-      new {
-        restore_cache {
-          name = "Restore Gradle Dependencies Cache"
-          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-        }
-      }
-      setUpLinuxEnvironment("arm64", JAVA_11)
-      gradle("buildNative")
-      new {
-        save_cache {
-          name = "Save Gradle Dependencies Cache"
-          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-          paths {
-            "~/.gradle/caches/modules-2/files-2.1/"
-          }
-        }
-      }
-      persistToWorkspace
-    }
-  }
+  ["build-ubuntu-amd64"] = buildLinuxNativeImage("x64", JAVA_11)
+//   ["build-ubuntu-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
+  
 //   ["dev-jdk11"] {
 //     docker {
 //       image("cimg/openjdk:11.0")
@@ -242,8 +212,4 @@ local function gradle(args: String): StepConfig = new {
       ./gradlew \(gradleArgs) \(args)
       """
   }
-}
-
-local function image(imageName: String): DockerImage = new {
-  image = imageName
 }
