@@ -45,9 +45,6 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
         name = "Set up environment"
         command = new Listing {
           #"""
-          #!/usr/bin/env bash
-          set -eo pipefail
-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
             && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
             && microdnf clean all \
@@ -66,15 +63,17 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
           cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
-          curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
 
-          mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
-          && cd /tmp/dep_zlib-\#(zlibVersion) \
-          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
-          && echo "zlib-\#(zlibVersion): make install..." && make -s install \
-          && rm -rf /tmp/dep_zlib-\#(zlibVersion)
+            mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
+            && cd /tmp/dep_zlib-\#(zlibVersion) \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
+            && echo "zlib-\#(zlibVersion): make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-\#(zlibVersion)
+          fi
           """#
           // don't need musl on aarch because GraalVM only supports musl builds on x86
           when (arch == "amd64") {
@@ -281,6 +280,7 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
+      export JAVA_HOME~/jdk
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(args)
       """

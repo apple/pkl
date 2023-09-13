@@ -10,9 +10,6 @@ jobs:
         key: staticdeps-amd64
     - run:
         command: |-
-          #!/usr/bin/env bash
-          set -eo pipefail
-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
             && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
             && microdnf clean all \
@@ -31,15 +28,17 @@ jobs:
           cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
-          curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
-          mkdir -p /tmp/dep_zlib-1.2.13 \
-          && cd /tmp/dep_zlib-1.2.13 \
-          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "zlib-1.2.13: make..." && make -s -j4 \
-          && echo "zlib-1.2.13: make install..." && make -s install \
-          && rm -rf /tmp/dep_zlib-1.2.13
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
@@ -66,6 +65,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export JAVA_HOME~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64
         name: gradle pkl-cli:linuxExecutableAmd64
@@ -94,9 +94,6 @@ jobs:
         key: staticdeps-aarch64
     - run:
         command: |-
-          #!/usr/bin/env bash
-          set -eo pipefail
-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
             && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
             && microdnf clean all \
@@ -115,15 +112,17 @@ jobs:
           cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
-          curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
-          mkdir -p /tmp/dep_zlib-1.2.13 \
-          && cd /tmp/dep_zlib-1.2.13 \
-          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "zlib-1.2.13: make..." && make -s -j4 \
-          && echo "zlib-1.2.13: make install..." && make -s install \
-          && rm -rf /tmp/dep_zlib-1.2.13
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
         name: Set up environment
     - save_cache:
         paths:
@@ -134,6 +133,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export JAVA_HOME~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64
         name: gradle pkl-cli:linuxExecutableAarch64
@@ -162,9 +162,6 @@ jobs:
         key: staticdeps-amd64
     - run:
         command: |-
-          #!/usr/bin/env bash
-          set -eo pipefail
-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
             && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
             && microdnf clean all \
@@ -183,15 +180,17 @@ jobs:
           cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
-          curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
-          mkdir -p /tmp/dep_zlib-1.2.13 \
-          && cd /tmp/dep_zlib-1.2.13 \
-          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "zlib-1.2.13: make..." && make -s -j4 \
-          && echo "zlib-1.2.13: make install..." && make -s install \
-          && rm -rf /tmp/dep_zlib-1.2.13
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
@@ -218,6 +217,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export JAVA_HOME~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64
         name: gradle pkl-cli:alpineExecutableAmd64
@@ -244,6 +244,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
+          export JAVA_HOME~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
