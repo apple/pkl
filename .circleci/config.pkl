@@ -221,6 +221,8 @@ workflows {
             }
           }
         }
+      }
+      new {
         ["build-linux-alpine-amd64"] {
           filters {
             branches {
@@ -228,6 +230,8 @@ workflows {
             }
           }
         }
+      }
+      new {
         ["build-macos-amd64"] {
           filters {
             branches {
