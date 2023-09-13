@@ -249,7 +249,7 @@ tasks.checkNative {
   dependsOn(testMacExecutable)
 }
 
-val testAlpineExecutable by tasks.registering(Test::class) {
+val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
   enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64"
   dependsOn(":pkl-cli:alpineExecutableAmd64")
 
@@ -266,7 +266,7 @@ val testAlpineExecutable by tasks.registering(Test::class) {
 }
 
 tasks.checkNative {
-  dependsOn(testAlpineExecutable)
+  dependsOn(testAlpineExecutableAmd64)
 }
 
 tasks.clean {

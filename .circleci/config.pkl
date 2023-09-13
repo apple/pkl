@@ -165,9 +165,9 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
 }
 
 jobs {
-  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64")
-  ["build-linux-arm64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64")
-  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64")
+  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64 pkl-cli:testLinuxExecutableAmd64")
+  ["build-linux-arm64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-cli:testLinuxExecutableAarch64")
+  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64 pkl-cli:testAlpineExecutableAmd64")
   ["build-macos-amd64"] {
     macos {
       xcode = "14.0.0"
@@ -239,24 +239,24 @@ workflows {
 
   ["build-native-images"] {
     jobs {
-//       new {
-//         ["build-linux-arm64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
-//       new {
-//         ["build-linux-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
+      new {
+        ["build-linux-arm64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
+      new {
+        ["build-linux-amd64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
       new {
         ["build-linux-alpine-amd64"] {
           filters {

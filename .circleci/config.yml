@@ -70,8 +70,8 @@ jobs:
         command: |-
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64
-        name: gradle pkl-cli:linuxExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-cli:testLinuxExecutableAmd64
+        name: gradle pkl-cli:linuxExecutableAmd64 pkl-cli:testLinuxExecutableAmd64
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
@@ -141,8 +141,8 @@ jobs:
         command: |-
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64
-        name: gradle pkl-cli:linuxExecutableAarch64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-cli:testLinuxExecutableAarch64
+        name: gradle pkl-cli:linuxExecutableAarch64 pkl-cli:testLinuxExecutableAarch64
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
@@ -228,8 +228,8 @@ jobs:
         command: |-
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64
-        name: gradle pkl-cli:alpineExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-cli:testAlpineExecutableAmd64
+        name: gradle pkl-cli:alpineExecutableAmd64 pkl-cli:testAlpineExecutableAmd64
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
@@ -271,6 +271,14 @@ jobs:
 workflows:
   build-native-images:
     jobs:
+    - build-linux-arm64:
+        filters:
+          branches:
+            only: main
+    - build-linux-amd64:
+        filters:
+          branches:
+            only: main
     - build-linux-alpine-amd64:
         filters:
           branches:
