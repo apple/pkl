@@ -27,7 +27,10 @@ jobs: Mapping<String, Job>?
 /// The top-level keys for the Workflows configuration are version and jobs.
 /// For more information, see the
 /// [Using Workflows to Orchestrate Jobs](https://circleci.com/docs/workflows/) page.
-workflows: Mapping<String, Workflow>?
+workflows: Mapping<String, Workflow(isValidWorkflow)>?
+
+local isValidWorkflow = (workflow: Workflow) ->
+  workflow.jobs.toList().every((jobs) -> jobs.keys.every((it) -> jobs.containsKey(it)))
 
 /// Pipeline parameters declared for use in the configuration.
 ///
@@ -84,7 +87,11 @@ class Job {
   /// Options for [docker executor](https://circleci.com/docs/configuration-reference/#docker)
   docker: Listing<DockerImage>?
 
-  /// Options for [macOS executor](https://circleci.com/docs/configuration-reference/#macos)
+  /// CircleCI supports running jobs on macOS, to allow you to build, test, and deploy apps for
+  /// macOS, iOS, tvOS and watchOS.
+  ///
+  /// To run a job in a macOS virtual machine, add the macos key to the top-level configuration
+  /// for your job and specify the version of Xcode you would like to use.
   macos: MacOSExecutor?
 
   /// Options for [machine executor](https://circleci.com/docs/configuration-reference/#machine)
@@ -105,6 +112,9 @@ typealias ResourceClass =
   |"arm.2xlarge"
 
 class MacOSExecutor {
+  /// The version of Xcode that is installed on the virtual machine, see the
+  /// [Supported Xcode Versions section of the Testing iOS document](https://circleci.com/docs/using-macos/#supported-xcode-versions)
+  /// for the complete list.
   xcode: String
 }
 
@@ -113,10 +123,13 @@ class Machine {
   ///
   /// View [available images](https://circleci.com/developer/images?imageType=machine).
   ///
-  /// Note: This key is not supported for Linux VMs on installations of CircleCI server.
-  /// For information about customizing machine executor images on CircleCI installed on your
-  /// servers, see our VM Service documentation
+  /// Note: This key is *not* supported for Linux VMs on installations of CircleCI server.
+  /// For information about customizing `machine` executor images on CircleCI installed on your
+  /// servers, see our [VM Service documentation](https://circleci.com/docs/server/v4.1/operator/manage-virtual-machines-with-vm-service/)
   image: String
+
+  /// Set this to `true` to enable [Docker Layer Caching](https://circleci.com/docs/docker-layer-caching/).
+  docker_layer_caching: Boolean?
 }
 
 class DockerImage {

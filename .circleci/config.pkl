@@ -34,12 +34,12 @@ local gradleJvmArgs =
   + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
   + "'"
 
-local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): StepConfig =
+local function setUpLinuxEnvironment(arch: "amd64"|"aarch64"): StepConfig =
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
-  let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
-  let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
-  let (majorJdkVersion = jdkVersion.split(".").first)
+//   let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
+//   let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
+//   let (majorJdkVersion = jdkVersion.split(".").first)
     new {
       run {
         name = "Set up environment"
@@ -47,15 +47,6 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
           #"""
           #!/usr/bin/env bash
           set -eo pipefail
-
-          # install jdk
-          curl -L \
-            https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
-
-          tar tf /tmp/jdk.tar.gz
-          mkdir ~/jdk \
-          && cd ~/jdk \
-          && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
           mkdir -p ~/staticdeps/bin
 
@@ -70,9 +61,14 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
           && echo "zlib-\#(zlibVersion): make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-\#(zlibVersion)
           """#
-          // don't need musl on arm because GraalVM only supports musl builds on x86
-          when (arch == "x64") {
+          // don't need musl/libstdc++-static on aarch because GraalVM only supports musl builds on x86
+          when (arch == "amd64") {
             #"""
+            # install libstdc++ static
+            sudo apt-get update
+            sudo apt-get install libstdc++10-dev
+            cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
+
             # install musl
             curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
 
@@ -92,38 +88,63 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
       }
     }
 
-local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String, gradleCommand: String): Job = new {
-  machine {
-    image = "ubuntu-2204:current"
+local restoreGradleCache: StepConfig = new {
+  restore_cache {
+    name = "Restore Gradle Dependencies Cache"
+    key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
   }
-  resource_class = if (arch == "arm64") "arm.medium" else "medium"
+}
+
+local saveToGradleCache: StepConfig = new {
+  save_cache {
+    name = "Save Gradle Dependencies Cache"
+    key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+    paths {
+      "~/.gradle/caches/modules-2/files-2.1/"
+    }
+  }
+}
+
+local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: String): Job = new {
+  docker {
+    new {
+      image = "cimg/openjdk:11.0"
+    }
+  }
+  resource_class = if (arch == "arm64") "arm.large" else "large"
   steps {
     "checkout"
+    restoreGradleCache
+    setUpLinuxEnvironment(arch)
+    // hack to get more RAM in docker
     new {
-      restore_cache {
-        name = "Restore Gradle Dependencies Cache"
-        key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+      setup_remote_docker {
+        version = "20.10.14"
+        docker_layer_cacheing = true
       }
     }
-    setUpLinuxEnvironment(arch, javaVersion)
     gradle(gradleCommand)
-    new {
-      save_cache {
-        name = "Save Gradle Dependencies Cache"
-        key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-        paths {
-          "~/.gradle/caches/modules-2/files-2.1/"
-        }
-      }
-    }
+    saveToGradleCache
     persistToWorkspace
   }
 }
 
 jobs {
-  ["build-linux-amd64"] = buildLinuxNativeImage("x64", JAVA_11, "pkl-cli:linuxExecutableAmd64")
-  ["build-linux-arm64"] = buildLinuxNativeImage("arm64", JAVA_11, "pkl-cli:linuxExecutableAarch64")
-  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("x64", JAVA_11, "pkl-cli:alpineExecutableAmd64")
+  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64")
+  ["build-linux-arm64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64")
+  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("aarch64", "pkl-cli:alpineExecutableAmd64")
+  ["build-macos-amd64"] {
+    macos {
+      xcode = "14.0.0"
+    }
+    steps {
+      "checkout"
+      restoreGradleCache
+      gradle("buildNative")
+      saveToGradleCache
+      persistToWorkspace
+    }
+  }
 //   ["dev-jdk11"] {
 //     docker {
 //       image("cimg/openjdk:11.0")
@@ -200,8 +221,6 @@ workflows {
             }
           }
         }
-      }
-      new {
         ["build-linux-alpine-amd64"] {
           filters {
             branches {
@@ -209,16 +228,14 @@ workflows {
             }
           }
         }
+        ["build-macos-amd64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
       }
-//       new {
-//         ["build-macos-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
     }
   }
 }
@@ -228,7 +245,6 @@ local function gradle(args: String): StepConfig = new {
     name = "gradle \(args)"
     command = """
       export PATH=~/staticdeps/bin:$PATH
-      export JAVA_HOME=~/jdk
       ./gradlew \(gradleArgs) \(args)
       """
   }
