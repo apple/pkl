@@ -137,23 +137,85 @@ class DockerImage {
 }
 
 class Workflow {
+  /// A job can have the keys `requires`, `name`, `context`, `type`, and `filters`.
   jobs: Listing<*Mapping<String, WorkflowJob>(length == 1)|String>
   `when`: LogicStatement?
 }
 
 class WorkflowJob {
-  filters: Filter?
+  /// The name key can be used to invoke reusable jobs across any number of workflows.
+  ///
+  /// Using the name key ensures numbers are not appended to your job name (i.e. sayhello-1,
+  /// sayhello-2, etc.).
+  /// The name you assign to the name key needs to be unique, otherwise the numbers will still be
+  /// appended to the job name.
+  name: String?
+
+  /// A list of jobs that must succeed for the job to start.
+  ///
+  /// Note: When jobs in the current workflow that are listed as dependencies are not executed
+  /// (due to a filter function for example), their requirement as a dependency for other jobs will
+  /// be ignored by the requires option.
+  /// However, if all dependencies of a job are filtered, then that job will not be executed either.
   requires: Listing<String>?
+
+  /// The name of the context(s).
+  ///
+  /// Jobs may be configured to use global environment variables set for an organization, see the
+  /// [Contexts](https://circleci.com/docs/contexts/) document for adding a context in the
+  /// application settings.
+  ///
+  /// The initial default name is org-global.
+  /// Each context name must be unique.
+  /// If using CircleCI Server, only a single Context per workflow is supported.
+  /// Note: A maximum of 100 unique contexts across all workflows is allowed
+  context: String|Listing<String>?
+
+  /// A job may have a type of `approval` indicating it must be manually approved before downstream
+  /// jobs may proceed.
+  ///
+  /// For more information see the Using Workflows to Orchestrate Jobs page.
+  type: "approval"?
+
+  /// Job Filters can have the key branches or tags
+  filters: Filter?
 }
 
 class Filter {
+  /// Branches can have the keys only and ignore which either map to a single string naming a branch.
+  /// You may also use regular expressions to match against branches by enclosing them with slashes,
+  /// or map to a list of such strings.
+  /// Regular expressions must match the *entire* string.
+  ///
+  /// Any branches that match `only` will run the job.
+  /// Any branches that match `ignore` will not run the job.
+  /// If neither `only` nor `ignore` are specified then all branches will run the job.
+  /// If both `only` and `ignore` are specified the `only` is considered before `ignore`.
   branches: FilterSpec?
+
+  /// CircleCI does not run workflows for tags unless you explicitly specify tag filters.
+  /// Additionally, if a job requires any other jobs (directly or indirectly), you must specify tag
+  /// filters for those jobs.
+  ///
+  /// Tags can have the keys only and ignore.
+  /// You may also use regular expressions to match against tags by enclosing them with slashes,
+  /// or map to a list of such strings.
+  /// Regular expressions must match the entire string.
+  /// Both lightweight and annotated tags are supported.
+  ///
+  /// Any tags that match only will run the job.
+  /// Any tags that match ignore will not run the job.
+  /// If neither only nor ignore are specified then the job is skipped for all tags.
+  /// If both only and ignore are specified the only is considered before ignore.
   tags: FilterSpec?
 }
 
 class FilterSpec {
-  only: String?(this != null || ignore != null)
-  ignore: String?(this != null || only != null)
+  /// Either a single branch specifier, or a list of branch specifiers
+  only: (String|Listing<String>)?(this != null || ignore != null)
+
+  /// Either a single branch specifier, or a list of branch specifiers
+  ignore: (String|Listing<String>)?(this != null || only != null)
 }
 
 typealias Step = *StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"

@@ -154,11 +154,14 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
     saveToGradleCache
     persistToWorkspace
     new {
-      run = "cat */build/test-results/**.xml > build/test-results.xml"
+      // find all test results and write them to the home dir
+      run = """
+        find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ 
+        """
     }
     new {
       store_test_results {
-        path = "build/test-results.xml"
+        path = "~/test-results"
       }
     }
   }
