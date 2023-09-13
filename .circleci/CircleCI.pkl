@@ -159,7 +159,7 @@ class StepConfig {
   /// It is also possible to store test results as a build artifact; to do so, please refer to the
   /// [store_artifacts] step.
   store_test_results: StoreTestResults?
-  
+
   /// Step to store artifacts (for example logs, binaries, etc) to be available in the web app
   /// or through the API.
   ///

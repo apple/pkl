@@ -58,6 +58,17 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
             mkdir -p ~/staticdeps/bin
+
+            # install zlib
+            curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
+            && cd /tmp/dep_zlib-\#(zlibVersion) \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
+            && echo "zlib-\#(zlibVersion): make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-\#(zlibVersion)
           """#
           // don't need musl on arm because GraalVM only supports musl builds on x86
           when (arch == "x64") {
@@ -110,9 +121,9 @@ local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): 
 }
 
 jobs {
-  ["build-ubuntu-amd64"] = buildLinuxNativeImage("x64", JAVA_11)
-  ["build-ubuntu-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
-  
+  ["build-linux-amd64"] = buildLinuxNativeImage("x64", JAVA_11)
+  ["build-linux-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
+  ["build-linux-alpine-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
 //   ["dev-jdk11"] {
 //     docker {
 //       image("cimg/openjdk:11.0")
@@ -190,15 +201,15 @@ workflows {
           }
         }
       }
-//       new {
-//         ["build-macos-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
+      new {
+        ["build-macos-amd64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
     }
   }
 }
