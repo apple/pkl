@@ -231,7 +231,7 @@ tasks.checkNative {
 }
 
 val testAlpineExecutable by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isLinux
+  enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64"
   dependsOn(":pkl-cli:alpineExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")

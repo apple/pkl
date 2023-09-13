@@ -46,8 +46,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
     new {
       run {
         name = "Set up environment"
-        command =
-        new Listing {
+        command = new Listing {
           #"""
             #!/usr/bin/env bash
             set -eo pipefail
