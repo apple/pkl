@@ -64,15 +64,15 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
               https://github.com/adoptium/temurin11-binaries/releases/download/jdk-\#(jdk11Version)/OpenJDK11U-jdk_x64_linux_hotspot_\#(jdk11VersionAlt).tar.gz -o /tmp/openjdk11.tar.gz
 
             tar tf /tmp/openjdk11.tar.gz
-            mkdir /opt/jdk11 \
-            && cd /opt/jdk11 \
+            mkdir ~/jdk11 \
+            && cd ~/jdk11 \
             && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
 
-            mkdir -p /opt/staticdeps/bin
+            mkdir -p ~/staticdeps/bin
 
             # install libstdc
-            # mkdir /opt/staticdeps \
-            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /opt/staticdeps \
+            # mkdir ~/staticdeps \
+            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps \
 
             # install musl
             curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
@@ -80,19 +80,19 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
             mkdir -p /tmp/dep_musl-\#(muslVersion) \
             && cd /tmp/dep_musl-\#(muslVersion) \
             && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=/opt/staticdeps > /dev/null \
+            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=~/staticdeps > /dev/null \
             && echo "musl-\#(muslVersion): make..." && make -s -j4 \
             && echo "musl-\#(muslVersion): make install..." && make -s install \
             && rm -rf /tmp/dep_musl-\#(muslVersion)
 
             # native-image expects to find an executable at this path.
-            ln -s /opt/staticdeps/bin/musl-gcc /opt/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
 
             # install zlib
             mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
             && cd /tmp/dep_zlib-\#(zlibVersion) \
             && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix=/opt/staticdeps > /dev/null \
+            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix=~/staticdeps > /dev/null \
             && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
             && echo "zlib-\#(zlibVersion): make install..." && make -s install \
             && rm -rf /tmp/dep_zlib-\#(zlibVersion)
@@ -200,9 +200,6 @@ jobs {
     resource_class = "arm.medium"
     steps {
       "checkout"
-      new {
-        run = "echo $(whoami)"
-      }
       setUpLinuxEnvironment("arm64")
       gradleBuildNative
       persistToWorkspace
