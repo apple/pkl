@@ -156,7 +156,7 @@ jobs:
     - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
     - store_test_results:
         path: ~/test-results
-    resource_class: arm.large
+    resource_class: arm.medium
     docker:
     - image: arm64v8/oraclelinux:8-slim
   build-linux-alpine-amd64:

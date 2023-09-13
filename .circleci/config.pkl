@@ -127,7 +127,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
           "oraclelinux:8-slim" 
     }
   }
-  resource_class = if (arch == "aarch64") "arm.large" else "large"
+  resource_class = if (arch == "aarch64") "arm.medium" else "large"
   steps {
     "checkout"
     restoreGradleCache
