@@ -202,7 +202,7 @@ jobs {
     steps {
       "checkout"
       setUpLinuxEnvironment("arm64", JAVA_11)
-      gradleBuildNative
+      gradle("buildNative")
       persistToWorkspace
     }
   }
@@ -295,16 +295,17 @@ workflows {
     }
   }
 }
-// 
-// local function gradle(args: String): StepConfig = new {
-//   run {
-//     name = "gradle \(args)"
-//     command = """
-//       export PATH=/staticdeps/bin:$PATH
-//       ./gradlew \(gradleArgs) \(args)
-//       """
-//   }
-// }
+
+local function gradle(args: String): StepConfig = new {
+  run {
+    name = "gradle \(args)"
+    command = """
+      export PATH=/staticdeps/bin:$PATH
+      export JAVA_HOME=~/jdk/
+      ./gradlew \(gradleArgs) \(args)
+      """
+  }
+}
 
 local function image(imageName: String): DockerImage = new {
   image = imageName

@@ -106,9 +106,43 @@ class StepConfig {
   run: (*RunConfig|String)?
   store_test_results: Path?
   setup_remote_docker: SetupRemoteDocker?
+
+  /// Special step used to persist a temporary file to be used by another job in the workflow.
+  /// For more information on using workspaces, see the
+  /// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
+  ///
+  /// `persist_to_workspace` adopts the storage settings from the storage customization controls on
+  /// the CircleCI web app.
+  /// If no custom setting is provided, `persist_to_workspace` defaults to 15 days.
+  /// 
+  /// Workspace storage retention can be customized on the CircleCI web app by navigating to Plan > Usage Controls.
   persist_to_workspace: PersistToWorkspace?
+
+  /// Special step used to attach the workflow’s workspace to the current container.
+  ///
+  /// The full contents of the workspace are downloaded and copied into the directory the workspace
+  /// is being attached at.
+  /// For more information on using workspaces, see the
+  /// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
   attach_workspace: AttachWorkspace?
+
   command: CalledCommand?
+
+  /// Generates and stores a cache of a file or directory of files such as dependencies or source
+  /// code in our object storage.
+  ///
+  /// Later jobs can [restore this cache](https://circleci.com/docs/configuration-reference/#restore_cache).
+  /// Learn more on the [Caching Dependencies](https://circleci.com/docs/caching/) page.
+  /// 
+  /// Cache retention can be customized on the [CircleCI web app](https://app.circleci.com/) by
+  /// navigating to Plan > Usage Controls.
+  save_cache: SaveCache?
+
+  /// Restores a previously saved cache based on a key. 
+  /// 
+  /// Cache needs to have been saved first for this key using the [`save_cache` step](https://circleci.com/docs/configuration-reference/#save_cache).
+  /// Learn more in [the caching documentation](https://circleci.com/docs/caching/).
+  restore_cache: RestoreCache?
 }
 
 class RunConfig {
@@ -142,20 +176,40 @@ class RunConfig {
   `when`: ("always"|"on_success"|"on_fail")? 
 }
 
+class SaveCache {
+  /// List of directories which should be added to the cache
+  paths: Listing<String>
+  
+  /// Unique identifier for this cache
+  key: String
+  
+  /// Title of the step to be shown in the CircleCI UI (default: “Saving Cache”)
+  name: String?
+  
+  /// [Specify when to enable or disable the step](https://circleci.com/docs/configuration-reference/#the-when-attribute).
+  ///
+  /// Takes the following values: always, on_success, on_fail (default: on_success)
+  `when`: ("always"|"on_success"|"on_fail")?
+}
+
+class RestoreCache {
+  /// Single cache key to restore
+  key: String?(this != null || keys != null)
+  
+  /// List of cache keys to lookup for a cache to restore.
+  ///
+  /// Only first existing key will be restored.
+  keys: Listing<String>?
+
+  /// Title of the step to be shown in the CircleCI UI (default: “Restoring Cache”)
+  name: String?
+}
+
 class SetupRemoteDocker {
   version: String
   docker_layer_cacheing: Boolean
 }
 
-/// Special step used to persist a temporary file to be used by another job in the workflow.
-/// For more information on using workspaces, see the
-/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
-///
-/// `persist_to_workspace` adopts the storage settings from the storage customization controls on
-/// the CircleCI web app.
-/// If no custom setting is provided, `persist_to_workspace` defaults to 15 days.
-/// 
-/// Workspace storage retention can be customized on the CircleCI web app by navigating to Plan > Usage Controls.
 class PersistToWorkspace {
   /// Either an absolute path or a path relative to `working_directory`
   root: String
@@ -167,12 +221,6 @@ class PersistToWorkspace {
   paths: Listing<String>
 }
 
-/// Special step used to attach the workflow’s workspace to the current container.
-///
-/// The full contents of the workspace are downloaded and copied into the directory the workspace
-/// is being attached at.
-/// For more information on using workspaces, see the
-/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
 class AttachWorkspace {
   /// Directory to attach the workspace to.
   at: String
