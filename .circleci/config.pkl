@@ -47,6 +47,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
       run {
         name = "Set up environment"
         command =
+        new Listing {
           #"""
             #!/usr/bin/env bash
             set -eo pipefail
@@ -71,17 +72,6 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
             # mkdir ~/staticdeps \
             # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps \
 
-            # install musl
-            curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
-
-            mkdir -p /tmp/dep_musl-\#(muslVersion) \
-            && cd /tmp/dep_musl-\#(muslVersion) \
-            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=~/staticdeps > /dev/null \
-            && echo "musl-\#(muslVersion): make..." && make -s -j4 \
-            && echo "musl-\#(muslVersion): make install..." && make -s install \
-            && rm -rf /tmp/dep_musl-\#(muslVersion)
-
             # native-image expects to find an executable at this path.
             ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
 
@@ -96,6 +86,22 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
 
             export PATH=~/staticdeps/bin:$PATH >> "$BASH_ENV"
           """#
+          // don't need musl on arm because GraalVM only supports musl builds on x86
+          when (arch == "x64") {
+            #"""
+            # install musl
+            curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-\#(muslVersion) \
+            && cd /tmp/dep_musl-\#(muslVersion) \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=~/staticdeps > /dev/null \
+            && echo "musl-\#(muslVersion): make..." && make -s -j4 \
+            && echo "musl-\#(muslVersion): make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-\#(muslVersion)
+            """#
+          }
+        }.join("\n\n")
       }
     }
 

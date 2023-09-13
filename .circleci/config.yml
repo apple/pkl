@@ -28,17 +28,6 @@ jobs:
             # mkdir ~/staticdeps \
             # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps \
 
-            # install musl
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
-
-            mkdir -p /tmp/dep_musl-1.2.2 \
-            && cd /tmp/dep_musl-1.2.2 \
-            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix=~/staticdeps > /dev/null \
-            && echo "musl-1.2.2: make..." && make -s -j4 \
-            && echo "musl-1.2.2: make install..." && make -s install \
-            && rm -rf /tmp/dep_musl-1.2.2
-
             # native-image expects to find an executable at this path.
             ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/aarch64-linux-musl-gcc
 

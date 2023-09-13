@@ -222,7 +222,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
  */
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
-      buildInfo.os.isLinux,
+      buildInfo.os.isLinux && buildInfo.arch == "amd64",
       file("$buildDir/executable/pkl-alpine-linux-amd64"),
       listOf(
         "--static",
