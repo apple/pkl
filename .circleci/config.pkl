@@ -5,8 +5,6 @@ amends "CircleCI.pkl"
 
 version = 2.1
 
-local WORKSPACE = "workspace"
-
 local gradleBuildNative: Step = new {
   run {
     name = "gradle buildNative"
@@ -14,13 +12,12 @@ local gradleBuildNative: Step = new {
       export PATH=/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) buildNative
       """
-    working_directory = WORKSPACE
   }
 }
 
 local persistToWorkspace: Step = new {
   persist_to_workspace {
-    root = WORKSPACE
+    root = "."
     paths {
       "pcl-cli/build/executable/"
     }
@@ -52,7 +49,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
         command =
           #"""
             #!/usr/bin/env bash
-            set -eox pipefail
+            set -eo pipefail
 
             # install system deps
             # sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
