@@ -97,7 +97,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
             && echo "zlib-\#(zlibVersion): make install..." && make -s install \
             && rm -rf /tmp/dep_zlib-\#(zlibVersion)
 
-            export PATH=/opt/staticdeps/bin:$PATH >> "$BASH_ENV"
+            export PATH=~/staticdeps/bin:$PATH >> "$BASH_ENV"
           """#
       }
     }

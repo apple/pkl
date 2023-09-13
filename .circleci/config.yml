@@ -51,7 +51,7 @@ jobs:
             && echo "zlib-1.2.13: make install..." && make -s install \
             && rm -rf /tmp/dep_zlib-1.2.13
 
-            export PATH=/opt/staticdeps/bin:$PATH >> "$BASH_ENV"
+            export PATH=~/staticdeps/bin:$PATH >> "$BASH_ENV"
         name: Set up environment
     - run:
         command: |-
