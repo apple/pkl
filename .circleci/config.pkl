@@ -1,206 +1,29 @@
 // CircleCI build file.
 // This file needs to be rendered to `.circleci/config.yml`
 // or it won't do anything.
-// It's recommended to create a pre-commit hook to render it.
 amends "CircleCI.pkl"
 
 version = 2.1
 
-jobs {
-  ["build-macos-amd64"] {
-    macos {
-      xcode = "14.2.0"
-    }
-    steps {
-      "checkout"
-      gradle("buildNative")
-    }
-  }
-  ["build-ubuntu-amd64"] {
-    docker {
-      new {
-        image = "oraclelinux:8-slim"
-      }
-    }
-    environment {
-      ["LANG"] = "en_US.UTF-8"
-      ["JAVA_HOME"] = "/jdk11"
-    }
-    steps {
-      "checkout"
-      new {
-        run {
-          name = "Set up environment"
-          // language=bash
-          command = #"""
-            #!/usr/bin/env bash
-            set -ex -o pipefail
+local WORKSPACE = "workspace"
 
-            export muslVersion=1.2.2
-            export zlibVersion=1.2.13
-            export jdk11Version=11.0.12%2B7
-            export jdk11VersionAlt=11.0.12_7
-
-            sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-              && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-              && microdnf clean all
-
-            curl -L https://github.com/adoptium/temurin11-binaries/releases/download/jdk-${jdk11Version}/OpenJDK11U-jdk_x64_linux_hotspot_${jdk11VersionAlt}.tar.gz -o /tmp/openjdk11.tar.gz
-
-            tar tf /tmp/openjdk11.tar.gz
-
-            mkdir /jdk11 \
-              && cd /jdk11 \
-              && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
-
-            mkdir /staticdeps \
-              && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
-              && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
-
-            curl -L https://musl.libc.org/releases/musl-$muslVersion.tar.gz -o /tmp/musl.tar.gz
-
-            mkdir -p /dep_musl-$muslVersion \
-              && cd /dep_musl-$muslVersion \
-              && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-              && echo "musl-$muslVersion: configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
-              && echo "musl-$muslVersion: make..." && make -s -j4 \
-              && echo "musl-$muslVersion: make install..." && make -s install \
-              && rm -rf /dep_musl-$muslVersion
-
-            curl -L https://github.com/madler/zlib/releases/download/v$zlibVersion/zlib-$zlibVersion.tar.gz -o /tmp/zlib.tar.gz
-
-            mkdir -p /dep_zlib-$zlibVersion \
-              && cd /dep_zlib-$zlibVersion \
-              && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-              && echo "zlib-$zlibVersion: configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
-              && echo "zlib-$zlibVersion: make..." && make -s -j4 \
-              && echo "zlib-$zlibVersion: make install..." && make -s install \
-              && rm -rf /dep_zlib-$zlibVersion
-
-            rm -f /tmp/*.tar.gz
-
-            # native-image expects to find an executable at this path.
-            ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/x86_64-linux-musl-gcc
-
-            export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
-            """#
-        }
-      }
-      // This is only used s.t. we can get more RAM in CircleCI builds.
-      new {
-        setup_remote_docker {
-          version = "20.10.14"
-          docker_layer_cacheing = true
-        }
-      }
-      (gradle("buildNative")) {
-        run {
-          working_directory = "workspace"
-        }
-      }
-      new {
-        persist_to_workspace {
-          root = "workspace"
-          paths {
-            "pcl-cli/build/executable/"
-          }
-        }
-      }
-    }
-  }
-  ["dev-jdk11"] {
-    docker {
-      image("cimg/openjdk:11.0")
-    }
-    steps {
-      "checkout"
-      gradle("build")
-      new {
-        store_test_results {
-          path = "./pkl-core/build/test-results/"
-        }
-      }
-    }
-  }
-  ["dev-jdk17"] {
-    docker {
-      image("cimg/openjdk:17.0")
-    }
-    steps {
-      "checkout"
-      gradle("build")
-    }
-  }
-  ["dev-bench"] {
-    docker {
-      image("cimg/openjdk:11.0")
-    }
-    steps {
-      "checkout"
-      gradle("jmh")
-    }
-  }
-  ["dev-gradle-compatibility"] {
-    docker {
-      image("cimg/openjdk:11.0")
-    }
-    steps {
-      "checkout"
-      gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
-    }
-  }
-}
-
-workflows {
-//   ["prb"] {
-//     jobs {
-//       "dev-jdk11"
-//       "dev-jdk17"
-//       "dev-bench"
-//       // we should use linux instead of mac as it's much cheaper
-//       "build-macos-amd64"
-//       // disabling gradle-compatibility for now because there's some failling tests (also failing on rio)
-//       // "dev-gradle-compatibility"
-//     }
-//   }
-// runs out of memory on the free large tier
-  ["run-ubuntu-amd64-native"] {
-    jobs {
-      new {
-        ["build-ubuntu-amd64"] {
-          filters = new BranchFilter {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-local function gradle(args: String): StepConfig = new {
+local gradleBuildNative: Step = new {
   run {
-    name = "gradle \(args)"
+    name = "gradle buildNative"
     command = """
       export PATH=/staticdeps/bin:$PATH
-      ./gradlew \(gradleArgs) \(gradleJvmArgs) \(args)
+      ./gradlew \(gradleArgs) buildNative
       """
-    
+    working_directory = WORKSPACE
   }
 }
 
-local function run(cmd: String): StepConfig = new {
-  run = cmd
-}
-
-local function image(imageName: String): DockerImage = new {
-  image = imageName
-}
-
-local function testResults(reportPath: String): StoreTestResults = new {
-  store_test_results {
-    path = reportPath
+local persistToWorkspace: Step = new {
+  persist_to_workspace {
+    root = WORKSPACE
+    paths {
+      "pcl-cli/build/executable/"
+    }
   }
 }
 
@@ -217,3 +40,275 @@ local gradleJvmArgs =
   + "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED "
   + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
   + "'"
+
+local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
+  let (muslVersion = "1.2.2")
+  let (zlibVersion = "1.2.13")
+  let (jdk11Version = "11.0.12%2B7")
+  let (jdk11VersionAlt = "11.0.12_7")
+    new {
+      run {
+        name = "Set up environment"
+        command =
+          #"""
+            #!/usr/bin/env bash
+            set -eox pipefail
+
+            # install system deps
+            # sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            # && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            # && microdnf clean all
+
+            # install jdk11
+            curl -L \
+              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-\#(jdk11Version)/OpenJDK11U-jdk_x64_linux_hotspot_\#(jdk11VersionAlt).tar.gz -o /tmp/openjdk11.tar.gz
+
+            tar tf /tmp/openjdk11.tar.gz
+            mkdir /jdk11 \
+
+            && cd /jdk11 \
+            && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
+
+            mkdir /staticdeps
+            # install libstdc
+            # mkdir /staticdeps \
+            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
+            # && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
+
+            # install musl
+            curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /dep_musl-\#(muslVersion) \
+            && cd /dep_musl-\#(muslVersion) \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
+            && echo "musl-\#(muslVersion): make..." && make -s -j4 \
+            && echo "musl-\#(muslVersion): make install..." && make -s install \
+            && rm -rf /dep_musl-\#(muslVersion)
+
+            # native-image expects to find an executable at this path.
+            ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
+
+            # install zlib
+            mkdir -p /dep_zlib-\#(zlibVersion) \
+            && cd /dep_zlib-\#(zlibVersion) \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
+            && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
+            && echo "zlib-\#(zlibVersion): make install..." && make -s install \
+            && rm -rf /dep_zlib-\#(zlibVersion)
+
+            export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
+          """#
+      }
+    }
+
+jobs {
+//   ["build-macos-amd64"] {
+//     macos {
+//       xcode = "14.2.0"
+//     }
+//     steps {
+//       "checkout"
+//       gradleBuildNative
+//       persistToWorkspace
+//     }
+//   }
+//   ["build-ubuntu-amd64"] {
+//     machine {
+//       image = "ubuntu-2204"
+//     }
+//     resource_class = "arm.medium"
+//     environment {
+//       ["LANG"] = "en_US.UTF-8"
+//       ["JAVA_HOME"] = "/jdk11"
+//     }
+//     steps {
+//       "checkout"
+//       new {
+//         run {
+//           name = "Set up environment"
+//           // language=bash
+//           command = #"""
+//             #!/usr/bin/env bash
+//             set -ex -o pipefail
+// 
+//             export muslVersion=1.2.2
+//             export zlibVersion=1.2.13
+//             export jdk11Version=11.0.12%2B7
+//             export jdk11VersionAlt=11.0.12_7
+// 
+//             sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+//               && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+//               && microdnf clean all
+// 
+//             curl -L https://github.com/adoptium/temurin11-binaries/releases/download/jdk-${jdk11Version}/OpenJDK11U-jdk_x64_linux_hotspot_${jdk11VersionAlt}.tar.gz -o /tmp/openjdk11.tar.gz
+// 
+//             tar tf /tmp/openjdk11.tar.gz
+// 
+//             mkdir /jdk11 \
+//               && cd /jdk11 \
+//               && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
+// 
+//             mkdir /staticdeps \
+//               && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
+//               && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
+// 
+//             curl -L https://musl.libc.org/releases/musl-$muslVersion.tar.gz -o /tmp/musl.tar.gz
+// 
+//             mkdir -p /dep_musl-$muslVersion \
+//               && cd /dep_musl-$muslVersion \
+//               && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+//               && echo "musl-$muslVersion: configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
+//               && echo "musl-$muslVersion: make..." && make -s -j4 \
+//               && echo "musl-$muslVersion: make install..." && make -s install \
+//               && rm -rf /dep_musl-$muslVersion
+// 
+//             curl -L https://github.com/madler/zlib/releases/download/v$zlibVersion/zlib-$zlibVersion.tar.gz -o /tmp/zlib.tar.gz
+// 
+//             mkdir -p /dep_zlib-$zlibVersion \
+//               && cd /dep_zlib-$zlibVersion \
+//               && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+//               && echo "zlib-$zlibVersion: configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
+//               && echo "zlib-$zlibVersion: make..." && make -s -j4 \
+//               && echo "zlib-$zlibVersion: make install..." && make -s install \
+//               && rm -rf /dep_zlib-$zlibVersion
+// 
+//             rm -f /tmp/*.tar.gz
+// 
+//             # native-image expects to find an executable at this path.
+//             ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/x86_64-linux-musl-gcc
+// 
+//             export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
+//             """#
+//         }
+//       }
+//       // This is only used s.t. we can get more RAM in CircleCI builds.
+//       new {
+//         setup_remote_docker {
+//           version = "20.10.14"
+//           docker_layer_cacheing = true
+//         }
+//       }
+//       gradleBuildNative
+//       persistToWorkspace
+//     }
+//   }
+  ["build-ubuntu-arm64"] {
+    machine {
+      image = "ubuntu-2204"
+    }
+    resource_class = "arm.medium"
+    steps {
+      "checkout"
+      setUpLinuxEnvironment("arm64")
+      gradleBuildNative
+      persistToWorkspace
+    }
+  }
+//   ["dev-jdk11"] {
+//     docker {
+//       image("cimg/openjdk:11.0")
+//     }
+//     steps {
+//       "checkout"
+//       gradle("build")
+//       new {
+//         store_test_results {
+//           path = "./pkl-core/build/test-results/"
+//         }
+//       }
+//     }
+//   }
+//   ["dev-jdk17"] {
+//     docker {
+//       image("cimg/openjdk:17.0")
+//     }
+//     steps {
+//       "checkout"
+//       gradle("build")
+//     }
+//   }
+//   ["dev-bench"] {
+//     docker {
+//       image("cimg/openjdk:11.0")
+//     }
+//     steps {
+//       "checkout"
+//       gradle("jmh")
+//     }
+//   }
+//   ["dev-gradle-compatibility"] {
+//     docker {
+//       image("cimg/openjdk:11.0")
+//     }
+//     steps {
+//       "checkout"
+//       gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
+//     }
+//   }
+}
+
+workflows {
+//   ["prb"] {
+//     jobs {
+//       "dev-jdk11"
+//       "dev-jdk17"
+//       "dev-bench"
+//       // we should use linux instead of mac as it's much cheaper
+//       "build-macos-amd64"
+//       // disabling gradle-compatibility for now because there's some failling tests (also failing on rio)
+//       // "dev-gradle-compatibility"
+//     }
+//   }
+// runs out of memory on the free large tier
+
+  ["build-native-images"] {
+    `when` {
+      
+    }
+    jobs {
+      new {
+        ["build-ubuntu-arm64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
+//       new {
+//         ["build-ubuntu-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
+//       new {
+//         ["build-macos-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
+    }
+  }
+}
+// 
+// local function gradle(args: String): StepConfig = new {
+//   run {
+//     name = "gradle \(args)"
+//     command = """
+//       export PATH=/staticdeps/bin:$PATH
+//       ./gradlew \(gradleArgs) \(args)
+//       """
+//   }
+// }
+
+local function image(imageName: String): DockerImage = new {
+  image = imageName
+}

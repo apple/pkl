@@ -10,6 +10,13 @@ commands: Mapping<String, Command>?
 
 jobs: Mapping<String, Job>?
 
+/// Used for orchestrating all jobs.
+///
+/// Each workflow consists of the workflow name as a key and a map as a value.
+/// A name should be unique within the current config.yml.
+/// The top-level keys for the Workflows configuration are version and jobs.
+/// For more information, see the
+/// [Using Workflows to Orchestrate Jobs](https://circleci.com/docs/workflows/) page.
 workflows: Mapping<String, Workflow>?
 
 parameters: Mapping<String, Parameter>?
@@ -20,13 +27,53 @@ class Job {
   working_directory: String?
   parallelism: Int?
   environment: Mapping<String, String>?
-  resource_class: String?
+
+  /// The `resource_class` feature allows you to configure CPU and RAM resources for each job.
+  ///
+  /// Resource classes are available for each execution environment, as described in the tables below.
+  ///
+  /// We implement soft concurrency limits for each resource class to ensure our system remains
+  /// stable for all customers.
+  /// If you are on a Performance or custom plan and experience queuing for certain resource
+  /// classes, it is possible you are hitting these limits.
+  /// Contact [CircleCI support](https://support.circleci.com/hc/en-us/requests/new) to request a
+  /// raise on these limits for your account.
+  ///
+  /// If you do not specify a resource class, CircleCI will use a default value that is subject
+  /// to change.
+  /// It is best practice to specify a resource class as opposed to relying on a default.
+  resource_class: ResourceClass?
   docker: Listing<DockerImage>?
   macos: MacOSExecutor?
+  machine: Machine?
 }
+
+typealias ResourceClass =
+  "small"
+  |"medium"
+  |"medium+"
+  |"large"
+  |"xlarge"
+  |"2xlarge"
+  |"2xlarge+"
+  |"arm.medium"
+  |"arm.large"
+  |"arm.xlarge"
+  |"arm.2xlarge"
 
 class MacOSExecutor {
   xcode: String
+}
+
+class Machine {
+  /// The virtual machine image to use.
+  ///
+  /// View [available images](https://circleci.com/developer/images?imageType=machine).
+  ///
+  /// Note: This key is not supported for Linux VMs on installations of CircleCI server.
+  /// For information about customizing machine executor images on CircleCI installed on your
+  /// servers, see our VM Service documentation
+  image: String
 }
 
 class DockerImage {
@@ -43,14 +90,9 @@ class WorkflowJob {
   requires: Listing<String>?
 }
 
-abstract class Filter
-
-class BranchFilter extends Filter {
-  branches: FilterSpec
-}
-
-class TagFilter extends Filter {
-  tags: FilterSpec
+class Filter {
+  branches: FilterSpec?
+  tags: FilterSpec?
 }
 
 class FilterSpec {
