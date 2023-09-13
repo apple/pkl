@@ -1,4 +1,5 @@
 org.pkl.core.LanguageSnippetTestsEngine
 org.pkl.core.MacLanguageSnippetTestsEngine
-org.pkl.core.LinuxLanguageSnippetTestsEngine
+org.pkl.core.LinuxAmd64LanguageSnippetTestsEngine
+org.pkl.core.LinuxAarch64LanguageSnippetTestsEngine
 org.pkl.core.AlpineLanguageSnippetTestsEngine

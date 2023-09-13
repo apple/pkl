@@ -104,7 +104,28 @@ typealias Step = *StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"
 
 class StepConfig {
   run: (*RunConfig|String)?
-  store_test_results: Path?
+
+  /// Special step used to upload and store test results for a build.
+  ///
+  /// Test results are visible on the CircleCI web application under each build’s *Test Summary*
+  /// section.
+  /// Storing test results is useful for timing analysis of your test suites.
+  /// For more information on storing test results, see the
+  /// [Collecting Test Data](https://circleci.com/docs/collect-test-data/) page.
+  ///
+  /// It is also possible to store test results as a build artifact; to do so, please refer to the
+  /// [store_artifacts] step.
+  store_test_results: StoreTestResults?
+  
+  /// Step to store artifacts (for example logs, binaries, etc) to be available in the web app
+  /// or through the API.
+  ///
+  /// See the [Uploading Artifacts](https://circleci.com/docs/artifacts/) document for more information.
+  store_artifacts: StoreArtifacts?
+
+  /// Allows Docker commands to be run locally.
+  ///
+  /// See [Running Docker Commands](https://circleci.com/docs/building-docker-images/) for details.
   setup_remote_docker: SetupRemoteDocker?
 
   /// Special step used to persist a temporary file to be used by another job in the workflow.
@@ -140,7 +161,8 @@ class StepConfig {
 
   /// Restores a previously saved cache based on a key. 
   /// 
-  /// Cache needs to have been saved first for this key using the [`save_cache` step](https://circleci.com/docs/configuration-reference/#save_cache).
+  /// Cache needs to have been saved first for this key using the [save_cache] step.
+  ///
   /// Learn more in [the caching documentation](https://circleci.com/docs/caching/).
   restore_cache: RestoreCache?
 }
@@ -242,11 +264,18 @@ class Parameter {
 }
 
 class StoreTestResults {
-  store_test_results: Path
+  /// Path (absolute, or relative to your `working_directory`) to directory containing JUnit XML
+  /// test metadata files, or to a single test file.
+  path: String
 }
 
-class Path {
+class StoreArtifacts {
+  /// Directory in the primary container to save as job artifacts
   path: String
+
+  /// Prefix added to the artifact paths in the artifacts API (default: the directory of the file
+  /// specified in path)
+  destination: String?
 }
 
 typealias LogicStatement = Boolean|String|And|Or|Not|Equal|Matches

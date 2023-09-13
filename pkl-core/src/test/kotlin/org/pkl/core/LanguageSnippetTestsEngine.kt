@@ -198,8 +198,13 @@ class MacLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine()
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
-class LinuxLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+class LinuxAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-linux-amd64")
+  override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
+}
+
+class LinuxAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-linux-aarch64")
   override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
 }
 

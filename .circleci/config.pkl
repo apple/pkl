@@ -11,17 +11,6 @@ local JAVA_11 = "11.0.20.1+1"
 
 local JAVA_17 = "17.0.8.1+1"
 
-local gradleBuildNative: Step = new {
-  run {
-    name = "gradle buildNative"
-    command = """
-      export PATH=/staticdeps/bin:$PATH
-      export JAVA_HOME=~/jdk/
-      ./gradlew \(gradleArgs) buildNative
-      """
-  }
-}
-
 local persistToWorkspace: Step = new {
   persist_to_workspace {
     root = "."
@@ -201,9 +190,29 @@ jobs {
     resource_class = "arm.medium"
     steps {
       "checkout"
+      new {
+        restore_cache {
+          name = "Restore Gradle Dependencies Cache"
+          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+        }
+      }
       setUpLinuxEnvironment("arm64", JAVA_11)
       gradle("buildNative")
+      new {
+        save_cache {
+          name = "Save Gradle Dependencies Cache"
+          key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+          paths {
+            "~/.gradle/caches/modules-2/files-2.1/"
+          }
+        }
+      }
       persistToWorkspace
+      new {
+        store_test_results {
+          
+        }
+      }
     }
   }
 //   ["dev-jdk11"] {

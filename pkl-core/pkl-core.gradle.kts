@@ -160,7 +160,8 @@ tasks.test {
 
   useJUnitPlatform {
     excludeEngines("MacLanguageSnippetTestsEngine")
-    excludeEngines("LinuxLanguageSnippetTestsEngine")
+    excludeEngines("LinuxAmd64LanguageSnippetTestsEngine")
+    excludeEngines("LinuxAarch64LanguageSnippetTestsEngine")
     excludeEngines("AlpineLanguageSnippetTestsEngine")
   }
 }
@@ -222,13 +223,13 @@ val testLinuxExecutableAmd64 by tasks.registering(Test::class) {
   classpath = tasks.test.get().classpath
 
   useJUnitPlatform {
-    includeEngines("LinuxLanguageSnippetTestsEngine")
+    includeEngines("LinuxAmd64LanguageSnippetTestsEngine")
   }
 }
 
 val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
   enabled = buildInfo.os.isLinux && buildInfo.arch == "aarch64"
-  dependsOn(":pkl-cli:linuxExecutableAmd64")
+  dependsOn(":pkl-cli:linuxExecutableAarch64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
   inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
@@ -238,13 +239,14 @@ val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
   classpath = tasks.test.get().classpath
 
   useJUnitPlatform {
-    includeEngines("LinuxLanguageSnippetTestsEngine")
+    includeEngines("LinuxAarch64LanguageSnippetTestsEngine")
   }
 }
 
 tasks.checkNative {
   dependsOn(testLinuxExecutableAmd64)
   dependsOn(testLinuxExecutableAarch64)
+  dependsOn(testMacExecutable)
 }
 
 val testAlpineExecutable by tasks.registering(Test::class) {
