@@ -280,7 +280,7 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
-      export JAVA_HOME~/jdk
+      export JAVA_HOME=~/jdk
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(args)
       """
