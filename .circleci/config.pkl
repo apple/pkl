@@ -48,10 +48,10 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
           #!/usr/bin/env bash
           set -eo pipefail
 
-          RUN sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-          && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-          && microdnf clean all \
-          && rm -rf /var/cache/dnf
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
 
           # install jdk
           curl -L \
