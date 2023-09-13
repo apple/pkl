@@ -38,7 +38,7 @@ jobs:
         name: Set up environment
     - run:
         command: |-
-          export PATH=/staticdeps/bin:$PATH
+          export PATH=~/staticdeps/bin:$PATH
           export JAVA_HOME=~/jdk
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
@@ -78,7 +78,7 @@ jobs:
         name: Set up environment
     - run:
         command: |-
-          export PATH=/staticdeps/bin:$PATH
+          export PATH=~/staticdeps/bin:$PATH
           export JAVA_HOME=~/jdk
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative

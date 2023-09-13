@@ -6,8 +6,18 @@ module CircleCI
 // no need to use olders versions
 version: Number(this == 2.1) = 2.1
 
+/// A command defines a sequence of steps as a map to be executed in a job, enabling you to reuse
+/// a single command definition across multiple jobs.
+///
+/// For more information see the
+/// [Reusable Config Reference Guide](https://circleci.com/docs/reusing-config/).
 commands: Mapping<String, Command>?
 
+/// A Workflow is comprised of one or more uniquely named jobs.
+///
+/// Jobs are specified in the jobs map, see
+/// [Sample config.yml](https://circleci.com/docs/sample-config/) for two examples of a job map.
+/// The name of the job is the key in the map, and the value is a map describing the job.
 jobs: Mapping<String, Job>?
 
 /// Used for orchestrating all jobs.
@@ -19,10 +29,19 @@ jobs: Mapping<String, Job>?
 /// [Using Workflows to Orchestrate Jobs](https://circleci.com/docs/workflows/) page.
 workflows: Mapping<String, Workflow>?
 
+/// Pipeline parameters declared for use in the configuration.
+///
+/// See [Pipeline Values and Parameters](https://circleci.com/docs/pipeline-variables/#pipeline-parameters-in-configuration)
+/// for usage details.
 parameters: Mapping<String, Parameter>?
 
 class Job {
+  /// Shell to use for execution command in all steps.
+  ///
+  /// Can be overridden by shell in each step (default: See Default Shell Options)
   shell: String?
+
+  /// A list of [steps](https://circleci.com/docs/configuration-reference/#steps) to be performed
   steps: Listing<Step>(!isEmpty)
 
   /// In which directory to run the steps.
@@ -40,7 +59,10 @@ class Job {
   /// dollar sign $ and all. working_directory will be created automatically if it doesn’t exist.
   working_directory: String?
 
+  /// Number of parallel instances of this job to run (default: 1)
   parallelism: Int?
+
+  /// A map of environment variable names and values.
   environment: Mapping<String, String>?
 
   /// The `resource_class` feature allows you to configure CPU and RAM resources for each job.
@@ -58,8 +80,14 @@ class Job {
   /// to change.
   /// It is best practice to specify a resource class as opposed to relying on a default.
   resource_class: ResourceClass?
+
+  /// Options for [docker executor](https://circleci.com/docs/configuration-reference/#docker)
   docker: Listing<DockerImage>?
+
+  /// Options for [macOS executor](https://circleci.com/docs/configuration-reference/#macos)
   macos: MacOSExecutor?
+
+  /// Options for [machine executor](https://circleci.com/docs/configuration-reference/#machine)
   machine: Machine?
 }
 

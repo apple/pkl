@@ -74,7 +74,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
             && rm -rf /tmp/dep_musl-\#(muslVersion)
 
             # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
             """#
           }
         }.join("\n\n")
@@ -237,7 +237,7 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
-      export PATH=/staticdeps/bin:$PATH
+      export PATH=~/staticdeps/bin:$PATH
       export JAVA_HOME=~/jdk
       ./gradlew \(gradleArgs) \(args)
       """
