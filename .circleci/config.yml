@@ -178,7 +178,7 @@ workflows:
         filters:
           branches:
             only: main
-    - build-macos-amd64:
+    - build-linux-alpine-amd64:
         filters:
           branches:
             only: main
