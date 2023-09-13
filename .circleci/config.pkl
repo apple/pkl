@@ -120,10 +120,14 @@ local saveToGradleCache: StepConfig = new {
 local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: String): Job = new {
   docker {
     new {
-      image = if (arch == "amd64") "oraclelinux:8-slim" else "arm64v8/oraclelinux:8-slim"
+      image =
+        if (arch == "aarch64")
+          "arm64v8/oraclelinux:8-slim"
+        else
+          "oraclelinux:8-slim" 
     }
   }
-  resource_class = if (arch == "arm64") "arm.large" else "large"
+  resource_class = if (arch == "aarch64") "arm.large" else "large"
   steps {
     "checkout"
     restoreGradleCache

@@ -1,3 +1,4 @@
+# Generated from .circleci/config.pkl. DO NOT EDIT.
 version: 2.1
 jobs:
   build-linux-amd64:
@@ -81,9 +82,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
     - store_test_results:
-        path: build/test-results.xml
+        path: ~/test-results
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
@@ -152,10 +153,10 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
     - store_test_results:
-        path: build/test-results.xml
-    resource_class: large
+        path: ~/test-results
+    resource_class: arm.large
     docker:
     - image: arm64v8/oraclelinux:8-slim
   build-linux-alpine-amd64:
@@ -239,9 +240,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
     - store_test_results:
-        path: build/test-results.xml
+        path: ~/test-results
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
