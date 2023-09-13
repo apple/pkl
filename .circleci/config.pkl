@@ -208,11 +208,6 @@ jobs {
         }
       }
       persistToWorkspace
-      new {
-        store_test_results {
-          
-        }
-      }
     }
   }
 //   ["dev-jdk11"] {
