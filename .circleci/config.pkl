@@ -66,7 +66,7 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64"): StepConfig =
             #"""
             # install libstdc++ static
             sudo apt-get update
-            sudo apt-get install libstdc++10-dev
+            sudo apt-get install libstdc++-10-dev
             cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
 
             # install musl
@@ -126,6 +126,14 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
     gradle(gradleCommand)
     saveToGradleCache
     persistToWorkspace
+    new {
+      run = "cat */build/test-results/**.xml > build/test-results.xml"
+    }
+    new {
+      store_test_results {
+        path = "build/test-results.xml"
+      }
+    }
   }
 }
 
@@ -213,15 +221,15 @@ workflows {
 //           }
 //         }
 //       }
-      new {
-        ["build-linux-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       new {
+//         ["build-linux-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
       new {
         ["build-linux-alpine-amd64"] {
           filters {
@@ -231,15 +239,15 @@ workflows {
           }
         }
       }
-      new {
-        ["build-macos-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       new {
+//         ["build-macos-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
     }
   }
 }

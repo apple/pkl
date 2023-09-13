@@ -26,7 +26,7 @@ jobs:
 
           # install libstdc++ static
           sudo apt-get update
-          sudo apt-get install libstdc++10-dev
+          sudo apt-get install libstdc++-10-dev
           cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
 
           # install musl
@@ -60,6 +60,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - store_test_results:
+        path: build/test-results.xml
     resource_class: large
     docker:
     - image: cimg/openjdk:11.0
@@ -104,6 +107,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - store_test_results:
+        path: build/test-results.xml
     resource_class: large
     docker:
     - image: cimg/openjdk:11.0
@@ -148,6 +154,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - run: cat */build/test-results/**.xml > build/test-results.xml
+    - store_test_results:
+        path: build/test-results.xml
     resource_class: large
     docker:
     - image: cimg/openjdk:11.0
@@ -176,15 +185,7 @@ jobs:
 workflows:
   build-native-images:
     jobs:
-    - build-linux-amd64:
-        filters:
-          branches:
-            only: main
     - build-linux-alpine-amd64:
-        filters:
-          branches:
-            only: main
-    - build-macos-amd64:
         filters:
           branches:
             only: main
