@@ -8,6 +8,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
+        name: Restore static deps from cache
     - run:
         command: |-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
@@ -17,7 +18,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir ~/jdk \
             && cd ~/jdk \
@@ -61,12 +62,13 @@ jobs:
         paths:
         - ~/staticdeps
         key: staticdeps-amd64
+        name: Save statics deps to cache
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
     - run:
         command: |-
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64
         name: gradle pkl-cli:linuxExecutableAmd64
@@ -93,6 +95,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-aarch64
+        name: Restore static deps from cache
     - run:
         command: |-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
@@ -130,12 +133,13 @@ jobs:
         paths:
         - ~/staticdeps
         key: staticdeps-aarch64
+        name: Save statics deps to cache
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
     - run:
         command: |-
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64
         name: gradle pkl-cli:linuxExecutableAarch64
@@ -162,6 +166,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
+        name: Restore static deps from cache
     - run:
         command: |-
           sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
@@ -171,7 +176,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir ~/jdk \
             && cd ~/jdk \
@@ -215,12 +220,13 @@ jobs:
         paths:
         - ~/staticdeps
         key: staticdeps-amd64
+        name: Save statics deps to cache
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
     - run:
         command: |-
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64
         name: gradle pkl-cli:alpineExecutableAmd64
@@ -247,7 +253,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative

@@ -53,7 +53,7 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
           mkdir ~/jdk \
             && cd ~/jdk \
@@ -129,12 +129,14 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
     restoreGradleCache
     new {
       restore_cache {
+        name = "Restore static deps from cache"
         key = "staticdeps-\(arch)"
       }
     }
     setUpLinuxEnvironment(arch, JAVA_11)
     new {
       save_cache {
+        name = "Save statics deps to cache"
         key = "staticdeps-\(arch)"
         paths {
           "~/staticdeps"
@@ -281,7 +283,7 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
-      export JAVA_HOME=~/jdk/
+      export JAVA_HOME=~/jdk
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(args)
       """
