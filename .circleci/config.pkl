@@ -200,6 +200,9 @@ jobs {
     resource_class = "arm.medium"
     steps {
       "checkout"
+      new {
+        run = "echo $(whoami)"
+      }
       setUpLinuxEnvironment("arm64")
       gradleBuildNative
       persistToWorkspace

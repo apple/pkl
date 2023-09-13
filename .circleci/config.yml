@@ -3,6 +3,7 @@ jobs:
   build-ubuntu-arm64:
     steps:
     - checkout
+    - run: echo $(whoami)
     - run:
         command: |2-
             #!/usr/bin/env bash
