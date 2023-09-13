@@ -264,9 +264,6 @@ workflows {
 // runs out of memory on the free large tier
 
   ["build-native-images"] {
-    `when` {
-      
-    }
     jobs {
       new {
         ["build-ubuntu-arm64"] {

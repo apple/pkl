@@ -1,137 +1,76 @@
 version: 2.1
 jobs:
-  build-macos-amd64:
+  build-ubuntu-arm64:
     steps:
     - checkout
     - run:
-        name: gradle buildNative
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
-        environment: {}
-    macos:
-      xcode: 14.2.0
-  build-ubuntu-amd64:
-    steps:
-    - checkout
-    - run:
-        name: Set up environment
-        command: |-
-          #!/usr/bin/env bash
-          set -ex -o pipefail
+        command: |2-
+            #!/usr/bin/env bash
+            set -eox pipefail
 
-          export muslVersion=1.2.2
-          export zlibVersion=1.2.13
-          export jdk11Version=11.0.12%2B7
-          export jdk11VersionAlt=11.0.12_7
+            # install system deps
+            # sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            # && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            # && microdnf clean all
 
-          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            && microdnf clean all
+            # install jdk11
+            curl -L \
+              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz -o /tmp/openjdk11.tar.gz
 
-          curl -L https://github.com/adoptium/temurin11-binaries/releases/download/jdk-${jdk11Version}/OpenJDK11U-jdk_x64_linux_hotspot_${jdk11VersionAlt}.tar.gz -o /tmp/openjdk11.tar.gz
+            tar tf /tmp/openjdk11.tar.gz
+            mkdir /jdk11 \
 
-          tar tf /tmp/openjdk11.tar.gz
-
-          mkdir /jdk11 \
             && cd /jdk11 \
             && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
 
-          mkdir /staticdeps \
-            && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
-            && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
+            mkdir /staticdeps
+            # install libstdc
+            # mkdir /staticdeps \
+            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
+            # && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
 
-          curl -L https://musl.libc.org/releases/musl-$muslVersion.tar.gz -o /tmp/musl.tar.gz
+            # install musl
+            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
-          mkdir -p /dep_musl-$muslVersion \
-            && cd /dep_musl-$muslVersion \
+            mkdir -p /dep_musl-1.2.2 \
+            && cd /dep_musl-1.2.2 \
             && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-$muslVersion: configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
-            && echo "musl-$muslVersion: make..." && make -s -j4 \
-            && echo "musl-$muslVersion: make install..." && make -s install \
-            && rm -rf /dep_musl-$muslVersion
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /dep_musl-1.2.2
 
-          curl -L https://github.com/madler/zlib/releases/download/v$zlibVersion/zlib-$zlibVersion.tar.gz -o /tmp/zlib.tar.gz
+            # native-image expects to find an executable at this path.
+            ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/aarch64-linux-musl-gcc
 
-          mkdir -p /dep_zlib-$zlibVersion \
-            && cd /dep_zlib-$zlibVersion \
+            # install zlib
+            mkdir -p /dep_zlib-1.2.13 \
+            && cd /dep_zlib-1.2.13 \
             && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-$zlibVersion: configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
-            && echo "zlib-$zlibVersion: make..." && make -s -j4 \
-            && echo "zlib-$zlibVersion: make install..." && make -s install \
-            && rm -rf /dep_zlib-$zlibVersion
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /dep_zlib-1.2.13
 
-          rm -f /tmp/*.tar.gz
-
-          # native-image expects to find an executable at this path.
-          ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/x86_64-linux-musl-gcc
-
-          export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
-        environment: {}
-    - setup_remote_docker:
-        version: 20.10.14
-        docker_layer_cacheing: true
+            export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
+        name: Set up environment
     - run:
+        command: |-
+          export PATH=/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
-        environment: {}
-    environment:
-      LANG: en_US.UTF-8
-      JAVA_HOME: /jdk11
-    docker:
-    - image: oraclelinux:8-slim
-  dev-jdk11:
-    steps:
-    - checkout
-    - run:
-        name: gradle build
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' build
-        environment: {}
-    - store_test_results:
-        path: ./pkl-core/build/test-results/
-    docker:
-    - image: cimg/openjdk:11.0
-  dev-jdk17:
-    steps:
-    - checkout
-    - run:
-        name: gradle build
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' build
-        environment: {}
-    docker:
-    - image: cimg/openjdk:17.0
-  dev-bench:
-    steps:
-    - checkout
-    - run:
-        name: gradle jmh
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' jmh
-        environment: {}
-    docker:
-    - image: cimg/openjdk:11.0
-  dev-gradle-compatibility:
-    steps:
-    - checkout
-    - run:
-        name: gradle :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
-        command: |-
-          export PATH=/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
-        environment: {}
-    docker:
-    - image: cimg/openjdk:11.0
+        working_directory: workspace
+    - persist_to_workspace:
+        root: workspace
+        paths:
+        - pcl-cli/build/executable/
+    resource_class: arm.medium
+    machine:
+      image: ubuntu-2204
 workflows:
-  run-ubuntu-amd64-native:
+  build-native-images:
     jobs:
-    - build-ubuntu-amd64:
+    - build-ubuntu-arm64:
         filters:
           branches:
             only: main
