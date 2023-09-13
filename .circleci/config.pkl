@@ -123,7 +123,7 @@ local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String, g
 jobs {
   ["build-linux-amd64"] = buildLinuxNativeImage("x64", JAVA_11, "pkl-cli:linuxExecutableAmd64")
   ["build-linux-arm64"] = buildLinuxNativeImage("arm64", JAVA_11, "pkl-cli:linuxExecutableAarch64")
-  ["build-linux-alpine-arm64"] = buildLinuxNativeImage("arm64", JAVA_11, "pkl-cli:alpineExecutableAmd64")
+  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("x64", JAVA_11, "pkl-cli:alpineExecutableAmd64")
 //   ["dev-jdk11"] {
 //     docker {
 //       image("cimg/openjdk:11.0")

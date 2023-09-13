@@ -116,7 +116,7 @@ jobs:
     resource_class: arm.medium
     machine:
       image: ubuntu-2204:current
-  build-linux-alpine-arm64:
+  build-linux-alpine-amd64:
     steps:
     - checkout
     - restore_cache:
@@ -129,7 +129,7 @@ jobs:
 
           # install jdk
           curl -L \
-            https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+            https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
           tar tf /tmp/jdk.tar.gz
           mkdir ~/jdk \
@@ -148,6 +148,20 @@ jobs:
           && echo "zlib-1.2.13: make..." && make -s -j4 \
           && echo "zlib-1.2.13: make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-1.2.13
+
+          # install musl
+          curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+          mkdir -p /tmp/dep_musl-1.2.2 \
+          && cd /tmp/dep_musl-1.2.2 \
+          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "musl-1.2.2: make..." && make -s -j4 \
+          && echo "musl-1.2.2: make install..." && make -s install \
+          && rm -rf /tmp/dep_musl-1.2.2
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
         name: Set up environment
     - run:
         command: |-
@@ -164,7 +178,7 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    resource_class: arm.medium
+    resource_class: medium
     machine:
       image: ubuntu-2204:current
 workflows:
