@@ -26,7 +26,7 @@ local persistToWorkspace: Step = new {
   persist_to_workspace {
     root = "."
     paths {
-      "pcl-cli/build/executable/"
+      "pkl-cli/build/executable/"
     }
   }
 }

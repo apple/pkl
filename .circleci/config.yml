@@ -39,7 +39,7 @@ jobs:
     - persist_to_workspace:
         root: '.'
         paths:
-        - pcl-cli/build/executable/
+        - pkl-cli/build/executable/
     resource_class: arm.medium
     machine:
       image: ubuntu-2204:current
