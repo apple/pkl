@@ -24,7 +24,22 @@ parameters: Mapping<String, Parameter>?
 class Job {
   shell: String?
   steps: Listing<Step>(!isEmpty)
+
+  /// In which directory to run the steps.
+  ///
+  /// Will be interpreted as an absolute path.
+  ///
+  /// Default: `~/project` (where project is a literal string, not the name of your specific project).
+  ///
+  /// Processes run during the job can use the `$CIRCLE_WORKING_DIRECTORY` environment variable to
+  /// refer to this directory.
+  ///
+  /// Note: Paths written in your YAML configuration file will not be expanded; if your
+  /// store_test_results.path is $CIRCLE_WORKING_DIRECTORY/tests, then CircleCI will attempt to
+  /// store the test subdirectory of the directory literally named $CIRCLE_WORKING_DIRECTORY,
+  /// dollar sign $ and all. working_directory will be created automatically if it doesn’t exist.
   working_directory: String?
+
   parallelism: Int?
   environment: Mapping<String, String>?
 

@@ -13,7 +13,7 @@ jobs:
 
             # install jdk
             curl -L \
-              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
             tar tf /tmp/jdk.tar.gz
             mkdir ~/jdk \
@@ -39,7 +39,7 @@ jobs:
     - run:
         command: |-
           export PATH=/staticdeps/bin:$PATH
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
     - save_cache:
@@ -79,7 +79,7 @@ jobs:
     - run:
         command: |-
           export PATH=/staticdeps/bin:$PATH
-          export JAVA_HOME=~/jdk/
+          export JAVA_HOME=~/jdk
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
     - save_cache:

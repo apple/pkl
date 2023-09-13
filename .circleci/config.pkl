@@ -50,7 +50,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
 
             # install jdk
             curl -L \
-              https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x86") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+              https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
             tar tf /tmp/jdk.tar.gz
             mkdir ~/jdk \
@@ -238,7 +238,7 @@ local function gradle(args: String): StepConfig = new {
     name = "gradle \(args)"
     command = """
       export PATH=/staticdeps/bin:$PATH
-      export JAVA_HOME=~/jdk/
+      export JAVA_HOME=~/jdk
       ./gradlew \(gradleArgs) \(args)
       """
   }
