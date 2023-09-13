@@ -18,41 +18,40 @@ jobs:
               https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz -o /tmp/openjdk11.tar.gz
 
             tar tf /tmp/openjdk11.tar.gz
-            mkdir /jdk11 \
-
-            && cd /jdk11 \
+            mkdir /opt/jdk11 \
+            && cd /opt/jdk11 \
             && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
 
-            mkdir /staticdeps
+            mkdir -p /opt/staticdeps/bin
+
             # install libstdc
-            # mkdir /staticdeps \
-            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /staticdeps \
-            # && echo "export PATH=/staticdeps/bin:\$PATH" >> $HOME/.profile
+            # mkdir /opt/staticdeps \
+            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a /opt/staticdeps \
 
             # install musl
             curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
-            mkdir -p /dep_musl-1.2.2 \
-            && cd /dep_musl-1.2.2 \
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
             && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix=/staticdeps > /dev/null \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix=/opt/staticdeps > /dev/null \
             && echo "musl-1.2.2: make..." && make -s -j4 \
             && echo "musl-1.2.2: make install..." && make -s install \
-            && rm -rf /dep_musl-1.2.2
+            && rm -rf /tmp/dep_musl-1.2.2
 
             # native-image expects to find an executable at this path.
-            ln -s /staticdeps/bin/musl-gcc /staticdeps/bin/aarch64-linux-musl-gcc
+            ln -s /opt/staticdeps/bin/musl-gcc /opt/staticdeps/bin/aarch64-linux-musl-gcc
 
             # install zlib
-            mkdir -p /dep_zlib-1.2.13 \
-            && cd /dep_zlib-1.2.13 \
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
             && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix=/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix=/opt/staticdeps > /dev/null \
             && echo "zlib-1.2.13: make..." && make -s -j4 \
             && echo "zlib-1.2.13: make install..." && make -s install \
-            && rm -rf /dep_zlib-1.2.13
+            && rm -rf /tmp/dep_zlib-1.2.13
 
-            export PATH=/staticdeps/bin:$PATH >> "$BASH_ENV"
+            export PATH=/opt/staticdeps/bin:$PATH >> "$BASH_ENV"
         name: Set up environment
     - run:
         command: |-
