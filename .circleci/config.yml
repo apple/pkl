@@ -184,10 +184,6 @@ jobs:
 workflows:
   build-native-images:
     jobs:
-    - build-linux-arm64:
-        filters:
-          branches:
-            only: main
     - build-linux-amd64:
         filters:
           branches:

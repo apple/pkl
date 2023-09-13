@@ -183,15 +183,15 @@ workflows {
 
   ["build-native-images"] {
     jobs {
-      new {
-        ["build-linux-arm64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       new {
+//         ["build-linux-arm64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
       new {
         ["build-linux-amd64"] {
           filters {
