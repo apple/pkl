@@ -34,12 +34,12 @@ local gradleJvmArgs =
   + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
   + "'"
 
-local function setUpLinuxEnvironment(arch: "amd64"|"aarch64"): StepConfig =
+local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String): StepConfig =
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
-//   let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
-//   let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
-//   let (majorJdkVersion = jdkVersion.split(".").first)
+  let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
+  let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
+  let (majorJdkVersion = jdkVersion.split(".").first)
     new {
       run {
         name = "Set up environment"
@@ -48,7 +48,22 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64"): StepConfig =
           #!/usr/bin/env bash
           set -eo pipefail
 
+          RUN sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+          && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+          && microdnf clean all \
+          && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
           mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
@@ -61,27 +76,24 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64"): StepConfig =
           && echo "zlib-\#(zlibVersion): make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-\#(zlibVersion)
           """#
-          // don't need musl/libstdc++-static on aarch because GraalVM only supports musl builds on x86
+          // don't need musl on aarch because GraalVM only supports musl builds on x86
           when (arch == "amd64") {
             #"""
-            # install libstdc++ static
-            sudo apt-get update
-            sudo apt-get install libstdc++-10-dev
-            cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
-
             # install musl
-            curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+            if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+              curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
 
-            mkdir -p /tmp/dep_musl-\#(muslVersion) \
-            && cd /tmp/dep_musl-\#(muslVersion) \
-            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "musl-\#(muslVersion): make..." && make -s -j4 \
-            && echo "musl-\#(muslVersion): make install..." && make -s install \
-            && rm -rf /tmp/dep_musl-\#(muslVersion)
+              mkdir -p /tmp/dep_musl-\#(muslVersion) \
+              && cd /tmp/dep_musl-\#(muslVersion) \
+              && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+              && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+              && echo "musl-\#(muslVersion): make..." && make -s -j4 \
+              && echo "musl-\#(muslVersion): make install..." && make -s install \
+              && rm -rf /tmp/dep_musl-\#(muslVersion)
 
-            # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+              # native-image expects to find an executable at this path.
+              ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+            fi
             """#
           }
         }.join("\n\n")
@@ -108,14 +120,27 @@ local saveToGradleCache: StepConfig = new {
 local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: String): Job = new {
   docker {
     new {
-      image = "cimg/openjdk:11.0"
+      image = if (arch == "amd64") "oraclelinux:8-slim" else "arm64v8/oraclelinux:8-slim"
     }
   }
   resource_class = if (arch == "arm64") "arm.large" else "large"
   steps {
     "checkout"
     restoreGradleCache
-    setUpLinuxEnvironment(arch)
+    new {
+      restore_cache {
+        key = "staticdeps-\(arch)"
+      }
+    }
+    setUpLinuxEnvironment(arch, JAVA_11)
+    new {
+      save_cache {
+        key = "staticdeps-\(arch)"
+        paths {
+          "~/staticdeps"
+        }
+      }
+    }
     // hack to get more RAM in docker
     new {
       setup_remote_docker {

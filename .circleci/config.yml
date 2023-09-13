@@ -6,12 +6,29 @@ jobs:
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-amd64
     - run:
         command: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
+          RUN sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+          && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+          && microdnf clean all \
+          && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
           mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
@@ -24,25 +41,26 @@ jobs:
           && echo "zlib-1.2.13: make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-1.2.13
 
-          # install libstdc++ static
-          sudo apt-get update
-          sudo apt-get install libstdc++-10-dev
-          cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
-
           # install musl
-          curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
-          mkdir -p /tmp/dep_musl-1.2.2 \
-          && cd /tmp/dep_musl-1.2.2 \
-          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "musl-1.2.2: make..." && make -s -j4 \
-          && echo "musl-1.2.2: make install..." && make -s install \
-          && rm -rf /tmp/dep_musl-1.2.2
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
 
-          # native-image expects to find an executable at this path.
-          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
         name: Set up environment
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
@@ -65,19 +83,36 @@ jobs:
         path: build/test-results.xml
     resource_class: large
     docker:
-    - image: cimg/openjdk:11.0
+    - image: oraclelinux:8-slim
   build-linux-arm64:
     steps:
     - checkout
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-aarch64
     - run:
         command: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
+          RUN sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+          && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+          && microdnf clean all \
+          && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
           mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
@@ -90,6 +125,10 @@ jobs:
           && echo "zlib-1.2.13: make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-1.2.13
         name: Set up environment
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-aarch64
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
@@ -112,19 +151,36 @@ jobs:
         path: build/test-results.xml
     resource_class: large
     docker:
-    - image: cimg/openjdk:11.0
+    - image: arm64v8/oraclelinux:8-slim
   build-linux-alpine-amd64:
     steps:
     - checkout
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-amd64
     - run:
         command: |-
           #!/usr/bin/env bash
           set -eo pipefail
 
+          RUN sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+          && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+          && microdnf clean all \
+          && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
           mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
@@ -137,25 +193,26 @@ jobs:
           && echo "zlib-1.2.13: make install..." && make -s install \
           && rm -rf /tmp/dep_zlib-1.2.13
 
-          # install libstdc++ static
-          sudo apt-get update
-          sudo apt-get install libstdc++-10-dev
-          cp /usr/lib/gcc/x86_64-linux-gnu/10/libstdc++.a ~/staticdeps
-
           # install musl
-          curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
-          mkdir -p /tmp/dep_musl-1.2.2 \
-          && cd /tmp/dep_musl-1.2.2 \
-          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-          && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
-          && echo "musl-1.2.2: make..." && make -s -j4 \
-          && echo "musl-1.2.2: make install..." && make -s install \
-          && rm -rf /tmp/dep_musl-1.2.2
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
 
-          # native-image expects to find an executable at this path.
-          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
         name: Set up environment
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
     - setup_remote_docker:
         version: 20.10.14
         docker_layer_cacheing: true
@@ -178,7 +235,7 @@ jobs:
         path: build/test-results.xml
     resource_class: large
     docker:
-    - image: cimg/openjdk:11.0
+    - image: oraclelinux:8-slim
   build-macos-amd64:
     steps:
     - checkout
