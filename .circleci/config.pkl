@@ -3,7 +3,13 @@
 // or it won't do anything.
 amends "CircleCI.pkl"
 
+import "package://artifacts.apple.com/pkl/pkl/temp.pkl.experimental@1.0.0#/URI.pkl"
+
 version = 2.1
+
+local JAVA_11 = "11.0.20.1+1"
+
+local JAVA_17 = "17.0.8.1+1"
 
 local gradleBuildNative: Step = new {
   run {
@@ -38,11 +44,12 @@ local gradleJvmArgs =
   + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
   + "'"
 
-local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
+local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): StepConfig =
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
-  let (jdk11Version = "11.0.12%2B7")
-  let (jdk11VersionAlt = "11.0.12_7")
+  let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
+  let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
+  let (majorJdkVersion = jdkVersion.split(".").first)
     new {
       run {
         name = "Set up environment"
@@ -51,28 +58,16 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
             #!/usr/bin/env bash
             set -eo pipefail
 
-            # install system deps
-            # sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            # && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            # && microdnf clean all
-
-            # install jdk11
+            # install jdk
             curl -L \
-              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-\#(jdk11Version)/OpenJDK11U-jdk_x64_linux_hotspot_\#(jdk11VersionAlt).tar.gz -o /tmp/openjdk11.tar.gz
+              https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "x86") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
-            tar tf /tmp/openjdk11.tar.gz
-            mkdir ~/jdk11 \
-            && cd ~/jdk11 \
-            && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
+            tar tf /tmp/jdk.tar.gz
+            mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
             mkdir -p ~/staticdeps/bin
-
-            # install libstdc
-            # mkdir ~/staticdeps \
-            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps \
-
-            # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
 
             # install zlib
             mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
@@ -98,6 +93,9 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64"): StepConfig =
             && echo "musl-\#(muslVersion): make..." && make -s -j4 \
             && echo "musl-\#(muslVersion): make install..." && make -s install \
             && rm -rf /tmp/dep_musl-\#(muslVersion)
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/\#(if (arch == "x64") "x86_64" else "aarch64")-linux-musl-gcc
             """#
           }
         }.join("\n\n")
@@ -199,10 +197,13 @@ jobs {
     machine {
       image = "ubuntu-2204:current"
     }
+    environment {
+      ["JAVA_HOME"] = "~/jdk"
+    }
     resource_class = "arm.medium"
     steps {
       "checkout"
-      setUpLinuxEnvironment("arm64")
+      setUpLinuxEnvironment("arm64", JAVA_11)
       gradleBuildNative
       persistToWorkspace
     }

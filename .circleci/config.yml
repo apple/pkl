@@ -8,28 +8,16 @@ jobs:
             #!/usr/bin/env bash
             set -eo pipefail
 
-            # install system deps
-            # sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            # && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            # && microdnf clean all
-
-            # install jdk11
+            # install jdk
             curl -L \
-              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz -o /tmp/openjdk11.tar.gz
+              https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
-            tar tf /tmp/openjdk11.tar.gz
-            mkdir ~/jdk11 \
-            && cd ~/jdk11 \
-            && cat /tmp/openjdk11.tar.gz | tar --strip-components=1 -xzC .
+            tar tf /tmp/jdk.tar.gz
+            mkdir ~/jdk \
+            && cd ~/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
             mkdir -p ~/staticdeps/bin
-
-            # install libstdc
-            # mkdir ~/staticdeps \
-            # && cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps \
-
-            # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/aarch64-linux-musl-gcc
 
             # install zlib
             mkdir -p /tmp/dep_zlib-1.2.13 \
@@ -51,6 +39,8 @@ jobs:
         root: '.'
         paths:
         - pcl-cli/build/executable/
+    environment:
+      JAVA_HOME: ~/jdk
     resource_class: arm.medium
     machine:
       image: ubuntu-2204:current
