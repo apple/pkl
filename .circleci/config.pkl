@@ -84,7 +84,7 @@ local function setUpLinuxEnvironment(arch: "x64"|"arm64", jdkVersion: String): S
 jobs {
   ["build-ubuntu-amd64"] {
     machine {
-      image = "ubuntu-2204"
+      image = "ubuntu-2204:current"
     }
     resource_class = "medium"
     steps {

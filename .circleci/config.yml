@@ -53,7 +53,7 @@ jobs:
         - pkl-cli/build/executable/
     resource_class: medium
     machine:
-      image: ubuntu-2204
+      image: ubuntu-2204:current
   build-ubuntu-arm64:
     steps:
     - checkout
