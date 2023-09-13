@@ -111,7 +111,7 @@ local function buildLinuxNativeImage(arch: "x64"|"arm64", javaVersion: String): 
 
 jobs {
   ["build-ubuntu-amd64"] = buildLinuxNativeImage("x64", JAVA_11)
-//   ["build-ubuntu-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
+  ["build-ubuntu-arm64"] = buildLinuxNativeImage("arm64", JAVA_11)
   
 //   ["dev-jdk11"] {
 //     docker {
@@ -172,15 +172,15 @@ workflows {
 
   ["build-native-images"] {
     jobs {
-      new {
-        ["build-ubuntu-arm64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       new {
+//         ["build-ubuntu-arm64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
       new {
         ["build-ubuntu-amd64"] {
           filters {
