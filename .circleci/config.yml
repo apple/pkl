@@ -64,9 +64,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.14
-        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8
@@ -139,9 +136,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-aarch64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.14
-        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8
@@ -230,9 +224,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.14
-        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8

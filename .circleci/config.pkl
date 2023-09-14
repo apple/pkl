@@ -148,12 +148,12 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
       }
     }
     // hack to get more RAM in docker
-    new {
-      setup_remote_docker {
-        version = "20.10.14"
-        docker_layer_cacheing = true
-      }
-    }
+//     new {
+//       setup_remote_docker {
+//         version = "20.10.14"
+//         docker_layer_cacheing = true
+//       }
+//     }
     gradle(gradleCommand)
     saveToGradleCache
     persistToWorkspace
