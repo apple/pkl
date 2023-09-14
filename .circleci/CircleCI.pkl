@@ -30,7 +30,10 @@ jobs: Mapping<String, Job>?
 workflows: Mapping<String, Workflow(isValidWorkflow)>?
 
 local isValidWorkflow = (workflow: Workflow) ->
-  workflow.jobs.toList().every((jobs) -> jobs.keys.every((it) -> jobs.containsKey(it)))
+  workflow.jobs.toList().every((job) ->
+    let (jobName = if (job is String) job else job.keys.first)
+      jobs.containsKey(jobName)
+  )
 
 /// Pipeline parameters declared for use in the configuration.
 ///
