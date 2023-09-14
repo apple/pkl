@@ -308,6 +308,8 @@ jobs:
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:11.0
   gradle-check-jdk17:
@@ -329,9 +331,11 @@ jobs:
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:17.0
-  benchmark:
+  bench:
     steps:
     - checkout
     - restore_cache:
@@ -378,6 +382,18 @@ workflows:
     jobs:
     - gradle-check-jdk11
     - gradle-check-jdk17
+  bench:
+    jobs:
+    - bench:
+        filters:
+          branches:
+            only: main
+  gradle-compatibility:
+    jobs:
+    - gradle-compatibility:
+        filters:
+          branches:
+            only: main
   build-native-images:
     jobs:
     - build-linux-amd64

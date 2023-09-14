@@ -7,9 +7,86 @@ import "package://artifacts.apple.com/pkl/pkl/temp.pkl.experimental@1.0.0#/URI.p
 
 version = 2.1
 
-local JAVA_11 = "11.0.20.1+1"
+jobs {
+  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64")
+  ["build-linux-aarch64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64")
+  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64")
+  ["build-macos-amd64"] {
+    macos {
+      xcode = "14.0.0"
+    }
+    steps {
+      "checkout"
+      gradle("buildNative")
+      persistToWorkspace
+      ...storeTestResults
+    }
+  }
+  ["gradle-check-jdk11"] = (gradleCheck) {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+  }
+  ["gradle-check-jdk17"] = (gradleCheck) {
+    docker {
+      new {
+        image = "cimg/openjdk:17.0"
+      }
+    }
+  }
+  ["bench"] {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle("jmh")
+      ...storeTestResults
+    }
+  }
+  ["gradle-compatibility"] {
+    docker {
+      new {
+        image = "cimg/openjdk:17.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
+      ...storeTestResults
+    }
+  }
+}
 
-local JAVA_17 = "17.0.8.1+1"
+workflows {
+  ["gradle-check"] {
+    jobs {
+      "gradle-check-jdk11"
+      "gradle-check-jdk17"
+    }
+  }
+  ["bench"] {
+    jobs { runOnMainOnly("bench") }
+  }
+  ["gradle-compatibility"] {
+    jobs { runOnMainOnly("gradle-compatibility") }
+  }
+  ["build-native-images"] {
+    jobs {
+      // always run linux/amd64 for every commit; including PRBs
+      "build-linux-amd64"
+      runOnMainOnly("build-linux-aarch64")
+      runOnMainOnly("build-linux-alpine-amd64")
+      runOnMainOnly("build-macos-amd64")
+    }
+  }
+}
+
+local JAVA_11 = "11.0.20.1+1"
 
 local persistToWorkspace: Step = new {
   persist_to_workspace {
@@ -178,97 +255,14 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
   }
 }
 
-jobs {
-  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64")
-  ["build-linux-aarch64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64")
-  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64")
-  ["build-macos-amd64"] {
-    macos {
-      xcode = "14.0.0"
-    }
-    steps {
-      "checkout"
-      gradle("buildNative")
-      persistToWorkspace
-      ...storeTestResults
-    }
+local gradleCheck: Job = new {
+  environment {
+    ["LANG"] = "en_US.UTF-8"
   }
-  ["gradle-check-jdk11"] {
-    docker {
-      new {
-        image = "cimg/openjdk:11.0"
-      }
-    }
-    steps {
-      ...setupSteps
-      gradle("check")
-      ...storeTestResults
-    }
-  }
-  ["gradle-check-jdk17"] {
-    docker {
-      new {
-        image = "cimg/openjdk:17.0"
-      }
-    }
-    steps {
-      ...setupSteps
-      gradle("check")
-      ...storeTestResults
-    }
-  }
-  ["benchmark"] {
-    docker {
-      new {
-        image = "cimg/openjdk:11.0"
-      }
-    }
-    steps {
-      ...setupSteps
-      gradle("jmh")
-      ...storeTestResults
-    }
-  }
-  ["gradle-compatibility"] {
-    docker {
-      new {
-        image = "cimg/openjdk:17.0"
-      }
-    }
-    steps {
-      ...setupSteps
-      gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
-      ...storeTestResults
-    }
-  }
-}
-
-workflows {
-//   ["prb"] {
-//     jobs {
-//       "dev-jdk11"
-//       "dev-jdk17"
-//       "dev-bench"
-//       // we should use linux instead of mac as it's much cheaper
-//       "build-macos-amd64"
-//       // disabling gradle-compatibility for now because there's some failling tests (also failing on rio)
-//       // "dev-gradle-compatibility"
-//     }
-//   }
-  ["gradle-check"] {
-    jobs {
-      "gradle-check-jdk11"
-      "gradle-check-jdk17"
-    }
-  }
-  ["build-native-images"] {
-    jobs {
-      // always run linux/amd64 for every commit; including PRBs
-      "build-linux-amd64"
-      runOnMainOnly("build-linux-aarch64")
-      runOnMainOnly("build-linux-alpine-amd64")
-      runOnMainOnly("build-macos-amd64")
-    }
+  steps {
+    ...setupSteps
+    gradle("check")
+    ...storeTestResults
   }
 }
 
