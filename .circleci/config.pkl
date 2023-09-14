@@ -127,7 +127,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
           "oraclelinux:8-slim" 
     }
   }
-  resource_class = if (arch == "aarch64") "arm.medium" else "large"
+  resource_class = if (arch == "aarch64") "arm.large" else "large"
   steps {
     "checkout"
     restoreGradleCache
@@ -159,9 +159,13 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
     persistToWorkspace
     new {
       // find all test results and write them to the home dir
-      run = """
-        find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ 
-        """
+      run {
+        name = "Gather test results"
+        command = """
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ 
+          """
+        `when` = "always"
+      }
     }
     new {
       store_test_results {
@@ -173,7 +177,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
 
 jobs {
   ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64")
-  ["build-linux-arm64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64")
+  ["build-linux-aarch64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64")
   ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64")
   ["build-macos-amd64"] {
     macos {
@@ -247,7 +251,7 @@ workflows {
   ["build-native-images"] {
     jobs {
       new {
-        ["build-linux-arm64"] {
+        ["build-linux-aarch64"] {
           filters {
             branches {
               only = "main"
@@ -255,24 +259,24 @@ workflows {
           }
         }
       }
-      new {
-        ["build-linux-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
-      new {
-        ["build-linux-alpine-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       new {
+//         ["build-linux-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
+//       new {
+//         ["build-linux-alpine-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
 //       new {
 //         ["build-macos-amd64"] {
 //           filters {
@@ -290,6 +294,7 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
+      export LANG=en_US.UTF-8
       export JAVA_HOME=~/jdk
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(args)

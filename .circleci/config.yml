@@ -69,6 +69,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export LANG=en_US.UTF-8
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
@@ -82,13 +83,16 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
+    - run:
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        name: Gather test results
+        when: always
     - store_test_results:
         path: ~/test-results
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
-  build-linux-arm64:
+  build-linux-aarch64:
     steps:
     - checkout
     - restore_cache:
@@ -140,6 +144,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export LANG=en_US.UTF-8
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
@@ -153,10 +158,13 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
+    - run:
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        name: Gather test results
+        when: always
     - store_test_results:
         path: ~/test-results
-    resource_class: arm.medium
+    resource_class: arm.large
     docker:
     - image: arm64v8/oraclelinux:8-slim
   build-linux-alpine-amd64:
@@ -227,6 +235,7 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
+          export LANG=en_US.UTF-8
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
@@ -240,7 +249,10 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ '
+    - run:
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        name: Gather test results
+        when: always
     - store_test_results:
         path: ~/test-results
     resource_class: large
@@ -254,6 +266,7 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
+          export LANG=en_US.UTF-8
           export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
@@ -272,15 +285,7 @@ jobs:
 workflows:
   build-native-images:
     jobs:
-    - build-linux-arm64:
-        filters:
-          branches:
-            only: main
-    - build-linux-amd64:
-        filters:
-          branches:
-            only: main
-    - build-linux-alpine-amd64:
+    - build-linux-aarch64:
         filters:
           branches:
             only: main

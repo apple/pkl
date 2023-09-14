@@ -291,7 +291,7 @@ class RunConfig {
 
   /// Title of the step to be shown in the CircleCI UI (default: full `command`)
   name: String?
-  
+
   /// Shell to use for execution command (default: See [Default Shell Options](https://circleci.com/docs/configuration-reference/#default-shell-options))
   shell: String?
 
@@ -319,13 +319,13 @@ class RunConfig {
 class SaveCache {
   /// List of directories which should be added to the cache
   paths: Listing<String>
-  
+
   /// Unique identifier for this cache
   key: String
-  
+
   /// Title of the step to be shown in the CircleCI UI (default: “Saving Cache”)
   name: String?
-  
+
   /// [Specify when to enable or disable the step](https://circleci.com/docs/configuration-reference/#the-when-attribute).
   ///
   /// Takes the following values: always, on_success, on_fail (default: on_success)
@@ -335,7 +335,7 @@ class SaveCache {
 class RestoreCache {
   /// Single cache key to restore
   key: String?(this != null || keys != null)
-  
+
   /// List of cache keys to lookup for a cache to restore.
   ///
   /// Only first existing key will be restored.
@@ -366,19 +366,30 @@ class AttachWorkspace {
   at: String
 }
 
-class Run {
-  run: String
-}
-
 class Command {
-  parameters: Mapping<String, Parameter>
+  /// A sequence of steps run inside the calling job of the command.
   steps: Listing<Step>(!isEmpty)
+
+  /// A map of parameter keys.
+  ///
+  /// See the [Parameter Syntax](https://circleci.com/docs/reusing-config/#parameter-syntax)
+  /// section of the [Reusing Config](https://circleci.com/docs/reusing-config/) document for details.
+  parameters: Mapping<String, Parameter>?
+
+  /// A string that describes the purpose of the command.
+  description: String?
 }
 
 class Parameter {
+  /// Optional. Used to generate documentation for your orb.
   description: String?
-  default: String|Number|Boolean
-  type: "string"|"integer"|"boolean"
+
+  /// The default value for the parameter. If not present, the parameter is implied to be required.
+  default: (String|Number|Boolean)?
+
+  /// Required. See [Parameter Types](https://circleci.com/docs/reusing-config/#parameter-types)
+  /// for details.
+  type: "string"|"boolean"|"integer"|"enum"|"executor"|"steps"|"env_var_name"
 }
 
 class StoreTestResults {
