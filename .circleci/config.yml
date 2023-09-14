@@ -21,8 +21,8 @@ jobs:
           curl -L \
            https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
-          mkdir ~/jdk \
-            && cd ~/jdk \
+          mkdir /jdk \
+            && cd /jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
           mkdir -p ~/staticdeps/bin
@@ -90,7 +90,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: $HOME/jdk
+      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
     resource_class: large
     docker:
@@ -115,8 +115,8 @@ jobs:
           curl -L \
            https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
-          mkdir ~/jdk \
-            && cd ~/jdk \
+          mkdir /jdk \
+            && cd /jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
           mkdir -p ~/staticdeps/bin
@@ -168,7 +168,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: $HOME/jdk
+      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
     resource_class: arm.large
     docker:
@@ -193,8 +193,8 @@ jobs:
           curl -L \
            https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
 
-          mkdir ~/jdk \
-            && cd ~/jdk \
+          mkdir /jdk \
+            && cd /jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
           mkdir -p ~/staticdeps/bin
@@ -262,7 +262,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: $HOME/jdk
+      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
     resource_class: large
     docker:
@@ -289,7 +289,7 @@ jobs:
         path: ~/test-results
     macos:
       xcode: 14.0.0
-  check-jdk11:
+  gradle-check-jdk11:
     steps:
     - checkout
     - restore_cache:
@@ -310,7 +310,7 @@ jobs:
         path: ~/test-results
     docker:
     - image: cimg/openjdk:11.0
-  check-jdk17:
+  gradle-check-jdk17:
     steps:
     - checkout
     - restore_cache:
@@ -331,7 +331,7 @@ jobs:
         path: ~/test-results
     docker:
     - image: cimg/openjdk:17.0
-  bench:
+  benchmark:
     steps:
     - checkout
     - restore_cache:
@@ -352,7 +352,7 @@ jobs:
         path: ~/test-results
     docker:
     - image: cimg/openjdk:11.0
-  dev-gradle-compatibility:
+  gradle-compatibility:
     steps:
     - checkout
     - restore_cache:
@@ -374,6 +374,10 @@ jobs:
     docker:
     - image: cimg/openjdk:17.0
 workflows:
+  gradle-check:
+    jobs:
+    - gradle-check-jdk11
+    - gradle-check-jdk17
   build-native-images:
     jobs:
     - build-linux-amd64

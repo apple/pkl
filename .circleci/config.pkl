@@ -41,8 +41,8 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
           curl -L \
            https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
-          mkdir ~/jdk \
-            && cd ~/jdk \
+          mkdir /jdk \
+            && cd /jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
 
           mkdir -p ~/staticdeps/bin
@@ -144,7 +144,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
     }
   }
   environment {
-    ["JAVA_HOME"] = "$HOME/jdk"
+    ["JAVA_HOME"] = "/jdk"
     ["LANG"] = "en_US.UTF-8"
   }
   resource_class = if (arch == "aarch64") "arm.large" else "large"
@@ -193,7 +193,7 @@ jobs {
       ...storeTestResults
     }
   }
-  ["check-jdk11"] {
+  ["gradle-check-jdk11"] {
     docker {
       new {
         image = "cimg/openjdk:11.0"
@@ -205,7 +205,7 @@ jobs {
       ...storeTestResults
     }
   }
-  ["check-jdk17"] {
+  ["gradle-check-jdk17"] {
     docker {
       new {
         image = "cimg/openjdk:17.0"
@@ -217,7 +217,7 @@ jobs {
       ...storeTestResults
     }
   }
-  ["bench"] {
+  ["benchmark"] {
     docker {
       new {
         image = "cimg/openjdk:11.0"
@@ -229,7 +229,7 @@ jobs {
       ...storeTestResults
     }
   }
-  ["dev-gradle-compatibility"] {
+  ["gradle-compatibility"] {
     docker {
       new {
         image = "cimg/openjdk:17.0"
@@ -255,7 +255,12 @@ workflows {
 //       // "dev-gradle-compatibility"
 //     }
 //   }
-  // runs out of memory on the free large tier
+  ["gradle-check"] {
+    jobs {
+      "gradle-check-jdk11"
+      "gradle-check-jdk17"
+    }
+  }
   ["build-native-images"] {
     jobs {
       // always run linux/amd64 for every commit; including PRBs
