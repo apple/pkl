@@ -64,6 +64,9 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
+    - setup_remote_docker:
+        version: 20.10.24
+        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8
@@ -115,7 +118,7 @@ jobs:
 
           mkdir -p ~/staticdeps/bin
 
-          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+          cp /usr/lib/gcc/aarch64-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -136,6 +139,9 @@ jobs:
         - ~/staticdeps
         key: staticdeps-aarch64
         name: Save statics deps to cache
+    - setup_remote_docker:
+        version: default
+        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8
@@ -224,6 +230,9 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
+    - setup_remote_docker:
+        version: 20.10.24
+        docker_layer_cacheing: true
     - run:
         command: |-
           export LANG=en_US.UTF-8

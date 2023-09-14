@@ -346,7 +346,14 @@ class RestoreCache {
 }
 
 class SetupRemoteDocker {
+  /// Version string of Docker you would like to use (default: 20.10.17).
+  ///
+  /// View the list of supported docker versions
+  /// [here](https://circleci.com/docs/building-docker-images/#docker-version).
   version: String
+
+  /// Set this to true to enable [Docker Layer Caching](https://circleci.com/docs/docker-layer-caching/)
+  /// in the Remote Docker Environment (default: false)
   docker_layer_cacheing: Boolean
 }
 

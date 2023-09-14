@@ -61,7 +61,7 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
 
           mkdir -p ~/staticdeps/bin
 
-          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+          cp /usr/lib/gcc/\#(if (arch == "amd64") "x86_64" else "aarch64")-redhat-linux/8/libstdc++.a ~/staticdeps
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
@@ -148,12 +148,12 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
       }
     }
     // hack to get more RAM in docker
-//     new {
-//       setup_remote_docker {
-//         version = "20.10.14"
-//         docker_layer_cacheing = true
-//       }
-//     }
+    new {
+      setup_remote_docker {
+        version = if (arch == "amd64") "20.10.24" else "default"
+        docker_layer_cacheing = true
+      }
+    }
     gradle(gradleCommand)
     saveToGradleCache
     persistToWorkspace
