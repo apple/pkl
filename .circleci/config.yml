@@ -90,7 +90,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: ~/jdk
+      JAVA_HOME: $HOME/jdk
       LANG: en_US.UTF-8
     resource_class: large
     docker:
@@ -168,7 +168,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: ~/jdk
+      JAVA_HOME: $HOME/jdk
       LANG: en_US.UTF-8
     resource_class: arm.large
     docker:
@@ -262,7 +262,7 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: ~/jdk
+      JAVA_HOME: $HOME/jdk
       LANG: en_US.UTF-8
     resource_class: large
     docker:

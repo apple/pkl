@@ -27,9 +27,9 @@ jobs: Mapping<String, Job>?
 /// The top-level keys for the Workflows configuration are version and jobs.
 /// For more information, see the
 /// [Using Workflows to Orchestrate Jobs](https://circleci.com/docs/workflows/) page.
-workflows: Mapping<String, Workflow(isValidWorkflow)>?
+workflows: Mapping<String, Workflow(hasValidJobNames)>?
 
-local isValidWorkflow = (workflow: Workflow) ->
+local hasValidJobNames = (workflow: Workflow) ->
   workflow.jobs.toList().every((job) ->
     let (jobName = if (job is String) job else job.keys.first)
       jobs.containsKey(jobName)
