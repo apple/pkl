@@ -69,26 +69,29 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
-          export LANG=en_US.UTF-8
-          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
         name: gradle pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Save Gradle Dependencies Cache
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
         name: Gather test results
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      JAVA_HOME: ~/jdk
+      LANG: en_US.UTF-8
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
@@ -144,26 +147,29 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
-          export LANG=en_US.UTF-8
-          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
         name: gradle pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Save Gradle Dependencies Cache
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
         name: Gather test results
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      JAVA_HOME: ~/jdk
+      LANG: en_US.UTF-8
     resource_class: arm.large
     docker:
     - image: arm64v8/oraclelinux:8-slim
@@ -235,26 +241,29 @@ jobs:
         docker_layer_cacheing: true
     - run:
         command: |-
-          export LANG=en_US.UTF-8
-          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         name: gradle pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Save Gradle Dependencies Cache
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
         name: Gather test results
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      JAVA_HOME: ~/jdk
+      LANG: en_US.UTF-8
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
@@ -266,34 +275,135 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export LANG=en_US.UTF-8
-          export JAVA_HOME=~/jdk
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
         name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Save Gradle Dependencies Cache
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
     macos:
       xcode: 14.0.0
+  check-jdk11:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
+        name: gradle check
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    docker:
+    - image: cimg/openjdk:11.0
+  check-jdk17:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
+        name: gradle check
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    docker:
+    - image: cimg/openjdk:17.0
+  bench:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' jmh
+        name: gradle jmh
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    docker:
+    - image: cimg/openjdk:11.0
+  dev-gradle-compatibility:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
+        name: gradle :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    docker:
+    - image: cimg/openjdk:17.0
 workflows:
   build-native-images:
     jobs:
-    - build-linux-amd64: {}
-    - build-linux-aarch64:
-        filters:
-          branches:
-            only: main
-    - build-linux-alpine-amd64:
-        filters:
-          branches:
-            only: main
     - build-macos-amd64:
         filters:
           branches:

@@ -100,6 +100,36 @@ local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String
       }
     }
 
+local setupSteps: Listing<Step> = new {
+  "checkout"
+  restoreGradleCache
+}
+
+local nativeBuildCleanupTasks: Listing<Step> = new {
+  persistToWorkspace
+  ...cleanupSteps
+}
+
+local cleanupSteps: Listing<Step> = new {
+  saveToGradleCache
+  new {
+    // find all test results and write them to the home dir
+    run {
+      name = "Gather test results"
+      command = """
+        mkdir ~/test-results/
+        find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \\;
+        """
+      `when` = "always"
+    }
+  }
+  new {
+    store_test_results {
+      path = "~/test-results"
+    }
+  }
+}
+
 local restoreGradleCache: StepConfig = new {
   restore_cache {
     name = "Restore Gradle Dependencies Cache"
@@ -127,10 +157,13 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
           "oraclelinux:8-slim" 
     }
   }
+  environment {
+    ["JAVA_HOME"] = "~/jdk"
+    ["LANG"] = "en_US.UTF-8"
+  }
   resource_class = if (arch == "aarch64") "arm.large" else "large"
   steps {
-    "checkout"
-    restoreGradleCache
+    ...setupSteps
     new {
       restore_cache {
         name = "Restore static deps from cache"
@@ -155,23 +188,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
       }
     }
     gradle(gradleCommand)
-    saveToGradleCache
-    persistToWorkspace
-    new {
-      // find all test results and write them to the home dir
-      run {
-        name = "Gather test results"
-        command = """
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \\; 
-          """
-        `when` = "always"
-      }
-    }
-    new {
-      store_test_results {
-        path = "~/test-results"
-      }
-    }
+    ...nativeBuildCleanupTasks
   }
 }
 
@@ -184,54 +201,59 @@ jobs {
       xcode = "14.0.0"
     }
     steps {
-      "checkout"
-      restoreGradleCache
+      ...setupSteps
       gradle("buildNative")
-      saveToGradleCache
-      persistToWorkspace
+      ...nativeBuildCleanupTasks
     }
   }
-//   ["dev-jdk11"] {
-//     docker {
-//       image("cimg/openjdk:11.0")
-//     }
-//     steps {
-//       "checkout"
-//       gradle("build")
-//       new {
-//         store_test_results {
-//           path = "./pkl-core/build/test-results/"
-//         }
-//       }
-//     }
-//   }
-//   ["dev-jdk17"] {
-//     docker {
-//       image("cimg/openjdk:17.0")
-//     }
-//     steps {
-//       "checkout"
-//       gradle("build")
-//     }
-//   }
-//   ["dev-bench"] {
-//     docker {
-//       image("cimg/openjdk:11.0")
-//     }
-//     steps {
-//       "checkout"
-//       gradle("jmh")
-//     }
-//   }
-//   ["dev-gradle-compatibility"] {
-//     docker {
-//       image("cimg/openjdk:11.0")
-//     }
-//     steps {
-//       "checkout"
-//       gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
-//     }
-//   }
+  ["check-jdk11"] {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle("check")
+      ...cleanupSteps
+    }
+  }
+  ["check-jdk17"] {
+    docker {
+      new {
+        image = "cimg/openjdk:17.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle("check")
+      ...cleanupSteps
+    }
+  }
+  ["bench"] {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle("jmh")
+      ...cleanupSteps
+    }
+  }
+  ["dev-gradle-compatibility"] {
+    docker {
+      new {
+        image = "cimg/openjdk:17.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
+      ...cleanupSteps
+    }
+  }
 }
 
 workflows {
@@ -249,27 +271,25 @@ workflows {
 // runs out of memory on the free large tier
   ["build-native-images"] {
     jobs {
-      new {
-        ["build-linux-amd64"] {}
-      }
-      new {
-        ["build-linux-aarch64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
-      new {
-        ["build-linux-alpine-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+//       "build-linux-amd64"
+//       new {
+//         ["build-linux-aarch64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
+//       new {
+//         ["build-linux-alpine-amd64"] {
+//           filters {
+//             branches {
+//               only = "main"
+//             }
+//           }
+//         }
+//       }
       new {
         ["build-macos-amd64"] {
           filters {
@@ -287,8 +307,6 @@ local function gradle(args: String): StepConfig = new {
   run {
     name = "gradle \(args)"
     command = """
-      export LANG=en_US.UTF-8
-      export JAVA_HOME=~/jdk
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \(gradleArgs) \(args)
       """
