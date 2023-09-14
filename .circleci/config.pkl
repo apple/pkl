@@ -162,7 +162,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
       run {
         name = "Gather test results"
         command = """
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ 
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \\; 
           """
         `when` = "always"
       }
@@ -247,9 +247,11 @@ workflows {
 //     }
 //   }
 // runs out of memory on the free large tier
-
   ["build-native-images"] {
     jobs {
+      new {
+        ["build-linux-amd64"] {}
+      }
       new {
         ["build-linux-aarch64"] {
           filters {
@@ -259,33 +261,24 @@ workflows {
           }
         }
       }
-//       new {
-//         ["build-linux-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
-//       new {
-//         ["build-linux-alpine-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
-//       new {
-//         ["build-macos-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
+      new {
+        ["build-linux-alpine-amd64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
+      new {
+        ["build-macos-amd64"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+        }
+      }
     }
   }
 }

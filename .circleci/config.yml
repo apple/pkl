@@ -84,7 +84,7 @@ jobs:
         paths:
         - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
         name: Gather test results
         when: always
     - store_test_results:
@@ -159,7 +159,7 @@ jobs:
         paths:
         - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
         name: Gather test results
         when: always
     - store_test_results:
@@ -250,7 +250,7 @@ jobs:
         paths:
         - pkl-cli/build/executable/
     - run:
-        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ '
+        command: 'find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \; '
         name: Gather test results
         when: always
     - store_test_results:
@@ -285,7 +285,16 @@ jobs:
 workflows:
   build-native-images:
     jobs:
+    - build-linux-amd64: {}
     - build-linux-aarch64:
+        filters:
+          branches:
+            only: main
+    - build-linux-alpine-amd64:
+        filters:
+          branches:
+            only: main
+    - build-macos-amd64:
         filters:
           branches:
             only: main
