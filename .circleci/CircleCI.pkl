@@ -446,7 +446,7 @@ typealias CalledCommand = Mapping<String, CommandCall>(length == 1)
 typealias CommandCall = Mapping<String, String|Number|Boolean>
 
 output {
-  text = "# Generated from .circleci/config.pkl. DO NOT EDIT.\n" + super.text
+  text = "# Generated from CircleCI.pkl. DO NOT EDIT.\n" + super.text
   renderer = new YamlRenderer {
     converters {
       [StepConfig] = (it) -> it.toMap().remove("command") + (it.command?.toMap() ?? Map())

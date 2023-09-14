@@ -20,20 +20,6 @@ local persistToWorkspace: Step = new {
   }
 }
 
-local gradleArgs = "--info --stacktrace \(gradleJvmArgs)"
-
-local gradleJvmArgs =
-  "'"
-  + "-Dorg.gradle.jvmargs="
-  + "-Dfile.encoding=UTF-8 "
-  + // google-java-format requires jdk.compiler exports
-    "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED "
-  + "--add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED "
-  + "--add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED "
-  + "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED "
-  + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
-  + "'"
-
 local function setUpLinuxEnvironment(arch: "amd64"|"aarch64", jdkVersion: String): StepConfig =
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
@@ -107,11 +93,11 @@ local setupSteps: Listing<Step> = new {
 
 local nativeBuildCleanupTasks: Listing<Step> = new {
   persistToWorkspace
-  ...cleanupSteps
+  saveToGradleCache
+  ...storeTestResults
 }
 
-local cleanupSteps: Listing<Step> = new {
-  saveToGradleCache
+local storeTestResults: Listing<Step> = new {
   new {
     // find all test results and write them to the home dir
     run {
@@ -201,9 +187,10 @@ jobs {
       xcode = "14.0.0"
     }
     steps {
-      ...setupSteps
+      "checkout"
       gradle("buildNative")
-      ...nativeBuildCleanupTasks
+      persistToWorkspace
+      ...storeTestResults
     }
   }
   ["check-jdk11"] {
@@ -215,7 +202,7 @@ jobs {
     steps {
       ...setupSteps
       gradle("check")
-      ...cleanupSteps
+      ...storeTestResults
     }
   }
   ["check-jdk17"] {
@@ -227,7 +214,7 @@ jobs {
     steps {
       ...setupSteps
       gradle("check")
-      ...cleanupSteps
+      ...storeTestResults
     }
   }
   ["bench"] {
@@ -239,7 +226,7 @@ jobs {
     steps {
       ...setupSteps
       gradle("jmh")
-      ...cleanupSteps
+      ...storeTestResults
     }
   }
   ["dev-gradle-compatibility"] {
@@ -251,7 +238,7 @@ jobs {
     steps {
       ...setupSteps
       gradle(":pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate")
-      ...cleanupSteps
+      ...storeTestResults
     }
   }
 }
@@ -268,47 +255,45 @@ workflows {
 //       // "dev-gradle-compatibility"
 //     }
 //   }
-// runs out of memory on the free large tier
+  // runs out of memory on the free large tier
   ["build-native-images"] {
     jobs {
-//       "build-linux-amd64"
-//       new {
-//         ["build-linux-aarch64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
-//       new {
-//         ["build-linux-alpine-amd64"] {
-//           filters {
-//             branches {
-//               only = "main"
-//             }
-//           }
-//         }
-//       }
-      new {
-        ["build-macos-amd64"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
-        }
-      }
+      // always run linux/amd64 for every commit; including PRBs
+      "build-linux-amd64"
+      runOnMainOnly("build-linux-aarch64")
+      runOnMainOnly("build-linux-alpine-amd64")
+      runOnMainOnly("build-macos-amd64")
     }
   }
 }
 
-local function gradle(args: String): StepConfig = new {
-  run {
-    name = "gradle \(args)"
-    command = """
-      export PATH=~/staticdeps/bin:$PATH
-      ./gradlew \(gradleArgs) \(args)
-      """
+local function gradle(args: String): StepConfig =
+  let (gradleJvmArgs = "'" + new Listing<String> {
+    "-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8"
+    // google-java-format requires jdk.compiler exports
+    "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+    "--add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"
+    "--add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"
+    "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
+    "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+  }.join(" ") + "'")
+  let (gradleArgs = "--info --stacktrace \(gradleJvmArgs)")
+    new {
+      run {
+        name = "gradle \(args)"
+        command = """
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew \(gradleArgs) \(args)
+          """
+      }
+    }
+
+local function runOnMainOnly(job: String): Mapping<String, WorkflowJob> = new {
+  [job] {
+    filters {
+      branches {
+        only = "main"
+      }
+    }
   }
 }
