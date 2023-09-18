@@ -30,7 +30,7 @@ The plugin is applied as follows:
 [source,groovy,subs="+attributes"]
 ----
 plugins {
-  id "org.pkl" version "{pkl-artifact-version}"
+  id "org.pkl-lang" version "{pkl-artifact-version}"
 }
 ----
 
@@ -38,7 +38,7 @@ plugins {
 [source,kotlin,subs="+attributes"]
 ----
 plugins {
-  id("org.pkl") version "{pkl-artifact-version}"
+  id("org.pkl-lang") version "{pkl-artifact-version}"
 }
 ----
 

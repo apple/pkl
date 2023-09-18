@@ -326,10 +326,10 @@ val stagedLinuxExecutableAarch64: Configuration by configurations.creating {
 }
 
 dependencies {
-  stagedMacExecutable("org.pkl.staging:pkl-cli-macos:${buildInfo.pklVersionNonUnique}@bin") {
+  stagedMacExecutable("org.pkl-lang.staging:pkl-cli-macos:${buildInfo.pklVersionNonUnique}@bin") {
     isChanging = true
   }
-  stagedLinuxExecutableAarch64("org.pkl.staging:pkl-cli-linux-aarch64:${buildInfo.pklVersionNonUnique}@bin") {
+  stagedLinuxExecutableAarch64("org.pkl-lang.staging:pkl-cli-linux-aarch64:${buildInfo.pklVersionNonUnique}@bin") {
     isChanging = true
   }
 }

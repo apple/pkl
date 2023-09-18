@@ -179,7 +179,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {
@@ -210,7 +210,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {
@@ -244,7 +244,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {
@@ -292,7 +292,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {
@@ -411,7 +411,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {

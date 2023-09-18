@@ -10,7 +10,7 @@ class PkldocGeneratorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {
@@ -81,7 +81,7 @@ class PkldocGeneratorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {

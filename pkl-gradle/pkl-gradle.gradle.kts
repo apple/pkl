@@ -44,7 +44,7 @@ publishing {
 gradlePlugin {
   plugins {
     create("pkl") {
-      id = "org.pkl"
+      id = "org.pkl-lang"
       implementationClass = "org.pkl.gradle.PklPlugin"
     }
   }

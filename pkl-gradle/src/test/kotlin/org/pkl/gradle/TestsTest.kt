@@ -258,7 +258,7 @@ class TestsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "org.pkl"
+        id "org.pkl-lang"
       }
 
       pkl {

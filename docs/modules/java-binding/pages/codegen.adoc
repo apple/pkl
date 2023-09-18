@@ -46,7 +46,7 @@ To use the library in a Maven project, declare the following dependency:
 [source,xml,subs="+attributes"]
 ----
 <dependency>
-  <groupId>org.pkl</groupId>
+  <groupId>org.pkl-lang</groupId>
   <artifactId>pkl-codegen-java</artifactId>
   <version>{pkl-artifact-version}</version>
 </dependency>

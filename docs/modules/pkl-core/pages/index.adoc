@@ -32,7 +32,7 @@ To use the library in a Gradle project, declare the following dependency:
 [source,groovy,subs="+attributes"]
 ----
 dependencies {
-  compile "org.pkl:pkl-core:{pkl-artifact-version}"
+  compile "org.pkl-lang:pkl-core:{pkl-artifact-version}"
 }
 ----
 
@@ -44,7 +44,7 @@ To use the library in a Maven project, declare the following dependency:
 [source,xml,subs="+attributes"]
 ----
 <dependency>
-  <groupId>org.pkl</groupId>
+  <groupId>org.pkl-lang</groupId>
   <artifactId>pkl-core</artifactId>
   <version>{pkl-artifact-version}</version>
 </dependency>
