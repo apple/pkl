@@ -179,7 +179,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -210,7 +210,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -244,7 +244,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -292,7 +292,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -411,7 +411,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {

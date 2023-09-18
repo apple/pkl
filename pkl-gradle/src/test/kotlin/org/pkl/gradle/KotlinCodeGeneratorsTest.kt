@@ -71,7 +71,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -106,7 +106,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
       }
 
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       apply plugin: "kotlin"
