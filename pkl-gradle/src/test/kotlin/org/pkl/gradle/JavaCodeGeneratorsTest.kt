@@ -99,7 +99,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
@@ -121,7 +121,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       "build.gradle", """
       plugins {
         id "java"
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       repositories {

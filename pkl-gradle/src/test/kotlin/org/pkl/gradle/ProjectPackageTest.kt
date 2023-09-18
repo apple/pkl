@@ -39,7 +39,7 @@ class ProjectPackageTest : AbstractTest() {
     writeFile(
       "build.gradle", """
       plugins {
-        id "com.apple.pkl"
+        id "org.pkl"
       }
 
       pkl {
