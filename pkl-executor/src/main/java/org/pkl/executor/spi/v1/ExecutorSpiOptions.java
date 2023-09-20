@@ -36,6 +36,7 @@ public class ExecutorSpiOptions {
   private final Duration timeout;
 
   private final String outputFormat;
+  private final Path moduleCacheDir;
 
   public ExecutorSpiOptions(
       List<String> allowedModules,
@@ -45,7 +46,8 @@ public class ExecutorSpiOptions {
       List<Path> modulePath,
       /* @Nullable */ Path rootDir,
       /* @Nullable */ Duration timeout,
-      /* @Nullable */ String outputFormat) {
+      /* @Nullable */ String outputFormat,
+      /* @Nullable */ Path moduleCacheDir) {
 
     this.allowedModules = allowedModules;
     this.allowedResources = allowedResources;
@@ -55,6 +57,7 @@ public class ExecutorSpiOptions {
     this.rootDir = rootDir;
     this.timeout = timeout;
     this.outputFormat = outputFormat;
+    this.moduleCacheDir = moduleCacheDir;
   }
 
   public List<String> getAllowedModules() {
@@ -87,5 +90,9 @@ public class ExecutorSpiOptions {
 
   public /* @Nullable */ String getOutputFormat() {
     return outputFormat;
+  }
+
+  public /* @Nullable */ Path getModuleCacheDir() {
+    return moduleCacheDir;
   }
 }

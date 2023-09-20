@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
-import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,8 +223,8 @@ final class EmbeddedExecutor implements Executor {
       classLoader.close();
     }
 
-    ExecutorSpiOptions2 toEvaluatorOptions(ExecutorOptions options) {
-      return new ExecutorSpiOptions2(
+    ExecutorSpiOptions toEvaluatorOptions(ExecutorOptions options) {
+      return new ExecutorSpiOptions(
           options.getAllowedModules(),
           options.getAllowedResources(),
           options.getEnvironmentVariables(),

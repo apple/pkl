@@ -25,7 +25,6 @@ import org.pkl.core.resource.ResourceReaders;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
-import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 
 public class ExecutorSpiImpl implements ExecutorSpi {
   private final String pklVersion = Release.current().version().toString();
@@ -66,23 +65,21 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             .addResourceReader(ResourceReaders.environmentVariable())
             .addResourceReader(ResourceReaders.externalProperty())
             .addResourceReader(ResourceReaders.modulePath(resolver))
+            .addResourceReader(ResourceReaders.pkg())
             .addResourceReader(ResourceReaders.file())
             .addResourceReader(ResourceReaders.http())
             .addResourceReader(ResourceReaders.https())
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactories(ModuleKeyFactories.fromServiceProviders())
             .addModuleKeyFactory(ModuleKeyFactories.modulePath(resolver))
+            .addModuleKeyFactory(ModuleKeyFactories.pkg)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addModuleKeyFactory(ModuleKeyFactories.genericUrl)
             .setEnvironmentVariables(options.getEnvironmentVariables())
             .setExternalProperties(options.getExternalProperties())
             .setTimeout(options.getTimeout())
-            .setOutputFormat(options.getOutputFormat());
-
-    if (options instanceof ExecutorSpiOptions2) {
-      var options2 = (ExecutorSpiOptions2) options;
-      builder.setModuleCacheDir(options2.getModuleCacheDir());
-    }
+            .setOutputFormat(options.getOutputFormat())
+            .setModuleCacheDir(options.getModuleCacheDir());
 
     try (var evaluator = builder.build()) {
       return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
