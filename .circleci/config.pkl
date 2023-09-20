@@ -90,6 +90,60 @@ jobs {
       gradle("publishToSonatype")
     }
   }
+  ["gradle-release"] {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+    steps {
+      ...setupSteps
+      new {
+        attach_workspace {
+          at = "."
+        }
+      }
+      // TODO replace this.
+      new {
+        run {
+          command = """
+            echo "TODO replace me with ./gradlew closeAndReleaseSonatypeStagingRepository"
+            """
+        }
+      }
+    }
+  }
+  ["github-release"] {
+    docker {
+      new {
+        image = "cibuilds/github:0.10"
+      }
+    }
+    steps {
+      new {
+        attach_workspace {
+          at = "."
+        }
+      }
+      new {
+        run {
+          name = "Publish release on GitHub"
+          command = #"""
+            ghr \
+              -t ${GITHUB_TOKEN} \
+              -u ${CIRCLE_PROJECT_USERNAME} \
+              -r ${CIRCLE_PROJECT_REPONAME} \
+              -c ${CIRCLE_SHA1} \
+              pkl-cli/build/executable/jpkl \
+              pkl-cli/build/executable/pkl-macos-amd64 \
+              pkl-cli/build/executable/pkl-linux-amd64 \
+              pkl-cli/build/executable/pkl-linux-aarch64 \
+              pkl-cli/build/executable/pkl-alpine-linux-amd64
+            """#
+        }
+      }
+    }
+  }
 }
 
 local buildAndTestJobs = List(
@@ -110,7 +164,7 @@ local releaseJobs = List(
   "build-macos-amd64-release-build",
   "gradle-check-jdk11",
   "gradle-check-jdk17",
-  "gradle-compatibility",
+//   "gradle-compatibility",
   "bench"
 )
 
@@ -133,6 +187,39 @@ workflows {
           requires = buildAndTestJobs.toListing()
           context {
             "Pkl release"
+          }
+        }
+      }
+    }
+  }
+  ["build-test-release"] {
+    jobs {
+      ...releaseJobs.map(runOnReleaseTagOnly)
+      new {
+        ["gradle-release"] {
+          filters {
+            branches {
+              ignore = "/.*/"
+            }
+            tags {
+              only = #"/^\d+\.\d+\.\d+$/"#
+            }
+          }
+          requires = releaseJobs.toListing()
+        }
+      }
+      new {
+        ["github-release"] {
+          requires {
+            "gradle-release"
+          }
+          filters {
+            branches {
+              ignore = "/.*/"
+            }
+            tags {
+              only = #"/^\d+\.\d+\.\d+$/"#
+            }
           }
         }
       }
@@ -361,6 +448,9 @@ local function runOnMainOnly(job: String): Mapping<String, WorkflowJob> = new {
       branches {
         only = "main"
       }
+      tags {
+        ignore = "/.*/"
+      }
     }
   }
 }
@@ -370,6 +460,22 @@ local function runOnBranchOnly(job: String): Mapping<String, WorkflowJob> = new 
     filters {
       branches {
         ignore = "main"
+      }
+      tags {
+        ignore = "/.*/"
+      }
+    }
+  }
+}
+
+local runOnReleaseTagOnly = (job: String) -> new Mapping<String, WorkflowJob> {
+  [job] {
+    filters {
+      branches {
+        ignore = "/.*/"
+      }
+      tags {
+        only = #"/^\d+\.\d+\.\d+$/"#
       }
     }
   }

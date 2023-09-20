@@ -680,6 +680,37 @@ jobs:
         name: gradle publishToSonatype
     docker:
     - image: cimg/openjdk:11.0
+  gradle-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - attach_workspace:
+        at: '.'
+    - run:
+        command: echo "TODO replace me with ./gradlew closeAndReleaseSonatypeStagingRepository"
+    docker:
+    - image: cimg/openjdk:11.0
+  github-release:
+    steps:
+    - attach_workspace:
+        at: '.'
+    - run:
+        command: |-
+          ghr \
+            -t ${GITHUB_TOKEN} \
+            -u ${CIRCLE_PROJECT_USERNAME} \
+            -r ${CIRCLE_PROJECT_REPONAME} \
+            -c ${CIRCLE_SHA1} \
+            pkl-cli/build/executable/jpkl \
+            pkl-cli/build/executable/pkl-macos-amd64 \
+            pkl-cli/build/executable/pkl-linux-amd64 \
+            pkl-cli/build/executable/pkl-linux-aarch64 \
+            pkl-cli/build/executable/pkl-alpine-linux-amd64
+        name: Publish release on GitHub
+    docker:
+    - image: cibuilds/github:0.10
 workflows:
   build-and-test:
     jobs:
@@ -687,60 +718,88 @@ workflows:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - gradle-check-jdk11:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - gradle-check-jdk17:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - build-linux-aarch64:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - build-linux-alpine-amd64:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - build-macos-amd64:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
     - bench:
         filters:
           branches:
             ignore: main
+          tags:
+            ignore: /.*/
   build-test-deploy-snapshot:
     jobs:
     - build-linux-amd64:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - gradle-check-jdk11:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - gradle-check-jdk17:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - build-linux-aarch64:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - build-linux-alpine-amd64:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - build-macos-amd64:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - bench:
         filters:
           branches:
             only: main
+          tags:
+            ignore: /.*/
     - deploy-snapshot:
         requires:
         - build-linux-amd64
@@ -755,3 +814,69 @@ workflows:
         filters:
           branches:
             only: main
+  build-test-release:
+    jobs:
+    - build-linux-amd64-release-build:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - build-linux-aarch64-release-build:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - build-linux-alpine-amd64-release-build:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - build-macos-amd64-release-build:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - gradle-check-jdk11:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - gradle-check-jdk17:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - bench:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - gradle-release:
+        requires:
+        - build-linux-amd64-release-build
+        - build-linux-aarch64-release-build
+        - build-linux-alpine-amd64-release-build
+        - build-macos-amd64-release-build
+        - gradle-check-jdk11
+        - gradle-check-jdk17
+        - bench
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - github-release:
+        requires:
+        - gradle-release
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
