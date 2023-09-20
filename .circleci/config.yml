@@ -668,7 +668,7 @@ jobs:
   deploy-snapshot:
     steps:
     - attach_workspace:
-        at: pkl-cli/build/executables
+        at: pkl-cli/build/executable
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH

@@ -83,7 +83,7 @@ jobs {
     steps {
       new {
         attach_workspace {
-          at = "pkl-cli/build/executables"
+          at = "pkl-cli/build/executable"
         }
       }
       gradle("publishToSonatype")
