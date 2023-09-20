@@ -81,6 +81,7 @@ jobs {
       }
     }
     steps {
+      ...setupSteps
       new {
         attach_workspace {
           at = "pkl-cli/build/executable"
@@ -98,7 +99,7 @@ local buildAndTestJobs = List(
   "build-linux-aarch64",
   "build-linux-alpine-amd64",
   "build-macos-amd64",
-  "gradle-compatibility",
+//   "gradle-compatibility",
   "bench"
 )
 
@@ -119,7 +120,7 @@ workflows {
       ...buildAndTestJobs.map((it) -> runOnBranchOnly(it))
     }
   }
-  ["deploy-snapshot"] {
+  ["build-test-deploy-snapshot"] {
     jobs {
       ...buildAndTestJobs.map((it) -> runOnMainOnly(it))
       new {

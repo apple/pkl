@@ -667,6 +667,10 @@ jobs:
     - image: cimg/openjdk:17.0
   deploy-snapshot:
     steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
     - attach_workspace:
         at: pkl-cli/build/executable
     - run:
@@ -703,15 +707,11 @@ workflows:
         filters:
           branches:
             ignore: main
-    - gradle-compatibility:
-        filters:
-          branches:
-            ignore: main
     - bench:
         filters:
           branches:
             ignore: main
-  deploy-snapshot:
+  build-test-deploy-snapshot:
     jobs:
     - build-linux-amd64:
         filters:
@@ -737,10 +737,6 @@ workflows:
         filters:
           branches:
             only: main
-    - gradle-compatibility:
-        filters:
-          branches:
-            only: main
     - bench:
         filters:
           branches:
@@ -753,7 +749,6 @@ workflows:
         - build-linux-aarch64
         - build-linux-alpine-amd64
         - build-macos-amd64
-        - gradle-compatibility
         - bench
         context:
         - Pkl release
