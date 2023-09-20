@@ -1,7 +1,11 @@
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 
 plugins {
   `maven-publish`
+  signing
 }
 
 val sourcesJar by tasks.existing
@@ -11,6 +15,33 @@ publishing {
   publications {
     create<MavenPublication>("library") {
       from(components["java"])
+      pom {
+        licenses {
+          name.set("Apache License 2.0")
+          url.set("https://github.com/pkl-lang/pkl/blob/main/LICENSE.txt")
+        }
+        developers {
+          developer {
+            id.set("pkl-authors")
+            name.set("The Pkl Authors")
+            email.set("pkl-oss@group.apple.com")
+          }
+        }
+        scm {
+          connection.set("scm:git:git://github.com/pkl-lang/pkl.git")
+          developerConnection.set("scm:git:ssh://github.com/pkl-lang/pkl.git")
+          val buildInfo = project.extensions.getByType<BuildInfo>()
+          url.set("https://github.com/pkl-lang/pkl/tree/${buildInfo.commitish}")
+        }
+        issueManagement {
+          system.set("GitHub Issues")
+          url.set("https://github.com/pkl-lang/pkl/issues")
+        }
+        ciManagement {
+          system.set("Circle CI")
+          url.set("https://app.circleci.com/pipelines/github/pkl-lang/pkl")
+        }
+      }
     }
   }
 }
@@ -64,4 +95,21 @@ val validatePom by tasks.registering {
 
 tasks.publish {
   dependsOn(validatePom)
+}
+
+signing {
+  // provided as env vars `ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword`
+  // in CI.
+  val signingKey = (findProperty("signingKey") as String?)
+    ?.let { Base64.getDecoder().decode(it).toString(StandardCharsets.US_ASCII) }
+  val signingPassword = findProperty("signingPassword") as String?
+  if (signingKey != null && signingPassword != null) {
+    useInMemoryPgpKeys(signingKey, signingPassword)
+  }
+  sign(publishing.publications["library"])
+}
+
+artifacts {
+  archives(javadocJar)
+  archives(sourcesJar)
 }

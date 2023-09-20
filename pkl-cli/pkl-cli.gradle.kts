@@ -8,6 +8,7 @@ plugins {
   pklPublishLibrary
   pklNativeBuild
   `maven-publish`
+  signing
 
   // already on build script class path (see buildSrc/build.gradle.kts),
   // hence must only specify plugin ID here
@@ -25,16 +26,21 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/dev/pkl-cli")
+        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-cli")
         description.set("Pkl CLI Java library.")
       }
     }
   }
 }
 
+val stagedMacAmd64Executable: Configuration by configurations.creating
+val stagedLinuxAmd64Executable: Configuration by configurations.creating
+val stagedLinuxAarch64Executable: Configuration by configurations.creating
+val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
+
 dependencies {
   compileOnly(libs.svm)
-  
+
   // CliEvaluator exposes PClass
   api(project(":pkl-core"))
   // CliEvaluatorOptions exposes CliBaseOptions
@@ -53,6 +59,11 @@ dependencies {
   }
 
   testImplementation(project(":pkl-commons-test"))
+
+  stagedMacAmd64Executable(files("$buildDir/executable/pkl-macos-amd64"))
+  stagedLinuxAmd64Executable(files("$buildDir/executable/pkl-linux-amd64"))
+  stagedLinuxAarch64Executable(files("$buildDir/executable/pkl-linux-aarch64"))
+  stagedAlpineLinuxAmd64Executable(files("$buildDir/executable/pkl-alpine-linux-amd64"))
 }
 
 tasks.jar {
@@ -248,170 +259,7 @@ artifacts {
   }
 }
 
-val stageMacExecutable by tasks.registering(Exec::class) {
-  configureStageUpload(
-    macExecutable,
-    "pkl-cli-macos"
-  )
-}
-
-val stageLinuxExecutableAarch64 by tasks.registering(Exec::class) {
-  configureStageUpload(
-    linuxExecutableAarch64,
-    "pkl-cli-linux-aarch64"
-  )
-}
-
-/**
- * Publishes locally built executables to a staging repo (same repo that hosts the GraalVM distros).
- *
- * CI builds will pick up the executable from the staging repo and publish it to libs-release.
- * This is an interim solution until CI supports linux/aarch64 or darwin builds, or native-image
- * supports cross-compilation.
- * Uses curl instead of Maven publishing because the latter doesn't work for this repo
- * (at least not from a dev machine).
- * The upload path follows Maven conventions so that the artifact can be consumed as Maven
- * dependency.
- */
-fun Exec.configureStageUpload(fromTask: TaskProvider<Exec>, artifactId: String) {
-  // TODO: remove this in the new CI
-  enabled = buildInfo.os.isMacOsX
-  dependsOn(fromTask)
-
-  executable = "curl"
-  val uploadUrl = "https://artifacts.apple.com/pcl-modules-local/staging/com/apple/pkl/staging/$artifactId/${buildInfo.pklVersionNonUnique}/$artifactId-${buildInfo.pklVersionNonUnique}.bin"
-
-  argumentProviders.add(CommandLineArgumentProvider {
-    // defined in ~/.gradle/gradle.properties
-    val user = project.rootProject.extra["artifactory_user"]!!.toString()
-    val password = project.rootProject.extra["artifactory_password"]!!.toString()
-
-    listOf(
-      "--upload-file", fromTask.get().outputs.files.singleFile.path,
-      "-u", "$user:$password",
-      "-X", "PUT",
-      uploadUrl
-    )
-  })
-
-  doLast {
-    println("")
-    println("Staged ${fromTask.name} binary at: $uploadUrl")
-  }
-}
-
-val stage by tasks.registering {
-  dependsOn(stageMacExecutable)
-  dependsOn(stageLinuxExecutableAarch64)
-}
-
-//region Homebrew Publishing
-
-val brewPublishVersion: String = project.version.toString()
-
-val stagedMacExecutable: Configuration by configurations.creating {
-  // always use the latest snapshot
-  resolutionStrategy {
-    deactivateDependencyLocking()
-    cacheChangingModulesFor(0, "seconds")
-  }
-}
-
-val stagedLinuxExecutableAarch64: Configuration by configurations.creating {
-  // always use the latest snapshot
-  resolutionStrategy {
-    deactivateDependencyLocking()
-    cacheChangingModulesFor(0, "seconds")
-  }
-}
-
-dependencies {
-  stagedMacExecutable("org.pkl-lang.staging:pkl-cli-macos:${buildInfo.pklVersionNonUnique}@bin") {
-    isChanging = true
-  }
-  stagedLinuxExecutableAarch64("org.pkl-lang.staging:pkl-cli-linux-aarch64:${buildInfo.pklVersionNonUnique}@bin") {
-    isChanging = true
-  }
-}
-
-fun Tar.configureTar(fromSrc: Any, os: String, arch: String) {
-  destinationDirectory.set(file("$buildDir/brew${os}Tar"))
-  archiveFileName.set("pkl-${brewPublishVersion}.${os}_${arch}.tar.gz")
-
-  into("bin") {
-    from(fromSrc)
-    rename { "pkl" }
-  }
-
-  compression = Compression.GZIP
-  fileMode = Integer.valueOf("0755", 8)
-}
-
-val brewMacTar by tasks.registering(Tar::class) {
-  configureTar(
-    if (buildInfo.os.isMacOsX) macExecutable else stagedMacExecutable,
-    "darwin",
-    "amd64"
-  )
-}
-
-val brewLinuxTar by tasks.registering(Tar::class) {
-  configureTar(
-    linuxExecutableAmd64,
-    "linux",
-    "amd64"
-  )
-}
-
-val brewLinuxAarch64Tar by tasks.registering(Tar::class) {
-  configureTar(
-    if (buildInfo.arch == "aarch64") linuxExecutableAarch64 else stagedLinuxExecutableAarch64,
-    "linux",
-    "aarch64"
-  )
-}
-
-val brewMacChecksum by tasks.registering(Checksum::class) {
-  dependsOn(brewMacTar)
-  files = brewMacTar.get().outputs.files
-  outputDir = file("$buildDir/brewMacChecksum")
-  algorithm = Checksum.Algorithm.SHA256
-}
-
-val brewMacChecksumFile: Provider<File> = brewMacChecksum.map { checksum ->
-  file("${checksum.outputDir}/${brewMacTar.get().archiveFileName.get()}.sha256")
-}
-
-val brewLinuxChecksum by tasks.registering(Checksum::class) {
-  dependsOn(brewLinuxTar)
-  files = brewLinuxTar.get().outputs.files
-  outputDir = file("$buildDir/brewLinuxChecksum")
-  algorithm = Checksum.Algorithm.SHA256
-}
-
-val brewLinuxChecksumFile: Provider<File> = brewLinuxChecksum.map { checksum ->
-  file("${checksum.outputDir}/${brewLinuxTar.get().archiveFileName.get()}.sha256")
-}
-
-val brewLinuxAarch64Checksum by tasks.registering(Checksum::class) {
-  dependsOn(brewLinuxAarch64Tar)
-  files = brewLinuxAarch64Tar.get().outputs.files
-}
-
-val brewLinuxAarch64ChecksumFile: Provider<File> = brewLinuxAarch64Checksum.map { checksum ->
-  file("${checksum.outputDir}/${brewLinuxAarch64Tar.get().archiveFileName.get()}.sha256")
-}
-
-val publishBrewTars by tasks.registering(Sync::class) {
-  destinationDir = file("$buildDir/publishBrewTars")
-  from(brewMacTar)
-  from(brewLinuxTar)
-  from(brewLinuxAarch64Tar)
-}
-//endregion
-
 //region Maven Publishing
-
 publishing {
   publications {
     register<MavenPublication>("javaExecutable") {
@@ -427,87 +275,62 @@ publishing {
         description.set("""
           Pkl CLI executable for Java.
           Can be executed directly on *nix (if the `java` command is found on the PATH) and with `java -jar` otherwise.
-          Requires Java 8 or higher.
+          Requires Java 11 or higher.
         """.trimIndent())
       }
     }
-
-    register<MavenPublication>("macExecutable") {
-      artifactId = "pkl-cli-macos"
-
-      if (buildInfo.os.isMacOsX) {
-        artifact(macExecutable.map { it.outputs.files.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(macExecutable)
-        }
-      } else {
-        artifact(provider { stagedMacExecutable.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedMacExecutable)
-        }
+    create<MavenPublication>("macExecutableAmd64") {
+      artifactId = "pkl-cli-macos-amd64"
+      artifact(stagedMacAmd64Executable.singleFile) {
+        classifier = null
+        extension = "bin"
+        builtBy(stagedMacAmd64Executable)
       }
-
       pom {
-        description.set("Native Pkl CLI executable for macOS.")
+        description.set("Native Pkl CLI executable for macOS/amd64.")
       }
     }
-
     create<MavenPublication>("linuxExecutableAmd64") {
       artifactId = "pkl-cli-linux-amd64"
-
-      if (buildInfo.os.isLinux) {
-        artifact(linuxExecutableAmd64.map { it.outputs.files.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(linuxExecutableAmd64)
-        }
+      artifact(stagedLinuxAmd64Executable.singleFile) {
+        classifier = null
+        extension = "bin"
+        builtBy(stagedLinuxAmd64Executable)
       }
-
       pom {
         description.set("Native Pkl CLI executable for linux/amd64.")
       }
     }
-
     create<MavenPublication>("linuxExecutableAarch64") {
       artifactId = "pkl-cli-linux-aarch64"
-
-      if (buildInfo.os.isLinux && buildInfo.arch == "aarch64") {
-        artifact(linuxExecutableAmd64.map { it.outputs.files.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(linuxExecutableAmd64)
-        }
-      } else {
-        artifact(provider { stagedLinuxExecutableAarch64.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedLinuxExecutableAarch64)
-        }
+      artifact(stagedLinuxAarch64Executable.singleFile) {
+        classifier = null
+        extension = "bin"
+        builtBy(stagedLinuxAarch64Executable)
       }
-
-      pom {
+      pom { 
         description.set("Native Pkl CLI executable for linux/aarch64.")
       }
     }
-
-    create<MavenPublication>("alpineExecutableAmd64") {
-      artifactId = "pkl-cli-alpine-amd64"
-
-      if (buildInfo.os.isLinux) {
-        artifact(alpineExecutableAmd64.map { it.outputs.files.singleFile }) {
-          classifier = null
-          extension = "bin"
-          builtBy(alpineExecutableAmd64)
-        }
+    create<MavenPublication>("alpineLinuxExecutableAmd64") {
+      artifactId = "pkl-cli-alpine-linux-amd64"
+      artifact(stagedAlpineLinuxAmd64Executable.singleFile) {
+        classifier = null
+        extension = "bin"
+        builtBy(stagedAlpineLinuxAmd64Executable)
       }
-
       pom {
-        description.set("Native Pkl CLI executable for Alpine Linux on linux/amd64.")
+        description.set("Native Pkl CLI executable for linux/amd64 and statically linked to musl.")
       }
     }
   }
 }
 
+signing {
+  sign(publishing.publications["javaExecutable"])
+  sign(publishing.publications["macExecutableAmd64"])
+  sign(publishing.publications["linuxExecutableAmd64"])
+  sign(publishing.publications["linuxExecutableAarch64"])
+  sign(publishing.publications["alpineLinuxExecutableAmd64"])
+}
 //endregion

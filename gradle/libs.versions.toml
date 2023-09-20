@@ -38,6 +38,7 @@ slf4j = "1.+"
 snakeYaml = "2.+"
 spotlessPlugin = "6.11.0"
 msgpack = "0.9.0"
+nexusPublishPlugin = "1.3.0"
 
 [libraries] # ordered alphabetically
 antlr = { group = "com.tunnelvisionlabs", name = "antlr4", version.ref = "antlr" }
@@ -91,3 +92,4 @@ ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtP
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
+nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }

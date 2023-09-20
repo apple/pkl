@@ -12,6 +12,16 @@ plugins {
 
   alias(libs.plugins.ideaExt)
   alias(libs.plugins.jmh) apply false
+  alias(libs.plugins.nexusPublish)
+}
+
+nexusPublishing {
+  repositories {
+    sonatype {
+      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+    }
+  }
 }
 
 idea {

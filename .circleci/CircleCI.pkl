@@ -88,7 +88,7 @@ class Job {
   resource_class: ResourceClass?
 
   /// Options for [docker executor](https://circleci.com/docs/configuration-reference/#docker)
-  docker: Listing<DockerImage>?
+  docker: Listing<DockerImage>(!isEmpty)?
 
   /// CircleCI supports running jobs on macOS, to allow you to build, test, and deploy apps for
   /// macOS, iOS, tvOS and watchOS.
@@ -172,7 +172,7 @@ class WorkflowJob {
   /// Each context name must be unique.
   /// If using CircleCI Server, only a single Context per workflow is supported.
   /// Note: A maximum of 100 unique contexts across all workflows is allowed
-  context: (String|Listing<String>)?
+  context: (*Listing<String>|String)?
 
   /// A job may have a type of `approval` indicating it must be manually approved before downstream
   /// jobs may proceed.

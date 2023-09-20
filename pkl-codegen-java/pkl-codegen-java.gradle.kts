@@ -33,7 +33,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/dev/pkl-codegen-java")
+        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-codegen-java")
         description.set("""
           Java source code generator that generates corresponding Java classes for Pkl classes,
           simplifying consumption of Pkl configuration as statically typed Java objects.

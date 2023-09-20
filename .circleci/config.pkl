@@ -8,9 +8,9 @@ import "package://artifacts.apple.com/pkl/pkl/temp.pkl.experimental@1.0.0#/URI.p
 version = 2.1
 
 jobs {
-  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64")
-  ["build-linux-aarch64"] = buildLinuxNativeImage("aarch64", "pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64")
-  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", "pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64")
+  ["build-linux-amd64"] = buildLinuxNativeImage("amd64", gradle("pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64"))
+  ["build-linux-aarch64"] = buildLinuxNativeImage("aarch64", gradle("pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64"))
+  ["build-linux-alpine-amd64"] = buildLinuxNativeImage("amd64", gradle("pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64"))
   ["build-macos-amd64"] {
     macos {
       xcode = "14.0.0"
@@ -18,6 +18,20 @@ jobs {
     steps {
       "checkout"
       gradle("buildNative")
+      persistToWorkspace
+      ...storeTestResults
+    }
+  }
+  ["build-linux-amd64-release-build"] = buildLinuxNativeImage("amd64", gradleRelease("pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64"))
+  ["build-linux-aarch64-release-build"] = buildLinuxNativeImage("aarch64", gradleRelease("pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64"))
+  ["build-linux-alpine-amd64-release-build"] = buildLinuxNativeImage("amd64", gradleRelease("pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64"))
+  ["build-macos-amd64-release-build"] {
+    macos {
+      xcode = "14.0.0"
+    }
+    steps {
+      "checkout"
+      gradle("-DreleaseBuild=true buildNative")
       persistToWorkspace
       ...storeTestResults
     }
@@ -60,28 +74,67 @@ jobs {
       ...storeTestResults
     }
   }
-}
-
-workflows {
-  ["gradle-check"] {
-    jobs {
-      "gradle-check-jdk11"
-      "gradle-check-jdk17"
+  ["deploy-snapshot"] {
+    docker {
+      new {
+        image = "cimg/openjdk:11.0"
+      }
+    }
+    steps {
+      new {
+        attach_workspace {
+          at = "pkl-cli/build/executables"
+        }
+      }
+      gradle("publishToSonatype")
     }
   }
-  ["bench"] {
-    jobs { runOnMainOnly("bench") }
-  }
-  ["gradle-compatibility"] {
-    jobs { runOnMainOnly("gradle-compatibility") }
-  }
-  ["build-native-images"] {
+}
+
+local buildAndTestJobs = List(
+  "build-linux-amd64",
+  "gradle-check-jdk11",
+  "gradle-check-jdk17",
+  "build-linux-aarch64",
+  "build-linux-alpine-amd64",
+  "build-macos-amd64",
+  "gradle-compatibility",
+  "bench"
+)
+
+local releaseJobs = List(
+  "build-linux-amd64-release-build",
+  "build-linux-aarch64-release-build",
+  "build-linux-alpine-amd64-release-build",
+  "build-macos-amd64-release-build",
+  "gradle-check-jdk11",
+  "gradle-check-jdk17",
+  "gradle-compatibility",
+  "bench"
+)
+
+workflows {
+  ["build-and-test"] {
     jobs {
-      // always run linux/amd64 for every commit; including PRBs
-      "build-linux-amd64"
-      runOnMainOnly("build-linux-aarch64")
-      runOnMainOnly("build-linux-alpine-amd64")
-      runOnMainOnly("build-macos-amd64")
+      ...buildAndTestJobs.map((it) -> runOnBranchOnly(it))
+    }
+  }
+  ["deploy-snapshot"] {
+    jobs {
+      ...buildAndTestJobs.map((it) -> runOnMainOnly(it))
+      new {
+        ["deploy-snapshot"] {
+          filters {
+            branches {
+              only = "main"
+            }
+          }
+          requires = buildAndTestJobs.toListing()
+          context {
+            "Pkl release"
+          }
+        }
+      }
     }
   }
 }
@@ -210,7 +263,7 @@ local saveToGradleCache: StepConfig = new {
   }
 }
 
-local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: String): Job = new {
+local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleStep: StepConfig): Job = new {
   docker {
     new {
       image =
@@ -250,7 +303,7 @@ local function buildLinuxNativeImage(arch: "amd64"|"aarch64", gradleCommand: Str
         docker_layer_cacheing = true
       }
     }
-    gradle(gradleCommand)
+    gradleStep
     ...nativeBuildCleanupTasks
   }
 }
@@ -266,17 +319,18 @@ local gradleCheck: Job = new {
   }
 }
 
+local gradleArgs: Listing<String> = new {
+  "-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8"
+  // google-java-format requires jdk.compiler exports
+  "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+  "--add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"
+  "--add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"
+  "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
+  "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+}
+
 local function gradle(args: String): StepConfig =
-  let (gradleJvmArgs = "'" + new Listing<String> {
-    "-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8"
-    // google-java-format requires jdk.compiler exports
-    "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
-    "--add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"
-    "--add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"
-    "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
-    "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
-  }.join(" ") + "'")
-  let (gradleArgs = "--info --stacktrace \(gradleJvmArgs)")
+  let (gradleArgs = "--info --stacktrace '\(gradleArgs.join(" "))'")
     new {
       run {
         name = "gradle \(args)"
@@ -287,11 +341,34 @@ local function gradle(args: String): StepConfig =
       }
     }
 
+local function gradleRelease(args: String): StepConfig =
+  let (_gradleArgs = (gradleArgs) { "-DreleaseBuild=true" })
+    let (gradleArgs = "--info --stacktrace '\(_gradleArgs.join(" "))'")
+      new {
+        run {
+          name = "gradle \(args)"
+          command = """
+            export PATH=~/staticdeps/bin:$PATH
+            ./gradlew \(gradleArgs) \(args)
+            """
+        }
+      }
+
 local function runOnMainOnly(job: String): Mapping<String, WorkflowJob> = new {
   [job] {
     filters {
       branches {
         only = "main"
+      }
+    }
+  }
+}
+
+local function runOnBranchOnly(job: String): Mapping<String, WorkflowJob> = new {
+  [job] {
+    filters {
+      branches {
+        ignore = "main"
       }
     }
   }

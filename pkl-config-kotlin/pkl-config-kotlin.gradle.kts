@@ -64,7 +64,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/dev/pkl-config-kotlin")
+        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-config-kotlin")
         description.set("Kotlin extensions for pkl-config-java, a Java config library based on the Pkl config language.")
 
         // change dependency pkl-config-java to pkl-config-java-all
