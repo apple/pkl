@@ -672,7 +672,7 @@ jobs:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
     - attach_workspace:
-        at: pkl-cli/build/executable
+        at: '.'
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH

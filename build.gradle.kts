@@ -54,6 +54,7 @@ Gradle version : ${gradle.gradleVersion}
 Java version   : ${System.getProperty("java.version")}
 isParallel     : ${gradle.startParameter.isParallelProjectExecutionEnabled}
 maxWorkerCount : ${gradle.startParameter.maxWorkerCount}
+Architecture   : ${buildInfo.arch}
 
 Project Version        : ${project.version}
 Pkl Version            : ${buildInfo.pklVersion}

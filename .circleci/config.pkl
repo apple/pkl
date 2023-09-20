@@ -84,7 +84,7 @@ jobs {
       ...setupSteps
       new {
         attach_workspace {
-          at = "pkl-cli/build/executable"
+          at = "."
         }
       }
       gradle("publishToSonatype")

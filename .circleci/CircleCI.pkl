@@ -113,6 +113,8 @@ typealias ResourceClass =
   |"arm.large"
   |"arm.xlarge"
   |"arm.2xlarge"
+  |"macos.m1.medium.gen1"
+  |"macos.m1.large.gen1"
 
 class MacOSExecutor {
   /// The version of Xcode that is installed on the virtual machine, see the
