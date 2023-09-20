@@ -129,16 +129,20 @@ jobs {
         run {
           name = "Publish release on GitHub"
           command = #"""
+            mkdir release-artifacts
+            cp pkl-cli/build/executable/jpkl release-artifacts
+            cp pkl-cli/build/executable/pkl-macos-amd64 release-artifacts
+            cp pkl-cli/build/executable/pkl-linux-amd64 release-artifacts
+            cp pkl-cli/build/executable/pkl-linux-aarch64 release-artifacts
+            cp pkl-cli/build/executable/pkl-alpine-linux-amd64 release-artifacts
+
             ghr \
               -t ${GITHUB_TOKEN} \
               -u ${CIRCLE_PROJECT_USERNAME} \
               -r ${CIRCLE_PROJECT_REPONAME} \
               -c ${CIRCLE_SHA1} \
-              pkl-cli/build/executable/jpkl \
-              pkl-cli/build/executable/pkl-macos-amd64 \
-              pkl-cli/build/executable/pkl-linux-amd64 \
-              pkl-cli/build/executable/pkl-linux-aarch64 \
-              pkl-cli/build/executable/pkl-alpine-linux-amd64
+              ${CIRCLE_TAG}
+              ./release-artifacts/
             """#
         }
       }
@@ -195,8 +199,10 @@ workflows {
   ["build-test-release"] {
     jobs {
       ...releaseJobs.map(runOnReleaseTagOnly)
+      // do GitHub release first because we can overwrite the tag.
+      // publishing to Maven Central is final.
       new {
-        ["gradle-release"] {
+        ["github-release"] {
           filters {
             branches {
               ignore = "/.*/"
@@ -209,10 +215,7 @@ workflows {
         }
       }
       new {
-        ["github-release"] {
-          requires {
-            "gradle-release"
-          }
+        ["gradle-release"] {
           filters {
             branches {
               ignore = "/.*/"
@@ -221,6 +224,7 @@ workflows {
               only = #"/^\d+\.\d+\.\d+$/"#
             }
           }
+          requires { "github-release" }
         }
       }
     }

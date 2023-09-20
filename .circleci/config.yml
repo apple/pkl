@@ -698,16 +698,20 @@ jobs:
         at: '.'
     - run:
         command: |-
+          mkdir release-artifacts
+          cp pkl-cli/build/executable/jpkl release-artifacts
+          cp pkl-cli/build/executable/pkl-macos-amd64 release-artifacts
+          cp pkl-cli/build/executable/pkl-linux-amd64 release-artifacts
+          cp pkl-cli/build/executable/pkl-linux-aarch64 release-artifacts
+          cp pkl-cli/build/executable/pkl-alpine-linux-amd64 release-artifacts
+
           ghr \
             -t ${GITHUB_TOKEN} \
             -u ${CIRCLE_PROJECT_USERNAME} \
             -r ${CIRCLE_PROJECT_REPONAME} \
             -c ${CIRCLE_SHA1} \
-            pkl-cli/build/executable/jpkl \
-            pkl-cli/build/executable/pkl-macos-amd64 \
-            pkl-cli/build/executable/pkl-linux-amd64 \
-            pkl-cli/build/executable/pkl-linux-aarch64 \
-            pkl-cli/build/executable/pkl-alpine-linux-amd64
+            ${CIRCLE_TAG}
+            ./release-artifacts/
         name: Publish release on GitHub
     docker:
     - image: cibuilds/github:0.10
@@ -858,7 +862,7 @@ workflows:
             ignore: /.*/
           tags:
             only: /^\d+\.\d+\.\d+$/
-    - gradle-release:
+    - github-release:
         requires:
         - build-linux-amd64-release-build
         - build-linux-aarch64-release-build
@@ -872,9 +876,9 @@ workflows:
             ignore: /.*/
           tags:
             only: /^\d+\.\d+\.\d+$/
-    - github-release:
+    - gradle-release:
         requires:
-        - gradle-release
+        - github-release
         filters:
           branches:
             ignore: /.*/
