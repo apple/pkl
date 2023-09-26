@@ -49,6 +49,10 @@ stringLiteral: "yes"
 constrained: String(length.isBetween(3, 10))
 aliased: MyMap<Person>
 
+hidden hiddenProp: String
+const constProp: String = "the const prop"
+fixed fixedProp: String = "the fixed prop"
+
 /// class doc comment
 @MyAnn { text = "class annotation" }
 open class Person {

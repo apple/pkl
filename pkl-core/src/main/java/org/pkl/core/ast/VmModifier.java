@@ -164,6 +164,10 @@ public final class VmModifier {
         return "hidden";
       case EXTERNAL:
         return "external";
+      case FIXED:
+        return "fixed";
+      case CONST:
+        return "const";
       default:
         throw new VmExceptionBuilder()
             .bug("Cannot convert internal modifier `%s` to a string.", toString(modifier))
@@ -179,6 +183,8 @@ public final class VmModifier {
     if (isHidden(modifiers)) builder.add(toString(HIDDEN));
     // `external` modifier is part of class contract but not part of property/method contract
     if (isExternal(modifiers) && isClass) builder.add(toString(EXTERNAL));
+    if (isFixed(modifiers)) builder.add(toString(FIXED));
+    if (isConst(modifiers)) builder.add(toString(CONST));
 
     return builder.build();
   }

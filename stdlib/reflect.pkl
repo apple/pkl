@@ -319,7 +319,7 @@ external class TypeParameter {
 }
 
 /// A modifier of a [Declaration].
-typealias Modifier = "abstract"|"external"|"hidden"|"open"
+typealias Modifier = "abstract"|"external"|"hidden"|"open"|"fixed"|"const"
 
 /// The variance of a [TypeParameter].
 ///
