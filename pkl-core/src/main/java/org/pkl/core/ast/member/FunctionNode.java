@@ -161,8 +161,10 @@ public final class FunctionNode extends MemberNode {
 
     var parameters = CollectionUtils.<String, PType>newLinkedHashMap(paramCount);
     for (var i = 0; i < paramCount; i++) {
-      parameters.put(
-          getFrameDescriptor().getSlotName(i).toString(), TypeNode.export(parameterTypeNodes[i]));
+      var slotName = getFrameDescriptor().getSlotName(i);
+      // Ignored parameters (`_`) have no name
+      var paramName = slotName == null ? "_#" + i : slotName.toString();
+      parameters.put(paramName, TypeNode.export(parameterTypeNodes[i]));
     }
 
     var result =

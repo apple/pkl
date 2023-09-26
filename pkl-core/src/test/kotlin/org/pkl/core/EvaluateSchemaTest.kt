@@ -61,12 +61,12 @@ class EvaluateSchemaTest {
     assertThat(module.moduleName).isEqualTo("test")
 
     assertThat(module.moduleClass.sourceLocation.startLine).isEqualTo(2)
-    assertThat(module.moduleClass.sourceLocation.endLine).isEqualTo(22)
+    assertThat(module.moduleClass.sourceLocation.endLine).isEqualTo(26)
   }
 
   private fun checkModuleProperties(module: ModuleSchema) {
     val properties = module.moduleClass.properties
-    assertThat(properties).hasSize(2)
+    assertThat(properties).hasSize(3)
 
     val propertyb1 = properties.getValue("propertyb1")
     assertThat(propertyb1.sourceLocation.startLine).isEqualTo(5)
@@ -81,11 +81,15 @@ class EvaluateSchemaTest {
     paramType as PType.Class
     assertThat(paramType.pClass)
       .isEqualTo(BaseModule.getIntClass().export())
+    
+    val propertyb3 = properties.getValue("propertyb3")
+    assertThat(propertyb3.sourceLocation.startLine).isEqualTo(24)
+    assertThat(propertyb3.sourceLocation.endLine).isEqualTo(24)
   }
 
   private fun checkModuleMethods(module: ModuleSchema) {
     val methods = module.moduleClass.methods
-    assertThat(methods).hasSize(2)
+    assertThat(methods).hasSize(3)
 
     val methodb1 = methods.getValue("methodb1")
     assertThat(methodb1.sourceLocation.startLine).isEqualTo(12)
@@ -115,6 +119,11 @@ class EvaluateSchemaTest {
     returnBaseType as PType.Class
     assertThat(returnBaseType.pClass).isEqualTo(BaseModule.getIntClass().export())
     assertThat(returnType.constraints).isEqualTo(listOf("isPositive"))
+    
+    val methodb3 = methods.getValue("methodb3")
+    assertThat(methodb3.sourceLocation.startLine).isEqualTo(26)
+    assertThat(methodb3.sourceLocation.endLine).isEqualTo(26)
+    assertThat(methodb3.parameters.keys).containsExactly("x", "_#1", "i", "_#3")
   }
 
   private fun checkModuleClasses(module: ModuleSchema) {

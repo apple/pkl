@@ -20,3 +20,7 @@ class Classb1 extends Classa1 {
   name: String
   age: Int
 }
+
+propertyb3 = (_, _) -> 3
+
+function methodb3(x: String, _, i: Int, _): Int = x.length + i
