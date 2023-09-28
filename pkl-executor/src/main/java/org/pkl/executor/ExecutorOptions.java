@@ -40,6 +40,7 @@ public final class ExecutorOptions {
   private final /* @Nullable */ String outputFormat;
 
   private final /* @Nullable */ Path moduleCacheDir;
+  private final /* @Nullable */ Path projectDir;
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
@@ -60,6 +61,7 @@ public final class ExecutorOptions {
    * @param moduleCacheDir API equivalent of the {@code --cache-dir} CLI option. Passing {@link
    *     #defaultModuleCacheDir()} is equivalent to omitting {@code --cache-dir}. Passing {@code
    *     null} is equivalent to {@code --no-cache}.
+   * @param projectDir API equivalent of the {@code --project-dir} CLI option.
    */
   public ExecutorOptions(
       List<String> allowedModules,
@@ -70,7 +72,8 @@ public final class ExecutorOptions {
       /* @Nullable */ Path rootDir,
       /* @Nullable */ Duration timeout,
       /* @Nullable */ String outputFormat,
-      /* @Nullable */ Path moduleCacheDir) {
+      /* @Nullable */ Path moduleCacheDir,
+      /* @Nullable */ Path projectDir) {
 
     this.allowedModules = allowedModules;
     this.allowedResources = allowedResources;
@@ -81,6 +84,7 @@ public final class ExecutorOptions {
     this.timeout = timeout;
     this.outputFormat = outputFormat;
     this.moduleCacheDir = moduleCacheDir;
+    this.projectDir = projectDir;
   }
 
   /** API equivalent of the {@code --allowed-modules} CLI option. */
@@ -131,6 +135,16 @@ public final class ExecutorOptions {
     return moduleCacheDir;
   }
 
+  /**
+   * API equivalent of the {@code --project-dir} CLI option.
+   *
+   * <p>Unlike the CLI, this option only sets project dependencies. It does not set evaluator
+   * settings.
+   */
+  public /* @Nullable */ Path getProjectDir() {
+    return projectDir;
+  }
+
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
@@ -145,7 +159,8 @@ public final class ExecutorOptions {
         && Objects.equals(rootDir, other.rootDir)
         && Objects.equals(timeout, other.timeout)
         && Objects.equals(outputFormat, other.outputFormat)
-        && Objects.equals(moduleCacheDir, other.moduleCacheDir);
+        && Objects.equals(moduleCacheDir, other.moduleCacheDir)
+        && Objects.equals(projectDir, other.projectDir);
   }
 
   @Override
@@ -159,7 +174,8 @@ public final class ExecutorOptions {
         rootDir,
         timeout,
         outputFormat,
-        moduleCacheDir);
+        moduleCacheDir,
+        projectDir);
   }
 
   @Override
@@ -183,6 +199,8 @@ public final class ExecutorOptions {
         + outputFormat
         + ", cacheDir="
         + moduleCacheDir
+        + ", projectDir="
+        + projectDir
         + '}';
   }
 }

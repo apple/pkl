@@ -19,6 +19,7 @@ import java.io.Writer
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.cli.CliTestException
 import org.pkl.commons.cli.CliTestOptions
 import org.pkl.core.project.Project
 import org.pkl.core.project.ProjectPackager
@@ -29,6 +30,7 @@ class CliProjectPackager(
   projectDirs: List<Path>,
   private val testOptions: CliTestOptions,
   private val outputPath: String,
+  private val skipPublishCheck: Boolean,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer()
 ) : CliAbstractProjectCommand(baseOptions, projectDirs) {
@@ -44,7 +46,11 @@ class CliProjectPackager(
         consoleWriter = consoleWriter,
         errWriter = errWriter,
       )
-    testRunner.run()
+    try {
+      testRunner.run()
+    } catch (e: CliTestException) {
+      throw CliException(ErrorMessages.create("packageTestsFailed", project.`package`!!.uri))
+    }
   }
 
   override fun doRun() {
@@ -62,13 +68,10 @@ class CliProjectPackager(
     // Require that all local projects are included
     projects.forEach { proj ->
       proj.dependencies.localDependencies.values.forEach { localDep ->
-        if (projects.none { it.projectDir == localDep.projectDir }) {
+        val projectDir = Path.of(localDep.projectFileUri).parent
+        if (projects.none { it.projectDir == projectDir }) {
           throw CliException(
-            ErrorMessages.create(
-              "missingProjectInPackageCommand",
-              proj.projectDir,
-              localDep.projectDir
-            )
+            ErrorMessages.create("missingProjectInPackageCommand", proj.projectDir, projectDir)
           )
         }
       }
@@ -78,6 +81,8 @@ class CliProjectPackager(
         cliOptions.normalizedWorkingDir,
         outputPath,
         stackFrameTransformer,
+        securityManager,
+        skipPublishCheck,
         consoleWriter
       )
       .createPackages()

@@ -15,6 +15,7 @@
  */
 package org.pkl.server
 
+import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -23,7 +24,8 @@ import org.pkl.core.*
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
-import org.pkl.core.project.Project
+import org.pkl.core.packages.PackageUri
+import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 
@@ -113,29 +115,56 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     evaluator.close()
   }
 
-  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
-    val project =
-      message.projectDir?.let { dir ->
-        val securityManager =
-          SecurityManagers.standard(
-            message.allowedModules ?: SecurityManagers.defaultAllowedModules,
-            message.allowedResources ?: SecurityManagers.defaultAllowedResources,
-            SecurityManagers.defaultTrustLevels,
-            message.rootDir
+  private fun buildDeclaredDependencies(
+    projectFileUri: URI,
+    dependencies: Map<String, Dependency>,
+    myPackageUri: URI?
+  ): DeclaredDependencies {
+    val remoteDependencies = buildMap {
+      for ((key, dep) in dependencies) {
+        if (dep is RemoteDependency) {
+          put(
+            key,
+            org.pkl.core.packages.Dependency.RemoteDependency(
+              PackageUri(dep.packageUri),
+              dep.checksums
+            )
           )
-        Project.loadFromPath(dir, securityManager, message.timeout)
+        }
       }
-    val projectSettings = if (message.disableProjectSettings == true) null else project?.settings
-    val modulePaths = message.modulePaths ?: projectSettings?.modulePath ?: emptyList()
+    }
+    val localDependencies = buildMap {
+      for ((key, dep) in dependencies) {
+        if (dep is Project) {
+          val localDep =
+            buildDeclaredDependencies(dep.projectFileUri, dep.dependencies, dep.packageUri)
+          put(key, localDep)
+        }
+      }
+    }
+    return DeclaredDependencies(
+      remoteDependencies,
+      localDependencies,
+      projectFileUri,
+      myPackageUri?.let(::PackageUri)
+    )
+  }
+
+  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
+    val modulePaths = message.modulePaths ?: emptyList()
     val resolver = ModulePathResolver(modulePaths)
-    val allowedModules = message.allowedModules ?: projectSettings?.allowedModules ?: emptyList()
-    val allowedResources =
-      message.allowedResources ?: projectSettings?.allowedResources ?: emptyList()
-    val rootDir = message.rootDir ?: projectSettings?.rootDir
-    val env = message.env ?: projectSettings?.env ?: emptyMap()
-    val properties = message.properties ?: projectSettings?.externalProperties ?: emptyMap()
-    val timeout = message.timeout ?: projectSettings?.timeout?.toJavaDuration()
-    val cacheDir = message.cacheDir ?: projectSettings?.moduleCacheDir
+    val allowedModules = message.allowedModules ?: emptyList()
+    val allowedResources = message.allowedResources ?: emptyList()
+    val rootDir = message.rootDir
+    val env = message.env ?: emptyMap()
+    val properties = message.properties ?: emptyMap()
+    val timeout = message.timeout
+    val cacheDir = message.cacheDir
+    val dependencies =
+      message.project?.let { proj ->
+        buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
+      }
+    log("Got dependencies: $dependencies")
     return BinaryEvaluator(
       StackFrameTransformers.defaultTransformer,
       SecurityManagers.standard(
@@ -151,7 +180,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       properties,
       timeout,
       cacheDir,
-      project?.dependencies,
+      dependencies,
       message.outputFormat
     )
   }

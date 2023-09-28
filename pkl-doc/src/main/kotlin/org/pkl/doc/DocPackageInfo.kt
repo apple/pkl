@@ -165,7 +165,7 @@ data class DocPackageInfo(
   internal fun getModuleSourceCode(moduleName: String): String? {
     val path = "/" + getModulePath(moduleName, moduleNamePrefix) + ".pkl"
     // assumption: the fragment is only used for line numbers
-    return sourceCodeUrlScheme?.replace("%{path}", path)?.substringBeforeLast('#')
+    return sourceCodeUrlScheme?.replace("%{path}", path)?.substringBefore('#')
   }
 
   private fun getModulePath(moduleName: String, packagePrefix: String): String =

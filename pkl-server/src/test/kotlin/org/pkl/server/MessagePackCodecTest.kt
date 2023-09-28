@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.msgpack.core.MessagePack
 import org.pkl.core.module.PathElement
+import org.pkl.core.packages.Checksums
 
 class MessagePackCodecTest {
   private val encoder: MessageEncoder
@@ -88,8 +89,30 @@ class MessagePackCodecTest {
         rootDir = Path.of("root/dir"),
         cacheDir = Path.of("cache/dir"),
         outputFormat = "pcf",
-        projectDir = null,
-        disableProjectSettings = null
+        project =
+          Project(
+            projectFileUri = URI("file:///dummy/PklProject"),
+            packageUri = null,
+            dependencies =
+              mapOf(
+                "foo" to
+                  Project(
+                    projectFileUri = URI("file:///foo"),
+                    packageUri = URI("package://localhost:12110/foo@1.0.0"),
+                    dependencies =
+                      mapOf(
+                        "bar" to
+                          Project(
+                            projectFileUri = URI("file:///bar"),
+                            packageUri = URI("package://localhost:12110/bar@1.1.0"),
+                            dependencies = emptyMap()
+                          )
+                      )
+                  ),
+                "baz" to
+                  RemoteDependency(URI("package://localhost:12110/baz@1.1.0"), Checksums("abc123"))
+              )
+          )
       )
     )
   }

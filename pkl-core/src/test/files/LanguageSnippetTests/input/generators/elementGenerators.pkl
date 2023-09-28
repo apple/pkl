@@ -423,6 +423,20 @@ forWithMultipleMembersNested = new Listing {
   }
 }
 
+forGeneratorsWithOverlappingNamesAndWhenNestedWhen = new Listing {
+  when (false) {
+    for (c in List(1)) {
+      c
+    }
+  } else {
+    for (c in List(6)) {
+      when (c != 1) {
+        c
+      }
+    }
+  }
+}
+
 whenWithMultipleMembers = new Dynamic {
   for (i, n in new Listing { 1; 2; 3; 4; 5 }) {
     when (n.isOdd) {

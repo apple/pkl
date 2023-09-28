@@ -16,6 +16,7 @@
 package org.pkl.commons.test
 
 import java.nio.file.Path
+import java.util.Locale
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.useDirectoryEntries
 import kotlin.reflect.KClass
@@ -53,6 +54,11 @@ abstract class InputOutputTestEngine :
   class ExecutionContext : EngineExecutionContext
 
   override fun getId(): String = this::class.java.simpleName
+
+  init {
+    // Enforce consistent locale for tests to avoid inconsistent formatting.
+    Locale.setDefault(Locale.ROOT)
+  }
 
   override fun discover(
     discoveryRequest: EngineDiscoveryRequest,

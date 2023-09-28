@@ -574,8 +574,8 @@ class KotlinCodeGeneratorTest {
     assertContains(
       """
       |  open class Foo(
-      |    val other: Long,
-      |    val bar: Bar
+      |    open val other: Long,
+      |    open val bar: Bar
       |  )
     """
         .trimMargin(),
@@ -585,8 +585,8 @@ class KotlinCodeGeneratorTest {
     assertContains(
       """
       |  open class Bar(
-      |    val foo: Foo,
-      |    val other: String
+      |    open val foo: Foo,
+      |    open val other: String
       |  )
     """
         .trimMargin(),
@@ -619,7 +619,7 @@ class KotlinCodeGeneratorTest {
     assertContains(
       """
       |  open class Foo(
-      |    val one: Long
+      |    open val one: Long
       |  )
     """
         .trimMargin(),
@@ -640,7 +640,7 @@ class KotlinCodeGeneratorTest {
       """
       |  open class Bar(
       |    one: Long,
-      |    val two: String
+      |    open val two: String
       |  ) : None(one)
     """
         .trimMargin(),

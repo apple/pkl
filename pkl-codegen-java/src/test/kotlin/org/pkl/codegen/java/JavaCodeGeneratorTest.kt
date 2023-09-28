@@ -1736,6 +1736,94 @@ class JavaCodeGeneratorTest {
     confirmSerDe(bigStruct)
   }
 
+  @Test
+  fun `override property type`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      open class Foo
+
+      class TheFoo extends Foo {
+        fooProp: String
+      }
+
+      open class OpenClass {
+        prop: Foo
+      }
+
+      class TheClass extends OpenClass {
+        prop: TheFoo
+      }
+    """
+          .trimIndent()
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+    |  public static final class TheClass extends OpenClass {
+    |    public final @NonNull TheFoo prop;
+    |
+    |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
+    |      super(prop);
+    |      this.prop = prop;
+    |    }
+    |
+    |    public TheClass withProp(@NonNull TheFoo prop) {
+    |      return new TheClass(prop);
+    |    }
+    """
+          .trimMargin()
+      )
+    assertCompilesSuccessfully(javaCode)
+  }
+
+  @Test
+  fun `override property type, with getters`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      open class Foo
+
+      class TheFoo extends Foo {
+        fooProp: String
+      }
+
+      open class OpenClass {
+        prop: Foo
+      }
+
+      class TheClass extends OpenClass {
+        prop: TheFoo
+      }
+    """
+          .trimIndent(),
+        generateGetters = true
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+    |  public static final class TheClass extends OpenClass {
+    |    private final @NonNull TheFoo prop;
+    |
+    |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
+    |      super(prop);
+    |      this.prop = prop;
+    |    }
+    |
+    |    @Override
+    |    public @NonNull TheFoo getProp() {
+    |      return prop;
+    |    }
+    """
+          .trimMargin()
+      )
+    assertCompilesSuccessfully(javaCode)
+  }
+
   private fun generateFiles(tempDir: Path, vararg pklModules: PklModule): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()

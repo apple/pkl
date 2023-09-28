@@ -1,9 +1,9 @@
 package org.pkl.core
 
-import org.pkl.core.project.Project
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pkl.core.project.Project
 import java.nio.file.Path
 import java.time.Duration
 
@@ -51,7 +51,7 @@ class EvaluatorBuilderTest {
     }
     assertThat(e1).hasMessage("No stack frame transformer set.")
   }
-  
+
   @Test
   fun `sets evaluator settings from project`() {
     val projectPath = Path.of(javaClass.getResource("project/project1/PklProject")!!.toURI())

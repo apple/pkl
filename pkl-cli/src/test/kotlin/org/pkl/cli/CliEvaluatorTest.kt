@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.pkl.commons.*
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.OutputFormat
@@ -1158,7 +1159,7 @@ result = someLib.x
   }
 
   @Test
-  fun `not adding the self signed certificate will result in a error`() {
+  fun `not including the self signed certificate will result in a error`() {
     PackageServer.ensureStarted()
     val moduleUri =
       writePklFile(
@@ -1177,7 +1178,9 @@ result = someLib.x
           sourceModules = listOf(moduleUri),
           workingDir = tempDir,
           moduleCacheDir = tempDir,
-          noCache = true
+          noCache = true,
+          // ensure we override any previously set root cert to the default buundle.
+          caCertificates = listOf(BaseOptions.Companion.includedCARootCerts())
         ),
       )
     val err = assertThrows<CliException> { CliEvaluator(options, consoleWriter = buffer).run() }

@@ -1,7 +1,6 @@
 open module constModifier
 
 import "pkl:test"
-import "pkl:math"
 
 const constantSimpleValue = "constant"
 
@@ -23,8 +22,6 @@ nonConstantNestedValue {
 }
 
 function nonConstFunction() = nonConstantSimpleValue
-
-const function constFunctionCallingNonConst(): (String) -> String = (s) -> s + nonConstFunction()
 
 class ConstImport {
   const cst = 10
@@ -71,4 +68,3 @@ res01 = new Valid {}
 res02 = test.catch(() -> "\(new BrokenSimple {})")
 res03 = test.catch(() -> "\(new BrokenNested {})")
 res04 = test.catch(() -> "\(new BrokenFunction {})")
-res05 = test.catch(() -> constFunctionCallingNonConst().apply("hello "))

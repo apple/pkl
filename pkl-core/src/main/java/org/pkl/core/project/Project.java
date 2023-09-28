@@ -54,6 +54,7 @@ public final class Project {
   private final URI projectFileUri;
   private final Path projectDir;
   private final List<Path> tests;
+  private final Map<String, Project> localProjectDependencies;
 
   /**
    * Loads Project data from the given {@link Path}.
@@ -76,6 +77,7 @@ public final class Project {
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .build()) {
@@ -101,20 +103,27 @@ public final class Project {
     return loadFromPath(path, SecurityManagers.defaultManager, null);
   }
 
-  private static DeclaredDependencies parseDependencies(PObject module, URI projectFileUri)
+  private static DeclaredDependencies parseDependencies(
+      PObject module, URI projectFileUri, @Nullable PackageUri packageUri)
       throws URISyntaxException {
     var remoteDependencies = new HashMap<String, RemoteDependency>();
-    var localDependencies = new HashMap<String, Project>();
+    var localDependencies = new HashMap<String, DeclaredDependencies>();
     //noinspection unchecked
     var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
     for (var entry : dependencies.entrySet()) {
-      if (entry.getValue().getClassInfo().equals(PClassInfo.Project)) {
-        localDependencies.put(entry.getKey(), parseProject(entry.getValue()));
+      var value = entry.getValue();
+      if (value.getClassInfo().equals(PClassInfo.Project)) {
+        var localProjectFileUri = URI.create((String) value.getProperty("projectFileUri"));
+        var localPkgUri =
+            PackageUri.create((String) ((PObject) value.getProperty("package")).getProperty("uri"));
+        localDependencies.put(
+            entry.getKey(), parseDependencies(value, localProjectFileUri, localPkgUri));
       } else {
-        remoteDependencies.put(entry.getKey(), parseRemoteDependency(entry.getValue()));
+        remoteDependencies.put(entry.getKey(), parseRemoteDependency(value));
       }
     }
-    return new DeclaredDependencies(remoteDependencies, localDependencies, projectFileUri);
+    return new DeclaredDependencies(
+        remoteDependencies, localDependencies, projectFileUri, packageUri);
   }
 
   private static RemoteDependency parseRemoteDependency(PObject object) throws URISyntaxException {
@@ -133,7 +142,7 @@ public final class Project {
   public static Project parseProject(PObject module) throws URISyntaxException {
     var pkgObj = getNullableProperty(module, "package");
     var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
-    var dependencies = parseDependencies(module, projectFileUri);
+    var dependencies = parseDependencies(module, projectFileUri, null);
     var projectDir = Path.of(projectFileUri).getParent();
     Package pkg = null;
     if (pkgObj != null) {
@@ -150,7 +159,29 @@ public final class Project {
         testPathStrs.stream()
             .map((it) -> projectDir.resolve(it).normalize())
             .collect(Collectors.toList());
-    return new Project(pkg, dependencies, evaluatorSettings, projectFileUri, projectDir, tests);
+    var localProjectDependencies = parseLocalProjectDependencies(module);
+    return new Project(
+        pkg,
+        dependencies,
+        evaluatorSettings,
+        projectFileUri,
+        projectDir,
+        tests,
+        localProjectDependencies);
+  }
+
+  private static Map<String, Project> parseLocalProjectDependencies(PObject module)
+      throws URISyntaxException {
+    //noinspection unchecked
+    var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
+    var result = new HashMap<String, Project>();
+    for (var entry : dependencies.entrySet()) {
+      var value = entry.getValue();
+      if (value.getClassInfo().equals(PClassInfo.Project)) {
+        result.put(entry.getKey(), parseProject(entry.getValue()));
+      }
+    }
+    return result;
   }
 
   @SuppressWarnings("unchecked")
@@ -279,13 +310,15 @@ public final class Project {
       EvaluatorSettings evaluatorSettings,
       URI projectFileUri,
       Path projectDir,
-      List<Path> tests) {
+      List<Path> tests,
+      Map<String, Project> localProjectDependencies) {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
     this.projectFileUri = projectFileUri;
     this.projectDir = projectDir;
     this.tests = tests;
+    this.localProjectDependencies = localProjectDependencies;
   }
 
   public @Nullable Package getPackage() {
@@ -327,6 +360,10 @@ public final class Project {
 
   public DeclaredDependencies getDependencies() {
     return dependencies;
+  }
+
+  public Map<String, Project> getLocalProjectDependencies() {
+    return localProjectDependencies;
   }
 
   public Path getProjectDir() {

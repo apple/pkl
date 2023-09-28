@@ -22,7 +22,9 @@ import java.nio.file.Path
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
+import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
+import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
+import org.pkl.commons.test.PackageServer
 import org.pkl.core.module.PathElement
 
 class ServerTest {
@@ -824,6 +827,133 @@ class ServerTest {
       )
   }
 
+  @Test
+  fun `evaluate with project dependencies`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("cache").createDirectories()
+    PackageServer.populateCacheDir(cacheDir)
+    val libDir = tempDir.resolve("lib/").createDirectories()
+    libDir
+      .resolve("lib.pkl")
+      .writeText(
+        """
+      text = "This is from lib"
+    """
+          .trimIndent()
+      )
+    libDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+      
+      package {
+        name = "lib"
+        baseUri = "package://localhost:12110/lib"
+        version = "5.0.0"
+        packageZipUrl = "https://localhost:12110/lib.zip"
+      }
+    """
+          .trimIndent()
+      )
+    val projectDir = tempDir.resolve("proj/").createDirectories()
+    val module = projectDir.resolve("mod.pkl")
+    module.writeText(
+      """
+      import "@birds/Bird.pkl"
+      import "@lib/lib.pkl"
+      
+      res: Bird = new {
+        name = "Birdie"
+        favoriteFruit { name = "dragonfruit" }
+      }
+      
+      libContents = lib
+    """
+        .trimIndent()
+    )
+    val dollar = '$'
+    projectDir
+      .resolve("PklProject.deps.json")
+      .writeText(
+        """
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {
+          "package://localhost:12110/birds@0": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:12110/birds@0.5.0",
+            "checksums": {
+              "sha256": "${dollar}skipChecksumVerification"
+            }
+          },
+          "package://localhost:12110/fruit@1": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+            "checksums": {
+              "sha256": "${dollar}skipChecksumVerification"
+            }
+          },
+          "package://localhost:12110/lib@5": {
+            "type": "local",
+            "uri": "projectpackage://localhost:12110/lib@5.0.0",
+            "path": "../lib"
+          }
+        }
+      }
+
+    """
+          .trimIndent()
+      )
+    val evaluatorId =
+      client.sendCreateEvaluatorRequest(
+        cacheDir = cacheDir,
+        project =
+          Project(
+            projectFileUri = projectDir.resolve("PklProject").toUri(),
+            packageUri = null,
+            dependencies =
+              mapOf(
+                "birds" to
+                  RemoteDependency(packageUri = URI("package://localhost:12110/birds@0.5.0"), null),
+                "lib" to
+                  Project(
+                    projectFileUri = libDir.toUri().resolve("PklProject"),
+                    packageUri = URI("package://localhost:12110/lib@5.0.0"),
+                    dependencies = emptyMap()
+                  )
+              )
+          )
+      )
+    client.send(
+      EvaluateRequest(
+        requestId = 1,
+        evaluatorId = evaluatorId,
+        moduleUri = module.toUri(),
+        moduleText = null,
+        expr = "output.text",
+      )
+    )
+    val resp2 = client.receive<EvaluateResponse>()
+    assertThat(resp2.error).isNull()
+    assertThat(resp2.result).isNotNull()
+    assertThat(resp2.result!!.debugRendering.trim())
+      .isEqualTo(
+        """
+        |
+          res {
+            name = "Birdie"
+            favoriteFruit {
+              name = "dragonfruit"
+            }
+          }
+          libContents {
+            text = "This is from lib"
+          }
+        """
+          .trimIndent()
+      )
+  }
+
   private val ByteArray.debugYaml
     get() = MessagePackDebugRenderer(this).output.trimIndent()
 
@@ -831,7 +961,9 @@ class ServerTest {
     requestId: Long = 123,
     resourceReaders: List<ResourceReaderSpec> = listOf(),
     moduleReaders: List<ModuleReaderSpec> = listOf(),
-    modulePaths: List<Path> = listOf()
+    modulePaths: List<Path> = listOf(),
+    project: Project? = null,
+    cacheDir: Path? = null
   ): Long {
     val message =
       CreateEvaluatorRequest(
@@ -845,10 +977,9 @@ class ServerTest {
         properties = mapOf(),
         timeout = null,
         rootDir = null,
-        cacheDir = null,
+        cacheDir = cacheDir,
         outputFormat = null,
-        disableProjectSettings = null,
-        projectDir = null
+        project = project
       )
 
     send(message)

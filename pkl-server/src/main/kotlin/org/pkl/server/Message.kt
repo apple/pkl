@@ -21,6 +21,7 @@ import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
 import org.pkl.core.module.PathElement
+import org.pkl.core.packages.Checksums
 
 sealed interface Message {
   val type: MessageType
@@ -86,6 +87,28 @@ private fun <T> T?.equalsNullable(other: Any?): Boolean {
   return Objects.equals(this, other)
 }
 
+enum class DependencyType(val value: String) {
+  LOCAL("local"),
+  REMOTE("remote")
+}
+
+sealed interface Dependency {
+  val type: DependencyType
+  val packageUri: URI?
+}
+
+data class RemoteDependency(override val packageUri: URI, val checksums: Checksums?) : Dependency {
+  override val type: DependencyType = DependencyType.REMOTE
+}
+
+data class Project(
+  val projectFileUri: URI,
+  override val packageUri: URI?,
+  val dependencies: Map<String, Dependency>
+) : Dependency {
+  override val type: DependencyType = DependencyType.LOCAL
+}
+
 data class CreateEvaluatorRequest(
   override val requestId: Long,
   val allowedModules: List<Pattern>?,
@@ -98,9 +121,8 @@ data class CreateEvaluatorRequest(
   val timeout: Duration?,
   val rootDir: Path?,
   val cacheDir: Path?,
-  val projectDir: Path?,
   val outputFormat: String?,
-  val disableProjectSettings: Boolean?
+  val project: Project?,
 ) : ClientRequestMessage() {
   override val type = MessageType.CREATE_EVALUATOR_REQUEST
 
@@ -126,27 +148,25 @@ data class CreateEvaluatorRequest(
       timeout.equalsNullable(other.timeout) &&
       rootDir.equalsNullable(other.rootDir) &&
       cacheDir.equalsNullable(other.cacheDir) &&
-      projectDir.equalsNullable(other.projectDir) &&
       outputFormat.equalsNullable(other.outputFormat) &&
-      disableProjectSettings.equalsNullable(other.disableProjectSettings)
+      project.equalsNullable(other.project)
   }
 
   @Suppress("DuplicatedCode") // false duplicate within method
   override fun hashCode(): Int {
     var result = requestId.hashCode()
-    result = 31 * result + (allowedModules?.map { it.pattern() }?.hashCode() ?: 0)
-    result = 31 * result + (allowedResources?.map { it.pattern() }?.hashCode() ?: 0)
-    result = 31 * result + (clientModuleReaders?.hashCode() ?: 0)
-    result = 31 * result + (clientResourceReaders?.hashCode() ?: 0)
-    result = 31 * result + (modulePaths?.hashCode() ?: 0)
-    result = 31 * result + (env?.hashCode() ?: 0)
-    result = 31 * result + (properties?.hashCode() ?: 0)
-    result = 31 * result + (timeout?.hashCode() ?: 0)
-    result = 31 * result + (rootDir?.hashCode() ?: 0)
-    result = 31 * result + (cacheDir?.hashCode() ?: 0)
-    result = 31 * result + (projectDir?.hashCode() ?: 0)
-    result = 31 * result + (outputFormat?.hashCode() ?: 0)
-    result = 31 * result + (disableProjectSettings?.hashCode() ?: 0)
+    result = 31 * result + allowedModules?.map { it.pattern() }.hashCode()
+    result = 31 * result + allowedResources?.map { it.pattern() }.hashCode()
+    result = 31 * result + clientModuleReaders.hashCode()
+    result = 31 * result + clientResourceReaders.hashCode()
+    result = 31 * result + modulePaths.hashCode()
+    result = 31 * result + env.hashCode()
+    result = 31 * result + properties.hashCode()
+    result = 31 * result + timeout.hashCode()
+    result = 31 * result + rootDir.hashCode()
+    result = 31 * result + cacheDir.hashCode()
+    result = 31 * result + outputFormat.hashCode()
+    result = 31 * result + project.hashCode()
     result = 31 * result + type.hashCode()
     return result
   }

@@ -15,10 +15,10 @@
  */
 package org.pkl.server
 
-import java.lang.RuntimeException
 import kotlin.io.path.pathString
 import org.msgpack.core.MessagePacker
 import org.pkl.core.module.PathElement
+import org.pkl.core.packages.Checksums
 
 internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEncoder {
   private fun MessagePacker.packModuleReaderSpec(reader: ModuleReaderSpec) {
@@ -42,6 +42,42 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
     packKeyValue("isDirectory", pathElement.isDirectory)
   }
 
+  private fun MessagePacker.packProject(project: Project) {
+    packMapHeader(2)
+    packKeyValue("projectFileUri", project.projectFileUri.toString())
+    packString("dependencies")
+    packDependencies(project.dependencies)
+  }
+
+  private fun MessagePacker.packDependencies(dependencies: Map<String, Dependency>) {
+    packMapHeader(dependencies.size)
+    for ((name, dep) in dependencies) {
+      packString(name)
+      if (dep is Project) {
+        packMapHeader(4)
+        packKeyValue("type", dep.type.value)
+        packKeyValue("packageUri", dep.packageUri.toString())
+        packKeyValue("projectFileUri", dep.projectFileUri.toString())
+        packString("dependencies")
+        packDependencies(dep.dependencies)
+      } else {
+        dep as RemoteDependency
+        packMapHeader(dep.checksums?.let { 3 } ?: 2)
+        packKeyValue("type", dep.type.value)
+        packKeyValue("packageUri", dep.packageUri.toString())
+        dep.checksums?.let { checksums ->
+          packString("checksums")
+          packChecksums(checksums)
+        }
+      }
+    }
+  }
+
+  private fun MessagePacker.packChecksums(checksums: Checksums) {
+    packMapHeader(1)
+    packKeyValue("sha256", checksums.sha256)
+  }
+
   override fun encode(msg: Message) =
     with(packer) {
       packArrayHeader(2)
@@ -51,7 +87,7 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
       when (msg.type.code) {
         MessageType.CREATE_EVALUATOR_REQUEST.code -> {
           msg as CreateEvaluatorRequest
-          packMapHeader(8, msg.timeout, msg.rootDir, msg.cacheDir, msg.outputFormat)
+          packMapHeader(8, msg.timeout, msg.rootDir, msg.cacheDir, msg.outputFormat, msg.project)
           packKeyValue("requestId", msg.requestId)
           packKeyValue("allowedModules", msg.allowedModules?.map { it.toString() })
           packKeyValue("allowedResources", msg.allowedResources?.map { it.toString() })
@@ -76,6 +112,10 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
           packKeyValue("rootDir", msg.rootDir?.pathString)
           packKeyValue("cacheDir", msg.cacheDir?.pathString)
           packKeyValue("outputFormat", msg.outputFormat)
+          if (msg.project != null) {
+            packString("project")
+            packProject(msg.project)
+          }
         }
         MessageType.CREATE_EVALUATOR_RESPONSE.code -> {
           msg as CreateEvaluatorResponse
@@ -202,14 +242,16 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
     value1: Any?,
     value2: Any?,
     value3: Any?,
-    value4: Any?
+    value4: Any?,
+    value5: Any?
   ) =
     packMapHeader(
       size +
         (if (value1 != null) 1 else 0) +
         (if (value2 != null) 1 else 0) +
         (if (value3 != null) 1 else 0) +
-        (if (value4 != null) 1 else 0)
+        (if (value4 != null) 1 else 0) +
+        (if (value5 != null) 1 else 0)
     )
 
   private fun MessagePacker.packKeyValue(name: String, value: Int?) {

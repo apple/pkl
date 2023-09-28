@@ -9,7 +9,7 @@
 
 . pkl-lang/pkl.github.com (dev branch)
 .. run `gw validateLocalSite`.
-... It's okay if there are errors like `Unexpected HTTP status code 404 for external link https://pkl.apple.com/pkl/<new-version>-dev/...` because we do not publish docs for unreleased versions of Pkl.
+... It's okay if there are errors like `Unexpected HTTP status code 404 for external link https://pkl.apple.com/<new-version>-dev/...` because we do not publish docs for unreleased versions of Pkl.
 .. do a quick manual check of the generated site (esp. the release notes)
 . pkl-lang/pkl (dev branch)
 .. gradle.properties: update `version` as necessary

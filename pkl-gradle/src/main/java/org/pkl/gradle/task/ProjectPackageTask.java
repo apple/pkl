@@ -46,6 +46,10 @@ public abstract class ProjectPackageTask extends BasePklTask {
   @Input
   public abstract Property<Boolean> getOverwrite();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getSkipPublishCheck();
+
   @Override
   protected void doRunTask() {
     var projectDirectories =
@@ -62,6 +66,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get()),
             getOutputPath().get().getAsFile().getAbsolutePath(),
+            getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

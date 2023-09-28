@@ -24,7 +24,7 @@ object Mod {
   }
 
   open class Foo(
-    val one: Long
+    open val one: Long
   ) {
     open fun copy(one: Long = this.one): Foo = Foo(one)
 
@@ -81,7 +81,7 @@ object Mod {
 
   open class Bar(
     one: Long,
-    val two: String
+    open val two: String
   ) : None(one) {
     open fun copy(one: Long = this.one, two: String = this.two): Bar = Bar(one, two)
 

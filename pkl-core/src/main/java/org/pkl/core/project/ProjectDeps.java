@@ -35,7 +35,6 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
@@ -91,8 +90,7 @@ public class ProjectDeps {
     var parsed = Json.parseObject(input);
     var schemaVersion = parsed.getInt("schemaVersion");
     if (!supportedSchemaVersions.contains(schemaVersion)) {
-      throw new PackageLoadError(
-          ErrorMessages.create("unsupportedProjectDepsVersion", schemaVersion));
+      throw new PackageLoadError("unsupportedProjectDepsVersion", schemaVersion);
     }
     var resolvedDependencies =
         parsed.get("resolvedDependencies", ProjectDeps::parseResolvedDependencies);

@@ -26,7 +26,7 @@
 /// `--project-dir` flag, or is determined implicitly by walking up the working directory, looking
 /// for a directory containing a `PklProject` file.
 ///
-/// When using the API libraries (e.g. _pkl-go_ or _pkl-config-java_), the project must be
+/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must be
 /// explicitly stated via the evaluator builder.
 ///
 /// ## Embedding [Project]
@@ -64,7 +64,7 @@
 ///   value = project
 /// }
 /// ``` 
-@ModuleInfo { minPklVersion = "0.24.1" }
+@ModuleInfo { minPklVersion = "0.24.7" }
 module pkl.Project
 
 import "pkl:Project"

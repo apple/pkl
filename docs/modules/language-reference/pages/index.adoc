@@ -81,6 +81,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-value-converters: {uri-pkl-stdlib-docs}/base/PcfRenderer#converters
 // TODO: double check this
 :uri-pkl-go-resource-reader-docs: https://github.com/pkl-lang/pkl-go/blob/main/pkl/reader.go
+:uri-pkl-swift-resource-reader-docs: https://github.com/pkl-lang/pkl-swift/blob/main/Sources/PklSwift/Reader.swift
 :uri-glob-7: https://man7.org/linux/man-pages/man7/glob.7.html
 :uri-unicode-identifier: https://unicode.org/reports/tr31/#R1-1
 :uri-semver: https://semver.org
@@ -348,10 +349,10 @@ To embed the result of expression `<expr>` in a string, use `\(<expr>)`:
 
 [source%tested,{pkl}]
 ----
-name = "Parrot"
+name = "Dodo"
 greeting = "Hi, \(name)!" // <1>
 ----
-<1> result: `"Hi, Parrot!"`
+<1> result: `"Hi, Dodo!"`
 
 Before a result is inserted, it is converted to a string:
 
@@ -370,7 +371,7 @@ To write a string that spans multiple lines, use a multiline string literal:
 ----
 """
 Although the Dodo is extinct,
-its species will be remembered.
+the species will be remembered.
 """
 ----
 
@@ -385,7 +386,7 @@ Notice that there is no leading or trailing whitespace.
 
 [source%tested,{pkl-expr}]
 ----
-"Although the Dodo is extinct,\nits species will be remembered."
+"Although the Dodo is extinct,\nthe species will be remembered."
 ----
 
 String interpolation, character escape sequences, and Unicode escape sequences work the same as for single line strings:
@@ -395,7 +396,7 @@ String interpolation, character escape sequences, and Unicode escape sequences w
 bird = "Dodo"
 message = """
 Although the \(bird) is extinct,
-its species will be remembered.
+the species will be remembered.
 """
 ----
 
@@ -408,10 +409,10 @@ In the following string, lines have no leading whitespace:
 [source%tested,{pkl}]
 ----
 str = """
-  The quick
-  brown fox
-  jumps over the
-  lazy dog.
+  Although the Dodo
+  is extinct,
+  the species
+  will be remembered.
   """
 ----
 
@@ -420,10 +421,10 @@ In the following string, lines are indented between three and five spaces:
 [source%tested,{pkl}]
 ----
 str = """
-     The quick
-       brown fox
-     jumps over the
-       lazy dog.
+     Although the Dodo
+       is extinct,
+     the species
+       will be remembered.
   """
 ----
 
@@ -468,15 +469,15 @@ Here are just a few examples:
 
 [source%tested,{pkl}]
 ----
-strLength = "abc".length // <1>
-reversedStr = "abc".reverse() // <2>
-hasAx = "abc".contains("ax") // <3>
-trimmed = "  abc  ".trim() // <4>
+strLength = "dodo".length // <1>
+reversedStr = "dodo".reverse() // <2>
+hasAx = "dodo".contains("alive") // <3>
+trimmed = "  dodo  ".trim() // <4>
 ----
-<1> result: `3`
-<2> result: `"cba"`
+<1> result: `4`
+<2> result: `"odod"`
 <3> result: `false`
-<4> result: `"abc"`
+<4> result: `"dodo"`
 
 [[durations]]
 == Durations
@@ -643,45 +644,45 @@ and because they are the backbone of most data models, understanding objects is 
 [[defining-objects]]
 === Defining Objects
 
-Let's define an object with properties `name` and `isExtinct`:
+Let's define an object with properties `name` and `extinct`:
 
 [source%tested,{pkl}]
 ----
-pigeon { // <1>
-  name = "Pigeon" // <2>
-  isExtinct = false // <3>
+dodo { // <1>
+  name = "Dodo" // <2>
+  extinct = true // <3>
 } // <4>
 ----
-<1> Defines a module property named `pigeon`.
+<1> Defines a module property named `dodo`.
     The open curly brace (`{`) indicates that the value of this property is an object.
-<2> Defines an object property named `name` with string value `"Pigeon"`.
-<3> Defines an object property named `isExtinct` with boolean value `false`.
+<2> Defines an object property named `name` with string value `"Dodo"`.
+<3> Defines an object property named `extinct` with boolean value `true`.
 <4> The closing curly brace indicates the end of the object definition.
 
 To access an object property by name, use dot (`.`) notation:
 
 [source%tested,{pkl}]
 ----
-pigeonName = pigeon.name
-pigeonIsExtinct = pigeon.isExtinct
+dodoName = dodo.name
+dodoIsExtinct = dodo.extinct
 ----
 
 Objects can be nested:
 
 [source%tested,{pkl}]
 ----
-pigeon {
-  name = "Pigeon"
-  profile { // <1>
-    age = 2
-    isExtinct = false
+dodo {
+  name = "Dodo"
+  taxonomy { // <1>
+    `class` = "Aves" // <2>
   }
 }
 ----
-<1> Defines an object property named `profile`.
+<1> Defines an object property named `taxonomy`.
     The open curly brace indicates that its value is another object.
+<2> The word `class` is a keyword of Pkl, and needs to be wrapped in backticks (```) to be used as a property.
 
-As you probably guessed, the nested property `age` can be accessed with `pigeon.profile.age`.
+As you probably guessed, the nested property `class` can be accessed with `dodo.taxonomy.class`.
 
 Like all values, objects are _immutable_, which is just a fancy (and short!) way to say that their properties never change.
 So what happens when Pigeon moves to a different street? Do we have to construct a new object from scratch?
@@ -695,17 +696,18 @@ Here is how this looks:
 
 [source%parsed,{pkl}]
 ----
-pigeon2 = (pigeon) { // <1>
-  profile { // <2>
-    age = 5 // <3>
+tortoise = (dodo) { // <1>
+  name = "Galápagos tortoise"
+  taxonomy { // <2>
+    `class` = "Reptilia" // <3>
   }
 }
 ----
-<1> Defines a module property named `pigeon2`.
-    Its value is an object that _amends_ `pigeon`.
+<1> Defines a module property named `tortoise`.
+    Its value is an object that _amends_ `dodo`.
     Note that the amended object must be enclosed in parentheses.
-<2> Object property `pigeon2.profile` _amends_ `pigeon.profile`.
-<3> Object property `pigeon2.profile.age` _overrides_ `pigeon.profile.age`.
+<2> Object property `tortoise.taxonomy` _amends_ `dodo.taxonomy`.
+<3> Object property `tortoise.taxonomy.class` _overrides_ `dodo.taxonomy.class`.
 
 As you can see, it is easy to construct a new object that overrides selected properties of an existing object,
 even if, as in our example, the overridden property is nested inside another object.
@@ -725,8 +727,8 @@ The <<defining-objects,defining objects>> and <<amending-objects,amending object
 [source%tested,{pkl}]
 ----
 pigeon { // <1>
-  age = 5
-  isExtinct = false
+  name = "Turtle dove"
+  extinct = false
 }
 
 parrot = (pigeon) { // <2>
@@ -746,16 +748,16 @@ Amending object bodies can be chained for both an amends expression and an amend
 
 [source%tested,{pkl}]
 ----
+pigeon {
+  name = "Common wood pigeon"
+} {
+  extinct = false
+} // <1>
+
 dodo = (pigeon) {
   name = "Dodo"
 } {
-  isExtinct = true
-} // <1>
-
-elfOwl {
-  name = "Elf Owl"
-} {
-  age = 9
+  extinct = true
 } // <2>
 ----
 <1> Chained amends expression (`pigeon { ... } { ... }` is the amends expression).
@@ -771,27 +773,27 @@ Here is an example:
 
 [source%tested,{pkl}]
 ----
-alarm {
-  lowThreshold = 100
-  highThreshold = lowThreshold * 3 // <1>
+penguin {
+  eggIncubation = 40.d 
+  adultWeightInGrams = eggIncubation.value * 100 // <1>
 }
-highThreshold = alarm.highThreshold
+adultWeightInGrams = penguin.adultWeightInGrams
 ----
-<1> result: `300`
+<1> result: `4000`
 
-We have defined a hypothetical `alarm` object whose `highThreshold` property is defined in terms of `lowThreshold`.
-Can you guess what happens when `alarm` is amended and its `lowThreshold` overridden?
+We have defined a hypothetical `penguin` object whose `adultWeightInGrams` property is defined in terms of the `eggIncubation` duration.
+Can you guess what happens when `penguin` is amended and its `eggIncubation` overridden?
 
 [source%tested,{pkl}]
 ----
-alarm2 = (alarm) {
-  lowThreshold = 200
+madeUpBird = (penguin) {
+  eggIncubation = 11.d
 }
-highThreshold = alarm2.highThreshold // <1>
+adultWeightInGrams = madeUpBird.adultWeightInGrams // <1>
 ----
-<1> result: `600`
+<1> result: `1100`
 
-As you can see, ``alarm2``'s `highThreshold` changed along with its `lowThreshold`.
+As you can see, ``madeUpBird``'s `adultWeightInGrams` changed along with its `eggIncubation`.
 This is what we mean when we say that object properties are _late-bound_.
 
 [NOTE]
@@ -813,11 +815,9 @@ Say we have the following object:
 
 [source%tested,{pkl}]
 ----
-pigeon {
-  name = "Pigeon"
-  profile {
-    isExtinct = false
-  }
+dodo {
+  name = "Dodo"
+  extinct = true
 }
 ----
 
@@ -833,13 +833,13 @@ Equipped with this knowledge, let's try to accomplish our objective:
 
 [source%tested,{pkl-expr}]
 ----
-pigeon
+dodo
   .toMap()
   .remove("name")
   .toDynamic()
 ----
 
-The resulting dynamic object is equivalent to `pigeon`, except that it no longer has a `name` property.
+The resulting dynamic object is equivalent to `dodo`, except that it no longer has a `name` property.
 
 [IMPORTANT]
 .Lazy vs. Eager Data Types
@@ -854,11 +854,13 @@ To make these boundaries clear, transitioning between _lazy_ and _eager_ data ty
 [[typed-objects]]
 === Typed Objects
 
+:fn-typed-objects: footnote:[By "structure" we mean a list of property names and (optionally) property types.]
+
 Pkl has two kinds of objects:
 
-* A link:{uri-stdlib-Dynamic}[Dynamic] object has no predefined structure:footnote:[By "structure" we mean a list of property names and (optionally) property types.].
+* A link:{uri-stdlib-Dynamic}[Dynamic] object has no predefined structure.{fn-typed-objects}
   When a dynamic object is amended, not only can existing properties be overridden or amended, but new properties can also be added.
-  So far, we have only used dynamic objects in this chapter. +
+  So far, we have only used dynamic objects in this chapter.
 * A link:{uri-stdlib-Typed}[Typed] object has a fixed structure described by a class definition.
   When a typed object is amended, its properties can be overridden or amended, but new properties cannot be added.
   In other words, the new object has the same class as the original object.
@@ -866,8 +868,7 @@ Pkl has two kinds of objects:
 [TIP]
 .When to Use Typed vs. Dynamic Objects
 ====
-* Use typed objects to build schema-backed data models that are validated.
-  footnote:[By "Use typed objects" we mean to define classes and build data models out of instances of these classes.]
+* Use typed objects to build schema-backed data models that are validatedfootnote:[By "Use typed objects" we mean to define classes and build data models out of instances of these classes.].
   This is what most templates do.
 * Use dynamic objects to build schema-less data models that are not validated.
   Dynamic objects are useful for ad-hoc tasks, tasks that do not justify the effort of writing and maintaining a schema, and for representing data whose structure is unknown.
@@ -883,24 +884,23 @@ Let's look at an example:
 ----
 class Bird { // <1>
   name: String
-  age: Int
-  isExtinct: Boolean
+  lifespan: Int
+  migratory: Boolean
 }
 
 pigeon = new Bird { // <2>
   name = "Pigeon"
-  age = 5
-  isExtinct = false
+  lifespan = 8
+  migratory = false
 }
 ----
-<1> Defines a class named `Bird` with properties `name`, `age` and `isExtinct`.
+<1> Defines a class named `Bird` with properties `name`, `lifespan` and `migratory`.
 <2> Defines a module property named `pigeon`.
     Its value is a typed object constructed by instantiating class `Bird`.
     A type only needs to be stated when the property does not have or inherit a <<type-annotations,type annotation>>.
     Otherwise, amend syntax (`pigeon { ... }`) or shorthand instantiation syntax (`pigeon = new { ... }`) should be used.
 
-Congratulations, you have constructed your first typed object!
-footnote:[Not counting that every module is a typed object.]
+Congratulations, you have constructed your first typed objectfootnote:[Not counting that every module is a typed object.]!
 How does it differ from a dynamic object?
 
 The answer is that a typed object has a fixed structure prescribed by its class, which cannot be changed when amending the object:
@@ -909,12 +909,12 @@ The answer is that a typed object has a fixed structure prescribed by its class,
 ----
 class Bird { // <1>
   name: String
-  age: Int
+  lifespan: Int
 }
 
 faultyPigeon = new Bird {
   name = "Pigeon"
-  age = 5
+  lifespan = 8
   hobby = "singing"
 }
 ----
@@ -926,7 +926,7 @@ Evaluating this, gives:
 Cannot find property *hobby* in object of type *repl#Bird*.
 
 Available properties:
-age
+lifespan
 name
 ----
 
@@ -937,7 +937,7 @@ Let's try to override property `name` with a value of the wrong type:
 ----
 faultyPigeon2 = new Bird {
   name = 3.min
-  age = 5
+  lifespan = 8
 }
 ----
 
@@ -961,15 +961,15 @@ When you have a `Dynamic` that has all the properties (with the right types and 
 ----
 class Bird {
   name: String
-  age: Int
+  lifespan: Int
 }
 
 pigeon = new Dynamic { // <1>
   name = "Pigeon"
-  age = 5
+  lifespan = 8
 }.toTyped(Bird) // <2>
 ----
-<1> Instead of a `new Bird`, `pigeon` can be defined with a `new Dynamic`
+<1> Instead of a `new Bird`, `pigeon` can be defined with a `new Dynamic`.
 <2> That `Dynamic` is then converted to a `Bird`.
 ====
 
@@ -984,16 +984,16 @@ A property with modifier `hidden` is omitted from rendered output and from objec
 ----
 class Bird {
   name: String
-  age: Int
-  hidden nameAndAgeInIndex = "\(name), \(age)" // <1>
-  nameSignWidth: UInt = nameAndAgeInIndex.length // <2>
+  lifespan: Int
+  hidden nameAndLifespanInIndex = "\(name), \(lifespan)" // <1>
+  nameSignWidth: UInt = nameAndLifespanInIndex.length // <2>
 }
 
 pigeon = new Bird { // <3>
   name = "Pigeon"
 }
 
-pigeonInIndex = pigeon.nameAndAgeInIndex // <4>
+pigeonInIndex = pigeon.nameAndLifespanInIndex // <4>
 
 pigeonDynamic = pigeon.toDynamic() // <5>
 ----
@@ -1009,13 +1009,13 @@ Invoking Pkl on this file produces the following result.
 ----
 pigeon {
   name = "Pigeon"
-  age = 5
+  lifespan = 8
   nameSignWidth = 9
 }
 pigeonInIndex = "Pigeon, 5"
 pigeonDynamic {
   name = "Pigeon"
-  age = 5
+  lifespan = 8
   nameSignWidth = 9
 }
 ----
@@ -1027,22 +1027,22 @@ A property with modifier `local` can only be referenced in the lexical scope of 
 ----
 class Bird {
   name: String
-  age: Int
+  lifespan: Int
   local separator = "," // <1>
-  hidden nameAndAgeInIndex = "\(name)\(separator) \(age)" // <2>
+  hidden nameAndLifespanInIndex = "\(name)\(separator) \(lifespan)" // <2>
 }
 
 pigeon = new Bird {
   name = "Pigeon"
-  age = 5
+  lifespan = 8
 }
 
-pigeonInIndex = pigeon.nameAndAgeInIndex // <3>
+pigeonInIndex = pigeon.nameAndLifespanInIndex // <3>
 pigeonSeparator = pigeon.separator // Error <4>
 ----
 <1> This property can only be accessed from inside this _class definition_.
 <2> Non-local properties can refer to the local property as usual.
-<3> The _value_ of `separator` occurs in `nameAndAgeInIndex`.
+<3> The _value_ of `separator` occurs in `nameAndLifespanInIndex`.
 <4> Pkl does not accept this, as there is no property `separator` on a `Bird` instance.
 
 Because a `local` property is added to the lexical scope, but not (observably) to the object, you can add `local` properties to ``Listing``s and ``Mapping``s.
@@ -1066,7 +1066,7 @@ A property with the `fixed` modifier cannot be assigned to or amended when defin
 ----
 fixed laysEggs: Boolean = true
 
-fixed examples: Listing<String> = new {
+fixed birds: Listing<String> = new {
   "Pigeon"
   "Hawk"
   "Penguin"
@@ -1083,14 +1083,14 @@ amends "Bird.pkl"
 
 laysEggs = false // <1>
 
-examples { // <2>
+birds { // <2>
   "Giraffe"
 }
 ----
 <1> Error: cannot assign to fixed property `laysEggs`
-<2> Error: cannot amend fixed property `examples`
+<2> Error: cannot amend fixed property `birds`
 
-When extending a class and overriding an existing property definition, the fixedity of the overridden property must be preserved.
+When extending a class and overriding an existing property definition, the fixed-ness of the overridden property must be preserved.
 If the property in the parent class is declared `fixed`, the child property must also be declared `fixed`.
 If the property in the parent class is not declared `fixed`, the child property may not add the `fixed` modifier.
 
@@ -1115,17 +1115,17 @@ from other properties.
 
 [source%parsed,{pkl}]
 ----
-class Add {
-  a: Int
-  b: Int
-  fixed result: Int = a + b
+class Bird {
+  wingspan: Int
+  weight: Int
+  fixed wingspanWeightRatio: Int = wingspan / weight
 }
 ----
 
 Another use-case for `fixed` is to define properties that are meant to be fixed to a class definition.
-In the example below, the `scientificName` of a bird is tied to the class, and therefore is declared `fixed`.
+In the example below, the `species` of a bird is tied to the class, and therefore is declared `fixed`.
 
-Note that it is possible to define a fixed property without a value, for one of two reasons:
+Note that it is possible to define a `fixed` property without a value, for one of two reasons:
 
 1. The type has a default value that makes an explicit default redundant.
 2. The property is meant to be overridden by a child class.
@@ -1133,20 +1133,20 @@ Note that it is possible to define a fixed property without a value, for one of 
 [source%tested,{pkl}]
 ----
 abstract class Bird {
-  fixed scientificName: String // <1>
+  fixed species: String // <1>
 }
 
 class Osprey extends Bird {
-  fixed scientificName: "Pandion haliaetus" // <2>
+  fixed species: "Pandion haliaetus" // <2>
 }
 ----
 <1> No explicit default because the property is overridden by a child class.
-<2> Overrides the type from `String` to the <<string-literal-types,string literal type>> `"Swallow"`. +
+<2> Overrides the type from `String` to the <<string-literal-types,string literal type>> `"Pandion haliaetus"`. +
 Assigning an explicit default would be redundant, therefore it is omitted.
 
 ==== Const properties
 
-A property with the `const` modifier behaves like the <<fixed-properties,fixed>> modifier,
+A property with the `const` modifier behaves like the <<fixed-properties,`fixed`>> modifier,
 with the additional rule that it cannot reference non-const properties or methods.
 
 .Bird.pkl
@@ -1168,57 +1168,40 @@ Referencing any non-const property or method is an error.
 ----
 pigeonName: String = "Pigeon"
 
-const function birdAge(i: Int): Int = (i / 4).toInt()
+const function birdLifespan(i: Int): Int = (i / 4).toInt()
 
 class Bird {
   name: String
-  age: Int
+  lifespan: Int
 }
 
 const bird: Bird = new {
   name = pigeonName // <1>
-  age = birdAge(24) // <2>
+  lifespan = birdLifespan(24) // <2>
 }
 ----
 <1> Error: cannot reference non-const property `pigeonName` from a const property.
-<2> Allowed: `birdAge` is const.
+<2> Allowed: `birdLifespan` is const.
 
-Within a class or annotation body, references to members of its enclosing module must be `const`.
-NOTE: This rule is in place because it would otherwise change a class or annotation's definition when amending its enclosing module.
+It is okay to reference another value _within_ the same const property.
 
-.invalid2.pkl
-[source%parsed,{pkl}]
-----
-pigeonName: String = "Pigeon"
-
-const function birdAge(i: Int): Int = (i / 4).toInt()
-
-class Bird {
-  name: String = pigeonName // <1>
-  age: Int = birdAge(24) // <2>
-}
-
-@Deprecated { message = "Replace with \(pigeonName)" } // <3>
-oldPigeonName: String
-----
-<1> Error: cannot reference non-const property `pigeonName` from a class body.
-<2> Allowed: `birdAge` is const.
-<3> Error: cannot reference non-const property `pigeonName` from an annotation body.
-
-Values from an <<import-clause,import clause>> are implicitly `const`.
-Therefore, it is okay to reference these values as if they were `const`.
-
-.imports.pkl
+.valid.pkl
 [source%tested,{pkl}]
 ----
-import "pkl:math"
+class Bird {
+  lifespan: Int
+  description: String
+  speciesName: "Bird"
+}
 
-class Circle {
-  radius: Int
-  fixed area: Float = math.pi * radius * radius // <1>
+const bird: Bird = new {
+  lifespan = 8
+  description = "species: \(speciesName), lifespan: \(lifespan)" // <1>
 }
 ----
-<1> `math.pi` is allowed here, because it comes from an import clause.
+<1> `lifespan` is declared within property `bird`. `speciesName` resolves to `this.speciesName`, where `this` is a value within property `bird`.
+
+NOTE: Because `const` members can only reference its own values, or other `const` members, they are not <<late-binding,late bound>>.
 
 The `const` modifier implies that it is also <<fixed-properties,fixed>>.
 Therefore, the same rules that apply to `fixed` also apply to `const`:
@@ -1226,7 +1209,68 @@ Therefore, the same rules that apply to `fixed` also apply to `const`:
 * A `const` property cannot be assigned to or amended when defining an object of its class.
 * The const-ness of a property or method must be preserved when it is overridden by a child class.
 
-This concludes our tour of objects, one of the most complex but also most powerful features of Pkl.
+[[class-and-annotation-const]]
+*Class and Annotation Scoping*
+
+Within a class or annotation body, any reference to a property or method of its enclosing module requires that the referenced member is `const`.
+
+.invalid2.pkl
+[source%parsed,{pkl}]
+----
+pigeonName: String = "Pigeon"
+
+class Bird {
+  name: String = pigeonName // <1>
+}
+
+@Deprecated { message = "Replace with \(pigeonName)" } // <2>
+oldPigeonName: String
+----
+<1> Error: cannot reference non-const property `pigeonName` from a class.
+<2> Error: cannot reference non-const property `pigeonName` from an annotation.
+
+This rule exists because classes and annotations are not <<late-binding,late bound>>;
+it is not possible to change the definition of a class nor annotation by amending the module
+where it is defined.
+
+Generally, there are two strategies for referencing a property from a class or annotation:
+
+*Add the `const` modifier to the referenced property*
+
+One solution is to add the `const` modifier to the property being referenced.
+
+.Birds.pkl
+[source,diff]
+----
+-pigeonName: String = "Pigeon"
++const pigeonName: String = "Pigeon"
+
+ class Bird {
+   name: String = pigeonName
+ }
+----
+
+This solution makes sense if `pigeonName` does get assigned/amended when amending module `Birds.pkl` (modules are regular objects that can be amended).
+
+*Self-import the module*
+
+.Birds.pkl
+[source,diff]
+----
++import "Birds.pkl" // <1>
++
+ pigeonName: String = "Pigeon"
+
+ class Bird {
+-   name: String = pigeonName
++   name: String = Birds.pigeonName
+ }
+----
+<1> module `Birds` imports itself
+
+This solution works because an import clause implicitly defines a `const local` property and amending this module does not affect a self-import.
+
+This makes sense if property `pigeonName` *does* get assigned/amended when amending module `Birds.pkl`.
 
 [[listings]]
 == Listings
@@ -1283,7 +1327,7 @@ To access an element by index, use the `[]` (subscript) operator:
 
 [source%tested,{pkl}]
 ----
-firstBirdName = birds[0].name   // <1>
+firstBirdName = birds[0].name  // <1>
 secondBirdDiet = birds[1].diet // <2>
 ----
 <1> result: `"Pigeon"`
@@ -1297,7 +1341,7 @@ listing = new Listing {
   "Pigeon" // <1>
   3.min // <2>
   new Listing { // <3>
-    "Barn Owl"
+    "Barn owl"
   }
 }
 ----
@@ -1345,7 +1389,7 @@ To add, override, or amend elements of this listing, amend the listing itself:
 ----
 birds2 = (birds) { // <1>
   new { // <2>
-    name = "Barn Owl"
+    name = "Barn owl"
     diet = "Mice"
   }
   [0] { // <3>
@@ -1456,22 +1500,22 @@ Listings can have a _default element_:
 ----
 birds = new Listing {
   default { // <1>
-    age = 5
+    lifespan = 8
   }
   new { // <2>
     name = "Pigeon" // <3>
   }
   new { // <4>
     name = "Parrot"
-    age = 2 // <5>
+    lifespan = 20 // <5>
   }
 }
 ----
-<1> Amends the `default` element and sets property `age`.
+<1> Amends the `default` element and sets property `lifespan`.
 <2> Defines a new listing element that implicitly amends the default element.
-<3> Defines a new property called `name`. Property `age` is inherited from the default element.
+<3> Defines a new property called `name`. Property `lifespan` is inherited from the default element.
 <4> Defines a new listing element that implicitly amends the default element.
-<5> Overrides the default for property `age`.
+<5> Overrides the default for property `lifespan`.
 
 `default` is a hidden (that is, not rendered) link:{uri-stdlib-Listing-default}[property] defined in class `Listing`.
 If `birds` had a <<listing-type-annotations,type annotation>>, a suitable default element would be inferred from its type parameter.
@@ -1484,7 +1528,7 @@ As a result, defaults can be changed retroactively:
 ----
 birds2 = (birds) {
   default {
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
 }
@@ -1498,12 +1542,12 @@ An equivalent literal definition of `birds2` would look as follows:
 birds2 = new Listing {
   new {
     name = "Pigeon"
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
   new {
     name = "Parrot"
-    age = 2
+    lifespan = 20
     diet = "Berries"
   }
 }
@@ -1537,7 +1581,7 @@ Here is an example:
 ----
 class Bird {
   name: String
-  age: Int
+  lifespan: Int
 }
 
 birds: Listing<Bird>
@@ -1552,11 +1596,11 @@ Let's go ahead and populate `birds`:
 birds {
   new {
     name = "Pigeon"
-    age = 5
+    lifespan = 8
   }
   new {
     name = "Parrot"
-    age = 2
+    lifespan = 20
   }
 }
 ----
@@ -1573,7 +1617,7 @@ To constrain a listing to distinct elements, use ``Listing``'s link:{uri-stdlib-
 ----
 class Bird {
   name: String
-  age: Int
+  lifespan: Int
 }
 
 birds: Listing<Bird>(isDistinct)
@@ -1627,11 +1671,11 @@ Here is a mapping with two entries:
 ----
 birds = new Mapping { // <1>
   ["Pigeon"] { // <2>
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
   ["Parrot"] { // <3>
-    age = 2
+    lifespan = 20
     diet = "Berries"
   }
 }
@@ -1659,7 +1703,7 @@ mapping = new Mapping {
   ["list"] = List("Pigeon", "Parrot")
   ["nested mapping"] {
     ["Pigeon"] {
-      age = 2
+      lifespan = 20
       diet = "Seeds"
     }
   }
@@ -1690,15 +1734,15 @@ Mappings can have `local` properties:
 [source%tested,{pkl}]
 ----
 mapping = new Mapping {
-  local pigeon = "Pigeon" // <1>
+  local parrot = "Parrot" // <1>
   ["Pigeon"] { // <2>
-    friend = pigeon
+    friend = parrot
   }
 }
 ----
-<1> Defines a local property name `pigeon` with value `"Pigeon"`.
-    Local properties can have a type annotation, as in `pigeon: String = "Pigeon""`.
-<2> Defines a mapping entry whose value references `pigeon`.
+<1> Defines a local property name `parrot` with value `"Parrot"`.
+    Local properties can have a type annotation, as in `parrot: String = "Parrot"`.
+<2> Defines a mapping entry whose value references `parrot`.
     The local property is visible to values but not keys.
 
 [[amending-mappings]]
@@ -1710,11 +1754,11 @@ Let's say we have the following mapping:
 ----
 birds = new Mapping {
   ["Pigeon"] {
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
   ["Parrot"] {
-    age = 2
+    lifespan = 20
     diet = "Berries"
   }
 }
@@ -1725,21 +1769,21 @@ To add, override, or amend entries of this mapping, amend the mapping:
 [source%tested,{pkl}]
 ----
 birds2 = (birds) { // <1>
-  ["Barn Owl"] { // <2>
-    age = 9
-    diet = "mice"
+  ["Barn owl"] { // <2>
+    lifespan = 15
+    diet = "Mice"
   }
   ["Pigeon"] { // <3>
     diet = "Seeds"
   }
   ["Parrot"] = new { // <4>
-    age = 2
+    lifespan = 20
     diet = "Berries"
   }
 }
 ----
 <1> Defines a module property named `birds2`. Its value is a mapping that amends `birds`.
-<2> Defines a mapping entry with key `"Barn Owl"` and a value of type `Dynamic`.
+<2> Defines a mapping entry with key `"Barn owl"` and a value of type `Dynamic`.
 <3> Amends mapping entry `"Pigeon"` and overrides property `diet`.
 <4> Overrides mapping entry `"Parrot"` with an entirely new value of type `Dynamic`.
 
@@ -1752,11 +1796,11 @@ To reference the value with key `<key>`, use `this[<key>]`:
 ----
 birds = new Mapping {
   ["Pigeon"] { // <1>
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
   ["Parrot"] = (this["Pigeon"]) { // <2>
-    age = 2
+    lifespan = 20
   }
 }
 ----
@@ -1775,8 +1819,8 @@ birds2 = (birds) { // <1>
 
 parrotDiet = birds2["Parrot"].diet // <2>
 ----
-<1> Amends mapping `birds` and overrides ``"Pigeon"``'s `diet` property to have value `"seeds"`.
-<2> Because `"Parrot"` is defined in terms of `"Pigeon"`, its `diet` property also changes to `"seeds"`.
+<1> Amends mapping `birds` and overrides ``"Pigeon"``'s `diet` property to have value `"Seeds"`.
+<2> Because `"Parrot"` is defined in terms of `"Pigeon"`, its `diet` property also changes to `"Seeds"`.
 
 === Transforming Mappings
 
@@ -1786,11 +1830,11 @@ Say we have the following mapping:
 ----
 birds = new Mapping {
   ["Pigeon"] {
-    age = 2
+    lifespan = 8
     diet = "Seeds"
   }
   ["Parrot"] = (this["Pigeon"]) {
-    age = 4
+    lifespan = 20
   }
 }
 ----
@@ -1816,7 +1860,7 @@ result = birds
   .toMapping()
 ----
 
-`result` contains the same values as `birds`, but its keys have changed to `"derF"` and `"amliW"`.
+`result` contains the same values as `birds`, but its keys have changed to `"noegiP"` and `"torraP"`.
 
 [IMPORTANT]
 .Lazy vs. Eager Data Types
@@ -1837,21 +1881,21 @@ Mappings can have a _default value_:
 ----
 birds = new Mapping {
   default { // <1>
-    age = 2
+    lifespan = 8
   }
   ["Pigeon"] { // <2>
     diet = "Seeds" // <3>
   }
   ["Parrot"] { // <4>
-    age = 5 // <5>
+    lifespan = 20 // <5>
   }
 }
 ----
-<1> Amends the `default` value and sets property `age`.
+<1> Amends the `default` value and sets property `lifespan`.
 <2> Defines a mapping entry with key `"Pigeon"` that implicitly amends the default value.
-<3> Defines a new property called `diet`. Property `age` is inherited from the default value.
+<3> Defines a new property called `diet`. Property `lifespan` is inherited from the default value.
 <4> Defines a mapping entry with key `"Parrot"` that implicitly amends the default value.
-<5> Overrides the default for property `age`.
+<5> Overrides the default for property `lifespan`.
 
 `default` is a hidden (that is, not rendered) link:{uri-stdlib-Mapping-default}[property] defined in class `Mapping`.
 If `birds` had a <<mapping-type-annotations,type annotation>>, a suitable default value would be inferred from its second type parameter.
@@ -1864,7 +1908,7 @@ As a result, defaults can be changed retroactively:
 ----
 birds2 = (birds) {
   default {
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
 }
@@ -1877,17 +1921,17 @@ An equivalent literal definition of `birds2` would look as follows:
 ----
 birds2 = new Mapping {
   ["Pigeon"] {
-    age = 5
+    lifespan = 8
     diet = "Seeds"
   }
   ["Parrot"] {
-    age = 2
+    lifespan = 20
     diet = "Berries"
   }
 }
 ----
 
-Note that Parrot kept its age because its prior self defined it explicitly, overriding any default.
+Note that Parrot kept its lifespan because its prior self defined it explicitly, overriding any default.
 
 If you are interested in the technical underpinnings of default values, continue with <<function-amending, Function Amending>>.
 
@@ -1915,7 +1959,7 @@ Here is an example:
 [source%tested,{pkl}]
 ----
 class Bird {
-  age: Int
+  lifespan: Int
 }
 
 birds: Mapping<String, Bird>
@@ -1928,18 +1972,18 @@ Let's go ahead and populate `birds`:
 [source%tested,{pkl}]
 ----
 birds {
-  ["pigeon"] {
-    age = 5
+  ["Pigeon"] {
+    lifespan = 8
   }
-  ["parrot"] {
-    age = 2
+  ["Parrot"] {
+    lifespan = 20
   }
 }
 ----
 
 Thanks to ``birds``'s default value, which was inferred from its type,
 it is not necessary to state the type of each mapping value
-(`["pigeon"] = new Bird { ... }`, `["parrot"] = new Bird { ... }`, etc.).
+(`["Pigeon"] = new Bird { ... }`, `["Parrot"] = new Bird { ... }`, etc.).
 
 [[classes]]
 == Classes
@@ -1954,29 +1998,30 @@ Properties can also be `hidden` from rendering.
 ----
 class Bird {
   name: String
-  profile: Profile
+  hidden taxonomy: Taxonomy
 }
 
-class Profile {
-  isExtinct: Boolean
-  isAdult: Boolean = true
+class Taxonomy {
+  `species`: String
 }
 
 pigeon: Bird = new {
-  name = "Pigeon"
-  profile {
-    isExtinct = false
+  name = "Common wood pigeon"
+  taxonomy {
+    species = "Columba palumbus"
   }
 }
 
 pigeonClass = pigeon.getClass()
 ----
 
+Declaration of new class instances will fail when property names are misspelled: 
+
 [source%tested%error,{pkl}]
 ----
-// detects the spelling mistake
+// Detects the spelling mistake
 parrot = new Bird {
-  mame = "Parrot"
+  namw = "Parrot"
 }
 ----
 
@@ -2025,12 +2070,12 @@ parrot: Bird = new {
 }
 
 greeting1 = pigeon.greet(parrot) // <3>
-greeting2 = greetPigeon(parrot) // <4>
+greeting2 = greetPigeon(parrot)  // <4>
 ----
-<1> instance method of class `Bird`
-<2> module method
-<3> call instance method on `pigeon`
-<4> call module method (on `this`)
+<1> Instance method of class `Bird`.
+<2> Module method.
+<3> Call instance method on `pigeon`.
+<4> Call module method (on `this`).
 
 [[modules]]
 == Modules
@@ -2067,15 +2112,15 @@ Modules may declare their name by way of a _module clause_, which consists of th
 
 [source%tested,{pkl}]
 ----
-/// My awesome module.
-module com.mycompany.birds
+/// My bird module.
+module com.animals.Birds
 ----
 
 A module clause must come first in a module.
 Its doc comment, if present, holds the module's overall documentation.
 
 In the absence of a module clause, a module's name is inferred from the module URI from which the module was first loaded.
-For example, the inferred name for a module first loaded from `+https://apple.com/pkl/bird.pkl+` is `bird`.
+For example, the inferred name for a module first loaded from `+https://example.com/pkl/bird.pkl+` is `bird`.
 
 Module names do not affect evaluation but are used in diagnostic messages and Pkldoc.
 In particular, they are the first component (everything before the hash sign) of fully qualified member names such as `pkl.base#Int`.
@@ -2119,12 +2164,12 @@ In a typical Java project, this corresponds to file path `src/main/resources/pat
 Example: `+package://example.com/mypackage@1.0.0#/my_module.pkl+`
 
 Represent a module within a _package_.
-A package is shareable archive of modules and resources that are published to the internet.
+A package is a shareable archive of modules and resources that are published to the internet.
 
 To import `package://example.com/mypackage@1.0.0#/my_module.pkl`, Pkl follows these steps:
 
-1. Make HTTPS GET request to `https://example.com/mypackage@1.0.0` to retrieve the package's metadata.
-2. From the package metadata, download the referenced zip archive, and validate checksum.
+1. Make an HTTPS GET request to `https://example.com/mypackage@1.0.0` to retrieve the package's metadata.
+2. From the package metadata, download the referenced zip archive, and validate its checksum.
 3. Resolve path `/my_module.pkl` within the package's zip archive.
 
 A package asset URI has the following form:
@@ -2212,7 +2257,7 @@ pigeon {
   diet = "Seeds"
 }
 
-parrot = (pigeon) {        // <1>
+parrot = (pigeon) { // <1>
   name = "Parrot"   // <2>
 }
 ----
@@ -2231,9 +2276,9 @@ diet = "Seeds"
 .parrot.pkl
 [source%parsed,{pkl}]
 ----
-amends "pigeon.pkl"     // <1>
+amends "pigeon.pkl" // <1>
 
-name = "Parrot"   // <2>
+name = "Parrot"     // <2>
 ----
 <1> Module `parrot` amends module `pigeon`, inheriting all of its members.
 <2> `parrot` overrides `name`.
@@ -2286,7 +2331,7 @@ open class Pigeon {   // <1>
 class Parrot extends Pigeon {   // <2>
   name = "Parrot"               // <3>
   diet = "Berries"              // <4>
-  isExtinct = false             // <5>
+  extinct = false               // <5>
 
   function say() = "Pkl is great!"   // <6>
 }
@@ -2295,7 +2340,7 @@ class Parrot extends Pigeon {   // <2>
 <2> Class `Parrot` extends `Pigeon`, inheriting all of its members.
 <3> `Parrot` overrides `name`.
 <4> `Parrot` overrides `diet`.
-<5> `Parrot` defines a new property named `isExtinct`.
+<5> `Parrot` defines a new property named `extinct`.
 <6> `Parrot` defines a new function named `say`.
 
 Extending a module works in the same way, except that the syntax differs slightly:
@@ -2315,16 +2360,16 @@ diet = "Seeds"
 ----
 extends "pigeon.pkl"    // <1>
 
-name = "Parrot"   // <2>
-diet = "Berries"  // <3>
-isExtinct = false              // <4>
+name = "Parrot"         // <2>
+diet = "Berries"        // <3>
+extinct = false         // <4>
 
-function say() = "Pkl is great!"   // <5>
+function say() = "Pkl is great!" // <5>
 ----
 <1> Module `parrot` extends module `pigeon`, inheriting all of its members.
 <2> `parrot` overrides `name`.
 <3> `parrot` overrides `diet`.
-<4> `parrot` defines a new property named `isExtinct`.
+<4> `parrot` defines a new property named `extinct`.
 <5> `parrot` defines a new function named `say`.
 
 A module is extended by way of an _extends clause_, which consists of the keyword `extends` followed by the <<Module URIs,module URI>> of the module to extend.
@@ -2342,7 +2387,7 @@ import "other.pkl"
 
 name = "Parrot"
 diet = "Berries"
-isExtinct = false
+extinct = false
 
 function say() = "Pkl is great!"
 ----
@@ -2379,7 +2424,7 @@ name = "Parrot"
 
 Multiple import clauses are permitted.
 
-A module import implicitly defines a new `local` property through which the imported module can be accessed.
+A module import implicitly defines a new `const local` property through which the imported module can be accessed.
 (Remember that modules are regular objects.)
 The name of this property, called _import name_, is constructed from the module URI as follows:
 
@@ -2411,6 +2456,14 @@ name = pigeon.name
 import "pkl:math"
 
 pi = math.Pi
+----
+
+.Package import
+[source%parsed,{pkl}]
+----
+import "package://example.com/birds@1.0.0#/sparrow.pkl"
+
+name = sparrow.name
 ----
 
 Because its members are automatically visible in every module, the `pkl:base` module is typically not imported.
@@ -2476,10 +2529,10 @@ A globbed import clause cannot be used as a type.
 
 [source,{pkl}]
 ----
-import* "clusters/*.pkl" as allClusters // <1>
-import* "users/*.pkl" <2>
+import* "birds/*.pkl" as allBirds // <1>
+import* "reptils/*.pkl" <2>
 
-clusters = import*("clusters/*.pkl") // <3>
+birds = import*("birds/*.pkl") // <3>
 ----
 <1> Globbed import clause
 <2> Globbed import clause without explicit name (will import the name `*`)
@@ -2490,10 +2543,10 @@ Assuming that a file system contains these files:
 [source,txt]
 ----
 .
-├── clusters/
-│  ├── us-west-1.pkl
-│  ├── us-west-2.pkl
-│  └── us-west-3.pkl
+├── birds/
+│  ├── pigeon.pkl
+│  ├── parrot.pkl
+│  └── falcon.pkl
 └── index.pkl
 ----
 
@@ -2502,16 +2555,16 @@ The following two snippets are logically identical:
 .index.pkl
 [source,{pkl}]
 ----
-clusters = import*("clusters/*.pkl")
+birds = import*("birds/*.pkl")
 ----
 
 .index.pkl
 [source,{pkl}]
 ----
-clusters = new Mapping {
-  ["clusters/us-west-1.pkl"] = import("clusters/us-west-1.pkl")
-  ["clusters/us-west-2.pkl"] = import("clusters/us-west-2.pkl")
-  ["clusters/us-west-3.pkl"] = import("clusters/us-west-3.pkl")
+birds = new Mapping {
+  ["birds/pigeon.pkl"] = import("birds/pigeon.pkl")
+  ["birds/parrot.pkl"] = import("birds/parrot.pkl")
+  ["birds/falcon.pkl"] = import("birds/falcon.pkl")
 }
 ----
 
@@ -2568,7 +2621,7 @@ Pkl embedders can further customize security checks.
 By default, the output of evaluating a module is the entire module rendered as Pcf.
 There are two ways to change this behavior:
 
-1. _Outside_ the language, by using the `--format` CLI option or `outputFormat` Gradle task property.
+1. _Outside_ the language, by using the `--format` CLI option or the `outputFormat` Gradle task property.
 2. _Inside_ the language, by configuring a module's `output` property.
 
 ==== CLI
@@ -2921,14 +2974,14 @@ Here are some examples:
 [source%tested,{pkl}]
 ----
 name = "Pigeon"
-nameLength = name?.length         // <1>
-nameUpper = name?.toUpperCase()  // <2>
+nameLength = name?.length          // <1>
+nameUpper = name?.toUpperCase()    // <2>
 
 name2 = null
 name2Length = name2?.length        // <3>
-name2Upper = name2?.toUpperCase() // <4>
+name2Upper = name2?.toUpperCase()  // <4>
 ----
-<1> result: `4`
+<1> result: `6`
 <2> result: `"PIGEON"`
 <3> result: `null`
 <4> result: `null`
@@ -2982,9 +3035,9 @@ Every `if` expression must have an `else` branch.
 
 [source%tested,{pkl}]
 ----
-num = if (3 > 4) 5 else 10 // <1>
+num = if (2 + 2 == 5) 1984 else 42 // <1>
 ----
-<1> result: `10`
+<1> result: `42`
 
 [[resources]]
 == Resources
@@ -3042,10 +3095,10 @@ Assuming that a file system contains these files:
 [source,txt]
 ----
 .
-├── clusters/
-│  ├── us-west-1.pkl
-│  ├── us-west-2.pkl
-│  └── us-west-3.pkl
+├── birds/
+│  ├── pigeon.pkl
+│  ├── parrot.pkl
+│  └── falcon.pkl
 └── index.pkl
 ----
 
@@ -3054,16 +3107,16 @@ The following two snippets are logically identical:
 .index.pkl
 [source%parsed,{pkl}]
 ----
-clusterFiles = read*("clusters/*.txt")
+birdFiles = read*("birds/*.pkl")
 ----
 
 .index.pkl
 [source%parsed,{pkl}]
 ----
-clusterFiles = new Mapping {
-  ["clusters/us-west-1.txt"] = read("clusters/us-west-1.txt")
-  ["clusters/us-west-2.txt"] = read("clusters/us-west-2.txt")
-  ["clusters/us-west-3.txt"] = read("clusters/us-west-3.txt")
+birdFiles = new Mapping {
+  ["birds/pigeon.pkl"] = read("birds/pigeon.pkl")
+  ["birds/parrot.pkl"] = read("birds/parrot.pkl")
+  ["birds/falcon.pkl"] = read("birds/falcon.pkl")
 }
 ----
 
@@ -3098,6 +3151,7 @@ For example, the expression `read*("+++env:**+++")` will evaluate to a Mapping o
 When Pkl is embedded within another runtime, it can be extended to read other kinds of resources.
 
 When embedded into a JVM application, new resources may be read by implementing the link:{uri-pkl-core-ResourceReader}[ResourceReader] SPI.
+When Pkl is embedded within Swift, new resources may be read by implementing the link:{uri-pkl-swift-resource-reader-docs}[ResourceReader] interface.
 When Pkl is embedded within Go, new resources may be read by implementing the link:{uri-pkl-go-resource-reader-docs}[ResourceReader] interface.
 
 === Resource Allowlist
@@ -3117,7 +3171,7 @@ To raise an error, use a `throw` expression:
 
 [source%tested%error,{pkl}]
 ----
-myValue = throw("I'm outta here!") // <1>
+myValue = throw("You won't be able to recover from this one!") // <1>
 ----
 <1> `myValue` never receives a value because the program exits.
 
@@ -3193,41 +3247,41 @@ Here is an example:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets = List("seeds", "berries", "mice"))
-  List(diets[2], diets[0]) // <1>
+birdDiets = let (diets = List("Seeds", "Berries", "Mice"))
+List(diets[2], diets[0]) // <1>
 ----
-<1> result: `List("mice", "seeds")`
+<1> result: `List("Mice", "Seeds")`
 
-`Let` expressions serve two purposes:
+`let` expressions serve two purposes:
 
 - They introduce a human-friendly name for a potentially complex expression.
 - They evaluate a potentially expensive expression that is used in multiple places only once.
 
-`Let` expressions can have type annotations:
+`let` expressions can have type annotations:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets: List<String> = List("seeds", "berries", "mice"))
-  diets[2] + diets[0] // <1>
+birdDiets = let (diets: List<String> = List("Seeds", "Berries", "Mice"))
+diets[2] + diets[0] // <1>
 ----
-<1> result: `List("mice", "seeds")`
+<1> result: `List("Mice", "Seeds")`
 
-`Let` expressions can be stacked:
+`let` expressions can be stacked:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (birds = List("pigeon", "barn owl", "parrot"))
-  let (diet = List("seeds", "mice", "berries"))
-    birds.zip(diet) // <1>
+birdDiets = let (birds = List("Pigeon", "Barn owl", "Parrot"))
+let (diet = List("Seeds", "Mice", "Berries"))
+birds.zip(diet) // <1>
 ----
-<1> result: `List(Pair("pigeon", "seeds"), Pair("barn owl", "mice"), Pair("parrot", "berries"))`
+<1> result: `List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
 
 [[type-tests]]
 === Type Tests
 
 To test if a value conforms to a type, use the _is_ operator.
 
-All of the following tests hold:
+All the following tests hold:
 
 [source%tested,{pkl}]
 ----
@@ -3258,11 +3312,11 @@ A value can be tested against any type, not just a class:
 ----
 test1 = email is String(contains("@")) // <1>
 test2 = map is Map<Int, Base> // <2>
-test3 = name is "Pigeon"|"Barn Owl"|"Parrot" // <3>
+test3 = name is "Pigeon"|"Barn owl"|"Parrot" // <3>
 ----
 <1> `email` is tested for being a string that contains a `@` sign
 <2> `map` is tested for being a map from `Int` to `Base` values
-<3> `name` is tested for being one of `"Pigeon"`, `"Barn Owl"`, or `"Parrot"`
+<3> `name` is tested for being one of `"Pigeon"`, `"Barn owl"`, or `"Parrot"`
 
 [[type-casts]]
 === Type Casts
@@ -3272,11 +3326,11 @@ If the type check succeeds, the operand is returned as-is; otherwise, an error i
 
 [source%tested,{pkl}]
 ----
-employees {
+birds {
   new { name = "Pigeon" }
-  new { name = "Barn Owl" }
+  new { name = "Barn owl" }
 }
-names = employees.toList().map((it) -> it.name) as List<String>
+names = birds.toList().map((it) -> it.name) as List<String>
 ----
 
 Although type casts are never mandatory in Pkl, they occasionally help humans and tools better understand an expression's type.
@@ -3442,8 +3496,8 @@ To access a value by key, use the `[]` (subscript) operator:
 
 [source%tested,{pkl}]
 ----
-map = Map("pigeon", 5.gb, "parrot", 10.gb)
-parrotValue = map["parrot"] // <1>
+map = Map("Pigeon", 5.gb, "Parrot", 10.gb)
+parrotValue = map["Parrot"] // <1>
 ----
 <1> result: `10.gb`
 
@@ -3452,12 +3506,12 @@ Here are just a few examples:
 
 [source%tested,{pkl}]
 ----
-map = Map("pigeon", 5.gb, "parrot", 10.gb)
-res1 = map.containsKey("parrot") // <1>
+map = Map("Pigeon", 5.gb, "Parrot", 10.gb)
+res1 = map.containsKey("Parrot") // <1>
 res2 = map.containsValue(8.gb) // <2>
 res3 = map.isEmpty // <3>
 res4 = map.length // <4>
-res5 = map.getOrNull("susan") // <5>
+res5 = map.getOrNull("Falcon") // <5>
 ----
 <1> result: `true`
 <2> result: `false`
@@ -3502,14 +3556,14 @@ The result is a list of link:{uri-stdlib-RegexMatch}[RegexMatch] objects contain
 
 [source%tested,{pkl}]
 ----
-matches = emailRegex.findMatchesIn("pigeon@example.com / barnowl@example.com / parrot@example.com")
+matches = emailRegex.findMatchesIn("pigeon@example.com / falcon@example.com / parrot@example.com")
 list1 = matches.drop(1).map((it) -> it.start) // <1>
 list2 = matches.drop(1).map((it) -> it.value) // <2>
 list3 = matches.drop(1).map((it) -> it.groups[1].value) // <3>
 ----
 <1> result: `List(0, 19, 40)` (the entire match, `matches[0]`, was dropped)
-<2> result: `List("pigeon@example.com", "barnowl@example.com", "parrot@example.com")`
-<3> result: `List("pigeon, barn owl, parrot")`
+<2> result: `List("pigeon@example.com", "falcon@example.com", "parrot@example.com")`
+<3> result: `List("pigeon, falcon, parrot")`
 
 [[type-aliases]]
 === Type Aliases
@@ -3545,7 +3599,7 @@ Type aliases can have type parameters:
 ----
 typealias StringMap<Value> = Map<String, Value>
 
-map: StringMap<Int> = Map("Pigeon", 42, "Barn Owl", 21)
+map: StringMap<Int> = Map("Pigeon", 42, "Falcon", 21)
 ----
 
 Code generators have different strategies for dealing with type aliases:
@@ -3636,8 +3690,8 @@ class Bird {
 }
 bird: Bird // <2>
 ----
-<1> declares an instance property of type `String`
-<2> declares a module property of type `Bird`
+<1> Declares an instance property of type `String`.
+<2> Declares a module property of type `Bird`.
 
 ==== Module Types
 
@@ -3647,7 +3701,7 @@ Any module import can be used as type:
 .bird.pkl
 ----
 name: String
-age: Int
+lifespan: Int
 ----
 
 [source%parsed,{pkl}]
@@ -3658,7 +3712,7 @@ import "bird.pkl"
 pigeon: bird  // <1>
 parrot: bird // <1>
 ----
-<1> guaranteed to amend _bird.pkl_
+<1> Guaranteed to amend _bird.pkl_.
 
 As a special case, the `module` keyword denotes the _enclosing_ module's type:
 
@@ -3666,7 +3720,7 @@ As a special case, the `module` keyword denotes the _enclosing_ module's type:
 .bird.pkl
 ----
 name: String
-age: Int
+lifespan: Int
 friends: Listing<module>
 ----
 
@@ -3676,12 +3730,12 @@ friends: Listing<module>
 amends "bird.pkl"
 
 name = "Pigeon"
-age = 5
+lifespan = 8
 friends {
-  import("barnOwl.pkl") // <1>
+  import("falcon.pkl") // <1>
 }
 ----
-<1> _barnOwl.pkl_ (not shown here) is guaranteed to amend _bird.pkl_
+<1> _falcon.pkl_ (not shown here) is guaranteed to amend _bird.pkl_.
 
 ==== Type Aliases
 
@@ -3705,8 +3759,8 @@ To turn them into _nullable types_, append a question mark (`?`):
 
 [source%parsed,{pkl}]
 ----
-name: Bird = null   // <1>
-name2: Bird? = null // <2>
+bird: Bird = null   // <1>
+bird2: Bird? = null // <2>
 ----
 <1> throws `Type mismatch: Expected a value of type Bird, but got null`
 <2> succeeds
@@ -3731,11 +3785,11 @@ A generic type has constituent types written in angle brackets (`<>`):
 
 [source%parsed,{pkl}]
 ----
-pair: Pair<String, Bird> // <1>
-coll: Collection<Bird>   // <2>
-list: List<Bird>         // <3>
-set: Set<Bird>           // <4>
-map: Map<String, Bird>   // <5>
+pair: Pair<String, Bird>    // <1>
+coll: Collection<Bird>      // <2>
+list: List<Bird>            // <3>
+set: Set<Bird>              // <4>
+map: Map<String, Bird>      // <5>
 cont: Mapping<String, Bird> // <6>
 ----
 
@@ -3800,7 +3854,7 @@ A string literal type admits a single string value:
 
 [source%parsed,{pkl}]
 ----
-diet: "seeds"
+diet: "Seeds"
 ----
 
 While occasionally useful on their own,
@@ -3808,14 +3862,14 @@ string literal types are often combined with <<Union Types>> to form enumerated 
 
 [source%parsed,{pkl}]
 ----
-diet: "seeds"|"berries"|"insects"
+diet: "Seeds"|"Berries"|"Insects"
 ----
 
 To reuse an enumerated type, introduce a type alias:
 
 [source%parsed,{pkl}]
 ----
-typealias Diet = "seeds"|"berries"|"insects"
+typealias Diet = "Seeds"|"Berries"|"Insects"
 diet: Diet
 ----
 
@@ -3856,11 +3910,11 @@ Omitting a type annotation is equivalent to specifying type `unknown`:
 
 [source%parsed,{pkl}]
 ----
-age = 5 // <1>
+lifespan = 42 // <1>
 map: Map // <2>
 function say(name) = name // <3>
 ----
-<1> shorthand for `age: unknown = 42`
+<1> shorthand for `lifespan: unknown = 42`
     (As a dynamically typed language, Pkl does not try to statically infer types.)
 <2> shorthand for `map: Map<unknown, unknown> = Map()`
 <3> shorthand for `function say(name: unknown): unknown = name`
@@ -3882,9 +3936,9 @@ listing: Listing<Bird>         // = new Listing { default = (index) -> new Bird 
 mapping: Mapping<String, Bird> // = new Mapping { default = (key) -> new Bird {} } <6>
 obj: Bird                      // = new Bird {} <7>
 nullable: Bird?                // = Null(new Bird {}) <8>
-union: *Bird|String             // = new Bird {} <9>
-stringLiteral: "Pigeon"            // = "Pigeon" <10>
-nullish: Null                    // = null <11>
+union: *Bird|String            // = new Bird {} <9>
+stringLiteral: "Pigeon"        // = "Pigeon" <10>
+nullish: Null                  // = null <11>
 ----
 
 <1> Properties of type `Collection` default to the empty list.
@@ -3995,7 +4049,7 @@ class Project {
 
 project: Project = new {
   type = "open-source"
-  contacts = Map("Dr. Pigeon", "drpigeon@example.com")
+  contacts = Map("Pigeon", "pigeon@example.com")
 }
 ----
 
@@ -4154,7 +4208,7 @@ pigeon {
 pigeonWithDiet = pigeon |> withDiet
 
 barnOwl {
-  name = "Barn Owl"
+  name = "Barn owl"
 }
 barnOwlWithDiet = barnOwl |> withDiet
 ----
@@ -4165,8 +4219,8 @@ barnOwlWithDiet = barnOwl |> withDiet
 function withDiet(_diet: String) = new Mixin {
   diet = _diet
 }
-seedPigeon = pigeon |> withDiet("seeds")
-miceBarnOwl = barnOwl |> withDiet("mice")
+seedPigeon = pigeon |> withDiet("Seeds")
+MiceBarnOwl = barnOwl |> withDiet("Mice")
 ----
 
 Mixins can themselves be modified with <<function-amending,function amending>>.
@@ -4190,14 +4244,14 @@ birds = new Mapping {
     diet = "Seeds"
   }
   ["Pigeon"] { // <2>
-    age = 2
+    lifespan = 8
   }
 }
 ----
 <1> Amends the `default` function, which returns a default mapping value given a mapping key, and sets property `diet`.
-<2> Implicitly applies the amended `default` function and amends the returned object with property `age`.
+<2> Implicitly applies the amended `default` function and amends the returned object with property `lifespan`.
 
-The result is a mapping whose entry `"Pigeon"` has both `diet` and `age` set.
+The result is a mapping whose entry `"Pigeon"` has both `diet` and `lifespan` set.
 
 When amending an anonymous function, it is possible to access its parameters
 by declaring a comma-separated, arrow (`->`) terminated parameter list after the opening curly brace (`{`).
@@ -4211,16 +4265,16 @@ birds = new Mapping {
     name = key
   }
   ["Pigeon"] {} // <2>
-  ["Barn Owl"] {} // <3>
+  ["Barn owl"] {} // <3>
 }
 ----
 <1> Amends the `default` function and sets the `name` property to the mapping entry's key.
     To access the `default` function's key parameter, it is declared with `key ->`.
     (Any other parameter name could be chosen, but `key` is customary for default functions.)
 <2> Defines a mapping entry with key `"Pigeon"`
-<3> Defines a mapping entry with key `"Barn Owl"`
+<3> Defines a mapping entry with key `"Barn owl"`
 
-The result is a mapping with two entries `"Pigeon"` and `"Barn Owl"` whose `name` properties are set to their keys.
+The result is a mapping with two entries `"Pigeon"` and `"Barn owl"` whose `name` properties are set to their keys.
 
 Function amending can also be used to refine <<mixins,mixins>>.
 
@@ -4330,7 +4384,7 @@ The following code conditionally generates properties `hobby` and `idol`:
 isSinger = true
 
 parrot {
-  age = 2
+  lifespan = 20
   when (isSinger) {
     hobby = "singing"
     idol = "Frank Sinatra"
@@ -4345,7 +4399,7 @@ parrot {
 isSinger = false
 
 parrot {
-  age = 4
+  lifespan = 20
   when (isSinger) {
     hobby = "singing"
     idol = "Aretha Franklin"
@@ -4369,7 +4423,7 @@ abilities {
 }
 
 abilitiesByBird {
-  ["Barn Owl"] = "hooing"
+  ["Barn owl"] = "hooing"
   when (isSinger) {
     ["Parrot"] = "singing" // <2>
   }
@@ -4389,34 +4443,34 @@ They come in two variants:
 . `for (<key>, <value> in <iterable>) { <members> }`
 
 The following code generates a `birds` object containing three elements.
-Each element is an object with properties `name` and `age`.
+Each element is an object with properties `name` and `lifespan`.
 
 [source%tested,{pkl}]
 ----
-names = List("Pigeon", "Barn Owl", "Parrot")
+names = List("Pigeon", "Barn owl", "Parrot")
 
 birds {
   for (_name in names) {
     new {
       name = _name
-      age = 5
+      lifespan = 42
     }
   }
 }
 ----
 
 The following code generates a `birdsByName` object containing three entries.
-Each entry is an object with properties `name` and `age` keyed by name.
+Each entry is an object with properties `name` and `lifespan` keyed by name.
 
 [source%tested,{pkl}]
 ----
-namesAndAges = Map("Pigeon", 2, "Barn Owl", 12, "Parrot", 7)
+namesAndLifespans = Map("Pigeon", 8, "Barn owl", 15, "Parrot", 20)
 
 birdsByName {
-  for (_name, _age in namesAndAges) {
+  for (_name, _lifespan in namesAndLifespans) {
     [_name] {
       name = _name
-      age = _age
+      lifespan = _lifespan
     }
   }
 }
@@ -4461,8 +4515,7 @@ property value
 |===
 
 Indices are zero based.
-Note that `for` generators can generate elements and entries but not properties.
-footnote:[More precisely, they cannot generate properties with a non-constant name.]
+Note that `for` generators can generate elements and entries but not properties.footnote:[More precisely, they cannot generate properties with a non-constant name.]
 
 [[spread-syntax]]
 === Spread Syntax (`\...`)
@@ -4481,7 +4534,7 @@ Entries become entries, elements become elements, and properties become properti
 ----
 entries1 {
   ["Pigeon"] = "Piggy the Pigeon"
-  ["Barn Owl"] = "Barney the Barn Owl"
+  ["Barn owl"] = "Barney the Barn owl"
 }
 
 entries2 {
@@ -4503,7 +4556,7 @@ properties2 {
   ...properties1 // <3>
 }
 ----
-<1> Spreads entries `["Pigeon"] = "Piggy the Pigeon"` and `["Barn Owl"] = "Barney the Barn Owl"`
+<1> Spreads entries `["Pigeon"] = "Piggy the Pigeon"` and `["Barn owl"] = "Barney the Barn owl"`
 <2> Spreads elements `1` and `2`
 <3> Spreads properties `name = "Pigeon"` and `diet = "Seeds"`
 
@@ -4585,7 +4638,7 @@ This is especially true when configuring elements, which—unlike entries—cann
 
 [source%tested,{pkl}]
 ----
-environmentVariables { // <1>
+environmentVariables {   // <1>
   new { name = "PIGEON"; value = "pigeon-value" }
   new { name = "PARROT"; value = "parrot-value" }
   new { name = "BARN OWL"; value = "barn-owl-value" }
@@ -4593,7 +4646,7 @@ environmentVariables { // <1>
 
 updated = (environmentVariables) {
   [[name == "PARROT"]] { // <2>
-    value = "new-value" // <3>
+    value = "new-value"  // <3>
   }
 }
 ----
@@ -4698,8 +4751,8 @@ TIP: If incorporating escape characters into a glob pattern, use <<custom-string
 |`**.y{a,}ml`
 |Anything suffixed by either `yml` or `yaml`, crossing directory boundaries. 
 
-|`resources/{\*.yml,*.json}`
-|Anything within the `resources` subdirectory that ends in `.yml` or `.json`. This pattern is equivalent to `resources/*.{yml,json}`.
+|`birds/{\*.yml,*.json}`
+|Anything within the `birds` subdirectory that ends in `.yml` or `.json`. This pattern is equivalent to `birds/*.{yml,json}`.
 
 |`a?*.txt`
 |Anything starting with `a` and at least one more letter, and suffixed with `.txt`.
@@ -4732,11 +4785,11 @@ Backticks are not part of a quoted identifier's name, and surrounding an already
 
 [source,{pkl}]
 ----
-`number` = 5 // <1>
+`number` = 42 // <1>
 res1 = `number` // <2>
 res2 = number // <3>
 ----
-<1> Equivalent to `number = 5`
+<1> Equivalent to `number = 42`
 <2> References property `{backtick}number{backtick}`
 <3> Also references property `{backtick}number{backtick}`
 ====
@@ -4768,8 +4821,8 @@ Plaintext URLs are only rendered as links when enclosed in angle brackets:
 
 [source,{pkl}]
 ----
-/// A link is *not* generated for https://apple.com.
-/// A link *is* generated for <https://apple.com>.
+/// A link is *not* generated for https://example.com.
+/// A link *is* generated for <https://example.com>.
 ----
 ====
 
@@ -4800,29 +4853,29 @@ module com.animals.Birds
 
 /// A bird living on Earth.
 ///
-/// Has [name] and [age] properties and an [isOlderThan()] method.
+/// Has [name] and [lifespan] properties and an [isOlderThan()] method.
 class Bird {
   /// The name of this bird.
   name: String
 
-  /// The age of this bird.
-  age: UInt8
+  /// The lifespan of this bird.
+  lifespan: UInt8
 
   /// Tells if this bird is older than [bird].
-  function isOlderThan(bird: Bird): Boolean = age > bird.age
+  function isOlderThan(bird: Bird): Boolean = lifespan > bird.lifespan
 }
 
 /// An adult [Bird].
-typealias Adult = Bird(age >= 18)
+typealias Adult = Bird(lifespan >= 2)
 
 /// A common [Bird] found in large cities.
 pigeon: Bird = new {
   name = "Pigeon"
-  age = 2
+  lifespan = 8
 }
 
-/// Creates a [Bird] with the given [_name] and age `0`.
-function Infant(_name: String): Bird = new { name = _name; age = 0 }
+/// Creates a [Bird] with the given [_name] and lifespan `0`.
+function Infant(_name: String): Bird = new { name = _name; lifespan = 0 }
 ----
 
 [[member-links]]
@@ -4985,8 +5038,7 @@ Hence, the argument list of a method call is irrelevant for method resolution.
 Pkl's object model is based on link:{uri-prototypical-inheritance}[prototypical inheritance].
 The prototype chain of objectfootnote:[An instance of `Listing`, `Mapping`, `Dynamic`, or (a subclass of) `Typed`.] `x` contains, from bottom to top:
 
-1. The chain of objects amended to create `x`, ending in `x` itself, in reverse order.
-   footnote:[All objects in this chain are instances of the same class,
+1. The chain of objects amended to create `x`, ending in `x` itself, in reverse order.footnote:[All objects in this chain are instances of the same class,
    except when a direct conversion between listing, mapping, dynamic, and typed object has occurred.
    For example, `Typed.toDynamic()` returns a dynamic object that amends a typed object.]
 2. The prototype of the class of the top object in (1).
@@ -4997,15 +5049,14 @@ The prototype of class `X` is an instance of `X` that defines the defaults for p
 Its direct ancestor in the prototype chain is the prototype of the superclass of `X`.
 
 The prototype of class `Any` sits at the top of every prototype chain.
-To reduce the chance of naming collisions, `Any` does not define any property names.
-footnote:[Method resolution searches the class inheritance rather than prototype chain.]
+To reduce the chance of naming collisions, `Any` does not define any property names.footnote:[Method resolution searches the class inheritance rather than prototype chain.]
 
 Consider the following code:
 
 [source%tested,{pkl}]
 ----
 one = new Dynamic { name = "Pigeon" }
-two = (one) { age = 5 }
+two = (one) { lifespan = 8 }
 ----
 
 The prototype chain of object `two` contains, now listed from top to bottom:
@@ -5023,10 +5074,10 @@ abstract class Named {
   name: String
 }
 class Bird extends Named {
-  age: Int = 42
+  lifespan: Int = 42
 }
 one = new Bird { name = "Pigeon" }
-two = (one) { age = 5 }
+two = (one) { lifespan = 8 }
 ----
 
 The prototype chain of object `two` contains, listed from top to bottom:
@@ -5160,7 +5211,7 @@ dependencies {
 ----
 <1> Declare dependency on `package://example.com/birds@1.0.0` with simple name "birds".
 
-These dependencies can then imported by their simple name.
+These dependencies can then be imported by their simple name.
 This syntax is called _dependency notation_.
 
 Example:
@@ -5170,7 +5221,7 @@ Example:
 import "@birds/Bird.pkl" // <1>
 
 pigeon: Bird = new {
-  name = "pigeon
+  name = "Pigeon"
 }
 ----
 <1> Dependency notation; imports path `/Bird.pkl` within dependency `package://example.com/birds@1.0.0`
@@ -5252,7 +5303,7 @@ package {
   packageZipUrl = "https://example.com/birds@\(version).zip
 }
 ----
-<1> Specify relative project `../fruit` as a dependency
+<1> Specify relative project `../fruit` as a dependency.
 
 .fruit/PklProject
 [source,{pkl}]
@@ -5268,7 +5319,7 @@ package {
 ----
 
 From the perspective of project `birds`, `fruit` is just another package.
-It can be imported using dependency notation, i.e. `import "@fruit/Apple.pkl"`.
-At runtime, it will resolve to relative path `../fruit/Apple.pkl`.
+It can be imported using dependency notation, i.e. `import "@fruit/Pear.pkl"`.
+At runtime, it will resolve to relative path `../fruit/Pear.pkl`.
 
 When packaging projects with local dependencies, both the project and its dependent project must be passed to the xref:pkl-cli:index.adoc#command-project-package[`pkl project package`] command.

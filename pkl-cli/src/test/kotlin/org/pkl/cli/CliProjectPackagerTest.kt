@@ -31,8 +31,10 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.CliTestOptions
 import org.pkl.commons.readString
+import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
+import org.pkl.core.runtime.CertificateUtils
 
 class CliProjectPackagerTest {
   @Test
@@ -43,6 +45,7 @@ class CliProjectPackagerTest {
         listOf(),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
@@ -56,6 +59,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
@@ -77,6 +81,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err)
@@ -120,10 +125,11 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = buffer
       )
     val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageContaining("Tests failed")
+    assertThat(err).hasMessageContaining("because its API tests are failing")
     assertThat(buffer.toString()).contains("1 == 2")
   }
 
@@ -166,6 +172,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = buffer
       )
     packager.run()
@@ -222,9 +229,16 @@ class CliProjectPackagerTest {
           "resolvedDependencies": {
             "package://localhost:12110/birds@0": {
               "type": "remote",
-              "uri": "package://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:12110/birds@0.5.0",
               "checksums": {
                 "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              }
+            },
+            "package://localhost:12110/fruit@1": {
+              "type": "remote",
+              "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+              "checksums": {
+                "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
               }
             }
           }
@@ -239,6 +253,7 @@ class CliProjectPackagerTest {
         listOf(projectDir),
         CliTestOptions(),
         ".out",
+        skipPublishCheck = true,
         consoleWriter = buffer
       )
     packager.run()
@@ -289,6 +304,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = StringWriter()
       )
     packager.run()
@@ -364,6 +380,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = StringWriter()
       )
       .run()
@@ -417,14 +434,14 @@ class CliProjectPackagerTest {
           "resolvedDependencies": {
             "package://localhost:12110/birds@0": {
               "type": "remote",
-              "uri": "package://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:12110/birds@0.5.0",
               "checksums": {
                 "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
               }
             },
             "package://localhost:12110/project2@5": {
               "type": "local",
-              "uri": "package://localhost:12110/project2@5.0.0",
+              "uri": "projectpackage://localhost:12110/project2@5.0.0",
               "path": "../project2"
             }
           }
@@ -463,6 +480,7 @@ class CliProjectPackagerTest {
         listOf(projectDir, project2Dir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = StringWriter()
       )
       .run()
@@ -554,14 +572,14 @@ class CliProjectPackagerTest {
           "resolvedDependencies": {
             "package://localhost:12110/birds@0": {
               "type": "remote",
-              "uri": "package://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:12110/birds@0.5.0",
               "checksums": {
                 "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
               }
             },
             "package://localhost:12110/project2@5": {
               "type": "local",
-              "uri": "package://localhost:12110/project2@5.0.0",
+              "uri": "projectpackage://localhost:12110/project2@5.0.0",
               "path": "../project2"
             }
           }
@@ -600,6 +618,7 @@ class CliProjectPackagerTest {
             listOf(projectDir),
             CliTestOptions(),
             ".out/%{name}@%{version}",
+            skipPublishCheck = true,
             consoleWriter = StringWriter()
           )
           .run()
@@ -639,6 +658,7 @@ class CliProjectPackagerTest {
             listOf(tempDir),
             CliTestOptions(),
             ".out/%{name}@%{version}",
+            skipPublishCheck = true,
             consoleWriter = StringWriter()
           )
           .run()
@@ -688,6 +708,7 @@ class CliProjectPackagerTest {
             listOf(tempDir),
             CliTestOptions(),
             ".out/%{name}@%{version}",
+            skipPublishCheck = true,
             consoleWriter = StringWriter()
           )
           .run()
@@ -732,6 +753,7 @@ class CliProjectPackagerTest {
             listOf(tempDir),
             CliTestOptions(),
             ".out/%{name}@%{version}",
+            skipPublishCheck = true,
             consoleWriter = StringWriter()
           )
           .run()
@@ -774,6 +796,7 @@ class CliProjectPackagerTest {
         listOf(tempDir),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = StringWriter()
       )
       .run()
@@ -817,6 +840,7 @@ class CliProjectPackagerTest {
         listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
         CliTestOptions(),
         ".out/%{name}@%{version}",
+        skipPublishCheck = true,
         consoleWriter = out
       )
       .run()
@@ -839,6 +863,92 @@ class CliProjectPackagerTest {
       .hasSameElementsAs(listOf("/", "/main.pkl"))
     assertThat(tempDir.resolve(".out/project2@2.0.0/project2@2.0.0.zip").zipFilePaths())
       .hasSameElementsAs(listOf("/", "/main2.pkl"))
+  }
+
+  @Test
+  fun `publish checks`(@TempDir tempDir: Path) {
+    PackageServer.ensureStarted()
+    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
+    tempDir.writeFile("project/main.pkl", "res = 1")
+    tempDir.writeFile(
+      "project/PklProject",
+      // intentionally conflict with localhost:12110/birds@0.5.0 from our test fixtures
+      """
+        amends "pkl:Project"
+        
+        package {
+          name = "birds"
+          version = "0.5.0"
+          baseUri = "package://localhost:12110/birds"
+          packageZipUrl = "https://foo.com"
+        }
+      """
+        .trimIndent()
+    )
+    val e =
+      assertThrows<CliException> {
+        CliProjectPackager(
+            CliBaseOptions(workingDir = tempDir),
+            listOf(tempDir.resolve("project")),
+            CliTestOptions(),
+            ".out/%{name}@%{version}",
+            skipPublishCheck = false,
+            consoleWriter = StringWriter()
+          )
+          .run()
+      }
+    assertThat(e)
+      .hasMessageStartingWith(
+        """
+      Package `package://localhost:12110/birds@0.5.0` was already published with different contents.
+      
+      Computed checksum: 7324e17214b6dcda63ebfb57d5a29b077af785c13bed0dc22b5138628a3f8d8f
+      Published checksum: 3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
+    PackageServer.ensureStarted()
+    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
+    tempDir.writeFile("project/main.pkl", "res = 1")
+    tempDir.writeFile(
+      "project/PklProject",
+      """
+        amends "pkl:Project"
+        
+        package {
+          name = "mangos"
+          version = "1.0.0"
+          baseUri = "package://localhost:12110/mangos"
+          packageZipUrl = "https://foo.com"
+        }
+      """
+        .trimIndent()
+    )
+    val out = StringWriter()
+    CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir),
+        listOf(tempDir.resolve("project")),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = false,
+        consoleWriter = out
+      )
+      .run()
+    assertThat(out.toString())
+      .isEqualTo(
+        """
+      .out/mangos@1.0.0/mangos@1.0.0.zip
+      .out/mangos@1.0.0/mangos@1.0.0.zip.sha256
+      .out/mangos@1.0.0/mangos@1.0.0
+      .out/mangos@1.0.0/mangos@1.0.0.sha256
+
+    """
+          .trimIndent()
+      )
   }
 
   private fun Path.zipFilePaths(): List<String> {

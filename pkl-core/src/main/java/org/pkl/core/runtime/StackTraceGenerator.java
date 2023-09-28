@@ -38,10 +38,7 @@ class StackTraceGenerator {
   }
 
   private List<StackFrame> capture() {
-    // When dealing with stack overflows, the actual exception containing the Truffle frames is
-    // on the StackOverflowError and not the parent VmException.
-    var exp = exception.getCause() instanceof StackOverflowError ? exception.getCause() : exception;
-    var truffleElements = TruffleStackTrace.getStackTrace(exp);
+    var truffleElements = TruffleStackTrace.getStackTrace(exception);
     if (truffleElements.isEmpty()) {
       addFrame(exception.getSourceSection(), exception.getMemberName());
     } else {

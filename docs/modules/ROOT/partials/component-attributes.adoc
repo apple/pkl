@@ -3,10 +3,10 @@
 // the following attributes must be updated immediately before a release
 
 // pkl version corresponding to current git commit without -dev suffix or git hash
-:pkl-version-no-suffix: 0.24.1
+:pkl-version-no-suffix: 0.24.7
 // tells whether pkl version corresponding to current git commit
 // is a release version (:is-release-version: '') or dev version (:!is-release-version:)
-:!is-release-version:
+:is-release-version: ''
 
 // the remaining attributes do not need to be updated regularly
 
@@ -35,9 +35,8 @@ endif::[]
 ifdef::is-release-version[]
 :symbolic-version-name: current
 endif::[]
-:uri-pkl-docs-base: https://pkl.apple.com/package-docs/
-:uri-pkl-hub-base: {uri-pkl-docs-base}/pkl-hub
-:uri-pkl-stdlib-docs-base: {uri-pkl-hub-base}/pkl
+:uri-pkl-docs-base: https://pkl.apple.com/package-docs
+:uri-pkl-stdlib-docs-base: {uri-pkl-docs-base}/pkl
 :uri-pkl-stdlib-docs: {uri-pkl-stdlib-docs-base}/{pkl-version}
 :uri-pkl-stdlib-docs-index: {uri-pkl-stdlib-docs}/
 

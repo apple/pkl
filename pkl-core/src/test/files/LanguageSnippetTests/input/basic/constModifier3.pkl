@@ -1,0 +1,10 @@
+const function foo(num: Int(isBetween(0, 32))): Int = num
+const function foo2(num: Int(this.isBetween(0, 32))): Int = num
+const function foo3(str: String(length > 5)): String = str
+const function foo4(str: String(this.length > 5)): String = str
+
+
+res = foo(25)
+res2 = foo2(26)
+res3 = foo3("hihihi")
+res4 = foo4("hihihi")

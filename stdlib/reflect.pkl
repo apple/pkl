@@ -26,7 +26,7 @@
 /// - Documentation generators (such as *Pkldoc*)
 /// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
 /// - Domain-specific schema validators
-@ModuleInfo { minPklVersion = "0.24.1" }
+@ModuleInfo { minPklVersion = "0.24.7" }
 module pkl.reflect
 
 import "pkl:base"

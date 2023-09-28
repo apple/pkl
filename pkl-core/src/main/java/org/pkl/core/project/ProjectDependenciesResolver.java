@@ -18,6 +18,7 @@ package org.pkl.core.project;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.nio.file.Path;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 import org.pkl.core.PklException;
@@ -59,17 +60,17 @@ public class ProjectDependenciesResolver {
   }
 
   public ProjectDeps resolve() {
-    buildResolvedDependenciesForProject(project);
+    buildResolvedDependencies(project.getDependencies());
     for (var localProject : project.getDependencies().getLocalDependencies().values()) {
-      assert localProject.getPackage() != null;
-      var canonicalUri = CanonicalPackageUri.fromPackageUri(localProject.getPackage().getUri());
+      var packageUri = localProject.getMyPackageUri();
+      assert packageUri != null;
+      var canonicalUri = CanonicalPackageUri.fromPackageUri(packageUri);
       var resolvedDependency = resolvedDependencies.get(canonicalUri);
       if (!(resolvedDependencies.get(canonicalUri) instanceof LocalDependency)) {
         log(
             String.format(
                 "WARN: local dependency `%s` was overridden to remote dependency `%s`.",
-                localProject.getPackage().getUri().getDisplayName(),
-                resolvedDependency.getPackageUri().getDisplayName()));
+                packageUri.getDisplayName(), resolvedDependency.getPackageUri().getDisplayName()));
       }
     }
     return new ProjectDeps(resolvedDependencies);
@@ -83,13 +84,13 @@ public class ProjectDependenciesResolver {
     }
   }
 
-  private void buildResolvedDependenciesForProject(Project project) {
-    for (var dependency : project.getDependencies().getRemoteDependencies().values()) {
+  private void buildResolvedDependencies(DeclaredDependencies declaredDependencies) {
+    for (var dependency : declaredDependencies.getRemoteDependencies().values()) {
       resolveDependenciesOfPackageUri(
           dependency.getPackageUri().toProjectPackageUri(), dependency.getChecksums());
     }
-    for (var localProject : project.getDependencies().getLocalDependencies().values()) {
-      resolveDependenciesOfProject(localProject);
+    for (var localDeclaredDependencies : declaredDependencies.getLocalDependencies().values()) {
+      resolveDependencies(localDeclaredDependencies);
     }
   }
 
@@ -125,13 +126,14 @@ public class ProjectDependenciesResolver {
     }
   }
 
-  private void resolveDependenciesOfProject(Project project) {
-    var pkg = project.getPackage();
-    assert pkg != null;
-    var relativePath = this.project.getProjectDir().relativize(project.getProjectDir());
-    var localDependency = new LocalDependency(pkg.getUri().toProjectPackageUri(), relativePath);
+  private void resolveDependencies(DeclaredDependencies declaredDependencies) {
+    var packageUri = declaredDependencies.getMyPackageUri();
+    assert packageUri != null;
+    var projectDir = Path.of(declaredDependencies.getProjectFileUri()).getParent();
+    var relativePath = this.project.getProjectDir().relativize(projectDir);
+    var localDependency = new LocalDependency(packageUri.toProjectPackageUri(), relativePath);
     updateDependency(localDependency);
-    buildResolvedDependenciesForProject(project);
+    buildResolvedDependencies(declaredDependencies);
   }
 
   private void updateDependency(Dependency dependency) {

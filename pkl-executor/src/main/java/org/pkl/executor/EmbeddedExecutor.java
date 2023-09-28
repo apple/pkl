@@ -233,7 +233,8 @@ final class EmbeddedExecutor implements Executor {
           options.getRootDir(),
           options.getTimeout(),
           options.getOutputFormat(),
-          options.getModuleCacheDir());
+          options.getModuleCacheDir(),
+          options.getProjectDir());
     }
   }
 
@@ -256,10 +257,16 @@ final class EmbeddedExecutor implements Executor {
           } else if (name.startsWith("java.")
               || name.startsWith("jdk.")
               || name.startsWith("sun.")
+              // Don't add all of `javax` because some packages might come from a dependency
+              // (e.g. jsr305)
+              || name.startsWith("javax.annotation.processing")
+              || name.startsWith("javax.lang.")
+              || name.startsWith("javax.naming.")
+              || name.startsWith("javax.net.")
+              || name.startsWith("javax.crypto.")
+              || name.startsWith("javax.security.")
               || name.startsWith("com.sun.")) {
-            // once we move to JDK 9+, should use `getPlatformClassLoader().loadClass()` instead of
-            // `super.loadClass()`
-            clazz = super.loadClass(name, false);
+            clazz = getPlatformClassLoader().loadClass(name);
           } else {
             clazz = findClass(name);
           }

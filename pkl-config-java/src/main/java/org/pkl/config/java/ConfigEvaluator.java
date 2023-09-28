@@ -38,5 +38,17 @@ public interface ConfigEvaluator extends AutoCloseable {
    */
   ConfigEvaluator setValueMapper(ValueMapper mapper);
 
+  /** Evaluates the given module source into a {@link Config} tree. */
   Config evaluate(ModuleSource moduleSource);
+
+  /**
+   * Releases all resources held by this evaluator. If an {@code evaluate} method is currently
+   * executing, this method blocks until cancellation of that execution has completed.
+   *
+   * <p>Once an evaluator has been closed, it can no longer be used, and calling {@code evaluate}
+   * methods will throw {@link IllegalStateException}. However, objects previously returned by
+   * {@code evaluate} methods remain valid.
+   */
+  @Override
+  void close();
 }

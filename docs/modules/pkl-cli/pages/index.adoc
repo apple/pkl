@@ -346,7 +346,7 @@ This command also takes <<common-options, common options>>.
 
 Run as a server that communicates over standard input/output.
 
-This option is used for embedding Pkl in an external client, such as xref:go:ROOT:index.adoc[pkl-go].
+This option is used for embedding Pkl in an external client, such as xref:swift:ROOT:index.adoc[pkl-swift] or xref:go:ROOT:index.adoc[pkl-go].
 
 [[command-test]]
 === `pkl test`
@@ -411,7 +411,10 @@ The package ZIP should be available at the `packageZipUrl` location specified in
 The package metadata should be available at the package URI's derived HTTPS URL.
 For example, given package `package://example.com/mypackage@1.0.0`, the metadata file should be published to `+https://example.com/mypackage@1.0.0+`.
 
-Prior to publishing, this command will run the package's API tests if any are defined.
+During packaging, this command runs these additional steps:
+
+1. Run the package's API tests, if any are defined.
+2. Validates that if the package has already been published, that the package's metadata is identical. This step can be skipped using the `--skip-publish-check` flag.
 
 Examples:
 
@@ -436,6 +439,15 @@ Accepts the following placeholders:
 
 `%\{name}`:: The name of the package
 `%\{version}`:: The version of the package
+====
+
+.--skip-publish-check
+[%collapsible]
+====
+Skips checking whether a package has already been published with different contents.
+
+By default, the packager will check whether a package at the same version has already been published.
+If the package has been published, it validates that the package's metadata is identical to the locally generated metadata.
 ====
 
 .--junit-reports
@@ -704,7 +716,7 @@ pkl> species
 "Barn"
 pkl> species += " Owl"
 pkl> species
-"Barn Owl"
+"Barn owl"
 ----
 
 Due to Pkl's late binding semantics, redefining a member affects dependent members:
@@ -714,7 +726,7 @@ Due to Pkl's late binding semantics, redefining a member affects dependent membe
 pkl> name = "Barn"
 pkl> species = "$name Owl"
 pkl> species
-"Barn Owl"
+"Barn owl"
 pkl> name = "Elf"
 pkl> species
 "Elf Owl"

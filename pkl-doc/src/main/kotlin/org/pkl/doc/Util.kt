@@ -66,7 +66,7 @@ internal val List<PObject>.alsoKnownAs: List<String>?
 internal fun createDeprecatedAnnotation(message: String): PObject =
   PObject(PClassInfo.Deprecated, mapOf("message" to message, "replaceWith" to PNull.getInstance()))
 
-private val paragraphSeparatorRegex: Regex = Regex("\n\\s*\n")
+private val paragraphSeparatorRegex: Regex = Regex("(?m:^\\s*(`{3,}\\w*)?\\s*\n)")
 
 internal fun getDocCommentSummary(docComment: String?): String? {
   if (docComment == null) return null
@@ -82,7 +82,10 @@ internal fun getDocCommentOverflow(docComment: String?): String? {
 
   return when (val match = paragraphSeparatorRegex.find(docComment)) {
     null -> null
-    else -> docComment.substring(match.range.last + 1).trim().ifEmpty { null }
+    else -> {
+      val index = if (match.groups[1] != null) match.range.first else match.range.last + 1
+      docComment.substring(index).trim().ifEmpty { null }
+    }
   }
 }
 

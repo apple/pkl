@@ -54,18 +54,21 @@ public final class ResolveVariableNode extends ExpressionNode {
   private final boolean isBaseModule;
   private final boolean isCustomThisScope;
   private final ConstLevel constLevel;
+  private final int constDepth;
 
   public ResolveVariableNode(
       SourceSection sourceSection,
       Identifier variableName,
       boolean isBaseModule,
       boolean isCustomThisScope,
-      ConstLevel constLevel) {
+      ConstLevel constLevel,
+      int constDepth) {
     super(sourceSection);
     this.variableName = variableName;
     this.isBaseModule = isBaseModule;
     this.isCustomThisScope = isCustomThisScope;
     this.constLevel = constLevel;
+    this.constDepth = constDepth;
   }
 
   @Override
@@ -128,7 +131,7 @@ public final class ResolveVariableNode extends ExpressionNode {
       if (localMember != null) {
         assert localMember.isLocal();
 
-        checkConst(currOwner, localMember);
+        checkConst(currOwner, localMember, levelsUp);
 
         var value = localMember.getConstantValue();
         if (value != null) {
@@ -145,7 +148,7 @@ public final class ResolveVariableNode extends ExpressionNode {
       if (member != null) {
         assert !member.isLocal();
 
-        checkConst(currOwner, member);
+        checkConst(currOwner, member, levelsUp);
 
         // Non-local properties are late-bound, which is why we can't ever return ConstantNode here.
         //
@@ -191,22 +194,42 @@ public final class ResolveVariableNode extends ExpressionNode {
       }
     }
 
-    // Assuming this variable exists at all, it must be a property accessible through `this`.
+    // Assuming this method exists at all, it must be a method accessible through `this`.
+    ///
+    // Reading a property off of implicit `this` needs a const check if this node is not in a const
+    // scope.
+    // open class A {
+    //   a = 1
+    // }
+    //
+    // class B extends A {
+    //   const b = a // <-- implicit this lookup of `a`, which is not in a const scope.
+    // }
+    //
+    // A const scope exists if there is an object body, for example.
+    //
+    // class B extends A {
+    //   const b = new { a } // <-- `new {}` creates a const scope.
+    // }
+    boolean needsConst = constLevel == ConstLevel.ALL && constDepth == -1 && !isCustomThisScope;
     return ReadPropertyNodeGen.create(
         sourceSection,
         variableName,
         MemberLookupMode.IMPLICIT_THIS,
-        // class properties are already class/annotation const, so they only need a check
-        // if we require full const check
-        constLevel == ConstLevel.ALL,
+        needsConst,
         VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThisScope));
   }
 
-  private void checkConst(VmObjectLike currOwner, Member member) {
+  @SuppressWarnings("DuplicatedCode")
+  private void checkConst(VmObjectLike currOwner, Member member, int levelsUp) {
+    if (!constLevel.isConst()) {
+      return;
+    }
+    var memberIsOutsideConstScope = levelsUp > constDepth;
     var invalid = false;
     switch (constLevel) {
       case ALL:
-        invalid = !member.isConst();
+        invalid = memberIsOutsideConstScope && !member.isConst();
         break;
       case MODULE:
         invalid = currOwner.isModuleObject() && !member.isConst();

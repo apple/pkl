@@ -15,12 +15,15 @@
  */
 package org.pkl.core.service;
 
+import static org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME;
+
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.*;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModulePathResolver;
+import org.pkl.core.project.Project;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
@@ -66,6 +69,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             .addResourceReader(ResourceReaders.externalProperty())
             .addResourceReader(ResourceReaders.modulePath(resolver))
             .addResourceReader(ResourceReaders.pkg())
+            .addResourceReader(ResourceReaders.projectpackage())
             .addResourceReader(ResourceReaders.file())
             .addResourceReader(ResourceReaders.http())
             .addResourceReader(ResourceReaders.https())
@@ -73,6 +77,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             .addModuleKeyFactories(ModuleKeyFactories.fromServiceProviders())
             .addModuleKeyFactory(ModuleKeyFactories.modulePath(resolver))
             .addModuleKeyFactory(ModuleKeyFactories.pkg)
+            .addModuleKeyFactory(ModuleKeyFactories.projectpackage)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addModuleKeyFactory(ModuleKeyFactories.genericUrl)
             .setEnvironmentVariables(options.getEnvironmentVariables())
@@ -80,6 +85,10 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             .setTimeout(options.getTimeout())
             .setOutputFormat(options.getOutputFormat())
             .setModuleCacheDir(options.getModuleCacheDir());
+    if (options.getProjectDir() != null) {
+      var project = Project.loadFromPath(options.getProjectDir().resolve(PKL_PROJECT_FILENAME));
+      builder.setProjectDependencies(project.getDependencies());
+    }
 
     try (var evaluator = builder.build()) {
       return evaluator.evaluateOutputText(ModuleSource.path(modulePath));

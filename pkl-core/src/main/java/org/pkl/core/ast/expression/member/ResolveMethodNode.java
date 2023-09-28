@@ -49,6 +49,7 @@ public final class ResolveMethodNode extends ExpressionNode {
   // Tells if the call site is inside a [CustomThisScope].
   private final boolean isCustomThisScope;
   private final ConstLevel constLevel;
+  private final int constDepth;
 
   public ResolveMethodNode(
       SourceSection sourceSection,
@@ -56,7 +57,8 @@ public final class ResolveMethodNode extends ExpressionNode {
       ExpressionNode[] argumentNodes,
       boolean isBaseModule,
       boolean isCustomThisScope,
-      ConstLevel constLevel) {
+      ConstLevel constLevel,
+      int constDepth) {
 
     super(sourceSection);
 
@@ -65,6 +67,7 @@ public final class ResolveMethodNode extends ExpressionNode {
     this.isBaseModule = isBaseModule;
     this.isCustomThisScope = isCustomThisScope;
     this.constLevel = constLevel;
+    this.constDepth = constDepth;
   }
 
   @Override
@@ -86,14 +89,14 @@ public final class ResolveMethodNode extends ExpressionNode {
         var localMethod = currOwner.getVmClass().getDeclaredMethod(localMethodName);
         if (localMethod != null) {
           assert localMethod.isLocal();
-          checkConst(currOwner, localMethod);
+          checkConst(currOwner, localMethod, levelsUp);
           return new InvokeMethodLexicalNode(
               sourceSection, localMethod.getCallTarget(sourceSection), levelsUp, argumentNodes);
         }
         var method = currOwner.getVmClass().getDeclaredMethod(methodName);
         if (method != null) {
           assert !method.isLocal();
-          checkConst(currOwner, method);
+          checkConst(currOwner, method, levelsUp);
           if (method.getDeclaringClass().isClosed()) {
             return new InvokeMethodLexicalNode(
                 sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes);
@@ -112,7 +115,7 @@ public final class ResolveMethodNode extends ExpressionNode {
         var localMethod = currOwner.getMember(localMethodName);
         if (localMethod != null) {
           assert localMethod.isLocal();
-          checkConst(currOwner, localMethod);
+          checkConst(currOwner, localMethod, levelsUp);
           var methodCallTarget =
               // TODO: is it OK to pass owner as receiver here?
               // (calls LocalMethodNode, which only resolves types)
@@ -140,21 +143,35 @@ public final class ResolveMethodNode extends ExpressionNode {
     }
 
     // Assuming this method exists at all, it must be a method accessible through `this`.
+    //
+    // Calling a method off implicit `this` needs a const check if the node is not in a const scope
+    // (see ResolveVariableNode for an explanation)
+    //
+    // Edge case: always allow method calls for custom `this` scopes (member predicates, type
+    // constraints)
+    // because they do not refer to a lexical `this`.
+    boolean needsConst = constLevel == ConstLevel.ALL && constDepth == -1 && !isCustomThisScope;
     //noinspection ConstantConditions
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         methodName,
         argumentNodes,
         MemberLookupMode.IMPLICIT_THIS,
+        needsConst,
         VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThisScope),
         GetClassNodeGen.create(null));
   }
 
-  private void checkConst(VmObjectLike currOwner, Member method) {
+  @SuppressWarnings("DuplicatedCode")
+  private void checkConst(VmObjectLike currOwner, Member method, int levelsUp) {
+    if (!constLevel.isConst()) {
+      return;
+    }
+    var memberIsOutsideConstScope = levelsUp > constDepth;
     var invalid = false;
     switch (constLevel) {
       case ALL:
-        invalid = !method.isConst();
+        invalid = memberIsOutsideConstScope && !method.isConst();
         break;
       case MODULE:
         invalid = currOwner.isModuleObject() && !method.isConst();

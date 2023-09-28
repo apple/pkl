@@ -22,6 +22,7 @@ import org.pkl.core.ModuleSource.uri
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
+import org.pkl.core.util.ErrorMessages
 
 class CliTestRunner
 @JvmOverloads
@@ -62,7 +63,9 @@ constructor(
       for (moduleUri in sources) {
         try {
           val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
-          failed = results.failed()
+          if (!failed) {
+            failed = results.failed()
+          }
           SimpleReport().report(results, consoleWriter)
           consoleWriter.flush()
           val junitDir = testOptions.junitDir
@@ -94,7 +97,7 @@ constructor(
         }
       }
       if (failed) {
-        throw CliTestException("Tests failed")
+        throw CliTestException(ErrorMessages.create("testsFailed"))
       }
     }
   }

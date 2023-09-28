@@ -122,7 +122,7 @@ class BinaryEvaluatorTest {
   fun `evaluate import expression`() {
     val bytes = evaluate("", """import("pkl:release").current.documentation.homepage""")
 
-    assertThat(bytes.asString()).startsWith("https://pkl.apple.com/pkl/")
+    assertThat(bytes.asString()).startsWith("https://pkl.apple.com/")
   }
 
   @Test

@@ -11,7 +11,7 @@ Consider the following example Pkl file.
 [source,{pkl}]
 .intro.pkl
 ----
-name = "Pkl: Configure your Systems the Apple Way"
+name = "Pkl: Configure your Systems in New Ways"
 attendants = 100
 isInteractive = true
 amountLearned = 13.37
@@ -22,7 +22,7 @@ Running Pkl on this file gives
 [source,shell]
 ----
 $ pkl eval /Users/me/tutorial/intro.pkl
-name = "Pkl: Configure your Systems the Apple Way"
+name = "Pkl: Configure your Systems in New Ways"
 attendants = 100
 isInteractive = true
 amountLearned = 13.37
@@ -39,7 +39,7 @@ For example, JSON:
 ----
 $ pkl eval -f json /Users/me/tutorial/intro.pkl
 {
-  "name": "Pkl: Configure your Systems the Apple Way",
+  "name": "Pkl: Configure your Systems in New Ways",
   "attendants": 100,
   "isInteractive": true,
   "amountLearned": 13.37
@@ -56,7 +56,7 @@ $ pkl eval -f plist /Users/me/tutorial/intro.pkl
 <plist version="1.0">
 <dict>
   <key>name</key>
-  <string>Pkl: Configure your Systems the Apple Way</string>
+  <string>Pkl: Configure your Systems in New Ways</string>
   <key>attendants</key>
   <integer>100</integer>
   <key>isInteractive</key>
@@ -87,12 +87,10 @@ First, look at the syntax for objects and their members.
 .simpleObjectWithProperties.pkl
 ----
 bird { // <1>
-  name = "Pigeon" // <2>
+  name = "Common wood pigeon" // <2>
   diet = "Seeds"
-  profile { // <3>
-    feathers = 10_000
-    isAdult = true
-    isExtinct = false
+  taxonomy { // <3>
+    species = "Columba palumbus"
   }
 }
 ----
@@ -100,8 +98,8 @@ bird { // <1>
 <2> For primitive values, Pkl has the `=` syntax (more on this later).
 <3> Just like `bird {`, but to show that objects can be nested.
 
-This defines an object called `bird` with three _named properties_: `name`, `diet`, and `profile`.
-The first two of these are strings, but `profile` is another object.
+This defines an object called `bird` with three _named properties_: `name`, `diet`, and `taxonomy`.
+The first two of these are strings, but `taxonomy` is another object.
 This means properties in an object can have different types and objects can be nested.
 
 === Elements
@@ -127,8 +125,8 @@ exampleObjectWithJustIntElements {
 }
 
 exampleObjectWithMixedElements {
-  "Infrastructure Summit"
-  (2000 + 21) // <2>
+  "Bird Breeder Conference"
+  (2000 + 23) // <2>
   exampleObjectWithJustIntElements // <3>
 }
 ----
@@ -149,12 +147,10 @@ You write entry "names" by enclosing them in square brackets ("names" is quoted,
 ----
 pigeonShelter {
   ["bird"] { // <1>
-    name = "Pigeon"
+    name = "Common wood pigeon"
     diet = "Seeds"
-    profile {
-      feathers = 10_000
-      isAdult = true
-      isExtinct = false
+    taxonomy {
+      species = "Columba palumbus"
     }
   }
   ["address"] = "355 Bird St." // <2>
@@ -179,20 +175,20 @@ These object members can be freely mixed.
 ----
 mixedObject {
   name = "Pigeon"
-  age = 1
+  lifespan = 8
   "wing"
   "claw"
   ["wing"] = "Not related to the _element_ \"wing\""
   42
-  isExtinct = true
+  extinct = false
   [false] {
     description = "Construed object example"
   }
 }
 ----
 
-Notice, how properties (`name`, `age` and `extinct`), elements (`"wing"`, `"claw"`, `42`) and entries (`"wing"`, `false`) are mixed together in this one object.
-You don't have to order them by kind and you don't require (other) special syntax.
+Notice, how properties (`name`, `lifespan` and `extinct`), elements (`"wing"`, `"claw"`, `42`) and entries (`"wing"`, `false`) are mixed together in this one object.
+You don't have to order them by kind, and you don't require (other) special syntax.
 
 === Collections
 
@@ -219,17 +215,17 @@ Both listings and mappings _are_ "just objects," so, they don't require syntax b
 .collections.pkl
 ----
 birds { // <1>
-  "pigeon"
-  "parrot"
-  "barn owl"
-  "falcon"
+  "Pigeon"
+  "Parrot"
+  "Barn owl"
+  "Falcon"
 }
 
 habitats { // <2>
-  ["pigeon"] = "streets"
-  ["parrot"] = "parks"
-  ["barn owl"] = "forests"
-  ["falcon"] = "mountains"
+  ["Pigeon"] = "Streets"
+  ["Parrot"] = "Parks"
+  ["Barn owl"] = "Forests"
+  ["Falcon"] = "Mountains"
 }
 ----
 <1> A listing containing four elements.
@@ -247,16 +243,16 @@ When you render _this_ configuration as JSON, everything works:
 ----
 {
   "birds": [
-    "pigeon",
-    "parrot",
-    "barn owl",
-    "falcon"
+    "Pigeon",
+    "Parrot",
+    "Barn owl",
+    "Falcon"
   ],
   "habitats": {
-    "pigeon": "streets",
-    "parrot": "parks",
-    "barn owl": "forests",
-    "falcon": "mountains"
+    "Pigeon": "Streets",
+    "Parrot": "Parks",
+    "Barn owl": "Forests",
+    "Falcon": "Mountains"
   }
 }
 ----
@@ -269,10 +265,10 @@ For example:
 .indexedListing.pkl
 ----
 birds {
-  "pigeon"
-  "parrot"
-  "barn owl"
-  "falcon"
+  "Pigeon"
+  "Parrot"
+  "Barn owl"
+  "Falcon"
 }
 
 relatedToSnowOwl = birds[2]
@@ -281,12 +277,12 @@ results in
 [source,{pkl}]
 ----
 birds {
-  "pigeon"
-  "parrot"
-  "barn owl"
-  "falcon"
+  "Pigeon"
+  "Parrot"
+  "Barn owl"
+  "Falcon"
 }
-relatedToSnowOwl = "barn owl"
+relatedToSnowOwl = "Barn owl"
 ----
 
 == Exercises
@@ -297,24 +293,25 @@ relatedToSnowOwl = "barn owl"
 [source,json]
 ----
 {
-  "name": "John",
-  "age": 30,
-  "pets": {
+  "name": "Common wood pigeon",
+  "lifespan": 8,
+  "friends": {
     "bird1": "Parrot",
-    "bird2": "Barn owl",
+    "bird2": "Albatross",
     "bird3": "Falcon"
   }
 }
 ----
 
-2. For some reason, we decide we no longer need the birdX names of the different cars; we just need them as an array. Change your solution to the previous question to produce the following JSON result:
+2. For some reason, we decide we no longer need the birdX names of the different birds; we just need them as an array.
+   Change your solution to the previous question to produce the following JSON result:
 
 +
 [source,json]
 ----
 {
-  "name": "John",
-  "age": 30,
-  "cars": ["Parrot", "Barn owl", "Falcon"]
+  "name": "Common wood pigeon",
+  "lifespan": 8,
+  "birds": ["Parrot", "Barn owl", "Falcon"]
 }
 ----

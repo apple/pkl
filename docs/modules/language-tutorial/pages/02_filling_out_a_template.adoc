@@ -16,44 +16,44 @@ Consider the following example.
 bird {
   name = "Pigeon"
   diet = "Seeds"
-  profile {
-    feathers = 10_000
-    isAdult = true
-    isExtinct = false
+  taxonomy {
+    kingdom = "Animalia"
+    clade = "Dinosauria"
+    order = "Columbiformes"
   }
 }
 
 parrot = (bird) {
   name = "Parrot"
   diet = "Berries"
-  profile {
-    feathers = 12_000
+  taxonomy {
+    order = "Psittaciformes"
   }
 }
 ----
 
 Parrot and Pigeon have nearly identical properties.
-They only differ in their name and profile, so if you have already written out `bird`, you can say that `parrot` is just like `pigeon` except `name` is `"Parrot"`, diet is `"Berries"` the `profile.feathers` is `"12_000"`.
+They only differ in their name and taxonomy, so if you have already written out `bird`, you can say that `parrot` is just like `pigeon` except `name` is `"Parrot"`, diet is `"Berries"` the `taxonomy.order` is `"Psittaciformes"`.
 When you run this, Pkl expands everything fully.
 
 [source,{pkl}]
 ----
 bird {
-  name = "Pigeon"
+  name = "Common wood pigeon"
   diet = "Seeds"
-  profile {
-    feathers = 10000
-    isAdult = true
-    isExtinct = false
+  taxonomy {
+    kingdom = "Animalia"
+    clade = "Dinosauria"
+    order = "Columbiformes"
   }
 }
 parrot {
   name = "Parrot"
   diet = "Berries"
-  profile {
-    feathers = 12000
-    isAdult = true
-    isExtinct = false
+  taxonomy {
+    kingdom = "Animalia"
+    clade = "Dinosauria"
+    order = "Psittaciformes"
   }
 }
 ----
@@ -72,68 +72,62 @@ Consider the following example.
 [source,{pkl}]
 .nestedAmends.pkl
 ----
-bird {
-  name = "Baby Pigeon"
+woodPigeon {
+  name = "Common wood pigeon"
   diet = "Seeds"
-  profile {
-    feathers = 0
-    isAdult = false
-    isExtinct = false
+  taxonomy {
+    species = "Columba palumbus"
   }
 }
 
-pigeon = (bird) {
-  name = "Pigeon"
-  profile { // <1>
-    feathers = 10_000
-    isAdult = true
+stockPigeon = (woodPigeon) {
+  name = "Stock pigeon"
+  taxonomy { // <1>
+    species = "Columba oenas"
   }
 }
 
-dodo = (pigeon) { // <2>
+dodo = (stockPigeon) { // <2>
   name = "Dodo"
-  profile {
-    isExtinct = true
+  extinct = true // <3>
+  taxonomy {
+    species = "Raphus cucullatus"
   }
 }
 ----
-<1> This amends `feathers` and `isAdult`, _as it occurs in_ `bird`.
+<1> This amends `species`, _as it occurs in_ `stockPigeon`.
 <2> Amended objects can, themselves, be amended.
+<3> New fields can be added to objects when amending.
 
-Notice how you only have to change `profile.feathers` and `profile.isAdult`.
-In this example, `bird.profile` has `feathers`, and two booleans `isAdult`, and `isExtinct`.
-You are amending `bird`, to define `pigeon`.
-They have the same `profile`, except for `feathers` and `isAdult`.
-This notation says that everything in `profile` should be what it is in the object you are amending (`bird`), except for `feathers` and `isAdult`, which should be `10_000` and `true`, respectively.
+Notice how you only have to change `taxonomy.species`.
+In this example, `bird.taxonomy` has `kingdom`, `clade`, `order` and `species`.
+You are amending `stockPigeon`, to define `woodPigeon`.
+They have the same `taxonomy`, except for `species`.
+This notation says that everything in `taxonomy` should be what it is in the object you are amending (`stockPigeon`), except for `species`, which should be `"Columba palumbus"` .
 
 For the input above, Pkl produces the following output.
 [source,{pkl}]
 ----
-bird {
-  name = "Baby Pigeon"
+woodPigeon {
+  name = "Common wood pigeon"
   diet = "Seeds"
-  profile {
-    feathers = 0
-    isAdult = false
-    isExtinct = false
+  taxonomy {
+    species = "Columba palumbus"
   }
 }
-pigeon {
-  name = "Pigeon"
+stockPigeon {
+  name = "Stock pigeon"
   diet = "Seeds"
-  profile {
-    feathers = 10000
-    isAdult = true
-    isExtinct = false
+  taxonomy {
+    species = "Columba oenas"
   }
 }
 dodo {
   name = "Dodo"
   diet = "Seeds"
-  profile {
-    feathers = 10000
-    isAdult = true
-    isExtinct = true
+  extinct = true
+  taxonomy {
+    species = "Raphus cucullatus"
   }
 }
 ----
@@ -148,7 +142,7 @@ What if you include _elements_ or _entries_ in an amends expression?
 favoriteFoods {
   "red berries"
   "blue berries"
-  ["Barn Owl"] {
+  ["Barn owl"] {
     "mice"
   }
 }
@@ -160,7 +154,7 @@ adultBirdFoods = (favoriteFoods) {
     "insects"
     "amphibians"
   }
-  ["Barn Owl"] { // <4>
+  ["Barn owl"] { // <4>
     "fish"
   }
 }
@@ -178,14 +172,14 @@ Result:
 [source,{pkl}]
 ----
 favoriteFoods {
-  ["Barn Owl"] {
+  ["Barn owl"] {
     "mice"
   }
   "red berries"
   "blue berries"
 }
 adultBirdFoods {
-  ["Barn Owl"] {
+  ["Barn owl"] {
     "mice"
     "fish"
   }
@@ -209,12 +203,10 @@ Going back to the example above, you can write `parrot` as a separate module.
 [source,{pkl}]
 .pigeon.pkl
 ----
-name = "Pigeon"
+name = "Common wood pigeon"
 diet = "Seeds"
-profile {
-  feathers = 10_000
-  isAdult = true
-  isExtinct = false
+taxonomy {
+  species = "Columba palumbus"
 }
 ----
 
@@ -226,8 +218,11 @@ You can `import` this module and express `parrot` like you did before.
 import "pigeon.pkl" // <1>
 
 parrot = (pigeon) {
-  name = "Parrot"
+  name = "Great green macaw"
   diet = "Berries"
+  species {
+    species = "Ara ambiguus"
+  }
 }
 ----
 <1> Importing `foo.pkl` creates the object `foo`, so you can refer to `pigeon` in this code, like you did before.
@@ -237,23 +232,19 @@ Looking at the result, however, you see a (possibly) unexpected difference.
 
 [source,{pkl}]
 ----
-$ pkl eval /Users/me/tutorial/parrot.pkl
-name = "Pigeon"
+$ pkl eval /Users/me/tutorial/pigeon.pkl
+name = "Common wood pigeon""
 diet = "Seeds"
-profile {
-  feathers = 10000
-  isAdult = true
-  isExtinct = false
+taxonomy {
+  species = "Columba palumbus"
 }
 
-$ pkl eval /Users/me/tutorial/pigeon.pkl
-pigeon {
-  name = "Parrot"
-  diet = "Beeds"
-  profile {
-    feathers = 10000
-    isAdult = true
-    isExtinct = false
+$ pkl eval /Users/me/tutorial/parrot.pkl
+parrot {
+  name = "Great green macaw"
+  diet = "Berries"
+  taxonomy {
+    species = "Ara ambiguus"
   }
 }
 ----
@@ -268,7 +259,7 @@ In order to say that "this module is an object, amended from the `pigeon` module
 ----
 amends "pigeon.pkl" // <1>
 
-name = "Parrot"
+name = "Great green macaw"
 ----
 <1> "This" module is the same as `"pigeon.pkl"`, except for what is in the remainder of the file.
 
@@ -348,7 +339,7 @@ at pkl.base#Module.output.text (https://github.com/pkl-lang/pkl/blob/e4d8c882d/s
 <6> What Pkl evaluated to discover the error.
 
 When Pkl prints source locations, it also prints clickable links for easy access.
-For local files, it generates a link for your development environment (https://pkl.apple.com/pkl/main/current/pkl-cli/index.html#settings-file[configurable in `+~/.pkl/settings.pkl+`]).
+For local files, it generates a link for your development environment (https://pkl.apple.com/main/current/pkl-cli/index.html#settings-file[configurable in `+~/.pkl/settings.pkl+`]).
 For packages imported from elsewhere, if available, Pkl produces `https://` links to their repository.
 
 Pkl complains about a _type constraint_.

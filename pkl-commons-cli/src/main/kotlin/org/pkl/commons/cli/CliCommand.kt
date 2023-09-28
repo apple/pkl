@@ -15,14 +15,8 @@
  */
 package org.pkl.commons.cli
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
-import java.util.stream.Collectors
-import kotlin.io.path.exists
-import kotlin.io.path.inputStream
-import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -36,12 +30,17 @@ import org.pkl.core.util.IoUtils
 
 /** Building block for CLI commands. Configured programmatically to allow for embedding. */
 abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
+  init {
+    if (cliOptions.caCertificates.isNotEmpty()) {
+      CertificateUtils.setupAllX509CertificatesGlobally(cliOptions.caCertificates)
+    }
+  }
+
   /** Runs this command. */
   fun run() {
     if (cliOptions.testMode) {
       IoUtils.setTestMode()
     }
-    setupCaCertificates()
     try {
       doRun()
     } catch (e: PklException) {
@@ -71,26 +70,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
       throw CliException(e.toString())
-    }
-  }
-
-  private fun setupCaCertificates() {
-    // command line overrides ~/.pkl/cacerts/
-    val certs =
-      cliOptions.caCertificates.ifEmpty {
-        val home = System.getProperty("user.home")
-        val cacerts = Path.of(home, ".pkl", "cacerts")
-        if (cacerts.exists() && cacerts.isDirectory()) {
-          Files.list(cacerts).filter(Path::isRegularFile).collect(Collectors.toList())
-        } else emptyList()
-      }
-    if (certs.isNotEmpty()) {
-      CertificateUtils.setupAllX509CertificatesGlobally(certs.map(Path::inputStream))
-    } else {
-      val rootCerts =
-        CliCommand::class.java.getResourceAsStream("/org/pkl/commons/cli/IncludedCARoots.pem")
-      assert(rootCerts != null)
-      CertificateUtils.setupAllX509CertificatesGlobally(listOf(rootCerts!!))
     }
   }
 

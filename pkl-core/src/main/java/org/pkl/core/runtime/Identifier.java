@@ -218,6 +218,7 @@ public final class Identifier implements Comparable<Identifier> {
   // equals and hashCode intentionally inherited from Object
 
   @Override
+  @TruffleBoundary
   public String toString() {
     return name;
   }

@@ -1,0 +1,51 @@
+foo {
+  bar = "bar"
+  baz = "bar"
+  qux = "bar"
+  qix = 1
+}
+bar {
+  qux = 1
+  baz {
+    corge = 2
+    biz {
+      buz = 1
+      qup = 2
+      fuzz = 5
+    }
+  }
+}
+amend {
+  bar = "bar"
+  baz = "amend"
+  qux = "bar"
+  qix = 1
+}
+thing {
+  prop1 = 5
+  prop2 = 5
+  prop3 {
+    prop4 = 5
+  }
+}
+thing2 {
+  prop1 = 5
+  prop2 = 5
+  prop3 {
+    prop4 = 5
+  }
+}
+thing3 {
+  prop1 = 5
+  prop2 = 5
+  prop3 {
+    prop4 = 5
+  }
+}
+thing4 {
+  prop1 = 5
+  prop2 = 2
+  prop3 {
+    prop4 = 10
+  }
+}

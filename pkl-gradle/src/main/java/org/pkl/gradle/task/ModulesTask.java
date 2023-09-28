@@ -17,7 +17,9 @@ package org.pkl.gradle.task;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
+import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 
@@ -151,5 +154,32 @@ public abstract class ModulesTask extends BasePklTask {
       throw new InvalidUserDataException("No source modules specified.");
     }
     doRunTask();
+  }
+
+  @Internal
+  @Override
+  protected CliBaseOptions getCliBaseOptions() {
+    if (cachedOptions == null) {
+      cachedOptions =
+          new CliBaseOptions(
+              getSourceModulesAsUris(),
+              patternsFromStrings(getAllowedModules().get()),
+              patternsFromStrings(getAllowedResources().get()),
+              getEnvironmentVariables().get(),
+              getExternalProperties().get(),
+              parseModulePath(),
+              getProject().getProjectDir().toPath(),
+              mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
+              mapAndGetOrNull(getSettingsModule(), this::parseModuleNotationToUri),
+              getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
+              getEvalTimeout().getOrNull(),
+              mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getNoCache().getOrElse(false),
+              getOmitProjectSettings().getOrElse(false),
+              getNoProject().getOrElse(false),
+              false,
+              Collections.emptyList());
+    }
+    return cachedOptions;
   }
 }

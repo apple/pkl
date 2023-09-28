@@ -15,12 +15,30 @@
  */
 package org.pkl.core.packages;
 
+import org.pkl.core.util.ErrorMessages;
+
 public class PackageLoadError extends RuntimeException {
-  public PackageLoadError(String message, Throwable cause) {
-    super(message, cause);
+
+  private final String messageName;
+  private final Object[] arguments;
+
+  public PackageLoadError(Throwable cause, String messageName, Object... arguments) {
+    super(ErrorMessages.create(messageName, arguments), cause);
+    this.messageName = messageName;
+    this.arguments = arguments;
   }
 
-  public PackageLoadError(String message) {
-    super(message);
+  public PackageLoadError(String messageName, Object... arguments) {
+    super(ErrorMessages.create(messageName, arguments));
+    this.messageName = messageName;
+    this.arguments = arguments;
+  }
+
+  public String getMessageName() {
+    return messageName;
+  }
+
+  public Object[] getArguments() {
+    return arguments;
   }
 }

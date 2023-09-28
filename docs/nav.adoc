@@ -35,6 +35,7 @@
 *** xref:kotlin-binding:codegen.adoc[Code Generator]
 *** xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin Library]
 
+** xref:swift:ROOT:index.adoc[Swift]
 ** xref:go:ROOT:index.adoc[Go]
 
 * xref:release-notes:index.adoc[Release Notes]

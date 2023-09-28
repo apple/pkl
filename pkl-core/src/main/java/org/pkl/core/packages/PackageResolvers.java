@@ -53,7 +53,6 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
-import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
@@ -109,12 +108,11 @@ class PackageResolvers {
         return Pair.of(dependencyMetadata, checksums);
       } catch (JsonParseException e) {
         throw new PackageLoadError(
-            ErrorMessages.create(
-                "invalidDependencyMetadata",
-                packageUri.getDisplayName(),
-                packageUri.getMetadataRequestUri(),
-                e.getMessage()),
-            e);
+            e,
+            "invalidDependencyMetadata",
+            packageUri.getDisplayName(),
+            packageUri.getMetadataRequestUri(),
+            e.getMessage());
       }
     }
 
@@ -163,12 +161,11 @@ class PackageResolvers {
       var expectedChecksum = dependencyMetadata.getPackageZipChecksums().getSha256();
       if (!checksum.equals(expectedChecksum)) {
         throw new PackageLoadError(
-            ErrorMessages.create(
-                "invalidPackageZipChecksum",
-                packageUri.getDisplayName(),
-                checksum,
-                expectedChecksum,
-                dependencyMetadata.getPackageZipUrl()));
+            "invalidPackageZipChecksum",
+            packageUri.getDisplayName(),
+            checksum,
+            expectedChecksum,
+            dependencyMetadata.getPackageZipUrl());
       }
     }
 
@@ -185,12 +182,11 @@ class PackageResolvers {
       }
       if (!checksum.equals(expectedChecksum)) {
         throw new PackageLoadError(
-            ErrorMessages.create(
-                "invalidPackageMetadataChecksum",
-                packageUri.getDisplayName(),
-                checksum,
-                expectedChecksum,
-                requestUri));
+            "invalidPackageMetadataChecksum",
+            packageUri.getDisplayName(),
+            checksum,
+            expectedChecksum,
+            requestUri);
       }
     }
 
@@ -202,11 +198,10 @@ class PackageResolvers {
       try {
         responseCode = connection.getResponseCode();
         if (responseCode != 200) {
-          throw new PackageLoadError(ErrorMessages.create("badHttpStatusCode", responseCode, uri));
+          throw new PackageLoadError("badHttpStatusCode", responseCode, uri);
         }
       } catch (IOException e) {
-        throw new PackageLoadError(
-            ErrorMessages.create("ioErrorMakingHttpGet", uri, e.getMessage()));
+        throw new PackageLoadError(e, "ioErrorMakingHttpGet", uri, e.getMessage());
       }
       return connection.getInputStream();
     }
@@ -230,10 +225,9 @@ class PackageResolvers {
     protected PackageLoadError invalidPackageZipUrl(
         PackageUri packageUri, DependencyMetadata dependencyMetadata) {
       return new PackageLoadError(
-          ErrorMessages.create(
-              "invalidPackageZipUrl",
-              packageUri.getDisplayName(),
-              dependencyMetadata.getPackageZipUrl()));
+          "invalidPackageZipUrl",
+          packageUri.getDisplayName(),
+          dependencyMetadata.getPackageZipUrl());
     }
   }
 
@@ -382,12 +376,11 @@ class PackageResolvers {
         return metadata;
       } catch (JsonParseException e) {
         throw new PackageLoadError(
-            ErrorMessages.create(
-                "invalidDependencyMetadata",
-                packageUri.getDisplayName(),
-                requestUri,
-                e.getMessage()),
-            e);
+            e,
+            "invalidDependencyMetadata",
+            packageUri.getDisplayName(),
+            requestUri,
+            e.getMessage());
       }
     }
 
@@ -514,12 +507,11 @@ class PackageResolvers {
       } catch (JsonParseException e) {
         Files.deleteIfExists(metadataPath);
         throw new PackageLoadError(
-            ErrorMessages.create(
-                "invalidDependencyMetadata",
-                packageUri.getDisplayName(),
-                requestUri,
-                e.getMessage()),
-            e);
+            e,
+            "invalidDependencyMetadata",
+            packageUri.getDisplayName(),
+            requestUri,
+            e.getMessage());
       }
       if (!metadata.getPackageZipUrl().getScheme().equalsIgnoreCase("https")) {
         Files.deleteIfExists(metadataPath);

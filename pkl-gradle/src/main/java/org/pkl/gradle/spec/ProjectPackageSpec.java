@@ -27,4 +27,6 @@ public interface ProjectPackageSpec extends BasePklSpec {
   DirectoryProperty getJunitReportsDir();
 
   Property<Boolean> getOverwrite();
+
+  Property<Boolean> getSkipPublishCheck();
 }

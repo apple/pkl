@@ -17,6 +17,7 @@ dependencies {
   implementation(libs.slf4jApi)
 
   testImplementation(project(":pkl-commons-test"))
+  testImplementation(project(":pkl-core"))
   testImplementation(libs.slf4jSimple)
 }
 

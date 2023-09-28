@@ -223,6 +223,38 @@ public final class SymbolTable {
       return scope;
     }
 
+    private boolean isConst() {
+      return constLevel.isConst();
+    }
+
+    /**
+     * Returns the lexical depth from the current scope to the top-most scope that is const. Depth
+     * is 0-indexed, and -1 means that the scope is not a const scope.
+     *
+     * <p>A const scope is a lexical scope on the right-hand side of a const property.
+     *
+     * <pre>{@code
+     * const foo = new {
+     *   bar {
+     *     baz // <-- depth == 1
+     *   }
+     * }
+     * }</pre>
+     */
+    public int getConstDepth() {
+      var depth = -1;
+      var lexicalScope = getLexicalScope();
+      while (lexicalScope.getConstLevel() == ConstLevel.ALL) {
+        depth += 1;
+        var parent = lexicalScope.getParent();
+        if (parent == null) {
+          return depth;
+        }
+        lexicalScope = parent.getLexicalScope();
+      }
+      return depth;
+    }
+
     /**
      * Adds the for generator variable to the frame descriptor.
      *
@@ -356,7 +388,7 @@ public final class SymbolTable {
     }
   }
 
-  public static final class MethodScope extends TypeParameterizableScope implements LexicalScope {
+  public static final class MethodScope extends TypeParameterizableScope {
     public MethodScope(
         Scope parent,
         Identifier name,

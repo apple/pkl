@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -24,12 +25,15 @@ import org.pkl.core.runtime.*;
 public final class ReadSuperPropertyNode extends ExpressionNode {
 
   private final Identifier propertyName;
+  private final boolean needsConst;
 
   @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
-  public ReadSuperPropertyNode(SourceSection sourceSection, Identifier propertyName) {
+  public ReadSuperPropertyNode(
+      SourceSection sourceSection, Identifier propertyName, boolean needsConst) {
     super(sourceSection);
     this.propertyName = propertyName;
+    this.needsConst = needsConst;
   }
 
   // TODO: how can this be optimized?
@@ -51,6 +55,10 @@ public final class ReadSuperPropertyNode extends ExpressionNode {
     for (var owner = initialOwner; owner != null; owner = owner.getParent()) {
       var property = owner.getMember(propertyName);
       if (property == null) continue;
+      if (needsConst && !property.isConst()) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
+      }
 
       var constantValue = property.getConstantValue();
       if (constantValue != null) return constantValue; // TODO: type check

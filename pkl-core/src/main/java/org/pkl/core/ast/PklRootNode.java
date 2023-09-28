@@ -42,6 +42,9 @@ public abstract class PklRootNode extends RootNode {
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       throw e;
+    } catch (StackOverflowError e) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmStackOverflowException(e);
     } catch (Exception e) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();

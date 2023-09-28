@@ -30,11 +30,9 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.project.CanonicalPackageUri;
 import org.pkl.core.project.DeclaredDependencies;
-import org.pkl.core.project.Project;
 import org.pkl.core.project.ProjectDeps;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.json.Json.JsonParseException;
 
 public class ProjectDependenciesManager {
@@ -83,21 +81,19 @@ public class ProjectDependenciesManager {
     }
   }
 
-  private void ensureLocalProjectDependencyInitialized(Project project, ProjectDeps projectDeps) {
+  private void ensureLocalProjectDependencyInitialized(
+      DeclaredDependencies localProjectDependencies, ProjectDeps projectDeps) {
     assert localPackageDependencies != null;
-    var pkg = project.getPackage();
-    assert pkg != null;
     // turn `package:` scheme into `projectpackage`: scheme
-    var uri = PackageUri.create("project" + pkg.getUri());
+    var uri = PackageUri.create("project" + localProjectDependencies.getMyPackageUri());
     if (localPackageDependencies.containsKey(uri)) {
       return;
     }
-    var resolvedDeps =
-        doBuildResolvedDependenciesForProject(project.getDependencies(), projectDeps);
+    var resolvedDeps = doBuildResolvedDependenciesForProject(localProjectDependencies, projectDeps);
     localPackageDependencies.put(uri, resolvedDeps);
     // TODO: check circular imports (should not be possible)
-    for (var localPkg : project.getDependencies().getLocalDependencies().values()) {
-      ensureLocalProjectDependencyInitialized(localPkg, projectDeps);
+    for (var declaredDeps : localProjectDependencies.getLocalDependencies().values()) {
+      ensureLocalProjectDependencyInitialized(declaredDeps, projectDeps);
     }
   }
 
@@ -105,11 +101,10 @@ public class ProjectDependenciesManager {
       URI projectFileUri, PackageUri declaredPackage, Dependency resolvedDependency) {
     if (resolvedDependency.getVersion().compareTo(declaredPackage.getVersion()) < 0) {
       throw new PackageLoadError(
-          ErrorMessages.create(
-              "projectDependenciesOutOfDateInProject",
-              projectFileUri,
-              declaredPackage.getDisplayName(),
-              resolvedDependency.getPackageUri().getDisplayName()));
+          "projectDependenciesOutOfDateInProject",
+          projectFileUri,
+          declaredPackage.getDisplayName(),
+          resolvedDependency.getPackageUri().getDisplayName());
     }
   }
 
@@ -120,16 +115,16 @@ public class ProjectDependenciesManager {
             declaredDeps.getRemoteDependencies().size()
                 + declaredDeps.getLocalDependencies().size());
     for (var entry : declaredDeps.getLocalDependencies().entrySet()) {
-      var localProj = entry.getValue();
-      var pkg = localProj.getPackage();
-      assert pkg != null;
-      var packageUri = CanonicalPackageUri.fromPackageUri(pkg.getUri());
-      var resolvedDep = resolvedProjectDeps.get(packageUri);
+      var localDeclaredDependencies = entry.getValue();
+      var packageUri = localDeclaredDependencies.getMyPackageUri();
+      assert packageUri != null;
+      var canonicalPackageUri =
+          CanonicalPackageUri.fromPackageUri(localDeclaredDependencies.getMyPackageUri());
+      var resolvedDep = resolvedProjectDeps.get(canonicalPackageUri);
       if (resolvedDep == null) {
-        throw new PackageLoadError(
-            ErrorMessages.create("unresolvedProjectDependency", pkg.getUri()));
+        throw new PackageLoadError("unresolvedProjectDependency", packageUri);
       }
-      checkProjectDependencyOutOfDate(declaredDeps.getProjectFileUri(), pkg.getUri(), resolvedDep);
+      checkProjectDependencyOutOfDate(declaredDeps.getProjectFileUri(), packageUri, resolvedDep);
       ret.put(entry.getKey(), resolvedDep);
     }
     for (var entry : declaredDeps.getRemoteDependencies().entrySet()) {
@@ -137,8 +132,7 @@ public class ProjectDependenciesManager {
       var packageUri = CanonicalPackageUri.fromPackageUri(remoteDep.getPackageUri());
       var resolvedDep = resolvedProjectDeps.get(packageUri);
       if (resolvedDep == null) {
-        throw new PackageLoadError(
-            ErrorMessages.create("unresolvedProjectDependency", entry.getValue().getPackageUri()));
+        throw new PackageLoadError("unresolvedProjectDependency", entry.getValue().getPackageUri());
       }
       checkProjectDependencyOutOfDate(
           declaredDeps.getProjectFileUri(), remoteDep.getPackageUri(), resolvedDep);
@@ -176,16 +170,14 @@ public class ProjectDependenciesManager {
               CanonicalPackageUri.fromPackageUri(packageDependency.getPackageUri());
           var resolvedDep = projectDeps.get(canonicalPackage);
           if (resolvedDep == null) {
-            throw new PackageLoadError(
-                ErrorMessages.create("unresolvedProjectDependency", packageDependency));
+            throw new PackageLoadError("unresolvedProjectDependency", packageDependency);
           }
           if (resolvedDep.getVersion().compareTo(packageDependency.getVersion()) < 0) {
             throw new PackageLoadError(
-                ErrorMessages.create(
-                    "projectDependenciesOutOfDateInPackage",
-                    packageUri.getDisplayName(),
-                    packageDependency.getPackageUri().getDisplayName(),
-                    resolvedDep.getPackageUri().getDisplayName()));
+                "projectDependenciesOutOfDateInPackage",
+                packageUri.getDisplayName(),
+                packageDependency.getPackageUri().getDisplayName(),
+                resolvedDep.getPackageUri().getDisplayName());
           }
           resolvedDeps.put(entry.getKey(), resolvedDep);
         }
@@ -198,7 +190,7 @@ public class ProjectDependenciesManager {
   public Dependency getResolvedDependency(PackageUri packageUri) {
     var dep = getProjectDeps().get(CanonicalPackageUri.fromPackageUri(packageUri));
     if (dep == null) {
-      throw new PackageLoadError(ErrorMessages.create("unresolvedProjectDependency", packageUri));
+      throw new PackageLoadError("unresolvedProjectDependency", packageUri);
     }
     return dep;
   }

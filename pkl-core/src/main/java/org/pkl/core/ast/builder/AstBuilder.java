@@ -252,10 +252,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var modifiers =
         doVisitModifiers(
                 headerCtx.modifier(), VmModifier.VALID_CLASS_MODIFIERS, "invalidClassModifier")
-            | VmModifier.CONST;
+            | VmModifier.CLASS;
 
-    var isLocal = VmModifier.isLocal(modifiers);
-    var className = Identifier.property(headerCtx.Identifier().getText(), isLocal);
+    var className =
+        Identifier.property(headerCtx.Identifier().getText(), VmModifier.isLocal(modifiers));
 
     return symbolTable.enterClass(
         className,
@@ -309,9 +309,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               new ObjectMember(
                   sourceSection,
                   headerSection,
-                  isLocal
-                      ? VmModifier.LOCAL | VmModifier.CLASS | VmModifier.CONST
-                      : VmModifier.CLASS | VmModifier.CONST,
+                  modifiers | VmModifier.CONST,
                   scope.getName(),
                   scope.getQualifiedName());
 
@@ -334,7 +332,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                 headerCtx.modifier(),
                 VmModifier.VALID_TYPE_ALIAS_MODIFIERS,
                 "invalidTypeAliasModifier")
-            | VmModifier.CONST;
+            | VmModifier.TYPE_ALIAS;
 
     var isLocal = VmModifier.isLocal(modifiers);
     var name = Identifier.property(headerCtx.Identifier().getText(), isLocal);
@@ -362,7 +360,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               new ObjectMember(
                   sourceSection,
                   headerSection,
-                  isLocal ? VmModifier.LOCAL | VmModifier.TYPE_ALIAS : VmModifier.TYPE_ALIAS,
+                  modifiers | VmModifier.CONST,
                   scopeName,
                   scope.getQualifiedName());
 
@@ -590,7 +588,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             bodyNode =
                 doVisitObjectBody(
                     objBodyCtx,
-                    new ReadSuperPropertyNode(unavailableSourceSection(), scope.getName()));
+                    new ReadSuperPropertyNode(
+                        unavailableSourceSection(),
+                        scope.getName(),
+                        scope.getConstLevel() == ConstLevel.ALL));
           } else { // no value given
             if (isLocal) {
               assert typeAnnCtx != null;
@@ -761,7 +762,15 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             bodyNode =
                 doVisitObjectBody(
                     bodyCtx,
-                    new ReadSuperPropertyNode(unavailableSourceSection(), scope.getName()));
+                    new ReadSuperPropertyNode(
+                        unavailableSourceSection(),
+                        scope.getName(),
+                        // Never need a const check for amends declarations. In `foo { ... }`:
+                        // 1. if `foo` is const (i.e. `const foo { ... }`, `super.foo` is required
+                        // to be const (the const-ness of a property cannot be changed)
+                        // 2. if in a const scope (i.e. `const bar = new { foo { ... } }`),
+                        // `super.foo` does not reference something outside the scope.
+                        false));
           } else { // foo = ...
             assert exprCtx != null;
             bodyNode = visitExpr(exprCtx);
@@ -1639,7 +1648,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   private ExpressionNode createResolveVariableNode(SourceSection section, Identifier propertyName) {
     var scope = symbolTable.getCurrentScope();
     return new ResolveVariableNode(
-        section, propertyName, isBaseModule, scope.isCustomThisScope(), scope.getConstLevel());
+        section,
+        propertyName,
+        isBaseModule,
+        scope.isCustomThisScope(),
+        scope.getConstLevel(),
+        scope.getConstDepth());
   }
 
   private ExpressionNode doVisitListLiteral(ExprContext ctx, ArgumentListContext argListCtx) {
@@ -1927,7 +1941,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var argCtx = ctx.argumentList();
     var receiver = visitExpr(ctx.expr());
 
-    var constLevel = symbolTable.getCurrentScope().getConstLevel();
+    var currentScope = symbolTable.getCurrentScope();
+    var constLevel = currentScope.getConstLevel();
     var needsConst = false;
     if (receiver instanceof OuterNode) {
       var outerScope = getParentLexicalScope();
@@ -1943,6 +1958,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
     } else if (receiver instanceof GetModuleNode) {
       needsConst = constLevel != ConstLevel.NONE;
+    } else if (receiver instanceof ThisNode) {
+      var constDepth = currentScope.getConstDepth();
+      needsConst = constLevel == ConstLevel.ALL && constDepth == -1;
     }
 
     if (ctx.t.getType() == PklLexer.QDOT) {
@@ -2026,6 +2044,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
     } else if (receiver instanceof GetModuleNode) {
       needsConst = constLevel != ConstLevel.NONE;
+    } else if (receiver instanceof ThisNode) {
+      var constDepth = symbolTable.getCurrentScope().getConstDepth();
+      needsConst = constLevel == ConstLevel.ALL && constDepth == -1;
     }
     if (ctx.t.getType() == PklLexer.QDOT) {
       return new NullPropagatingOperationNode(
@@ -2046,6 +2067,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var sourceSection = createSourceSection(ctx);
     var memberName = toIdentifier(ctx.Identifier());
     var argCtx = ctx.argumentList();
+    var currentScope = symbolTable.getCurrentScope();
+    var needsConst =
+        currentScope.getConstLevel() == ConstLevel.ALL && currentScope.getConstDepth() == -1;
 
     if (argCtx != null) { // supermethod call
       if (!symbolTable.getCurrentScope().isClassMemberScope()) {
@@ -2055,11 +2079,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
 
-      return InvokeSuperMethodNodeGen.create(sourceSection, memberName, visitArgumentList(argCtx));
+      return InvokeSuperMethodNodeGen.create(
+          sourceSection, memberName, visitArgumentList(argCtx), needsConst);
     }
 
     // superproperty call
-    return new ReadSuperPropertyNode(createSourceSection(ctx), memberName);
+    return new ReadSuperPropertyNode(createSourceSection(ctx), memberName, needsConst);
   }
 
   @Override
@@ -2112,7 +2137,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         visitArgumentList(argListCtx),
         isBaseModule,
         scope.isCustomThisScope(),
-        scope.getConstLevel());
+        scope.getConstLevel(),
+        scope.getConstDepth());
   }
 
   @Override
@@ -2265,6 +2291,19 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitThisExpr(ThisExprContext ctx) {
+    if (!(ctx.parent instanceof QualifiedAccessExprContext)) {
+      var currentScope = symbolTable.getCurrentScope();
+      var needsConst =
+          currentScope.getConstLevel() == ConstLevel.ALL
+              && currentScope.getConstDepth() == -1
+              && !currentScope.isCustomThisScope();
+      if (needsConst) {
+        throw exceptionBuilder()
+            .withSourceSection(createSourceSection(ctx))
+            .evalError("thisIsNotConst")
+            .build();
+      }
+    }
     return VmUtils.createThisNode(
         createSourceSection(ctx), symbolTable.getCurrentScope().isCustomThisScope());
   }

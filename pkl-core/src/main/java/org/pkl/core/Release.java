@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class Release {
   private static final String SOURCE_CODE_HOMEPAGE = "https://github.com/pkl-lang/pkl/";
-  private static final String DOCUMENTATION_HOMEPAGE = "https://pkl.apple.com/pkl/main/";
+  private static final String DOCUMENTATION_HOMEPAGE = "https://pkl.apple.com/main/";
 
   private static final Release CURRENT;
 

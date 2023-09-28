@@ -25,12 +25,15 @@ import javax.lang.model.element.Modifier
 import kotlin.AssertionError
 import kotlin.Boolean
 import kotlin.Int
+import kotlin.Long
 import kotlin.RuntimeException
 import kotlin.String
 import kotlin.Suppress
 import kotlin.Unit
+import kotlin.apply
 import kotlin.let
 import kotlin.takeIf
+import kotlin.to
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 
@@ -245,6 +248,7 @@ class JavaCodeGenerator(
 
       if (superProperties.isNotEmpty()) {
         for ((name, property) in superProperties) {
+          if (properties.containsKey(name)) continue
           addCtorParameter(builder, name, property)
         }
         // $W inserts space or newline (automatic line wrapping)
@@ -404,7 +408,11 @@ class JavaCodeGenerator(
     }
 
     @Suppress("DuplicatedCode")
-    fun generateGetter(propertyName: String, property: PClass.Property): MethodSpec {
+    fun generateGetter(
+      propertyName: String,
+      property: PClass.Property,
+      isOverridden: Boolean
+    ): MethodSpec {
       val propertyType = property.type
       val isBooleanProperty =
         propertyType is PType.Class && propertyType.pClass.info == PClassInfo.Boolean
@@ -419,6 +427,9 @@ class JavaCodeGenerator(
           .addModifiers(Modifier.PUBLIC)
           .returns(propertyType.toJavaPoetName())
           .addStatement("return \$N", propertyName)
+      if (isOverridden) {
+        builder.addAnnotation(Override::class.java)
+      }
 
       val docComment = property.docComment
       val hasJavadoc = docComment != null && codegenOptions.generateJavadoc
@@ -455,10 +466,19 @@ class JavaCodeGenerator(
       val codeBuilder = CodeBlock.builder()
       codeBuilder.add("return new \$T(", javaPoetClassName)
       var firstProperty = true
-      for (name in allProperties.keys) {
+      for (name in superProperties.keys) {
+        if (name in properties) continue
         if (firstProperty) {
-          codeBuilder.add("\$N", name)
           firstProperty = false
+          codeBuilder.add("\$N", name)
+        } else {
+          codeBuilder.add(", \$N", name)
+        }
+      }
+      for (name in properties.keys) {
+        if (firstProperty) {
+          firstProperty = false
+          codeBuilder.add("\$N", name)
         } else {
           codeBuilder.add(", \$N", name)
         }
@@ -562,7 +582,8 @@ class JavaCodeGenerator(
         if (name in properties) {
           builder.addField(generateField(name, property))
           if (codegenOptions.generateGetters) {
-            builder.addMethod(generateGetter(name, property))
+            val isOverridden = name in superProperties
+            builder.addMethod(generateGetter(name, property, isOverridden))
           }
         }
         if (!pClass.isAbstract) {
@@ -684,6 +705,16 @@ class JavaCodeGenerator(
     return ClassName.get(packageName, moduleClassName, simpleName)
   }
 
+  /** Generate `List<? extends Foo>` if `Foo` is `abstract` or `open`, to allow subclassing. */
+  private fun PType.toJavaPoetTypeArgumentName(): TypeName {
+    val baseName = toJavaPoetName(nullable = false, boxed = true)
+    return if (this is PType.Class && (pClass.isAbstract || pClass.isOpen)) {
+      WildcardTypeName.subtypeOf(baseName)
+    } else {
+      baseName
+    }
+  }
+
   private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName =
     when (this) {
       PType.UNKNOWN -> TypeName.OBJECT.nullableIf(nullable)
@@ -709,12 +740,12 @@ class JavaCodeGenerator(
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[0].toJavaPoetName(boxed = true)
+                  typeArguments[0].toJavaPoetTypeArgumentName()
                 },
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[1].toJavaPoetName(boxed = true)
+                  typeArguments[1].toJavaPoetTypeArgumentName()
                 }
               )
               .nullableIf(nullable)
@@ -724,28 +755,29 @@ class JavaCodeGenerator(
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[0].toJavaPoetName(boxed = true)
+                  typeArguments[0].toJavaPoetTypeArgumentName()
                 }
               )
               .nullableIf(nullable)
           PClassInfo.List,
-          PClassInfo.Listing ->
+          PClassInfo.Listing -> {
             ParameterizedTypeName.get(
                 LIST,
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[0].toJavaPoetName(boxed = true)
+                  typeArguments[0].toJavaPoetTypeArgumentName()
                 }
               )
               .nullableIf(nullable)
+          }
           PClassInfo.Set ->
             ParameterizedTypeName.get(
                 SET,
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[0].toJavaPoetName(boxed = true)
+                  typeArguments[0].toJavaPoetTypeArgumentName()
                 }
               )
               .nullableIf(nullable)
@@ -756,12 +788,12 @@ class JavaCodeGenerator(
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[0].toJavaPoetName(boxed = true)
+                  typeArguments[0].toJavaPoetTypeArgumentName()
                 },
                 if (typeArguments.isEmpty()) {
                   TypeName.OBJECT
                 } else {
-                  typeArguments[1].toJavaPoetName(boxed = true)
+                  typeArguments[1].toJavaPoetTypeArgumentName()
                 }
               )
               .nullableIf(nullable)

@@ -278,7 +278,6 @@ public final class MapNodes {
 
   public abstract static class toMapping extends ExternalMethod0Node {
     @Specialization
-    @TruffleBoundary
     protected VmMapping eval(VmMap self) {
       var members = EconomicMaps.<Object, ObjectMember>create(self.getLength());
 

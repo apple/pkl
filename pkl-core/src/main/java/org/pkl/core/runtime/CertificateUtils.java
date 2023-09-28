@@ -17,6 +17,8 @@ package org.pkl.core.runtime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -34,12 +36,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 public class CertificateUtils {
-
-  public static void setupAllX509CertificatesGlobally(List<InputStream> certs) {
+  public static void setupAllX509CertificatesGlobally(List<Object> certs) {
     try {
       var certificates = new ArrayList<X509Certificate>(certs.size());
-      for (var certStream : certs) {
-        try (var input = certStream) {
+      for (var cert : certs) {
+        try (var input = toInputStream(cert)) {
           certificates.addAll(generateCertificates(input));
         }
       }
@@ -47,6 +48,20 @@ public class CertificateUtils {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static InputStream toInputStream(Object cert) throws IOException {
+    if (cert instanceof Path) {
+      var pathCert = (Path) cert;
+      return Files.newInputStream(pathCert);
+    }
+    if (cert instanceof InputStream) {
+      return (InputStream) cert;
+    }
+    throw new IllegalArgumentException(
+        "Unknown class for certificate: "
+            + cert.getClass()
+            + ". Valid types: java.nio.Path, java.io.InputStream");
   }
 
   private static Collection<X509Certificate> generateCertificates(InputStream inputStream)

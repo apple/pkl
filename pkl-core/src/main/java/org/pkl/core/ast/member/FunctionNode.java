@@ -126,6 +126,9 @@ public final class FunctionNode extends MemberNode {
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
       throw e.toVmException();
+    } catch (StackOverflowError e) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmStackOverflowException(e);
     } catch (Exception e) {
       CompilerDirectives.transferToInterpreter();
       if (e instanceof VmException) {

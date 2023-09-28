@@ -20,13 +20,15 @@ package org.pkl.doc
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.path
 import java.net.URI
 import java.nio.file.Path
 import org.pkl.commons.cli.cliMain
-import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.core.Release
 
 /** Main method for the Pkldoc CLI. */
@@ -35,12 +37,9 @@ internal fun main(args: Array<String>) {
 }
 
 class DocCommand :
-  ModulesCommand(
-    name = "pkldoc",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+  BaseCommand(name = "pkldoc", helpLink = Release.current().documentation().homepage(), help = "") {
 
-  override val modules: List<URI> by
+  private val modules: List<URI> by
     argument(
         name = "<modules>",
         help = "Module paths/uris, or package uris to generate documentation for"
@@ -56,6 +55,8 @@ class DocCommand :
       )
       .path()
       .required()
+
+  private val projectOptions by ProjectOptions()
 
   override fun run() {
     val options =

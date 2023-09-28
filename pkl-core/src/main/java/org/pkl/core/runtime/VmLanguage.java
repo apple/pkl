@@ -35,7 +35,7 @@ import org.pkl.core.util.Nullable;
 @TruffleLanguage.Registration(
     id = "pkl",
     name = "Pkl",
-    version = "0.24.1-dev",
+    version = "0.24.7",
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
 public final class VmLanguage extends TruffleLanguage<VmContext> {

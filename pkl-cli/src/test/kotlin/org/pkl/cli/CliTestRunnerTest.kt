@@ -91,7 +91,7 @@ class CliTestRunnerTest {
     val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
-    assertThatCode { runner.run() }.hasMessage("Tests failed")
+    assertThatCode { runner.run() }.hasMessage("Tests failed.")
 
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(

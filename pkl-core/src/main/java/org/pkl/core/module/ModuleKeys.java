@@ -324,14 +324,14 @@ public final class ModuleKeys {
     protected Map<String, ? extends Dependency> getDependencies() {
       var projectDepsManager = VmContext.get(null).getProjectDependenciesManager();
       if (projectDepsManager == null || !projectDepsManager.hasPath(path)) {
-        throw new PackageLoadError(ErrorMessages.create("cannotResolveDependencyNoProject"));
+        throw new PackageLoadError("cannotResolveDependencyNoProject");
       }
       return projectDepsManager.getDependencies();
     }
 
     @Override
     protected PackageLoadError cannotFindDependency(String name) {
-      return new PackageLoadError(ErrorMessages.create("cannotFindDependencyInProject", name));
+      return new PackageLoadError("cannotFindDependencyInProject", name);
     }
   }
 
@@ -623,10 +623,7 @@ public final class ModuleKeys {
     @Override
     protected PackageLoadError cannotFindDependency(String name) {
       return new PackageLoadError(
-          ErrorMessages.create(
-              "cannotFindDependencyInPackage",
-              name,
-              packageAssetUri.getPackageUri().getDisplayName()));
+          "cannotFindDependencyInPackage", name, packageAssetUri.getPackageUri().getDisplayName());
     }
   }
 
@@ -741,10 +738,7 @@ public final class ModuleKeys {
     @Override
     protected PackageLoadError cannotFindDependency(String name) {
       return new PackageLoadError(
-          ErrorMessages.create(
-              "cannotFindDependencyInPackage",
-              name,
-              packageAssetUri.getPackageUri().getDisplayName()));
+          "cannotFindDependencyInPackage", name, packageAssetUri.getPackageUri().getDisplayName());
     }
   }
 }

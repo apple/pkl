@@ -44,8 +44,8 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     checkTextContains(
       text, """
       |  open class Address(
-      |    val street: String,
-      |    val zip: Long
+      |    open val street: String,
+      |    open val zip: Long
       |  )
     """
     )

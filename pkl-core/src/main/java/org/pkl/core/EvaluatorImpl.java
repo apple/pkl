@@ -47,6 +47,7 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmStackOverflowException;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
@@ -297,25 +298,21 @@ public class EvaluatorImpl implements Evaluator {
     // report that instead of the timeout so as not to swallow a fundamental problem.
     try {
       evalResult = supplier.get();
+    } catch (VmStackOverflowException e) {
+      if (isPklBug(e)) {
+        throw new VmExceptionBuilder()
+            .bug("Stack overflow")
+            .withCause(e.getCause())
+            .build()
+            .toPklException(frameTransformer);
+      }
+      handleTimeout(timeoutTask);
+      throw e.toPklException(frameTransformer);
     } catch (VmException e) {
       handleTimeout(timeoutTask);
       throw e.toPklException(frameTransformer);
     } catch (Exception e) {
       throw new PklBugException(e);
-    } catch (StackOverflowError e) {
-      if (isPklBug(e)) {
-        throw new VmExceptionBuilder()
-            .bug("Stack overflow")
-            .withCause(e)
-            .build()
-            .toPklException(frameTransformer);
-      }
-      handleTimeout(timeoutTask);
-      throw new VmExceptionBuilder()
-          .evalError("stackOverflow")
-          .withCause(e)
-          .build()
-          .toPklException(frameTransformer);
     } catch (ExceptionInInitializerError e) {
       if (!(e.getCause() instanceof VmException)) {
         throw new PklBugException(e);
@@ -404,7 +401,7 @@ public class EvaluatorImpl implements Evaluator {
     }
   }
 
-  private boolean isPklBug(StackOverflowError e) {
+  private boolean isPklBug(VmStackOverflowException e) {
     // There's no good way to tell if a StackOverflowError came from Pkl, or from our
     // implementation.
     // This is a simple heuristic; it's pretty likely that any stack overflow error that occurs

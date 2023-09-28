@@ -119,7 +119,7 @@ internal class BinaryEvaluator(
     }
 
     override fun visitIntSeq(value: VmIntSeq) {
-      packer.packArrayHeader(3)
+      packer.packArrayHeader(4)
       packer.packInt(CODE_INTSEQ.toInt())
       packer.packLong(value.start)
       packer.packLong(value.end)

@@ -39,6 +39,8 @@ import java.util.zip.ZipOutputStream;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
+import org.pkl.core.SecurityManager;
+import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.module.ModuleKeys;
@@ -49,6 +51,7 @@ import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
+import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
@@ -92,6 +95,8 @@ public class ProjectPackager {
   private final Path workingDir;
   private final String outputPathPattern;
   private final StackFrameTransformer stackFrameTransformer;
+  private final PackageResolver packageResolver;
+  private final boolean skipPublishCheck;
   private final Writer outputWriter;
 
   public ProjectPackager(
@@ -99,11 +104,16 @@ public class ProjectPackager {
       Path workingDir,
       String outputPathPattern,
       StackFrameTransformer stackFrameTransformer,
+      SecurityManager securityManager,
+      boolean skipPublishCheck,
       Writer outputWriter) {
     this.projects = projects;
     this.workingDir = workingDir;
     this.outputPathPattern = outputPathPattern;
     this.stackFrameTransformer = stackFrameTransformer;
+    // intentionally use InMemoryPackageResolver
+    this.packageResolver = PackageResolver.getInstance(securityManager, null);
+    this.skipPublishCheck = skipPublishCheck;
     this.outputWriter = outputWriter;
   }
 
@@ -132,10 +142,10 @@ public class ProjectPackager {
       throw new PklException(
           ErrorMessages.create("noPackageDefinedByProject", project.getProjectFileUri()));
     }
-    var files = collectPackageElements(project, pkg);
     if (packageResults.containsKey(pkg.getUri())) {
       return packageResults.get(pkg.getUri());
     }
+    var files = collectPackageElements(project, pkg);
     validatePklImportsAndReads(project, files);
     var outputDir = resolveOutputDirectory(pkg);
     var metadataFileName = IoUtils.takeLastSegment(pkg.getUri().getUri().getPath(), '/');
@@ -148,11 +158,38 @@ public class ProjectPackager {
         createDependencyMetadataAndComputeChecksum(project, pkg, metadataFile, zipFileChecksum);
     Files.writeString(zipChecksumFile, zipFileChecksum);
     Files.writeString(metadataChecksumFile, metadataFileChecksum);
+    if (!skipPublishCheck) {
+      checkAlreadyPublishedPackage(pkg, metadataFileChecksum);
+    }
     var result =
         new PackageResult(
             metadataFile, metadataChecksumFile, zipFile, zipChecksumFile, metadataFileChecksum);
     packageResults.put(pkg.getUri(), result);
     return result;
+  }
+
+  private void checkAlreadyPublishedPackage(Package pkg, String computedChecksum)
+      throws IOException {
+    try {
+      var metadataAndChecksum =
+          packageResolver.getDependencyMetadataAndComputeChecksum(pkg.getUri());
+      var receivedChecksum = metadataAndChecksum.second.getSha256();
+      if (!receivedChecksum.equals(computedChecksum)) {
+        throw new PklException(
+            ErrorMessages.create(
+                "packageAlreadyPublishedWithDifferentContents",
+                pkg.getUri(),
+                computedChecksum,
+                receivedChecksum));
+      }
+    } catch (PackageLoadError e) {
+      if (e.getMessageName().equals("badHttpStatusCode") && (int) e.getArguments()[0] == 404) {
+        return;
+      }
+      throw e;
+    } catch (SecurityManagerException e) {
+      throw new PklException(e.getMessage());
+    }
   }
 
   private String createDependencyMetadataAndComputeChecksum(
@@ -167,7 +204,6 @@ public class ProjectPackager {
   /** If the project has a local dependency, package it as well, so we can record its checksum. */
   private Map<String, RemoteDependency> buildDependencies(Project project) throws IOException {
     try {
-
       var ret =
           new HashMap<String, RemoteDependency>(
               project.getDependencies().getLocalDependencies().size()
@@ -177,21 +213,29 @@ public class ProjectPackager {
         var resolved =
             (RemoteDependency)
                 projectDependenciesManager.getResolvedDependency(entry.getValue().getPackageUri());
-        ret.put(entry.getKey(), resolved);
+        ret.put(
+            entry.getKey(),
+            new RemoteDependency(
+                resolved.getPackageUri().toExternalPackageUri(), resolved.getChecksums()));
       }
-      for (var entry : project.getDependencies().getLocalDependencies().entrySet()) {
-        var localProjectDependency = entry.getValue();
-        var pkg = localProjectDependency.getPackage();
-        assert pkg != null;
-        var resolved = projectDependenciesManager.getResolvedDependency(pkg.getUri());
+      for (var entry : project.getLocalProjectDependencies().entrySet()) {
+        var localProject = entry.getValue();
+        assert localProject.getPackage() != null;
+        var packageUri = localProject.getPackage().getUri();
+        var resolved = projectDependenciesManager.getResolvedDependency(packageUri);
         if (resolved instanceof LocalDependency) {
-          var packageResult = doPackage(localProjectDependency);
+          var packageResult = doPackage(localProject);
           ret.put(
               entry.getKey(),
               new RemoteDependency(
-                  pkg.getUri(), new Checksums(packageResult.getMetadataChecksum())));
+                  packageUri.toExternalPackageUri(),
+                  new Checksums(packageResult.getMetadataChecksum())));
         } else {
-          ret.put(entry.getKey(), (RemoteDependency) resolved);
+          var remoteDep = (RemoteDependency) resolved;
+          ret.put(
+              entry.getKey(),
+              new RemoteDependency(
+                  remoteDep.getPackageUri().toExternalPackageUri(), remoteDep.getChecksums()));
         }
       }
       return ret;

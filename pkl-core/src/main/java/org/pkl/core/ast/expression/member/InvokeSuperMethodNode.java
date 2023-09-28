@@ -30,11 +30,16 @@ import org.pkl.core.runtime.VmUtils;
 public abstract class InvokeSuperMethodNode extends ExpressionNode {
   private final Identifier methodName;
   @Children private final ExpressionNode[] argumentNodes;
+  private final boolean needsConst;
 
   protected InvokeSuperMethodNode(
-      SourceSection sourceSection, Identifier methodName, ExpressionNode[] argumentNodes) {
+      SourceSection sourceSection,
+      Identifier methodName,
+      ExpressionNode[] argumentNodes,
+      boolean needsConst) {
 
     super(sourceSection);
+    this.needsConst = needsConst;
 
     assert !methodName.isLocalMethod();
 
@@ -49,6 +54,10 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
       @Cached("findSupermethod(frame)") ClassMethod supermethod,
       @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
+    if (needsConst && !supermethod.isConst()) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
+    }
     var args = new Object[2 + argumentNodes.length];
     args[0] = VmUtils.getReceiverOrNull(frame);
     args[1] = supermethod.getOwner();

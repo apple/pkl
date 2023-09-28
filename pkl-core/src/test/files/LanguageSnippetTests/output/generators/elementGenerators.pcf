@@ -301,6 +301,9 @@ forWithMultipleMembersNested {
   "byy22"
   "22yyb"
 }
+forGeneratorsWithOverlappingNamesAndWhenNestedWhen {
+  6
+}
 whenWithMultipleMembers {
   0
   0

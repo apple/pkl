@@ -130,7 +130,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   protected abstract void doRunTask();
 
-  @LateInit private CliBaseOptions cachedOptions;
+  @LateInit protected CliBaseOptions cachedOptions;
 
   @Internal
   protected CliBaseOptions getCliBaseOptions() {

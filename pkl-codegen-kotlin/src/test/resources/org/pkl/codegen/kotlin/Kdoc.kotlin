@@ -33,7 +33,7 @@ data class Mod(
      * class property comment.
      * *emphasized* `code`.
      */
-    val price: String
+    open val price: String
   ) {
     open fun copy(price: String = this.price): Product = Product(price)
 

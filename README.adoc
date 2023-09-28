@@ -1,6 +1,6 @@
 = Pkl
 
-:uri-docs: https://pkl.apple.com/pkl/main/current
+:uri-docs: https://pkl.apple.com/main/current
 :uri-docs-introduction: {uri-docs}/introduction
 :uri-docs-release-notes: {uri-docs}/release-notes
 :uri-docs-language: {uri-docs}/language
@@ -9,8 +9,8 @@
 :uri-github-issue: https://github.com/pkl-lang/pkl/issues
 :uri-stackoverflow: https://stackoverflow.com/questions/tagged/pkl
 :uri-pkl-examples-repo: https://github.com/pkl-lang/pkl-examples
-:uri-installation: https://pkl.apple.com/pkl/main/current/pkl-cli/index.html#installation
-:uri-lang-reference: https://pkl.apple.com/pkl/main/current/language-reference/index.html
+:uri-installation: https://pkl.apple.com/main/current/pkl-cli/index.html#installation
+:uri-lang-reference: https://pkl.apple.com/main/current/language-reference/index.html
 :uri-gng: https://gng.dsun.org
 :uri-intellij: https://www.jetbrains.com/idea/download/
 :uri-jdk: https://adoptopenjdk.net/releases.html
@@ -104,18 +104,6 @@ gw wrapper --gradle-version [version] --gradle-distribution-sha256-sum [sha]
 ** Output dir is `generated/truffle/`
 * ANTLR code generation is performed by task `:pkl-core:generateGrammarSource`
 ** Output dir is `generated/antlr/`
-
-=== Evaluating Pkl files in IntelliJ
-
-There is a Run Configuration checked into the `.idea/runConfigurations` directory that allows you to debug the evaluation of a Pkl file.
-
-To debug the evaluation of a Pkl file:
-
-1. Ensure that the file is the current active file in the editor.
-2. Select "Evaluate Pkl File" within the Configurations dropdown.
-3. Use either the run or debug icons to evaluate that file.
-
-image:images/debug-bar.png[]
 
 === Resources
 

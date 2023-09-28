@@ -242,7 +242,7 @@ class KotlinCodeGenerator(
       if (isOverride) {
         methodBuilder.addModifiers(KModifier.OVERRIDE)
       }
-      if (pClass.isOpen) {
+      if (pClass.isOpen || pClass.isAbstract) {
         methodBuilder.addModifiers(KModifier.OPEN)
       }
 
@@ -385,6 +385,12 @@ class KotlinCodeGenerator(
       val docComment = property.docComment
       if (docComment != null && options.generateKdoc) {
         builder.addKdoc(renderAsKdoc(docComment))
+      }
+      if (propertyName in superProperties) {
+        builder.addModifiers(KModifier.OVERRIDE)
+      }
+      if (pClass.isOpen || pClass.isAbstract) {
+        builder.addModifiers(KModifier.OPEN)
       }
 
       return builder.build()

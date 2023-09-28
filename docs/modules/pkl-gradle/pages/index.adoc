@@ -465,8 +465,8 @@ It prepares package assets to be published from a project.
 
 There are two differences between this feature and the CLI:
 
-* Input project directories are required
-* Output directory defaults to a path within the build directory
+* Input project directories are required (the CLI determines a project from the current working directory if arguments are omitted).
+* Output directory defaults to a path within the build directory.
 
 === Usage
 
@@ -514,6 +514,18 @@ $ ./gradlew makePackages
 Default: (none) +
 Example: `projectDirectories.from(file("pkl-config/""))` +
 The project directories to create packages for.
+====
+
+.skipPublishCheck: Property<Boolean>
+[%collapsible]
+====
+Default: (false) +
+Example: `skipPublishCheck.set(true)`
+
+Skips checking whether a package has already been published with different contents.
+
+By default, the packager will check whether a package at the same version has already been published.
+If the package has been published, it validates that the package's metadata is identical to the locally generated metadata.
 ====
 
 .outputPath: DirectoryProperty

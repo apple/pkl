@@ -1,5 +1,6 @@
 package org.pkl.gradle
 
+import org.assertj.core.api.Assertions
 import org.pkl.commons.readString
 import org.pkl.commons.test.PackageServer
 import org.assertj.core.api.Assertions.assertThat
@@ -401,12 +402,77 @@ class EvaluatorsTest : AbstractTest() {
     PackageServer.populateCacheDir(tempDir)
     runTask("evalTest")
   }
+  
+  @Test
+  fun `explicitly set project dir`() {
+    writeBuildFile("pcf", "projectDir = file(\"proj1\")", listOf("proj1/foo.pkl"))
+    
+    writeFile("proj1/PklProject", """
+      amends "pkl:Project"
+      
+      dependencies {
+        ["proj2"] = import("../proj2/PklProject")
+      }
+      
+      package {
+        name = "proj1"
+        baseUri = "package://localhost:12110/\(name)"
+        version = "1.0.0"
+        packageZipUrl = "https://localhost:12110/\(name)@\(version).zip"
+      }
+    """.trimIndent())
+    
+    writeFile("proj2/PklProject", """
+      amends "pkl:Project"
+      
+      package {
+        name = "proj2"
+        baseUri = "package://localhost:12110/\(name)"
+        version = "1.0.0"
+        packageZipUrl = "https://localhost:12110/\(name)@\(version).zip"
+      }
+    """.trimIndent())
+    
+    writeFile("proj1/PklProject.deps.json", """
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {
+          "package://localhost:12110/proj2@1": {
+            "type": "local",
+            "uri": "projectpackage://localhost:12110/proj2@1.0.0",
+            "path": "../proj2"
+          }
+        }
+      }
+    """.trimIndent())
+    
+    writeFile("proj2/PklProject.deps.json", """
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {}
+      }
+    """.trimIndent())
+    
+    writeFile("proj1/foo.pkl", """
+      module proj1.foo
+      
+      bar: String = import("@proj2/baz.pkl").qux
+    """.trimIndent())
+    
+    writeFile("proj2/baz.pkl", """
+      qux: String = "Contents of @proj2/qux"
+    """.trimIndent())
+
+    runTask("evalTest")
+    assertThat(testProjectDir.resolve("proj1/foo.pcf")).exists()
+  }
 
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat` 
     // because test compile class path doesn't contain pkl-core
     outputFormat: String, 
-    additionalContents: String = ""
+    additionalContents: String = "",
+    sourceModules: List<String> = listOf("test.pkl")
   ) {
     writeFile(
       "build.gradle", """
@@ -417,7 +483,7 @@ class EvaluatorsTest : AbstractTest() {
       pkl {
         evaluators {
           evalTest {
-            sourceModules = ["test.pkl"]
+            sourceModules = [${sourceModules.joinToString(separator = ", ") { "\"$it\"" }}]
             outputFormat = "$outputFormat"
             settingsModule = "pkl:settings"
             $additionalContents

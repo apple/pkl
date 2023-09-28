@@ -34,33 +34,33 @@ object Mod {
   }
 
   open class PropertyTypes(
-    val boolean: Boolean,
-    val int: Long,
-    val float: Double,
-    val string: String,
-    val duration: Duration,
-    val durationUnit: DurationUnit,
-    val dataSize: DataSize,
-    val dataSizeUnit: DataSizeUnit,
-    val nullable: String?,
-    val nullable2: String?,
-    val pair: Pair<Any?, Any?>,
-    val pair2: Pair<String, Other>,
-    val coll: Collection<Any?>,
-    val coll2: Collection<Other>,
-    val list: List<Any?>,
-    val list2: List<Other>,
-    val set: Set<Any?>,
-    val set2: Set<Other>,
-    val map: Map<Any?, Any?>,
-    val map2: Map<String, Other>,
-    val container: Map<Any?, Any?>,
-    val container2: Map<String, Other>,
-    val other: Other,
-    val regex: Regex,
-    val any: Any?,
-    val nonNull: Any,
-    val enum: Direction
+    open val boolean: Boolean,
+    open val int: Long,
+    open val float: Double,
+    open val string: String,
+    open val duration: Duration,
+    open val durationUnit: DurationUnit,
+    open val dataSize: DataSize,
+    open val dataSizeUnit: DataSizeUnit,
+    open val nullable: String?,
+    open val nullable2: String?,
+    open val pair: Pair<Any?, Any?>,
+    open val pair2: Pair<String, Other>,
+    open val coll: Collection<Any?>,
+    open val coll2: Collection<Other>,
+    open val list: List<Any?>,
+    open val list2: List<Other>,
+    open val set: Set<Any?>,
+    open val set2: Set<Other>,
+    open val map: Map<Any?, Any?>,
+    open val map2: Map<String, Other>,
+    open val container: Map<Any?, Any?>,
+    open val container2: Map<String, Other>,
+    open val other: Other,
+    open val regex: Regex,
+    open val any: Any?,
+    open val nonNull: Any,
+    open val enum: Direction
   ) {
     open fun copy(
       boolean: Boolean = this.boolean,
@@ -196,7 +196,7 @@ object Mod {
   }
 
   open class Other(
-    val name: String
+    open val name: String
   ) {
     open fun copy(name: String = this.name): Other = Other(name)
 

@@ -1,15 +1,18 @@
 package org.pkl.executor
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
 import org.pkl.commons.walk
+import org.pkl.core.runtime.CertificateUtils
+import java.nio.file.Files
+import java.nio.file.Path
+import java.time.Duration
+import kotlin.io.path.createDirectories
 
 class EmbeddedExecutorTest {
   private val pklDistribution by lazy {
@@ -143,6 +146,7 @@ class EmbeddedExecutorTest {
             tempDir,
             null,
             null,
+            null,
             null
           )
         )
@@ -179,6 +183,7 @@ class EmbeddedExecutorTest {
             tempDir,
             null,
             null,
+            null,
             null
           )
         )
@@ -213,6 +218,7 @@ class EmbeddedExecutorTest {
           mapOf("ENV_VAR" to "ENV_VAR"),
           mapOf("property" to "property"),
           listOf(),
+          null,
           null,
           null,
           null,
@@ -267,6 +273,7 @@ class EmbeddedExecutorTest {
           null,
           null,
           null,
+          null,
           null
         )
       )
@@ -305,6 +312,7 @@ class EmbeddedExecutorTest {
             mapOf(),
             listOf(),
             tempDir,
+            null,
             null,
             null,
             null
@@ -348,6 +356,7 @@ class EmbeddedExecutorTest {
             tempDir,
             Duration.ofSeconds(1),
             null,
+            null,
             null
           )
         )
@@ -386,7 +395,8 @@ class EmbeddedExecutorTest {
           null,
           null,
           null,
-          ExecutorOptions.defaultModuleCacheDir()
+          ExecutorOptions.defaultModuleCacheDir(),
+          null
         )
       )
     }
@@ -396,5 +406,119 @@ class EmbeddedExecutorTest {
       x = 42
     """.trimIndent().trim()
     )
+  }
+  
+  @Test
+  fun `evaluate a module that loads a package`(@TempDir tempDir: Path) {
+    val pklFile = tempDir.resolve("test.pkl")
+    pklFile.toFile().writeText(
+      """
+      @ModuleInfo { minPklVersion = "0.24.0" }
+      module MyModule
+
+      import "package://localhost:12110/birds@0.5.0#/Bird.pkl"
+
+      chirpy = new Bird { name = "Chirpy"; favoriteFruit { name = "Orange" } }
+    """.trimIndent()
+    )
+    PackageServer.ensureStarted()
+    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
+    val executor = Executors.embedded(listOf(pklDistribution))
+    val result = executor.use {
+      it.evaluatePath(pklFile,
+        ExecutorOptions(
+          listOf("file:", "package:", "https:"),
+          listOf("prop:", "package:", "https:"),
+          mapOf(),
+          mapOf(),
+          listOf(),
+          null,
+          null,
+          null,
+          ExecutorOptions.defaultModuleCacheDir(),
+          null)
+      )
+    }
+    assertThat(result.trim()).isEqualTo("""
+      chirpy {
+        name = "Chirpy"
+        favoriteFruit {
+          name = "Orange"
+        }
+      }
+    """.trimIndent())
+  }
+
+  @Test
+  fun `evaluate a project dependency`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("packages")
+    PackageServer.populateCacheDir(cacheDir)
+    val projectDir = tempDir.resolve("project/")
+    projectDir.createDirectories()
+    projectDir.resolve("PklProject").toFile().writeText("""
+      amends "pkl:Project"
+      
+      dependencies {
+        ["birds"] { uri = "package://localhost:12110/birds@0.5.0" }
+      }
+    """.trimIndent())
+    val dollar = '$'
+    projectDir.resolve("PklProject.deps.json").toFile().writeText("""
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {
+          "package://localhost:12110/birds@0": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:12110/birds@0.5.0",
+            "checksums": {
+              "sha256": "${dollar}skipChecksumVerification"
+            }
+          },
+          "package://localhost:12110/fruit@1": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+            "checksums": {
+              "sha256": "${dollar}skipChecksumVerification"
+            }
+          }
+        }
+      }
+    """.trimIndent())
+    val pklFile = projectDir.resolve("test.pkl")
+    pklFile.toFile().writeText(
+      """
+        @ModuleInfo { minPklVersion = "0.24.0" }
+        module myModule
+        
+        import "@birds/catalog/Swallow.pkl"
+        
+        result = Swallow
+      """.trimIndent()
+    )
+    val executor = Executors.embedded(listOf(pklDistribution))
+    val result = executor.use {
+      it.evaluatePath(pklFile,
+        ExecutorOptions(
+          listOf("file:", "package:", "projectpackage:", "https:"),
+          listOf("prop:", "package:", "projectpackage:", "https:"),
+          mapOf(),
+          mapOf(),
+          listOf(),
+          null,
+          null,
+          null,
+          cacheDir,
+          projectDir)
+      )
+    }
+    assertThat(result).isEqualTo("""
+      result {
+        name = "Swallow"
+        favoriteFruit {
+          name = "Apple"
+        }
+      }
+      
+    """.trimIndent())
   }
 }

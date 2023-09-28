@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class ProjectPackageTest : AbstractTest() {
   @Test
   fun basic() {
-    writeBuildFile()
+    writeBuildFile("skipPublishCheck.set(true)")
     writeProjectContent()
     runTask("createMyPackages")
     assertThat(testProjectDir.resolve("build/generated/pkl/packages/proj1@1.0.0.zip")).exists()
@@ -18,6 +18,7 @@ class ProjectPackageTest : AbstractTest() {
   fun `custom output dir`() {
     writeBuildFile( """
       outputPath.set(file("thepackages"))
+      skipPublishCheck.set(true)
     """)
     writeProjectContent()
     runTask("createMyPackages")
@@ -29,6 +30,7 @@ class ProjectPackageTest : AbstractTest() {
   fun `junit dir`() {
     writeBuildFile("""
       junitReportsDir.set(file("test-reports"))
+      skipPublishCheck.set(true)
     """.trimIndent())
     writeProjectContent()
     runTask("createMyPackages")

@@ -75,7 +75,7 @@ class CliKotlinCodeGeneratorTest {
     assertContains(
       """
       open class Mod1(
-        val pigeon: Person
+        open val pigeon: Person
       ) {
     """
         .trimIndent(),

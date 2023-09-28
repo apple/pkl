@@ -93,7 +93,7 @@ object MessageTransports {
           val handler =
             responseHandlers.remove(message.requestId)
               ?: throw ProtocolException(
-                "Received response for unknown request ID `${message.requestId}`."
+                "Received response ${message.javaClass.simpleName} for unknown request ID `${message.requestId}`."
               )
           handler(message)
         }

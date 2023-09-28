@@ -29,3 +29,26 @@ property6: Float = 3.14159265359
 
 /// 😀😀😀 Property with 😎😎😎 Unicode doc comment. 😡😡😡
 property7: Float = 3.14159265359
+
+/// Summary
+/// ```
+/// 
+/// code = 4 * 10
+/// ```
+/// Rest of the body
+property8: Int = 0
+
+/// Sumary
+/// ```java
+/// 
+/// code = 0
+/// ```
+/// Rest
+property9: Int = 1
+
+/// ```
+/// 
+/// code = 2
+/// ```
+/// Rest
+property10: Int = 2

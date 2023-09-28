@@ -7,20 +7,19 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.PklException
-import org.pkl.core.runtime.CertificateUtils
 import org.pkl.core.SecurityManagers
 import org.pkl.core.packages.PackageResolver
+import org.pkl.core.runtime.CertificateUtils
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
-import kotlin.io.path.inputStream
 
 class ProjectDependenciesResolverTest {
   companion object {
     @JvmStatic
     @BeforeAll
     fun beforeAll() {
-      CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate.inputStream()))
+      CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
       PackageServer.ensureStarted()
     }
   }

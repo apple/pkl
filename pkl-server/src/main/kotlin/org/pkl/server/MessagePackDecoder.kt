@@ -24,6 +24,7 @@ import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
 import org.msgpack.value.impl.ImmutableStringValueImpl
 import org.pkl.core.module.PathElement
+import org.pkl.core.packages.Checksums
 
 internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : MessageDecoder {
   override fun decode(): Message? {
@@ -57,9 +58,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
             timeout = map.unpackLongOrNull("timeoutSeconds")?.let(Duration::ofSeconds),
             rootDir = map.unpackStringOrNull("rootDir")?.let(Path::of),
             cacheDir = map.unpackStringOrNull("cacheDir")?.let(Path::of),
-            projectDir = map.unpackStringOrNull("projectDir")?.let(Path::of),
             outputFormat = map.unpackStringOrNull("outputFormat"),
-            disableProjectSettings = map.unpackBooleanOrNull("disableProjectSettings")
+            project = map.unpackProject("project")
           )
         }
         MessageType.CREATE_EVALUATOR_RESPONSE.code -> {
@@ -243,6 +243,34 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
         hasHierarchicalUris = readerMap.unpackBoolean("hasHierarchicalUris"),
         isGlobbable = readerMap.unpackBoolean("isGlobbable")
       )
+    }
+  }
+
+  private fun Map<Value, Value>.unpackProject(name: String): Project? {
+    val projMap = getNullable(name)?.asMapValue()?.map() ?: return null
+    val projectFileUri = URI(projMap.unpackString("projectFileUri"))
+    val dependencies = projMap.unpackDependencies("dependencies")
+    return Project(projectFileUri, null, dependencies)
+  }
+
+  private fun Map<Value, Value>.unpackDependencies(name: String): Map<String, Dependency> {
+    val mapValue = get(name).asMapValue().map()
+    return mapValue.entries.associate { (key, value) ->
+      val dependencyName = key.asStringValue().asString()
+      val dependencyObj = value.asMapValue().map()
+      val type = dependencyObj.unpackString("type")
+      val packageUri = URI(dependencyObj.unpackString("packageUri"))
+      if (type == DependencyType.REMOTE.value) {
+        val checksums =
+          dependencyObj.getNullable("checksums")?.asMapValue()?.map()?.let { obj ->
+            val sha256 = obj.unpackString("sha256")
+            Checksums(sha256)
+          }
+        return@associate dependencyName to RemoteDependency(packageUri, checksums)
+      }
+      val dependencies = dependencyObj.unpackDependencies("dependencies")
+      val projectFileUri = dependencyObj.unpackString("projectFileUri")
+      dependencyName to Project(URI(projectFileUri), packageUri, dependencies)
     }
   }
 }

@@ -21,6 +21,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
@@ -79,36 +80,36 @@ class ProjectCommand(helpLink: String) :
         helpLink = helpLink,
         help =
           """
-        Verify package(s), and prepare package artifacts to be published.
-
-        This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
-        Additionally, it verifies that all imports resolve to paths that are local to the project.
-
-        Finally, this command writes the folowing artifacts into the output directory specified by the output path.
-
-          - `name@version` - dependency metadata$NEWLINE
-          - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
-          - `name@version.zip` - package archive$NEWLINE
-          - `name@version.zip.sha256` - package archive's SHA-256 checksum
-
-        The output path option accepts the following placeholders:
-
-          - %{name}: The display name of the package$NEWLINE
-          - %{version}: The version of the package
-
-        If a project has local project dependencies, the depended upon project directories must also
-        be included as arguments to this command.
-
-        Examples:
-
-        ```
-        # Search the current working directory for a project, and package it.
-        $ pkl project package
-
-        # Package all projects within the `packages/` directory.
-        $ pkl project package packages/*/
-        ```
-        """
+          Verify package(s), and prepare package artifacts to be published.
+  
+          This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
+          Additionally, it verifies that all imports resolve to paths that are local to the project.
+  
+          Finally, this command writes the folowing artifacts into the output directory specified by the output path.
+  
+            - `name@version` - dependency metadata$NEWLINE
+            - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
+            - `name@version.zip` - package archive$NEWLINE
+            - `name@version.zip.sha256` - package archive's SHA-256 checksum
+  
+          The output path option accepts the following placeholders:
+  
+            - %{name}: The display name of the package$NEWLINE
+            - %{version}: The version of the package
+  
+          If a project has local project dependencies, the depended upon project directories must also
+          be included as arguments to this command.
+  
+          Examples:
+  
+          ```
+          # Search the current working directory for a project, and package it.
+          $ pkl project package
+  
+          # Package all projects within the `packages/` directory.
+          $ pkl project package packages/*/
+          ```
+          """
             .trimIndent(),
       ) {
       private val testOptions by TestOptions()
@@ -119,18 +120,27 @@ class ProjectCommand(helpLink: String) :
       private val outputPath: String by
         option(
             names = arrayOf("--output-path"),
-            help = "The directory to write artifacts to.",
+            help = "The directory to write artifacts to",
             metavar = "<path>"
           )
           .single()
           .default(".out/%{name}@%{version}")
+
+      private val skipPublishCheck: Boolean by
+        option(
+            names = arrayOf("--skip-publish-check"),
+            help = "Skip checking if a package has already been published with different contents",
+          )
+          .single()
+          .flag()
 
       override fun run() {
         CliProjectPackager(
             baseOptions.baseOptions(emptyList()),
             projectDirs,
             testOptions.cliTestOptions,
-            outputPath
+            outputPath,
+            skipPublishCheck
           )
           .run()
       }

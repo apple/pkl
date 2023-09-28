@@ -809,7 +809,14 @@ public final class VmUtils {
   public static int findSlot(VirtualFrame frame, Object identifier) {
     var descriptor = frame.getFrameDescriptor();
     for (int i = 0; i < descriptor.getNumberOfSlots(); i++) {
-      if (descriptor.getSlotName(i) == identifier && frame.getTag(i) != FrameSlotKind.Illegal.tag) {
+      if (descriptor.getSlotName(i) == identifier
+          && frame.getTag(i) != FrameSlotKind.Illegal.tag
+          // Truffle initializes all frame tags as `FrameSlotKind.Object`, instead of
+          // `FrameSlotKind.Illegal`. Unevaluated (in a `when` with `false` condition) `for`
+          // generators, therefore, leave their bound variables tagged as `Object`, but `null`. If
+          // another `for` generator in the same scope binds variables with the same names, they
+          // resolve the wrong slot number.
+          && (frame.getTag(i) != FrameSlotKind.Object.tag || frame.getObject(i) != null)) {
         return i;
       }
     }

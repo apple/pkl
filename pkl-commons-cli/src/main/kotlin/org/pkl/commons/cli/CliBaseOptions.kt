@@ -113,11 +113,15 @@ data class CliBaseOptions(
   val testMode: Boolean = false,
 
   /**
-   * Path to files containing X.509 certificates in PEM format.
+   * [X.509 certificates](https://en.wikipedia.org/wiki/X.509) in PEM format.
    *
-   * If not empty, this replaces the default certificates bundled with Pkl.
+   * Elements can either be a [Path] or a [java.io.InputStream]. Input streams are closed when
+   * [CliCommand] is initialized.
+   *
+   * If not empty, this determines the CA root certs used for all HTTPS requests. Warning: this
+   * affects the whole Java runtime, not just the Pkl API!
    */
-  val caCertificates: List<Path> = emptyList(),
+  val caCertificates: List<Any> = emptyList(),
 ) {
 
   companion object {
