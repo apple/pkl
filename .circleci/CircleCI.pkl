@@ -3,8 +3,7 @@
 /// feel free to add it.
 module CircleCI
 
-// no need to use olders versions
-version: Number(this == 2.1) = 2.1
+version: Number
 
 /// A command defines a sequence of steps as a map to be executed in a job, enabling you to reuse
 /// a single command definition across multiple jobs.
@@ -71,7 +70,7 @@ class Job {
   /// A map of environment variable names and values.
   environment: Mapping<String, String>?
 
-  /// The `resource_class` feature allows you to configure CPU and RAM resources for each job.
+  /// The [resource_class] feature allows you to configure CPU and RAM resources for each job.
   ///
   /// Resource classes are available for each execution environment, as described in the tables below.
   ///
@@ -138,12 +137,93 @@ class Machine {
 }
 
 class DockerImage {
+  /// The name of a custom docker image to use.
+  ///
+  /// The first `image` listed under a job defines the job’s own primary container image where all
+  /// steps will run.
   image: String
+
+  /// `name` defines the the hostname for the container (the default is `localhost`), which is used
+  /// for reaching secondary (service) containers.
+  ///
+  /// By default, all services are exposed directly on `localhost`.
+  /// This field is useful if you would rather have a different hostname instead of `localhost`,
+  /// for example, if you are starting multiple versions of the same service.
+  name: String?
+
+  /// The command used as executable when launching the container.
+  ///
+  /// [entrypoint] overrides the image’s `ENTRYPOINT`
+  entrypoint: (*Listing<String>|String)?
+
+  /// The command used as pid 1 (or args for entrypoint) when launching the container.
+  ///
+  /// [command] overrides the image’s `COMMAND`.
+  /// It will be used as arguments to the image `ENTRYPOINT` if it has one, or as the executable
+  /// if the image has no `ENTRYPOINT`.
+  command: (*Listing<String>|String)?
+
+  /// Which user to run commands as within the Docker container
+  user: String?
+
+  /// environment variable names and values.
+  ///
+  /// The [environment] settings apply to the entrypoint/command run by the docker container, not
+  /// the job steps
+  environment: Mapping<String, String>?
+
+  /// Authentication for registries using standard docker login credentials
+  auth: Mapping<String, String>?
+
+  /// Authentication for AWS Elastic Container Registry (ECR)
+  aws_auth: Mapping<String, String>?
+}
+
+class ScheduleTrigger {
+  /// The cron key is defined using POSIX crontab syntax
+  @SourceCode { language = "cronexp" }
+  cron: String
+
+  /// Trigger Filters can have the key branches.
+  filters: Filter(tags == null)?
+}
+
+class ScheduleTriggerFilter {
+  /// The `branches` key controls whether the _current_ branch should have a schedule trigger
+  /// created for it, where _current_ branch is the branch containing the `config.yml` file with
+  /// the trigger stanza.
+  /// That is, a push on the `main` branch will only schedule a
+  /// [workflow](https://circleci.com/docs/workflows/#using-contexts-and-filtering-in-your-workflows)
+  /// for the `main` branch.
+  ///
+  /// Branches can have the keys only and ignore which each map to a single string naming a branch.
+  /// You may also use regular expressions to match against branches by enclosing them with `/`’s,
+  /// or map to a list of such strings. Regular expressions must match the **entire** string.
+  ///
+  /// * Any branches that match only will run the job.
+  /// * Any branches that match ignore will not run the job.
+  /// * If neither only nor ignore are specified then all branches will run the job.
+  ///   If both only and ignore are specified, the only is used and ignore will have no effect.
+  branches: ScheduleTriggerFilterBranches
+}
+
+class ScheduleTriggerFilterBranches {
+  /// Either a single branch specifier, or a list of branch specifiers
+  only: *Listing<String>|String
+  
+  /// Either a single branch specifier, or a list of branch specifiers
+  ignore: (*Listing<String>|String)?
 }
 
 class Workflow {
   /// A job can have the keys `requires`, `name`, `context`, `type`, and `filters`.
-  jobs: Listing<*Mapping<String, WorkflowJob>(length == 1)|String>
+  jobs: Listing<*Mapping<String, WorkflowJob>(!isEmpty)|String>
+
+  /// Specifies which triggers will cause this workflow to be executed.
+  ///
+  /// Default behavior is to trigger the workflow when pushing to a branch
+  triggers: Listing<ScheduleTrigger>?
+
   `when`: LogicStatement?
 }
 
@@ -220,81 +300,29 @@ class FilterSpec {
   only: (String|Listing<String>)?(this != null || ignore != null)
 
   /// Either a single branch specifier, or a list of branch specifiers
+  @SourceCode { language = "RegExp" }
   ignore: (String|Listing<String>)?(this != null || only != null)
 }
 
-typealias Step = *StepConfig|"checkout"|"setup_remote_docker"|"add_ssh_keys"
+typealias Step = AbstractStep|SimpleStepName
 
-class StepConfig {
-  run: (*RunConfig|String)?
+typealias SimpleStepName = "checkout"|"setup_remote_docker"|"add_ssh_keyes"|String
 
-  /// Special step used to upload and store test results for a build.
-  ///
-  /// Test results are visible on the CircleCI web application under each build’s *Test Summary*
-  /// section.
-  /// Storing test results is useful for timing analysis of your test suites.
-  /// For more information on storing test results, see the
-  /// [Collecting Test Data](https://circleci.com/docs/collect-test-data/) page.
-  ///
-  /// It is also possible to store test results as a build artifact; to do so, please refer to the
-  /// [store_artifacts] step.
-  store_test_results: StoreTestResults?
-
-  /// Step to store artifacts (for example logs, binaries, etc) to be available in the web app
-  /// or through the API.
-  ///
-  /// See the [Uploading Artifacts](https://circleci.com/docs/artifacts/) document for more information.
-  store_artifacts: StoreArtifacts?
-
-  /// Allows Docker commands to be run locally.
-  ///
-  /// See [Running Docker Commands](https://circleci.com/docs/building-docker-images/) for details.
-  setup_remote_docker: SetupRemoteDocker?
-
-  /// Special step used to persist a temporary file to be used by another job in the workflow.
-  /// For more information on using workspaces, see the
-  /// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
-  ///
-  /// `persist_to_workspace` adopts the storage settings from the storage customization controls on
-  /// the CircleCI web app.
-  /// If no custom setting is provided, `persist_to_workspace` defaults to 15 days.
-  /// 
-  /// Workspace storage retention can be customized on the CircleCI web app by navigating to Plan > Usage Controls.
-  persist_to_workspace: PersistToWorkspace?
-
-  /// Special step used to attach the workflow’s workspace to the current container.
-  ///
-  /// The full contents of the workspace are downloaded and copied into the directory the workspace
-  /// is being attached at.
-  /// For more information on using workspaces, see the
-  /// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
-  attach_workspace: AttachWorkspace?
-
-  command: CalledCommand?
-
-  /// Generates and stores a cache of a file or directory of files such as dependencies or source
-  /// code in our object storage.
-  ///
-  /// Later jobs can [restore this cache](https://circleci.com/docs/configuration-reference/#restore_cache).
-  /// Learn more on the [Caching Dependencies](https://circleci.com/docs/caching/) page.
-  /// 
-  /// Cache retention can be customized on the [CircleCI web app](https://app.circleci.com/) by
-  /// navigating to Plan > Usage Controls.
-  save_cache: SaveCache?
-
-  /// Restores a previously saved cache based on a key. 
-  /// 
-  /// Cache needs to have been saved first for this key using the [save_cache] step.
-  ///
-  /// Learn more in [the caching documentation](https://circleci.com/docs/caching/).
-  restore_cache: RestoreCache?
+local abstract class AbstractStep {
+  fixed hidden __name__: String
 }
 
-class RunConfig {
+/// Used for invoking all command-line programs.
+///
+/// Run commands are executed using non-login shells by default, so you must explicitly source any
+/// dotfiles as part of the command.
+class RunStep extends AbstractStep {
+  fixed hidden __name__ = "run"
+
   /// Command to run via the shell
   command: String
 
-  /// Title of the step to be shown in the CircleCI UI (default: full `command`)
+  /// Title of the step to be shown in the CircleCI UI (default: full [command])
   name: String?
 
   /// Shell to use for execution command (default: See [Default Shell Options](https://circleci.com/docs/configuration-reference/#default-shell-options))
@@ -303,11 +331,13 @@ class RunConfig {
   /// Additional environmental variables, locally scoped to command
   environment: Mapping<String, String>?
 
-  /// Whether or not this step should run in the background (default: `false`)
+  /// Whether or not this step should run in the background (default: [false])
   background: Boolean?
 
-  /// In which directory to run this step. Will be interpreted relative to the working_directory
-  /// of the job). (default: `.`)
+  /// In which directory to run this step.
+  ///
+  /// Will be interpreted relative to the working_directory
+  /// of the job. (default: `.`)
   working_directory: String?
 
   /// Elapsed time the command can run without output.
@@ -318,10 +348,20 @@ class RunConfig {
   /// Specify when to enable or disable the step.
   ///
   /// Takes the following values: `always`, `on_success`, `on_fail` (default: on_success)
-  `when`: ("always"|"on_success"|"on_fail")? 
+  `when`: ("always"|"on_success"|"on_fail")?
 }
 
-class SaveCache {
+/// Generates and stores a cache of a file or directory of files such as dependencies or source
+/// code in our object storage.
+///
+/// Later jobs can [restore this cache](https://circleci.com/docs/configuration-reference/#restore_cache).
+/// Learn more on the [Caching Dependencies](https://circleci.com/docs/caching/) page.
+/// 
+/// Cache retention can be customized on the [CircleCI web app](https://app.circleci.com/) by
+/// navigating to Plan > Usage Controls.
+class SaveCacheStep extends AbstractStep {
+  fixed hidden __name__ = "save_cache"
+
   /// List of directories which should be added to the cache
   paths: Listing<String>
 
@@ -337,7 +377,14 @@ class SaveCache {
   `when`: ("always"|"on_success"|"on_fail")?
 }
 
-class RestoreCache {
+/// Restores a previously saved cache based on a key. 
+/// 
+/// Cache needs to have been saved first for this key using the [save_cache] step.
+///
+/// Learn more in [the caching documentation](https://circleci.com/docs/caching/).
+class RestoreCacheStep extends AbstractStep {
+  fixed hidden __name__ = "restore_cache"
+
   /// Single cache key to restore
   key: String?(this != null || keys != null)
 
@@ -350,7 +397,12 @@ class RestoreCache {
   name: String?
 }
 
-class SetupRemoteDocker {
+/// Allows Docker commands to be run locally.
+///
+/// See [Running Docker Commands](https://circleci.com/docs/building-docker-images/) for details.
+class SetupRemoteDockerStep extends AbstractStep {
+  fixed hidden __name__ = "setup_remote_docker"
+
   /// Version string of Docker you would like to use (default: 20.10.17).
   ///
   /// View the list of supported docker versions
@@ -362,7 +414,18 @@ class SetupRemoteDocker {
   docker_layer_cacheing: Boolean
 }
 
-class PersistToWorkspace {
+/// Special step used to persist a temporary file to be used by another job in the workflow.
+/// For more information on using workspaces, see the
+/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
+///
+/// `persist_to_workspace` adopts the storage settings from the storage customization controls on
+/// the CircleCI web app.
+/// If no custom setting is provided, `persist_to_workspace` defaults to 15 days.
+/// 
+/// Workspace storage retention can be customized on the CircleCI web app by navigating to Plan > Usage Controls.
+class PersistToWorkspaceStep extends AbstractStep {
+  fixed hidden __name__ = "persist_to_workspace"
+
   /// Either an absolute path or a path relative to `working_directory`
   root: String
 
@@ -373,7 +436,15 @@ class PersistToWorkspace {
   paths: Listing<String>
 }
 
-class AttachWorkspace {
+/// Special step used to attach the workflow’s workspace to the current container.
+///
+/// The full contents of the workspace are downloaded and copied into the directory the workspace
+/// is being attached at.
+/// For more information on using workspaces, see the
+/// [Using Workspaces to Share Data Between Jobs](https://circleci.com/docs/workspaces/) page.
+class AttachWorkspaceStep extends AbstractStep {
+  fixed hidden __name__ = "attach_workspace"
+
   /// Directory to attach the workspace to.
   at: String
 }
@@ -404,13 +475,31 @@ class Parameter {
   type: "string"|"boolean"|"integer"|"enum"|"executor"|"steps"|"env_var_name"
 }
 
-class StoreTestResults {
+/// Special step used to upload and store test results for a build.
+///
+/// Test results are visible on the CircleCI web application under each build’s *Test Summary*
+/// section.
+/// Storing test results is useful for timing analysis of your test suites.
+/// For more information on storing test results, see the
+/// [Collecting Test Data](https://circleci.com/docs/collect-test-data/) page.
+///
+/// It is also possible to store test results as a build artifact; to do so, please refer to the
+/// [store_artifacts] step.
+class StoreTestResults extends AbstractStep {
+  fixed hidden __name__ = "store_test_results"
+
   /// Path (absolute, or relative to your `working_directory`) to directory containing JUnit XML
   /// test metadata files, or to a single test file.
   path: String
 }
 
-class StoreArtifacts {
+/// Step to store artifacts (for example logs, binaries, etc) to be available in the web app
+/// or through the API.
+///
+/// See the [Uploading Artifacts](https://circleci.com/docs/artifacts/) document for more information.
+class StoreArtifacts extends AbstractStep {
+  fixed hidden __name__ = "store_artifacts"
+
   /// Directory in the primary container to save as job artifacts
   path: String
 
@@ -454,7 +543,7 @@ output {
   text = "# Generated from CircleCI.pkl. DO NOT EDIT.\n" + super.text
   renderer = new YamlRenderer {
     converters {
-      [StepConfig] = (it) -> it.toMap().remove("command") + (it.command?.toMap() ?? Map())
+      [AbstractStep] = (it) -> Map(it.__name__, it.toMap())
     }
   }
 }
