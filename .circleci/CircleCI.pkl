@@ -300,7 +300,6 @@ class FilterSpec {
   only: (String|Listing<String>)?(this != null || ignore != null)
 
   /// Either a single branch specifier, or a list of branch specifiers
-  @SourceCode { language = "RegExp" }
   ignore: (String|Listing<String>)?(this != null || only != null)
 }
 
