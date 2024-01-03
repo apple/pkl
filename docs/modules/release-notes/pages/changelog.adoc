@@ -1,64 +1,8 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
-[[release-0.24.7]]
-== 0.24.7 (2023-01-02)
-* Fixes a bug when creating packages where generated package metadata might incorrectly use the `projectpackage` scheme for dependencies.
-* Fixes a bug when generating pkldoc when a URL hash value includes a hash character.
+[[release-0.25.0]]
+== 0.25.0 (UNRELEASED)
 
-[[release-0.24.6]]
-== 0.24.6 (2023-11-08)
-* Fixes a bug in how the pkl-doc CLI parses command line arguments.
-* Fixes a bug where pkldoc generates incorrect documentation if a code fence starts with an empty line.
-
-[[release-0.24.5]]
-== 0.24.5 (2023-11-08)
-
-* Fixes a bug where class and typealias members could not be accessed within a `const` property.
-* Changes the Java code generator to emit wildcards if a parameterized type is `abstract` or `open`. For example, this will generate `List<? extends Animal>` instead of `List<Animal>`, if `Animal` is an `open` or `abstract` class.
-* Breaking change: Adds `projectDir` to the pkl-executor API.
-
-[[release-0.24.4]]
-== 0.24.4 (2023-11-03)
-
-* Fixes a bug in pkl-gradle where the `projectDir`, `omitProjectSettings` and `noProject` flags are ignored.
-* Fixes a bug in the Java and Kotlin code generators when a property's type is overridden.
-
-[[release-0.24.3]]
-== 0.24.3 (2023-11-02)
-
-* Changes pkl-server's message passing API to receive project metadata directly.
-* Allow file-based `read()` calls within a `PklProject` file.
-* Fixes a bug where `pkl test` does not actually fail if a test fails, and a subsequent test passes.
-* Bumps various library dependencies.
-
-[[release-0.24.2]]
-== 0.24.2 (2023-10-02)
-
-* Adds more fixes for the `const` modifier
-** Fixes a regression where an amends declaration in an object within a `const` property/method causes a `PklBugException`
-** Throw if `this` points to a value outside of the const modifier (e.g. `const foo = this`)
-** Fix an issue where the implicit `this` in a type constraint causes a `const` violation.
-* Fixes an issue where for generators might cause a `NullPointerException`.
-* Fixes an issue where tasks from the pkl-gradle plugin do not use the JDK's CA certs.
-* Adds a `close()` method to `ConfigEvaluator`.
-* Fixes an issue where the executor API fails to load packages.
-
-[[release-0.24.1]]
-== 0.24.1 (2023-09-28)
-
-* Fixes issues with the `const` modifier.
-** Allow properties to reference other properties within a `const` scope.
-** Fixed an issue where properties referenced from `this` and `super` were not being checked for `const`.
-* Fixes an issue where `Evaluator.evaluateSchema` would throw an exception for methods that used the blank identifier.
-* Fixes issue where the executor API cannot evaluate packages.
-* Adds `fixed` and `const` to the reflect API.
-* Fixes an issue where reflecting upon a module with glob imports would cause a `PklBugException`.
-
-
-
-[[release-0.24.0]]
-== 0.24.0 (2023-09-07)
-
-xref:0.24.adoc[Release notes]
+xref:0.25.adoc[Release notes]
 

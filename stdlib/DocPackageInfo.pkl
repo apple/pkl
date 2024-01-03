@@ -63,7 +63,7 @@
 /// @Deprecated { message = "Use `com.example.Birds.Parrot` instead" }
 /// amends "pkl:PackageInfo"
 /// ```
-@ModuleInfo { minPklVersion = "0.24.7" }
+@ModuleInfo { minPklVersion = "0.25.0" }
 module pkl.DocPackageInfo
 
 import "pkl:reflect"
