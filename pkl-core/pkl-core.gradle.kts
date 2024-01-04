@@ -61,7 +61,7 @@ dependencies {
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
   add("generatorImplementation", libs.kotlinStdLib)
-  
+
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
 
@@ -159,7 +159,8 @@ tasks.test {
   inputs.dir("src/test/files/LanguageSnippetTests/output")
 
   useJUnitPlatform {
-    excludeEngines("MacLanguageSnippetTestsEngine")
+    excludeEngines("MacAmd64LanguageSnippetTestsEngine")
+    excludeEngines("MacAarch64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAmd64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAarch64LanguageSnippetTestsEngine")
     excludeEngines("AlpineLanguageSnippetTestsEngine")
@@ -191,9 +192,9 @@ tasks.check {
   dependsOn(testJavaExecutable)
 }
 
-val testMacExecutable by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isMacOsX
-  dependsOn(":pkl-cli:macExecutable")
+val testMacExecutableAmd64 by tasks.registering(Test::class) {
+  enabled = buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22
+  dependsOn(":pkl-cli:macExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
   inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
@@ -203,12 +204,24 @@ val testMacExecutable by tasks.registering(Test::class) {
   classpath = tasks.test.get().classpath
 
   useJUnitPlatform {
-    includeEngines("MacLanguageSnippetTestsEngine")
+    includeEngines("MacAmd64LanguageSnippetTestsEngine")
   }
 }
 
-tasks.checkNative {
-  dependsOn(testMacExecutable)
+val testMacExecutableAarch64 by tasks.registering(Test::class) {
+  enabled = buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22
+  dependsOn(":pkl-cli:macExecutableAarch64")
+
+  inputs.dir("src/test/files/LanguageSnippetTests/input")
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
+  inputs.dir("src/test/files/LanguageSnippetTests/output")
+
+  testClassesDirs = files(tasks.test.get().testClassesDirs)
+  classpath = tasks.test.get().classpath
+
+  useJUnitPlatform {
+    includeEngines("MacAarch64LanguageSnippetTestsEngine")
+  }
 }
 
 val testLinuxExecutableAmd64 by tasks.registering(Test::class) {
@@ -243,12 +256,6 @@ val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
   }
 }
 
-tasks.checkNative {
-  dependsOn(testLinuxExecutableAmd64)
-  dependsOn(testLinuxExecutableAarch64)
-  dependsOn(testMacExecutable)
-}
-
 val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
   enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64"
   dependsOn(":pkl-cli:alpineExecutableAmd64")
@@ -266,6 +273,10 @@ val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
 }
 
 tasks.checkNative {
+  dependsOn(testLinuxExecutableAmd64)
+  dependsOn(testLinuxExecutableAarch64)
+  dependsOn(testMacExecutableAmd64)
+  dependsOn(testMacExecutableAarch64)
   dependsOn(testAlpineExecutableAmd64)
 }
 

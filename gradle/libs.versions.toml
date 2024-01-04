@@ -9,6 +9,8 @@ downloadTaskPlugin = "4.1.2"
 geantyref = "1.+"
 # must not use `+` because used in download URL
 graalVm = "22.3.1"
+# intentionally empty; replaced by patch file when building pkl-cli macos/aarch64
+graalVM23JdkVersion = "replace-me"
 # slightly hacky but convenient place so we remember to update the checksum
 graalVmSha256-darwin-amd64 = "325afad5f1c4a07a458c95e7c444cff63514a6afa6f2655c12b4f494dccf2228"
 graalVmSha256-linux-amd64 = "55547725a8be3ceb0a1da29a84cd3e958ba398ce4470ac89a8ba1bdb6d9bddb8"

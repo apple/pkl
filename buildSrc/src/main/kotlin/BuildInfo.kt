@@ -4,6 +4,7 @@ import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.artifacts.VersionConstraint
 import org.gradle.kotlin.dsl.getByType
 
 // `buildInfo` in main build scripts
@@ -16,24 +17,51 @@ open class BuildInfo(project: Project) {
       System.getenv("GRAALVM_HOME") ?: "${System.getProperty("user.home")}/.graalvm"
     }
 
+    val version: String by lazy {
+      libs.findVersion("graalVm").get().toString()
+    }
+
+    val isGraal22: Boolean by lazy {
+      version.startsWith("22")
+    }
+
     val arch by lazy {
-      // TODO: we can remove this once we upgrade to GraalVM 22.2
-      if (os.isMacOsX) "amd64" else self.arch
+      if (os.isMacOsX && isGraal22) {
+        "amd64"
+      } else {
+        self.arch
+      }
     }
 
     val osName: String by lazy {
-      // graalvm uses "darwin" and "linux" to identify macOS/linux in their release binaries.
-      // Gradle's [OperatingSystem] class doesn't have an accessor to return exactly these two
-      // values.
       when {
-        os.isMacOsX -> "darwin"
+        os.isMacOsX && isGraal22 -> "darwin"
+        os.isMacOsX -> "macos"
         os.isLinux -> "linux"
         else -> throw RuntimeException("${os.familyName} is not supported.")
       }
     }
 
     val baseName: String by lazy {
-      "graalvm-ce-java11-${osName}-${arch}-${libs.findVersion("graalVm").get()}"
+      if (graalVm.isGraal22) {
+        "graalvm-ce-java11-${osName}-${arch}-${version}"
+      } else {
+        "graalvm-jdk-${graalVM23JdkVersion}_${osName}-${arch}_bin"
+      }
+    }
+
+    val graalVM23JdkVersion: String by lazy {
+      libs.findVersion("graalVM23JdkVersion").get().requiredVersion
+    }
+
+    val downloadUrl: String by lazy {
+      if (isGraal22) {
+        "https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-" +
+          "${version}/$baseName.tar.gz"
+      } else {
+        val jdkMajor = graalVM23JdkVersion.takeWhile { it != '.' }
+        "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.tar.gz"
+      }
     }
 
     val installDir: File by lazy {
@@ -104,7 +132,6 @@ open class BuildInfo(project: Project) {
   }
 
   // https://melix.github.io/blog/2021/03/version-catalogs-faq.html#_but_how_can_i_use_the_catalog_in_em_plugins_em_defined_in_code_buildsrc_code
-  @Suppress("UnstableApiUsage")
   val libs: VersionCatalog by lazy {
     project.extensions.getByType<VersionCatalogsExtension>().named("libs")
   }

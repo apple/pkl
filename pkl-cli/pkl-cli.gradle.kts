@@ -1,7 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.gradle.crypto.checksum.Checksum
-
 plugins {
   pklAllProjects
   pklKotlinLibrary
@@ -34,6 +32,7 @@ publishing {
 }
 
 val stagedMacAmd64Executable: Configuration by configurations.creating
+val stagedMacAarch64Executable: Configuration by configurations.creating
 val stagedLinuxAmd64Executable: Configuration by configurations.creating
 val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
@@ -61,6 +60,7 @@ dependencies {
   testImplementation(project(":pkl-commons-test"))
 
   stagedMacAmd64Executable(files("$buildDir/executable/pkl-macos-amd64"))
+  stagedMacAarch64Executable(files("$buildDir/executable/pkl-macos-aarch64"))
   stagedLinuxAmd64Executable(files("$buildDir/executable/pkl-linux-amd64"))
   stagedLinuxAarch64Executable(files("$buildDir/executable/pkl-linux-aarch64"))
   stagedAlpineLinuxAmd64Executable(files("$buildDir/executable/pkl-alpine-linux-amd64"))
@@ -146,6 +146,10 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   workingDir = outputFile.parentFile
   executable = "${buildInfo.graalVm.baseDir}/bin/native-image"
 
+  // JARs to exclude from the class path for the native-image build.
+  val exclusions =
+    if (buildInfo.graalVm.isGraal22) emptyList()
+    else listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
@@ -192,7 +196,10 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         // for use with https://www.graalvm.org/docs/tools/dashboard/
         //,"-H:DashboardDump=dashboard.dump", "-H:+DashboardAll"
         // native-image rejects non-existing class path entries -> filter
-        ,"--class-path", ((sourceSets.main.get().output + configurations.runtimeClasspath.get()).filter { it.exists() }).asPath
+        ,"--class-path"
+        ,((sourceSets.main.get().output + configurations.runtimeClasspath.get())
+            .filter { it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }})
+            .asPath
         // make sure dev machine stays responsive (15% slowdown on my laptop)
         ,"-J-XX:ActiveProcessorCount=${
           Runtime.getRuntime().availableProcessors() / (if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1)
@@ -204,8 +211,25 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
 /**
  * Builds the pkl CLI for macOS/amd64.
  */
-val macExecutable: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isMacOsX, file("$buildDir/executable/pkl-macos-amd64"))
+val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, file("$buildDir/executable/pkl-macos-amd64"))
+}
+
+/**
+ * Builds the pkl CLI for macOS/aarch64.
+ *
+ * This requires that GraalVM be set to version 23.0 or greater, because 22.x does not support this
+ * os/arch pair.
+ */
+val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  configureExecutable(
+    buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
+    file("$buildDir/executable/pkl-macos-aarch64"),
+    listOf(
+      "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
+      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
+    )
+  )
 }
 
 /**
@@ -245,7 +269,7 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
 }
 
 tasks.assembleNative {
-  dependsOn(macExecutable, linuxExecutableAmd64, linuxExecutableAarch64, alpineExecutableAmd64)
+  dependsOn(macExecutableAmd64, macExecutableAarch64, linuxExecutableAmd64, linuxExecutableAarch64, alpineExecutableAmd64)
 }
 
 // make Java executable available to other subprojects
@@ -288,6 +312,17 @@ publishing {
       }
       pom {
         description.set("Native Pkl CLI executable for macOS/amd64.")
+      }
+    }
+    create<MavenPublication>("macExecutableAarch64") {
+      artifactId = "pkl-cli-macos-aarch64"
+      artifact(stagedMacAarch64Executable.singleFile) {
+        classifier = null
+        extension = "bin"
+        builtBy(stagedMacAarch64Executable)
+      }
+      pom {
+        description.set("Native Pkl CLI executable for macOS/aarch64.")
       }
     }
     create<MavenPublication>("linuxExecutableAmd64") {

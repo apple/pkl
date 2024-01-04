@@ -67,6 +67,7 @@ tasks.shadowJar {
 
   exclude("META-INF/maven/**")
   exclude("META-INF/upgrade/**")
+  exclude("META-INF/versions/19/**")
 
   // org.antlr.v4.runtime.misc.RuleDependencyProcessor
   exclude("META-INF/services/javax.annotation.processing.Processor")

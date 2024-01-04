@@ -12,6 +12,7 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 val homeDir = buildInfo.graalVm.homeDir
 val baseName = buildInfo.graalVm.baseName
 val installDir = buildInfo.graalVm.installDir
+val downloadUrl = buildInfo.graalVm.downloadUrl
 val downloadFile = file(homeDir).resolve("$baseName.tar.gz")
 
 // tries to minimize chance of corruption by download-to-temp-file-and-move
@@ -20,9 +21,7 @@ val downloadGraalVm by tasks.registering(Download::class) {
     !installDir.exists()
   }
 
-  @Suppress("UnstableApiUsage")
-  src("https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-" +
-    "${buildInfo.libs.findVersion("graalVm").get()}/$baseName.tar.gz")
+  src(downloadUrl)
   dest(downloadFile)
   overwrite(false)
   tempAndMove(true)
