@@ -6,15 +6,15 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.test.WithPackageServerTest
 import org.pkl.commons.toPath
 import org.pkl.commons.walk
-import org.pkl.core.runtime.CertificateUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.io.path.createDirectories
 
-class EmbeddedExecutorTest {
+class EmbeddedExecutorTest: WithPackageServerTest() {
   private val pklDistribution by lazy {
     val libsDir = FileTestUtils.rootProjectDir.resolve("pkl-config-java/build/libs")
     if (!Files.isDirectory(libsDir)) {
@@ -407,7 +407,7 @@ class EmbeddedExecutorTest {
     """.trimIndent().trim()
     )
   }
-  
+
   @Test
   fun `evaluate a module that loads a package`(@TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
@@ -421,8 +421,6 @@ class EmbeddedExecutorTest {
       chirpy = new Bird { name = "Chirpy"; favoriteFruit { name = "Orange" } }
     """.trimIndent()
     )
-    PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     val executor = Executors.embedded(listOf(pklDistribution))
     val result = executor.use {
       it.evaluatePath(pklFile,

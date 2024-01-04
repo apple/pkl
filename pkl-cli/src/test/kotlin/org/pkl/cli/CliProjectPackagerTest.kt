@@ -31,12 +31,11 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.CliTestOptions
 import org.pkl.commons.readString
-import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.test.WithPackageServerTest
 import org.pkl.commons.writeString
-import org.pkl.core.runtime.CertificateUtils
 
-class CliProjectPackagerTest {
+class CliProjectPackagerTest : WithPackageServerTest() {
   @Test
   fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
     val packager =
@@ -867,8 +866,6 @@ class CliProjectPackagerTest {
 
   @Test
   fun `publish checks`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
@@ -911,8 +908,6 @@ class CliProjectPackagerTest {
 
   @Test
   fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",

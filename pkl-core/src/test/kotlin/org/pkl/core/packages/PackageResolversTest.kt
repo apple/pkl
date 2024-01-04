@@ -10,12 +10,9 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.pkl.commons.deleteRecursively
 import org.pkl.commons.readString
-import org.pkl.commons.test.FileTestUtils
-import org.pkl.commons.test.PackageServer
-import org.pkl.commons.test.listFilesRecursively
+import org.pkl.commons.test.*
 import org.pkl.core.SecurityManagers
 import org.pkl.core.module.PathElement
-import org.pkl.core.runtime.CertificateUtils
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -24,20 +21,11 @@ import kotlin.io.path.readBytes
 
 class PackageResolversTest {
   @Execution(ExecutionMode.SAME_THREAD)
-  abstract class AbstractPackageResolverTest {
+  abstract class AbstractPackageResolverTest: WithPackageServerTest() {
 
     abstract val resolver: PackageResolver
 
     private val packageRoot = FileTestUtils.rootProjectDir.resolve("pkl-commons-test/src/main/files/packages")
-
-    companion object {
-      @JvmStatic
-      @BeforeAll
-      fun beforeAll() {
-        CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
-        PackageServer.ensureStarted()
-      }
-    }
 
     @Test
     fun `get module bytes`() {
@@ -189,6 +177,7 @@ class PackageResolversTest {
       @JvmStatic
       @AfterAll
       fun afterAll() {
+        WithPackageServerTest.afterAll()
         assertThat(cacheDir.exists())
         assertThat(cacheDir.listFilesRecursively()).isNotEmpty
       }
@@ -196,8 +185,7 @@ class PackageResolversTest {
       @BeforeAll
       @JvmStatic
       fun beforeAll() {
-        CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
-        PackageServer.ensureStarted()
+        WithPackageServerTest.beforeAll()
         cacheDir.deleteRecursively()
       }
     }

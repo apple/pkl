@@ -19,7 +19,6 @@ import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpsConfigurator
 import com.sun.net.httpserver.HttpsParameters
 import com.sun.net.httpserver.HttpsServer
-import java.net.BindException
 import java.net.InetSocketAddress
 import java.nio.file.*
 import java.security.KeyStore
@@ -31,6 +30,13 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.deleteRecursively
 
 object PackageServer {
+  @JvmStatic
+  fun main(args: Array<String>) {
+    server.bind(InetSocketAddress(PORT), 0)
+    server.start()
+    println("[package-server] Listening on port $PORT")
+  }
+
   private val keystore = javaClass.getResource("/localhost.p12")!!
 
   // When tests are run via Gradle (i.e. from ./gradlew check), resources are packaged into a jar.
@@ -109,12 +115,4 @@ object PackageServer {
       executor = myExecutor
     }
   }
-
-  fun ensureStarted() =
-    synchronized(this) {
-      try {
-        server.bind(InetSocketAddress(PORT), 0)
-        server.start()
-      } catch (_: BindException) {}
-    }
 }
