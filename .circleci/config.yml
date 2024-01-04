@@ -10,6 +10,9 @@ jobs:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
     - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
+    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
@@ -237,45 +240,6 @@ jobs:
     resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
-<<<<<<< HEAD
-  pkl-cli-macos-amd64-release:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-        name: Installing Rosetta 2
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
-        name: gradle buildNative
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    resource_class: macos.m1.large.gen1
-    macos:
-      xcode: 14.0.0
-=======
->>>>>>> 9cba7f75a (Add CircleCI mac/aarch64 build)
   pkl-cli-linux-alpine-amd64-release:
     steps:
     - checkout
@@ -373,6 +337,9 @@ jobs:
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -601,45 +568,6 @@ jobs:
     resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
-<<<<<<< HEAD
-  pkl-cli-macos-amd64-snapshot:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-        name: Installing Rosetta 2
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
-        name: gradle buildNative
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    resource_class: macos.m1.large.gen1
-    macos:
-      xcode: 14.0.0
-=======
->>>>>>> 9cba7f75a (Add CircleCI mac/aarch64 build)
   pkl-cli-linux-alpine-amd64-snapshot:
     steps:
     - checkout
@@ -889,15 +817,11 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-<<<<<<< HEAD
     - hold:
         type: approval
-    - bench:
+    - pkl-cli-macOS-amd64-release:
         requires:
         - hold
-=======
-    - pkl-cli-macOS-amd64-release:
->>>>>>> 9cba7f75a (Add CircleCI mac/aarch64 build)
         filters:
           branches:
             ignore: /.*/
@@ -911,25 +835,17 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-<<<<<<< HEAD
-    - pkl-cli-linux-aarch64-release:
+    - pkl-cli-macOS-aarch64-release:
         requires:
         - hold
-=======
-    - pkl-cli-macOS-aarch64-release:
->>>>>>> 9cba7f75a (Add CircleCI mac/aarch64 build)
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-<<<<<<< HEAD
-    - pkl-cli-macos-amd64-release:
+    - pkl-cli-linux-aarch64-release:
         requires:
         - hold
-=======
-    - pkl-cli-linux-aarch64-release:
->>>>>>> 9cba7f75a (Add CircleCI mac/aarch64 build)
         filters:
           branches:
             ignore: /.*/
@@ -944,6 +860,8 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - bench:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
