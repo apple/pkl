@@ -70,7 +70,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-cli:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -148,7 +148,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-cli:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -182,7 +182,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-cli:testMacExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -274,7 +274,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-cli:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -368,7 +368,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-cli:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -446,7 +446,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-cli:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -480,7 +480,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAmd64 pkl-cli:testMacExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -572,7 +572,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-cli:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -733,31 +733,8 @@ jobs:
     - image: cimg/openjdk:11.0
   deploy-release:
     steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - attach_workspace:
-        at: '.'
     - run:
-        command: ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' closeAndReleaseSonatypeStagingRepository
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    docker:
-    - image: cimg/openjdk:11.0
+        command: echo "Fake deploy! Replace me."
   github-release:
     steps:
     - attach_workspace:
@@ -782,94 +759,28 @@ jobs:
     docker:
     - image: cibuilds/github:0.10
 workflows:
-  build-and-test:
+  prb:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - bench:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-amd64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-aarch64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-macos-amd64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-alpine-amd64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-  build-test-deploy-snapshot:
+    - gradle-check-jdk11
+    - gradle-check-jdk17
+    - bench
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-macos-amd64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
+    when:
+      matches:
+        value: << pipeline.git.branch >>
+        pattern: ^pull/\d+(/head)?$
+  deploy-snapshot:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - bench:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-amd64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-aarch64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-macos-amd64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-alpine-amd64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
+    - gradle-check-jdk11
+    - gradle-check-jdk17
+    - bench
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-macos-amd64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
     - deploy-snapshot:
         requires:
         - gradle-check-jdk11
@@ -881,60 +792,19 @@ workflows:
         - pkl-cli-linux-alpine-amd64-snapshot
         context:
         - Pkl release
-        filters:
-          branches:
-            only: main
-  build-test-release:
+    when:
+      equals:
+      - main
+      - << pipeline.git.branch >>
+  deploy-release:
     jobs:
-    - gradle-check-jdk11:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - gradle-check-jdk17:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - bench:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - pkl-cli-linux-amd64-release:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - pkl-cli-linux-aarch64-release:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - pkl-cli-macos-amd64-release:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - pkl-cli-linux-alpine-amd64-release:
-        requires: []
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
+    - gradle-check-jdk11
+    - gradle-check-jdk17
+    - bench
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-macos-amd64-release
+    - pkl-cli-linux-alpine-amd64-release
     - github-release:
         requires:
         - gradle-check-jdk11
@@ -944,16 +814,10 @@ workflows:
         - pkl-cli-linux-aarch64-release
         - pkl-cli-macos-amd64-release
         - pkl-cli-linux-alpine-amd64-release
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
     - deploy-release:
         requires:
         - github-release
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
+    when:
+      matches:
+        value: << pipeline.git.tag >>
+        pattern: ^\d+\.\d+\.\d+$

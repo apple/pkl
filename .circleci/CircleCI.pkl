@@ -217,7 +217,7 @@ class ScheduleTrigger {
   cron: String
 
   /// Trigger Filters can have the key branches.
-  filters: Filter(tags == null)?
+  filters: ScheduleTriggerFilter
 }
 
 class ScheduleTriggerFilter {
@@ -256,7 +256,9 @@ class Workflow {
   /// Default behavior is to trigger the workflow when pushing to a branch
   triggers: Listing<ScheduleTrigger>?
 
-  `when`: LogicStatement?
+  `when`: (*LogicStatement|Boolean|String)?
+
+  `unless`: (*LogicStatement|Boolean|String)?
 }
 
 class WorkflowJob {
@@ -295,10 +297,10 @@ class WorkflowJob {
   type: "approval"?
 
   /// Job Filters can have the key branches or tags
-  filters: Filter?
+  filters: JobFilters?
 }
 
-class Filter {
+class JobFilters {
   /// Branches can have the keys only and ignore which either map to a single string naming a branch.
   /// You may also use regular expressions to match against branches by enclosing them with slashes,
   /// or map to a list of such strings.
@@ -332,7 +334,7 @@ class FilterSpec {
   only: (String|Listing<String>)?(this != null || ignore != null)
 
   /// Either a single branch specifier, or a list of branch specifiers
-  ignore: (String|Listing<String>)?(this != null || only != null)
+  ignore: (String|Listing<String>)?
 }
 
 typealias Step = AbstractStep|SimpleStepName
@@ -480,6 +482,40 @@ class AttachWorkspaceStep extends AbstractStep {
   at: String
 }
 
+/// A conditional step consists of a step with the key `when`.
+///
+/// Under the `when` key are the subkeys `condition` and `steps`.
+/// The purpose of the `when` step is customizing commands and job configuration to run on custom
+/// conditions (determined at config-compile time) that are checked before a workflow runs.
+/// See the [Conditional Steps section of the Reusing Config](https://circleci.com/docs/reusing-config/#defining-conditional-steps)
+/// document for more details.
+class WhenStep {
+  fixed hidden __name__ = "when"
+
+  /// The logic statement that determines whether to execute.
+  condition: (*LogicStatement|Boolean|String)?
+
+  /// A list of steps to execute when the condition is true
+  steps: Listing<AbstractStep|SimpleStepName>?
+}
+
+/// A conditional step consists of a step with the key `unless`.
+///
+/// Under the `unless` key are the subkeys `condition` and `steps`.
+/// The purpose of the `unless` step is customizing commands and job configuration to run on custom
+/// conditions (determined at config-compile time) that are checked before a workflow runs.
+/// See the [Conditional Steps section of the Reusing Config](https://circleci.com/docs/reusing-config/#defining-conditional-steps)
+/// document for more details.
+class UnlessStep {
+  fixed hidden __name__ = "unless"
+
+  /// The logic statement that determines whether to execute.
+  condition: (*LogicStatement|Boolean|String)?
+
+  /// A list of steps to execute when the condition is true
+  steps: Listing<AbstractStep|SimpleStepName>?
+}
+
 class Command {
   /// A sequence of steps run inside the calling job of the command.
   steps: Listing<Step>(!isEmpty)
@@ -539,30 +575,41 @@ class StoreArtifacts extends AbstractStep {
   destination: String?
 }
 
-typealias LogicStatement = Boolean|String|And|Or|Not|Equal|Matches
+/// Certain dynamic configuration features accept logic statements as arguments.
+///
+/// Logic statements are evaluated to boolean values at configuration compilation time, that is,
+/// before the workflow is run.
+class LogicStatement {
+  /// True if all arguments are truthy.
+  and: Listing<*LogicStatement|Boolean|String>?(onlyOneSet(List(this, or, not, equals, matches)))
 
-class And {
-  and: Listing<Boolean|String|And|Or|Not|Equal|Matches>
+  /// True if any arguments are truthy.
+  or: Listing<*LogicStatement|Boolean|String>?
+
+  /// True if the argument is not truthy.
+  not: (*LogicStatement|Boolean|String)?
+
+  /// True if all arguments evaluate to equal values.
+  equals: Listing<Boolean|String|Number>?
+
+  /// True if [value][Match.value] matches the [pattern][Match.pattern].
+  matches: Match?
 }
 
-class Or {
-  or: Listing<Boolean|String|And|Or|Not|Equal|Matches>
-}
-
-class Not {
-  not: Boolean|String|And|Or|Not|Equal|Matches
-}
-
-class Equal {
-  equals: Listing<Boolean|String|Number>
-}
-
-class Matches {
-  matches: Match
-}
+/// Tells if only one of the values is not null.
+local const function onlyOneSet(values: List<Any>): Boolean =
+  values.filter((it) -> it != null).length == 1
 
 class Match {
+  /// The value to match against
   value: String
+
+  /// A [Java regular expression](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+  /// used to test against the value.
+  ///
+  /// A full match pattern must be provided, prefix matching is not an option.
+  /// Though, it is recommended to enclose a pattern in `^` and `$` to avoid accidental partial matches.
+  @SourceCode { language = "RegExp" }
   pattern: String
 }
 

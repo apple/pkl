@@ -59,7 +59,16 @@ jobs {
       """#
   }.job
   ["deploy-snapshot"] = new DeployJob { command = "publishToSonatype" }.job
-  ["deploy-release"] = new DeployJob { command = "closeAndReleaseSonatypeStagingRepository" }.job
+  ["deploy-release"] {
+    steps {
+      new RunStep {
+        command = """
+          echo "Fake deploy! Replace me."
+          """
+      }
+    }
+  }
+//   ["deploy-release"] = new DeployJob { command = "closeAndReleaseSonatypeStagingRepository" }.job
   ["github-release"] {
     docker {
       new {
@@ -106,25 +115,23 @@ local releaseJobs = (baseJobs) {
 }
 
 workflows {
-  ["build-and-test"] {
-    jobs {
-      for (job in buildAndTestJobs) {
-        runOnBranchOnly(job)
+  ["prb"] {
+    `when` {
+      matches {
+        pattern = "^pull/\\d+(/head)?$"
+        value = "<< pipeline.git.branch >>"
       }
     }
+    jobs = buildAndTestJobs
   }
-  ["build-test-deploy-snapshot"] {
+  ["deploy-snapshot"] {
+    `when` {
+      equals { "main"; "<< pipeline.git.branch >>" }
+    }
     jobs {
-      for (job in buildAndTestJobs) {
-        runOnMainOnly(job)
-      }
+      ...buildAndTestJobs
       new {
         ["deploy-snapshot"] {
-          filters {
-            branches {
-              only = "main"
-            }
-          }
           requires = buildAndTestJobs
           context {
             "Pkl release"
@@ -133,55 +140,27 @@ workflows {
       }
     }
   }
-  ["build-test-release"] {
-    jobs {
-      for (job in releaseJobs) {
-        runOnReleaseTagOnly(job, new Listing {})
+  ["deploy-release"] {
+    `when` {
+      matches {
+        pattern = #"^\d+\.\d+\.\d+$"#
+        value = "<< pipeline.git.tag >>"
       }
+    }
+    jobs {
+      ...releaseJobs
       // do GitHub release first because we can overwrite the tag.
       // publishing to Maven Central is final.
-      runOnReleaseTagOnly("github-release", releaseJobs)
-      runOnReleaseTagOnly("deploy-release", new Listing { "github-release" })
-    }
-  }
-}
-
-local function runOnMainOnly(job: String): Mapping<String, WorkflowJob> = new {
-  [job] {
-    filters {
-      branches {
-        only = "main"
+      new {
+        ["github-release"] {
+          requires = releaseJobs
+        }
       }
-      tags {
-        ignore = "/.*/"
+      new {
+        ["deploy-release"] {
+          requires { "github-release" }
+        }
       }
     }
-  }
-}
-
-local function runOnBranchOnly(job: String): Mapping<String, WorkflowJob> = new {
-  [job] {
-    filters {
-      branches {
-        ignore = "main"
-      }
-      tags {
-        ignore = "/.*/"
-      }
-    }
-  }
-}
-
-local function runOnReleaseTagOnly(job: String, _requires: Listing<String>?): Mapping<String, WorkflowJob> = new {
-  [job] {
-    filters {
-      branches {
-        ignore = "/.*/"
-      }
-      tags {
-        only = #"/^\d+\.\d+\.\d+$/"#
-      }
-    }
-    requires = _requires
   }
 }
