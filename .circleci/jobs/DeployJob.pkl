@@ -15,10 +15,6 @@ job {
 steps {
   new CircleCI.AttachWorkspaceStep { at = "." }
   new CircleCI.RunStep {
-    command = """
-      ./gradlew \\
-        \(self.gradleArgs) \\
-        \(module.command)
-      """
+    command = "./gradlew \(self.gradleArgs) \(module.command)"
   }
 }

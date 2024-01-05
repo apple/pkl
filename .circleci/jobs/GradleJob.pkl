@@ -27,7 +27,7 @@ fixed gradleArgs = new Listing {
   when (isRelease) {
     "-DreleaseBuild=true"
   }
-}.join(" \\\n  ")
+}.join(" ")
 
 steps: Listing<CircleCI.Step>
 

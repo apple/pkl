@@ -105,17 +105,12 @@ steps {
     when (musl) {
       command = #"""
         export PATH=~/staticdeps/bin:$PATH
-        ./gradlew \
-          \#(module.gradleArgs) \
-          pkl-cli:alpineExecutableAmd64 \
-          pkl-core:testAlpineExecutableAmd64
+        ./gradlew \#(module.gradleArgs) pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         """#
     } else {
       command = #"""
         export PATH=~/staticdeps/bin:$PATH
-        ./gradlew \
-          \#(module.gradleArgs) \
-          buildNative
+        ./gradlew \#(module.gradleArgs) buildNative
         """#
     }
   }

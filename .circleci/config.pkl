@@ -97,11 +97,9 @@ local baseJobs: Listing<String> = new {
   "bench"
 }
 
-// local buildAndTestJobs: Listing<String> = (baseJobs) {
-//   ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
-// }
-
-local buildAndTestJobs: Listing = new { "bench" }
+local buildAndTestJobs: Listing<String> = (baseJobs) {
+  ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
+}
 
 local releaseJobs = (baseJobs) {
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))

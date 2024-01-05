@@ -12,9 +12,7 @@ steps {
   new CircleCI.RunStep {
     name = self.name
     command = """
-      ./gradlew \\
-        \(self.gradleArgs) \\ 
-        \(self.command)
+      ./gradlew \(self.gradleArgs) \(self.command)
       """
   }
 }
