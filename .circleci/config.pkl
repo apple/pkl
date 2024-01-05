@@ -131,7 +131,7 @@ workflows {
   }
   ["deploy-snapshot"] {
     `when` {
-      equals { "main"; "<< pipeline.git.branch >>" }
+      equal { "main"; "<< pipeline.git.branch >>" }
     }
     jobs {
       ...buildAndTestJobs

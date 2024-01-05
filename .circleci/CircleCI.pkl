@@ -581,7 +581,7 @@ class StoreArtifacts extends AbstractStep {
 /// before the workflow is run.
 class LogicStatement {
   /// True if all arguments are truthy.
-  and: Listing<*LogicStatement|Boolean|String>?(onlyOneSet(List(this, or, not, equals, matches)))
+  and: Listing<*LogicStatement|Boolean|String>?(onlyOneSet(List(this, or, not, equal, matches)))
 
   /// True if any arguments are truthy.
   or: Listing<*LogicStatement|Boolean|String>?
@@ -590,7 +590,7 @@ class LogicStatement {
   not: (*LogicStatement|Boolean|String)?
 
   /// True if all arguments evaluate to equal values.
-  equals: Listing<Boolean|String|Number>?
+  equal: Listing<Boolean|String|Number>?
 
   /// True if [value][Match.value] matches the [pattern][Match.pattern].
   matches: Match?

@@ -795,7 +795,7 @@ workflows:
         context:
         - Pkl release
     when:
-      equals:
+      equal:
       - main
       - << pipeline.git.branch >>
   deploy-release:
