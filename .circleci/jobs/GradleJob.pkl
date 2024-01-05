@@ -1,0 +1,65 @@
+open module GradleJob
+
+import "../CircleCI.pkl"
+
+/// Whether this is a release build or not.
+isRelease: Boolean = false
+
+// `org.gradle.jvmargs` in gradle.properties is overridden by CI's gradle.properties,
+// which in turn is overridden here.
+// Keep in sync with gradle.properties.
+local gradleJvmArgs =
+  "'"
+  + "-Dorg.gradle.jvmargs="
+  + "-Dfile.encoding=UTF-8 "
+  + // google-java-format requires jdk.compiler exports
+    "--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED "
+  + "--add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED "
+  + "--add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED "
+  + "--add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED "
+  + "--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+  + "'"
+
+fixed gradleArgs = new Listing {
+  "--info"
+  "--stacktrace"
+  gradleJvmArgs
+  when (isRelease) {
+    "-DreleaseBuild=true"
+  }
+}.join(" \\\n  ")
+
+steps: Listing<CircleCI.Step>
+
+job: CircleCI.Job = new {
+  environment {
+    ["LANG"] = "en_US.UTF-8"
+  }
+  steps {
+    "checkout"
+    new CircleCI.RestoreCacheStep {
+      name = "Restore Gradle Dependencies Cache"
+      key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+    }
+    ...module.steps
+    new CircleCI.SaveCacheStep {
+      name = "Save Gradle Dependencies Cache"
+      key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
+      paths {
+        "~/.gradle/caches/modules-2/files-2.1/"
+      }
+    }
+    new CircleCI.RunStep {
+      // find all test results and write them to the home dir
+      name = "Gather test results"
+      command = """
+        mkdir ~/test-results/
+        find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \\;
+        """
+      `when` = "always"
+    }
+    new CircleCI.StoreTestResults {
+      path = "~/test-results"
+    }
+  }
+}

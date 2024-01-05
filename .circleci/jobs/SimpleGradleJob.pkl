@@ -1,0 +1,26 @@
+extends "GradleJob.pkl"
+
+import "../CircleCI.pkl"
+
+local self = this
+
+name: String = command
+
+command: String
+
+steps {
+  new CircleCI.RunStep {
+    name = self.name
+    command = """
+      ./gradlew \\
+        \(self.gradleArgs) \\ 
+        \(self.command)
+      """
+  }
+}
+
+job {
+  docker {
+    new { image = "cimg/openjdk:11.0" }
+  }
+}

@@ -1,0 +1,26 @@
+module GradleCheckJob
+
+extends "GradleJob.pkl"
+
+import "../CircleCI.pkl"
+
+javaVersion: "11.0"|"17.0"
+
+steps {
+  new CircleCI.RunStep {
+    name = "gradle check"
+    command = """
+      ./gradlew \\
+        \(module.gradleArgs) \\
+        check
+      """
+  }
+}
+
+job {
+  docker {
+    new {
+      image = "cimg/openjdk:\(javaVersion)"
+    }
+  }
+}

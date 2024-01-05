@@ -1,7 +1,7 @@
 # Generated from CircleCI.pkl. DO NOT EDIT.
 version: 2.1
 jobs:
-  build-linux-amd64:
+  pkl-cli-linux-amd64-release:
     steps:
     - checkout
     - restore_cache:
@@ -70,300 +70,17 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
-        name: gradle pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      JAVA_HOME: /jdk
-      LANG: en_US.UTF-8
-    resource_class: large
-    docker:
-    - image: oraclelinux:8-slim
-  build-linux-aarch64:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - restore_cache:
-        key: staticdeps-aarch64
-        name: Restore static deps from cache
-    - run:
-        command: |-
-          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            && microdnf clean all \
-            && rm -rf /var/cache/dnf
-
-          # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
-
-          mkdir /jdk \
-            && cd /jdk \
-            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          mkdir -p ~/staticdeps/bin
-
-          cp /usr/lib/gcc/aarch64-redhat-linux/8/libstdc++.a ~/staticdeps
-
-          # install zlib
-          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
-
-            mkdir -p /tmp/dep_zlib-1.2.13 \
-            && cd /tmp/dep_zlib-1.2.13 \
-            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "zlib-1.2.13: make..." && make -s -j4 \
-            && echo "zlib-1.2.13: make install..." && make -s install \
-            && rm -rf /tmp/dep_zlib-1.2.13
-          fi
-        name: Set up environment
-        shell: '#!/bin/bash -exo pipefail'
-    - save_cache:
-        paths:
-        - ~/staticdeps
-        key: staticdeps-aarch64
-        name: Save statics deps to cache
-    - setup_remote_docker:
-        version: default
-        docker_layer_cacheing: true
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
-        name: gradle pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      JAVA_HOME: /jdk
-      LANG: en_US.UTF-8
-    resource_class: arm.large
-    docker:
-    - image: arm64v8/oraclelinux:8-slim
-  build-linux-alpine-amd64:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - restore_cache:
-        key: staticdeps-amd64
-        name: Restore static deps from cache
-    - run:
-        command: |-
-          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            && microdnf clean all \
-            && rm -rf /var/cache/dnf
-
-          # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
-
-          mkdir /jdk \
-            && cd /jdk \
-            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          mkdir -p ~/staticdeps/bin
-
-          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
-
-          # install zlib
-          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
-
-            mkdir -p /tmp/dep_zlib-1.2.13 \
-            && cd /tmp/dep_zlib-1.2.13 \
-            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "zlib-1.2.13: make..." && make -s -j4 \
-            && echo "zlib-1.2.13: make install..." && make -s install \
-            && rm -rf /tmp/dep_zlib-1.2.13
-          fi
-
-          # install musl
-          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
-
-            mkdir -p /tmp/dep_musl-1.2.2 \
-            && cd /tmp/dep_musl-1.2.2 \
-            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "musl-1.2.2: make..." && make -s -j4 \
-            && echo "musl-1.2.2: make install..." && make -s install \
-            && rm -rf /tmp/dep_musl-1.2.2
-
-            # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
-          fi
-        name: Set up environment
-        shell: '#!/bin/bash -exo pipefail'
-    - save_cache:
-        paths:
-        - ~/staticdeps
-        key: staticdeps-amd64
-        name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
-        name: gradle pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      JAVA_HOME: /jdk
-      LANG: en_US.UTF-8
-    resource_class: large
-    docker:
-    - image: oraclelinux:8-slim
-  build-macos-amd64:
-    steps:
-    - checkout
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' buildNative
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            -DreleaseBuild=true \
+            buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    macos:
-      xcode: 14.0.0
-  build-linux-amd64-release-build:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - restore_cache:
-        key: staticdeps-amd64
-        name: Restore static deps from cache
-    - run:
-        command: |-
-          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
-            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
-            && microdnf clean all \
-            && rm -rf /var/cache/dnf
-
-          # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
-
-          mkdir /jdk \
-            && cd /jdk \
-            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          mkdir -p ~/staticdeps/bin
-
-          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
-
-          # install zlib
-          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
-
-            mkdir -p /tmp/dep_zlib-1.2.13 \
-            && cd /tmp/dep_zlib-1.2.13 \
-            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "zlib-1.2.13: make..." && make -s -j4 \
-            && echo "zlib-1.2.13: make install..." && make -s install \
-            && rm -rf /tmp/dep_zlib-1.2.13
-          fi
-
-          # install musl
-          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
-
-            mkdir -p /tmp/dep_musl-1.2.2 \
-            && cd /tmp/dep_musl-1.2.2 \
-            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
-            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
-            && echo "musl-1.2.2: make..." && make -s -j4 \
-            && echo "musl-1.2.2: make install..." && make -s install \
-            && rm -rf /tmp/dep_musl-1.2.2
-
-            # native-image expects to find an executable at this path.
-            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
-          fi
-        name: Set up environment
-        shell: '#!/bin/bash -exo pipefail'
-    - save_cache:
-        paths:
-        - ~/staticdeps
-        key: staticdeps-amd64
-        name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED -DreleaseBuild=true' pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
-        name: gradle pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
     - save_cache:
         paths:
         - ~/.gradle/caches/modules-2/files-2.1/
@@ -378,12 +95,12 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
-  build-linux-aarch64-release-build:
+  pkl-cli-linux-aarch64-release:
     steps:
     - checkout
     - restore_cache:
@@ -436,8 +153,13 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED -DreleaseBuild=true' pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
-        name: gradle pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            -DreleaseBuild=true \
+            buildNative
+        name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
@@ -456,12 +178,49 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
     resource_class: arm.large
     docker:
     - image: arm64v8/oraclelinux:8-slim
-  build-linux-alpine-amd64-release-build:
+  pkl-cli-macos-amd64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            -DreleaseBuild=true \
+            buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    macos:
+      xcode: 14.0.0
+  pkl-cli-linux-alpine-amd64-release:
     steps:
     - checkout
     - restore_cache:
@@ -530,8 +289,14 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED -DreleaseBuild=true' pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
-        name: gradle pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            -DreleaseBuild=true \
+            pkl-cli:alpineExecutableAmd64 \
+            pkl-core:testAlpineExecutableAmd64
+        name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
@@ -550,23 +315,95 @@ jobs:
     - store_test_results:
         path: ~/test-results
     environment:
-      JAVA_HOME: /jdk
       LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
-  build-macos-amd64-release-build:
+  pkl-cli-linux-amd64-snapshot:
     steps:
     - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - setup_remote_docker:
+        version: 20.10.24
+        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true buildNative
-        name: gradle -DreleaseBuild=true buildNative
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            buildNative
+        name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -575,8 +412,229 @@ jobs:
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: large
+    docker:
+    - image: oraclelinux:8-slim
+  pkl-cli-linux-aarch64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-aarch64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/aarch64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-aarch64
+        name: Save statics deps to cache
+    - setup_remote_docker:
+        version: default
+        docker_layer_cacheing: true
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: arm.large
+    docker:
+    - image: arm64v8/oraclelinux:8-slim
+  pkl-cli-macos-amd64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     macos:
       xcode: 14.0.0
+  pkl-cli-linux-alpine-amd64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -L \
+           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - setup_remote_docker:
+        version: 20.10.24
+        docker_layer_cacheing: true
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            pkl-cli:alpineExecutableAmd64 \
+            pkl-core:testAlpineExecutableAmd64
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: large
+    docker:
+    - image: oraclelinux:8-slim
   gradle-check-jdk11:
     steps:
     - checkout
@@ -585,9 +643,17 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            check
         name: gradle check
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -608,9 +674,17 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            check
         name: gradle check
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -631,9 +705,17 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' jmh
-        name: gradle jmh
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \ 
+            jmh
+        name: jmh
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -642,6 +724,8 @@ jobs:
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:11.0
   gradle-compatibility:
@@ -652,9 +736,19 @@ jobs:
         name: Restore Gradle Dependencies Cache
     - run:
         command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
-        name: gradle :pkl-gradle:build :pkl-gradle:compatibilityTestReleases :pkl-gradle:compatibilityTestCandidate
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \ 
+            :pkl-gradle:build \
+            :pkl-gradle:compatibilityTestReleases \
+            :pkl-gradle:compatibilityTestCandidate
+        name: gradle compatibility
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -663,8 +757,10 @@ jobs:
         when: always
     - store_test_results:
         path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
-    - image: cimg/openjdk:17.0
+    - image: cimg/openjdk:11.0
   deploy-snapshot:
     steps:
     - checkout
@@ -675,12 +771,29 @@ jobs:
         at: '.'
     - run:
         command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' publishToSonatype
-        name: gradle publishToSonatype
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            publishToSonatype
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:11.0
-  gradle-release:
+  deploy-release:
     steps:
     - checkout
     - restore_cache:
@@ -689,7 +802,27 @@ jobs:
     - attach_workspace:
         at: '.'
     - run:
-        command: echo "TODO replace me with ./gradlew closeAndReleaseSonatypeStagingRepository"
+        command: |-
+          ./gradlew \
+            --info \
+            --stacktrace \
+            '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' \
+            closeAndReleaseSonatypeStagingRepository
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:11.0
   github-release:
@@ -718,12 +851,6 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-    - build-linux-amd64:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
     - gradle-check-jdk11:
         filters:
           branches:
@@ -736,25 +863,31 @@ workflows:
             ignore: main
           tags:
             ignore: /.*/
-    - build-linux-aarch64:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - build-linux-alpine-amd64:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - build-macos-amd64:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
     - bench:
+        filters:
+          branches:
+            ignore: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-macos-amd64-snapshot:
+        filters:
+          branches:
+            ignore: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-alpine-amd64-snapshot:
         filters:
           branches:
             ignore: main
@@ -762,12 +895,6 @@ workflows:
             ignore: /.*/
   build-test-deploy-snapshot:
     jobs:
-    - build-linux-amd64:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
     - gradle-check-jdk11:
         filters:
           branches:
@@ -780,25 +907,31 @@ workflows:
             only: main
           tags:
             ignore: /.*/
-    - build-linux-aarch64:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - build-linux-alpine-amd64:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - build-macos-amd64:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
     - bench:
+        filters:
+          branches:
+            only: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-amd64-snapshot:
+        filters:
+          branches:
+            only: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-aarch64-snapshot:
+        filters:
+          branches:
+            only: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-macos-amd64-snapshot:
+        filters:
+          branches:
+            only: main
+          tags:
+            ignore: /.*/
+    - pkl-cli-linux-alpine-amd64-snapshot:
         filters:
           branches:
             only: main
@@ -806,13 +939,13 @@ workflows:
             ignore: /.*/
     - deploy-snapshot:
         requires:
-        - build-linux-amd64
         - gradle-check-jdk11
         - gradle-check-jdk17
-        - build-linux-aarch64
-        - build-linux-alpine-amd64
-        - build-macos-amd64
         - bench
+        - pkl-cli-linux-amd64-snapshot
+        - pkl-cli-linux-aarch64-snapshot
+        - pkl-cli-macos-amd64-snapshot
+        - pkl-cli-linux-alpine-amd64-snapshot
         context:
         - Pkl release
         filters:
@@ -820,43 +953,50 @@ workflows:
             only: main
   build-test-release:
     jobs:
-    - build-linux-amd64-release-build:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - build-linux-aarch64-release-build:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - build-linux-alpine-amd64-release-build:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
-    - build-macos-amd64-release-build:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^\d+\.\d+\.\d+$/
     - gradle-check-jdk11:
+        requires: []
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^\d+\.\d+\.\d+$/
     - gradle-check-jdk17:
+        requires: []
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^\d+\.\d+\.\d+$/
     - bench:
+        requires: []
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - pkl-cli-linux-amd64-release:
+        requires: []
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - pkl-cli-linux-aarch64-release:
+        requires: []
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - pkl-cli-macos-amd64-release:
+        requires: []
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-release:
+        requires: []
         filters:
           branches:
             ignore: /.*/
@@ -864,19 +1004,19 @@ workflows:
             only: /^\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - build-linux-amd64-release-build
-        - build-linux-aarch64-release-build
-        - build-linux-alpine-amd64-release-build
-        - build-macos-amd64-release-build
         - gradle-check-jdk11
         - gradle-check-jdk17
         - bench
+        - pkl-cli-linux-amd64-release
+        - pkl-cli-linux-aarch64-release
+        - pkl-cli-macos-amd64-release
+        - pkl-cli-linux-alpine-amd64-release
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^\d+\.\d+\.\d+$/
-    - gradle-release:
+    - deploy-release:
         requires:
         - github-release
         filters:
