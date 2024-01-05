@@ -51,7 +51,7 @@ jobs {
   for (jobName, job in gradleCheckJobs) {
     [jobName] = job.job
   }
-  ["bench"] = new SimpleGradleJob { command = "jmh" }.job
+  ["bench"] = new SimpleGradleJob { command = "bench:jmh" }.job
   ["gradle-compatibility"] = new SimpleGradleJob {
     name = "gradle compatibility"
     command = #"""
