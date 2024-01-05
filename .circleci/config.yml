@@ -851,43 +851,7 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
     - bench:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-amd64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-aarch64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-macos-amd64-snapshot:
-        filters:
-          branches:
-            ignore: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-alpine-amd64-snapshot:
         filters:
           branches:
             ignore: main
@@ -895,43 +859,7 @@ workflows:
             ignore: /.*/
   build-test-deploy-snapshot:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
     - bench:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-amd64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-aarch64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-macos-amd64-snapshot:
-        filters:
-          branches:
-            only: main
-          tags:
-            ignore: /.*/
-    - pkl-cli-linux-alpine-amd64-snapshot:
         filters:
           branches:
             only: main
@@ -939,13 +867,7 @@ workflows:
             ignore: /.*/
     - deploy-snapshot:
         requires:
-        - gradle-check-jdk11
-        - gradle-check-jdk17
         - bench
-        - pkl-cli-linux-amd64-snapshot
-        - pkl-cli-linux-aarch64-snapshot
-        - pkl-cli-macos-amd64-snapshot
-        - pkl-cli-linux-alpine-amd64-snapshot
         context:
         - Pkl release
         filters:

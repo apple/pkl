@@ -1,6 +1,4 @@
-// CircleCI build file.
-// This file needs to be rendered to `.circleci/config.yml`
-// or it won't do anything.
+// File gets rendered to .circleci/config.yml via git hook. 
 amends "CircleCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
@@ -99,9 +97,11 @@ local baseJobs: Listing<String> = new {
   "bench"
 }
 
-local buildAndTestJobs: Listing<String> = (baseJobs) {
-  ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
-}
+// local buildAndTestJobs: Listing<String> = (baseJobs) {
+//   ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
+// }
+
+local buildAndTestJobs: Listing = new { "bench" }
 
 local releaseJobs = (baseJobs) {
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))
