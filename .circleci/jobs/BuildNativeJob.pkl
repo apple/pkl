@@ -1,6 +1,4 @@
 /// Builds the native `pkl` CLI
-module BuildNativeJob
-
 extends "GradleJob.pkl"
 
 import "../CircleCI.pkl"

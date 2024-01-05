@@ -1,4 +1,4 @@
-open module GradleJob
+abstract module GradleJob
 
 import "../CircleCI.pkl"
 

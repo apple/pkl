@@ -1,5 +1,3 @@
-module GradleCheckJob
-
 extends "GradleJob.pkl"
 
 import "../CircleCI.pkl"

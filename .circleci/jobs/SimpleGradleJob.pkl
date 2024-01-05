@@ -2,17 +2,15 @@ extends "GradleJob.pkl"
 
 import "../CircleCI.pkl"
 
-local self = this
-
 name: String = command
 
 command: String
 
 steps {
   new CircleCI.RunStep {
-    name = self.name
+    name = module.name
     command = """
-      ./gradlew \(self.gradleArgs) \(self.command)
+      ./gradlew \(module.gradleArgs) \(module.command)
       """
   }
 }
