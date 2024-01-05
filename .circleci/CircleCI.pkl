@@ -119,7 +119,7 @@ class Job {
   resource_class: ResourceClass?
 
   /// Options for [docker executor](https://circleci.com/docs/configuration-reference/#docker)
-  docker: Listing<DockerImage>(!isEmpty)?
+  docker: Listing<DockerImage>(!isEmpty)?(onlyOneSet(List(this, macos, machine)))
 
   /// CircleCI supports running jobs on macOS, to allow you to build, test, and deploy apps for
   /// macOS, iOS, tvOS and watchOS.

@@ -735,6 +735,8 @@ jobs:
     steps:
     - run:
         command: echo "Fake deploy! Replace me."
+    docker:
+    - image: cimg/openjdk:17.0
   github-release:
     steps:
     - attach_workspace:

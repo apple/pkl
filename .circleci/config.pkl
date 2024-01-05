@@ -60,6 +60,11 @@ jobs {
   }.job
   ["deploy-snapshot"] = new DeployJob { command = "publishToSonatype" }.job
   ["deploy-release"] {
+    docker {
+      new {
+        image = "cimg/openjdk:17.0"
+      }
+    }
     steps {
       new RunStep {
         command = """
