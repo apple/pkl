@@ -102,17 +102,15 @@ steps {
   }
   new CircleCI.RunStep {
     name = "gradle buildNative"
-    when (musl) {
-      command = #"""
-        export PATH=~/staticdeps/bin:$PATH
-        ./gradlew \#(module.gradleArgs) pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
-        """#
-    } else {
-      command = #"""
-        export PATH=~/staticdeps/bin:$PATH
-        ./gradlew \#(module.gradleArgs) buildNative
-        """#
-    }
+    local _os =
+      if (os == "macOS") "mac"
+      else if (musl) "alpine"
+      else "linux"
+    local jobName = "\(_os)Executable\(arch.capitalize())"
+    command = #"""
+      export PATH=~/staticdeps/bin:$PATH
+      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-cli:test\#(jobName.capitalize())
+      """#
   }
   new CircleCI.PersistToWorkspaceStep {
     root = "."
