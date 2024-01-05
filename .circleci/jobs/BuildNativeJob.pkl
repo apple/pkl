@@ -109,7 +109,7 @@ steps {
     local jobName = "\(_os)Executable\(arch.capitalize())"
     command = #"""
       export PATH=~/staticdeps/bin:$PATH
-      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-cli:test\#(jobName.capitalize())
+      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize())
       """#
   }
   new CircleCI.PersistToWorkspaceStep {
