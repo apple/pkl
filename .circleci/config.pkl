@@ -73,7 +73,8 @@ jobs {
       }
     }
   }
-//   ["deploy-release"] = new DeployJob { command = "closeAndReleaseSonatypeStagingRepository" }.job
+  // TODO enable this and delete the dummy one
+  // ["deploy-release"] = new DeployJob { command = "closeAndReleaseSonatypeStagingRepository" }.job
   ["github-release"] {
     docker {
       new {
@@ -138,9 +139,7 @@ workflows {
       new {
         ["deploy-snapshot"] {
           requires = buildAndTestJobs
-          context {
-            "Pkl release"
-          }
+          context { "Pkl release" }
         }
       }
     }
@@ -164,6 +163,7 @@ workflows {
       new {
         ["deploy-release"] {
           requires { "github-release" }
+          context { "Pkl release" }
         }
       }
     }

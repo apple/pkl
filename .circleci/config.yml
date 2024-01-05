@@ -819,6 +819,8 @@ workflows:
     - deploy-release:
         requires:
         - github-release
+        context:
+        - Pkl release
     when:
       matches:
         value: << pipeline.git.tag >>
