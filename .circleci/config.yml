@@ -1,5 +1,7 @@
 # Generated from CircleCI.pkl. DO NOT EDIT.
 version: 2.1
+orbs:
+  pr-approval: pkl-lang/pr-approval@dev:first
 jobs:
   pkl-cli-linux-amd64-release:
     steps:
@@ -763,13 +765,38 @@ jobs:
 workflows:
   prb:
     jobs:
-    - gradle-check-jdk11
-    - gradle-check-jdk17
-    - bench
-    - pkl-cli-linux-amd64-snapshot
-    - pkl-cli-linux-aarch64-snapshot
-    - pkl-cli-macos-amd64-snapshot
-    - pkl-cli-linux-alpine-amd64-snapshot
+    - hold:
+        type: approval
+    - pr-approval/authenticate:
+        context: job-approval
+    - gradle-check-jdk11:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - gradle-check-jdk17:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - bench:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - pkl-cli-linux-amd64-snapshot:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - pkl-cli-linux-aarch64-snapshot:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - pkl-cli-macos-amd64-snapshot:
+        requires:
+        - hold
+        - pr-approval/authenticate
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+        - pr-approval/authenticate
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -792,8 +819,7 @@ workflows:
         - pkl-cli-linux-aarch64-snapshot
         - pkl-cli-macos-amd64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
-        context:
-        - Pkl release
+        context: Pkl release
     when:
       equal:
       - main
@@ -819,8 +845,7 @@ workflows:
     - deploy-release:
         requires:
         - github-release
-        context:
-        - Pkl release
+        context: Pkl release
     when:
       matches:
         value: << pipeline.git.tag >>

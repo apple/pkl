@@ -42,6 +42,10 @@ local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
   }
 }
 
+orbs {
+  ["pr-approval"] = "pkl-lang/pr-approval@dev:first"
+}
+
 jobs {
   for (jobName, job in buildNativeJobs) {
     [jobName] = job.job
@@ -128,7 +132,25 @@ workflows {
         value = "<< pipeline.git.branch >>"
       }
     }
-    jobs = buildAndTestJobs
+    jobs {
+      new {
+        ["hold"] {
+          type = "approval"
+        }
+      }
+      new {
+        ["pr-approval/authenticate"] {
+          context = "job-approval"
+        }
+      }
+      for (job in buildAndTestJobs) {
+        new {
+          [job] {
+            requires { "hold"; "pr-approval/authenticate" }
+          }
+        }
+      }
+    }
   }
   ["deploy-snapshot"] {
     `when` {
@@ -139,7 +161,7 @@ workflows {
       new {
         ["deploy-snapshot"] {
           requires = buildAndTestJobs
-          context { "Pkl release" }
+          context = "Pkl release"
         }
       }
     }
@@ -163,7 +185,7 @@ workflows {
       new {
         ["deploy-release"] {
           requires { "github-release" }
-          context { "Pkl release" }
+          context = "Pkl release"
         }
       }
     }
