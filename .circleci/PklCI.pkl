@@ -1,6 +1,12 @@
 /// CI job template specifically for Pkl.
 module PklCI
+
 import "CircleCI.pkl"
+import "pkl:reflect"
+
+local projectName =
+  let (moduleUri = reflect.Module(module).uri)
+    moduleUri.split("/").dropLast(2).last
 
 /// The jobs required by this build
 jobs: Mapping<String, CircleCI.Job>
@@ -29,19 +35,22 @@ circleCi: CircleCI = new {
           value = "<< pipeline.git.branch >>"
         }
       }
-      jobs = new {
-        new {
-          ["hold"] {
-            type = "approval"
+      // TODO: add approval flow for every project
+      when (projectName == "pkl") {
+        jobs = new {
+          new {
+            ["hold"] {
+              type = "approval"
+            }
           }
-        }
-        new {
-          ["pr-approval/authenticate"] {
-            context = "job-approval"
+          new {
+            ["pr-approval/authenticate"] {
+              context = "job-approval"
+            }
           }
-        }
-        for (job in super.jobs) {
-          job |> requireApproval
+          for (job in prb.jobs) {
+            job |> requireApproval
+          }
         }
       }
     }
@@ -121,3 +130,7 @@ typealias SetupRemoteDockerStep = CircleCI.SetupRemoteDockerStep
 typealias UnlessStep = CircleCI.UnlessStep
 typealias WhenStep = CircleCI.WhenStep
 typealias LogicStatement = CircleCI.LogicStatement
+typealias Job = CircleCI.Job
+typealias JobFilters = CircleCI.JobFilters
+typealias Workflow = CircleCI.Workflow
+typealias WorkflowJob = CircleCI.WorkflowJob
