@@ -1,12 +1,45 @@
 // File gets rendered to .circleci/config.yml via git hook. 
-amends "CircleCI.pkl"
+amends "PklCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
 import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-version = 2.1
+prb {
+  jobs = buildAndTestJobs
+}
+
+main {
+  jobs {
+    ...buildAndTestJobs
+    new {
+      ["deploy-snapshot"] {
+        requires = buildAndTestJobs
+        context = "Pkl release"
+      }
+    }
+  }
+}
+
+release {
+  jobs {
+    ...releaseJobs
+    // do GitHub release first because we can overwrite the tag.
+    // publishing to Maven Central is final.
+    new {
+      ["github-release"] {
+        requires = releaseJobs
+      }
+    }
+    new {
+      ["deploy-release"] {
+        requires { "github-release" }
+        context = "Pkl release"
+      }
+    }
+  }
+}
 
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
   for (_dist in List("release", "snapshot")) {
@@ -40,10 +73,6 @@ local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
     javaVersion = "17.0"
     isRelease = false
   }
-}
-
-orbs {
-  ["pr-approval"] = "pkl-lang/pr-approval@dev:first"
 }
 
 jobs {
@@ -116,78 +145,10 @@ local baseJobs: Listing<String> = new {
   "bench"
 }
 
-local buildAndTestJobs: Listing<String> = (baseJobs) {
+local buildAndTestJobs = (baseJobs) {
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
 }
 
 local releaseJobs = (baseJobs) {
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))
-}
-
-workflows {
-  ["prb"] {
-    `when` {
-      matches {
-        pattern = "^pull/\\d+(/head)?$"
-        value = "<< pipeline.git.branch >>"
-      }
-    }
-    jobs {
-      new {
-        ["hold"] {
-          type = "approval"
-        }
-      }
-      new {
-        ["pr-approval/authenticate"] {
-          context = "job-approval"
-        }
-      }
-      for (job in buildAndTestJobs) {
-        new {
-          [job] {
-            requires { "hold"; "pr-approval/authenticate" }
-          }
-        }
-      }
-    }
-  }
-  ["deploy-snapshot"] {
-    `when` {
-      equal { "main"; "<< pipeline.git.branch >>" }
-    }
-    jobs {
-      ...buildAndTestJobs
-      new {
-        ["deploy-snapshot"] {
-          requires = buildAndTestJobs
-          context = "Pkl release"
-        }
-      }
-    }
-  }
-  ["deploy-release"] {
-    `when` {
-      matches {
-        pattern = #"^\d+\.\d+\.\d+$"#
-        value = "<< pipeline.git.tag >>"
-      }
-    }
-    jobs {
-      ...releaseJobs
-      // do GitHub release first because we can overwrite the tag.
-      // publishing to Maven Central is final.
-      new {
-        ["github-release"] {
-          requires = releaseJobs
-        }
-      }
-      new {
-        ["deploy-release"] {
-          requires { "github-release" }
-          context = "Pkl release"
-        }
-      }
-    }
-  }
 }

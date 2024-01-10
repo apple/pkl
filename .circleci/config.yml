@@ -801,7 +801,7 @@ workflows:
       matches:
         value: << pipeline.git.branch >>
         pattern: ^pull/\d+(/head)?$
-  deploy-snapshot:
+  main:
     jobs:
     - gradle-check-jdk11
     - gradle-check-jdk17
@@ -824,15 +824,50 @@ workflows:
       equal:
       - main
       - << pipeline.git.branch >>
-  deploy-release:
+  release:
     jobs:
-    - gradle-check-jdk11
-    - gradle-check-jdk17
-    - bench
-    - pkl-cli-linux-amd64-release
-    - pkl-cli-linux-aarch64-release
-    - pkl-cli-macos-amd64-release
-    - pkl-cli-linux-alpine-amd64-release
+    - gradle-check-jdk11:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - gradle-check-jdk17:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - bench:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-aarch64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macos-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
         - gradle-check-jdk11
@@ -842,11 +877,17 @@ workflows:
         - pkl-cli-linux-aarch64-release
         - pkl-cli-macos-amd64-release
         - pkl-cli-linux-alpine-amd64-release
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - deploy-release:
         requires:
         - github-release
         context: Pkl release
-    when:
-      matches:
-        value: << pipeline.git.tag >>
-        pattern: ^\d+\.\d+\.\d+$
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/

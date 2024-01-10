@@ -1,0 +1,123 @@
+/// CI job template specifically for Pkl.
+module PklCI
+import "CircleCI.pkl"
+
+/// The jobs required by this build
+jobs: Mapping<String, CircleCI.Job>
+
+/// The workflow to run for pull request builds.
+prb: CircleCI.Workflow
+
+/// The workflow to run for commits on the main branch
+main: CircleCI.Workflow
+
+/// The workflow to run for tags that match a semver.
+release: CircleCI.Workflow
+
+/// The CircleCI output.
+circleCi: CircleCI = new {
+  version = 2.1
+  orbs {
+    ["pr-approval"] = "pkl-lang/pr-approval@dev:first"
+  }
+  jobs = module.jobs
+  workflows {
+    ["prb"] = (prb) {
+      `when` {
+        matches {
+          pattern = "^pull/\\d+(/head)?$"
+          value = "<< pipeline.git.branch >>"
+        }
+      }
+      jobs = new {
+        new {
+          ["hold"] {
+            type = "approval"
+          }
+        }
+        new {
+          ["pr-approval/authenticate"] {
+            context = "job-approval"
+          }
+        }
+        for (job in super.jobs) {
+          job |> requireApproval
+        }
+      }
+    }
+    ["main"] = (main) {
+      `when` {
+        equal {
+          "main"
+          CircleCI.pipelineValues.`pipeline.git.branch`
+        }
+      }
+    }
+    ["release"] = (release) {
+      // Can't use `when` for building on tags.
+      // See: https://discuss.circleci.com/t/cant-trigger-workflow-on-git-tag-push-using-when-condition/43252
+      jobs = super.jobs |> runOnTag
+    }
+  }
+}
+
+local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) ->
+  new Listing<*Mapping<String, CircleCI.WorkflowJob>|String> {
+    for (job in jobs) {
+      when (job is String) {
+        new {
+          [job] {
+            filters {
+              tags {
+                only = #"/^v?\d+\.\d+\.\d+$/"#
+              }
+              branches {
+                ignore = "/.*/"
+              }
+            }
+          }
+        }
+      } else {
+        (job) {
+          [job.keys.first] {
+            filters {
+              tags {
+                only = #"/^v?\d+\.\d+\.\d+$/"#
+              }
+              branches {
+                ignore = "/.*/"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+local requireApproval = (it: String|Mapping<String, CircleCI.WorkflowJob>) ->
+  if (it is String)
+    new Mapping<String, CircleCI.WorkflowJob> {
+      [it] {
+        requires { "hold"; "pr-approval/authenticate" }
+      }
+    }
+  else
+    (it) {
+      [it.keys.first] {
+        requires { "hold"; "pr-approval/authenticate" }
+      }
+    }
+
+output = circleCi.output
+
+// re-export types so they are available without qualification
+typealias StoreTestResults = CircleCI.StoreTestResults
+typealias SaveCacheStep = CircleCI.SaveCacheStep
+typealias AttachWorkspaceStep = CircleCI.AttachWorkspaceStep
+typealias RunStep = CircleCI.RunStep
+typealias PersistToWorkspaceStep = CircleCI.PersistToWorkspaceStep
+typealias RestoreCacheStep = CircleCI.RestoreCacheStep
+typealias SetupRemoteDockerStep = CircleCI.SetupRemoteDockerStep
+typealias UnlessStep = CircleCI.UnlessStep
+typealias WhenStep = CircleCI.WhenStep
+typealias LogicStatement = CircleCI.LogicStatement

@@ -37,13 +37,6 @@ jobs: Mapping<String, Job>?
 /// For more information, see the
 /// [Using Workflows to Orchestrate Jobs](https://circleci.com/docs/workflows/) page.
 workflows: Mapping<String, Workflow>?
-// 
-// local hasValidJobNames = (workflow: Workflow) ->
-//   workflow.jobs.toList().every((job) ->
-//     let (jobName = if (job is String) job else job.keys.first)
-//       if (job is Mapping && trace(job[jobName].type) == "approval") true
-//       else jobs.containsKey(jobName)
-//   )
 
 /// Pipeline parameters declared for use in the configuration.
 ///
@@ -103,7 +96,7 @@ class Job {
   /// A map of environment variable names and values.
   environment: Mapping<String, String>?
 
-  /// The [resource_class] feature allows you to configure CPU and RAM resources for each job.
+  /// The [resource_class](https://circleci.com/docs/resource-class-overview/) feature allows you to configure CPU and RAM resources for each job.
   ///
   /// Resource classes are available for each execution environment, as described in the tables below.
   ///
@@ -344,6 +337,10 @@ typealias SimpleStepName = "checkout"|"setup_remote_docker"|"add_ssh_keyes"|Stri
 
 local abstract class AbstractStep {
   fixed hidden __name__: String
+}
+
+function run(_command: String): RunStep = new {
+  command = _command
 }
 
 /// Used for invoking all command-line programs.
@@ -617,6 +614,88 @@ class Match {
 typealias CalledCommand = Mapping<String, CommandCall>(length == 1)
 
 typealias CommandCall = Mapping<String, String|Number|Boolean>
+
+class PipelineValues {
+  /// A globally unique id representing for the pipeline.
+  ///
+  /// Type: string
+  `pipeline.id`: "<< pipeline.id >>"
+
+  /// A project unique integer id for the pipeline.
+  ///
+  /// Type: integer
+  `pipeline.number`: "<< pipeline.number >>"
+
+  /// The URL where the current project is hosted.
+  ///
+  /// For example, `https://github.com/circleci/circleci-docs`.
+  `pipeline.project.git_url`: "<< pipeline.project.git_url >>"
+  `pipeline.project.type`: "<< pipeline.project.type >>"
+  `pipeline.git.tag`: "<< pipeline.git.tag >>"
+  `pipeline.git.branch`: "<< pipeline.git.branch >>"
+  `pipeline.git.revision`: "<< pipeline.git.revision >>"
+  `pipeline.git.base_revision`: "<< pipeline.git.base_revision >>"
+  `pipeline.in_setup`: "<< pipeline.in_setup >>"
+  `pipeline.trigger_source`: "<< pipeline.trigger_source >>"
+  `pipeline.schedule.name`: "<< pipeline.schedule.name >>"
+  `pipeline.schedule.id`: "<< pipeline.schedule.id >>"
+  `pipeline.trigger_parameters.circleci.trigger_type`: "<< pipeline.trigger_parameters.circleci.trigger_type >>"
+  `pipeline.trigger_parameters.circleci.event_time`: "<< pipeline.trigger_parameters.circleci.event_time >>"
+  `pipeline.trigger_parameters.circleci.event_type`: "<< pipeline.trigger_parameters.circleci.event_type >>"
+  `pipeline.trigger_parameters.circleci.project_id`: "<< pipeline.trigger_parameters.circleci.project_id >>"
+  `pipeline.trigger_parameters.circleci.actor_id`: "<< pipeline.trigger_parameters.circleci.actor_id >>"
+  `pipeline.trigger_parameters.gitlab.type`: "<< pipeline.trigger_parameters.gitlab.type >>"
+  `pipeline.trigger_parameters.github_app.type`: "<< pipeline.trigger_parameters.github_app.type >>"
+  `pipeline.trigger_parameters.gitlab.project_id`: "<< pipeline.trigger_parameters.gitlab.project_id >>"
+  `pipeline.trigger_parameters.github_app.project_id`: "<< pipeline.trigger_parameters.github_app.project_id >>"
+  `pipeline.trigger_parameters.gitlab.ref`: "<< pipeline.trigger_parameters.gitlab.ref >>"
+  `pipeline.trigger_parameters.github_app.ref`: "<< pipeline.trigger_parameters.github_app.ref >>"
+  `pipeline.trigger_parameters.gitlab.checkout_sha`: "<< pipeline.trigger_parameters.gitlab.checkout_sha >>"
+  `pipeline.trigger_parameters.github_app.checkout_sha`: "<< pipeline.trigger_parameters.github_app.checkout_sha >>"
+  `pipeline.trigger_parameters.gitlab.user_id`: "<< pipeline.trigger_parameters.gitlab.user_id >>"
+  `pipeline.trigger_parameters.github_app.user_id`: "<< pipeline.trigger_parameters.github_app.user_id >>"
+  `pipeline.trigger_parameters.gitlab.user_name`: "<< pipeline.trigger_parameters.gitlab.user_name >>"
+  `pipeline.trigger_parameters.github_app.user_name`: "<< pipeline.trigger_parameters.github_app.user_name >>"
+  `pipeline.trigger_parameters.gitlab.user_username`: "<< pipeline.trigger_parameters.gitlab.user_username >>"
+  `pipeline.trigger_parameters.github_app.user_username`: "<< pipeline.trigger_parameters.github_app.user_username >>"
+  `pipeline.trigger_parameters.gitlab.user_avatar`: "<< pipeline.trigger_parameters.gitlab.user_avatar >>"
+  `pipeline.trigger_parameters.github_app.user_avatar`: "<< pipeline.trigger_parameters.github_app.user_avatar >>"
+  `pipeline.trigger_parameters.gitlab.repo_name`: "<< pipeline.trigger_parameters.gitlab.repo_name >>"
+  `pipeline.trigger_parameters.github_app.repo_name`: "<< pipeline.trigger_parameters.github_app.repo_name >>"
+  `pipeline.trigger_parameters.gitlab.repo_url`: "<< pipeline.trigger_parameters.gitlab.repo_url >>"
+  `pipeline.trigger_parameters.github_app.repo_url`: "<< pipeline.trigger_parameters.github_app.repo_url >>"
+  `pipeline.trigger_parameters.gitlab.web_url`: "<< pipeline.trigger_parameters.gitlab.web_url >>"
+  `pipeline.trigger_parameters.github_app.web_url`: "<< pipeline.trigger_parameters.github_app.web_url >>"
+  `pipeline.trigger_parameters.gitlab.commit_sha`: "<< pipeline.trigger_parameters.gitlab.commit_sha >>"
+  `pipeline.trigger_parameters.github_app.commit_sha`: "<< pipeline.trigger_parameters.github_app.commit_sha >>"
+  `pipeline.trigger_parameters.gitlab.commit_title`: "<< pipeline.trigger_parameters.gitlab.commit_title >>"
+  `pipeline.trigger_parameters.github_app.commit_title`: "<< pipeline.trigger_parameters.github_app.commit_title >>"
+  `pipeline.trigger_parameters.gitlab.commit_message`: "<< pipeline.trigger_parameters.gitlab.commit_message >>"
+  `pipeline.trigger_parameters.github_app.commit_message`: "<< pipeline.trigger_parameters.github_app.commit_message >>"
+  `pipeline.trigger_parameters.gitlab.commit_timestamp`: "<< pipeline.trigger_parameters.gitlab.commit_timestamp >>"
+  `pipeline.trigger_parameters.github_app.commit_timestamp`: "<< pipeline.trigger_parameters.github_app.commit_timestamp >>"
+  `pipeline.trigger_parameters.gitlab.commit_author_name`: "<< pipeline.trigger_parameters.gitlab.commit_author_name >>"
+  `pipeline.trigger_parameters.github_app.commit_author_name`: "<< pipeline.trigger_parameters.github_app.commit_author_name >>"
+  `pipeline.trigger_parameters.gitlab.commit_author_email`: "<< pipeline.trigger_parameters.gitlab.commit_author_email >>"
+  `pipeline.trigger_parameters.github_app.commit_author_email`: "<< pipeline.trigger_parameters.github_app.commit_author_email >>"
+  `pipeline.trigger_parameters.gitlab.total_commits_count`: "<< pipeline.trigger_parameters.gitlab.total_commits_count >>"
+  `pipeline.trigger_parameters.github_app.total_commits_count`: "<< pipeline.trigger_parameters.github_app.total_commits_count >>"
+  `pipeline.trigger_parameters.gitlab.branch`: "<< pipeline.trigger_parameters.gitlab.branch >>"
+  `pipeline.trigger_parameters.github_app.branch`: "<< pipeline.trigger_parameters.github_app.branch >>"
+  `pipeline.trigger_parameters.gitlab.default_branch`: "<< pipeline.trigger_parameters.gitlab.default_branch >>"
+  `pipeline.trigger_parameters.github_app.default_branch`: "<< pipeline.trigger_parameters.github_app.default_branch >>"
+  `pipeline.trigger_parameters.gitlab.x_gitlab_event_id`: "<< pipeline.trigger_parameters.gitlab.x_gitlab_event_id >>"
+  `pipeline.trigger_parameters.gitlab.is_fork_merge_request`: "<< pipeline.trigger_parameters.gitlab.is_fork_merge_request >>"
+}
+
+/// Pipeline values are available to all pipeline configurations and can be used without previous
+/// declaration.
+///
+/// For a full list of values and built-in environment variables, see the
+/// [Project values and variables guide](https://circleci.com/docs/variables/).
+///
+/// For more reference: <https://circleci.com/docs/pipeline-variables/#pipeline-values>
+hidden pipelineValues: PipelineValues
 
 output {
   text = "# Generated from CircleCI.pkl. DO NOT EDIT.\n" + super.text
