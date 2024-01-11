@@ -18,7 +18,9 @@ prb: CircleCI.Workflow
 main: CircleCI.Workflow
 
 /// The workflow to run for tags that match a semver.
-release: CircleCI.Workflow
+///
+/// If [null], this workflow is omitted.
+release: CircleCI.Workflow?
 
 /// The CircleCI output.
 circleCi: CircleCI = new {
@@ -62,10 +64,12 @@ circleCi: CircleCI = new {
         }
       }
     }
-    ["release"] = (release) {
-      // Can't use `when` for building on tags.
-      // See: https://discuss.circleci.com/t/cant-trigger-workflow-on-git-tag-push-using-when-condition/43252
-      jobs = super.jobs |> runOnTag
+    when (release != null) {
+      ["release"] = (release) {
+        // Can't use `when` for building on tags.
+        // See: https://discuss.circleci.com/t/cant-trigger-workflow-on-git-tag-push-using-when-condition/43252
+        jobs = super.jobs |> runOnTag
+      }
     }
   }
 }
