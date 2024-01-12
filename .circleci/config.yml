@@ -599,58 +599,6 @@ jobs:
     resource_class: large
     docker:
     - image: oraclelinux:8-slim
-  gradle-check-jdk11:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
-        name: gradle check
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    docker:
-    - image: cimg/openjdk:11.0
-  gradle-check-jdk17:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' check
-        name: gradle check
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    docker:
-    - image: cimg/openjdk:17.0
   bench:
     steps:
     - checkout
@@ -745,23 +693,17 @@ jobs:
         at: '.'
     - run:
         command: |-
-          mkdir release-artifacts
-          cp pkl-cli/build/executable/jpkl release-artifacts
-          cp pkl-cli/build/executable/pkl-macos-amd64 release-artifacts
-          cp pkl-cli/build/executable/pkl-linux-amd64 release-artifacts
-          cp pkl-cli/build/executable/pkl-linux-aarch64 release-artifacts
-          cp pkl-cli/build/executable/pkl-alpine-linux-amd64 release-artifacts
-
-          ghr \
-            -t ${GITHUB_TOKEN} \
-            -u ${CIRCLE_PROJECT_USERNAME} \
-            -r ${CIRCLE_PROJECT_REPONAME} \
-            -c ${CIRCLE_SHA1} \
-            ${CIRCLE_TAG}
-            ./release-artifacts/
+          export GH_TOKEN="${GITHUB_TOKEN}"
+          gh release create "${CIRCLE_TAG}" \
+            --title "${CIRCLE_TAG}" \
+            --target "${CIRCLE_SHA1}" \
+            --verify-tag \
+            --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${VERSION}" \
+            --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
+            pkl-cli/build/executable/*
         name: Publish release on GitHub
     docker:
-    - image: cibuilds/github:0.10
+    - image: maniator/gh:v2.40.1
 workflows:
   prb:
     jobs:
