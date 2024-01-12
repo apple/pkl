@@ -793,6 +793,7 @@ workflows:
         - pkl-cli-linux-aarch64-release
         - pkl-cli-macos-amd64-release
         - pkl-cli-linux-alpine-amd64-release
+        context: Pkl release
         filters:
           branches:
             ignore: /.*/

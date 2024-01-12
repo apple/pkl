@@ -30,6 +30,7 @@ release {
     new {
       ["github-release"] {
         requires = releaseJobs
+        context = "Pkl release"
       }
     }
     new {
