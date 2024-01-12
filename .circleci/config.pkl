@@ -134,8 +134,7 @@ jobs {
 }
 
 local baseJobs: Listing<String> = new {
-  "gradle-check-jdk11"
-  "gradle-check-jdk17"
+  ...gradleCheckJobs.keys
   "bench"
 }
 

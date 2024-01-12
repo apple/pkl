@@ -711,14 +711,6 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: job-approval
-    - gradle-check-jdk11:
-        requires:
-        - hold
-        - pr-approval/authenticate
-    - gradle-check-jdk17:
-        requires:
-        - hold
-        - pr-approval/authenticate
     - bench:
         requires:
         - hold
@@ -745,8 +737,6 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - gradle-check-jdk11
-    - gradle-check-jdk17
     - bench
     - pkl-cli-linux-amd64-snapshot
     - pkl-cli-linux-aarch64-snapshot
@@ -754,8 +744,6 @@ workflows:
     - pkl-cli-linux-alpine-amd64-snapshot
     - deploy-snapshot:
         requires:
-        - gradle-check-jdk11
-        - gradle-check-jdk17
         - bench
         - pkl-cli-linux-amd64-snapshot
         - pkl-cli-linux-aarch64-snapshot
@@ -768,18 +756,6 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
     - bench:
         filters:
           branches:
@@ -812,8 +788,6 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - gradle-check-jdk11
-        - gradle-check-jdk17
         - bench
         - pkl-cli-linux-amd64-release
         - pkl-cli-linux-aarch64-release
