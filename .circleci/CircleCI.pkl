@@ -243,7 +243,7 @@ class ScheduleTriggerFilterBranches {
 
 class Workflow {
   /// A job can have the keys `requires`, `name`, `context`, `type`, and `filters`.
-  jobs: Listing<*Mapping<String, WorkflowJob>(!isEmpty)|String>
+  jobs: Listing<*Mapping<String, WorkflowJob>(length == 1)|String>(!isEmpty)
 
   /// Specifies which triggers will cause this workflow to be executed.
   ///
@@ -351,7 +351,7 @@ class RunStep extends AbstractStep {
   fixed hidden __name__ = "run"
 
   /// Command to run via the shell
-  command: String
+  command: String(!isEmpty)
 
   /// Title of the step to be shown in the CircleCI UI (default: full [command])
   name: String?
