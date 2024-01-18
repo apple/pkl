@@ -81,7 +81,7 @@ class EvaluateExpressionTest {
       """import("pkl:release").current.documentation.homepage"""
     )
 
-    assertThat(result as String).startsWith("https://pkl.apple.com/")
+    assertThat(result as String).startsWith("https://pkl-lang.org/")
   }
 
   @Test

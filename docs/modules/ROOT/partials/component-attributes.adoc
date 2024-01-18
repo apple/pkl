@@ -35,7 +35,7 @@ endif::[]
 ifdef::is-release-version[]
 :symbolic-version-name: current
 endif::[]
-:uri-pkl-docs-base: https://pkl.apple.com/package-docs
+:uri-pkl-docs-base: https://pkl-lang.org/package-docs
 :uri-pkl-stdlib-docs-base: {uri-pkl-docs-base}/pkl
 :uri-pkl-stdlib-docs: {uri-pkl-stdlib-docs-base}/{pkl-version}
 :uri-pkl-stdlib-docs-index: {uri-pkl-stdlib-docs}/

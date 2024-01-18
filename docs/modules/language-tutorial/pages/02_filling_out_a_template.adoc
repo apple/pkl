@@ -339,7 +339,7 @@ at pkl.base#Module.output.text (https://github.com/pkl-lang/pkl/blob/e4d8c882d/s
 <6> What Pkl evaluated to discover the error.
 
 When Pkl prints source locations, it also prints clickable links for easy access.
-For local files, it generates a link for your development environment (https://pkl.apple.com/main/current/pkl-cli/index.html#settings-file[configurable in `+~/.pkl/settings.pkl+`]).
+For local files, it generates a link for your development environment (https://pkl-lang.org/main/current/pkl-cli/index.html#settings-file[configurable in `+~/.pkl/settings.pkl+`]).
 For packages imported from elsewhere, if available, Pkl produces `https://` links to their repository.
 
 Pkl complains about a _type constraint_.

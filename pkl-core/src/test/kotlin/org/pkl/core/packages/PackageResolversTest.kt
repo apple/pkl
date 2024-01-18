@@ -60,7 +60,7 @@ class PackageResolversTest {
         catalog
         catalog.pkl
         some
-        
+
       """.trimIndent())
     }
 
