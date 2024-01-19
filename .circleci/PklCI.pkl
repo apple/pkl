@@ -26,7 +26,7 @@ release: CircleCI.Workflow?
 circleCi: CircleCI = new {
   version = 2.1
   orbs {
-    ["pr-approval"] = "pkl-lang/pr-approval@dev:first"
+    ["pr-approval"] = "pkl-lang/pr-approval@dev:4"
   }
   jobs = module.jobs
   workflows {
