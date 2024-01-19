@@ -42,7 +42,7 @@ import java.util.zip.ZipInputStream;
 import javax.annotation.concurrent.GuardedBy;
 import javax.net.ssl.HttpsURLConnection;
 import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
+import org.pkl.core.Release;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.FileResolver;
@@ -52,7 +52,6 @@ import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
@@ -60,6 +59,13 @@ import org.pkl.core.util.json.Json.JsonParseException;
 
 class PackageResolvers {
   abstract static class AbstractPackageResolver implements PackageResolver {
+    private static final String USER_AGENT;
+
+    static {
+      var release = Release.current();
+      USER_AGENT = "Pkl/" + release.version() + " (" + release.os() + " " + release.flavor() + ")";
+    }
+
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, DependencyMetadata> cachedDependencyMetadata;
 
@@ -194,6 +200,7 @@ class PackageResolvers {
       // treat package assets as resources instead of modules
       securityManager.checkReadResource(uri);
       var connection = (HttpsURLConnection) uri.toURL().openConnection();
+      connection.setRequestProperty("User-Agent", USER_AGENT);
       int responseCode;
       try {
         responseCode = connection.getResponseCode();
@@ -238,9 +245,6 @@ class PackageResolvers {
    */
   static class InMemoryPackageResolver extends AbstractPackageResolver {
     @GuardedBy("lock")
-    private final EconomicSet<PackageUri> downloadedPackackages = EconomicSets.create();
-
-    @GuardedBy("lock")
     private final EconomicMap<PackageUri, EconomicMap<String, ByteBuffer>> cachedEntries =
         EconomicMaps.create();
 
@@ -266,7 +270,7 @@ class PackageResolvers {
     private void ensurePackageDownloaded(PackageUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       synchronized (lock) {
-        if (downloadedPackackages.contains(uri)) {
+        if (cachedEntries.containsKey(uri)) {
           return;
         }
         var metadata = getDependencyMetadata(uri, checksums);

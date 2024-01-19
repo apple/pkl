@@ -50,8 +50,9 @@ public class Release {
     var osName = System.getProperty("os.name");
     if (osName.equals("Mac OS X")) osName = "macOS";
     var osVersion = System.getProperty("os.version");
+    var os = osName + " " + osVersion;
     var flavor = TruffleOptions.AOT ? "native" : "Java " + System.getProperty("java.version");
-    var versionInfo = "Pkl " + version + " (" + osName + " " + osVersion + ", " + flavor + ")";
+    var versionInfo = "Pkl " + version + " (" + os + ", " + flavor + ")";
     var commitish = version.isNormal() ? version.toString() : commitId;
     var docsVersion = version.isNormal() ? version.toString() : "latest";
     var docsHomepage = DOCUMENTATION_HOMEPAGE + docsVersion + "/";
@@ -61,6 +62,8 @@ public class Release {
     CURRENT =
         new Release(
             version,
+            os,
+            flavor,
             versionInfo,
             commitId,
             new SourceCode(SOURCE_CODE_HOMEPAGE, commitish),
@@ -69,6 +72,8 @@ public class Release {
   }
 
   private final Version version;
+  private final String os;
+  private final String flavor;
   private final String versionInfo;
   private final String commitId;
   private final SourceCode sourceCode;
@@ -78,12 +83,16 @@ public class Release {
   /** Constructs a release. */
   public Release(
       Version version,
+      String os,
+      String flavor,
       String versionInfo,
       String commitId,
       SourceCode sourceCode,
       Documentation documentation,
       StandardLibrary standardLibrary) {
     this.version = version;
+    this.os = os;
+    this.flavor = flavor;
     this.versionInfo = versionInfo;
     this.commitId = commitId;
     this.sourceCode = sourceCode;
@@ -99,6 +108,16 @@ public class Release {
   /** The version of this release. */
   public Version version() {
     return version;
+  }
+
+  /** The operating system (name and version) this release is running on. */
+  public String os() {
+    return os;
+  }
+
+  /** The flavor of this release (native, or Java and JVM version). */
+  public String flavor() {
+    return flavor;
   }
 
   /** The output of {@code pkl --version} for this release. */
