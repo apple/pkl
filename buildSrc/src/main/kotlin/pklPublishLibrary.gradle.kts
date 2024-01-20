@@ -18,7 +18,7 @@ publishing {
       pom {
         licenses {
           name.set("Apache License 2.0")
-          url.set("https://github.com/pkl-lang/pkl/blob/main/LICENSE.txt")
+          url.set("https://github.com/apple/pkl/blob/main/LICENSE.txt")
         }
         developers {
           developer {
@@ -28,14 +28,14 @@ publishing {
           }
         }
         scm {
-          connection.set("scm:git:git://github.com/pkl-lang/pkl.git")
-          developerConnection.set("scm:git:ssh://github.com/pkl-lang/pkl.git")
+          connection.set("scm:git:git://github.com/apple/pkl.git")
+          developerConnection.set("scm:git:ssh://github.com/apple/pkl.git")
           val buildInfo = project.extensions.getByType<BuildInfo>()
-          url.set("https://github.com/pkl-lang/pkl/tree/${buildInfo.commitish}")
+          url.set("https://github.com/apple/pkl/tree/${buildInfo.commitish}")
         }
         issueManagement {
           system.set("GitHub Issues")
-          url.set("https://github.com/pkl-lang/pkl/issues")
+          url.set("https://github.com/apple/pkl/issues")
         }
         ciManagement {
           system.set("Circle CI")

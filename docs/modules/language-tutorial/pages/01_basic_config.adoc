@@ -205,7 +205,7 @@ Object: "Pigeon"
 
 89 | text = renderer.renderDocument(value)
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at pkl.base#Module.output.text (https://github.com/pkl-lang/pkl/blob/0.24.0/stdlib/base.pkl#L90)
+at pkl.base#Module.output.text (https://github.com/apple/pkl/blob/0.24.0/stdlib/base.pkl#L90)
 ----
 
 This is why Pkl has two special types of object, namely _listings_, which contain _exclusively_ elements, and _mappings_, which contain _exclusively_ entries.

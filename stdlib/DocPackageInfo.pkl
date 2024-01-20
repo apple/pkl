@@ -51,9 +51,9 @@
 /// name = "com.example.Birds"
 /// importUri = "https://example.com/Birds"
 /// authors { "pigeon@example.com" }
-/// sourceCode = "https://github.com/pkl-lang/birds/"
-/// sourceCodeUrlScheme = "https://github.com/pkl-lang/birds/blob/\(version)%{path}#L%{line}-%{endLine}"
-/// issueTracker = "https://github.com/pkl-lang/birds/issues"
+/// sourceCode = "https://github.com/apple/birds/"
+/// sourceCodeUrlScheme = "https://github.com/apple/birds/blob/\(version)%{path}#L%{line}-%{endLine}"
+/// issueTracker = "https://github.com/apple/birds/issues"
 /// version = "1.7.0"
 /// ```
 ///

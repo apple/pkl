@@ -39,5 +39,5 @@ authors {
 }
 sourceCode =
   let (commitish = if (current.version.isNormal()) current.version else current.commitId)
-    "https://github.com/pkl-lang/pkl/blob/\(commitish)/stdlib/"
-issueTracker = "https://github.com/pkl-lang/pkl/issues"
+    "https://github.com/apple/pkl/blob/\(commitish)/stdlib/"
+issueTracker = "https://github.com/apple/pkl/issues"

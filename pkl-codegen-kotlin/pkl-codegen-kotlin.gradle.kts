@@ -8,7 +8,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-codegen-kotlin")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-codegen-kotlin")
         description.set("""
           Kotlin source code generator that generates corresponding Kotlin classes for Pkl classes,
           simplifying consumption of Pkl configuration as statically typed Kotlin objects.

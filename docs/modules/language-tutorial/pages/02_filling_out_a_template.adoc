@@ -328,7 +328,7 @@ at cicd#timeout (file:///Users/me/tutorial/cicd.pkl, line 3)
 
 90 | text = renderer.renderDocument(value) // <6>
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at pkl.base#Module.output.text (https://github.com/pkl-lang/pkl/blob/e4d8c882d/stdlib/base.pkl#L90)
+at pkl.base#Module.output.text (https://github.com/apple/pkl/blob/e4d8c882d/stdlib/base.pkl#L90)
 
 ----
 <1> Pkl found an error.
@@ -402,7 +402,7 @@ at cicd#pipelines[#1].name (file:///Users/me/tutorial/cicd.pkl, line 6)
 
 90 | text = renderer.renderDocument(value)
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at pkl.base#Module.output.text (https://github.com/pkl-lang/pkl/blob/e4d8c882d/stdlib/base.pkl#L90)
+at pkl.base#Module.output.text (https://github.com/apple/pkl/blob/e4d8c882d/stdlib/base.pkl#L90)
 
 ----
 

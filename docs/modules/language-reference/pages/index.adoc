@@ -80,8 +80,8 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-core-PklException: {uri-pkl-core-main-sources}/PklException.java
 :uri-value-converters: {uri-pkl-stdlib-docs}/base/PcfRenderer#converters
 // TODO: double check this
-:uri-pkl-go-resource-reader-docs: https://github.com/pkl-lang/pkl-go/blob/main/pkl/reader.go
-:uri-pkl-swift-resource-reader-docs: https://github.com/pkl-lang/pkl-swift/blob/main/Sources/PklSwift/Reader.swift
+:uri-pkl-go-resource-reader-docs: https://github.com/apple/pkl-go/blob/main/pkl/reader.go
+:uri-pkl-swift-resource-reader-docs: https://github.com/apple/pkl-swift/blob/main/Sources/PklSwift/Reader.swift
 :uri-glob-7: https://man7.org/linux/man-pages/man7/glob.7.html
 :uri-unicode-identifier: https://unicode.org/reports/tr31/#R1-1
 :uri-semver: https://semver.org

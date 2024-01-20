@@ -44,10 +44,10 @@ endif::[]
 ifdef::is-release-version[]
 :github-branch: main
 endif::[]
-:uri-github-tree: https://github.com/pkl-lang/pkl/tree/{github-branch}
+:uri-github-tree: https://github.com/apple/pkl/tree/{github-branch}
 :uri-pkl-stdlib-sources: {uri-github-tree}/stdlib
 
-:github-releases-base: https://github.com/pkl-lang/pkl/releases
+:github-releases-base: https://github.com/apple/pkl/releases
 :github-releases: {github-releases-base}/download/{pkl-artifact-version}
 
 :uri-pkl-core-main-sources: {uri-github-tree}/pkl-core/src/main/java/org/pkl/core
@@ -59,7 +59,7 @@ endif::[]
 :pkl: pkl
 :pkl-expr: pkl expression
 
-:uri-pkl-examples-repo: https://github.com/pkl-lang/pkl-examples
+:uri-pkl-examples-repo: https://github.com/apple/pkl-examples
 :uri-pkl-examples-tree: {uri-pkl-examples-repo}/tree/main
 :uri-build-eval-example: {uri-pkl-examples-tree}/build-eval
 :uri-codegen-java-example: {uri-pkl-examples-tree}/codegen-java

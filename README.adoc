@@ -6,9 +6,9 @@
 :uri-docs-language: {uri-docs}/language
 :uri-docs-libraries: {uri-docs}/libraries
 :uri-docs-tools: {uri-docs}/tools
-:uri-github-issue: https://github.com/pkl-lang/pkl/issues
+:uri-github-issue: https://github.com/apple/pkl/issues
 :uri-stackoverflow: https://stackoverflow.com/questions/tagged/pkl
-:uri-pkl-examples-repo: https://github.com/pkl-lang/pkl-examples
+:uri-pkl-examples-repo: https://github.com/apple/pkl-examples
 :uri-installation: https://pkl-lang.org/main/current/pkl-cli/index.html#installation
 :uri-lang-reference: https://pkl-lang.org/main/current/language-reference/index.html
 :uri-gng: https://gng.dsun.org

@@ -24,7 +24,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-cli")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
         description.set("Pkl CLI Java library.")
       }
     }

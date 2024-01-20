@@ -38,7 +38,7 @@ publishing {
       // don't use `-all` suffix because this is the only JAR we publish
       artifactId = "pkl-tools"
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-tools")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-tools")
         description.set("Fat Jar containing pkl-cli, pkl-codegen-java, " +
           "pkl-codegen-kotlin, pkl-config-java, pkl-core, pkl-doc, " +
           "and their shaded third-party dependencies.")

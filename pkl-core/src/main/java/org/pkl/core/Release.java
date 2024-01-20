@@ -28,7 +28,7 @@ import java.util.Set;
  * equivalent of standard library module {@code pkl.release}.
  */
 public class Release {
-  private static final String SOURCE_CODE_HOMEPAGE = "https://github.com/pkl-lang/pkl/";
+  private static final String SOURCE_CODE_HOMEPAGE = "https://github.com/apple/pkl/";
   private static final String DOCUMENTATION_HOMEPAGE = "https://pkl-lang.org/main/";
 
   private static final Release CURRENT;

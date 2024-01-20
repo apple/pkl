@@ -1,4 +1,4 @@
-:uri-github-issue-pkl: https://github.com/pkl-lang/pkl/issues/new
+:uri-github-issue-pkl: https://github.com/apple/pkl/issues/new
 :uri-seven-rules: https://cbea.ms/git-commit/#seven-rules 
 
 = Pkl Contributor's Guide

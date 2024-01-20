@@ -13,9 +13,9 @@ XXX
 The next release (XXX) is scheduled for XXX (e.g., August 2, 2021).
 
 Please send feedback and questions to  https://stackoverflow.apple.com/questions/tagged/pkl[Stack Overflow], 
-or https://github.com/pkl-lang/pkl/issues/new[Github]. +
+or https://github.com/apple/pkl/issues/new[Github]. +
 
-[small]#Pkl is hosted on https://github.com/pkl-lang/pkl[GitHub].
+[small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 == Highlights [small]#💖#
@@ -69,4 +69,4 @@ We would like to thank the contributors to this release (in alphabetical order):
 XXX Radars down, Inbox Zero in sight ...
 
 [smaller]
-. XXX (https://github.com/pkl-lang/pkl/issues/new[XXX])
+. XXX (https://github.com/apple/pkl/issues/new[XXX])

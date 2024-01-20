@@ -272,7 +272,7 @@ class CliDocGeneratorTest {
               importUri = "foo.pkl",
               authors = listOf("me"),
               sourceCode = URI.create("foo.pkl"),
-              issueTracker = URI.create("https://github.com/pkl-lang/pkl/issues"),
+              issueTracker = URI.create("https://github.com/apple/pkl/issues"),
               overview = "my overview",
               sourceCodeUrlScheme = "https://example.com/blob/$version%{path}#L%{line}-%{endLine}"
             ),

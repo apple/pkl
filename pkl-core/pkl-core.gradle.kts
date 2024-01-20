@@ -69,7 +69,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-core")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-core")
         description.set("""
           Core implementation of the Pkl configuration language.
           Includes Java APIs for embedding the language into JVM applications,

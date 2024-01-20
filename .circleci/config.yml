@@ -1,7 +1,7 @@
 # Generated from CircleCI.pkl. DO NOT EDIT.
 version: 2.1
 orbs:
-  pr-approval: pkl-lang/pr-approval@dev:first
+  pr-approval: apple/pr-approval@0.1.0
 jobs:
   pkl-cli-linux-amd64-release:
     steps:
@@ -710,7 +710,7 @@ workflows:
     - hold:
         type: approval
     - pr-approval/authenticate:
-        context: job-approval
+        context: pkl-pr-approval
     - bench:
         requires:
         - hold

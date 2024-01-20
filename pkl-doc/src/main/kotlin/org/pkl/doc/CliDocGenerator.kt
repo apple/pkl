@@ -43,14 +43,14 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
       uri = null,
       version = if (options.isTestMode) "0.24.0" else Release.current().version().toString(),
       sourceCode =
-        if (options.isTestMode) URI("https://github.com/pkl-lang/pkl/blob/dev/stdlib/")
+        if (options.isTestMode) URI("https://github.com/apple/pkl/blob/dev/stdlib/")
         else URI(Release.current().sourceCode().homepage()),
       sourceCodeUrlScheme =
         if (options.isTestMode)
-          "https://github.com/pkl-lang/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
+          "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
         else Release.current().sourceCode().sourceCodeUrlScheme,
       documentation =
-        if (options.isTestMode) URI("https://pages.github.com/pkl-lang/pkl/stdlib/pkl/0.24.0/")
+        if (options.isTestMode) URI("https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/")
         else
           URI(
             PklInfo.current()

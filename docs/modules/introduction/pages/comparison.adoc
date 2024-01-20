@@ -3,7 +3,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-jsonnet: https://jsonnet.org
 :uri-hcl: https://github.com/hashicorp/hcl
 :uri-dhall: https://dhall-lang.org
-:uri-pkl-spring: https://github.com/pkl-lang/pkl-spring
+:uri-pkl-spring: https://github.com/apple/pkl-spring
 :uri-graalvm: https://www.graalvm.org
 
 Configuration is often described in a static configuration format or is generated with a general-purpose programming language.

@@ -1,8 +1,8 @@
 = Community
-:uri-github-issue: https://github.com/pkl-lang/pkl/issues
-:uri-stackoverflow: https://stackoverflow.com/questions/tagged/pkl
+:uri-github-issue: https://github.com/apple/pkl/issues
+:uri-github-discussions: https://stackoverflow.com/questions/tagged/pkl
 
 We'd love to hear from you!
 
 * Create an {uri-github-issue}[issue]
-* Ask questions on {uri-stackoverflow}[Stack Overflow]
+* Ask questions on {uri-github-discussions}[GitHub Discussions]

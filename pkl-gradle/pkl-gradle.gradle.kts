@@ -34,7 +34,7 @@ publishing {
   publications {
     withType<MavenPublication>().configureEach {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-gradle")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-gradle")
         description.set("Gradle plugin for the Pkl configuration language.")
       }
     }

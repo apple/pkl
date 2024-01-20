@@ -41,8 +41,8 @@ dependencies {
     name = "pkl"
     // use fixed version to avoid churn in expected test outputs
     version = "0.24.0"
-    sourceCode = "https://github.com/pkl-lang/pkl/blob/dev/stdlib/"
-    sourceCodeUrlScheme = "https://github.com/pkl-lang/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
-    documentation = "https://pages.github.com/pkl-lang/pkl/stdlib/pkl/0.24.0/"
+    sourceCode = "https://github.com/apple/pkl/blob/dev/stdlib/"
+    sourceCodeUrlScheme = "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
+    documentation = "https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/"
   }
 }

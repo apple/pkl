@@ -80,7 +80,7 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-config-java")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-config-java")
         description.set("Java config library based on the Pkl config language.")
       }
     }
@@ -88,7 +88,7 @@ publishing {
     named<MavenPublication>("fatJar") {
       artifactId = "pkl-config-java-all"
       pom {
-        url.set("https://github.com/pkl-lang/pkl/tree/main/pkl-config-java")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-config-java")
         description.set("Shaded fat Jar for pkl-config-java, a Java config library based on the Pkl config language.")
       }
     }
