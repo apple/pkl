@@ -92,10 +92,13 @@ steps {
         "~/staticdeps"
       }
     }
-    // hack to get more RAM in docker
-    new CircleCI.SetupRemoteDockerStep {
-      version = if (arch == "amd64") "20.10.24" else "default"
-      docker_layer_cacheing = true
+  }
+  when (os == "macOS" && arch == "amd64") {
+    new CircleCI.RunStep {
+      name = "Installing Rosetta 2"
+      command = """
+        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        """
     }
   }
   new CircleCI.RunStep {
@@ -123,6 +126,7 @@ job {
     macos {
       xcode = "14.0.0"
     }
+    resource_class = "macos.m1.large.gen1"
   } else {
     docker {
       new {
@@ -136,6 +140,6 @@ job {
     environment {
       ["JAVA_HOME"] = "/jdk"
     }
-    resource_class = if (arch == "aarch64") "arm.large" else "large"
+    resource_class = if (arch == "aarch64") "arm.xlarge" else "xlarge"
   }
 }

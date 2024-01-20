@@ -66,9 +66,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -94,7 +91,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: large
+    resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
   pkl-cli-linux-aarch64-release:
@@ -144,9 +141,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-aarch64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: default
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -172,7 +166,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: arm.large
+    resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
   pkl-cli-macos-amd64-release:
@@ -181,6 +175,9 @@ jobs:
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -205,6 +202,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
     macos:
       xcode: 14.0.0
   pkl-cli-linux-alpine-amd64-release:
@@ -270,9 +268,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -298,7 +293,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: large
+    resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
   pkl-cli-linux-amd64-snapshot:
@@ -364,9 +359,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -392,7 +384,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: large
+    resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
   pkl-cli-linux-aarch64-snapshot:
@@ -442,9 +434,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-aarch64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: default
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -470,7 +459,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: arm.large
+    resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
   pkl-cli-macos-amd64-snapshot:
@@ -479,6 +468,9 @@ jobs:
     - restore_cache:
         key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
         name: Restore Gradle Dependencies Cache
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -503,6 +495,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
     macos:
       xcode: 14.0.0
   pkl-cli-linux-alpine-amd64-snapshot:
@@ -568,9 +561,6 @@ jobs:
         - ~/staticdeps
         key: staticdeps-amd64
         name: Save statics deps to cache
-    - setup_remote_docker:
-        version: 20.10.24
-        docker_layer_cacheing: true
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -596,7 +586,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-    resource_class: large
+    resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
   bench:
@@ -693,7 +683,6 @@ jobs:
         at: '.'
     - run:
         command: |-
-          export GH_TOKEN="${GITHUB_TOKEN}"
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
@@ -749,38 +738,51 @@ workflows:
         - pkl-cli-linux-aarch64-snapshot
         - pkl-cli-macos-amd64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
-        context: Pkl release
+        context:
+        - pkl-maven-release
     when:
       equal:
       - main
       - << pipeline.git.branch >>
   release:
     jobs:
+    - hold:
+        type: approval
     - bench:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - pkl-cli-linux-amd64-release:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - pkl-cli-linux-aarch64-release:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - pkl-cli-macos-amd64-release:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - pkl-cli-linux-alpine-amd64-release:
+        requires:
+        - hold
         filters:
           branches:
             ignore: /.*/
@@ -793,7 +795,8 @@ workflows:
         - pkl-cli-linux-aarch64-release
         - pkl-cli-macos-amd64-release
         - pkl-cli-linux-alpine-amd64-release
-        context: Pkl release
+        - hold
+        context: pkl-github-release
         filters:
           branches:
             ignore: /.*/
@@ -802,7 +805,9 @@ workflows:
     - deploy-release:
         requires:
         - github-release
-        context: Pkl release
+        - hold
+        context:
+        - pkl-maven-release
         filters:
           branches:
             ignore: /.*/

@@ -2,11 +2,12 @@
 module PklCI
 
 import "CircleCI.pkl"
-import "pkl:reflect"
 
-local projectName =
-  let (moduleUri = reflect.Module(module).uri)
-    moduleUri.split("/").dropLast(2).last
+/// A map of user-selected names to either: orb references (strings) or orb definitions (maps).
+///
+/// Orb definitions must be the orb-relevant subset of 2.1 config.
+/// See the [Creating Orbs](https://circleci.com/docs/creating-orbs/) documentation for details.
+orbs: Mapping<String, Orb|String>?
 
 /// The jobs required by this build
 jobs: Mapping<String, CircleCI.Job>
@@ -25,7 +26,7 @@ release: CircleCI.Workflow?
 /// The CircleCI output.
 circleCi: CircleCI = new {
   version = 2.1
-  orbs {
+  orbs = (module.orbs) {
     ["pr-approval"] = "apple/pr-approval@0.1.0"
   }
   jobs = module.jobs
@@ -74,6 +75,12 @@ circleCi: CircleCI = new {
 
 local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) ->
   new Listing<*Mapping<String, CircleCI.WorkflowJob>|String> {
+    // TODO(oss) remove me
+    new {
+      ["hold"] {
+        type = "approval"
+      }
+    }
     for (job in jobs) {
       when (job is String) {
         new {
@@ -85,6 +92,9 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
               branches {
                 ignore = "/.*/"
               }
+            }
+            requires {
+              "hold"
             }
           }
         }
@@ -98,6 +108,9 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
               branches {
                 ignore = "/.*/"
               }
+            }
+            requires {
+              "hold"
             }
           }
         }
@@ -136,3 +149,4 @@ typealias Job = CircleCI.Job
 typealias JobFilters = CircleCI.JobFilters
 typealias Workflow = CircleCI.Workflow
 typealias WorkflowJob = CircleCI.WorkflowJob
+typealias Orb = CircleCI.Orb

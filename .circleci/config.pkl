@@ -16,7 +16,9 @@ main {
     new {
       ["deploy-snapshot"] {
         requires = buildAndTestJobs
-        context = "Pkl release"
+        context {
+          "pkl-maven-release"
+        }
       }
     }
   }
@@ -30,13 +32,15 @@ release {
     new {
       ["github-release"] {
         requires = releaseJobs
-        context = "Pkl release"
+        context = "pkl-github-release"
       }
     }
     new {
       ["deploy-release"] {
         requires { "github-release" }
-        context = "Pkl release"
+        context {
+          "pkl-maven-release"
+        }
       }
     }
   }
@@ -120,7 +124,6 @@ jobs {
       new RunStep {
         name = "Publish release on GitHub"
         command = #"""
-          export GH_TOKEN="${GITHUB_TOKEN}"
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
