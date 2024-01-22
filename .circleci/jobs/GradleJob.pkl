@@ -37,18 +37,7 @@ job: CircleCI.Job = new {
   }
   steps {
     "checkout"
-    new CircleCI.RestoreCacheStep {
-      name = "Restore Gradle Dependencies Cache"
-      key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-    }
     ...module.steps
-    new CircleCI.SaveCacheStep {
-      name = "Save Gradle Dependencies Cache"
-      key = "gradle-dependencies-{{ checksum \"gradle/libs.versions.toml\" }}"
-      paths {
-        "~/.gradle/caches/modules-2/files-2.1/"
-      }
-    }
     new CircleCI.RunStep {
       // find all test results and write them to the home dir
       name = "Gather test results"

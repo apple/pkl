@@ -6,9 +6,6 @@ jobs:
   pkl-cli-macOS-amd64-release:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
         name: Installing Rosetta 2
@@ -21,11 +18,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -42,9 +34,6 @@ jobs:
   pkl-cli-linux-amd64-release:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
         name: Restore static deps from cache
@@ -111,11 +100,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -133,9 +117,6 @@ jobs:
   pkl-cli-macOS-aarch64-release:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: git apply patches/graalVm23.patch
     - run:
@@ -147,11 +128,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -168,9 +144,6 @@ jobs:
   pkl-cli-linux-aarch64-release:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-aarch64
         name: Restore static deps from cache
@@ -221,11 +194,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -243,9 +211,6 @@ jobs:
   pkl-cli-linux-alpine-amd64-release:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
         name: Restore static deps from cache
@@ -312,11 +277,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -334,9 +294,6 @@ jobs:
   pkl-cli-macOS-amd64-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
         name: Installing Rosetta 2
@@ -349,11 +306,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -370,9 +322,6 @@ jobs:
   pkl-cli-linux-amd64-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
         name: Restore static deps from cache
@@ -439,11 +388,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -461,9 +405,6 @@ jobs:
   pkl-cli-macOS-aarch64-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: git apply patches/graalVm23.patch
     - run:
@@ -475,11 +416,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -496,9 +432,6 @@ jobs:
   pkl-cli-linux-aarch64-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-aarch64
         name: Restore static deps from cache
@@ -549,11 +482,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -571,9 +499,6 @@ jobs:
   pkl-cli-linux-alpine-amd64-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - restore_cache:
         key: staticdeps-amd64
         name: Restore static deps from cache
@@ -640,11 +565,6 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -662,17 +582,9 @@ jobs:
   bench:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' bench:jmh
         name: bench:jmh
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -688,20 +600,12 @@ jobs:
   gradle-compatibility:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - run:
         command: |-
           ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' :pkl-gradle:build \
             :pkl-gradle:compatibilityTestReleases \
             :pkl-gradle:compatibilityTestCandidate
         name: gradle compatibility
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
@@ -717,18 +621,10 @@ jobs:
   deploy-snapshot:
     steps:
     - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
     - attach_workspace:
         at: '.'
     - run:
         command: ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' publishToSonatype
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
     - run:
         command: |-
           mkdir ~/test-results/
