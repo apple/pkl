@@ -3,6 +3,42 @@ version: 2.1
 orbs:
   pr-approval: apple/pr-approval@0.1.0
 jobs:
+  pkl-cli-macOS-amd64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.2.0
   pkl-cli-linux-amd64-release:
     steps:
     - checkout
@@ -94,6 +130,41 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
+  pkl-cli-macOS-aarch64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: git apply patches/graalVm23.patch
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.2.0
   pkl-cli-linux-aarch64-release:
     steps:
     - checkout
@@ -169,42 +240,6 @@ jobs:
     resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
-  pkl-cli-macos-amd64-release:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-        name: Installing Rosetta 2
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
-        name: gradle buildNative
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    resource_class: macos.m1.large.gen1
-    macos:
-      xcode: 14.0.0
   pkl-cli-linux-alpine-amd64-release:
     steps:
     - checkout
@@ -296,6 +331,42 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
+  pkl-cli-macOS-amd64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.2.0
   pkl-cli-linux-amd64-snapshot:
     steps:
     - checkout
@@ -387,6 +458,41 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
+  pkl-cli-macOS-aarch64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Restore Gradle Dependencies Cache
+    - run:
+        command: git apply patches/graalVm23.patch
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - save_cache:
+        paths:
+        - ~/.gradle/caches/modules-2/files-2.1/
+        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
+        name: Save Gradle Dependencies Cache
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.2.0
   pkl-cli-linux-aarch64-snapshot:
     steps:
     - checkout
@@ -462,42 +568,6 @@ jobs:
     resource_class: arm.xlarge
     docker:
     - image: arm64v8/oraclelinux:8-slim
-  pkl-cli-macos-amd64-snapshot:
-    steps:
-    - checkout
-    - restore_cache:
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Restore Gradle Dependencies Cache
-    - run:
-        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-        name: Installing Rosetta 2
-    - run:
-        command: |-
-          export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace '-Dorg.gradle.jvmargs=-Dfile.encoding=UTF-8 --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED' pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
-        name: gradle buildNative
-    - persist_to_workspace:
-        root: '.'
-        paths:
-        - pkl-cli/build/executable/
-    - save_cache:
-        paths:
-        - ~/.gradle/caches/modules-2/files-2.1/
-        key: gradle-dependencies-{{ checksum "gradle/libs.versions.toml" }}
-        name: Save Gradle Dependencies Cache
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    resource_class: macos.m1.large.gen1
-    macos:
-      xcode: 14.0.0
   pkl-cli-linux-alpine-amd64-snapshot:
     steps:
     - checkout
@@ -700,7 +770,7 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - bench:
+    - pkl-cli-macOS-amd64-snapshot:
         requires:
         - hold
         - pr-approval/authenticate
@@ -708,11 +778,11 @@ workflows:
         requires:
         - hold
         - pr-approval/authenticate
-    - pkl-cli-linux-aarch64-snapshot:
+    - pkl-cli-macOS-aarch64-snapshot:
         requires:
         - hold
         - pr-approval/authenticate
-    - pkl-cli-macos-amd64-snapshot:
+    - pkl-cli-linux-aarch64-snapshot:
         requires:
         - hold
         - pr-approval/authenticate
@@ -726,17 +796,18 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - bench
+    - pkl-cli-macOS-amd64-snapshot
     - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
     - pkl-cli-linux-aarch64-snapshot
-    - pkl-cli-macos-amd64-snapshot
     - pkl-cli-linux-alpine-amd64-snapshot
+    - bench
     - deploy-snapshot:
         requires:
-        - bench
+        - pkl-cli-macOS-amd64-snapshot
         - pkl-cli-linux-amd64-snapshot
+        - pkl-cli-macOS-aarch64-snapshot
         - pkl-cli-linux-aarch64-snapshot
-        - pkl-cli-macos-amd64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
         context:
         - pkl-maven-release
@@ -748,7 +819,7 @@ workflows:
     jobs:
     - hold:
         type: approval
-    - bench:
+    - pkl-cli-macOS-amd64-release:
         requires:
         - hold
         filters:
@@ -764,7 +835,7 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-linux-aarch64-release:
+    - pkl-cli-macOS-aarch64-release:
         requires:
         - hold
         filters:
@@ -772,7 +843,7 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-macos-amd64-release:
+    - pkl-cli-linux-aarch64-release:
         requires:
         - hold
         filters:
@@ -788,12 +859,20 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - bench:
+        requires:
+        - hold
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - bench
+        - pkl-cli-macOS-amd64-release
         - pkl-cli-linux-amd64-release
+        - pkl-cli-macOS-aarch64-release
         - pkl-cli-linux-aarch64-release
-        - pkl-cli-macos-amd64-release
         - pkl-cli-linux-alpine-amd64-release
         - hold
         context: pkl-github-release

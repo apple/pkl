@@ -13,6 +13,7 @@ prb {
 main {
   jobs {
     ...buildAndTestJobs
+    "bench"
     new {
       ["deploy-snapshot"] {
         requires = buildAndTestJobs
@@ -27,6 +28,7 @@ main {
 release {
   jobs {
     ...releaseJobs
+    "bench"
     // do GitHub release first because we can overwrite the tag.
     // publishing to Maven Central is final.
     new {
@@ -49,16 +51,13 @@ release {
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
   for (_dist in List("release", "snapshot")) {
     for (_arch in List("amd64", "aarch64")) {
-      ["pkl-cli-linux-\(_arch)-\(_dist)"] {
-        arch = _arch 
-        os = "linux"
-        isRelease = _dist == "release"
+      for (_os in List("macOS", "linux")) {
+        ["pkl-cli-\(_os)-\(_arch)-\(_dist)"] {
+          arch = _arch 
+          os = _os
+          isRelease = _dist == "release"
+        }
       }
-    }
-    ["pkl-cli-macos-amd64-\(_dist)"] {
-      arch = "amd64"
-      os = "macOS"
-      isRelease = _dist == "release"
     }
     ["pkl-cli-linux-alpine-amd64-\(_dist)"] {
       arch = "amd64"
@@ -139,7 +138,6 @@ jobs {
 
 local baseJobs: Listing<String> = new {
   ...gradleCheckJobs.keys
-  "bench"
 }
 
 local buildAndTestJobs = (baseJobs) {
