@@ -79,14 +79,6 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
     new {
       ["hold"] {
         type = "approval"
-        filters {
-          tags {
-            only = #"/^v?\d+\.\d+\.\d+$/"#
-          }
-          branches {
-            ignore = "/.*/"
-          }
-        }
       }
     }
     for (job in jobs) {

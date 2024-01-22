@@ -748,11 +748,6 @@ workflows:
     jobs:
     - hold:
         type: approval
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
     - bench:
         requires:
         - hold
