@@ -63,6 +63,7 @@ object PackageServer {
   }
 
   private const val PORT = 12110
+  private var started = false
 
   private val sslContext by lazy {
     SSLContext.getInstance("SSL").apply {
@@ -86,18 +87,23 @@ object PackageServer {
     }
 
   private val handler = HttpHandler { exchange ->
-    assert(exchange.requestMethod == "GET")
+    if (exchange.requestMethod != "GET") {
+      exchange.sendResponseHeaders(405, 0)
+      exchange.close()
+      return@HttpHandler
+    }
     val path = exchange.requestURI.path
     val localPath =
       if (path.endsWith(".zip")) packagesDir.resolve(path.drop(1))
       else packagesDir.resolve("${path.drop(1)}${path}.json")
-    if (Files.exists(localPath)) {
-      exchange.sendResponseHeaders(200, Files.size(localPath))
-      exchange.responseBody.use { outputStream -> Files.copy(localPath, outputStream) }
-    } else {
+    if (!Files.exists(localPath)) {
       exchange.sendResponseHeaders(404, 0)
       exchange.close()
+      return@HttpHandler
     }
+    exchange.sendResponseHeaders(200, 0)
+    exchange.responseBody.use { outputStream -> Files.copy(localPath, outputStream) }
+    exchange.close()
   }
 
   private val myExecutor = Executors.newFixedThreadPool(1)
@@ -112,9 +118,28 @@ object PackageServer {
 
   fun ensureStarted() =
     synchronized(this) {
-      try {
-        server.bind(InetSocketAddress(PORT), 0)
-        server.start()
-      } catch (_: BindException) {}
+      if (!started) {
+        // Crude hack to make sure that parrallel tests don't try and use each others mock server
+        // otherwise you get flaky tests when a server instance is shutdown by one set of tests
+        // while another set of tests is still relying on it.
+        // Side effect is that tests that spin up a mock package server are now serialised, rather
+        // than running in parrallel. But that seems like a reasonable tradeoff to avoid flaky
+        // tests.
+        for (i in 1..20) {
+          try {
+            server.bind(InetSocketAddress(PORT), 0)
+            server.start()
+            started = true
+            println("Mock package server started after $i attempt(s)")
+            return@synchronized
+          } catch (_: BindException) {
+            println(
+              "Port $PORT in use after $i/20 attempt(s), probably another test running in parrallel. Sleeping for 1 second and trying again"
+            )
+            Thread.sleep(1000)
+          }
+        }
+        println("Unable to start package server! This will probably result in a test failures")
+      }
     }
 }
