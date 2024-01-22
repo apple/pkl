@@ -93,6 +93,7 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
                 ignore = "/.*/"
               }
             }
+            // TODO(oss) remove me
             requires {
               "hold"
             }
@@ -109,6 +110,7 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
                 ignore = "/.*/"
               }
             }
+            // TODO(oss) remove me
             requires {
               "hold"
             }
