@@ -1,5 +1,6 @@
 package org.pkl.core.project
 
+import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.*
 import org.pkl.core.packages.PackageUri
@@ -8,12 +9,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.test.WithPackageServerTest
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
 
-class ProjectTest: WithPackageServerTest() {
+class ProjectTest {
   @Test
   fun loadFromPath(@TempDir path: Path) {
     val projectPath = path.resolve("PklProject")
@@ -134,6 +134,7 @@ class ProjectTest: WithPackageServerTest() {
 
   @Test
   fun `evaluate project module -- invalid checksum`() {
+    PackageServer.ensureStarted()
     val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.path)
     val project = Project.loadFromPath(projectDir.resolve("PklProject"))
     val evaluator = EvaluatorBuilder.preconfigured()

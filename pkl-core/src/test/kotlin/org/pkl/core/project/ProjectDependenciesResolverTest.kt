@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
-import org.pkl.commons.test.WithPackageServerTest
 import org.pkl.core.PklException
 import org.pkl.core.SecurityManagers
 import org.pkl.core.packages.PackageResolver
@@ -15,7 +14,16 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
-class ProjectDependenciesResolverTest: WithPackageServerTest() {
+class ProjectDependenciesResolverTest {
+  companion object {
+    @JvmStatic
+    @BeforeAll
+    fun beforeAll() {
+      CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
+      PackageServer.ensureStarted()
+    }
+  }
+
   @Test
   fun resolveDependencies() {
     val project2Path = Path.of(javaClass.getResource("project2/PklProject")!!.path)

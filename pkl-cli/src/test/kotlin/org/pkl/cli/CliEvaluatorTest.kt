@@ -35,13 +35,13 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.test.FileTestUtils
-import org.pkl.commons.test.WithPackageServerTest
+import org.pkl.commons.test.PackageServer
 import org.pkl.core.OutputFormat
 import org.pkl.core.util.IoUtils
 
-class CliEvaluatorTest : WithPackageServerTest() {
+class CliEvaluatorTest {
   companion object {
-    const val DEFAULT_CONTENTS = """
+    const val defaultContents = """
 person {
   name = "pigeon"
   age = 20 + 10
@@ -227,7 +227,7 @@ person:
   @Test
   fun `module path module as source module`() {
     val dir = tempDir.resolve("foo").resolve("bar").createDirectories()
-    dir.resolve("test.pkl").writeString(DEFAULT_CONTENTS)
+    dir.resolve("test.pkl").writeString(defaultContents)
     // check relative imports too
     dir
       .resolve("test2.pkl")
@@ -322,7 +322,7 @@ person {
 
   private fun customWorkingDirectory(relativePath: Boolean) {
     val dir = tempDir.resolve("foo").resolve("bar").createDirectories()
-    val file = dir.resolve("test.pkl").writeString(DEFAULT_CONTENTS)
+    val file = dir.resolve("test.pkl").writeString(defaultContents)
 
     val outputFiles =
       evalToFiles(
@@ -351,7 +351,7 @@ person {
   @Test
   fun `source module with relative path`() {
     val dir = tempDir.resolve("foo").createDirectories()
-    dir.resolve("test.pkl").writeString(DEFAULT_CONTENTS)
+    dir.resolve("test.pkl").writeString(defaultContents)
 
     val outputFiles =
       evalToFiles(
@@ -436,7 +436,7 @@ result = someLib.x
 
   @Test
   fun `take input from stdin`() {
-    val stdin = StringReader(DEFAULT_CONTENTS)
+    val stdin = StringReader(defaultContents)
     val stdout = StringWriter()
     val evaluator =
       CliEvaluator(
@@ -448,7 +448,7 @@ result = someLib.x
         stdout
       )
     evaluator.run()
-    assertThat(stdout.toString().trim()).isEqualTo(DEFAULT_CONTENTS.replace("20 + 10", "30").trim())
+    assertThat(stdout.toString().trim()).isEqualTo(defaultContents.replace("20 + 10", "30").trim())
   }
 
   @Test
@@ -1119,6 +1119,7 @@ result = someLib.x
 
   @Test
   fun `setting noCache will skip writing to the cache dir`() {
+    PackageServer.ensureStarted()
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1159,6 +1160,7 @@ result = someLib.x
 
   @Test
   fun `not including the self signed certificate will result in a error`() {
+    PackageServer.ensureStarted()
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1185,7 +1187,7 @@ result = someLib.x
     assertThat(err.message).contains("unable to find valid certification path to requested target")
   }
 
-  private fun writePklFile(fileName: String, contents: String = DEFAULT_CONTENTS): URI {
+  private fun writePklFile(fileName: String, contents: String = defaultContents): URI {
     tempDir.resolve(fileName).createParentDirectories()
     return tempDir.resolve(fileName).writeString(contents).toUri()
   }

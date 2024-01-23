@@ -18,14 +18,22 @@ package org.pkl.cli
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.test.FileTestUtils
-import org.pkl.commons.test.WithPackageServerTest
+import org.pkl.commons.test.PackageServer
 import org.pkl.core.packages.PackageUri
 
-class CliDownloadPackageCommandTest : WithPackageServerTest() {
+class CliDownloadPackageCommandTest {
+  companion object {
+    @BeforeAll
+    @JvmStatic
+    fun beforeAll() {
+      PackageServer.ensureStarted()
+    }
+  }
 
   @Test
   fun `download packages`(@TempDir tempDir: Path) {

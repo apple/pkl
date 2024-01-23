@@ -18,15 +18,24 @@ package org.pkl.cli
 import java.io.StringWriter
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.test.FileTestUtils
-import org.pkl.commons.test.WithPackageServerTest
+import org.pkl.commons.test.PackageServer
 
-class CliProjectResolverTest : WithPackageServerTest() {
+class CliProjectResolverTest {
+  companion object {
+    @BeforeAll
+    @JvmStatic
+    fun beforeAll() {
+      PackageServer.ensureStarted()
+    }
+  }
+
   @Test
   fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
     val packager =
