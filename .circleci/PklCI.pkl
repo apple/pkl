@@ -38,21 +38,22 @@ circleCi: CircleCI = new {
           value = "<< pipeline.git.branch >>"
         }
       }
-      // TODO: add approval flow for every project
       jobs = new {
-        new {
-          ["hold"] {
-            type = "approval"
-          }
-        }
-        new {
-          ["pr-approval/authenticate"] {
-            context = "pkl-pr-approval"
-          }
-        }
-        for (job in prb.jobs) {
-          job |> requireApproval
-        }
+        // TODO: re-enable this
+//         new {
+//           ["hold"] {
+//             type = "approval"
+//           }
+//         }
+//         new {
+//           ["pr-approval/authenticate"] {
+//             context = "pkl-pr-approval"
+//           }
+//         }
+//         for (job in prb.jobs) {
+//           job |> requireApproval
+//         }
+        ...prb.jobs
       }
     }
     ["main"] = (main) {
@@ -75,12 +76,6 @@ circleCi: CircleCI = new {
 
 local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) ->
   new Listing<*Mapping<String, CircleCI.WorkflowJob>|String> {
-    // TODO(oss) remove me
-    new {
-      ["hold"] {
-        type = "approval"
-      }
-    }
     for (job in jobs) {
       when (job is String) {
         new {
@@ -92,10 +87,6 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
               branches {
                 ignore = "/.*/"
               }
-            }
-            // TODO(oss) remove me
-            requires {
-              "hold"
             }
           }
         }
@@ -109,10 +100,6 @@ local runOnTag = (jobs: Listing<Mapping<String, CircleCI.WorkflowJob>|String>) -
               branches {
                 ignore = "/.*/"
               }
-            }
-            // TODO(oss) remove me
-            requires {
-              "hold"
             }
           }
         }
