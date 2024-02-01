@@ -1,7 +1,7 @@
 = Pkl 0.25 Release Notes
 :version: 0.25
 :version-minor: 0.25.0
-:release-date: <TBD>
+:release-date: February 1st, 2024
 
 This is the first release of Pkl!
 

@@ -6,7 +6,7 @@
 :pkl-version-no-suffix: 0.25.0
 // tells whether pkl version corresponding to current git commit
 // is a release version (:is-release-version: '') or dev version (:!is-release-version:)
-:!is-release-version:
+:is-release-version: ''
 
 // the remaining attributes do not need to be updated regularly
 
