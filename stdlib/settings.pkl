@@ -19,7 +19,7 @@
 /// Every settings file must amend this module.
 /// Unless CLI commands and build tool plugins are explicitly configured with a settings file,
 /// they will use `~/.pkl/settings.pkl` or the defaults specified in this module.
-@ModuleInfo { minPklVersion = "0.25.0" }
+@ModuleInfo { minPklVersion = "0.25.1" }
 module pkl.settings
 
 /// The editor for viewing and editing Pkl files.
