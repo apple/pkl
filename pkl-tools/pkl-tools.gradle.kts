@@ -7,12 +7,9 @@ plugins {
   signing
 }
 
-val firstPartySourcesJars by configurations.existing
+val dummy: SourceSet by sourceSets.creating
 
-java {
-  // create an empty javadoc jar so Maven Central is happy
-  withJavadocJar()
-}
+val firstPartySourcesJars by configurations.existing
 
 // Note: pkl-tools cannot (easily) contain pkl-config-kotlin 
 // because pkl-tools ships with a shaded Kotlin stdlib.
@@ -37,6 +34,21 @@ dependencies {
   firstPartySourcesJars(project(":pkl-doc", "sourcesJar"))
 }
 
+// TODO: need to figure out how to properly generate javadoc here.
+// For now, we'll include a dummy javadoc jar.
+val javadocDummy by tasks.creating(Javadoc::class) {
+  source = dummy.allJava
+}
+
+java {
+  withJavadocJar()
+}
+
+val javadocJar by tasks.existing(Jar::class) {
+  from(javadocDummy.outputs.files)
+  archiveBaseName.set("pkl-tools-all")
+}
+
 tasks.shadowJar {
   archiveBaseName.set("pkl-tools-all")
 }
@@ -46,6 +58,10 @@ publishing {
     named<MavenPublication>("fatJar") {
       // don't use `-all` suffix because this is the only JAR we publish
       artifactId = "pkl-tools"
+      // add dummy javadoc jar to publication
+      artifact(javadocJar.flatMap { it.archiveFile }) {
+        classifier = "javadoc"
+      }
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-tools")
         description.set("Fat Jar containing pkl-cli, pkl-codegen-java, " +
