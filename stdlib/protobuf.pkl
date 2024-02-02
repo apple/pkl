@@ -16,7 +16,7 @@
 
 /// A renderer for [Protocol Buffers](https://developers.google.com/protocol-buffers).
 /// Note: This module is _experimental_ and not ready for production use.
-@ModuleInfo { minPklVersion = "0.25.1" }
+@ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.protobuf
 
 import "pkl:reflect"
