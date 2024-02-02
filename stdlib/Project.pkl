@@ -64,7 +64,7 @@
 ///   value = project
 /// }
 /// ``` 
-@ModuleInfo { minPklVersion = "0.25.0" }
+@ModuleInfo { minPklVersion = "0.25.1" }
 module pkl.Project
 
 import "pkl:Project"

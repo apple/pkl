@@ -1,6 +1,11 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.25.1]]
+== 0.25.1 (2024-02-01)
+
+* Fixes issue where pkl-tools fat jar is empty.
+
 [[release-0.25.0]]
 == 0.25.0 (2024-02-01)
 
