@@ -1,8 +1,11 @@
 = Pkl 0.25 Release Notes
 :version: 0.25
-:version-minor: 0.25.0
+:version-minor: 0.25.1
 :release-date: February 1st, 2024
 
-This is the first release of Pkl!
+Pkl {version} was released on {release-date}. +
+[.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-To learn more, refer to our xref:blog:introducing-pkl.adoc[blog post].
+This is the initial release of Pkl, a programming language for creating configuration.
+
+To learn more about Pkl, refer to our xref:blog:ROOT:introducing-pkl.adoc[blog post].
