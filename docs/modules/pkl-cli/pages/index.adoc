@@ -1,7 +1,7 @@
 = CLI
 include::ROOT:partial$component-attributes.adoc[]
 :uri-homebrew: https://brew.sh
-:uri-pkl-macos-download: {github-releases}/pkl-cli-macos-{pkl-artifact-version}.bin
+:uri-pkl-macos-download: {github-releases}/pkl-macos-amd64
 :uri-pkl-linux-amd64-download: {github-releases}/pkl-cli-linux-amd64-{pkl-artifact-version}.bin
 :uri-pkl-linux-aarch64-download: {github-releases}/pkl-cli-linux-aarch64-{pkl-artifact-version}.bin
 :uri-pkl-alpine-download: {github-releases}/pkl-cli-alpine-amd64-{pkl-artifact-version}.bin
@@ -79,8 +79,8 @@ Development and release versions can be downloaded and installed manually.
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o pkl {uri-pkl-macos-download}
-chmod +x pkl
+curl -L {uri-pkl-macos-download} -o pkl 
+chmod +x ./pkl
 ./pkl --version
 ----
 
