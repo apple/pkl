@@ -1,11 +1,23 @@
 = CLI
 include::ROOT:partial$component-attributes.adoc[]
 :uri-homebrew: https://brew.sh
-:uri-pkl-macos-download: {github-releases}/pkl-cli-macos-{pkl-artifact-version}.bin
-:uri-pkl-linux-amd64-download: {github-releases}/pkl-cli-linux-amd64-{pkl-artifact-version}.bin
-:uri-pkl-linux-aarch64-download: {github-releases}/pkl-cli-linux-aarch64-{pkl-artifact-version}.bin
-:uri-pkl-alpine-download: {github-releases}/pkl-cli-alpine-amd64-{pkl-artifact-version}.bin
-:uri-pkl-java-download: {github-releases}/pkl-cli-java-{pkl-artifact-version}.jar
+
+:uri-pkl-macos-amd64-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-macos-amd64/{pkl-artifact-version}/pkl-cli-macos-amd64-{pkl-artifact-version}.bin
+:uri-pkl-macos-aarch64-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-macos-aarch64/{pkl-artifact-version}/pkl-cli-macos-aarch64-{pkl-artifact-version}.bin
+:uri-pkl-linux-amd64-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-linux-amd64/{pkl-artifact-version}/pkl-cli-linux-amd64-{pkl-artifact-version}.bin
+:uri-pkl-linux-aarch64-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-linux-aarch64/{pkl-artifact-version}/pkl-cli-linux-aarch64-{pkl-artifact-version}.bin
+:uri-pkl-alpine-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-alpine-linux-amd64/{pkl-artifact-version}/pkl-cli-alpine-linux-amd64-{pkl-artifact-version}.bin
+:uri-pkl-java-download: https://repo1.maven.org/maven2/org/pkl-lang/pkl-cli-java/{pkl-artifact-version}/pkl-cli-java-{pkl-artifact-version}.jar
+
+ifdef::is-release-version[]
+:uri-pkl-macos-amd64-download: {github-releases}/pkl-macos-amd64
+:uri-pkl-macos-aarch64-download: {github-releases}/pkl-macos-aarch64
+:uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
+:uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
+:uri-pkl-alpine-download: {github-releases}/pkl-alpine-linux-amd64
+:uri-pkl-java-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-java/{pkl-artifact-version}/pkl-cli-java-{pkl-artifact-version}.jar
+endif::[]
+
 :uri-pkl-stdlib-docs-settings: {uri-pkl-stdlib-docs}/settings/
 :uri-pkl-cli-main-sources: {uri-github-tree}/pkl-cli/src/main/kotlin/org/pkl/cli
 :uri-pkl-cli-CliEvaluatorOptions: {uri-pkl-cli-main-sources}/CliEvaluatorOptions.kt
@@ -76,10 +88,22 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
+On amd64:
+
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o pkl {uri-pkl-macos-download}
+curl -L -o pkl {uri-pkl-macos-aarch64-download}
+chmod +x pkl
+./pkl --version
+----
+
+On aarch64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl {uri-pkl-macos-amd64-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -98,23 +122,22 @@ Pkl {pkl-version} (macOS, native)
 The Linux executable is dynamically linked against _glibc_ and _libstdc{plus}{plus}_ for the amd64 and aarch64 architectures.
 For a statically linked executable, see <<Alpine Linux Executable>>.
 
-On amd64:
-
-[source,shell]
-[subs="+attributes"]
-----
-# on amd64
-curl -o pkl {uri-pkl-linux-amd64-download}
-chmod +x pkl
-./pkl --version
-----
-
 On aarch64:
 
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o pkl {uri-pkl-linux-aarch64-download}
+curl -L -o pkl {uri-pkl-linux-aarch64-download}
+chmod +x pkl
+./pkl --version
+----
+
+On amd64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl {uri-pkl-linux-amd64-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -136,7 +159,7 @@ For a dynamically linked executable, see <<Linux Executable>>.
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o pkl {uri-pkl-alpine-download}
+curl -L -o pkl {uri-pkl-alpine-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -156,7 +179,7 @@ NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o jpkl {uri-pkl-java-download}
+curl -L -o jpkl {uri-pkl-java-download}
 chmod +x jpkl
 ./jpkl --version
 ----
