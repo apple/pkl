@@ -23,7 +23,12 @@ endif::[]
 
 :uri-maven-docsite: https://central.sonatype.com/
 
-:uri-sonatype: https://s01.oss.sonatype.org/service/local/repositories/snapshots/content/
+:uri-sonatype: https://s01.oss.sonatype.org/content/groups/public
+
+:uri-maven-repo: https://s01.oss.sonatype.org/content/groups/public
+ifdef::is-release-version[]
+:uri-maven-repo: https://repo1.maven.org/maven2
+endif::[]
 
 :symbolic-version-name: latest
 ifdef::is-release-version[]
