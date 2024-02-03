@@ -88,22 +88,22 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
-On Intel machines:
-
-[source,shell]
-[subs="+attributes"]
-----
-curl -L -o pkl {uri-pkl-macos-amd64-download}
-chmod +x pkl
-./pkl --version
-----
-
-On Apple silicon machines:
+On amd64:
 
 [source,shell]
 [subs="+attributes"]
 ----
 curl -L -o pkl {uri-pkl-macos-aarch64-download}
+chmod +x pkl
+./pkl --version
+----
+
+On aarch64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl {uri-pkl-macos-amd64-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -122,23 +122,22 @@ Pkl {pkl-version} (macOS, native)
 The Linux executable is dynamically linked against _glibc_ and _libstdc{plus}{plus}_ for the amd64 and aarch64 architectures.
 For a statically linked executable, see <<Alpine Linux Executable>>.
 
-On amd64:
-
-[source,shell]
-[subs="+attributes"]
-----
-# on amd64
-curl -L -o pkl {uri-pkl-linux-amd64-download}
-chmod +x pkl
-./pkl --version
-----
-
 On aarch64:
 
 [source,shell]
 [subs="+attributes"]
 ----
 curl -L -o pkl {uri-pkl-linux-aarch64-download}
+chmod +x pkl
+./pkl --version
+----
+
+On amd64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl {uri-pkl-linux-amd64-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -160,7 +159,7 @@ For a dynamically linked executable, see <<Linux Executable>>.
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o pkl {uri-pkl-alpine-download}
+curl -L -o pkl {uri-pkl-alpine-download}
 chmod +x pkl
 ./pkl --version
 ----
@@ -180,7 +179,7 @@ NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
 [source,shell]
 [subs="+attributes"]
 ----
-curl -o jpkl {uri-pkl-java-download}
+curl -L -o jpkl {uri-pkl-java-download}
 chmod +x jpkl
 ./jpkl --version
 ----
