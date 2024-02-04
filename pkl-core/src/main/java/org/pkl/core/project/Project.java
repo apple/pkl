@@ -62,7 +62,7 @@ public final class Project {
    * <p>Evaluates a module's {@code output.value} to allow for embedding a project within a
    * template.
    *
-   * @throws PklException if an error occured while evaluating the project file.
+   * @throws PklException if an error occurred while evaluating the project file.
    */
   public static Project loadFromPath(
       Path path,

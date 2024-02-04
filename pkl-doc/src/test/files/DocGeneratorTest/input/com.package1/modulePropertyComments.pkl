@@ -38,7 +38,7 @@ property7: Float = 3.14159265359
 /// Rest of the body
 property8: Int = 0
 
-/// Sumary
+/// Summary
 /// ```java
 /// 
 /// code = 0

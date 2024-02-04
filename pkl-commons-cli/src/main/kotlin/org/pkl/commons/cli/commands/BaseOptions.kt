@@ -94,7 +94,7 @@ class BaseOptions : OptionGroup() {
       .associate()
 
   val noCache: Boolean by
-    option(names = arrayOf("--no-cache"), help = "Disable cacheing of packages")
+    option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
       .single()
       .flag(default = false)
 

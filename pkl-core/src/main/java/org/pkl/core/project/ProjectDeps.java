@@ -45,7 +45,7 @@ import org.pkl.core.util.json.JsonWriter;
 /**
  * The Java representation of a project's resolved dependency list. Resolved dependencies are stored
  * as JSON as a sibling file to PklProject. Each key in the JSON file records an entry for each
- * dependecy via its base URI, and the major version number.
+ * dependency via its base URI, and the major version number.
  *
  * <p>A resolved dependency can either be local or remote. A remote dependency will have its
  * checksums recorded, while a local dependency will point to the relative path of the project
@@ -100,7 +100,7 @@ public class ProjectDeps {
   private static EconomicMap<CanonicalPackageUri, Dependency> parseResolvedDependencies(
       Object object) throws JsonParseException, URISyntaxException {
     if (!(object instanceof JsObject)) {
-      throw new FormatException("resolvedDendencies", "object", object.getClass());
+      throw new FormatException("resolvedDependencies", "object", object.getClass());
     }
     var jsObj = (JsObject) object;
     var ret = EconomicMaps.<CanonicalPackageUri, Dependency>create(jsObj.size());

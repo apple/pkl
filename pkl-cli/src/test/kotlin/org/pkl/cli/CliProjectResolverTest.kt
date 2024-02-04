@@ -50,7 +50,7 @@ class CliProjectResolverTest {
   }
 
   @Test
-  fun `missing PklProject when explict dir is provided`(@TempDir tempDir: Path) {
+  fun `missing PklProject when explicit dir is provided`(@TempDir tempDir: Path) {
     val packager =
       CliProjectResolver(
         CliBaseOptions(),

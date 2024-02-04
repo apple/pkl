@@ -626,7 +626,7 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-Common propeties:
+Common properties:
 
 include::../partials/gradle-common-properties.adoc[]
 
@@ -688,6 +688,6 @@ Example: `projectDirectories.from(file("pkl-config/""))` +
 The project directories to create packages for.
 ====
 
-Common propeties:
+Common properties:
 
 include::../partials/gradle-common-properties.adoc[]

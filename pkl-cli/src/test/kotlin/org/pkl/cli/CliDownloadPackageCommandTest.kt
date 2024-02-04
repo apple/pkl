@@ -143,7 +143,7 @@ class CliDownloadPackageCommandTest {
   }
 
   @Test
-  fun `disabling cacheing is an error`(@TempDir tempDir: Path) {
+  fun `disabling caching is an error`(@TempDir tempDir: Path) {
     val cmd =
       CliDownloadPackageCommand(
         baseOptions = CliBaseOptions(workingDir = tempDir, noCache = true),

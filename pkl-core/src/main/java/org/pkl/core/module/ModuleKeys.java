@@ -516,7 +516,7 @@ public final class ModuleKeys {
     protected Pair<String, String> parseDependencyNotation(String importPath) {
       var idx = importPath.indexOf('/');
       if (idx == -1) {
-        // treat named dependency wihout a subpath as the root path.
+        // treat named dependency without a subpath as the root path.
         // i.e. resolve to `@foo` to `package://example.com/foo@1.0.0#/`
         return Pair.of(importPath.substring(1), "/");
       }

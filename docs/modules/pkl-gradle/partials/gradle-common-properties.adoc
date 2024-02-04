@@ -72,7 +72,7 @@ If `null`, defaults to `~/.pkl/cache`.
 [%collapsible]
 ====
 Default: `false` +
-Disable cacheing of packages.
+Disable caching of packages.
 ====
 
 .modulePath: ConfigurableFileCollection

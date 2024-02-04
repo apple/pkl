@@ -399,7 +399,7 @@ class PackageResolvers {
   }
 
   /**
-   * Resolves packages, cacheing them to disk.
+   * Resolves packages, caching them to disk.
    *
    * <p>Uses the built-in zip file system in {@link jdk.nio.zipfs} for reading files from the zip
    * archive.
@@ -480,12 +480,12 @@ class PackageResolvers {
         PackageUri packageUri, URI requestUri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       var metadataFileName = getLastSegmentName(packageUri) + ".json";
-      var metdataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
-      var cachePath = cacheDir.resolve(metdataRelativePath);
+      var metadataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
+      var cachePath = cacheDir.resolve(metadataRelativePath);
       if (Files.exists(cachePath)) {
         return cachePath;
       }
-      var tmpPath = tmpDir.resolve(metdataRelativePath);
+      var tmpPath = tmpDir.resolve(metadataRelativePath);
       try {
         downloadMetadata(packageUri, requestUri, tmpPath, checksums);
         Files.createDirectories(cachePath.getParent());
@@ -600,7 +600,7 @@ class PackageResolvers {
       var path = getZipFileSystem(uri, checksums).getPath(uri.getUri().getFragment());
       if (Files.isDirectory(path)) {
         if (allowDirectories) {
-          // mimick the format that we get when reading a `file:` directory
+          // mimic the format that we get when reading a `file:` directory
           try (var paths = Files.list(path)) {
             var text =
                 paths

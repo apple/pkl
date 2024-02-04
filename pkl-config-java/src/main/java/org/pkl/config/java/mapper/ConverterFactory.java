@@ -26,7 +26,7 @@ import org.pkl.core.PClassInfo;
  * for every parameterization of the target type. Once created, the converter is cached for later
  * use, and the factory is never again invoked for the same parameterized target type.
  *
- * <p>For best performace, all introspection of target types (for example using {@link Reflection})
+ * <p>For best performance, all introspection of target types (for example using {@link Reflection})
  * should happen in the factory rather then the returned converters.
  */
 @FunctionalInterface

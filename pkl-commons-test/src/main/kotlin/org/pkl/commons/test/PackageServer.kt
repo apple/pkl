@@ -119,11 +119,11 @@ object PackageServer {
   fun ensureStarted() =
     synchronized(this) {
       if (!started) {
-        // Crude hack to make sure that parrallel tests don't try and use each others mock server
+        // Crude hack to make sure that parallel tests don't try and use each others mock server
         // otherwise you get flaky tests when a server instance is shutdown by one set of tests
         // while another set of tests is still relying on it.
         // Side effect is that tests that spin up a mock package server are now serialised, rather
-        // than running in parrallel. But that seems like a reasonable tradeoff to avoid flaky
+        // than running in parallel. But that seems like a reasonable tradeoff to avoid flaky
         // tests.
         for (i in 1..20) {
           try {
@@ -134,7 +134,7 @@ object PackageServer {
             return@synchronized
           } catch (_: BindException) {
             println(
-              "Port $PORT in use after $i/20 attempt(s), probably another test running in parrallel. Sleeping for 1 second and trying again"
+              "Port $PORT in use after $i/20 attempt(s), probably another test running in parallel. Sleeping for 1 second and trying again"
             )
             Thread.sleep(1000)
           }

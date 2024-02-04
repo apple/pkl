@@ -137,7 +137,7 @@ typealias LocalDependency = Project(
 /// When fetching a remote dependency, two HTTPS requests are made.
 /// Given dependency URI `package://example.com/foo@0.5.0`, the following requests are made:
 ///
-///   1. `GET https://example.com/foo@0.5.0` to retreive the metadata JSON file.
+///   1. `GET https://example.com/foo@0.5.0` to retrieve the metadata JSON file.
 ///   2. Given the metadata JSON file, make a GET request to the package URI ZIP archive.
 /// 
 /// If this project is published as a package, these dependencies are included within the published
@@ -170,12 +170,12 @@ typealias LocalDependency = Project(
 /// Pkl uses the
 /// [minimum version selection algorithm 1](https://research.swtch.com/vgo-mvs#algorithm_1)
 /// to resolve dependencies.
-/// A dependency is identfied by its package URI, as well as its major semver number.
+/// A dependency is identified by its package URI, as well as its major semver number.
 ///
 /// To determine the resolved dependencies of a project, the following algorithm is applied:
 ///   1. Gather all dependencies, both direct and transitive.
 ///   2. For each package's major version, determine the highest declared minor version.
-///   3. Write each resolved depenency to sibling file `PklProject.deps.json`.
+///   3. Write each resolved dependency to sibling file `PklProject.deps.json`.
 dependencies: Mapping<String(!contains("/")), *RemoteDependency|LocalDependency>
 
 /// If set, controls the base evaluator settings when running the evaluator.
@@ -196,7 +196,7 @@ evaluatorSettings: EvaluatorSettings
 /// dependency.
 projectFileUri: String = reflect.Module(module).uri
 
-/// Instantiates a project definintion within the enclosing module.
+/// Instantiates a project definition within the enclosing module.
 ///
 /// This is a convenience method for setting [projectFileUri] to the enclosing module's URI.
 ///
@@ -443,7 +443,7 @@ class EvaluatorSettings {
 
   /// Disables the file system cache for `package:` modules.
   ///
-  /// When cacheing is disabled, packages are loaded over the network and stored in memory.
+  /// When caching is disabled, packages are loaded over the network and stored in memory.
   noCache: Boolean?
 
   /// A collection of jars, zips, or directories to be placed into the module path.

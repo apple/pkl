@@ -70,7 +70,7 @@ public class FileSystemManager {
   }
 
   /**
-   * Possibily close this file system. Will not close if the file system was initialized externally
+   * Possibly close this file system. Will not close if the file system was initialized externally
    * to Pkl.
    */
   private static synchronized void close(Handle fs) throws IOException {

@@ -269,7 +269,7 @@ Floats support the same comparison and arithmetic operators as integers.
 Float literals with zero fractional part can be safely replaced with integer literals.
 For example, it is safe to write `1.3 * 42` instead of `1.3 * 42.0`.
 
-Floats can also include the same underscore separater as integers. For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
+Floats can also include the same underscore separator as integers. For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
 
 TIP: As integers are more convenient to use than floats with zero fractional part, we recommend to require `x: Number` instead of `x: Float` in type annotations.
 
@@ -3363,7 +3363,7 @@ list3 = List(1, "x", 5.min, List(1, 2, 3)) // <3>
 ----
 <1> result: empty list
 <2> result: list of length 3
-<3> result: heterogenous list whose last element is another list
+<3> result: heterogeneous list whose last element is another list
 
 To concatenate lists, use the `+` operator:
 
@@ -3420,7 +3420,7 @@ res4 = Set(1, "x", 5.min, List(1, 2, 3)) // <4>
 <1> result: empty set
 <2> result: set of length 3
 <3> result: same set of length 3
-<4> result: heterogenous set that contains a list as its last element
+<4> result: heterogeneous set that contains a list as its last element
 
 To compute the union of sets, use the `+` operator:
 
@@ -3836,7 +3836,7 @@ More complex union types can be formed:
 foo: List<Boolean|Number|String>|Bird
 ----
 
-Union types have no implicit default values, but an explicit type can be choosen using a `*` marker:
+Union types have no implicit default values, but an explicit type can be chosen using a `*` marker:
 [source%parsed,{pkl}]
 ----
 foo: "a"|"b"       // undefined. Will throw an error if not amended
@@ -3997,7 +3997,7 @@ pigeon: Bird = new {
 ----
 <1> Restricts `name` to have at least three characters.
 <2> The name of the bird (`this`) should not be the same as the name of the `parent`.
-<3> Note how `parent` is different from `name`. If they were the same, we would be thrown a contraint error.
+<3> Note how `parent` is different from `name`. If they were the same, we would be thrown a constraint error.
 
 In the following example, we define a `Bird` with a name of only two characters.
 
@@ -5024,7 +5024,7 @@ To answer this question, Pkl follows these steps:
   If a match is found, this is the answer.
 . Search the `pkl.base` module for a top-level definition of method `x`.
   If a match is found, this is the answer.
-. Seach the class inheritance chain of `this`, starting with the class of `this`
+. Search the class inheritance chain of `this`, starting with the class of `this`
   and continuing upwards until and including class `Any`, for a method named `x.`
   If a match is found, this is the answer.
 . Throw a "method `x` not found" error.

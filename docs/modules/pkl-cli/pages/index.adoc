@@ -366,7 +366,7 @@ This command also takes <<common-options, common options>>.
 [[command-server]]
 === `pkl server`
 
-*Synopsys:* `pkl server`
+*Synopsis:* `pkl server`
 
 Run as a server that communicates over standard input/output.
 
@@ -375,7 +375,7 @@ This option is used for embedding Pkl in an external client, such as xref:swift:
 [[command-test]]
 === `pkl test`
 
-*Synopsys:* `pkl test [<options>] [<modules>]`
+*Synopsis:* `pkl test [<options>] [<modules>]`
 
 Evaluate the given `<modules>` as _tests_, producing a test report and appropriate exit code.
 
@@ -410,7 +410,7 @@ This command also takes <<common-options, common options>>.
 [[command-repl]]
 === `pkl repl`
 
-*Synopsys:* `pkl repl [<options>]`
+*Synopsis:* `pkl repl [<options>]`
 
 Start a REPL session.
 
