@@ -88,22 +88,22 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
-On amd64:
-
-[source,shell]
-[subs="+attributes"]
-----
-curl -L -o pkl {uri-pkl-macos-amd64-download}
-chmod +x pkl
-./pkl --version
-----
-
 On aarch64:
 
 [source,shell]
 [subs="+attributes"]
 ----
 curl -L -o pkl {uri-pkl-macos-aarch64-download}
+chmod +x pkl
+./pkl --version
+----
+
+On amd64:
+
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl {uri-pkl-macos-amd64-download}
 chmod +x pkl
 ./pkl --version
 ----
