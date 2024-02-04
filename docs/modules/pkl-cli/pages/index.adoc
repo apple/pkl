@@ -88,7 +88,7 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
-On amd64:
+On aarch64:
 
 [source,shell]
 [subs="+attributes"]
@@ -98,7 +98,7 @@ chmod +x pkl
 ./pkl --version
 ----
 
-On aarch64:
+On amd64:
 
 [source,shell]
 [subs="+attributes"]
