@@ -30,7 +30,7 @@ amountLearned: Float = 13.37
 
 duration: Duration = 30.min
 
-bandwidthRequirementPerSecond: DataSize = 50.mb
+bandwidthRequirementPerSecond: DataSize = 52.4288.mb
 ----
 
 In the above, you've explicitly annotated the code with type signatures.
@@ -45,7 +45,7 @@ part = 3
 hasExercises = true
 amountLearned = 13.37
 duration = 30.min
-bandwidthRequirementPerSecond = 50.mb
+bandwidthRequirementPerSecond = 52.4288.mb
 ----
 
 Note how `Duration` and `DataSize` help you prevent https://en.wikipedia.org/wiki/Mars_Climate_Orbiter[unit errors] in these common (for configuration) domains.
@@ -146,7 +146,7 @@ pklTutorialPart1 {
   hasExercises = true
   amountLearned = 13.37
   duration = 30.min
-  bandwidthRequirementPerSecond = 50.mb
+  bandwidthRequirementPerSecond = 52.4288.mb
 }
 pklTutorialPart2 {
   name = "Filling out a Template"
@@ -154,7 +154,7 @@ pklTutorialPart2 {
   hasExercises = true
   amountLearned = 13.37
   duration = 30.min
-  bandwidthRequirementPerSecond = 50.mb
+  bandwidthRequirementPerSecond = 52.4288.mb
 }
 pklTutorialPart3 {
   name = "Writing a Template"
@@ -162,7 +162,7 @@ pklTutorialPart3 {
   hasExercises = true
   amountLearned = 13.37
   duration = 30.min
-  bandwidthRequirementPerSecond = 50.mb
+  bandwidthRequirementPerSecond = 52.4288.mb
 }
 
 ----
@@ -199,7 +199,7 @@ amountLearned: Float = 13.37 // <2>
 
 duration: Duration = 30.min // <2>
 
-bandwidthRequirementPerSecond: DataSize = 50.mb // <2>
+bandwidthRequirementPerSecond: DataSize = 52.4288.mb // <2>
 ----
 <1> No default value given.
 <2> Default value given.
@@ -239,7 +239,7 @@ part = 3
 hasExercises = true
 amountLearned = 13.37
 duration = 30.min
-bandwidthRequirementPerSecond = 50.mb
+bandwidthRequirementPerSecond = 52.4288.mb
 
 ----
 
