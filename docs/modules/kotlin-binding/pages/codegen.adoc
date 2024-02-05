@@ -103,7 +103,7 @@ To run the CLI, execute the library Jar or its `org.pkl.codegen.kotlin.Main` mai
 *Synopsis:* `java -cp <classpath> -jar pkl-codegen-kotlin.jar [<options>] <modules>`
 
 `<modules>`::
-The absolute or relative URIs of the modules to generate classe for.
+The absolute or relative URIs of the modules to generate classes for.
 Relative URIs are resolved against the working directory.
 
 ==== Options

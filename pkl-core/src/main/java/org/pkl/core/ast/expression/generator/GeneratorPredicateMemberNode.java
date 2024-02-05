@@ -84,7 +84,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
     var visitedKeys = EconomicSets.create();
 
     // do our own traversal instead of relying on `VmAbstractObject.force/iterateMemberValues`
-    // (more efficent and we don't want to execute `predicateNode` behind Truffle boundary)
+    // (more efficient and we don't want to execute `predicateNode` behind Truffle boundary)
     for (var owner = parent; owner != null; owner = owner.getParent()) {
       var entries = EconomicMaps.getEntries(owner.getMembers());
       while (entries.advance()) {

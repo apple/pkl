@@ -32,7 +32,7 @@ The cache directory for storing packages.
 .--no-cache
 [%collapsible]
 ====
-Disable cacheing of packages.
+Disable caching of packages.
 ====
 
 .-e, --env-var

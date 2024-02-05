@@ -254,7 +254,7 @@ myFoo1: Foo = new Foo { foo = "bar" } // <1>
 myFoo2 = new Foo { foo = "bar" } // <2>
 ----
 <1> Unnecessary `new Foo { ... }`
-<2> Unless amending/extendinge a module where `myFoo2` is already defined, `myFoo2` is effectively the `unknown` type, i.e. `myFoo2: unknown`.
+<2> Unless amending/extending a module where `myFoo2` is already defined, `myFoo2` is effectively the `unknown` type, i.e. `myFoo2: unknown`.
 
 == Comments
 
@@ -270,7 +270,7 @@ Add a single space after `///`.
 
 [source%parsed,{pkl}]
 ----
-/// The time alotted for eating lunch.
+/// The time allotted for eating lunch.
 ///
 /// Note:
 /// * Hamburgers typically take longer to eat than salad.
@@ -300,7 +300,7 @@ A line comment may also be placed at the end of a line, as long as the line does
 [source%tested,{pkl}]
 ----
 /// Designates whether it is zebra party time.
-partyTime: Booleean // TODO: Add constraints here?
+partyTime: Boolean // TODO: Add constraints here?
 ----
 
 === Block comments

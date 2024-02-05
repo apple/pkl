@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Cannot spread object because the enclosing object already has a delcaration of property `foo`.
+Cannot spread object because the enclosing object already has a declaration of property `foo`.
 
 x | ...source
     ^^^^^^^^^

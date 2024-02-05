@@ -16,7 +16,7 @@
 package org.pkl.core;
 
 /**
- * A SecurityManagerException declares that a violation occured during an external i/o operation.
+ * A SecurityManagerException declares that a violation occurred during an external i/o operation.
  *
  * <p>{@link SecurityManagerException#getMessage()} is passed to users when errors arise.
  */

@@ -85,7 +85,7 @@ class ProjectCommand(helpLink: String) :
           This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
           Additionally, it verifies that all imports resolve to paths that are local to the project.
   
-          Finally, this command writes the folowing artifacts into the output directory specified by the output path.
+          Finally, this command writes the following artifacts into the output directory specified by the output path.
   
             - `name@version` - dependency metadata$NEWLINE
             - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE

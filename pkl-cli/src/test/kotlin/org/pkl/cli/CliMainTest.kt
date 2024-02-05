@@ -35,7 +35,7 @@ class CliMainTest {
   private val cmd = RootCommand("pkl", "pkl version 1", "").subcommands(evalCmd)
 
   @Test
-  fun `duplicate CLI option produces meaningful errror message`(@TempDir tempDir: Path) {
+  fun `duplicate CLI option produces meaningful error message`(@TempDir tempDir: Path) {
     val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
 
     assertThatCode {
