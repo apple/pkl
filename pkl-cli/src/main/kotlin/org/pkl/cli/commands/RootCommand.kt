@@ -20,20 +20,20 @@ import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.parameters.options.versionOption
 
 class RootCommand(name: String, version: String, helpLink: String) :
-  NoOpCliktCommand(
-    name = name,
-    printHelpOnEmptyArgs = true,
-    epilog = "For more information, visit $helpLink",
-  ) {
-  init {
-    versionOption(version, names = setOf("-v", "--version"), message = { it })
+    NoOpCliktCommand(
+        name = name,
+        printHelpOnEmptyArgs = true,
+        epilog = "For more information, visit $helpLink",
+    ) {
+    init {
+        versionOption(version, names = setOf("-v", "--version"), message = { it })
 
-    context {
-      correctionSuggestor = { given, possible ->
-        if (!given.startsWith("-")) {
-          registeredSubcommands().map { it.commandName }
-        } else possible
-      }
+        context {
+            correctionSuggestor = { given, possible ->
+                if (!given.startsWith("-")) {
+                    registeredSubcommands().map { it.commandName }
+                } else possible
+            }
+        }
     }
-  }
 }

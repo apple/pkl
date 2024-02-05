@@ -27,44 +27,45 @@ import org.pkl.core.*
 import org.pkl.core.ModuleSource.modulePath
 
 class PPairToKotlinPairTest {
-  companion object {
-    private val evaluator = Evaluator.preconfigured()
+    companion object {
+        private val evaluator = Evaluator.preconfigured()
 
-    private val module =
-      evaluator.evaluate(modulePath("org/pkl/config/kotlin/mapper/PPairToKotlinPairTest.pkl"))
+        private val module =
+            evaluator.evaluate(modulePath("org/pkl/config/kotlin/mapper/PPairToKotlinPairTest.pkl"))
 
-    private val mapper = ValueMapperBuilder.preconfigured().forKotlin().build()
+        private val mapper = ValueMapperBuilder.preconfigured().forKotlin().build()
 
-    @AfterAll
-    @Suppress("unused")
-    @JvmStatic
-    fun afterAll() {
-      evaluator.close()
+        @AfterAll
+        @Suppress("unused")
+        @JvmStatic
+        fun afterAll() {
+            evaluator.close()
+        }
     }
-  }
 
-  @Test
-  fun ex1() {
-    val ex1 = module.getProperty("ex1")
-    val mapped: Pair<Int, Duration> =
-      mapper.map(
-        ex1,
-        Types.parameterizedType(Pair::class.java, Integer::class.java, Duration::class.java)
-      )
-    assertThat(mapped).isEqualTo(Pair(1, Duration(3.0, DurationUnit.SECONDS)))
-  }
+    @Test
+    fun ex1() {
+        val ex1 = module.getProperty("ex1")
+        val mapped: Pair<Int, Duration> =
+            mapper.map(
+                ex1,
+                Types.parameterizedType(Pair::class.java, Integer::class.java, Duration::class.java)
+            )
+        assertThat(mapped).isEqualTo(Pair(1, Duration(3.0, DurationUnit.SECONDS)))
+    }
 
-  @Test
-  fun ex2() {
-    val ex2 = module.getProperty("ex2")
-    val mapped: Pair<PObject, PObject> =
-      mapper.map(
-        ex2,
-        Types.parameterizedType(Pair::class.java, PObject::class.java, PObject::class.java)
-      )
+    @Test
+    fun ex2() {
+        val ex2 = module.getProperty("ex2")
+        val mapped: Pair<PObject, PObject> =
+            mapper.map(
+                ex2,
+                Types.parameterizedType(Pair::class.java, PObject::class.java, PObject::class.java)
+            )
 
-    assertThat(mapped.first.properties).containsOnly(entry("name", "pigeon"), entry("age", 40L))
+        assertThat(mapped.first.properties).containsOnly(entry("name", "pigeon"), entry("age", 40L))
 
-    assertThat(mapped.second.properties).containsOnly(entry("name", "parrot"), entry("age", 30L))
-  }
+        assertThat(mapped.second.properties)
+            .containsOnly(entry("name", "parrot"), entry("age", 30L))
+    }
 }

@@ -21,8 +21,8 @@ import org.msgpack.core.MessagePacker
 
 /** Factory methods for creating [MessageEncoder]s. */
 internal object MessageEncoders {
-  fun into(stream: OutputStream): MessageEncoder =
-    MessagePackEncoder(MessagePack.newDefaultPacker(stream))
+    fun into(stream: OutputStream): MessageEncoder =
+        MessagePackEncoder(MessagePack.newDefaultPacker(stream))
 
-  fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
+    fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
 }

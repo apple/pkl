@@ -17,5 +17,5 @@ package org.pkl.server
 
 /** Encodes a stream of messages. */
 internal interface MessageEncoder {
-  fun encode(msg: Message)
+    fun encode(msg: Message)
 }

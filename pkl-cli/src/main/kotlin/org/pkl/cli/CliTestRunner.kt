@@ -27,78 +27,78 @@ import org.pkl.core.util.ErrorMessages
 class CliTestRunner
 @JvmOverloads
 constructor(
-  private val options: CliBaseOptions,
-  private val testOptions: CliTestOptions,
-  private val consoleWriter: Writer = System.out.writer(),
-  private val errWriter: Writer = System.err.writer()
+    private val options: CliBaseOptions,
+    private val testOptions: CliTestOptions,
+    private val consoleWriter: Writer = System.out.writer(),
+    private val errWriter: Writer = System.err.writer()
 ) : CliCommand(options) {
 
-  override fun doRun() {
-    val builder = evaluatorBuilder()
-    try {
-      evalTest(builder)
-    } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+    override fun doRun() {
+        val builder = evaluatorBuilder()
+        try {
+            evalTest(builder)
+        } finally {
+            ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+        }
     }
-  }
 
-  private fun evalTest(builder: EvaluatorBuilder) {
-    val sources =
-      options.normalizedSourceModules.ifEmpty { project?.tests?.map { it.toUri() } }
-        ?:
-        // keep in sync with error message thrown by clikt
-        throw CliException(
-          """
+    private fun evalTest(builder: EvaluatorBuilder) {
+        val sources =
+            options.normalizedSourceModules.ifEmpty { project?.tests?.map { it.toUri() } }
+                ?:
+                // keep in sync with error message thrown by clikt
+                throw CliException(
+                    """
           Usage: pkl test [OPTIONS] <modules>...
           
           Error: Missing argument "<modules>"
         """
-            .trimIndent()
-        )
+                        .trimIndent()
+                )
 
-    val evaluator = builder.build()
-    evaluator.use {
-      var failed = false
-      val moduleNames = mutableSetOf<String>()
-      for (moduleUri in sources) {
-        try {
-          val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
-          if (!failed) {
-            failed = results.failed()
-          }
-          SimpleReport().report(results, consoleWriter)
-          consoleWriter.flush()
-          val junitDir = testOptions.junitDir
-          if (junitDir != null) {
-            junitDir.toFile().mkdirs()
-            val moduleName = "${results.moduleName}.xml"
-            if (moduleName in moduleNames) {
-              throw RuntimeException(
-                """
+        val evaluator = builder.build()
+        evaluator.use {
+            var failed = false
+            val moduleNames = mutableSetOf<String>()
+            for (moduleUri in sources) {
+                try {
+                    val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
+                    if (!failed) {
+                        failed = results.failed()
+                    }
+                    SimpleReport().report(results, consoleWriter)
+                    consoleWriter.flush()
+                    val junitDir = testOptions.junitDir
+                    if (junitDir != null) {
+                        junitDir.toFile().mkdirs()
+                        val moduleName = "${results.moduleName}.xml"
+                        if (moduleName in moduleNames) {
+                            throw RuntimeException(
+                                """
                   Cannot generate JUnit report for $moduleUri.
                   A report with the same name was already generated.
                   
                   To fix, provide a different name for this module by adding a module header.
                 """
-                  .trimIndent()
-              )
+                                    .trimIndent()
+                            )
+                        }
+                        moduleNames += moduleName
+                        JUnitReport().reportToPath(results, junitDir.resolve(moduleName))
+                    }
+                } catch (ex: Exception) {
+                    errWriter.appendLine("Error evaluating module ${moduleUri.path}:")
+                    errWriter.write(ex.message ?: "")
+                    if (moduleUri != sources.last()) {
+                        errWriter.appendLine()
+                    }
+                    errWriter.flush()
+                    failed = true
+                }
             }
-            moduleNames += moduleName
-            JUnitReport().reportToPath(results, junitDir.resolve(moduleName))
-          }
-        } catch (ex: Exception) {
-          errWriter.appendLine("Error evaluating module ${moduleUri.path}:")
-          errWriter.write(ex.message ?: "")
-          if (moduleUri != sources.last()) {
-            errWriter.appendLine()
-          }
-          errWriter.flush()
-          failed = true
+            if (failed) {
+                throw CliTestException(ErrorMessages.create("testsFailed"))
+            }
         }
-      }
-      if (failed) {
-        throw CliTestException(ErrorMessages.create("testsFailed"))
-      }
     }
-  }
 }

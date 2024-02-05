@@ -35,158 +35,160 @@ import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseOptions : OptionGroup() {
-  companion object {
-    fun includedCARootCerts(): InputStream {
-      return BaseOptions::class.java.getResourceAsStream("IncludedCARoots.pem")!!
-    }
-  }
-
-  private val defaults = CliBaseOptions()
-
-  private val output =
-    arrayOf("json", "jsonnet", "pcf", "properties", "plist", "textproto", "xml", "yaml")
-
-  val allowedModules: List<Pattern> by
-    option(
-        names = arrayOf("--allowed-modules"),
-        help = "URI patterns that determine which modules can be loaded and evaluated."
-      )
-      .convert("<pattern1,pattern2>") { Pattern.compile(it) }
-      .splitAll(",")
-
-  val allowedResources: List<Pattern> by
-    option(
-        names = arrayOf("--allowed-resources"),
-        help = "URI patterns that determine which external resources can be read."
-      )
-      .convert("<pattern1,pattern2>") { Pattern.compile(it) }
-      .splitAll(",")
-
-  val rootDir: Path? by
-    option(
-        names = arrayOf("--root-dir"),
-        help =
-          "Restricts access to file-based modules and resources to those located under the root directory."
-      )
-      .single()
-      .path()
-
-  val cacheDir: Path? by
-    option(names = arrayOf("--cache-dir"), help = "The cache directory for storing packages.")
-      .single()
-      .path()
-
-  val workingDir: Path by
-    option(
-        names = arrayOf("-w", "--working-dir"),
-        help = "Base path that relative module paths are resolved against."
-      )
-      .single()
-      .path()
-      .default(defaults.normalizedWorkingDir)
-
-  val properties: Map<String, String> by
-    option(
-        names = arrayOf("-p", "--property"),
-        metavar = "<name=value>",
-        help = "External property to set (repeatable)."
-      )
-      .associate()
-
-  val noCache: Boolean by
-    option(names = arrayOf("--no-cache"), help = "Disable cacheing of packages")
-      .single()
-      .flag(default = false)
-
-  val format: String? by
-    option(
-        names = arrayOf("-f", "--format"),
-        help = "Output format to generate. <${output.joinToString()}>"
-      )
-      .single()
-
-  val envVars: Map<String, String> by
-    option(
-        names = arrayOf("-e", "--env-var"),
-        metavar = "<name=value>",
-        help = "Environment variable to set (repeatable)."
-      )
-      .associate()
-
-  val modulePath: List<Path> by
-    option(
-        names = arrayOf("--module-path"),
-        metavar = "<path1${File.pathSeparator}path2>",
-        help =
-          "Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs."
-      )
-      .path()
-      .splitAll(File.pathSeparator)
-
-  val settings: URI? by
-    option(names = arrayOf("--settings"), help = "Pkl settings module to use.").single().convert {
-      IoUtils.toUri(it)
+    companion object {
+        fun includedCARootCerts(): InputStream {
+            return BaseOptions::class.java.getResourceAsStream("IncludedCARoots.pem")!!
+        }
     }
 
-  val timeout: Duration? by
-    option(
-        names = arrayOf("-t", "--timeout"),
-        metavar = "<number>",
-        help = "Duration, in seconds, after which evaluation of a source module will be timed out."
-      )
-      .single()
-      .long()
-      .convert { Duration.ofSeconds(it) }
+    private val defaults = CliBaseOptions()
 
-  val caCertificates: List<Path> by
-    option(
-        names = arrayOf("--ca-certificates"),
-        metavar = "<path>",
-        help = "Replaces the built-in CA certificates with the provided certificate file."
-      )
-      .path()
-      .multiple()
+    private val output =
+        arrayOf("json", "jsonnet", "pcf", "properties", "plist", "textproto", "xml", "yaml")
 
-  /**
-   * 1. If `--ca-certificates` option is not empty, use that.
-   * 2. If directory `~/.pkl/cacerts` is not empty, use that.
-   * 3. Use the bundled CA certificates.
-   */
-  private fun getEffectiveCaCertificates(): List<Any> {
-    return caCertificates
-      .ifEmpty {
-        val home = System.getProperty("user.home")
-        val cacerts = Path.of(home, ".pkl", "cacerts")
-        if (cacerts.exists() && cacerts.isDirectory())
-          Files.list(cacerts).filter(Path::isRegularFile).collect(Collectors.toList())
-        else emptyList()
-      }
-      .ifEmpty { listOf(includedCARootCerts()) }
-  }
+    val allowedModules: List<Pattern> by
+        option(
+                names = arrayOf("--allowed-modules"),
+                help = "URI patterns that determine which modules can be loaded and evaluated."
+            )
+            .convert("<pattern1,pattern2>") { Pattern.compile(it) }
+            .splitAll(",")
 
-  fun baseOptions(
-    modules: List<URI>,
-    projectOptions: ProjectOptions? = null,
-    testMode: Boolean = false
-  ): CliBaseOptions {
-    return CliBaseOptions(
-      sourceModules = modules,
-      allowedModules = allowedModules.ifEmpty { null },
-      allowedResources = allowedResources.ifEmpty { null },
-      environmentVariables = envVars.ifEmpty { null },
-      externalProperties = properties.mapValues { it.value.ifBlank { "true" } }.ifEmpty { null },
-      modulePath = modulePath.ifEmpty { null },
-      workingDir = workingDir,
-      settings = settings,
-      rootDir = rootDir,
-      projectDir = projectOptions?.projectDir,
-      timeout = timeout,
-      moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
-      noCache = noCache,
-      testMode = testMode,
-      omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
-      noProject = projectOptions?.noProject ?: false,
-      caCertificates = getEffectiveCaCertificates()
-    )
-  }
+    val allowedResources: List<Pattern> by
+        option(
+                names = arrayOf("--allowed-resources"),
+                help = "URI patterns that determine which external resources can be read."
+            )
+            .convert("<pattern1,pattern2>") { Pattern.compile(it) }
+            .splitAll(",")
+
+    val rootDir: Path? by
+        option(
+                names = arrayOf("--root-dir"),
+                help =
+                    "Restricts access to file-based modules and resources to those located under the root directory."
+            )
+            .single()
+            .path()
+
+    val cacheDir: Path? by
+        option(names = arrayOf("--cache-dir"), help = "The cache directory for storing packages.")
+            .single()
+            .path()
+
+    val workingDir: Path by
+        option(
+                names = arrayOf("-w", "--working-dir"),
+                help = "Base path that relative module paths are resolved against."
+            )
+            .single()
+            .path()
+            .default(defaults.normalizedWorkingDir)
+
+    val properties: Map<String, String> by
+        option(
+                names = arrayOf("-p", "--property"),
+                metavar = "<name=value>",
+                help = "External property to set (repeatable)."
+            )
+            .associate()
+
+    val noCache: Boolean by
+        option(names = arrayOf("--no-cache"), help = "Disable cacheing of packages")
+            .single()
+            .flag(default = false)
+
+    val format: String? by
+        option(
+                names = arrayOf("-f", "--format"),
+                help = "Output format to generate. <${output.joinToString()}>"
+            )
+            .single()
+
+    val envVars: Map<String, String> by
+        option(
+                names = arrayOf("-e", "--env-var"),
+                metavar = "<name=value>",
+                help = "Environment variable to set (repeatable)."
+            )
+            .associate()
+
+    val modulePath: List<Path> by
+        option(
+                names = arrayOf("--module-path"),
+                metavar = "<path1${File.pathSeparator}path2>",
+                help =
+                    "Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs."
+            )
+            .path()
+            .splitAll(File.pathSeparator)
+
+    val settings: URI? by
+        option(names = arrayOf("--settings"), help = "Pkl settings module to use.")
+            .single()
+            .convert { IoUtils.toUri(it) }
+
+    val timeout: Duration? by
+        option(
+                names = arrayOf("-t", "--timeout"),
+                metavar = "<number>",
+                help =
+                    "Duration, in seconds, after which evaluation of a source module will be timed out."
+            )
+            .single()
+            .long()
+            .convert { Duration.ofSeconds(it) }
+
+    val caCertificates: List<Path> by
+        option(
+                names = arrayOf("--ca-certificates"),
+                metavar = "<path>",
+                help = "Replaces the built-in CA certificates with the provided certificate file."
+            )
+            .path()
+            .multiple()
+
+    /**
+     * 1. If `--ca-certificates` option is not empty, use that.
+     * 2. If directory `~/.pkl/cacerts` is not empty, use that.
+     * 3. Use the bundled CA certificates.
+     */
+    private fun getEffectiveCaCertificates(): List<Any> {
+        return caCertificates
+            .ifEmpty {
+                val home = System.getProperty("user.home")
+                val cacerts = Path.of(home, ".pkl", "cacerts")
+                if (cacerts.exists() && cacerts.isDirectory())
+                    Files.list(cacerts).filter(Path::isRegularFile).collect(Collectors.toList())
+                else emptyList()
+            }
+            .ifEmpty { listOf(includedCARootCerts()) }
+    }
+
+    fun baseOptions(
+        modules: List<URI>,
+        projectOptions: ProjectOptions? = null,
+        testMode: Boolean = false
+    ): CliBaseOptions {
+        return CliBaseOptions(
+            sourceModules = modules,
+            allowedModules = allowedModules.ifEmpty { null },
+            allowedResources = allowedResources.ifEmpty { null },
+            environmentVariables = envVars.ifEmpty { null },
+            externalProperties =
+                properties.mapValues { it.value.ifBlank { "true" } }.ifEmpty { null },
+            modulePath = modulePath.ifEmpty { null },
+            workingDir = workingDir,
+            settings = settings,
+            rootDir = rootDir,
+            projectDir = projectOptions?.projectDir,
+            timeout = timeout,
+            moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
+            noCache = noCache,
+            testMode = testMode,
+            omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
+            noProject = projectOptions?.noProject ?: false,
+            caCertificates = getEffectiveCaCertificates()
+        )
+    }
 }

@@ -23,20 +23,20 @@ import org.pkl.commons.resolveSafely
 data class CliDocGeneratorOptions
 @JvmOverloads
 constructor(
-  /** Base options shared between CLI commands. */
-  val base: CliBaseOptions,
+    /** Base options shared between CLI commands. */
+    val base: CliBaseOptions,
 
-  /** The directory where generated documentation is placed. */
-  val outputDir: Path,
+    /** The directory where generated documentation is placed. */
+    val outputDir: Path,
 
-  /**
-   * Internal option only used for testing.
-   *
-   * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
-   * files (e.g., when stdlib line numbers change).
-   */
-  val isTestMode: Boolean = false
+    /**
+     * Internal option only used for testing.
+     *
+     * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
+     * files (e.g., when stdlib line numbers change).
+     */
+    val isTestMode: Boolean = false
 ) {
-  /** [outputDir] after undergoing normalization. */
-  val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)
+    /** [outputDir] after undergoing normalization. */
+    val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)
 }

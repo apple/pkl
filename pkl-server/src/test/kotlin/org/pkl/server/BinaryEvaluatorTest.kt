@@ -25,35 +25,35 @@ import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.resource.ResourceReaders
 
 class BinaryEvaluatorTest {
-  private val evaluator =
-    BinaryEvaluator(
-      StackFrameTransformers.defaultTransformer,
-      SecurityManagers.standard(
-        listOf(Pattern.compile(".*")),
-        listOf(Pattern.compile(".*")),
-        SecurityManagers.defaultTrustLevels,
-        Path.of("")
-      ),
-      Loggers.noop(),
-      listOf(ModuleKeyFactories.standardLibrary),
-      listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
-      mapOf(),
-      mapOf(),
-      null,
-      null,
-      null,
-      null
-    )
+    private val evaluator =
+        BinaryEvaluator(
+            StackFrameTransformers.defaultTransformer,
+            SecurityManagers.standard(
+                listOf(Pattern.compile(".*")),
+                listOf(Pattern.compile(".*")),
+                SecurityManagers.defaultTrustLevels,
+                Path.of("")
+            ),
+            Loggers.noop(),
+            listOf(ModuleKeyFactories.standardLibrary),
+            listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+            mapOf(),
+            mapOf(),
+            null,
+            null,
+            null,
+            null
+        )
 
-  private fun evaluate(text: String, expression: String?) =
-    evaluator.evaluate(ModuleSource.text(text), expression)
+    private fun evaluate(text: String, expression: String?) =
+        evaluator.evaluate(ModuleSource.text(text), expression)
 
-  @Test
-  fun `evaluate whole module`() {
-    val bytes = evaluate("foo = 1", null)
-    assertThat(bytes.debugRendering)
-      .isEqualTo(
-        """
+    @Test
+    fun `evaluate whole module`() {
+        val bytes = evaluate("foo = 1", null)
+        assertThat(bytes.debugRendering)
+            .isEqualTo(
+                """
       - 1
       - text
       - repl:text
@@ -63,31 +63,31 @@ class BinaryEvaluatorTest {
           - foo
           - 1
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `evaluate subpath`() {
-    val bytes =
-      evaluate(
-        """
+    @Test
+    fun `evaluate subpath`() {
+        val bytes =
+            evaluate(
+                """
       foo {
         bar = 2
       }
     """
-          .trimIndent(),
-        "foo.bar"
-      )
+                    .trimIndent(),
+                "foo.bar"
+            )
 
-    assertThat(bytes.asInt()).isEqualTo(2)
-  }
+        assertThat(bytes.asInt()).isEqualTo(2)
+    }
 
-  @Test
-  fun `evaluate output text`() {
-    val bytes =
-      evaluate(
-        """
+    @Test
+    fun `evaluate output text`() {
+        val bytes =
+            evaluate(
+                """
       foo {
         bar = 2
       }
@@ -96,55 +96,56 @@ class BinaryEvaluatorTest {
         renderer = new YamlRenderer {}
       }
     """
-          .trimIndent(),
-        "output.text"
-      )
+                    .trimIndent(),
+                "output.text"
+            )
 
-    assertThat(bytes.asString())
-      .isEqualTo(
-        """
+        assertThat(bytes.asString())
+            .isEqualTo(
+                """
       foo:
         bar: 2
 
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `evaluate let expression`() {
-    val bytes = evaluate("foo = 1", "let (bar = 2) foo + bar")
+    @Test
+    fun `evaluate let expression`() {
+        val bytes = evaluate("foo = 1", "let (bar = 2) foo + bar")
 
-    assertThat(bytes.asInt()).isEqualTo(3)
-  }
+        assertThat(bytes.asInt()).isEqualTo(3)
+    }
 
-  @Test
-  fun `evaluate import expression`() {
-    val bytes = evaluate("", """import("pkl:release").current.documentation.homepage""")
+    @Test
+    fun `evaluate import expression`() {
+        val bytes = evaluate("", """import("pkl:release").current.documentation.homepage""")
 
-    assertThat(bytes.asString()).startsWith("https://pkl-lang.org/")
-  }
+        assertThat(bytes.asString()).startsWith("https://pkl-lang.org/")
+    }
 
-  @Test
-  fun `evaluate expression with invalid syntax`() {
-    val error = assertThrows<PklException> { evaluate("foo = 1", "<>!!!") }
+    @Test
+    fun `evaluate expression with invalid syntax`() {
+        val error = assertThrows<PklException> { evaluate("foo = 1", "<>!!!") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
-    assertThat(error).hasMessageContaining("<>!!!")
-  }
+        assertThat(error).hasMessageContaining("Mismatched input")
+        assertThat(error).hasMessageContaining("<>!!!")
+    }
 
-  @Test
-  fun `evaluate non-expression`() {
-    val error = assertThrows<PklException> { evaluate("bar = 2", "bar = 15") }
+    @Test
+    fun `evaluate non-expression`() {
+        val error = assertThrows<PklException> { evaluate("bar = 2", "bar = 15") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
-    assertThat(error).hasMessageContaining("bar = 15")
-  }
+        assertThat(error).hasMessageContaining("Mismatched input")
+        assertThat(error).hasMessageContaining("bar = 15")
+    }
 
-  @Test
-  fun `evaluate semantically invalid expression`() {
-    val error = assertThrows<PklException> { evaluate("foo = 1", "foo as String") }
+    @Test
+    fun `evaluate semantically invalid expression`() {
+        val error = assertThrows<PklException> { evaluate("foo = 1", "foo as String") }
 
-    assertThat(error).hasMessageContaining("Expected value of type `String`, but got type `Int`")
-  }
+        assertThat(error)
+            .hasMessageContaining("Expected value of type `String`, but got type `Int`")
+    }
 }

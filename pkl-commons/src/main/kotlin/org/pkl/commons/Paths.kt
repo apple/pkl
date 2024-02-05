@@ -27,38 +27,38 @@ import kotlin.io.path.isSymbolicLink
 
 // not stored to avoid build-time initialization by native-image
 val currentWorkingDir: Path
-  get() = System.getProperty("user.dir").toPath()
+    get() = System.getProperty("user.dir").toPath()
 
 // unlike `Path.resolve`, this works across file systems if `other` is absolute
 fun Path.resolveSafely(other: Path): Path = if (other.isAbsolute) other else resolve(other)
 
 @Throws(IOException::class)
 fun Path.walk(maxDepth: Int = Int.MAX_VALUE, vararg options: FileVisitOption): Stream<Path> =
-  Files.walk(this, maxDepth, *options)
+    Files.walk(this, maxDepth, *options)
 
 @Throws(IOException::class)
 fun Path.createTempFile(
-  prefix: String? = null,
-  suffix: String? = null,
-  vararg attributes: FileAttribute<*>
+    prefix: String? = null,
+    suffix: String? = null,
+    vararg attributes: FileAttribute<*>
 ): Path = Files.createTempFile(this, prefix, suffix, *attributes)
 
 @Throws(IOException::class)
 fun Path.createParentDirectories(vararg attributes: FileAttribute<*>): Path = apply {
-  // Files.createDirectories will throw a FileAlreadyExistsException
-  // if the file exists and is not a directory and symlinks are never
-  // directories
-  if (parent?.isSymbolicLink() != true) {
-    parent?.createDirectories(*attributes)
-  }
+    // Files.createDirectories will throw a FileAlreadyExistsException
+    // if the file exists and is not a directory and symlinks are never
+    // directories
+    if (parent?.isSymbolicLink() != true) {
+        parent?.createDirectories(*attributes)
+    }
 }
 
 /** [Files.writeString] seems more efficient than [kotlin.io.path.writeText]. */
 @Throws(IOException::class)
 fun Path.writeString(
-  text: String,
-  charset: Charset = Charsets.UTF_8,
-  vararg options: OpenOption
+    text: String,
+    charset: Charset = Charsets.UTF_8,
+    vararg options: OpenOption
 ): Path = Files.writeString(this, text, charset, *options)
 
 /** [Files.readString] seems more efficient than [kotlin.io.path.readText]. */
@@ -67,7 +67,9 @@ fun Path.readString(charset: Charset = Charsets.UTF_8): String = Files.readStrin
 
 @Throws(IOException::class)
 fun Path.deleteRecursively() {
-  if (exists()) {
-    walk().use { paths -> paths.sorted(Comparator.reverseOrder()).forEach { it.deleteIfExists() } }
-  }
+    if (exists()) {
+        walk().use { paths ->
+            paths.sorted(Comparator.reverseOrder()).forEach { it.deleteIfExists() }
+        }
+    }
 }

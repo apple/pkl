@@ -21,10 +21,10 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 
 fun Path.writeFile(fileName: String, contents: String): Path {
-  return resolve(fileName).apply {
-    createParentDirectories()
-    writeString(contents, StandardCharsets.UTF_8)
-  }
+    return resolve(fileName).apply {
+        createParentDirectories()
+        writeString(contents, StandardCharsets.UTF_8)
+    }
 }
 
 fun Path.writeEmptyFile(fileName: String): Path = writeFile(fileName, "")

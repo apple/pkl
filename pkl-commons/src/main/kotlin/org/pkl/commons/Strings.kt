@@ -22,8 +22,8 @@ fun String.toPath(): Path = Path.of(this)
 
 /** Copy of org.pkl.core.util.IoUtils.toUri */
 fun String.toUri(): URI =
-  if (contains(":")) {
-    URI(this)
-  } else {
-    URI(null, null, this, null)
-  }
+    if (contains(":")) {
+        URI(this)
+    } else {
+        URI(null, null, this, null)
+    }

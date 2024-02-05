@@ -20,13 +20,13 @@ import org.pkl.cli.CliServer
 import org.pkl.commons.cli.CliBaseOptions
 
 class ServerCommand(helpLink: String) :
-  CliktCommand(
-    name = "server",
-    help = "Run as a server that communicates over standard input/output",
-    epilog = "For more information, visit $helpLink"
-  ) {
+    CliktCommand(
+        name = "server",
+        help = "Run as a server that communicates over standard input/output",
+        epilog = "For more information, visit $helpLink"
+    ) {
 
-  override fun run() {
-    CliServer(CliBaseOptions()).run()
-  }
+    override fun run() {
+        CliServer(CliBaseOptions()).run()
+    }
 }

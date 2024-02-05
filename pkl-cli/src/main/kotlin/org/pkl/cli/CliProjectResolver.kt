@@ -24,30 +24,33 @@ import org.pkl.core.packages.PackageResolver
 import org.pkl.core.project.ProjectDependenciesResolver
 
 class CliProjectResolver(
-  baseOptions: CliBaseOptions,
-  projectDirs: List<Path>,
-  private val consoleWriter: Writer = System.out.writer(),
-  private val errWriter: Writer = System.err.writer()
+    baseOptions: CliBaseOptions,
+    projectDirs: List<Path>,
+    private val consoleWriter: Writer = System.out.writer(),
+    private val errWriter: Writer = System.err.writer()
 ) : CliAbstractProjectCommand(baseOptions, projectDirs) {
-  override fun doRun() {
-    for (projectFile in normalizedProjectFiles) {
-      val project = loadProject(projectFile)
-      val packageResolver =
-        PackageResolver.getInstance(
-          SecurityManagers.standard(
-            allowedModules,
-            allowedResources,
-            SecurityManagers.defaultTrustLevels,
-            rootDir
-          ),
-          moduleCacheDir
-        )
-      val dependencies = ProjectDependenciesResolver(project, packageResolver, errWriter).resolve()
-      val depsFile =
-        projectFile.parent.resolve(ProjectDependenciesManager.PKL_PROJECT_DEPS_FILENAME).toFile()
-      depsFile.outputStream().use { dependencies.writeTo(it) }
-      consoleWriter.appendLine(depsFile.toString())
-      consoleWriter.flush()
+    override fun doRun() {
+        for (projectFile in normalizedProjectFiles) {
+            val project = loadProject(projectFile)
+            val packageResolver =
+                PackageResolver.getInstance(
+                    SecurityManagers.standard(
+                        allowedModules,
+                        allowedResources,
+                        SecurityManagers.defaultTrustLevels,
+                        rootDir
+                    ),
+                    moduleCacheDir
+                )
+            val dependencies =
+                ProjectDependenciesResolver(project, packageResolver, errWriter).resolve()
+            val depsFile =
+                projectFile.parent
+                    .resolve(ProjectDependenciesManager.PKL_PROJECT_DEPS_FILENAME)
+                    .toFile()
+            depsFile.outputStream().use { dependencies.writeTo(it) }
+            consoleWriter.appendLine(depsFile.toString())
+            consoleWriter.flush()
+        }
     }
-  }
 }

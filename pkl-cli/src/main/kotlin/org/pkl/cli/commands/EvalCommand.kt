@@ -25,64 +25,66 @@ import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
 class EvalCommand(helpLink: String) :
-  ModulesCommand(
-    name = "eval",
-    help = "Render pkl module(s)",
-    helpLink = helpLink,
-  ) {
-  private val outputPath: String? by
-    option(
-        names = arrayOf("-o", "--output-path"),
-        metavar = "<path>",
-        help = "File path where the output file is placed."
-      )
-      .single()
+    ModulesCommand(
+        name = "eval",
+        help = "Render pkl module(s)",
+        helpLink = helpLink,
+    ) {
+    private val outputPath: String? by
+        option(
+                names = arrayOf("-o", "--output-path"),
+                metavar = "<path>",
+                help = "File path where the output file is placed."
+            )
+            .single()
 
-  private val moduleOutputSeparator: String by
-    option(
-        names = arrayOf("--module-output-separator"),
-        metavar = "<string>",
-        help =
-          "Separator to use when multiple module outputs are written to the same file. (default: ---)"
-      )
-      .single()
-      .default("---")
+    private val moduleOutputSeparator: String by
+        option(
+                names = arrayOf("--module-output-separator"),
+                metavar = "<string>",
+                help =
+                    "Separator to use when multiple module outputs are written to the same file. (default: ---)"
+            )
+            .single()
+            .default("---")
 
-  private val expression: String? by
-    option(
-        names = arrayOf("-x", "--expression"),
-        metavar = "<expression>",
-        help = "Expression to be evaluated within the module."
-      )
-      .single()
+    private val expression: String? by
+        option(
+                names = arrayOf("-x", "--expression"),
+                metavar = "<expression>",
+                help = "Expression to be evaluated within the module."
+            )
+            .single()
 
-  private val multipleFileOutputPath: String? by
-    option(
-        names = arrayOf("-m", "--multiple-file-output-path"),
-        metavar = "<path>",
-        help = "Directory where a module's multiple file output is placed."
-      )
-      .single()
-      .validate {
-        if (outputPath != null || expression != null) {
-          fail("Option is mutually exclusive with -o, --output-path and -x, --expression.")
-        }
-      }
+    private val multipleFileOutputPath: String? by
+        option(
+                names = arrayOf("-m", "--multiple-file-output-path"),
+                metavar = "<path>",
+                help = "Directory where a module's multiple file output is placed."
+            )
+            .single()
+            .validate {
+                if (outputPath != null || expression != null) {
+                    fail(
+                        "Option is mutually exclusive with -o, --output-path and -x, --expression."
+                    )
+                }
+            }
 
-  // hidden option used by the native tests
-  private val testMode: Boolean by
-    option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
+    // hidden option used by the native tests
+    private val testMode: Boolean by
+        option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
 
-  override fun run() {
-    val options =
-      CliEvaluatorOptions(
-        base = baseOptions.baseOptions(modules, projectOptions, testMode = testMode),
-        outputPath = outputPath,
-        outputFormat = baseOptions.format,
-        moduleOutputSeparator = moduleOutputSeparator,
-        multipleFileOutputPath = multipleFileOutputPath,
-        expression = expression ?: CliEvaluatorOptions.defaults.expression
-      )
-    CliEvaluator(options).run()
-  }
+    override fun run() {
+        val options =
+            CliEvaluatorOptions(
+                base = baseOptions.baseOptions(modules, projectOptions, testMode = testMode),
+                outputPath = outputPath,
+                outputFormat = baseOptions.format,
+                moduleOutputSeparator = moduleOutputSeparator,
+                multipleFileOutputPath = multipleFileOutputPath,
+                expression = expression ?: CliEvaluatorOptions.defaults.expression
+            )
+        CliEvaluator(options).run()
+    }
 }

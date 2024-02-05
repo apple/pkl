@@ -26,14 +26,14 @@ import org.pkl.commons.toUri
 val serializers: SerializersModule = SerializersModule { contextual(UriSerializer) }
 
 object UriSerializer : KSerializer<URI> {
-  override val descriptor: SerialDescriptor =
-    PrimitiveSerialDescriptor("java.net.URI", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("java.net.URI", PrimitiveKind.STRING)
 
-  override fun serialize(encoder: Encoder, value: URI) {
-    encoder.encodeString(value.toString())
-  }
+    override fun serialize(encoder: Encoder, value: URI) {
+        encoder.encodeString(value.toString())
+    }
 
-  override fun deserialize(decoder: Decoder): URI {
-    return decoder.decodeString().toUri()
-  }
+    override fun deserialize(decoder: Decoder): URI {
+        return decoder.decodeString().toUri()
+    }
 }

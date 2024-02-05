@@ -25,14 +25,15 @@ import org.pkl.config.kotlin.to
 import org.pkl.core.ModuleSource.modulePath
 
 class PolymorphicTest {
-  @Test
-  fun `deserializing polymorphic objects`() {
-    val evaluator = ConfigEvaluatorBuilder.preconfigured().forKotlin().build()
-    val config = evaluator.evaluate(modulePath("/codegenPkl/PolymorphicModuleTest.pkl"))
-    val module = config.to<PolymorphicModuleTest>()
-    assertThat(module.desserts[0]).isInstanceOf(PolymorphicModuleTest.Strudel::class.java)
-    assertThat(module.desserts[1]).isInstanceOf(PolymorphicModuleTest.TurkishDelight::class.java)
-    assertThat(module.planes[0]).isInstanceOf(PolymorphicLib.Jet::class.java)
-    assertThat(module.planes[1]).isInstanceOf(PolymorphicLib.Propeller::class.java)
-  }
+    @Test
+    fun `deserializing polymorphic objects`() {
+        val evaluator = ConfigEvaluatorBuilder.preconfigured().forKotlin().build()
+        val config = evaluator.evaluate(modulePath("/codegenPkl/PolymorphicModuleTest.pkl"))
+        val module = config.to<PolymorphicModuleTest>()
+        assertThat(module.desserts[0]).isInstanceOf(PolymorphicModuleTest.Strudel::class.java)
+        assertThat(module.desserts[1])
+            .isInstanceOf(PolymorphicModuleTest.TurkishDelight::class.java)
+        assertThat(module.planes[0]).isInstanceOf(PolymorphicLib.Jet::class.java)
+        assertThat(module.planes[1]).isInstanceOf(PolymorphicLib.Propeller::class.java)
+    }
 }

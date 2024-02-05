@@ -27,48 +27,49 @@ import org.pkl.commons.cli.commands.BaseCommand
 
 class BaseCommandTest {
 
-  private val cmd =
-    object : BaseCommand("test", "") {
-      override fun run() = Unit
+    private val cmd =
+        object : BaseCommand("test", "") {
+            override fun run() = Unit
+        }
+
+    @Test
+    fun `invalid timeout`() {
+        val e = assertThrows<BadParameterValue> { cmd.parse(arrayOf("--timeout", "abc")) }
+        assertThat(e).hasMessageContaining("timeout")
     }
 
-  @Test
-  fun `invalid timeout`() {
-    val e = assertThrows<BadParameterValue> { cmd.parse(arrayOf("--timeout", "abc")) }
-    assertThat(e).hasMessageContaining("timeout")
-  }
+    @Test
+    fun `help queries do not present as errors`() {
+        assertThrows<PrintHelpMessage> { cmd.parse(arrayOf("--help")) }
+    }
 
-  @Test
-  fun `help queries do not present as errors`() {
-    assertThrows<PrintHelpMessage> { cmd.parse(arrayOf("--help")) }
-  }
+    @Test
+    fun `external properties without value default to 'true'`() {
+        cmd.parse(arrayOf("-p", "flag1", "-p", "flag2", "-p", "FOO=bar"))
+        val props = cmd.baseOptions.baseOptions(emptyList()).externalProperties
 
-  @Test
-  fun `external properties without value default to 'true'`() {
-    cmd.parse(arrayOf("-p", "flag1", "-p", "flag2", "-p", "FOO=bar"))
-    val props = cmd.baseOptions.baseOptions(emptyList()).externalProperties
+        assertThat(props).isEqualTo(mapOf("flag1" to "true", "flag2" to "true", "FOO" to "bar"))
+    }
 
-    assertThat(props).isEqualTo(mapOf("flag1" to "true", "flag2" to "true", "FOO" to "bar"))
-  }
+    @Test
+    fun `--allowed-modules, --allowed-resources and --module-path can be repeated`() {
+        cmd.parse(arrayOf("--allowed-modules", "m1,m2,m3", "--allowed-modules", "m4"))
 
-  @Test
-  fun `--allowed-modules, --allowed-resources and --module-path can be repeated`() {
-    cmd.parse(arrayOf("--allowed-modules", "m1,m2,m3", "--allowed-modules", "m4"))
+        assertThat(cmd.baseOptions.allowedModules.map(Pattern::toString))
+            .isEqualTo(listOf("m1", "m2", "m3", "m4"))
 
-    assertThat(cmd.baseOptions.allowedModules.map(Pattern::toString))
-      .isEqualTo(listOf("m1", "m2", "m3", "m4"))
+        cmd.parse(arrayOf("--allowed-resources", "r1,r2,r3", "--allowed-resources", "r4"))
+        assertThat(cmd.baseOptions.allowedResources.map(Pattern::toString))
+            .isEqualTo(listOf("r1", "r2", "r3", "r4"))
 
-    cmd.parse(arrayOf("--allowed-resources", "r1,r2,r3", "--allowed-resources", "r4"))
-    assertThat(cmd.baseOptions.allowedResources.map(Pattern::toString))
-      .isEqualTo(listOf("r1", "r2", "r3", "r4"))
+        val sep = File.pathSeparator
+        cmd.parse(arrayOf("--module-path", "p1${sep}p2${sep}p3", "--module-path", "p4"))
+        assertThat(cmd.baseOptions.modulePath)
+            .isEqualTo(listOf("p1", "p2", "p3", "p4").map(Path::of))
 
-    val sep = File.pathSeparator
-    cmd.parse(arrayOf("--module-path", "p1${sep}p2${sep}p3", "--module-path", "p4"))
-    assertThat(cmd.baseOptions.modulePath).isEqualTo(listOf("p1", "p2", "p3", "p4").map(Path::of))
+        cmd.parse(arrayOf())
+        assertThat(cmd.baseOptions.allowedModules).isEmpty()
 
-    cmd.parse(arrayOf())
-    assertThat(cmd.baseOptions.allowedModules).isEmpty()
-
-    assertThat(cmd.baseOptions.allowedResources).isEmpty()
-  }
+        assertThat(cmd.baseOptions.allowedResources).isEmpty()
+    }
 }

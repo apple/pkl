@@ -19,29 +19,32 @@ import org.pkl.commons.printStackTraceToString
 
 /** A CLI error to report back to users. */
 open class CliException(
-  /**
-   * The error message to report back to CLI users. The message is expected to be displayed as-is
-   * without any further enrichment. As such the message should be comprehensive and designed with
-   * the CLI user in mind.
-   */
-  message: String,
+    /**
+     * The error message to report back to CLI users. The message is expected to be displayed as-is
+     * without any further enrichment. As such the message should be comprehensive and designed with
+     * the CLI user in mind.
+     */
+    message: String,
 
-  /** The process exit code to use. */
-  val exitCode: Int = 1
+    /** The process exit code to use. */
+    val exitCode: Int = 1
 ) : RuntimeException(message) {
 
-  override fun toString(): String = message!!
+    override fun toString(): String = message!!
 }
 
 /** An unexpected CLI error classified as bug. */
 class CliBugException(
-  /** The cause for the bug. */
-  private val theCause: Exception,
+    /** The cause for the bug. */
+    private val theCause: Exception,
 
-  /** The process exit code to use. */
-  exitCode: Int = 1
+    /** The process exit code to use. */
+    exitCode: Int = 1
 ) :
-  CliException("An unexpected error has occurred. Would you mind filing a bug report?", exitCode) {
+    CliException(
+        "An unexpected error has occurred. Would you mind filing a bug report?",
+        exitCode
+    ) {
 
-  override fun toString(): String = "$message\n\n${theCause.printStackTraceToString()}"
+    override fun toString(): String = "$message\n\n${theCause.printStackTraceToString()}"
 }

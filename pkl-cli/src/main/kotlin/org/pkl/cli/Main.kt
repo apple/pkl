@@ -25,31 +25,31 @@ import org.pkl.core.Release
 
 /** Main method of the Pkl CLI (command-line evaluator and REPL). */
 internal fun main(args: Array<String>) {
-  val version = Release.current().versionInfo()
-  val helpLink = "${Release.current().documentation().homepage()}pkl-cli/index.html#usage"
-  val commands =
-    arrayOf(
-      EvalCommand(helpLink),
-      ReplCommand(helpLink),
-      ServerCommand(helpLink),
-      TestCommand(helpLink),
-      ProjectCommand(helpLink),
-      DownloadPackageCommand(helpLink)
-    )
-  val cmd = RootCommand("pkl", version, helpLink).subcommands(*commands)
-  cliMain {
-    if (CliMain.compat == "alpine") {
-      // Alpine's main thread has a prohibitively small stack size by default;
-      // https://github.com/oracle/graal/issues/3398
-      var throwable: Throwable? = null
-      Thread(null, { cmd.main(args) }, "alpineMain", 10000000).apply {
-        setUncaughtExceptionHandler { _, t -> throwable = t }
-        start()
-        join()
-      }
-      throwable?.let { throw it }
-    } else {
-      cmd.main(args)
+    val version = Release.current().versionInfo()
+    val helpLink = "${Release.current().documentation().homepage()}pkl-cli/index.html#usage"
+    val commands =
+        arrayOf(
+            EvalCommand(helpLink),
+            ReplCommand(helpLink),
+            ServerCommand(helpLink),
+            TestCommand(helpLink),
+            ProjectCommand(helpLink),
+            DownloadPackageCommand(helpLink)
+        )
+    val cmd = RootCommand("pkl", version, helpLink).subcommands(*commands)
+    cliMain {
+        if (CliMain.compat == "alpine") {
+            // Alpine's main thread has a prohibitively small stack size by default;
+            // https://github.com/oracle/graal/issues/3398
+            var throwable: Throwable? = null
+            Thread(null, { cmd.main(args) }, "alpineMain", 10000000).apply {
+                setUncaughtExceptionHandler { _, t -> throwable = t }
+                start()
+                join()
+            }
+            throwable?.let { throw it }
+        } else {
+            cmd.main(args)
+        }
     }
-  }
 }

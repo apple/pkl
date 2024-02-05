@@ -21,28 +21,30 @@ import org.pkl.core.PModule
 
 /** API equivalent of standard library module `pkl.DocsiteInfo`. */
 data class DocsiteInfo(
-  /** The display title of this Pkldoc website. */
-  val title: String?,
+    /** The display title of this Pkldoc website. */
+    val title: String?,
 
-  /**
-   * The overview documentation on the main page of this website.
-   *
-   * Uses the same Morkdown format as Pkldoc comments. Unless expanded, only the first paragraph is
-   * shown.
-   */
-  val overview: String?,
+    /**
+     * The overview documentation on the main page of this website.
+     *
+     * Uses the same Morkdown format as Pkldoc comments. Unless expanded, only the first paragraph
+     * is shown.
+     */
+    val overview: String?,
 
-  /** Imports used to resolve Pkldoc links in [overview]. */
-  val overviewImports: Map<String, URI>
+    /** Imports used to resolve Pkldoc links in [overview]. */
+    val overviewImports: Map<String, URI>
 ) {
-  companion object {
-    @Suppress("UNCHECKED_CAST")
-    fun fromPkl(module: PModule): DocsiteInfo =
-      DocsiteInfo(
-        title = module["title"] as String?,
-        overview = module["overview"] as String?,
-        overviewImports =
-          (module["overviewImports"] as Map<String, String>).mapValues { it.value.toUri() },
-      )
-  }
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        fun fromPkl(module: PModule): DocsiteInfo =
+            DocsiteInfo(
+                title = module["title"] as String?,
+                overview = module["overview"] as String?,
+                overviewImports =
+                    (module["overviewImports"] as Map<String, String>).mapValues {
+                        it.value.toUri()
+                    },
+            )
+    }
 }

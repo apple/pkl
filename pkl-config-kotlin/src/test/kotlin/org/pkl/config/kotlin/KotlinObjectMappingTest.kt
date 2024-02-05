@@ -22,45 +22,45 @@ import org.pkl.config.java.ConfigEvaluator
 import org.pkl.core.ModuleSource.text
 
 class KotlinObjectMappingTest {
-  data class TypedKey(val value: Int)
+    data class TypedKey(val value: Int)
 
-  data class KotlinGenericTypesTest(
-    // Sets
-    val stringSet: Set<String>,
-    val intSet: Set<Int>,
-    val booleanSetSet: Set<Set<Boolean>>,
+    data class KotlinGenericTypesTest(
+        // Sets
+        val stringSet: Set<String>,
+        val intSet: Set<Int>,
+        val booleanSetSet: Set<Set<Boolean>>,
 
-    // Lists
-    val stringList: List<String>,
-    val intList: List<Int>,
-    val booleanListList: List<List<Boolean>>,
+        // Lists
+        val stringList: List<String>,
+        val intList: List<Int>,
+        val booleanListList: List<List<Boolean>>,
 
-    // Maps
-    val intStringMap: Map<Int, String>,
-    val booleanIntStringMapMap: Map<Boolean, Map<Int, String>>,
-    val booleanIntMapStringMap: Map<Map<Boolean, Int>, String>,
-    val intSetListStringMap: Map<List<Set<Int>>, String>,
-    val typedStringMap: Map<TypedKey, String>,
-    val dynamicStringMap: Map<Map<String, Any>, String>,
+        // Maps
+        val intStringMap: Map<Int, String>,
+        val booleanIntStringMapMap: Map<Boolean, Map<Int, String>>,
+        val booleanIntMapStringMap: Map<Map<Boolean, Int>, String>,
+        val intSetListStringMap: Map<List<Set<Int>>, String>,
+        val typedStringMap: Map<TypedKey, String>,
+        val dynamicStringMap: Map<Map<String, Any>, String>,
 
-    // Listings
-    val stringSetListing: List<Set<String>>,
-    val intListingListing: List<List<Int>>,
+        // Listings
+        val stringSetListing: List<Set<String>>,
+        val intListingListing: List<List<Int>>,
 
-    // Mapping
-    val intStringMapping: Map<Int, String>,
-    val stringStringSetMapping: Map<String, Set<String>>,
+        // Mapping
+        val intStringMapping: Map<Int, String>,
+        val stringStringSetMapping: Map<String, Set<String>>,
 
-    // Map & Mapping with structured keys
-    val intListingStringMapping: Map<List<Int>, String>,
-    val intSetListStringMapping: Map<List<Set<Int>>, String>,
-    val thisOneGoesToEleven: Map<List<Set<Int>>, Map<List<Int>, Map<Int, String>>>
-  )
+        // Map & Mapping with structured keys
+        val intListingStringMapping: Map<List<Int>, String>,
+        val intSetListStringMapping: Map<List<Set<Int>>, String>,
+        val thisOneGoesToEleven: Map<List<Set<Int>>, Map<List<Int>, Map<Int, String>>>
+    )
 
-  @Test
-  fun `generic types correspond`() {
-    val code =
-      """
+    @Test
+    fun `generic types correspond`() {
+        val code =
+            """
       module KotlinGenericTypesTest
       
       class Foo {
@@ -110,13 +110,15 @@ class KotlinObjectMappingTest {
         [List(Set(0), Set(0), Set(7))] = Map(intListing, intStringMapping)
       }
     """
-        .trimIndent()
-    val result = ConfigEvaluator.preconfigured().forKotlin().evaluate(text(code))
-    assertDoesNotThrow { result.to<KotlinGenericTypesTest>() }
-      .apply {
-        assertThat(typedStringMap.keys).isEqualTo(setOf(TypedKey(1), TypedKey(2)))
-        assertThat(dynamicStringMap.keys)
-          .isEqualTo(setOf(hashMapOf("hello" to "world"), hashMapOf("value" to 42.toLong())))
-      }
-  }
+                .trimIndent()
+        val result = ConfigEvaluator.preconfigured().forKotlin().evaluate(text(code))
+        assertDoesNotThrow { result.to<KotlinGenericTypesTest>() }
+            .apply {
+                assertThat(typedStringMap.keys).isEqualTo(setOf(TypedKey(1), TypedKey(2)))
+                assertThat(dynamicStringMap.keys)
+                    .isEqualTo(
+                        setOf(hashMapOf("hello" to "world"), hashMapOf("value" to 42.toLong()))
+                    )
+            }
+    }
 }

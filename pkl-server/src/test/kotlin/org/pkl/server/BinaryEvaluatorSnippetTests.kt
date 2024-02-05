@@ -28,40 +28,40 @@ import org.pkl.core.module.ModuleKeyFactories
 @Testable class BinaryEvaluatorSnippetTests
 
 class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
-  override val testClass: KClass<*> = BinaryEvaluatorSnippetTests::class
+    override val testClass: KClass<*> = BinaryEvaluatorSnippetTests::class
 
-  private val snippetsDir = rootProjectDir.resolve("pkl-server/src/test/files/SnippetTests")
+    private val snippetsDir = rootProjectDir.resolve("pkl-server/src/test/files/SnippetTests")
 
-  private val outputDir = snippetsDir.resolve("output")
+    private val outputDir = snippetsDir.resolve("output")
 
-  override val inputDir: Path = snippetsDir.resolve("input")
+    override val inputDir: Path = snippetsDir.resolve("input")
 
-  override val isInputFile: (Path) -> Boolean = { true }
+    override val isInputFile: (Path) -> Boolean = { true }
 
-  override fun expectedOutputFileFor(inputFile: Path): Path {
-    val relativePath = inputDir.relativize(inputFile).toString()
-    return outputDir.resolve(relativePath.dropLast(3) + "yaml")
-  }
+    override fun expectedOutputFileFor(inputFile: Path): Path {
+        val relativePath = inputDir.relativize(inputFile).toString()
+        return outputDir.resolve(relativePath.dropLast(3) + "yaml")
+    }
 
-  private val evaluator =
-    BinaryEvaluator(
-      StackFrameTransformers.empty,
-      SecurityManagers.defaultManager,
-      Loggers.stdErr(),
-      listOf(ModuleKeyFactories.file),
-      listOf(),
-      mapOf(),
-      mapOf(),
-      null,
-      null,
-      null,
-      null
-    )
+    private val evaluator =
+        BinaryEvaluator(
+            StackFrameTransformers.empty,
+            SecurityManagers.defaultManager,
+            Loggers.stdErr(),
+            listOf(ModuleKeyFactories.file),
+            listOf(),
+            mapOf(),
+            mapOf(),
+            null,
+            null,
+            null,
+            null
+        )
 
-  private fun String.stripFilePaths() = replace(snippetsDir.toString(), "/\$snippetsDir")
+    private fun String.stripFilePaths() = replace(snippetsDir.toString(), "/\$snippetsDir")
 
-  override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
-    val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)
-    return true to bytes.debugRendering.stripFilePaths()
-  }
+    override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
+        val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)
+        return true to bytes.debugRendering.stripFilePaths()
+    }
 }

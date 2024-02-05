@@ -17,5 +17,5 @@ package org.pkl.server
 
 /** Decodes a stream of messages. */
 internal interface MessageDecoder {
-  fun decode(): Message?
+    fun decode(): Message?
 }

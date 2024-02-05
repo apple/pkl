@@ -24,70 +24,71 @@ import javax.tools.*
 class CompilationFailedException(msg: String) : RuntimeException(msg)
 
 object InMemoryJavaCompiler {
-  fun compile(sourceFiles: Map<String, String>): Map<String, Class<*>> {
-    val compiler = ToolProvider.getSystemJavaCompiler()
-    val diagnosticsCollector = DiagnosticCollector<JavaFileObject>()
-    val fileManager =
-      InMemoryFileManager(compiler.getStandardFileManager(diagnosticsCollector, null, null))
-    val sourceObjects =
-      sourceFiles.map { (filename, contents) -> ReadableSourceFileObject(filename, contents) }
-    val task = compiler.getTask(null, fileManager, diagnosticsCollector, null, null, sourceObjects)
-    val result = task.call()
-    if (!result) {
-      throw CompilationFailedException(
-        buildString {
-          appendLine("Compilation failed. Error(s):")
-          for (diagnostic in diagnosticsCollector.diagnostics) {
-            appendLine(diagnostic.getMessage(null))
-          }
+    fun compile(sourceFiles: Map<String, String>): Map<String, Class<*>> {
+        val compiler = ToolProvider.getSystemJavaCompiler()
+        val diagnosticsCollector = DiagnosticCollector<JavaFileObject>()
+        val fileManager =
+            InMemoryFileManager(compiler.getStandardFileManager(diagnosticsCollector, null, null))
+        val sourceObjects =
+            sourceFiles.map { (filename, contents) -> ReadableSourceFileObject(filename, contents) }
+        val task =
+            compiler.getTask(null, fileManager, diagnosticsCollector, null, null, sourceObjects)
+        val result = task.call()
+        if (!result) {
+            throw CompilationFailedException(
+                buildString {
+                    appendLine("Compilation failed. Error(s):")
+                    for (diagnostic in diagnosticsCollector.diagnostics) {
+                        appendLine(diagnostic.getMessage(null))
+                    }
+                }
+            )
         }
-      )
+        val loader = ClassFileObjectLoader(fileManager.outputFiles)
+        return fileManager.outputFiles.mapValues { loader.loadClass(it.key) }
     }
-    val loader = ClassFileObjectLoader(fileManager.outputFiles)
-    return fileManager.outputFiles.mapValues { loader.loadClass(it.key) }
-  }
 }
 
 private class ClassFileObjectLoader(val fileObjects: Map<String, WritableBinaryFileObject>) :
-  ClassLoader(ClassFileObjectLoader::class.java.classLoader) {
+    ClassLoader(ClassFileObjectLoader::class.java.classLoader) {
 
-  override fun findClass(name: String): Class<*> {
-    val obj = fileObjects[name]
-    if (obj == null || obj.kind != JavaFileObject.Kind.CLASS) {
-      throw ClassNotFoundException(name)
+    override fun findClass(name: String): Class<*> {
+        val obj = fileObjects[name]
+        if (obj == null || obj.kind != JavaFileObject.Kind.CLASS) {
+            throw ClassNotFoundException(name)
+        }
+        val array = obj.out.toByteArray()
+        return defineClass(name, array, 0, array.size)
     }
-    val array = obj.out.toByteArray()
-    return defineClass(name, array, 0, array.size)
-  }
 }
 
 private class ReadableSourceFileObject(path: String, private val contents: String) :
-  SimpleJavaFileObject(URI(path), JavaFileObject.Kind.SOURCE) {
+    SimpleJavaFileObject(URI(path), JavaFileObject.Kind.SOURCE) {
 
-  override fun openInputStream(): InputStream = contents.byteInputStream()
+    override fun openInputStream(): InputStream = contents.byteInputStream()
 
-  override fun getCharContent(ignoreEncodingErrors: Boolean): CharSequence = contents
+    override fun getCharContent(ignoreEncodingErrors: Boolean): CharSequence = contents
 }
 
 private class WritableBinaryFileObject(className: String, kind: JavaFileObject.Kind) :
-  SimpleJavaFileObject(URI("/${className.replace(".", "/")}.${kind.extension}"), kind) {
-  val out = ByteArrayOutputStream()
+    SimpleJavaFileObject(URI("/${className.replace(".", "/")}.${kind.extension}"), kind) {
+    val out = ByteArrayOutputStream()
 
-  override fun openOutputStream(): OutputStream = out
+    override fun openOutputStream(): OutputStream = out
 }
 
 private class InMemoryFileManager(delegate: JavaFileManager) :
-  ForwardingJavaFileManager<JavaFileManager>(delegate) {
+    ForwardingJavaFileManager<JavaFileManager>(delegate) {
 
-  val outputFiles = mutableMapOf<String, WritableBinaryFileObject>()
+    val outputFiles = mutableMapOf<String, WritableBinaryFileObject>()
 
-  override fun getJavaFileForOutput(
-    location: JavaFileManager.Location,
-    className: String,
-    kind: JavaFileObject.Kind,
-    sibling: FileObject
-  ): JavaFileObject {
+    override fun getJavaFileForOutput(
+        location: JavaFileManager.Location,
+        className: String,
+        kind: JavaFileObject.Kind,
+        sibling: FileObject
+    ): JavaFileObject {
 
-    return WritableBinaryFileObject(className, kind).also { outputFiles[className] = it }
-  }
+        return WritableBinaryFileObject(className, kind).also { outputFiles[className] = it }
+    }
 }

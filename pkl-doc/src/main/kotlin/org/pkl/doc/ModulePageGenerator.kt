@@ -18,271 +18,286 @@ package org.pkl.doc
 import kotlinx.html.*
 
 internal class ModulePageGenerator(
-  docsiteInfo: DocsiteInfo,
-  docPackage: DocPackage,
-  docModule: DocModule,
-  pageScope: ModuleScope,
-  isTestMode: Boolean
+    docsiteInfo: DocsiteInfo,
+    docPackage: DocPackage,
+    docModule: DocModule,
+    pageScope: ModuleScope,
+    isTestMode: Boolean
 ) :
-  ModuleOrClassPageGenerator<ModuleScope>(
-    docsiteInfo,
-    docModule,
-    docModule.schema.moduleClass,
-    pageScope,
-    isTestMode
-  ) {
-  private val module = docModule.schema
+    ModuleOrClassPageGenerator<ModuleScope>(
+        docsiteInfo,
+        docModule,
+        docModule.schema.moduleClass,
+        pageScope,
+        isTestMode
+    ) {
+    private val module = docModule.schema
 
-  override val html: HTML.() -> Unit = {
-    renderHtmlHead()
+    override val html: HTML.() -> Unit = {
+        renderHtmlHead()
 
-    body {
-      onLoad = "onLoad()"
+        body {
+            onLoad = "onLoad()"
 
-      renderPageHeader(docPackage.name, docPackage.version, docModule.name, null)
+            renderPageHeader(docPackage.name, docPackage.version, docModule.name, null)
 
-      main {
-        renderParentLinks()
+            main {
+                renderParentLinks()
 
-        h1 {
-          id = "declaration-title"
+                h1 {
+                    id = "declaration-title"
 
-          +docModule.name
+                    +docModule.name
 
-          span {
-            id = "declaration-version"
-            +docPackage.version
-          }
+                    span {
+                        id = "declaration-version"
+                        +docPackage.version
+                    }
+                }
+
+                val memberDocs =
+                    MemberDocs(
+                        clazz.docComment,
+                        pageScope,
+                        clazz.annotations,
+                        isDeclaration = true,
+                        collectMemberInfo(docModule)
+                    )
+
+                renderMemberGroupLinks(
+                    Triple("Overview", "#_overview", memberDocs.isExpandable),
+                    Triple("Properties", "#_properties", clazz.hasListedProperty),
+                    Triple("Methods", "#_methods", clazz.hasListedMethod),
+                    Triple("Classes", "#_classes", module.hasListedClass),
+                    Triple("Type Aliases", "#_type-aliases", module.hasListedTypeAlias)
+                )
+
+                renderAnchor("_overview")
+                div {
+                    id = "_declaration"
+                    classes = setOf("member")
+
+                    memberDocs.renderExpandIcon(this)
+
+                    div {
+                        classes = setOf("member-signature")
+
+                        renderModifiers(module.moduleClass.modifiers, "module")
+
+                        span {
+                            classes = setOf("name-decl")
+
+                            +docModule.name
+                        }
+
+                        renderModuleAmendsOrExtendsClause(module)
+                    }
+
+                    memberDocs.renderDocComment(this)
+                }
+
+                renderProperties()
+                renderMethods()
+                renderClasses()
+                renderTypeAliases()
+            }
         }
+    }
 
-        val memberDocs =
-          MemberDocs(
-            clazz.docComment,
-            pageScope,
-            clazz.annotations,
-            isDeclaration = true,
-            collectMemberInfo(docModule)
-          )
+    // example output:
+    // module PodSpec (io.k8s/api/core/v1:befa7c51) • Pkl Hub
+    override fun HTMLTag.renderPageTitle() {
+        val moduleScope = pageScope
+        val packageScope = moduleScope.parent!!
 
-        renderMemberGroupLinks(
-          Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Properties", "#_properties", clazz.hasListedProperty),
-          Triple("Methods", "#_methods", clazz.hasListedMethod),
-          Triple("Classes", "#_classes", module.hasListedClass),
-          Triple("Type Aliases", "#_type-aliases", module.hasListedTypeAlias)
-        )
+        +moduleScope.name.substringAfterLast('.')
+        +" ("
+        +packageScope.name
+        +moduleScope.name.drop(packageScope.name.length).substringBeforeLast('.').replace('.', '/')
+        +":"
+        +packageScope.version
+        +") • "
+        +(docsiteInfo.title ?: "Pkldoc")
+    }
 
-        renderAnchor("_overview")
+    private fun HtmlBlockTag.renderTypeAliases() {
+        if (!module.hasListedTypeAlias) return
+
         div {
-          id = "_declaration"
-          classes = setOf("member")
+            classes = setOf("member-group")
 
-          memberDocs.renderExpandIcon(this)
+            renderAnchor("_type-aliases")
 
-          div {
-            classes = setOf("member-signature")
+            h2 {
+                classes = setOf("member-group-title")
 
-            renderModifiers(module.moduleClass.modifiers, "module")
-
-            span {
-              classes = setOf("name-decl")
-
-              +docModule.name
+                +"Type Aliases"
+                if (module.supermodule.hasListedTypeAlias) {
+                    renderShowInheritedButton()
+                }
             }
 
-            renderModuleAmendsOrExtendsClause(module)
-          }
+            ul {
+                for ((typeAliasName, typeAlias) in module.allTypeAliases) {
+                    if (typeAlias.isUnlisted) continue
 
-          memberDocs.renderDocComment(this)
-        }
+                    li {
+                        renderAnchors(typeAlias)
 
-        renderProperties()
-        renderMethods()
-        renderClasses()
-        renderTypeAliases()
-      }
-    }
-  }
+                        div {
+                            val isInherited = typeAliasName !in module.typeAliases
+                            classes =
+                                if (isInherited) {
+                                    setOf(
+                                        "member",
+                                        "inherited",
+                                        "expandable",
+                                        "hidden",
+                                        "collapsed"
+                                    )
+                                } else setOf("member")
 
-  // example output:
-  // module PodSpec (io.k8s/api/core/v1:befa7c51) • Pkl Hub
-  override fun HTMLTag.renderPageTitle() {
-    val moduleScope = pageScope
-    val packageScope = moduleScope.parent!!
+                            val typeAliasScope = TypeAliasScope(typeAlias, pageScope.url, pageScope)
+                            val memberDocs =
+                                MemberDocs(
+                                    typeAlias.docComment,
+                                    typeAliasScope,
+                                    typeAlias.annotations
+                                )
 
-    +moduleScope.name.substringAfterLast('.')
-    +" ("
-    +packageScope.name
-    +moduleScope.name.drop(packageScope.name.length).substringBeforeLast('.').replace('.', '/')
-    +":"
-    +packageScope.version
-    +") • "
-    +(docsiteInfo.title ?: "Pkldoc")
-  }
+                            memberDocs.renderExpandIcon(this)
+                            renderSelfLink(typeAliasName)
 
-  private fun HtmlBlockTag.renderTypeAliases() {
-    if (!module.hasListedTypeAlias) return
+                            div {
+                                classes = setOf("member-left")
 
-    div {
-      classes = setOf("member-group")
+                                div {
+                                    classes =
+                                        if (memberDocs.isDeprecatedMember) {
+                                            setOf("member-modifiers", "member-deprecated")
+                                        } else setOf("member-modifiers")
 
-      renderAnchor("_type-aliases")
+                                    renderModifiers(typeAlias.modifiers, "typealias")
+                                }
+                            }
 
-      h2 {
-        classes = setOf("member-group-title")
+                            div {
+                                classes = setOf("member-main")
 
-        +"Type Aliases"
-        if (module.supermodule.hasListedTypeAlias) {
-          renderShowInheritedButton()
-        }
-      }
+                                div {
+                                    classes =
+                                        if (memberDocs.isDeprecatedMember) {
+                                            setOf("member-signature", "member-deprecated")
+                                        } else setOf("member-signature")
 
-      ul {
-        for ((typeAliasName, typeAlias) in module.allTypeAliases) {
-          if (typeAlias.isUnlisted) continue
+                                    renderTypeAliasName(typeAlias, "name-decl")
+                                    renderTypeParameters(typeAlias.typeParameters)
+                                    +" = "
+                                    renderType(typeAlias.aliasedType, typeAliasScope)
 
-          li {
-            renderAnchors(typeAlias)
+                                    if (isInherited) {
+                                        renderModuleContext(typeAlias)
+                                    }
+                                    renderMemberSourceLink(typeAlias)
+                                }
 
-            div {
-              val isInherited = typeAliasName !in module.typeAliases
-              classes =
-                if (isInherited) {
-                  setOf("member", "inherited", "expandable", "hidden", "collapsed")
-                } else setOf("member")
-
-              val typeAliasScope = TypeAliasScope(typeAlias, pageScope.url, pageScope)
-              val memberDocs =
-                MemberDocs(typeAlias.docComment, typeAliasScope, typeAlias.annotations)
-
-              memberDocs.renderExpandIcon(this)
-              renderSelfLink(typeAliasName)
-
-              div {
-                classes = setOf("member-left")
-
-                div {
-                  classes =
-                    if (memberDocs.isDeprecatedMember) {
-                      setOf("member-modifiers", "member-deprecated")
-                    } else setOf("member-modifiers")
-
-                  renderModifiers(typeAlias.modifiers, "typealias")
+                                memberDocs.renderDocComment(this)
+                            }
+                        }
+                    }
                 }
-              }
-
-              div {
-                classes = setOf("member-main")
-
-                div {
-                  classes =
-                    if (memberDocs.isDeprecatedMember) {
-                      setOf("member-signature", "member-deprecated")
-                    } else setOf("member-signature")
-
-                  renderTypeAliasName(typeAlias, "name-decl")
-                  renderTypeParameters(typeAlias.typeParameters)
-                  +" = "
-                  renderType(typeAlias.aliasedType, typeAliasScope)
-
-                  if (isInherited) {
-                    renderModuleContext(typeAlias)
-                  }
-                  renderMemberSourceLink(typeAlias)
-                }
-
-                memberDocs.renderDocComment(this)
-              }
             }
-          }
         }
-      }
     }
-  }
 
-  private fun HtmlBlockTag.renderClasses() {
-    if (!module.hasListedClass) return
+    private fun HtmlBlockTag.renderClasses() {
+        if (!module.hasListedClass) return
 
-    div {
-      classes = setOf("member-group")
+        div {
+            classes = setOf("member-group")
 
-      renderAnchor("_classes")
+            renderAnchor("_classes")
 
-      h2 {
-        classes = setOf("member-group-title")
+            h2 {
+                classes = setOf("member-group-title")
 
-        +"Classes"
-        if (module.supermodule.hasListedClass) {
-          renderShowInheritedButton()
-        }
-      }
-
-      ul {
-        for ((className, clazz) in module.allClasses) {
-          if (clazz.isUnlisted) continue
-
-          li {
-            renderAnchor(className)
-
-            div {
-              val isInherited = className !in module.classes
-              classes =
-                if (isInherited) {
-                  setOf(
-                    "member",
-                    "with-page-link",
-                    "inherited",
-                    "expandable",
-                    "hidden",
-                    "collapsed"
-                  )
-                } else setOf("member", "with-page-link")
-
-              val classScope = ClassScope(clazz, pageScope.url, pageScope)
-              val memberDocs =
-                MemberDocs(clazz.docComment, classScope, clazz.annotations, isDeclaration = false)
-
-              memberDocs.renderExpandIcon(this)
-              renderSelfLink(className)
-
-              div {
-                classes = setOf("member-left")
-
-                div {
-                  classes =
-                    if (memberDocs.isDeprecatedMember) {
-                      setOf("member-modifiers", "member-deprecated")
-                    } else setOf("member-modifiers")
-
-                  renderModifiers(clazz.modifiers, "class")
+                +"Classes"
+                if (module.supermodule.hasListedClass) {
+                    renderShowInheritedButton()
                 }
-              }
-
-              div {
-                classes = setOf("member-main")
-
-                div {
-                  classes =
-                    if (memberDocs.isDeprecatedMember) {
-                      setOf("member-signature", "member-deprecated")
-                    } else setOf("member-signature")
-
-                  renderClassName(clazz, "name-decl")
-                  renderTypeParameters(clazz.typeParameters)
-                  renderClassExtendsClause(clazz, classScope)
-
-                  if (isInherited) {
-                    renderModuleContext(clazz)
-                  }
-                  renderMemberSourceLink(clazz)
-                }
-
-                memberDocs.renderDocComment(this)
-              }
             }
-          }
+
+            ul {
+                for ((className, clazz) in module.allClasses) {
+                    if (clazz.isUnlisted) continue
+
+                    li {
+                        renderAnchor(className)
+
+                        div {
+                            val isInherited = className !in module.classes
+                            classes =
+                                if (isInherited) {
+                                    setOf(
+                                        "member",
+                                        "with-page-link",
+                                        "inherited",
+                                        "expandable",
+                                        "hidden",
+                                        "collapsed"
+                                    )
+                                } else setOf("member", "with-page-link")
+
+                            val classScope = ClassScope(clazz, pageScope.url, pageScope)
+                            val memberDocs =
+                                MemberDocs(
+                                    clazz.docComment,
+                                    classScope,
+                                    clazz.annotations,
+                                    isDeclaration = false
+                                )
+
+                            memberDocs.renderExpandIcon(this)
+                            renderSelfLink(className)
+
+                            div {
+                                classes = setOf("member-left")
+
+                                div {
+                                    classes =
+                                        if (memberDocs.isDeprecatedMember) {
+                                            setOf("member-modifiers", "member-deprecated")
+                                        } else setOf("member-modifiers")
+
+                                    renderModifiers(clazz.modifiers, "class")
+                                }
+                            }
+
+                            div {
+                                classes = setOf("member-main")
+
+                                div {
+                                    classes =
+                                        if (memberDocs.isDeprecatedMember) {
+                                            setOf("member-signature", "member-deprecated")
+                                        } else setOf("member-signature")
+
+                                    renderClassName(clazz, "name-decl")
+                                    renderTypeParameters(clazz.typeParameters)
+                                    renderClassExtendsClause(clazz, classScope)
+
+                                    if (isInherited) {
+                                        renderModuleContext(clazz)
+                                    }
+                                    renderMemberSourceLink(clazz)
+                                }
+
+                                memberDocs.renderDocComment(this)
+                            }
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }

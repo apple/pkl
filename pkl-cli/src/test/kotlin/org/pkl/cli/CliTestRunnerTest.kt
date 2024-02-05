@@ -37,10 +37,10 @@ import org.pkl.core.Release
 
 class CliTestRunnerTest {
 
-  @Test
-  fun `CliTestRunner succeed test`(@TempDir tempDir: Path) {
-    val code =
-      """
+    @Test
+    fun `CliTestRunner succeed test`(@TempDir tempDir: Path) {
+        val code =
+            """
       amends "pkl:test"
 
       facts {
@@ -50,31 +50,32 @@ class CliTestRunnerTest {
         }
       }
     """
-        .trimIndent()
-    val input = tempDir.resolve("test.pkl").writeString(code).toString()
-    val out = StringWriter()
-    val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
-    val testOpts = CliTestOptions()
-    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
-    runner.run()
+                .trimIndent()
+        val input = tempDir.resolve("test.pkl").writeString(code).toString()
+        val out = StringWriter()
+        val err = StringWriter()
+        val opts =
+            CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+        val testOpts = CliTestOptions()
+        val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+        runner.run()
 
-    assertThat(out.toString().stripFileAndLines(tempDir))
-      .isEqualTo(
-        """
+        assertThat(out.toString().stripFileAndLines(tempDir))
+            .isEqualTo(
+                """
       module test
         succeed ✅
       
     """
-          .trimIndent()
-      )
-    assertThat(err.toString()).isEqualTo("")
-  }
+                    .trimIndent()
+            )
+        assertThat(err.toString()).isEqualTo("")
+    }
 
-  @Test
-  fun `CliTestRunner fail test`(@TempDir tempDir: Path) {
-    val code =
-      """
+    @Test
+    fun `CliTestRunner fail test`(@TempDir tempDir: Path) {
+        val code =
+            """
       amends "pkl:test"
 
       facts {
@@ -84,33 +85,34 @@ class CliTestRunnerTest {
         }
       }
     """
-        .trimIndent()
-    val input = tempDir.resolve("test.pkl").writeString(code).toString()
-    val out = StringWriter()
-    val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
-    val testOpts = CliTestOptions()
-    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
-    assertThatCode { runner.run() }.hasMessage("Tests failed.")
+                .trimIndent()
+        val input = tempDir.resolve("test.pkl").writeString(code).toString()
+        val out = StringWriter()
+        val err = StringWriter()
+        val opts =
+            CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+        val testOpts = CliTestOptions()
+        val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+        assertThatCode { runner.run() }.hasMessage("Tests failed.")
 
-    assertThat(out.toString().stripFileAndLines(tempDir))
-      .isEqualTo(
-        """
+        assertThat(out.toString().stripFileAndLines(tempDir))
+            .isEqualTo(
+                """
       module test
         fail ❌
           4 == 9 ❌
           "foo" == "bar" ❌
       
     """
-          .trimIndent()
-      )
-    assertThat(err.toString()).isEqualTo("")
-  }
+                    .trimIndent()
+            )
+        assertThat(err.toString()).isEqualTo("")
+    }
 
-  @Test
-  fun `CliTestRunner JUnit reports`(@TempDir tempDir: Path) {
-    val code =
-      """
+    @Test
+    fun `CliTestRunner JUnit reports`(@TempDir tempDir: Path) {
+        val code =
+            """
       amends "pkl:test"
 
       facts {
@@ -123,17 +125,18 @@ class CliTestRunnerTest {
         }
       }
     """
-        .trimIndent()
-    val input = tempDir.resolve("test.pkl").writeString(code).toString()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
-    val testOpts = CliTestOptions(junitDir = tempDir)
-    val runner = CliTestRunner(opts, testOpts)
-    assertThatCode { runner.run() }.hasMessageContaining("failed")
+                .trimIndent()
+        val input = tempDir.resolve("test.pkl").writeString(code).toString()
+        val opts =
+            CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+        val testOpts = CliTestOptions(junitDir = tempDir)
+        val runner = CliTestRunner(opts, testOpts)
+        assertThatCode { runner.run() }.hasMessageContaining("failed")
 
-    val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
-    assertThat(junitReport)
-      .isEqualTo(
-        """
+        val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
+        assertThat(junitReport)
+            .isEqualTo(
+                """
       <?xml version="1.0" encoding="UTF-8"?>
       <testsuite name="test" tests="2" failures="1">
           <testcase classname="test" name="foo"></testcase>
@@ -145,14 +148,14 @@ class CliTestRunnerTest {
       </testsuite>
       
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `CliTestRunner duplicated JUnit reports`(@TempDir tempDir: Path) {
-    val foo =
-      """
+    @Test
+    fun `CliTestRunner duplicated JUnit reports`(@TempDir tempDir: Path) {
+        val foo =
+            """
       module foo
       
       amends "pkl:test"
@@ -163,10 +166,10 @@ class CliTestRunnerTest {
         }
       }
     """
-        .trimIndent()
+                .trimIndent()
 
-    val bar =
-      """
+        val bar =
+            """
       module foo
       
       amends "pkl:test"
@@ -177,32 +180,34 @@ class CliTestRunnerTest {
         }
       }
     """
-        .trimIndent()
-    val input = tempDir.resolve("test.pkl").writeString(foo).toString()
-    val input2 = tempDir.resolve("test.pkl").writeString(bar).toString()
-    val opts =
-      CliBaseOptions(
-        sourceModules = listOf(input.toUri(), input2.toUri()),
-        settings = URI("pkl:settings")
-      )
-    val testOpts = CliTestOptions(junitDir = tempDir)
-    val runner = CliTestRunner(opts, testOpts)
-    assertThatCode { runner.run() }.hasMessageContaining("failed")
-  }
+                .trimIndent()
+        val input = tempDir.resolve("test.pkl").writeString(foo).toString()
+        val input2 = tempDir.resolve("test.pkl").writeString(bar).toString()
+        val opts =
+            CliBaseOptions(
+                sourceModules = listOf(input.toUri(), input2.toUri()),
+                settings = URI("pkl:settings")
+            )
+        val testOpts = CliTestOptions(junitDir = tempDir)
+        val runner = CliTestRunner(opts, testOpts)
+        assertThatCode { runner.run() }.hasMessageContaining("failed")
+    }
 
-  @Test
-  fun `no source modules specified has same message as pkl eval`() {
-    val e1 = assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
-    val e2 =
-      assertThrows<MissingArgument> {
-        val rootCommand =
-          RootCommand("pkl", Release.current().versionInfo(), "").subcommands(EvalCommand(""))
-        rootCommand.parse(listOf("eval"))
-      }
-    assertThat(e1).hasMessageContaining("Missing argument \"<modules>\"")
-    assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
-  }
+    @Test
+    fun `no source modules specified has same message as pkl eval`() {
+        val e1 =
+            assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
+        val e2 =
+            assertThrows<MissingArgument> {
+                val rootCommand =
+                    RootCommand("pkl", Release.current().versionInfo(), "")
+                        .subcommands(EvalCommand(""))
+                rootCommand.parse(listOf("eval"))
+            }
+        assertThat(e1).hasMessageContaining("Missing argument \"<modules>\"")
+        assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
+    }
 
-  private fun String.stripFileAndLines(tmpDir: Path) =
-    replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex(""" \(.*, line \d+\)"""), "")
+    private fun String.stripFileAndLines(tmpDir: Path) =
+        replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex(""" \(.*, line \d+\)"""), "")
 }

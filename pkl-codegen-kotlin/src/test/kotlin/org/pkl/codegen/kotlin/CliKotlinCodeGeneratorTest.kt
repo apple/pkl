@@ -23,12 +23,12 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.readString
 
 class CliKotlinCodeGeneratorTest {
-  @Test
-  fun `module inheritance`(@TempDir tempDir: Path) {
-    val module1 =
-      PklModule(
-        "org.mod1",
-        """
+    @Test
+    fun `module inheritance`(@TempDir tempDir: Path) {
+        val module1 =
+            PklModule(
+                "org.mod1",
+                """
       open module org.mod1
 
       pigeon: Person
@@ -38,80 +38,80 @@ class CliKotlinCodeGeneratorTest {
         age: Int
       }
       """
-      )
+            )
 
-    val module2 =
-      PklModule(
-        "org.mod2",
-        """
+        val module2 =
+            PklModule(
+                "org.mod2",
+                """
       module org.mod2
 
       extends "mod1.pkl"
 
       parrot: Person
       """
-      )
+            )
 
-    val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
-    val module2File = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
-    val outputDir = tempDir.resolve("output")
+        val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
+        val module2File = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
+        val outputDir = tempDir.resolve("output")
 
-    val generator =
-      CliKotlinCodeGenerator(
-        CliKotlinCodeGeneratorOptions(
-          CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
-          outputDir
-        )
-      )
+        val generator =
+            CliKotlinCodeGenerator(
+                CliKotlinCodeGeneratorOptions(
+                    CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
+                    outputDir
+                )
+            )
 
-    generator.run()
+        generator.run()
 
-    val module1KotlinFile = outputDir.resolve("kotlin/org/Mod1.kt")
-    assertThat(module1KotlinFile).exists()
+        val module1KotlinFile = outputDir.resolve("kotlin/org/Mod1.kt")
+        assertThat(module1KotlinFile).exists()
 
-    val module2KotlinFile = outputDir.resolve("kotlin/org/Mod2.kt")
-    assertThat(module2KotlinFile).exists()
+        val module2KotlinFile = outputDir.resolve("kotlin/org/Mod2.kt")
+        assertThat(module2KotlinFile).exists()
 
-    assertContains(
-      """
+        assertContains(
+            """
       open class Mod1(
         open val pigeon: Person
       ) {
     """
-        .trimIndent(),
-      module1KotlinFile.readString()
-    )
+                .trimIndent(),
+            module1KotlinFile.readString()
+        )
 
-    assertContains(
-      """
+        assertContains(
+            """
       class Mod2(
         pigeon: Mod1.Person,
         val parrot: Mod1.Person
       ) : Mod1(pigeon) {
     """
-        .trimIndent(),
-      module2KotlinFile.readString()
-    )
-  }
+                .trimIndent(),
+            module2KotlinFile.readString()
+        )
+    }
 
-  @Test
-  fun `class name clashes`(@TempDir tempDir: Path) {
-    val module1 =
-      PklModule(
-        "org.mod1",
-        """
+    @Test
+    fun `class name clashes`(@TempDir tempDir: Path) {
+        val module1 =
+            PklModule(
+                "org.mod1",
+                """
       module org.mod1
 
       class Person {
         name: String
       }
       """
-      )
+            )
 
-    val module2 =
-      PklModule(
-        "org.mod2",
-        """
+        val module2 =
+            PklModule(
+                "org.mod2",
+                """
       module org.mod2
 
       import "mod1.pkl"
@@ -123,40 +123,40 @@ class CliKotlinCodeGeneratorTest {
         age: Int
       }
       """
-      )
+            )
 
-    val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
-    val module2PklFile = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
-    val outputDir = tempDir.resolve("output")
+        val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
+        val module2PklFile = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
+        val outputDir = tempDir.resolve("output")
 
-    val generator =
-      CliKotlinCodeGenerator(
-        CliKotlinCodeGeneratorOptions(
-          CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
-          outputDir
-        )
-      )
+        val generator =
+            CliKotlinCodeGenerator(
+                CliKotlinCodeGeneratorOptions(
+                    CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
+                    outputDir
+                )
+            )
 
-    generator.run()
+        generator.run()
 
-    val module2KotlinFile = outputDir.resolve("kotlin/org/Mod2.kt")
-    assertContains(
-      """
+        val module2KotlinFile = outputDir.resolve("kotlin/org/Mod2.kt")
+        assertContains(
+            """
       data class Mod2(
         val person1: Mod1.Person,
         val person2: Person
       )
       """
-        .trimIndent(),
-      module2KotlinFile.readString()
-    )
-  }
-
-  private fun assertContains(part: String, code: String) {
-    val trimmedPart = part.trim().trimMargin()
-    if (!code.contains(trimmedPart)) {
-      // check for equality to get better error output (ide diff dialog)
-      assertThat(code).isEqualTo(trimmedPart)
+                .trimIndent(),
+            module2KotlinFile.readString()
+        )
     }
-  }
+
+    private fun assertContains(part: String, code: String) {
+        val trimmedPart = part.trim().trimMargin()
+        if (!code.contains(trimmedPart)) {
+            // check for equality to get better error output (ide diff dialog)
+            assertThat(code).isEqualTo(trimmedPart)
+        }
+    }
 }

@@ -37,29 +37,29 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  *   `as(JavaType.listOf(String::class.java))`
  */
 inline fun <reified T> Config.to(): T {
-  val javaType = object : JavaType<T>() {}
-  val result = `as`<T>(javaType.type)
-  if (result == null && null !is T) {
-    throw ConversionException(
-      "Expected a non-null value but got `null`. " +
-        "To allow null values, convert to a nullable Kotlin type, for example `String?`."
-    )
-  }
-  return result
+    val javaType = object : JavaType<T>() {}
+    val result = `as`<T>(javaType.type)
+    if (result == null && null !is T) {
+        throw ConversionException(
+            "Expected a non-null value but got `null`. " +
+                "To allow null values, convert to a nullable Kotlin type, for example `String?`."
+        )
+    }
+    return result
 }
 
 /**
  * Configures this [ValueMapperBuilder] with conversions and converter factories for Kotlin types.
  */
 fun ValueMapperBuilder.forKotlin(): ValueMapperBuilder =
-  addConversions(KotlinConversions.all).addConverterFactories(KotlinConverterFactories.all)
+    addConversions(KotlinConversions.all).addConverterFactories(KotlinConverterFactories.all)
 
 /**
  * Configures this [ConfigEvaluatorBuilder] with conversions and converter factories for Kotlin
  * types.
  */
 fun ConfigEvaluatorBuilder.forKotlin(): ConfigEvaluatorBuilder =
-  setValueMapperBuilder(valueMapperBuilder.forKotlin())
+    setValueMapperBuilder(valueMapperBuilder.forKotlin())
 
 fun ConfigEvaluator.forKotlin(): ConfigEvaluator =
-  setValueMapper(valueMapper.toBuilder().forKotlin().build())
+    setValueMapper(valueMapper.toBuilder().forKotlin().build())

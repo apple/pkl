@@ -23,16 +23,17 @@ import java.nio.file.Path
 import org.pkl.commons.cli.CliTestOptions
 
 class TestOptions : OptionGroup() {
-  private val junitReportDir: Path? by
-    option(
-        names = arrayOf("--junit-reports"),
-        metavar = "<dir>",
-        help = "Directory where to store JUnit reports."
-      )
-      .path()
+    private val junitReportDir: Path? by
+        option(
+                names = arrayOf("--junit-reports"),
+                metavar = "<dir>",
+                help = "Directory where to store JUnit reports."
+            )
+            .path()
 
-  private val overwrite: Boolean by
-    option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
+    private val overwrite: Boolean by
+        option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.")
+            .flag()
 
-  val cliTestOptions: CliTestOptions by lazy { CliTestOptions(junitReportDir, overwrite) }
+    val cliTestOptions: CliTestOptions by lazy { CliTestOptions(junitReportDir, overwrite) }
 }

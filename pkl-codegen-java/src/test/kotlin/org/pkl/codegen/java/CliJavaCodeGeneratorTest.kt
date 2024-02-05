@@ -25,14 +25,14 @@ import org.pkl.commons.readString
 
 class CliJavaCodeGeneratorTest {
 
-  private val dollar = "$"
+    private val dollar = "$"
 
-  @Test
-  fun `module inheritance`(@TempDir tempDir: Path) {
-    val module1 =
-      PklModule(
-        "org.mod1",
-        """
+    @Test
+    fun `module inheritance`(@TempDir tempDir: Path) {
+        val module1 =
+            PklModule(
+                "org.mod1",
+                """
       open module org.mod1
 
       pigeon: Person
@@ -42,99 +42,100 @@ class CliJavaCodeGeneratorTest {
         age: Int
       }
       """
-      )
+            )
 
-    val module2 =
-      PklModule(
-        "org.mod2",
-        """
+        val module2 =
+            PklModule(
+                "org.mod2",
+                """
       module org.mod2
 
       extends "mod1.pkl"
 
       parrot: Person
       """
-      )
+            )
 
-    val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
-    val module2File = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
-    val outputDir = tempDir.resolve("output")
+        val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
+        val module2File = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
+        val outputDir = tempDir.resolve("output")
 
-    val generator =
-      CliJavaCodeGenerator(
-        CliJavaCodeGeneratorOptions(
-          CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
-          outputDir
-        )
-      )
+        val generator =
+            CliJavaCodeGenerator(
+                CliJavaCodeGeneratorOptions(
+                    CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
+                    outputDir
+                )
+            )
 
-    generator.run()
+        generator.run()
 
-    val javaDir = outputDir.resolve("java")
+        val javaDir = outputDir.resolve("java")
 
-    val moduleJavaFiles = javaDir.resolve("org").listDirectoryEntries()
-    assertThat(moduleJavaFiles.map { it.fileName.toString() })
-      .containsExactlyInAnyOrder("Mod1.java", "Mod2.java")
+        val moduleJavaFiles = javaDir.resolve("org").listDirectoryEntries()
+        assertThat(moduleJavaFiles.map { it.fileName.toString() })
+            .containsExactlyInAnyOrder("Mod1.java", "Mod2.java")
 
-    val module1JavaFile = javaDir.resolve("org/Mod1.java")
-    assertContains(
-      """
+        val module1JavaFile = javaDir.resolve("org/Mod1.java")
+        assertContains(
+            """
       |public class Mod1 {
       |  public final @NonNull Person pigeon;
     """,
-      module1JavaFile.readString()
-    )
+            module1JavaFile.readString()
+        )
 
-    val module2JavaFile = javaDir.resolve("org/Mod2.java")
-    assertContains(
-      """
+        val module2JavaFile = javaDir.resolve("org/Mod2.java")
+        assertContains(
+            """
       |public final class Mod2 extends Mod1 {
       |  public final Mod1. @NonNull Person parrot;
     """,
-      module2JavaFile.readString()
-    )
-    val resourcesDir = outputDir.resolve("resources/META-INF/org/pkl/config/java/mapper/classes/")
+            module2JavaFile.readString()
+        )
+        val resourcesDir =
+            outputDir.resolve("resources/META-INF/org/pkl/config/java/mapper/classes/")
 
-    val module1PropertiesFile = resourcesDir.resolve("org.mod1.properties")
+        val module1PropertiesFile = resourcesDir.resolve("org.mod1.properties")
 
-    assertContains(
-      """
+        assertContains(
+            """
         org.pkl.config.java.mapper.org.mod1\#Person=org.Mod1${dollar}Person
         org.pkl.config.java.mapper.org.mod1\#ModuleClass=org.Mod1
       """
-        .trimIndent(),
-      module1PropertiesFile.readString()
-    )
+                .trimIndent(),
+            module1PropertiesFile.readString()
+        )
 
-    val module2PropertiesFile = resourcesDir.resolve("org.mod2.properties")
+        val module2PropertiesFile = resourcesDir.resolve("org.mod2.properties")
 
-    assertContains(
-      """
+        assertContains(
+            """
         org.pkl.config.java.mapper.org.mod2\#ModuleClass=org.Mod2
       """
-        .trimIndent(),
-      module2PropertiesFile.readString()
-    )
-  }
+                .trimIndent(),
+            module2PropertiesFile.readString()
+        )
+    }
 
-  @Test
-  fun `class name clashes`(@TempDir tempDir: Path) {
-    val module1 =
-      PklModule(
-        "org.mod1",
-        """
+    @Test
+    fun `class name clashes`(@TempDir tempDir: Path) {
+        val module1 =
+            PklModule(
+                "org.mod1",
+                """
       module org.mod1
 
       class Person {
         name: String
       }
       """
-      )
+            )
 
-    val module2 =
-      PklModule(
-        "org.mod2",
-        """
+        val module2 =
+            PklModule(
+                "org.mod2",
+                """
       module org.mod2
 
       import "mod1.pkl"
@@ -146,39 +147,39 @@ class CliJavaCodeGeneratorTest {
         age: Int
       }
       """
-      )
+            )
 
-    val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
-    val module2PklFile = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
-    val outputDir = tempDir.resolve("output")
+        val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
+        val module2PklFile = module2.writeToDisk(tempDir.resolve("org/mod2.pkl"))
+        val outputDir = tempDir.resolve("output")
 
-    val generator =
-      CliJavaCodeGenerator(
-        CliJavaCodeGeneratorOptions(
-          CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
-          outputDir
-        )
-      )
+        val generator =
+            CliJavaCodeGenerator(
+                CliJavaCodeGeneratorOptions(
+                    CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
+                    outputDir
+                )
+            )
 
-    generator.run()
+        generator.run()
 
-    val module2JavaFile = outputDir.resolve("java/org/Mod2.java")
-    assertContains(
-      """
+        val module2JavaFile = outputDir.resolve("java/org/Mod2.java")
+        assertContains(
+            """
       |public final class Mod2 {
       |  public final Mod1. @NonNull Person person1;
       |
       |  public final @NonNull Person person2;
       """,
-      module2JavaFile.readString()
-    )
-  }
-
-  private fun assertContains(part: String, code: String) {
-    val trimmedPart = part.trim().trimMargin()
-    if (!code.contains(trimmedPart)) {
-      // check for equality to get better error output (ide diff dialog)
-      assertThat(code).isEqualTo(trimmedPart)
+            module2JavaFile.readString()
+        )
     }
-  }
+
+    private fun assertContains(part: String, code: String) {
+        val trimmedPart = part.trim().trimMargin()
+        if (!code.contains(trimmedPart)) {
+            // check for equality to get better error output (ide diff dialog)
+            assertThat(code).isEqualTo(trimmedPart)
+        }
+    }
 }

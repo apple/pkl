@@ -30,67 +30,67 @@ import org.pkl.core.Release
 
 /** Main method for the Kotlin code generator CLI. */
 internal fun main(args: Array<String>) {
-  cliMain { PklKotlinCodegenCommand().main(args) }
+    cliMain { PklKotlinCodegenCommand().main(args) }
 }
 
 class PklKotlinCodegenCommand :
-  ModulesCommand(
-    name = "pkl-codegen-kotlin",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+    ModulesCommand(
+        name = "pkl-codegen-kotlin",
+        helpLink = Release.current().documentation().homepage(),
+    ) {
 
-  private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
+    private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 
-  private val outputDir: Path by
-    option(
-        names = arrayOf("-o", "--output-dir"),
-        metavar = "<path>",
-        help = "The directory where generated source code is placed."
-      )
-      .path()
-      .default(defaults.outputDir)
+    private val outputDir: Path by
+        option(
+                names = arrayOf("-o", "--output-dir"),
+                metavar = "<path>",
+                help = "The directory where generated source code is placed."
+            )
+            .path()
+            .default(defaults.outputDir)
 
-  private val indent: String by
-    option(
-        names = arrayOf("--indent"),
-        metavar = "<chars>",
-        help = "The characters to use for indenting generated source code."
-      )
-      .default(defaults.indent)
+    private val indent: String by
+        option(
+                names = arrayOf("--indent"),
+                metavar = "<chars>",
+                help = "The characters to use for indenting generated source code."
+            )
+            .default(defaults.indent)
 
-  private val generateKdoc: Boolean by
-    option(
-        names = arrayOf("--generate-kdoc"),
-        help =
-          "Whether to generate Kdoc based on doc comments " +
-            "for Pkl modules, classes, and properties."
-      )
-      .flag()
+    private val generateKdoc: Boolean by
+        option(
+                names = arrayOf("--generate-kdoc"),
+                help =
+                    "Whether to generate Kdoc based on doc comments " +
+                        "for Pkl modules, classes, and properties."
+            )
+            .flag()
 
-  private val generateSpringboot: Boolean by
-    option(
-        names = arrayOf("--generate-spring-boot"),
-        help = "Whether to generate config classes for use with Spring boot."
-      )
-      .flag()
+    private val generateSpringboot: Boolean by
+        option(
+                names = arrayOf("--generate-spring-boot"),
+                help = "Whether to generate config classes for use with Spring boot."
+            )
+            .flag()
 
-  private val implementSerializable: Boolean by
-    option(
-        names = arrayOf("--implement-serializable"),
-        help = "Whether to make generated classes implement java.io.Serializable"
-      )
-      .flag()
+    private val implementSerializable: Boolean by
+        option(
+                names = arrayOf("--implement-serializable"),
+                help = "Whether to make generated classes implement java.io.Serializable"
+            )
+            .flag()
 
-  override fun run() {
-    val options =
-      CliKotlinCodeGeneratorOptions(
-        base = baseOptions.baseOptions(modules, projectOptions),
-        outputDir = outputDir,
-        indent = indent,
-        generateKdoc = generateKdoc,
-        generateSpringBootConfig = generateSpringboot,
-        implementSerializable = implementSerializable
-      )
-    CliKotlinCodeGenerator(options).run()
-  }
+    override fun run() {
+        val options =
+            CliKotlinCodeGeneratorOptions(
+                base = baseOptions.baseOptions(modules, projectOptions),
+                outputDir = outputDir,
+                indent = indent,
+                generateKdoc = generateKdoc,
+                generateSpringBootConfig = generateSpringboot,
+                implementSerializable = implementSerializable
+            )
+        CliKotlinCodeGenerator(options).run()
+    }
 }

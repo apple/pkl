@@ -28,26 +28,26 @@ fun ByteArray.asInt(): Int = unpack().asIntegerValue().asInt()
 fun ByteArray.asString(): String = unpack().asStringValue().asString()
 
 fun createDirectExecutor(): ExecutorService =
-  object : AbstractExecutorService() {
-    override fun execute(command: Runnable) {
-      command.run()
-    }
+    object : AbstractExecutorService() {
+        override fun execute(command: Runnable) {
+            command.run()
+        }
 
-    override fun shutdown() {}
+        override fun shutdown() {}
 
-    override fun shutdownNow(): MutableList<Runnable> {
-      throw UnsupportedOperationException("shutdownNow")
-    }
+        override fun shutdownNow(): MutableList<Runnable> {
+            throw UnsupportedOperationException("shutdownNow")
+        }
 
-    override fun isShutdown(): Boolean {
-      throw UnsupportedOperationException("isShutdown")
-    }
+        override fun isShutdown(): Boolean {
+            throw UnsupportedOperationException("isShutdown")
+        }
 
-    override fun isTerminated(): Boolean {
-      throw UnsupportedOperationException("isTerminated")
-    }
+        override fun isTerminated(): Boolean {
+            throw UnsupportedOperationException("isTerminated")
+        }
 
-    override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
-      throw UnsupportedOperationException("awaitTermination")
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+            throw UnsupportedOperationException("awaitTermination")
+        }
     }
-  }

@@ -16,4 +16,4 @@
 package org.pkl.doc
 
 class DocGeneratorException(message: String, cause: Throwable? = null) :
-  RuntimeException(message, cause)
+    RuntimeException(message, cause)

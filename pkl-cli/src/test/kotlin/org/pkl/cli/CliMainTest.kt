@@ -31,33 +31,35 @@ import org.pkl.commons.writeString
 
 class CliMainTest {
 
-  private val evalCmd = EvalCommand("")
-  private val cmd = RootCommand("pkl", "pkl version 1", "").subcommands(evalCmd)
+    private val evalCmd = EvalCommand("")
+    private val cmd = RootCommand("pkl", "pkl version 1", "").subcommands(evalCmd)
 
-  @Test
-  fun `duplicate CLI option produces meaningful errror message`(@TempDir tempDir: Path) {
-    val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
+    @Test
+    fun `duplicate CLI option produces meaningful errror message`(@TempDir tempDir: Path) {
+        val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
 
-    assertThatCode {
-        cmd.parse(arrayOf("eval", "--output-path", "path1", "--output-path", "path2", inputFile))
-      }
-      .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
+        assertThatCode {
+                cmd.parse(
+                    arrayOf("eval", "--output-path", "path1", "--output-path", "path2", inputFile)
+                )
+            }
+            .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
 
-    assertThatCode {
-        cmd.parse(arrayOf("eval", "-o", "path1", "--output-path", "path2", inputFile))
-      }
-      .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
-  }
+        assertThatCode {
+                cmd.parse(arrayOf("eval", "-o", "path1", "--output-path", "path2", inputFile))
+            }
+            .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
+    }
 
-  @Test
-  fun `eval requires at least one file`() {
-    assertThatCode { cmd.parse(arrayOf("eval")) }.hasMessage("""Missing argument "<modules>"""")
-  }
+    @Test
+    fun `eval requires at least one file`() {
+        assertThatCode { cmd.parse(arrayOf("eval")) }.hasMessage("""Missing argument "<modules>"""")
+    }
 
-  @Test
-  fun `output to symlinked directory works`(@TempDir tempDir: Path) {
-    val code =
-      """
+    @Test
+    fun `output to symlinked directory works`(@TempDir tempDir: Path) {
+        val code =
+            """
       x = 3
       
       output {
@@ -65,59 +67,59 @@ class CliMainTest {
         renderer = new JsonRenderer {}
       }
     """
-        .trimIndent()
-    val inputFile = tempDir.resolve("test.pkl").writeString(code).toString()
-    val outputFile = makeSymdir(tempDir, "out", "linkOut").resolve("test.pkl").toString()
+                .trimIndent()
+        val inputFile = tempDir.resolve("test.pkl").writeString(code).toString()
+        val outputFile = makeSymdir(tempDir, "out", "linkOut").resolve("test.pkl").toString()
 
-    assertThatCode { cmd.parse(arrayOf("eval", inputFile, "-o", outputFile)) }
-      .doesNotThrowAnyException()
-  }
+        assertThatCode { cmd.parse(arrayOf("eval", inputFile, "-o", outputFile)) }
+            .doesNotThrowAnyException()
+    }
 
-  @Test
-  fun `cannot have multiple output with -o or -x`(@TempDir tempDir: Path) {
-    val testIn = makeInput(tempDir)
-    val testOut = tempDir.resolve("test").toString()
-    val error =
-      """Invalid value for "--multiple-file-output-path": Option is mutually exclusive with -o, --output-path and -x, --expression."""
+    @Test
+    fun `cannot have multiple output with -o or -x`(@TempDir tempDir: Path) {
+        val testIn = makeInput(tempDir)
+        val testOut = tempDir.resolve("test").toString()
+        val error =
+            """Invalid value for "--multiple-file-output-path": Option is mutually exclusive with -o, --output-path and -x, --expression."""
 
-    assertThatCode { cmd.parse(arrayOf("eval", "-m", testOut, "-x", "x", testIn)) }
-      .hasMessage(error)
+        assertThatCode { cmd.parse(arrayOf("eval", "-m", testOut, "-x", "x", testIn)) }
+            .hasMessage(error)
 
-    assertThatCode { cmd.parse(arrayOf("eval", "-m", testOut, "-o", "/tmp/test", testIn)) }
-      .hasMessage(error)
-  }
+        assertThatCode { cmd.parse(arrayOf("eval", "-m", testOut, "-o", "/tmp/test", testIn)) }
+            .hasMessage(error)
+    }
 
-  @Test
-  fun `showing version works`() {
-    assertThatCode { cmd.parse(arrayOf("--version")) }.hasMessage("pkl version 1")
-  }
+    @Test
+    fun `showing version works`() {
+        assertThatCode { cmd.parse(arrayOf("--version")) }.hasMessage("pkl version 1")
+    }
 
-  @Test
-  fun `file paths get parsed into URIs`(@TempDir tempDir: Path) {
-    cmd.parse(arrayOf("eval", makeInput(tempDir, "my file.txt")))
+    @Test
+    fun `file paths get parsed into URIs`(@TempDir tempDir: Path) {
+        cmd.parse(arrayOf("eval", makeInput(tempDir, "my file.txt")))
 
-    val modules = evalCmd.baseOptions.baseOptions(evalCmd.modules).normalizedSourceModules
-    assertThat(modules).hasSize(1)
-    assertThat(modules[0].path).endsWith("my file.txt")
-  }
+        val modules = evalCmd.baseOptions.baseOptions(evalCmd.modules).normalizedSourceModules
+        assertThat(modules).hasSize(1)
+        assertThat(modules[0].path).endsWith("my file.txt")
+    }
 
-  @Test
-  fun `invalid URIs are not accepted`() {
-    val ex = assertThrows<BadParameterValue> { cmd.parse(arrayOf("eval", "file:my file.txt")) }
+    @Test
+    fun `invalid URIs are not accepted`() {
+        val ex = assertThrows<BadParameterValue> { cmd.parse(arrayOf("eval", "file:my file.txt")) }
 
-    assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
-  }
+        assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
+    }
 
-  private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {
-    val code = "x = 1"
-    return tempDir.resolve(fileName).writeString(code).toString()
-  }
+    private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {
+        val code = "x = 1"
+        return tempDir.resolve(fileName).writeString(code).toString()
+    }
 
-  private fun makeSymdir(baseDir: Path, name: String, linkName: String): Path {
-    val dir = baseDir.resolve(name)
-    val link = baseDir.resolve(linkName)
-    dir.createDirectory()
-    link.createSymbolicLinkPointingTo(dir)
-    return link
-  }
+    private fun makeSymdir(baseDir: Path, name: String, linkName: String): Path {
+        val dir = baseDir.resolve(name)
+        val link = baseDir.resolve(linkName)
+        dir.createDirectory()
+        link.createSymbolicLinkPointingTo(dir)
+        return link
+    }
 }

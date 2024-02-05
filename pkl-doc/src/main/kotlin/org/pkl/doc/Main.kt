@@ -33,41 +33,45 @@ import org.pkl.core.Release
 
 /** Main method for the Pkldoc CLI. */
 internal fun main(args: Array<String>) {
-  cliMain { DocCommand().main(args) }
+    cliMain { DocCommand().main(args) }
 }
 
 class DocCommand :
-  BaseCommand(name = "pkldoc", helpLink = Release.current().documentation().homepage(), help = "") {
+    BaseCommand(
+        name = "pkldoc",
+        helpLink = Release.current().documentation().homepage(),
+        help = ""
+    ) {
 
-  private val modules: List<URI> by
-    argument(
-        name = "<modules>",
-        help = "Module paths/uris, or package uris to generate documentation for"
-      )
-      .convert { parseModuleName(it) }
-      .multiple(required = true)
+    private val modules: List<URI> by
+        argument(
+                name = "<modules>",
+                help = "Module paths/uris, or package uris to generate documentation for"
+            )
+            .convert { parseModuleName(it) }
+            .multiple(required = true)
 
-  private val outputDir: Path by
-    option(
-        names = arrayOf("-o", "--output-dir"),
-        metavar = "<directory>",
-        help = "Directory where generated documentation is placed."
-      )
-      .path()
-      .required()
+    private val outputDir: Path by
+        option(
+                names = arrayOf("-o", "--output-dir"),
+                metavar = "<directory>",
+                help = "Directory where generated documentation is placed."
+            )
+            .path()
+            .required()
 
-  private val projectOptions by ProjectOptions()
+    private val projectOptions by ProjectOptions()
 
-  override fun run() {
-    val options =
-      CliDocGeneratorOptions(
-        baseOptions.baseOptions(
-          modules,
-          projectOptions,
-        ),
-        outputDir,
-        true
-      )
-    CliDocGenerator(options).run()
-  }
+    override fun run() {
+        val options =
+            CliDocGeneratorOptions(
+                baseOptions.baseOptions(
+                    modules,
+                    projectOptions,
+                ),
+                outputDir,
+                true
+            )
+        CliDocGenerator(options).run()
+    }
 }

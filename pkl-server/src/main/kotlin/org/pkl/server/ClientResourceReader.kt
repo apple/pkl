@@ -29,77 +29,79 @@ import org.pkl.core.resource.ResourceReader
 
 /** Resource reader that delegates read logic to the client. */
 internal class ClientResourceReader(
-  private val transport: MessageTransport,
-  private val evaluatorId: Long,
-  private val readerSpec: ResourceReaderSpec,
+    private val transport: MessageTransport,
+    private val evaluatorId: Long,
+    private val readerSpec: ResourceReaderSpec,
 ) : ResourceReader {
-  private val readResponses: MutableMap<URI, Future<ByteArray>> = ConcurrentHashMap()
+    private val readResponses: MutableMap<URI, Future<ByteArray>> = ConcurrentHashMap()
 
-  private val listResources: MutableMap<URI, Future<List<PathElement>>> = ConcurrentHashMap()
+    private val listResources: MutableMap<URI, Future<List<PathElement>>> = ConcurrentHashMap()
 
-  override fun hasHierarchicalUris(): Boolean = readerSpec.hasHierarchicalUris
+    override fun hasHierarchicalUris(): Boolean = readerSpec.hasHierarchicalUris
 
-  override fun isGlobbable(): Boolean = readerSpec.isGlobbable
+    override fun isGlobbable(): Boolean = readerSpec.isGlobbable
 
-  override fun getUriScheme() = readerSpec.scheme
+    override fun getUriScheme() = readerSpec.scheme
 
-  override fun read(uri: URI): Optional<Any> = Optional.of(Resource(uri, doRead(uri)))
+    override fun read(uri: URI): Optional<Any> = Optional.of(Resource(uri, doRead(uri)))
 
-  override fun hasElement(securityManager: SecurityManager, elementUri: URI): Boolean {
-    securityManager.checkResolveResource(elementUri)
-    return try {
-      doRead(elementUri)
-      true
-    } catch (e: IOException) {
-      false
+    override fun hasElement(securityManager: SecurityManager, elementUri: URI): Boolean {
+        securityManager.checkResolveResource(elementUri)
+        return try {
+            doRead(elementUri)
+            true
+        } catch (e: IOException) {
+            false
+        }
     }
-  }
 
-  override fun listElements(securityManager: SecurityManager, baseUri: URI): List<PathElement> {
-    securityManager.checkResolveResource(baseUri)
-    return doListElements(baseUri)
-  }
+    override fun listElements(securityManager: SecurityManager, baseUri: URI): List<PathElement> {
+        securityManager.checkResolveResource(baseUri)
+        return doListElements(baseUri)
+    }
 
-  private fun doListElements(baseUri: URI): List<PathElement> =
-    listResources
-      .computeIfAbsent(baseUri) {
-        CompletableFuture<List<PathElement>>().apply {
-          val request = ListResourcesRequest(Random.nextLong(), evaluatorId, baseUri)
-          transport.send(request) { response ->
-            when (response) {
-              is ListResourcesResponse ->
-                if (response.pathElements != null) {
-                  complete(response.pathElements)
-                } else {
-                  completeExceptionally(IOException(response.error))
+    private fun doListElements(baseUri: URI): List<PathElement> =
+        listResources
+            .computeIfAbsent(baseUri) {
+                CompletableFuture<List<PathElement>>().apply {
+                    val request = ListResourcesRequest(Random.nextLong(), evaluatorId, baseUri)
+                    transport.send(request) { response ->
+                        when (response) {
+                            is ListResourcesResponse ->
+                                if (response.pathElements != null) {
+                                    complete(response.pathElements)
+                                } else {
+                                    completeExceptionally(IOException(response.error))
+                                }
+                            else -> completeExceptionally(ProtocolException("Unexpected response"))
+                        }
+                    }
                 }
-              else -> completeExceptionally(ProtocolException("Unexpected response"))
             }
-          }
-        }
-      }
-      .getUnderlying()
+            .getUnderlying()
 
-  private fun doRead(uri: URI): ByteArray =
-    readResponses
-      .computeIfAbsent(uri) {
-        CompletableFuture<ByteArray>().apply {
-          val request = ReadResourceRequest(Random.nextLong(), evaluatorId, uri)
-          transport.send(request) { response ->
-            when (response) {
-              is ReadResourceResponse -> {
-                if (response.error != null) {
-                  completeExceptionally(IOException(response.error))
-                } else {
-                  complete(response.contents!!)
+    private fun doRead(uri: URI): ByteArray =
+        readResponses
+            .computeIfAbsent(uri) {
+                CompletableFuture<ByteArray>().apply {
+                    val request = ReadResourceRequest(Random.nextLong(), evaluatorId, uri)
+                    transport.send(request) { response ->
+                        when (response) {
+                            is ReadResourceResponse -> {
+                                if (response.error != null) {
+                                    completeExceptionally(IOException(response.error))
+                                } else {
+                                    complete(response.contents!!)
+                                }
+                            }
+                            else -> {
+                                completeExceptionally(
+                                    ProtocolException("Unexpected response: $response")
+                                )
+                            }
+                        }
+                    }
                 }
-              }
-              else -> {
-                completeExceptionally(ProtocolException("Unexpected response: $response"))
-              }
             }
-          }
-        }
-      }
-      .getUnderlying()
+            .getUnderlying()
 }

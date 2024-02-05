@@ -21,11 +21,11 @@ import org.msgpack.core.MessageUnpacker
 
 /** Factory methods for creating [MessageDecoder]s. */
 internal object MessageDecoders {
-  fun from(stream: InputStream): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(stream))
+    fun from(stream: InputStream): MessageDecoder =
+        MessagePackDecoder(MessagePack.newDefaultUnpacker(stream))
 
-  fun from(unpacker: MessageUnpacker): MessageDecoder = MessagePackDecoder(unpacker)
+    fun from(unpacker: MessageUnpacker): MessageDecoder = MessagePackDecoder(unpacker)
 
-  fun from(array: ByteArray): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(array))
+    fun from(array: ByteArray): MessageDecoder =
+        MessagePackDecoder(MessagePack.newDefaultUnpacker(array))
 }

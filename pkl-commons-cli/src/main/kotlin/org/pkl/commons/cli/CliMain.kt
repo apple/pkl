@@ -20,27 +20,27 @@ import kotlin.system.exitProcess
 
 /** Building block for CLIs. Intended to be called from a `main` method. */
 fun cliMain(block: () -> Unit) {
-  fun printError(error: Throwable, stream: PrintStream) {
-    val message = error.toString()
-    stream.print(message)
-    // ensure CLI output always ends with newline
-    if (!message.endsWith('\n')) stream.println()
-  }
+    fun printError(error: Throwable, stream: PrintStream) {
+        val message = error.toString()
+        stream.print(message)
+        // ensure CLI output always ends with newline
+        if (!message.endsWith('\n')) stream.println()
+    }
 
-  try {
-    block()
-  } catch (e: CliTestException) {
-    // no need to print the error, the test results will already do it
-    exitProcess(e.exitCode)
-  } catch (e: CliException) {
-    printError(e, if (e.exitCode == 0) System.out else System.err)
-    exitProcess(e.exitCode)
-  } catch (e: Exception) {
-    printError(CliBugException(e), System.err)
-    exitProcess(1)
-  }
+    try {
+        block()
+    } catch (e: CliTestException) {
+        // no need to print the error, the test results will already do it
+        exitProcess(e.exitCode)
+    } catch (e: CliException) {
+        printError(e, if (e.exitCode == 0) System.out else System.err)
+        exitProcess(e.exitCode)
+    } catch (e: Exception) {
+        printError(CliBugException(e), System.err)
+        exitProcess(1)
+    }
 }
 
 object CliMain {
-  val compat: String? = System.getProperty("org.pkl.compat")
+    val compat: String? = System.getProperty("org.pkl.compat")
 }

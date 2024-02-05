@@ -32,22 +32,22 @@ import org.pkl.commons.cli.commands.TestOptions
 import org.pkl.commons.cli.commands.single
 
 class ProjectCommand(helpLink: String) :
-  NoOpCliktCommand(
-    name = "project",
-    help = "Run commands related to projects",
-    epilog = "For more information, visit $helpLink"
-  ) {
-  init {
-    subcommands(ResolveCommand(helpLink), PackageCommand(helpLink))
-  }
+    NoOpCliktCommand(
+        name = "project",
+        help = "Run commands related to projects",
+        epilog = "For more information, visit $helpLink"
+    ) {
+    init {
+        subcommands(ResolveCommand(helpLink), PackageCommand(helpLink))
+    }
 
-  companion object {
-    class ResolveCommand(helpLink: String) :
-      BaseCommand(
-        name = "resolve",
-        helpLink = helpLink,
-        help =
-          """
+    companion object {
+        class ResolveCommand(helpLink: String) :
+            BaseCommand(
+                name = "resolve",
+                helpLink = helpLink,
+                help =
+                    """
         Resolve dependencies for project(s)
         
         This command takes the `dependencies` of `PklProject`s, and writes the
@@ -63,23 +63,25 @@ class ProjectCommand(helpLink: String) :
         $ pkl project resolve packages/*/
         ```
         """,
-      ) {
-      private val projectDirs: List<Path> by
-        argument("<dir>", "The project directories to resolve dependencies for").path().multiple()
+            ) {
+            private val projectDirs: List<Path> by
+                argument("<dir>", "The project directories to resolve dependencies for")
+                    .path()
+                    .multiple()
 
-      override fun run() {
-        CliProjectResolver(baseOptions.baseOptions(emptyList()), projectDirs).run()
-      }
-    }
+            override fun run() {
+                CliProjectResolver(baseOptions.baseOptions(emptyList()), projectDirs).run()
+            }
+        }
 
-    private const val NEWLINE = '\u0085'
+        private const val NEWLINE = '\u0085'
 
-    class PackageCommand(helpLink: String) :
-      BaseCommand(
-        name = "package",
-        helpLink = helpLink,
-        help =
-          """
+        class PackageCommand(helpLink: String) :
+            BaseCommand(
+                name = "package",
+                helpLink = helpLink,
+                help =
+                    """
           Verify package(s), and prepare package artifacts to be published.
   
           This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
@@ -110,40 +112,41 @@ class ProjectCommand(helpLink: String) :
           $ pkl project package packages/*/
           ```
           """
-            .trimIndent(),
-      ) {
-      private val testOptions by TestOptions()
+                        .trimIndent(),
+            ) {
+            private val testOptions by TestOptions()
 
-      private val projectDirs: List<Path> by
-        argument("<dir>", "The project directories to package").path().multiple()
+            private val projectDirs: List<Path> by
+                argument("<dir>", "The project directories to package").path().multiple()
 
-      private val outputPath: String by
-        option(
-            names = arrayOf("--output-path"),
-            help = "The directory to write artifacts to",
-            metavar = "<path>"
-          )
-          .single()
-          .default(".out/%{name}@%{version}")
+            private val outputPath: String by
+                option(
+                        names = arrayOf("--output-path"),
+                        help = "The directory to write artifacts to",
+                        metavar = "<path>"
+                    )
+                    .single()
+                    .default(".out/%{name}@%{version}")
 
-      private val skipPublishCheck: Boolean by
-        option(
-            names = arrayOf("--skip-publish-check"),
-            help = "Skip checking if a package has already been published with different contents",
-          )
-          .single()
-          .flag()
+            private val skipPublishCheck: Boolean by
+                option(
+                        names = arrayOf("--skip-publish-check"),
+                        help =
+                            "Skip checking if a package has already been published with different contents",
+                    )
+                    .single()
+                    .flag()
 
-      override fun run() {
-        CliProjectPackager(
-            baseOptions.baseOptions(emptyList()),
-            projectDirs,
-            testOptions.cliTestOptions,
-            outputPath,
-            skipPublishCheck
-          )
-          .run()
-      }
+            override fun run() {
+                CliProjectPackager(
+                        baseOptions.baseOptions(emptyList()),
+                        projectDirs,
+                        testOptions.cliTestOptions,
+                        outputPath,
+                        skipPublishCheck
+                    )
+                    .run()
+            }
+        }
     }
-  }
 }

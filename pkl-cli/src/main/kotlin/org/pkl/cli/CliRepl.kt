@@ -25,48 +25,48 @@ import org.pkl.core.repl.ReplServer
 import org.pkl.core.resource.ResourceReaders
 
 internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(options.base) {
-  override fun doRun() {
-    ModulePathResolver(modulePath).use { modulePathResolver ->
-      // TODO: send options as command
-      val server =
-        ReplServer(
-          SecurityManagers.standard(
-            allowedModules,
-            allowedResources,
-            SecurityManagers.defaultTrustLevels,
-            rootDir
-          ),
-          Loggers.stdErr(),
-          listOf(
-            ModuleKeyFactories.standardLibrary,
-            ModuleKeyFactories.modulePath(modulePathResolver)
-          ) +
-            ModuleKeyFactories.fromServiceProviders() +
-            listOf(
-              ModuleKeyFactories.file,
-              ModuleKeyFactories.pkg,
-              ModuleKeyFactories.projectpackage,
-              ModuleKeyFactories.genericUrl
-            ),
-          listOf(
-            ResourceReaders.environmentVariable(),
-            ResourceReaders.externalProperty(),
-            ResourceReaders.modulePath(modulePathResolver),
-            ResourceReaders.file(),
-            ResourceReaders.http(),
-            ResourceReaders.https(),
-            ResourceReaders.pkg(),
-            ResourceReaders.projectpackage()
-          ),
-          environmentVariables,
-          externalProperties,
-          moduleCacheDir,
-          project?.dependencies,
-          options.outputFormat,
-          options.base.normalizedWorkingDir,
-          stackFrameTransformer
-        )
-      Repl(options.base.normalizedWorkingDir, server).run()
+    override fun doRun() {
+        ModulePathResolver(modulePath).use { modulePathResolver ->
+            // TODO: send options as command
+            val server =
+                ReplServer(
+                    SecurityManagers.standard(
+                        allowedModules,
+                        allowedResources,
+                        SecurityManagers.defaultTrustLevels,
+                        rootDir
+                    ),
+                    Loggers.stdErr(),
+                    listOf(
+                        ModuleKeyFactories.standardLibrary,
+                        ModuleKeyFactories.modulePath(modulePathResolver)
+                    ) +
+                        ModuleKeyFactories.fromServiceProviders() +
+                        listOf(
+                            ModuleKeyFactories.file,
+                            ModuleKeyFactories.pkg,
+                            ModuleKeyFactories.projectpackage,
+                            ModuleKeyFactories.genericUrl
+                        ),
+                    listOf(
+                        ResourceReaders.environmentVariable(),
+                        ResourceReaders.externalProperty(),
+                        ResourceReaders.modulePath(modulePathResolver),
+                        ResourceReaders.file(),
+                        ResourceReaders.http(),
+                        ResourceReaders.https(),
+                        ResourceReaders.pkg(),
+                        ResourceReaders.projectpackage()
+                    ),
+                    environmentVariables,
+                    externalProperties,
+                    moduleCacheDir,
+                    project?.dependencies,
+                    options.outputFormat,
+                    options.base.normalizedWorkingDir,
+                    stackFrameTransformer
+                )
+            Repl(options.base.normalizedWorkingDir, server).run()
+        }
     }
-  }
 }

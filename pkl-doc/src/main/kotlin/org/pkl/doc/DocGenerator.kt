@@ -34,185 +34,186 @@ import org.pkl.core.Version
  * For the high-level Pkldoc API, see [CliDocGenerator].
  */
 class DocGenerator(
-  /**
-   * The documentation website to generate.
-   *
-   * API equivalent of `pkl:DocsiteInfo`.
-   */
-  private val docsiteInfo: DocsiteInfo,
+    /**
+     * The documentation website to generate.
+     *
+     * API equivalent of `pkl:DocsiteInfo`.
+     */
+    private val docsiteInfo: DocsiteInfo,
 
-  /** The modules to generate documentation for, grouped by package. */
-  modules: Map<DocPackageInfo, Collection<ModuleSchema>>,
+    /** The modules to generate documentation for, grouped by package. */
+    modules: Map<DocPackageInfo, Collection<ModuleSchema>>,
 
-  /**
-   * A function to resolve imports in [modules], [packageInfos], and [docsiteInfo].
-   *
-   * Module `pkl.base` is resolved with this function even if not explicitly imported.
-   */
-  private val importResolver: (URI) -> ModuleSchema,
+    /**
+     * A function to resolve imports in [modules], [packageInfos], and [docsiteInfo].
+     *
+     * Module `pkl.base` is resolved with this function even if not explicitly imported.
+     */
+    private val importResolver: (URI) -> ModuleSchema,
 
-  /** A comparator for package versions. */
-  versionComparator: Comparator<String>,
-  /** The directory where generated documentation is placed. */
-  private val outputDir: Path,
+    /** A comparator for package versions. */
+    versionComparator: Comparator<String>,
+    /** The directory where generated documentation is placed. */
+    private val outputDir: Path,
 
-  /**
-   * Internal option used only for testing.
-   *
-   * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
-   * files (e.g., when stdlib line numbers change).
-   */
-  private val isTestMode: Boolean = false
+    /**
+     * Internal option used only for testing.
+     *
+     * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
+     * files (e.g., when stdlib line numbers change).
+     */
+    private val isTestMode: Boolean = false
 ) {
-  companion object {
-    internal fun List<PackageData>.current(
-      versionComparator: Comparator<String>
-    ): List<PackageData> {
-      val comparator =
-        compareBy<PackageData> { it.ref.pkg }.thenBy(versionComparator) { it.ref.version }
-      return asSequence()
-        // If matching a semver pattern, remove any version that has a prerelease
-        // version (e.g. SNAPSHOT in 1.2.3-SNAPSHOT)
-        .filter { Version.parseOrNull(it.ref.version)?.preRelease == null }
-        .sortedWith(comparator)
-        .distinctBy { it.ref.pkg }
-        .toList()
+    companion object {
+        internal fun List<PackageData>.current(
+            versionComparator: Comparator<String>
+        ): List<PackageData> {
+            val comparator =
+                compareBy<PackageData> { it.ref.pkg }.thenBy(versionComparator) { it.ref.version }
+            return asSequence()
+                // If matching a semver pattern, remove any version that has a prerelease
+                // version (e.g. SNAPSHOT in 1.2.3-SNAPSHOT)
+                .filter { Version.parseOrNull(it.ref.version)?.preRelease == null }
+                .sortedWith(comparator)
+                .distinctBy { it.ref.pkg }
+                .toList()
+        }
     }
-  }
 
-  private val descendingVersionComparator: Comparator<String> = versionComparator.reversed()
+    private val descendingVersionComparator: Comparator<String> = versionComparator.reversed()
 
-  private val docPackages: List<DocPackage> = modules.map { DocPackage(it.key, it.value.toList()) }
+    private val docPackages: List<DocPackage> =
+        modules.map { DocPackage(it.key, it.value.toList()) }
 
-  /** Runs this documentation generator. */
-  fun run() {
-    try {
-      val htmlGenerator =
-        HtmlGenerator(docsiteInfo, docPackages, importResolver, outputDir, isTestMode)
-      val searchIndexGenerator = SearchIndexGenerator(outputDir)
-      val packageDataGenerator = PackageDataGenerator(outputDir)
-      val runtimeDataGenerator = RuntimeDataGenerator(descendingVersionComparator, outputDir)
+    /** Runs this documentation generator. */
+    fun run() {
+        try {
+            val htmlGenerator =
+                HtmlGenerator(docsiteInfo, docPackages, importResolver, outputDir, isTestMode)
+            val searchIndexGenerator = SearchIndexGenerator(outputDir)
+            val packageDataGenerator = PackageDataGenerator(outputDir)
+            val runtimeDataGenerator = RuntimeDataGenerator(descendingVersionComparator, outputDir)
 
-      for (docPackage in docPackages) {
-        if (docPackage.isUnlisted) continue
+            for (docPackage in docPackages) {
+                if (docPackage.isUnlisted) continue
 
-        docPackage.deletePackageDir()
-        htmlGenerator.generate(docPackage)
-        searchIndexGenerator.generate(docPackage)
-        packageDataGenerator.generate(docPackage)
-      }
+                docPackage.deletePackageDir()
+                htmlGenerator.generate(docPackage)
+                searchIndexGenerator.generate(docPackage)
+                packageDataGenerator.generate(docPackage)
+            }
 
-      val packagesData = packageDataGenerator.readAll()
-      val currentPackagesData = packagesData.current(descendingVersionComparator)
+            val packagesData = packageDataGenerator.readAll()
+            val currentPackagesData = packagesData.current(descendingVersionComparator)
 
-      createSymlinks(currentPackagesData)
+            createSymlinks(currentPackagesData)
 
-      htmlGenerator.generateSite(currentPackagesData)
-      searchIndexGenerator.generateSiteIndex(currentPackagesData)
-      runtimeDataGenerator.deleteDataDir()
-      runtimeDataGenerator.generate(packagesData)
-    } catch (e: IOException) {
-      throw DocGeneratorException("I/O error generating documentation.", e)
+            htmlGenerator.generateSite(currentPackagesData)
+            searchIndexGenerator.generateSiteIndex(currentPackagesData)
+            runtimeDataGenerator.deleteDataDir()
+            runtimeDataGenerator.generate(packagesData)
+        } catch (e: IOException) {
+            throw DocGeneratorException("I/O error generating documentation.", e)
+        }
     }
-  }
 
-  private fun DocPackage.deletePackageDir() {
-    outputDir.resolve("$name/$version").deleteRecursively()
-  }
-
-  private fun createSymlinks(currentPackagesData: List<PackageData>) {
-    for (packageData in currentPackagesData) {
-      val basePath = outputDir.resolve(packageData.ref.pkg)
-      val src = basePath.resolve(packageData.ref.version)
-      val dest = basePath.resolve("current")
-      if (dest.exists() && dest.isSameFileAs(src)) continue
-      dest.deleteIfExists()
-      dest.createSymbolicLinkPointingTo(basePath.relativize(src))
+    private fun DocPackage.deletePackageDir() {
+        outputDir.resolve("$name/$version").deleteRecursively()
     }
-  }
+
+    private fun createSymlinks(currentPackagesData: List<PackageData>) {
+        for (packageData in currentPackagesData) {
+            val basePath = outputDir.resolve(packageData.ref.pkg)
+            val src = basePath.resolve(packageData.ref.version)
+            val dest = basePath.resolve("current")
+            if (dest.exists() && dest.isSameFileAs(src)) continue
+            dest.deleteIfExists()
+            dest.createSymbolicLinkPointingTo(basePath.relativize(src))
+        }
+    }
 }
 
 internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<ModuleSchema>) {
-  val name: String
-    get() = docPackageInfo.name
+    val name: String
+        get() = docPackageInfo.name
 
-  val version: String
-    get() = docPackageInfo.version
+    val version: String
+        get() = docPackageInfo.version
 
-  val uri: URI?
-    get() = docPackageInfo.uri
+    val uri: URI?
+        get() = docPackageInfo.uri
 
-  val overview: String?
-    get() = docPackageInfo.overview
+    val overview: String?
+        get() = docPackageInfo.overview
 
-  val minPklVersion: Version? by lazy { docModules.mapNotNull { it.minPklVersion }.maxOrNull() }
+    val minPklVersion: Version? by lazy { docModules.mapNotNull { it.minPklVersion }.maxOrNull() }
 
-  val deprecation: String? = docPackageInfo.annotations.deprecation
+    val deprecation: String? = docPackageInfo.annotations.deprecation
 
-  val isUnlisted: Boolean = docPackageInfo.annotations.isUnlisted
+    val isUnlisted: Boolean = docPackageInfo.annotations.isUnlisted
 
-  val hasListedModule: Boolean by lazy { docModules.any { !it.isUnlisted } }
+    val hasListedModule: Boolean by lazy { docModules.any { !it.isUnlisted } }
 
-  private val exampleModulesBySubject: Map<String, List<ModuleSchema>> by lazy {
-    val result = mutableMapOf<String, MutableList<ModuleSchema>>()
-    for (mod in modules) {
-      val ann = mod.annotations.find { it.classInfo == PClassInfo.DocExample } ?: continue
+    private val exampleModulesBySubject: Map<String, List<ModuleSchema>> by lazy {
+        val result = mutableMapOf<String, MutableList<ModuleSchema>>()
+        for (mod in modules) {
+            val ann = mod.annotations.find { it.classInfo == PClassInfo.DocExample } ?: continue
 
-      @Suppress("UNCHECKED_CAST") val subjects = ann["subjects"] as List<String>
-      for (subject in subjects) {
-        val examples = result[subject]
-        if (examples == null) {
-          result[subject] = mutableListOf(mod)
-        } else {
-          examples.add(mod)
+            @Suppress("UNCHECKED_CAST") val subjects = ann["subjects"] as List<String>
+            for (subject in subjects) {
+                val examples = result[subject]
+                if (examples == null) {
+                    result[subject] = mutableListOf(mod)
+                } else {
+                    examples.add(mod)
+                }
+            }
         }
-      }
+        result
     }
-    result
-  }
 
-  val docModules: List<DocModule> by lazy {
-    val regularModules =
-      modules.filter { mod -> !mod.annotations.any { it.classInfo == PClassInfo.DocExample } }
-    regularModules.map { mod ->
-      DocModule(
-        this,
-        mod,
-        docPackageInfo.version,
-        docPackageInfo.getModuleImportUri(mod.moduleName),
-        docPackageInfo.getModuleSourceCode(mod.moduleName)?.toUri(),
-        exampleModulesBySubject[mod.moduleName] ?: listOf()
-      )
+    val docModules: List<DocModule> by lazy {
+        val regularModules =
+            modules.filter { mod -> !mod.annotations.any { it.classInfo == PClassInfo.DocExample } }
+        regularModules.map { mod ->
+            DocModule(
+                this,
+                mod,
+                docPackageInfo.version,
+                docPackageInfo.getModuleImportUri(mod.moduleName),
+                docPackageInfo.getModuleSourceCode(mod.moduleName)?.toUri(),
+                exampleModulesBySubject[mod.moduleName] ?: listOf()
+            )
+        }
     }
-  }
 }
 
 internal class DocModule(
-  val parent: DocPackage,
-  val schema: ModuleSchema,
-  val version: String,
-  val importUri: URI,
-  val sourceUrl: URI?,
-  val examples: List<ModuleSchema>
+    val parent: DocPackage,
+    val schema: ModuleSchema,
+    val version: String,
+    val importUri: URI,
+    val sourceUrl: URI?,
+    val examples: List<ModuleSchema>
 ) {
-  val name: String
-    get() = schema.moduleName
+    val name: String
+        get() = schema.moduleName
 
-  val path: String by lazy {
-    name.substring(parent.docPackageInfo.moduleNamePrefix.length).replace('.', '/')
-  }
+    val path: String by lazy {
+        name.substring(parent.docPackageInfo.moduleNamePrefix.length).replace('.', '/')
+    }
 
-  val overview: String?
-    get() = schema.docComment
+    val overview: String?
+        get() = schema.docComment
 
-  val minPklVersion: Version? by lazy {
-    val version =
-      schema.annotations.find { it.classInfo == PClassInfo.ModuleInfo }?.get("minPklVersion")
-        as String?
-    version?.let { Version.parse(it) }
-  }
+    val minPklVersion: Version? by lazy {
+        val version =
+            schema.annotations.find { it.classInfo == PClassInfo.ModuleInfo }?.get("minPklVersion")
+                as String?
+        version?.let { Version.parse(it) }
+    }
 
-  val deprecation: String? = schema.annotations.deprecation
+    val deprecation: String? = schema.annotations.deprecation
 
-  val isUnlisted: Boolean = schema.annotations.isUnlisted
+    val isUnlisted: Boolean = schema.annotations.isUnlisted
 }

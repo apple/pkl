@@ -27,25 +27,25 @@ import org.pkl.config.java.mapper.PObjectToDataObject
 
 /** [ConverterFactory]s for use with Kotlin. */
 object KotlinConverterFactories {
-  /**
-   * Variation of [ConverterFactories.pObjectToDataObject] for Kotlin objects. Uses the primary
-   * constructor of the Kotlin target class. Constructor parameters do *not* need to be annotated
-   * with [Named]. Supports both regular Kotlin classes and Kotlin data classes.
-   */
-  val pObjectToDataObject: ConverterFactory =
-    object : PObjectToDataObject() {
-      override fun selectConstructor(clazz: Class<*>): Optional<Constructor<*>> =
-        Optional.ofNullable(clazz.kotlin.primaryConstructor?.javaConstructor)
+    /**
+     * Variation of [ConverterFactories.pObjectToDataObject] for Kotlin objects. Uses the primary
+     * constructor of the Kotlin target class. Constructor parameters do *not* need to be annotated
+     * with [Named]. Supports both regular Kotlin classes and Kotlin data classes.
+     */
+    val pObjectToDataObject: ConverterFactory =
+        object : PObjectToDataObject() {
+            override fun selectConstructor(clazz: Class<*>): Optional<Constructor<*>> =
+                Optional.ofNullable(clazz.kotlin.primaryConstructor?.javaConstructor)
 
-      override fun getParameterNames(constructor: Constructor<*>): Optional<List<String>> {
-        val params = constructor.kotlinFunction?.parameters
-        val paramNames = params?.mapNotNull { it.name }
-        return Optional.ofNullable(paramNames?.takeIf { it.size == params.size })
-      }
-    }
+            override fun getParameterNames(constructor: Constructor<*>): Optional<List<String>> {
+                val params = constructor.kotlinFunction?.parameters
+                val paramNames = params?.mapNotNull { it.name }
+                return Optional.ofNullable(paramNames?.takeIf { it.size == params.size })
+            }
+        }
 
-  val pPairToKotlinPair: ConverterFactory = PPairToKotlinPair()
+    val pPairToKotlinPair: ConverterFactory = PPairToKotlinPair()
 
-  val all: Collection<ConverterFactory> =
-    Collections.unmodifiableList(listOf(pObjectToDataObject, pPairToKotlinPair))
+    val all: Collection<ConverterFactory> =
+        Collections.unmodifiableList(listOf(pObjectToDataObject, pPairToKotlinPair))
 }

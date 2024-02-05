@@ -26,29 +26,29 @@ import java.nio.file.Path
  * `pkl test`).
  */
 class ProjectOptions : OptionGroup() {
-  val projectDir: Path? by
-    option(
-        names = arrayOf("--project-dir"),
-        metavar = "<path>",
-        help =
-          "The project directory to use for this command. By default, searches up from the working directory for a PklProject file."
-      )
-      .single()
-      .path()
+    val projectDir: Path? by
+        option(
+                names = arrayOf("--project-dir"),
+                metavar = "<path>",
+                help =
+                    "The project directory to use for this command. By default, searches up from the working directory for a PklProject file."
+            )
+            .single()
+            .path()
 
-  val omitProjectSettings: Boolean by
-    option(
-        names = arrayOf("--omit-project-settings"),
-        help = "Ignores evaluator settings set in the PklProject file."
-      )
-      .single()
-      .flag(default = false)
+    val omitProjectSettings: Boolean by
+        option(
+                names = arrayOf("--omit-project-settings"),
+                help = "Ignores evaluator settings set in the PklProject file."
+            )
+            .single()
+            .flag(default = false)
 
-  val noProject: Boolean by
-    option(
-        names = arrayOf("--no-project"),
-        help = "Disables loading settings and dependencies from the PklProject file."
-      )
-      .single()
-      .flag(default = false)
+    val noProject: Boolean by
+        option(
+                names = arrayOf("--no-project"),
+                help = "Disables loading settings and dependencies from the PklProject file."
+            )
+            .single()
+            .flag(default = false)
 }

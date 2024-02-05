@@ -24,13 +24,14 @@ import org.pkl.config.kotlin.to
 import org.pkl.core.ModuleSource
 
 class OverriddenPropertyTest {
-  @Test
-  fun `overridden property`() {
-    ConfigEvaluatorBuilder.preconfigured().forKotlin().build().use { evaluator ->
-      val config = evaluator.evaluate(ModuleSource.modulePath("/codegenPkl/OverriddenProperty.pkl"))
-      val module = config.to<OverriddenProperty>()
-      assertThat(module.theClass.bar[0].prop1).isEqualTo("hello")
-      assertThat(module.theClass.bar[0].prop2).isEqualTo("hello again")
+    @Test
+    fun `overridden property`() {
+        ConfigEvaluatorBuilder.preconfigured().forKotlin().build().use { evaluator ->
+            val config =
+                evaluator.evaluate(ModuleSource.modulePath("/codegenPkl/OverriddenProperty.pkl"))
+            val module = config.to<OverriddenProperty>()
+            assertThat(module.theClass.bar[0].prop1).isEqualTo("hello")
+            assertThat(module.theClass.bar[0].prop2).isEqualTo("hello again")
+        }
     }
-  }
 }

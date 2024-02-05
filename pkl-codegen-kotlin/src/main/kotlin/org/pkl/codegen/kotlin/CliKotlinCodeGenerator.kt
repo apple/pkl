@@ -25,32 +25,35 @@ import org.pkl.core.module.ModuleKeyFactories
 
 /** API for the Kotlin code generator CLI. */
 class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions) :
-  CliCommand(options.base) {
+    CliCommand(options.base) {
 
-  override fun doRun() {
-    val builder = evaluatorBuilder()
+    override fun doRun() {
+        val builder = evaluatorBuilder()
 
-    try {
-      builder.build().use { evaluator ->
-        for (moduleUri in options.base.normalizedSourceModules) {
-          val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
-          val codeGenerator = KotlinCodeGenerator(schema, options.toKotlinCodegenOptions())
-          try {
-            for ((fileName, fileContents) in codeGenerator.output) {
-              val outputFile = options.outputDir.resolve(fileName)
-              try {
-                outputFile.createParentDirectories().writeString(fileContents)
-              } catch (e: IOException) {
-                throw CliException("I/O error writing file `$outputFile`.\nCause: ${e.message}")
-              }
+        try {
+            builder.build().use { evaluator ->
+                for (moduleUri in options.base.normalizedSourceModules) {
+                    val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
+                    val codeGenerator =
+                        KotlinCodeGenerator(schema, options.toKotlinCodegenOptions())
+                    try {
+                        for ((fileName, fileContents) in codeGenerator.output) {
+                            val outputFile = options.outputDir.resolve(fileName)
+                            try {
+                                outputFile.createParentDirectories().writeString(fileContents)
+                            } catch (e: IOException) {
+                                throw CliException(
+                                    "I/O error writing file `$outputFile`.\nCause: ${e.message}"
+                                )
+                            }
+                        }
+                    } catch (e: KotlinCodeGeneratorException) {
+                        throw CliException(e.message!!)
+                    }
+                }
             }
-          } catch (e: KotlinCodeGeneratorException) {
-            throw CliException(e.message!!)
-          }
+        } finally {
+            ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
         }
-      }
-    } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
     }
-  }
 }

@@ -18,115 +18,115 @@ package org.pkl.doc
 import kotlinx.html.*
 
 internal class PackagePageGenerator(
-  docsiteInfo: DocsiteInfo,
-  private val docPackage: DocPackage,
-  pageScope: PackageScope
+    docsiteInfo: DocsiteInfo,
+    private val docPackage: DocPackage,
+    pageScope: PackageScope
 ) : MainOrPackagePageGenerator<PackageScope>(docsiteInfo, pageScope, pageScope.parent) {
-  override val html: HTML.() -> Unit = {
-    renderHtmlHead()
+    override val html: HTML.() -> Unit = {
+        renderHtmlHead()
 
-    body {
-      onLoad = "onLoad()"
+        body {
+            onLoad = "onLoad()"
 
-      renderPageHeader(docPackage.name, docPackage.version, null, null)
+            renderPageHeader(docPackage.name, docPackage.version, null, null)
 
-      main {
-        renderParentLinks()
+            main {
+                renderParentLinks()
 
-        h1 {
-          id = "declaration-title"
-          +docPackage.name
+                h1 {
+                    id = "declaration-title"
+                    +docPackage.name
 
-          span {
-            id = "declaration-version"
-            +docPackage.version
-          }
-        }
+                    span {
+                        id = "declaration-version"
+                        +docPackage.version
+                    }
+                }
 
-        val packageInfo = docPackage.docPackageInfo
-        val memberDocs =
-          MemberDocs(
-            packageInfo.overview,
-            pageScope,
-            packageInfo.annotations,
-            isDeclaration = true,
-            collectMemberInfoForPackage(docPackage)
-          )
+                val packageInfo = docPackage.docPackageInfo
+                val memberDocs =
+                    MemberDocs(
+                        packageInfo.overview,
+                        pageScope,
+                        packageInfo.annotations,
+                        isDeclaration = true,
+                        collectMemberInfoForPackage(docPackage)
+                    )
 
-        renderMemberGroupLinks(
-          Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Modules", "#_modules", docPackage.hasListedModule)
-        )
+                renderMemberGroupLinks(
+                    Triple("Overview", "#_overview", memberDocs.isExpandable),
+                    Triple("Modules", "#_modules", docPackage.hasListedModule)
+                )
 
-        renderAnchor("_overview")
-        div {
-          id = "_declaration"
-          classes = setOf("member")
+                renderAnchor("_overview")
+                div {
+                    id = "_declaration"
+                    classes = setOf("member")
 
-          memberDocs.renderExpandIcon(this)
+                    memberDocs.renderExpandIcon(this)
 
-          div {
-            classes = setOf("member-signature")
+                    div {
+                        classes = setOf("member-signature")
 
-            renderModifiers(setOf(), "package")
+                        renderModifiers(setOf(), "package")
 
-            span {
-              classes = setOf("name-decl")
+                        span {
+                            classes = setOf("name-decl")
 
-              +docPackage.name
+                            +docPackage.name
+                        }
+                    }
+
+                    memberDocs.renderDocComment(this)
+                }
+
+                renderModules()
             }
-          }
-
-          memberDocs.renderDocComment(this)
         }
-
-        renderModules()
-      }
     }
-  }
 
-  // example output:
-  // package io.k8s (befa7c51) • Pkl Hub
-  override fun HTMLTag.renderPageTitle() {
-    +pageScope.name
-    +" ("
-    +pageScope.version
-    +") • "
-    +(docsiteInfo.title ?: "Pkldoc")
-  }
+    // example output:
+    // package io.k8s (befa7c51) • Pkl Hub
+    override fun HTMLTag.renderPageTitle() {
+        +pageScope.name
+        +" ("
+        +pageScope.version
+        +") • "
+        +(docsiteInfo.title ?: "Pkldoc")
+    }
 
-  private fun HtmlBlockTag.renderModules() {
-    if (!docPackage.hasListedModule) return
+    private fun HtmlBlockTag.renderModules() {
+        if (!docPackage.hasListedModule) return
 
-    div {
-      classes = setOf("member-group")
+        div {
+            classes = setOf("member-group")
 
-      renderAnchor("_modules")
+            renderAnchor("_modules")
 
-      h2 {
-        classes = setOf("member-group-title")
+            h2 {
+                classes = setOf("member-group-title")
 
-        +"Modules"
-      }
+                +"Modules"
+            }
 
-      ul {
-        for (docModule in docPackage.docModules) {
-          if (docModule.isUnlisted) continue
+            ul {
+                for (docModule in docPackage.docModules) {
+                    if (docModule.isUnlisted) continue
 
-          val module = docModule.schema
-          val moduleScope = pageScope.getModule(module.moduleName)
-          val memberDocs =
-            MemberDocs(
-              module.docComment,
-              moduleScope,
-              module.annotations,
-              isDeclaration = false,
-              collectMemberInfo(docModule)
-            )
+                    val module = docModule.schema
+                    val moduleScope = pageScope.getModule(module.moduleName)
+                    val memberDocs =
+                        MemberDocs(
+                            module.docComment,
+                            moduleScope,
+                            module.annotations,
+                            isDeclaration = false,
+                            collectMemberInfo(docModule)
+                        )
 
-          renderModuleOrPackage(module.moduleName, moduleScope, memberDocs)
+                    renderModuleOrPackage(module.moduleName, moduleScope, memberDocs)
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -18,89 +18,90 @@ package org.pkl.doc
 import kotlinx.html.*
 
 internal class MainPageGenerator(
-  docsiteInfo: DocsiteInfo,
-  private val packagesData: List<PackageData>,
-  pageScope: SiteScope
+    docsiteInfo: DocsiteInfo,
+    private val packagesData: List<PackageData>,
+    pageScope: SiteScope
 ) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, pageScope) {
-  override val html: HTML.() -> Unit = {
-    renderHtmlHead()
+    override val html: HTML.() -> Unit = {
+        renderHtmlHead()
 
-    body {
-      onLoad = "onLoad()"
+        body {
+            onLoad = "onLoad()"
 
-      renderPageHeader(null, null, null, null)
+            renderPageHeader(null, null, null, null)
 
-      main {
-        h1 {
-          id = "declaration-title"
+            main {
+                h1 {
+                    id = "declaration-title"
 
-          +(docsiteInfo.title ?: "")
+                    +(docsiteInfo.title ?: "")
+                }
+
+                val memberDocs =
+                    MemberDocs(docsiteInfo.overview, pageScope, listOf(), isDeclaration = true)
+
+                renderMemberGroupLinks(
+                    Triple("Overview", "#_overview", memberDocs.isExpandable),
+                    Triple("Packages", "#_packages", packagesData.isNotEmpty())
+                )
+
+                if (docsiteInfo.overview != null) {
+                    renderAnchor("_overview")
+                    div {
+                        id = "_declaration"
+                        classes = setOf("member")
+
+                        memberDocs.renderExpandIcon(this)
+                        memberDocs.renderDocComment(this)
+                    }
+                }
+
+                renderPackages()
+            }
         }
-
-        val memberDocs = MemberDocs(docsiteInfo.overview, pageScope, listOf(), isDeclaration = true)
-
-        renderMemberGroupLinks(
-          Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Packages", "#_packages", packagesData.isNotEmpty())
-        )
-
-        if (docsiteInfo.overview != null) {
-          renderAnchor("_overview")
-          div {
-            id = "_declaration"
-            classes = setOf("member")
-
-            memberDocs.renderExpandIcon(this)
-            memberDocs.renderDocComment(this)
-          }
-        }
-
-        renderPackages()
-      }
     }
-  }
 
-  override fun HTMLTag.renderPageTitle() {
-    +(docsiteInfo.title ?: "Pkldoc")
-  }
-
-  private fun HtmlBlockTag.renderPackages() {
-    if (packagesData.isEmpty()) return
-
-    div {
-      classes = setOf("member-group")
-
-      renderAnchor("_packages")
-
-      h2 {
-        classes = setOf("member-group-title")
-
-        +"Packages"
-      }
-
-      ul {
-        for (pkg in packagesData) {
-          val packageScope =
-            pageScope.packageScopes[pkg.ref.pkg]
-            // create scope for previously generated package
-            ?: pageScope.createEmptyPackageScope(
-                pkg.ref.pkg,
-                pkg.ref.version,
-                pkg.sourceCodeUrlScheme,
-                pkg.sourceCode
-              )
-
-          val memberDocs =
-            MemberDocs(
-              pkg.summary,
-              packageScope,
-              listOfNotNull(pkg.deprecation?.let { createDeprecatedAnnotation(it) }),
-              isDeclaration = false
-            )
-
-          renderModuleOrPackage(pkg.ref.pkg, packageScope, memberDocs)
-        }
-      }
+    override fun HTMLTag.renderPageTitle() {
+        +(docsiteInfo.title ?: "Pkldoc")
     }
-  }
+
+    private fun HtmlBlockTag.renderPackages() {
+        if (packagesData.isEmpty()) return
+
+        div {
+            classes = setOf("member-group")
+
+            renderAnchor("_packages")
+
+            h2 {
+                classes = setOf("member-group-title")
+
+                +"Packages"
+            }
+
+            ul {
+                for (pkg in packagesData) {
+                    val packageScope =
+                        pageScope.packageScopes[pkg.ref.pkg]
+                        // create scope for previously generated package
+                        ?: pageScope.createEmptyPackageScope(
+                                pkg.ref.pkg,
+                                pkg.ref.version,
+                                pkg.sourceCodeUrlScheme,
+                                pkg.sourceCode
+                            )
+
+                    val memberDocs =
+                        MemberDocs(
+                            pkg.summary,
+                            packageScope,
+                            listOfNotNull(pkg.deprecation?.let { createDeprecatedAnnotation(it) }),
+                            isDeclaration = false
+                        )
+
+                    renderModuleOrPackage(pkg.ref.pkg, packageScope, memberDocs)
+                }
+            }
+        }
+    }
 }

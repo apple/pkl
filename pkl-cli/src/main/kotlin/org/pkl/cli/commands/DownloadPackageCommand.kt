@@ -28,11 +28,11 @@ import org.pkl.commons.cli.commands.single
 import org.pkl.core.packages.PackageUri
 
 class DownloadPackageCommand(helpLink: String) :
-  BaseCommand(
-    name = "download-package",
-    helpLink = helpLink,
-    help =
-      """
+    BaseCommand(
+        name = "download-package",
+        helpLink = helpLink,
+        help =
+            """
     Download package(s)
     
     This command downloads the specified packages to the cache directory.
@@ -44,29 +44,29 @@ class DownloadPackageCommand(helpLink: String) :
     $ pkl download-package package://example.com/package1@1.0.0 package://example.com/package2@1.0.0 
     ```
   """
-        .trimIndent()
-  ) {
-  private val projectOptions by ProjectOptions()
+                .trimIndent()
+    ) {
+    private val projectOptions by ProjectOptions()
 
-  private val packageUris: List<PackageUri> by
-    argument("<package>", "The package URIs to download")
-      .convert { PackageUri(it) }
-      .multiple(required = true)
+    private val packageUris: List<PackageUri> by
+        argument("<package>", "The package URIs to download")
+            .convert { PackageUri(it) }
+            .multiple(required = true)
 
-  private val noTransitive: Boolean by
-    option(
-        names = arrayOf("--no-transitive"),
-        help = "Skip downloading transitive dependencies of a package"
-      )
-      .single()
-      .flag()
+    private val noTransitive: Boolean by
+        option(
+                names = arrayOf("--no-transitive"),
+                help = "Skip downloading transitive dependencies of a package"
+            )
+            .single()
+            .flag()
 
-  override fun run() {
-    CliDownloadPackageCommand(
-        baseOptions.baseOptions(emptyList(), projectOptions),
-        packageUris,
-        noTransitive
-      )
-      .run()
-  }
+    override fun run() {
+        CliDownloadPackageCommand(
+                baseOptions.baseOptions(emptyList(), projectOptions),
+                packageUris,
+                noTransitive
+            )
+            .run()
+    }
 }

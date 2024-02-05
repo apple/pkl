@@ -16,17 +16,17 @@
 package org.pkl.doc
 
 internal object HtmlConstants {
-  /** The `known-versions` element ID. */
-  const val KNOWN_VERSIONS: String = "known-versions"
+    /** The `known-versions` element ID. */
+    const val KNOWN_VERSIONS: String = "known-versions"
 
-  /** The `known-subtypes` element ID. */
-  const val KNOWN_SUBTYPES: String = "known-subtypes"
+    /** The `known-subtypes` element ID. */
+    const val KNOWN_SUBTYPES: String = "known-subtypes"
 
-  /** The `known-usages` element ID. */
-  const val KNOWN_USAGES: String = "known-usages"
+    /** The `known-usages` element ID. */
+    const val KNOWN_USAGES: String = "known-usages"
 }
 
 internal object CssConstants {
-  /** The `current-version` CSS class. */
-  const val CURRENT_VERSION: String = "current-version"
+    /** The `current-version` CSS class. */
+    const val CURRENT_VERSION: String = "current-version"
 }

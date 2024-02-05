@@ -20,24 +20,24 @@ import org.pkl.commons.cli.CliBaseOptions
 
 /** Configuration options for [CliKotlinCodeGenerator]. */
 data class CliKotlinCodeGeneratorOptions(
-  /** Base options shared between CLI commands. */
-  val base: CliBaseOptions,
+    /** Base options shared between CLI commands. */
+    val base: CliBaseOptions,
 
-  /** The directory where generated source code is placed. */
-  val outputDir: Path,
+    /** The directory where generated source code is placed. */
+    val outputDir: Path,
 
-  /** The characters to use for indenting generated source code. */
-  val indent: String = "  ",
+    /** The characters to use for indenting generated source code. */
+    val indent: String = "  ",
 
-  /** Whether to generate Kdoc based on doc comments for Pkl modules, classes, and properties. */
-  val generateKdoc: Boolean = false,
+    /** Whether to generate Kdoc based on doc comments for Pkl modules, classes, and properties. */
+    val generateKdoc: Boolean = false,
 
-  /** Whether to generate config classes for use with Spring Boot. */
-  val generateSpringBootConfig: Boolean = false,
+    /** Whether to generate config classes for use with Spring Boot. */
+    val generateSpringBootConfig: Boolean = false,
 
-  /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+    /** Whether to make generated classes implement [java.io.Serializable] */
+    val implementSerializable: Boolean = false
 ) {
-  fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig)
+    fun toKotlinCodegenOptions(): KotlinCodegenOptions =
+        KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig)
 }

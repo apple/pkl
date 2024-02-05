@@ -20,31 +20,31 @@ import java.util.concurrent.BlockingQueue
 import org.assertj.core.api.Assertions.assertThat
 
 internal class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
-  private val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)
+    private val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)
 
-  fun start() {
-    delegate.start({ incomingMessages.put(it) }, { incomingMessages.put(it) })
-  }
+    fun start() {
+        delegate.start({ incomingMessages.put(it) }, { incomingMessages.put(it) })
+    }
 
-  override fun close() {
-    delegate.close()
-  }
+    override fun close() {
+        delegate.close()
+    }
 
-  fun send(message: ClientOneWayMessage) {
-    delegate.send(message)
-  }
+    fun send(message: ClientOneWayMessage) {
+        delegate.send(message)
+    }
 
-  fun send(message: ClientRequestMessage) {
-    delegate.send(message) { incomingMessages.put(it) }
-  }
+    fun send(message: ClientRequestMessage) {
+        delegate.send(message) { incomingMessages.put(it) }
+    }
 
-  fun send(message: ClientResponseMessage) {
-    delegate.send(message)
-  }
+    fun send(message: ClientResponseMessage) {
+        delegate.send(message)
+    }
 
-  inline fun <reified T : Message> receive(): T {
-    val message = incomingMessages.take()
-    assertThat(message).isInstanceOf(T::class.java)
-    return message as T
-  }
+    inline fun <reified T : Message> receive(): T {
+        val message = incomingMessages.take()
+        assertThat(message).isInstanceOf(T::class.java)
+        return message as T
+    }
 }

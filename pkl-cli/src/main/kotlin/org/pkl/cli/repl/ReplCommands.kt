@@ -18,28 +18,28 @@ package org.pkl.cli.repl
 private val cmdRegex = Regex(":(\\p{Alpha}*)(\\p{Space}*)(.*)", RegexOption.DOT_MATCHES_ALL)
 
 internal fun getMatchingCommands(input: String): List<ParsedCommand> {
-  val match = cmdRegex.matchEntire(input) ?: return listOf()
-  val (cmd, ws, arg) = match.destructured
-  return Command.values()
-    .filter { it.toString().lowercase().startsWith(cmd) }
-    .map { ParsedCommand(it, cmd, ws, arg) }
+    val match = cmdRegex.matchEntire(input) ?: return listOf()
+    val (cmd, ws, arg) = match.destructured
+    return Command.values()
+        .filter { it.toString().lowercase().startsWith(cmd) }
+        .map { ParsedCommand(it, cmd, ws, arg) }
 }
 
 internal data class ParsedCommand(
-  val type: Command,
-  val cmd: String,
-  val ws: String,
-  val arg: String
+    val type: Command,
+    val cmd: String,
+    val ws: String,
+    val arg: String
 )
 
 internal enum class Command {
-  Clear,
-  Examples,
-  Force,
-  Help,
-  Load,
-  Quit,
-  Reset;
+    Clear,
+    Examples,
+    Force,
+    Help,
+    Load,
+    Quit,
+    Reset;
 
-  override fun toString() = name.lowercase()
+    override fun toString() = name.lowercase()
 }

@@ -17,11 +17,11 @@ package org.pkl.server
 
 /** A bidirectional transport for sending and receiving messages. */
 interface MessageTransport : AutoCloseable {
-  fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
+    fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
 
-  fun send(message: OneWayMessage)
+    fun send(message: OneWayMessage)
 
-  fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
+    fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
 
-  fun send(message: ResponseMessage)
+    fun send(message: ResponseMessage)
 }

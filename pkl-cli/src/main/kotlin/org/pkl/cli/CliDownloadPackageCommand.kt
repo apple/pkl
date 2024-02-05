@@ -22,38 +22,38 @@ import org.pkl.core.packages.PackageResolver
 import org.pkl.core.packages.PackageUri
 
 class CliDownloadPackageCommand(
-  baseOptions: CliBaseOptions,
-  private val packageUris: List<PackageUri>,
-  private val noTranstive: Boolean
+    baseOptions: CliBaseOptions,
+    private val packageUris: List<PackageUri>,
+    private val noTranstive: Boolean
 ) : CliCommand(baseOptions) {
 
-  override fun doRun() {
-    if (moduleCacheDir == null) {
-      throw CliException("Cannot download packages because no cache directory is specified.")
-    }
-    val packageResolver = PackageResolver.getInstance(securityManager, moduleCacheDir)
-    val errors = mutableMapOf<PackageUri, Throwable>()
-    for (pkg in packageUris) {
-      try {
-        packageResolver.downloadPackage(pkg, pkg.checksums, noTranstive)
-      } catch (e: Throwable) {
-        errors[pkg] = e
-      }
-    }
-    when (errors.size) {
-      0 -> return
-      1 -> throw CliException(errors.values.single().message!!)
-      else ->
-        throw CliException(
-          buildString {
-            appendLine("Failed to download some packages.")
-            for ((uri, error) in errors) {
-              appendLine()
-              appendLine("Failed to download $uri because:")
-              appendLine("${error.message}")
+    override fun doRun() {
+        if (moduleCacheDir == null) {
+            throw CliException("Cannot download packages because no cache directory is specified.")
+        }
+        val packageResolver = PackageResolver.getInstance(securityManager, moduleCacheDir)
+        val errors = mutableMapOf<PackageUri, Throwable>()
+        for (pkg in packageUris) {
+            try {
+                packageResolver.downloadPackage(pkg, pkg.checksums, noTranstive)
+            } catch (e: Throwable) {
+                errors[pkg] = e
             }
-          }
-        )
+        }
+        when (errors.size) {
+            0 -> return
+            1 -> throw CliException(errors.values.single().message!!)
+            else ->
+                throw CliException(
+                    buildString {
+                        appendLine("Failed to download some packages.")
+                        for ((uri, error) in errors) {
+                            appendLine()
+                            appendLine("Failed to download $uri because:")
+                            appendLine("${error.message}")
+                        }
+                    }
+                )
+        }
     }
-  }
 }

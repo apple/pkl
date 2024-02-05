@@ -24,36 +24,36 @@ import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
 abstract class BaseCommand(name: String, helpLink: String, help: String = "") :
-  CliktCommand(
-    name = name,
-    help = help,
-    epilog = "For more information, visit $helpLink",
-  ) {
-  val baseOptions by BaseOptions()
+    CliktCommand(
+        name = name,
+        help = help,
+        epilog = "For more information, visit $helpLink",
+    ) {
+    val baseOptions by BaseOptions()
 
-  /**
-   * Parses [moduleName] into a URI. If scheme is not present, we expect that this is a file path
-   * and encode any possibly invalid characters. If a scheme is present, we expect that this is a
-   * valid URI.
-   */
-  protected fun parseModuleName(moduleName: String): URI =
-    when (moduleName) {
-      "-" -> VmUtils.REPL_TEXT_URI
-      else ->
-        try {
-          IoUtils.toUri(moduleName)
-        } catch (e: URISyntaxException) {
-          val message = buildString {
-            append("Module URI `$moduleName` has invalid syntax (${e.reason}).")
-            if (e.index > -1) {
-              append("\n\n")
-              append(moduleName)
-              append("\n")
-              append(" ".repeat(e.index))
-              append("^")
-            }
-          }
-          throw CliException(message)
+    /**
+     * Parses [moduleName] into a URI. If scheme is not present, we expect that this is a file path
+     * and encode any possibly invalid characters. If a scheme is present, we expect that this is a
+     * valid URI.
+     */
+    protected fun parseModuleName(moduleName: String): URI =
+        when (moduleName) {
+            "-" -> VmUtils.REPL_TEXT_URI
+            else ->
+                try {
+                    IoUtils.toUri(moduleName)
+                } catch (e: URISyntaxException) {
+                    val message = buildString {
+                        append("Module URI `$moduleName` has invalid syntax (${e.reason}).")
+                        if (e.index > -1) {
+                            append("\n\n")
+                            append(moduleName)
+                            append("\n")
+                            append(" ".repeat(e.index))
+                            append("^")
+                        }
+                    }
+                    throw CliException(message)
+                }
         }
-    }
 }

@@ -22,15 +22,16 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
 
 class ReplCommand(helpLink: String) :
-  BaseCommand(
-    name = "repl",
-    help = "Start a REPL session",
-    helpLink = helpLink,
-  ) {
-  private val projectOptions by ProjectOptions()
+    BaseCommand(
+        name = "repl",
+        help = "Start a REPL session",
+        helpLink = helpLink,
+    ) {
+    private val projectOptions by ProjectOptions()
 
-  override fun run() {
-    val options = CliEvaluatorOptions(base = baseOptions.baseOptions(emptyList(), projectOptions))
-    CliRepl(options).run()
-  }
+    override fun run() {
+        val options =
+            CliEvaluatorOptions(base = baseOptions.baseOptions(emptyList(), projectOptions))
+        CliRepl(options).run()
+    }
 }

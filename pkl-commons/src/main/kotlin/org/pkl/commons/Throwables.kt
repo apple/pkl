@@ -20,4 +20,4 @@ import java.io.StringWriter
 
 /** Same as [Throwable.printStackTrace] except that it prints to a [String]. */
 fun Throwable.printStackTraceToString(): String =
-  StringWriter().also { printStackTrace(PrintWriter(it)) }.toString()
+    StringWriter().also { printStackTrace(PrintWriter(it)) }.toString()

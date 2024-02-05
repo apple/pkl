@@ -27,38 +27,38 @@ import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
 
 class ReplMessagesTest {
-  private val server =
-    ReplServer(
-      SecurityManagers.defaultManager,
-      Loggers.stdErr(),
-      listOf(ModuleKeyFactories.standardLibrary),
-      listOf(),
-      mapOf(),
-      mapOf(),
-      null,
-      null,
-      null,
-      "/".toPath(),
-      StackFrameTransformers.defaultTransformer
-    )
+    private val server =
+        ReplServer(
+            SecurityManagers.defaultManager,
+            Loggers.stdErr(),
+            listOf(ModuleKeyFactories.standardLibrary),
+            listOf(),
+            mapOf(),
+            mapOf(),
+            null,
+            null,
+            null,
+            "/".toPath(),
+            StackFrameTransformers.defaultTransformer
+        )
 
-  @Test
-  fun `run examples`() {
-    val examples = ReplMessages.examples
-    var startIndex = examples.indexOf("```")
-    while (startIndex != -1) {
-      val endIndex = examples.indexOf("```", startIndex + 3)
-      assertThat(endIndex).isNotEqualTo(-1)
-      val text =
-        examples
-          .substring(startIndex + 3, endIndex)
-          .lines()
-          .filterNot { it.contains(":force") }
-          .joinToString("\n")
-      val responses = server.handleRequest(ReplRequest.Eval("1", text, true, true))
-      assertThat(responses.size).isBetween(1, 9)
-      assertThat(responses).hasOnlyElementsOfType(ReplResponse.EvalSuccess::class.java)
-      startIndex = examples.indexOf("```", endIndex + 3)
+    @Test
+    fun `run examples`() {
+        val examples = ReplMessages.examples
+        var startIndex = examples.indexOf("```")
+        while (startIndex != -1) {
+            val endIndex = examples.indexOf("```", startIndex + 3)
+            assertThat(endIndex).isNotEqualTo(-1)
+            val text =
+                examples
+                    .substring(startIndex + 3, endIndex)
+                    .lines()
+                    .filterNot { it.contains(":force") }
+                    .joinToString("\n")
+            val responses = server.handleRequest(ReplRequest.Eval("1", text, true, true))
+            assertThat(responses.size).isBetween(1, 9)
+            assertThat(responses).hasOnlyElementsOfType(ReplResponse.EvalSuccess::class.java)
+            startIndex = examples.indexOf("```", endIndex + 3)
+        }
     }
-  }
 }

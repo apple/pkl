@@ -37,62 +37,65 @@ import org.pkl.commons.writeString
 import org.pkl.core.runtime.CertificateUtils
 
 class CliProjectPackagerTest {
-  @Test
-  fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
-  }
+    @Test
+    fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
+    }
 
-  @Test
-  fun `missing PklProject when explict dir is provided`(@TempDir tempDir: Path) {
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
-  }
+    @Test
+    fun `missing PklProject when explict dir is provided`(@TempDir tempDir: Path) {
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err)
+            .hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
+    }
 
-  @Test
-  fun `PklProject missing package section`(@TempDir tempDir: Path) {
-    tempDir
-      .resolve("PklProject")
-      .writeString(
-        """
+    @Test
+    fun `PklProject missing package section`(@TempDir tempDir: Path) {
+        tempDir
+            .resolve("PklProject")
+            .writeString(
+                """
       amends "pkl:Project"
     """
-          .trimIndent()
-      )
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err)
-      .hasMessageStartingWith("No package was declared in project `${tempDir.toUri()}PklProject`.")
-  }
+                    .trimIndent()
+            )
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err)
+            .hasMessageStartingWith(
+                "No package was declared in project `${tempDir.toUri()}PklProject`."
+            )
+    }
 
-  @Test
-  fun `failing apiTests`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "myTest.pkl",
-      """
+    @Test
+    fun `failing apiTests`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "myTest.pkl",
+            """
       amends "pkl:test"
       
       facts {
@@ -101,11 +104,11 @@ class CliProjectPackagerTest {
         }
       }
     """
-        .trimIndent()
-    )
-    tempDir.writeFile(
-      "PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile(
+            "PklProject",
+            """
       amends "pkl:Project"
       
       package {
@@ -116,29 +119,29 @@ class CliProjectPackagerTest {
         apiTests { "myTest.pkl" }
       }
     """
-        .trimIndent()
-    )
-    val buffer = StringWriter()
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = buffer
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageContaining("because its API tests are failing")
-    assertThat(buffer.toString()).contains("1 == 2")
-  }
+                .trimIndent()
+        )
+        val buffer = StringWriter()
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = buffer
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err).hasMessageContaining("because its API tests are failing")
+        assertThat(buffer.toString()).contains("1 == 2")
+    }
 
-  @Test
-  fun `passing apiTests`(@TempDir tempDir: Path) {
-    tempDir
-      .resolve("myTest.pkl")
-      .writeString(
-        """
+    @Test
+    fun `passing apiTests`(@TempDir tempDir: Path) {
+        tempDir
+            .resolve("myTest.pkl")
+            .writeString(
+                """
         amends "pkl:test"
         
         facts {
@@ -147,12 +150,12 @@ class CliProjectPackagerTest {
           }
         }
       """
-          .trimIndent()
-      )
-    tempDir
-      .resolve("PklProject")
-      .writeString(
-        """
+                    .trimIndent()
+            )
+        tempDir
+            .resolve("PklProject")
+            .writeString(
+                """
         amends "pkl:Project"
         
         package {
@@ -163,30 +166,30 @@ class CliProjectPackagerTest {
           apiTests { "myTest.pkl" }
         }
       """
-          .trimIndent()
-      )
-    val buffer = StringWriter()
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = buffer
-      )
-    packager.run()
-  }
+                    .trimIndent()
+            )
+        val buffer = StringWriter()
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = buffer
+            )
+        packager.run()
+    }
 
-  @Test
-  fun `apiTests that import dependencies`(@TempDir tempDir: Path) {
-    val cacheDir = tempDir.resolve("cache")
-    val projectDir = tempDir.resolve("myProject").createDirectories()
-    PackageServer.populateCacheDir(cacheDir)
-    projectDir
-      .resolve("myTest.pkl")
-      .writeString(
-        """
+    @Test
+    fun `apiTests that import dependencies`(@TempDir tempDir: Path) {
+        val cacheDir = tempDir.resolve("cache")
+        val projectDir = tempDir.resolve("myProject").createDirectories()
+        PackageServer.populateCacheDir(cacheDir)
+        projectDir
+            .resolve("myTest.pkl")
+            .writeString(
+                """
         amends "pkl:test"
         import "@birds/Bird.pkl"
         
@@ -196,12 +199,12 @@ class CliProjectPackagerTest {
           }
         }
       """
-          .trimIndent()
-      )
-    projectDir
-      .resolve("PklProject")
-      .writeString(
-        """
+                    .trimIndent()
+            )
+        projectDir
+            .resolve("PklProject")
+            .writeString(
+                """
         amends "pkl:Project"
         
         package {
@@ -218,12 +221,12 @@ class CliProjectPackagerTest {
           }
         }
       """
-          .trimIndent()
-      )
-    projectDir
-      .resolve("PklProject.deps.json")
-      .writeString(
-        """
+                    .trimIndent()
+            )
+        projectDir
+            .resolve("PklProject.deps.json")
+            .writeString(
+                """
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
@@ -244,49 +247,49 @@ class CliProjectPackagerTest {
           }
         }
       """
-          .trimIndent()
-      )
-    val buffer = StringWriter()
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = projectDir, moduleCacheDir = cacheDir),
-        listOf(projectDir),
-        CliTestOptions(),
-        ".out",
-        skipPublishCheck = true,
-        consoleWriter = buffer
-      )
-    packager.run()
-  }
+                    .trimIndent()
+            )
+        val buffer = StringWriter()
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = projectDir, moduleCacheDir = cacheDir),
+                listOf(projectDir),
+                CliTestOptions(),
+                ".out",
+                skipPublishCheck = true,
+                consoleWriter = buffer
+            )
+        packager.run()
+    }
 
-  @Test
-  fun `generate package`(@TempDir tempDir: Path) {
-    val fooPkl =
-      tempDir.writeFile(
-        "a/b/foo.pkl",
-        """
+    @Test
+    fun `generate package`(@TempDir tempDir: Path) {
+        val fooPkl =
+            tempDir.writeFile(
+                "a/b/foo.pkl",
+                """
         module foo
         
         name: String
       """
-          .trimIndent()
-      )
+                    .trimIndent()
+            )
 
-    val fooTxt =
-      tempDir.writeFile(
-        "c/d/foo.txt",
-        """
+        val fooTxt =
+            tempDir.writeFile(
+                "c/d/foo.txt",
+                """
         foo
         bar
         baz
       """
-          .trimIndent()
-      )
+                    .trimIndent()
+            )
 
-    tempDir
-      .resolve("PklProject")
-      .writeString(
-        """
+        tempDir
+            .resolve("PklProject")
+            .writeString(
+                """
         amends "pkl:Project"
         
         package {
@@ -296,26 +299,28 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-          .trimIndent()
-      )
-    val packager =
-      CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = StringWriter()
-      )
-    packager.run()
-    val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
-    val expectedMetadataChecksum = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.sha256")
-    val expectedArchive = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip")
-    val expectedArchiveChecksum = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip.sha256")
-    assertThat(expectedMetadata).exists()
-    assertThat(expectedMetadata)
-      .hasContent(
-        """
+                    .trimIndent()
+            )
+        val packager =
+            CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = StringWriter()
+            )
+        packager.run()
+        val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
+        val expectedMetadataChecksum =
+            tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.sha256")
+        val expectedArchive = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip")
+        val expectedArchiveChecksum =
+            tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip.sha256")
+        assertThat(expectedMetadata).exists()
+        assertThat(expectedMetadata)
+            .hasContent(
+                """
       {
         "name": "mypackage",
         "packageUri": "package://example.com/mypackage@1.0.0",
@@ -328,37 +333,42 @@ class CliProjectPackagerTest {
         "authors": []
       }
     """
-          .trimIndent()
-      )
-    assertThat(expectedArchive).exists()
-    assertThat(expectedArchive.zipFilePaths())
-      .hasSameElementsAs(listOf("/", "/c", "/c/d", "/c/d/foo.txt", "/a", "/a/b", "/a/b/foo.pkl"))
-    assertThat(expectedMetadataChecksum)
-      .hasContent("203ef387f217a3caee7f19819ef2b50926929269241cb7b3a29d95237b2c7f4b")
-    assertThat(expectedArchiveChecksum)
-      .hasContent("7f515fbc4b229ba171fac78c7c3f2c2e68e2afebae8cfba042b12733943a2813")
-    FileSystems.newFileSystem(URI("jar:" + expectedArchive.toUri()), mutableMapOf<String, String>())
-      .use { fs ->
-        assertThat(fs.getPath("a/b/foo.pkl")).hasSameTextualContentAs(fooPkl)
-        assertThat(fs.getPath("c/d/foo.txt")).hasSameTextualContentAs(fooTxt)
-      }
-  }
-
-  @Test
-  fun `generate package with excludes`(@TempDir tempDir: Path) {
-    tempDir.apply {
-      writeEmptyFile("a/b/c/d.bin")
-      writeEmptyFile("input/foo/bar.txt")
-      writeEmptyFile("z.bin")
-      writeEmptyFile("main.pkl")
-      writeEmptyFile("main.test.pkl")
-      writeEmptyFile("child/main.pkl")
-      writeEmptyFile("child/main.test.pkl")
+                    .trimIndent()
+            )
+        assertThat(expectedArchive).exists()
+        assertThat(expectedArchive.zipFilePaths())
+            .hasSameElementsAs(
+                listOf("/", "/c", "/c/d", "/c/d/foo.txt", "/a", "/a/b", "/a/b/foo.pkl")
+            )
+        assertThat(expectedMetadataChecksum)
+            .hasContent("203ef387f217a3caee7f19819ef2b50926929269241cb7b3a29d95237b2c7f4b")
+        assertThat(expectedArchiveChecksum)
+            .hasContent("7f515fbc4b229ba171fac78c7c3f2c2e68e2afebae8cfba042b12733943a2813")
+        FileSystems.newFileSystem(
+                URI("jar:" + expectedArchive.toUri()),
+                mutableMapOf<String, String>()
+            )
+            .use { fs ->
+                assertThat(fs.getPath("a/b/foo.pkl")).hasSameTextualContentAs(fooPkl)
+                assertThat(fs.getPath("c/d/foo.txt")).hasSameTextualContentAs(fooTxt)
+            }
     }
 
-    tempDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `generate package with excludes`(@TempDir tempDir: Path) {
+        tempDir.apply {
+            writeEmptyFile("a/b/c/d.bin")
+            writeEmptyFile("input/foo/bar.txt")
+            writeEmptyFile("z.bin")
+            writeEmptyFile("main.pkl")
+            writeEmptyFile("main.test.pkl")
+            writeEmptyFile("child/main.pkl")
+            writeEmptyFile("child/main.test.pkl")
+        }
+
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -373,41 +383,41 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
-    )
-    CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = StringWriter()
-      )
-      .run()
-    val expectedArchive = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip")
-    assertThat(expectedArchive.zipFilePaths())
-      .hasSameElementsAs(
-        listOf(
-          "/",
-          "/a",
-          "/a/b",
-          "/a/b/c",
-          "/child",
-          "/input",
-          "/input/foo",
-          "/input/foo/bar.txt",
-          "/main.pkl",
+                .trimIndent()
         )
-      )
-  }
+        CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = StringWriter()
+            )
+            .run()
+        val expectedArchive = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip")
+        assertThat(expectedArchive.zipFilePaths())
+            .hasSameElementsAs(
+                listOf(
+                    "/",
+                    "/a",
+                    "/a/b",
+                    "/a/b/c",
+                    "/child",
+                    "/input",
+                    "/input/foo",
+                    "/input/foo/bar.txt",
+                    "/main.pkl",
+                )
+            )
+    }
 
-  @Test
-  fun `generate packages with local dependencies`(@TempDir tempDir: Path) {
-    val projectDir = tempDir.resolve("project")
-    val project2Dir = tempDir.resolve("project2")
-    projectDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `generate packages with local dependencies`(@TempDir tempDir: Path) {
+        val projectDir = tempDir.resolve("project")
+        val project2Dir = tempDir.resolve("project2")
+        projectDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -424,11 +434,11 @@ class CliProjectPackagerTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
-    )
-    projectDir.writeFile(
-      "PklProject.deps.json",
-      """
+                .trimIndent()
+        )
+        projectDir.writeFile(
+            "PklProject.deps.json",
+            """
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
@@ -447,12 +457,12 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    project2Dir.writeFile(
-      "PklProject",
-      """
+        project2Dir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -462,33 +472,33 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com/project2.zip"
         }
       """
-        .trimIndent()
-    )
-    project2Dir.writeFile(
-      "PklProject.deps.json",
-      """
+                .trimIndent()
+        )
+        project2Dir.writeFile(
+            "PklProject.deps.json",
+            """
         {
           "schemaVersion": 1,
           "resolvedDependencies": {}
         }
       """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(projectDir, project2Dir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = StringWriter()
-      )
-      .run()
-    val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
-    assertThat(expectedMetadata).exists()
-    assertThat(expectedMetadata)
-      .hasContent(
-        """
+        CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(projectDir, project2Dir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = StringWriter()
+            )
+            .run()
+        val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
+        assertThat(expectedMetadata).exists()
+        assertThat(expectedMetadata)
+            .hasContent(
+                """
       {
         "name": "mypackage",
         "packageUri": "package://example.com/mypackage@1.0.0",
@@ -514,13 +524,13 @@ class CliProjectPackagerTest {
         "authors": []
       }
     """
-          .trimIndent()
-      )
-    val project2Metadata = tempDir.resolve(".out/project2@5.0.0/project2@5.0.0")
-    assertThat(project2Metadata).exists()
-    assertThat(project2Metadata.readString())
-      .isEqualTo(
-        """
+                    .trimIndent()
+            )
+        val project2Metadata = tempDir.resolve(".out/project2@5.0.0/project2@5.0.0")
+        assertThat(project2Metadata).exists()
+        assertThat(project2Metadata.readString())
+            .isEqualTo(
+                """
     {
       "name": "project2",
       "packageUri": "package://localhost:12110/project2@5.0.0",
@@ -533,19 +543,19 @@ class CliProjectPackagerTest {
       "authors": []
     }
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `generate package with local dependencies fails if local dep is not included for packaging`(
-    @TempDir tempDir: Path
-  ) {
-    val projectDir = tempDir.resolve("project")
-    val project2Dir = tempDir.resolve("project2")
-    projectDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `generate package with local dependencies fails if local dep is not included for packaging`(
+        @TempDir tempDir: Path
+    ) {
+        val projectDir = tempDir.resolve("project")
+        val project2Dir = tempDir.resolve("project2")
+        projectDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -562,11 +572,11 @@ class CliProjectPackagerTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
-    )
-    projectDir.writeFile(
-      "PklProject.deps.json",
-      """
+                .trimIndent()
+        )
+        projectDir.writeFile(
+            "PklProject.deps.json",
+            """
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
@@ -585,12 +595,12 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    project2Dir.writeFile(
-      "PklProject",
-      """
+        project2Dir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -600,46 +610,46 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com/project2.zip"
         }
       """
-        .trimIndent()
-    )
-    project2Dir.writeFile(
-      "PklProject.deps.json",
-      """
+                .trimIndent()
+        )
+        project2Dir.writeFile(
+            "PklProject.deps.json",
+            """
         {
           "schemaVersion": 1,
           "resolvedDependencies": {}
         }
       """
-        .trimIndent()
-    )
-    assertThatCode {
-        CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
-            listOf(projectDir),
-            CliTestOptions(),
-            ".out/%{name}@%{version}",
-            skipPublishCheck = true,
-            consoleWriter = StringWriter()
-          )
-          .run()
-      }
-      .hasMessageContaining("which is not included for packaging")
-  }
+                .trimIndent()
+        )
+        assertThatCode {
+                CliProjectPackager(
+                        CliBaseOptions(workingDir = tempDir),
+                        listOf(projectDir),
+                        CliTestOptions(),
+                        ".out/%{name}@%{version}",
+                        skipPublishCheck = true,
+                        consoleWriter = StringWriter()
+                    )
+                    .run()
+            }
+            .hasMessageContaining("which is not included for packaging")
+    }
 
-  @Test
-  fun `import path verification -- relative path outside project dir`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "main.pkl",
-      """
+    @Test
+    fun `import path verification -- relative path outside project dir`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "main.pkl",
+            """
         import "../foo.pkl"
   
         res = foo
       """
-        .trimIndent()
-    )
-    tempDir.writeFile(
-      "PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -649,47 +659,47 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val e =
-      assertThrows<CliException> {
-        CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
-            listOf(tempDir),
-            CliTestOptions(),
-            ".out/%{name}@%{version}",
-            skipPublishCheck = true,
-            consoleWriter = StringWriter()
-          )
-          .run()
-      }
-    assertThat(e.message)
-      .startsWith(
-        """
+                .trimIndent()
+        )
+        val e =
+            assertThrows<CliException> {
+                CliProjectPackager(
+                        CliBaseOptions(workingDir = tempDir),
+                        listOf(tempDir),
+                        CliTestOptions(),
+                        ".out/%{name}@%{version}",
+                        skipPublishCheck = true,
+                        consoleWriter = StringWriter()
+                    )
+                    .run()
+            }
+        assertThat(e.message)
+            .startsWith(
+                """
       –– Pkl Error ––
       Path `../foo.pkl` includes path segments that are outside the project root directory.
       
       1 | import "../foo.pkl"
                  ^^^^^^^^^^^^
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `import path verification -- absolute import from root dir`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "main.pkl",
-      """
+    @Test
+    fun `import path verification -- absolute import from root dir`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "main.pkl",
+            """
         import "$tempDir/foo.pkl"
   
         res = foo
       """
-        .trimIndent()
-    )
-    tempDir.writeFile(
-      "PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -699,42 +709,42 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val e =
-      assertThrows<CliException> {
-        CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
-            listOf(tempDir),
-            CliTestOptions(),
-            ".out/%{name}@%{version}",
-            skipPublishCheck = true,
-            consoleWriter = StringWriter()
-          )
-          .run()
-      }
-    assertThat(e.message)
-      .startsWith(
-        """
+                .trimIndent()
+        )
+        val e =
+            assertThrows<CliException> {
+                CliProjectPackager(
+                        CliBaseOptions(workingDir = tempDir),
+                        listOf(tempDir),
+                        CliTestOptions(),
+                        ".out/%{name}@%{version}",
+                        skipPublishCheck = true,
+                        consoleWriter = StringWriter()
+                    )
+                    .run()
+            }
+        assertThat(e.message)
+            .startsWith(
+                """
       –– Pkl Error ––
       Path `$tempDir/foo.pkl` includes path segments that are outside the project root directory.
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `import path verification -- absolute read from root dir`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "main.pkl",
-      """
+    @Test
+    fun `import path verification -- absolute read from root dir`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "main.pkl",
+            """
         res = read("$tempDir/foo.pkl")
       """
-        .trimIndent()
-    )
-    tempDir.writeFile(
-      "PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -744,42 +754,42 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val e =
-      assertThrows<CliException> {
-        CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
-            listOf(tempDir),
-            CliTestOptions(),
-            ".out/%{name}@%{version}",
-            skipPublishCheck = true,
-            consoleWriter = StringWriter()
-          )
-          .run()
-      }
-    assertThat(e.message)
-      .startsWith(
-        """
+                .trimIndent()
+        )
+        val e =
+            assertThrows<CliException> {
+                CliProjectPackager(
+                        CliBaseOptions(workingDir = tempDir),
+                        listOf(tempDir),
+                        CliTestOptions(),
+                        ".out/%{name}@%{version}",
+                        skipPublishCheck = true,
+                        consoleWriter = StringWriter()
+                    )
+                    .run()
+            }
+        assertThat(e.message)
+            .startsWith(
+                """
       –– Pkl Error ––
       Path `$tempDir/foo.pkl` includes path segments that are outside the project root directory.
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `import path verification -- passing`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "foo/bar.pkl",
-      """
+    @Test
+    fun `import path verification -- passing`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "foo/bar.pkl",
+            """
         import "baz.pkl"
       """
-        .trimIndent()
-    )
-    tempDir.writeFile(
-      "PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -789,25 +799,25 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = StringWriter()
-      )
-      .run()
-  }
+                .trimIndent()
+        )
+        CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = StringWriter()
+            )
+            .run()
+    }
 
-  @Test
-  fun `multiple projects`(@TempDir tempDir: Path) {
-    tempDir.writeFile("project1/main.pkl", "res = 1")
-    tempDir.writeFile(
-      "project1/PklProject",
-      """
+    @Test
+    fun `multiple projects`(@TempDir tempDir: Path) {
+        tempDir.writeFile("project1/main.pkl", "res = 1")
+        tempDir.writeFile(
+            "project1/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -817,12 +827,12 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    tempDir.writeFile("project2/main2.pkl", "res = 2")
-    tempDir.writeFile(
-      "project2/PklProject",
-      """
+                .trimIndent()
+        )
+        tempDir.writeFile("project2/main2.pkl", "res = 2")
+        tempDir.writeFile(
+            "project2/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -832,21 +842,21 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val out = StringWriter()
-    CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = true,
-        consoleWriter = out
-      )
-      .run()
-    assertThat(out.toString())
-      .isEqualTo(
-        """
+                .trimIndent()
+        )
+        val out = StringWriter()
+        CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = true,
+                consoleWriter = out
+            )
+            .run()
+        assertThat(out.toString())
+            .isEqualTo(
+                """
       .out/project1@1.0.0/project1@1.0.0.zip
       .out/project1@1.0.0/project1@1.0.0.zip.sha256
       .out/project1@1.0.0/project1@1.0.0
@@ -857,23 +867,25 @@ class CliProjectPackagerTest {
       .out/project2@2.0.0/project2@2.0.0.sha256
 
     """
-          .trimIndent()
-      )
-    assertThat(tempDir.resolve(".out/project1@1.0.0/project1@1.0.0.zip").zipFilePaths())
-      .hasSameElementsAs(listOf("/", "/main.pkl"))
-    assertThat(tempDir.resolve(".out/project2@2.0.0/project2@2.0.0.zip").zipFilePaths())
-      .hasSameElementsAs(listOf("/", "/main2.pkl"))
-  }
+                    .trimIndent()
+            )
+        assertThat(tempDir.resolve(".out/project1@1.0.0/project1@1.0.0.zip").zipFilePaths())
+            .hasSameElementsAs(listOf("/", "/main.pkl"))
+        assertThat(tempDir.resolve(".out/project2@2.0.0/project2@2.0.0.zip").zipFilePaths())
+            .hasSameElementsAs(listOf("/", "/main2.pkl"))
+    }
 
-  @Test
-  fun `publish checks`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
-    tempDir.writeFile("project/main.pkl", "res = 1")
-    tempDir.writeFile(
-      "project/PklProject",
-      // intentionally conflict with localhost:12110/birds@0.5.0 from our test fixtures
-      """
+    @Test
+    fun `publish checks`(@TempDir tempDir: Path) {
+        PackageServer.ensureStarted()
+        CertificateUtils.setupAllX509CertificatesGlobally(
+            listOf(FileTestUtils.selfSignedCertificate)
+        )
+        tempDir.writeFile("project/main.pkl", "res = 1")
+        tempDir.writeFile(
+            "project/PklProject",
+            // intentionally conflict with localhost:12110/birds@0.5.0 from our test fixtures
+            """
         amends "pkl:Project"
         
         package {
@@ -883,40 +895,42 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val e =
-      assertThrows<CliException> {
-        CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
-            listOf(tempDir.resolve("project")),
-            CliTestOptions(),
-            ".out/%{name}@%{version}",
-            skipPublishCheck = false,
-            consoleWriter = StringWriter()
-          )
-          .run()
-      }
-    assertThat(e)
-      .hasMessageStartingWith(
-        """
+                .trimIndent()
+        )
+        val e =
+            assertThrows<CliException> {
+                CliProjectPackager(
+                        CliBaseOptions(workingDir = tempDir),
+                        listOf(tempDir.resolve("project")),
+                        CliTestOptions(),
+                        ".out/%{name}@%{version}",
+                        skipPublishCheck = false,
+                        consoleWriter = StringWriter()
+                    )
+                    .run()
+            }
+        assertThat(e)
+            .hasMessageStartingWith(
+                """
       Package `package://localhost:12110/birds@0.5.0` was already published with different contents.
       
       Computed checksum: 7324e17214b6dcda63ebfb57d5a29b077af785c13bed0dc22b5138628a3f8d8f
       Published checksum: 3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
-    tempDir.writeFile("project/main.pkl", "res = 1")
-    tempDir.writeFile(
-      "project/PklProject",
-      """
+    @Test
+    fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
+        PackageServer.ensureStarted()
+        CertificateUtils.setupAllX509CertificatesGlobally(
+            listOf(FileTestUtils.selfSignedCertificate)
+        )
+        tempDir.writeFile("project/main.pkl", "res = 1")
+        tempDir.writeFile(
+            "project/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -926,34 +940,35 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
-    )
-    val out = StringWriter()
-    CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
-        listOf(tempDir.resolve("project")),
-        CliTestOptions(),
-        ".out/%{name}@%{version}",
-        skipPublishCheck = false,
-        consoleWriter = out
-      )
-      .run()
-    assertThat(out.toString())
-      .isEqualTo(
-        """
+                .trimIndent()
+        )
+        val out = StringWriter()
+        CliProjectPackager(
+                CliBaseOptions(workingDir = tempDir),
+                listOf(tempDir.resolve("project")),
+                CliTestOptions(),
+                ".out/%{name}@%{version}",
+                skipPublishCheck = false,
+                consoleWriter = out
+            )
+            .run()
+        assertThat(out.toString())
+            .isEqualTo(
+                """
       .out/mangos@1.0.0/mangos@1.0.0.zip
       .out/mangos@1.0.0/mangos@1.0.0.zip.sha256
       .out/mangos@1.0.0/mangos@1.0.0
       .out/mangos@1.0.0/mangos@1.0.0.sha256
 
     """
-          .trimIndent()
-      )
-  }
-
-  private fun Path.zipFilePaths(): List<String> {
-    return FileSystems.newFileSystem(URI("jar:${toUri()}"), emptyMap<String, String>()).use { fs ->
-      Files.walk(fs.getPath("/")).map { it.toString() }.collect(Collectors.toList())
+                    .trimIndent()
+            )
     }
-  }
+
+    private fun Path.zipFilePaths(): List<String> {
+        return FileSystems.newFileSystem(URI("jar:${toUri()}"), emptyMap<String, String>()).use { fs
+            ->
+            Files.walk(fs.getPath("/")).map { it.toString() }.collect(Collectors.toList())
+        }
+    }
 }

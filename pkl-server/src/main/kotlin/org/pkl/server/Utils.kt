@@ -22,35 +22,35 @@ import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 
 internal fun log(msg: String) {
-  if (System.getenv("PKL_DEBUG") == "1") {
-    System.err.println("[pkl-server] $msg")
-  }
+    if (System.getenv("PKL_DEBUG") == "1") {
+        System.err.println("[pkl-server] $msg")
+    }
 }
 
 internal fun AutoCloseable.closeQuietly() {
-  try {
-    close()
-  } catch (e: Exception) {
-    log(e.message.orEmpty())
-  }
+    try {
+        close()
+    } catch (e: Exception) {
+        log(e.message.orEmpty())
+    }
 }
 
 internal val threadLocalBufferPacker: ThreadLocal<MessageBufferPacker> =
-  ThreadLocal.withInitial { MessagePack.newDefaultBufferPacker() }
+    ThreadLocal.withInitial { MessagePack.newDefaultBufferPacker() }
 
 private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> =
-  ThreadLocal.withInitial {
-    val packer = threadLocalBufferPacker.get()
-    val encoder = MessageEncoders.into(packer);
-    { message: Message ->
-      packer.clear()
-      encoder.encode(message)
-      packer.toByteArray()
+    ThreadLocal.withInitial {
+        val packer = threadLocalBufferPacker.get()
+        val encoder = MessageEncoders.into(packer);
+        { message: Message ->
+            packer.clear()
+            encoder.encode(message)
+            packer.toByteArray()
+        }
     }
-  }
 
 internal fun encode(message: Message): ByteArray {
-  return threadLocalEncoder.get()(message)
+    return threadLocalEncoder.get()(message)
 }
 
 /**
@@ -60,8 +60,8 @@ internal fun encode(message: Message): ByteArray {
  * [Future.get] will wrap any exception in [ExecutionException], which is kind of silly.
  */
 fun <T> Future<T>.getUnderlying(): T =
-  try {
-    get()
-  } catch (e: ExecutionException) {
-    throw e.cause!!
-  }
+    try {
+        get()
+    } catch (e: ExecutionException) {
+        throw e.cause!!
+    }

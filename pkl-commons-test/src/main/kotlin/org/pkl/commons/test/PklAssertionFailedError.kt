@@ -24,10 +24,13 @@ import org.opentest4j.AssertionFailedError
  * https://github.com/ota4j-team/opentest4j/issues/59
  */
 class PklAssertionFailedError(message: String, expected: Any?, actual: Any?) :
-  AssertionFailedError(message, expected, actual) {
-  override fun toString(): String {
-    val patch =
-      DiffUtils.diff(expected.stringRepresentation.lines(), actual.stringRepresentation.lines())
-    return patch.deltas.joinToString("\n\n")
-  }
+    AssertionFailedError(message, expected, actual) {
+    override fun toString(): String {
+        val patch =
+            DiffUtils.diff(
+                expected.stringRepresentation.lines(),
+                actual.stringRepresentation.lines()
+            )
+        return patch.deltas.joinToString("\n\n")
+    }
 }

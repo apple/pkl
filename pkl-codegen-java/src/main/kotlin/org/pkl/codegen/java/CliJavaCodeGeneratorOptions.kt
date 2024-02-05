@@ -20,50 +20,52 @@ import org.pkl.commons.cli.CliBaseOptions
 
 /** Configuration options for [CliJavaCodeGenerator]. */
 data class CliJavaCodeGeneratorOptions(
-  /** Base options shared between CLI commands. */
-  val base: CliBaseOptions,
+    /** Base options shared between CLI commands. */
+    val base: CliBaseOptions,
 
-  /** The directory where generated source code is placed. */
-  val outputDir: Path,
+    /** The directory where generated source code is placed. */
+    val outputDir: Path,
 
-  /** The characters to use for indenting generated source code. */
-  val indent: String = "  ",
+    /** The characters to use for indenting generated source code. */
+    val indent: String = "  ",
 
-  /**
-   * Whether to generate public getter methods and private/protected fields instead of public
-   * fields.
-   */
-  val generateGetters: Boolean = false,
+    /**
+     * Whether to generate public getter methods and private/protected fields instead of public
+     * fields.
+     */
+    val generateGetters: Boolean = false,
 
-  /** Whether to generate Javadoc based on doc comments for Pkl modules, classes, and properties. */
-  val generateJavadoc: Boolean = false,
+    /**
+     * Whether to generate Javadoc based on doc comments for Pkl modules, classes, and properties.
+     */
+    val generateJavadoc: Boolean = false,
 
-  /** Whether to generate config classes for use with Spring Boot. */
-  val generateSpringBootConfig: Boolean = false,
+    /** Whether to generate config classes for use with Spring Boot. */
+    val generateSpringBootConfig: Boolean = false,
 
-  /**
-   * Fully qualified name of the annotation to use on constructor parameters. If this options is not
-   * set, [org.pkl.config.java.mapper.Named] will be used.
-   */
-  val paramsAnnotation: String? = null,
+    /**
+     * Fully qualified name of the annotation to use on constructor parameters. If this options is
+     * not set, [org.pkl.config.java.mapper.Named] will be used.
+     */
+    val paramsAnnotation: String? = null,
 
-  /**
-   * Fully qualified name of the annotation to use on non-null properties. If this option is not
-   * set, [org.pkl.config.java.mapper.NonNull] will be used.
-   */
-  val nonNullAnnotation: String? = null,
+    /**
+     * Fully qualified name of the annotation to use on non-null properties. If this option is not
+     * set, [org.pkl.config.java.mapper.NonNull] will be used.
+     */
+    val nonNullAnnotation: String? = null,
 
-  /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+    /** Whether to make generated classes implement [java.io.Serializable] */
+    val implementSerializable: Boolean = false
 ) {
-  fun toJavaCodegenOptions() =
-    JavaCodegenOptions(
-      indent,
-      generateGetters,
-      generateJavadoc,
-      generateSpringBootConfig,
-      paramsAnnotation,
-      nonNullAnnotation,
-      implementSerializable
-    )
+    fun toJavaCodegenOptions() =
+        JavaCodegenOptions(
+            indent,
+            generateGetters,
+            generateJavadoc,
+            generateSpringBootConfig,
+            paramsAnnotation,
+            nonNullAnnotation,
+            implementSerializable
+        )
 }

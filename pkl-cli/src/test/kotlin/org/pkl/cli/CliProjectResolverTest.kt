@@ -28,45 +28,46 @@ import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 
 class CliProjectResolverTest {
-  companion object {
-    @BeforeAll
-    @JvmStatic
-    fun beforeAll() {
-      PackageServer.ensureStarted()
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        fun beforeAll() {
+            PackageServer.ensureStarted()
+        }
     }
-  }
 
-  @Test
-  fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
-    val packager =
-      CliProjectResolver(
-        CliBaseOptions(workingDir = tempDir),
-        emptyList(),
-        consoleWriter = StringWriter(),
-        errWriter = StringWriter()
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
-  }
+    @Test
+    fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
+        val packager =
+            CliProjectResolver(
+                CliBaseOptions(workingDir = tempDir),
+                emptyList(),
+                consoleWriter = StringWriter(),
+                errWriter = StringWriter()
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
+    }
 
-  @Test
-  fun `missing PklProject when explict dir is provided`(@TempDir tempDir: Path) {
-    val packager =
-      CliProjectResolver(
-        CliBaseOptions(),
-        listOf(tempDir),
-        consoleWriter = StringWriter(),
-        errWriter = StringWriter()
-      )
-    val err = assertThrows<CliException> { packager.run() }
-    assertThat(err).hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
-  }
+    @Test
+    fun `missing PklProject when explict dir is provided`(@TempDir tempDir: Path) {
+        val packager =
+            CliProjectResolver(
+                CliBaseOptions(),
+                listOf(tempDir),
+                consoleWriter = StringWriter(),
+                errWriter = StringWriter()
+            )
+        val err = assertThrows<CliException> { packager.run() }
+        assertThat(err)
+            .hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
+    }
 
-  @Test
-  fun `basic project`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `basic project`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
 
         dependencies {
@@ -75,22 +76,22 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
-    )
-    CliProjectResolver(
-        CliBaseOptions(
-          workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
-        ),
-        listOf(tempDir),
-        consoleWriter = StringWriter(),
-        errWriter = StringWriter()
-      )
-      .run()
-    val expectedOutput = tempDir.resolve("PklProject.deps.json")
-    assertThat(expectedOutput)
-      .hasContent(
-        """
+                .trimIndent()
+        )
+        CliProjectResolver(
+                CliBaseOptions(
+                    workingDir = tempDir,
+                    caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+                ),
+                listOf(tempDir),
+                consoleWriter = StringWriter(),
+                errWriter = StringWriter()
+            )
+            .run()
+        val expectedOutput = tempDir.resolve("PklProject.deps.json")
+        assertThat(expectedOutput)
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -111,15 +112,15 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `basic project, inferred from working dir`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `basic project, inferred from working dir`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
 
         dependencies {
@@ -128,22 +129,22 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
-    )
-    CliProjectResolver(
-        CliBaseOptions(
-          workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
-        ),
-        emptyList(),
-        consoleWriter = StringWriter(),
-        errWriter = StringWriter()
-      )
-      .run()
-    val expectedOutput = tempDir.resolve("PklProject.deps.json")
-    assertThat(expectedOutput)
-      .hasContent(
-        """
+                .trimIndent()
+        )
+        CliProjectResolver(
+                CliBaseOptions(
+                    workingDir = tempDir,
+                    caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+                ),
+                emptyList(),
+                consoleWriter = StringWriter(),
+                errWriter = StringWriter()
+            )
+            .run()
+        val expectedOutput = tempDir.resolve("PklProject.deps.json")
+        assertThat(expectedOutput)
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -164,16 +165,16 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `local dependencies`(@TempDir tempDir: Path) {
-    val projectDir = tempDir.resolve("theproject")
-    projectDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `local dependencies`(@TempDir tempDir: Path) {
+        val projectDir = tempDir.resolve("theproject")
+        projectDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
 
         dependencies {
@@ -183,11 +184,11 @@ class CliProjectResolverTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
-    )
-    projectDir.writeFile(
-      "../project2/PklProject",
-      """
+                .trimIndent()
+        )
+        projectDir.writeFile(
+            "../project2/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -204,12 +205,12 @@ class CliProjectResolverTest {
           ["project3"] = import("../project3/PklProject")
         }
       """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    projectDir.writeFile(
-      "../project3/PklProject",
-      """
+        projectDir.writeFile(
+            "../project3/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -225,19 +226,19 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
-    )
-    CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
-        listOf(projectDir),
-        consoleWriter = StringWriter(),
-        errWriter = StringWriter()
-      )
-      .run()
-    val expectedOutput = projectDir.resolve("PklProject.deps.json")
-    assertThat(expectedOutput)
-      .hasContent(
-        """
+                .trimIndent()
+        )
+        CliProjectResolver(
+                CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+                listOf(projectDir),
+                consoleWriter = StringWriter(),
+                errWriter = StringWriter()
+            )
+            .run()
+        val expectedOutput = projectDir.resolve("PklProject.deps.json")
+        assertThat(expectedOutput)
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -268,16 +269,16 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 
-  @Test
-  fun `local dependency overridden by remote dependency`(@TempDir tempDir: Path) {
-    val projectDir = tempDir.resolve("theproject")
-    projectDir.writeFile(
-      "PklProject",
-      """
+    @Test
+    fun `local dependency overridden by remote dependency`(@TempDir tempDir: Path) {
+        val projectDir = tempDir.resolve("theproject")
+        projectDir.writeFile(
+            "PklProject",
+            """
         amends "pkl:Project"
 
         dependencies {
@@ -287,11 +288,11 @@ class CliProjectResolverTest {
           ["fruit"] = import("../fruit/PklProject")
         }
       """
-        .trimIndent()
-    )
-    projectDir.writeFile(
-      "../fruit/PklProject",
-      """
+                .trimIndent()
+        )
+        projectDir.writeFile(
+            "../fruit/PklProject",
+            """
         amends "pkl:Project"
         
         package {
@@ -301,21 +302,21 @@ class CliProjectResolverTest {
           packageZipUrl = "https://foo.com/fruit.zip"
         }
       """
-        .trimIndent()
-    )
-    val consoleOut = StringWriter()
-    val errOut = StringWriter()
-    CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
-        listOf(projectDir),
-        consoleWriter = consoleOut,
-        errWriter = errOut
-      )
-      .run()
-    val expectedOutput = projectDir.resolve("PklProject.deps.json")
-    assertThat(expectedOutput)
-      .hasContent(
-        """
+                .trimIndent()
+        )
+        val consoleOut = StringWriter()
+        val errOut = StringWriter()
+        CliProjectResolver(
+                CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+                listOf(projectDir),
+                consoleWriter = consoleOut,
+                errWriter = errOut
+            )
+            .run()
+        val expectedOutput = projectDir.resolve("PklProject.deps.json")
+        assertThat(expectedOutput)
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -336,19 +337,19 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-    assertThat(errOut.toString())
-      .isEqualTo(
-        "WARN: local dependency `package://localhost:12110/fruit@1.0.0` was overridden to remote dependency `package://localhost:12110/fruit@1.0.5`.\n"
-      )
-  }
+                    .trimIndent()
+            )
+        assertThat(errOut.toString())
+            .isEqualTo(
+                "WARN: local dependency `package://localhost:12110/fruit@1.0.0` was overridden to remote dependency `package://localhost:12110/fruit@1.0.5`.\n"
+            )
+    }
 
-  @Test
-  fun `resolving multiple projects`(@TempDir tempDir: Path) {
-    tempDir.writeFile(
-      "project1/PklProject",
-      """
+    @Test
+    fun `resolving multiple projects`(@TempDir tempDir: Path) {
+        tempDir.writeFile(
+            "project1/PklProject",
+            """
       amends "pkl:Project"
 
       dependencies {
@@ -357,12 +358,12 @@ class CliProjectResolverTest {
         }
       }
     """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    tempDir.writeFile(
-      "project2/PklProject",
-      """
+        tempDir.writeFile(
+            "project2/PklProject",
+            """
       amends "pkl:Project"
 
       dependencies {
@@ -371,30 +372,30 @@ class CliProjectResolverTest {
         }
       }
     """
-        .trimIndent()
-    )
+                .trimIndent()
+        )
 
-    val consoleOut = StringWriter()
-    val errOut = StringWriter()
-    CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
-        listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
-        consoleWriter = consoleOut,
-        errWriter = errOut
-      )
-      .run()
-    assertThat(consoleOut.toString())
-      .isEqualTo(
-        """
+        val consoleOut = StringWriter()
+        val errOut = StringWriter()
+        CliProjectResolver(
+                CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+                listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
+                consoleWriter = consoleOut,
+                errWriter = errOut
+            )
+            .run()
+        assertThat(consoleOut.toString())
+            .isEqualTo(
+                """
       $tempDir/project1/PklProject.deps.json
       $tempDir/project2/PklProject.deps.json
     
     """
-          .trimIndent()
-      )
-    assertThat(tempDir.resolve("project1/PklProject.deps.json"))
-      .hasContent(
-        """
+                    .trimIndent()
+            )
+        assertThat(tempDir.resolve("project1/PklProject.deps.json"))
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -415,11 +416,11 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-    assertThat(tempDir.resolve("project2/PklProject.deps.json"))
-      .hasContent(
-        """
+                    .trimIndent()
+            )
+        assertThat(tempDir.resolve("project2/PklProject.deps.json"))
+            .hasContent(
+                """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -433,7 +434,7 @@ class CliProjectResolverTest {
         }
       }
     """
-          .trimIndent()
-      )
-  }
+                    .trimIndent()
+            )
+    }
 }

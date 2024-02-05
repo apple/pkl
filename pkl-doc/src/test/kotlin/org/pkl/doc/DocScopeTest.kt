@@ -31,27 +31,27 @@ import org.pkl.core.PClass
 import org.pkl.core.TypeAlias
 
 class DocScopeTest {
-  companion object {
-    private val evaluator = Evaluator.preconfigured()
+    companion object {
+        private val evaluator = Evaluator.preconfigured()
 
-    private val docPackageInfo =
-      DocPackageInfo(
-        "mypackage",
-        "mypackage.",
-        null,
-        "1.2.3",
-        "publisher",
-        listOf("https://pkl-lang.org/"),
-        "sourceCode".toUri(),
-        "https://example.com/mypackage/blob/1.2.3%{path}#L%{line}-L%{endLine}",
-        "issueTracker".toUri(),
-        overview = "overview docs"
-      )
+        private val docPackageInfo =
+            DocPackageInfo(
+                "mypackage",
+                "mypackage.",
+                null,
+                "1.2.3",
+                "publisher",
+                listOf("https://pkl-lang.org/"),
+                "sourceCode".toUri(),
+                "https://example.com/mypackage/blob/1.2.3%{path}#L%{line}-L%{endLine}",
+                "issueTracker".toUri(),
+                overview = "overview docs"
+            )
 
-    private val module: ModuleSchema by lazy {
-      evaluator.evaluateSchema(
-        text(
-          """
+        private val module: ModuleSchema by lazy {
+            evaluator.evaluateSchema(
+                text(
+                    """
           module mypackage.mymodule
 
           age: Int
@@ -64,163 +64,172 @@ class DocScopeTest {
 
           typealias Email = String
           """
-            .trimIndent()
-        )
-      )
+                        .trimIndent()
+                )
+            )
+        }
+
+        private val moduleProperty: PClass.Property by lazy {
+            module.moduleClass.properties["age"]!!
+        }
+
+        private val moduleMethod: PClass.Method by lazy { module.moduleClass.methods["sing"]!! }
+
+        private val clazz: PClass by lazy { module.classes["Person"]!! }
+
+        private val typeAlias: TypeAlias by lazy { module.typeAliases["Email"]!! }
+
+        private val classProperty: PClass.Property by lazy { clazz.properties["name"]!! }
+
+        private val classMethod: PClass.Method by lazy { clazz.methods["call"]!! }
+
+        private val siteScope: SiteScope by lazy {
+            SiteScope(
+                listOf(DocPackage(docPackageInfo, mutableListOf(module))),
+                mapOf(),
+                { evaluator.evaluateSchema(uri(it)) },
+                "/output/dir".toPath()
+            )
+        }
+
+        private val packageScope: PackageScope by lazy { siteScope.getPackage("mypackage") }
+
+        private val moduleScope: ModuleScope by lazy {
+            packageScope.getModule("mypackage.mymodule")
+        }
+
+        private val modulePropertyScope: PropertyScope by lazy {
+            PropertyScope(moduleProperty, moduleScope)
+        }
+
+        private val moduleMethodScope: MethodScope by lazy {
+            MethodScope(moduleMethod, moduleScope)
+        }
+
+        private val classScope: ClassScope by lazy {
+            ClassScope(clazz, moduleScope.url, moduleScope)
+        }
+
+        private val typeAliasScope: TypeAliasScope by lazy {
+            TypeAliasScope(typeAlias, moduleScope.url, moduleScope)
+        }
+
+        private val classPropertyScope: PropertyScope by lazy {
+            PropertyScope(classProperty, classScope)
+        }
+
+        private val classMethodScope: MethodScope by lazy { MethodScope(classMethod, classScope) }
+
+        @JvmStatic
+        private fun scopes(): Collection<DocScope> =
+            listOf(
+                moduleScope,
+                modulePropertyScope,
+                moduleMethodScope,
+                classScope,
+                typeAliasScope,
+                classPropertyScope,
+                classMethodScope
+            )
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            evaluator.close()
+        }
     }
 
-    private val moduleProperty: PClass.Property by lazy { module.moduleClass.properties["age"]!! }
-
-    private val moduleMethod: PClass.Method by lazy { module.moduleClass.methods["sing"]!! }
-
-    private val clazz: PClass by lazy { module.classes["Person"]!! }
-
-    private val typeAlias: TypeAlias by lazy { module.typeAliases["Email"]!! }
-
-    private val classProperty: PClass.Property by lazy { clazz.properties["name"]!! }
-
-    private val classMethod: PClass.Method by lazy { clazz.methods["call"]!! }
-
-    private val siteScope: SiteScope by lazy {
-      SiteScope(
-        listOf(DocPackage(docPackageInfo, mutableListOf(module))),
-        mapOf(),
-        { evaluator.evaluateSchema(uri(it)) },
-        "/output/dir".toPath()
-      )
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve empty chain`(sourceScope: DocScope) {
+        assertThat(sourceScope.resolveDocLink("")).isNull()
     }
 
-    private val packageScope: PackageScope by lazy { siteScope.getPackage("mypackage") }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve module property`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("age")
+        targetScope as PropertyScope
 
-    private val moduleScope: ModuleScope by lazy { packageScope.getModule("mypackage.mymodule") }
-
-    private val modulePropertyScope: PropertyScope by lazy {
-      PropertyScope(moduleProperty, moduleScope)
+        assertThat(targetScope.property).isSameAs(moduleProperty)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#age"))
     }
 
-    private val moduleMethodScope: MethodScope by lazy { MethodScope(moduleMethod, moduleScope) }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve module method`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("sing()")
+        targetScope as MethodScope
 
-    private val classScope: ClassScope by lazy { ClassScope(clazz, moduleScope.url, moduleScope) }
-
-    private val typeAliasScope: TypeAliasScope by lazy {
-      TypeAliasScope(typeAlias, moduleScope.url, moduleScope)
+        assertThat(targetScope.method).isSameAs(moduleMethod)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#sing()"))
     }
 
-    private val classPropertyScope: PropertyScope by lazy {
-      PropertyScope(classProperty, classScope)
+    @Test
+    internal fun `resolve module method parameter`() {
+        val targetScope = moduleMethodScope.resolveDocLink("song")
+        targetScope as ParameterScope
+
+        assertThat(targetScope.name).isEqualTo("song")
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#sing().song"))
     }
 
-    private val classMethodScope: MethodScope by lazy { MethodScope(classMethod, classScope) }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve class`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("Person")
+        targetScope as ClassScope
 
-    @JvmStatic
-    private fun scopes(): Collection<DocScope> =
-      listOf(
-        moduleScope,
-        modulePropertyScope,
-        moduleMethodScope,
-        classScope,
-        typeAliasScope,
-        classPropertyScope,
-        classMethodScope
-      )
-
-    @JvmStatic
-    @AfterAll
-    fun afterAll() {
-      evaluator.close()
+        assertThat(targetScope.clazz).isSameAs(clazz)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html"))
     }
-  }
 
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve empty chain`(sourceScope: DocScope) {
-    assertThat(sourceScope.resolveDocLink("")).isNull()
-  }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve type alias`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("Email")
+        targetScope as TypeAliasScope
 
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve module property`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("age")
-    targetScope as PropertyScope
+        assertThat(targetScope.typeAlias).isSameAs(typeAlias)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#Email"))
+    }
 
-    assertThat(targetScope.property).isSameAs(moduleProperty)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#age"))
-  }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve class property`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("Person.name")
+        targetScope as PropertyScope
 
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve module method`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("sing()")
-    targetScope as MethodScope
+        assertThat(targetScope.property).isSameAs(classProperty)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html#name"))
+    }
 
-    assertThat(targetScope.method).isSameAs(moduleMethod)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#sing()"))
-  }
+    @ParameterizedTest
+    @MethodSource("scopes")
+    internal fun `resolve class method`(sourceScope: DocScope) {
+        val targetScope = sourceScope.resolveDocLink("Person.call()")
+        targetScope as MethodScope
 
-  @Test
-  internal fun `resolve module method parameter`() {
-    val targetScope = moduleMethodScope.resolveDocLink("song")
-    targetScope as ParameterScope
+        assertThat(targetScope.method).isSameAs(classMethod)
+        assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html#call()"))
+    }
 
-    assertThat(targetScope.name).isEqualTo("song")
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#sing().song"))
-  }
+    @Test
+    internal fun `resolve class method parameter`() {
+        val targetScope = classMethodScope.resolveDocLink("number")
+        targetScope as ParameterScope
 
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve class`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("Person")
-    targetScope as ClassScope
+        assertThat(targetScope.name).isEqualTo("number")
+        assertThat(targetScope.urlRelativeTo(moduleScope))
+            .isEqualTo(URI("Person.html#call().number"))
+    }
 
-    assertThat(targetScope.clazz).isSameAs(clazz)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html"))
-  }
+    @Test
+    internal fun `site scope URL is below output dir even if directory does not exist`() {
+        val outputDir = "/non/existing".toPath()
+        val scope = SiteScope(listOf(), mapOf(), { evaluator.evaluateSchema(uri(it)) }, outputDir)
 
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve type alias`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("Email")
-    targetScope as TypeAliasScope
-
-    assertThat(targetScope.typeAlias).isSameAs(typeAlias)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("index.html#Email"))
-  }
-
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve class property`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("Person.name")
-    targetScope as PropertyScope
-
-    assertThat(targetScope.property).isSameAs(classProperty)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html#name"))
-  }
-
-  @ParameterizedTest
-  @MethodSource("scopes")
-  internal fun `resolve class method`(sourceScope: DocScope) {
-    val targetScope = sourceScope.resolveDocLink("Person.call()")
-    targetScope as MethodScope
-
-    assertThat(targetScope.method).isSameAs(classMethod)
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html#call()"))
-  }
-
-  @Test
-  internal fun `resolve class method parameter`() {
-    val targetScope = classMethodScope.resolveDocLink("number")
-    targetScope as ParameterScope
-
-    assertThat(targetScope.name).isEqualTo("number")
-    assertThat(targetScope.urlRelativeTo(moduleScope)).isEqualTo(URI("Person.html#call().number"))
-  }
-
-  @Test
-  internal fun `site scope URL is below output dir even if directory does not exist`() {
-    val outputDir = "/non/existing".toPath()
-    val scope = SiteScope(listOf(), mapOf(), { evaluator.evaluateSchema(uri(it)) }, outputDir)
-
-    // used to return `/non/index.html`
-    assertThat(scope.url.path).isEqualTo("/non/existing/index.html")
-  }
+        // used to return `/non/index.html`
+        assertThat(scope.url.path).isEqualTo("/non/existing/index.html")
+    }
 }

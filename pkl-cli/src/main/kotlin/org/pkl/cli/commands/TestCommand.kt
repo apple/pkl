@@ -26,21 +26,21 @@ import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.TestOptions
 
 class TestCommand(helpLink: String) :
-  BaseCommand(name = "test", help = "Run tests within the given module(s)", helpLink = helpLink) {
-  val modules: List<URI> by
-    argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
-      .convert { parseModuleName(it) }
-      .multiple()
+    BaseCommand(name = "test", help = "Run tests within the given module(s)", helpLink = helpLink) {
+    val modules: List<URI> by
+        argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
+            .convert { parseModuleName(it) }
+            .multiple()
 
-  private val projectOptions by ProjectOptions()
+    private val projectOptions by ProjectOptions()
 
-  private val testOptions by TestOptions()
+    private val testOptions by TestOptions()
 
-  override fun run() {
-    CliTestRunner(
-        options = baseOptions.baseOptions(modules, projectOptions),
-        testOptions = testOptions.cliTestOptions
-      )
-      .run()
-  }
+    override fun run() {
+        CliTestRunner(
+                options = baseOptions.baseOptions(modules, projectOptions),
+                testOptions = testOptions.cliTestOptions
+            )
+            .run()
+    }
 }

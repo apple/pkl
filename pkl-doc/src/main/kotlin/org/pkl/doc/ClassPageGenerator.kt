@@ -19,116 +19,121 @@ import kotlinx.html.*
 import org.pkl.core.PClass
 
 internal class ClassPageGenerator(
-  docsiteInfo: DocsiteInfo,
-  docPackage: DocPackage,
-  docModule: DocModule,
-  clazz: PClass,
-  pageScope: ClassScope,
-  isTestMode: Boolean
+    docsiteInfo: DocsiteInfo,
+    docPackage: DocPackage,
+    docModule: DocModule,
+    clazz: PClass,
+    pageScope: ClassScope,
+    isTestMode: Boolean
 ) : ModuleOrClassPageGenerator<ClassScope>(docsiteInfo, docModule, clazz, pageScope, isTestMode) {
-  override val html: HTML.() -> Unit = {
-    renderHtmlHead()
+    override val html: HTML.() -> Unit = {
+        renderHtmlHead()
 
-    body {
-      onLoad = "onLoad()"
+        body {
+            onLoad = "onLoad()"
 
-      renderPageHeader(docPackage.name, docPackage.version, clazz.moduleName, clazz.simpleName)
-
-      main {
-        renderParentLinks()
-
-        renderAnchors(clazz)
-
-        h1 {
-          id = "declaration-title"
-          +clazz.simpleName
-
-          span {
-            id = "declaration-version"
-            +docPackage.version
-          }
-        }
-
-        val memberDocs =
-          MemberDocs(
-            clazz.docComment,
-            pageScope,
-            clazz.annotations,
-            isDeclaration = true,
-            mapOf(
-              MemberInfoKey("Known subtypes", runtimeDataClasses) to
-                {
-                  id = HtmlConstants.KNOWN_SUBTYPES
-                  classes = runtimeDataClasses
-                },
-              MemberInfoKey("Known usages", runtimeDataClasses) to
-                {
-                  id = HtmlConstants.KNOWN_USAGES
-                  classes = runtimeDataClasses
-                },
-              MemberInfoKey("All versions", runtimeDataClasses) to
-                {
-                  id = HtmlConstants.KNOWN_VERSIONS
-                  classes = runtimeDataClasses
-                },
+            renderPageHeader(
+                docPackage.name,
+                docPackage.version,
+                clazz.moduleName,
+                clazz.simpleName
             )
-          )
 
-        renderMemberGroupLinks(
-          Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Properties", "#_properties", clazz.hasListedProperty),
-          Triple("Methods", "#_methods", clazz.hasListedMethod)
-        )
+            main {
+                renderParentLinks()
 
-        renderAnchor("_overview")
-        div {
-          id = "_declaration"
-          classes = setOf("member")
+                renderAnchors(clazz)
 
-          memberDocs.renderExpandIcon(this)
+                h1 {
+                    id = "declaration-title"
+                    +clazz.simpleName
 
-          div {
-            classes =
-              if (memberDocs.isDeprecatedMember) {
-                setOf("member-signature", "member-deprecated")
-              } else setOf("member-signature")
+                    span {
+                        id = "declaration-version"
+                        +docPackage.version
+                    }
+                }
 
-            renderModifiers(clazz.modifiers, "class")
+                val memberDocs =
+                    MemberDocs(
+                        clazz.docComment,
+                        pageScope,
+                        clazz.annotations,
+                        isDeclaration = true,
+                        mapOf(
+                            MemberInfoKey("Known subtypes", runtimeDataClasses) to
+                                {
+                                    id = HtmlConstants.KNOWN_SUBTYPES
+                                    classes = runtimeDataClasses
+                                },
+                            MemberInfoKey("Known usages", runtimeDataClasses) to
+                                {
+                                    id = HtmlConstants.KNOWN_USAGES
+                                    classes = runtimeDataClasses
+                                },
+                            MemberInfoKey("All versions", runtimeDataClasses) to
+                                {
+                                    id = HtmlConstants.KNOWN_VERSIONS
+                                    classes = runtimeDataClasses
+                                },
+                        )
+                    )
 
-            span {
-              classes = setOf("name-decl")
+                renderMemberGroupLinks(
+                    Triple("Overview", "#_overview", memberDocs.isExpandable),
+                    Triple("Properties", "#_properties", clazz.hasListedProperty),
+                    Triple("Methods", "#_methods", clazz.hasListedMethod)
+                )
 
-              +clazz.simpleName
+                renderAnchor("_overview")
+                div {
+                    id = "_declaration"
+                    classes = setOf("member")
+
+                    memberDocs.renderExpandIcon(this)
+
+                    div {
+                        classes =
+                            if (memberDocs.isDeprecatedMember) {
+                                setOf("member-signature", "member-deprecated")
+                            } else setOf("member-signature")
+
+                        renderModifiers(clazz.modifiers, "class")
+
+                        span {
+                            classes = setOf("name-decl")
+
+                            +clazz.simpleName
+                        }
+
+                        renderTypeParameters(clazz.typeParameters)
+
+                        renderClassExtendsClause(clazz, pageScope)
+                    }
+
+                    memberDocs.renderDocComment(this)
+                }
+
+                renderProperties()
+                renderMethods()
             }
-
-            renderTypeParameters(clazz.typeParameters)
-
-            renderClassExtendsClause(clazz, pageScope)
-          }
-
-          memberDocs.renderDocComment(this)
         }
-
-        renderProperties()
-        renderMethods()
-      }
     }
-  }
 
-  // example output:
-  // class HostAlias (io.k8s/api/core/v1/PodSpec:befa7c51) • Pkl Hub
-  override fun HTMLTag.renderPageTitle() {
-    val classScope = pageScope
-    val moduleScope = classScope.parent!!
-    val packageScope = moduleScope.parent!!
+    // example output:
+    // class HostAlias (io.k8s/api/core/v1/PodSpec:befa7c51) • Pkl Hub
+    override fun HTMLTag.renderPageTitle() {
+        val classScope = pageScope
+        val moduleScope = classScope.parent!!
+        val packageScope = moduleScope.parent!!
 
-    +classScope.clazz.simpleName
-    +" ("
-    +packageScope.name
-    +moduleScope.name.drop(packageScope.name.length).replace('.', '/')
-    +":"
-    +packageScope.version
-    +") • "
-    +(docsiteInfo.title ?: "Pkldoc")
-  }
+        +classScope.clazz.simpleName
+        +" ("
+        +packageScope.name
+        +moduleScope.name.drop(packageScope.name.length).replace('.', '/')
+        +":"
+        +packageScope.version
+        +") • "
+        +(docsiteInfo.title ?: "Pkldoc")
+    }
 }

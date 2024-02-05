@@ -18,16 +18,16 @@ package org.pkl.cli.repl
 import org.pkl.core.Release
 
 internal object ReplMessages {
-  val welcome =
-    """
+    val welcome =
+        """
     Welcome to Pkl ${Release.current().version()}.
     Type an expression to have it evaluated.
     Type `:help` or `:examples` for more information.
   """
-      .trimIndent()
+            .trimIndent()
 
-  val help =
-    """
+    val help =
+        """
     `<expr>`           Evaluate <expr> and print the result. `1 + 3`
     `<name> = <expr>`  Evaluate <expr> and assign the result to property <name>. `msg = "howdy"`
     `:clear`           Clear the screen.
@@ -48,10 +48,10 @@ internal object ReplMessages {
     * Multi-line programs can be copy-pasted into the REPL.
 
   """
-      .trimIndent()
+            .trimIndent()
 
-  val examples: String =
-    """
+    val examples: String =
+        """
     Expressions:
     `2 + 3 * 4`
 
@@ -98,7 +98,7 @@ internal object ReplMessages {
     ${Release.current().documentation().homepage()}language-reference/
 
   """
-      .trimIndent()
+            .trimIndent()
 
-  private fun isMacOs() = System.getProperty("os.name").equals("Mac OS X", ignoreCase = true)
+    private fun isMacOs() = System.getProperty("os.name").equals("Mac OS X", ignoreCase = true)
 }

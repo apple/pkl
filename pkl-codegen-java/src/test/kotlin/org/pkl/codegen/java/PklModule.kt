@@ -20,7 +20,7 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 
 data class PklModule(val name: String, val content: String) {
-  fun writeToDisk(path: Path): Path {
-    return path.createParentDirectories().writeString(content)
-  }
+    fun writeToDisk(path: Path): Path {
+        return path.createParentDirectories().writeString(content)
+    }
 }
