@@ -220,7 +220,7 @@ import "pigeon.pkl" // <1>
 parrot = (pigeon) {
   name = "Great green macaw"
   diet = "Berries"
-  species {
+  taxonomy {
     species = "Ara ambiguus"
   }
 }
