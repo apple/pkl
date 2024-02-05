@@ -21,7 +21,7 @@ tasks.compileKotlin {
 
 spotless {
   kotlin {
-    ktfmt("0.44").googleStyle()
+    ktfmt("0.44").kotlinlangStyle()
     targetExclude("**/generated/**", "**/build/**")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
