@@ -14,6 +14,7 @@ if (isWorker) {
   const searchIndexUrl = workerName === "main" ?
       '../search-index.js' :
       '../' + workerName + '/search-index.js';
+  importScripts(searchIndexUrl);
   initSearchIndex();
   addEventListener('message', e => {
     const {query, packageName, moduleName, className} = e.data;
@@ -177,12 +178,11 @@ function toWordStarts(characters) {
   return result;
 }
 
-const regexIsUppercase = /\p{Lu}/u
-
-const regexIsNumericCharacter = /\p{N}/u
 
 // Partitions characters into uppercase, digit, dot, and other.
 function toCharClass(ch) {
+  const regexIsUppercase = /\p{Lu}/u
+  const regexIsNumericCharacter = /\p{N}/u
   return regexIsUppercase.test(ch) ? 3 : regexIsNumericCharacter.test(ch) ? 2 : ch === '.' ? 1 : 0;
 }
 
