@@ -59,7 +59,7 @@ public class VmExceptionRenderer {
         .append("Cmd+Double-click the link below to open an issue.\n")
         .append(
             "Please copy and paste the entire error output into the issue's description, provided you can share it.\n\n")
-        .append("https://github.com/apple/pkl/issues/new");
+        .append("https://github.com/apple/pkl/issues/new\n\n");
 
     builder.append(
         URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8)
