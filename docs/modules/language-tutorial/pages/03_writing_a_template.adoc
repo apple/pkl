@@ -304,17 +304,17 @@ assistants {
 
 agenda {
   ["beginners"] {
-    title = "Basic Configuration"
+    name = "Basic Configuration"
     part = 1
     duration = 45.min
   }
   ["intermediates"] {
-    title = "Filling out a Template"
+    name = "Filling out a Template"
     part = 2
     duration = 45.min
   }
   ["experts"] {
-    title = "Writing a Template"
+    name = "Writing a Template"
     part = 3
     duration = 45.min
   }
