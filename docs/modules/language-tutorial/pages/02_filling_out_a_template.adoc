@@ -233,7 +233,7 @@ Looking at the result, however, you see a (possibly) unexpected difference.
 [source,{pkl}]
 ----
 $ pkl eval /Users/me/tutorial/pigeon.pkl
-name = "Common wood pigeon""
+name = "Common wood pigeon"
 diet = "Seeds"
 taxonomy {
   species = "Columba palumbus"
