@@ -105,7 +105,7 @@ internal class ModulePageGenerator(
   }
 
   // example output:
-  // module PodSpec (io.k8s/api/core/v1:befa7c51) • Pkl Hub
+  // module PodSpec (pkg.pkl-lang.org/pkl-k8s/k8s:1.0.0) • Package Docs
   override fun HTMLTag.renderPageTitle() {
     val moduleScope = pageScope
     val packageScope = moduleScope.parent!!

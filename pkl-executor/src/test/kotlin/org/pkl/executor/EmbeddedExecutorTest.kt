@@ -367,8 +367,8 @@ class EmbeddedExecutorTest {
       .contains("Evaluation timed out after 1 second(s).")
   }
 
-  // As of 0.16, only Pkl Hub modules are cached.
-  // Because this test doesn't import a Pkl Hub module, it doesn't really test
+  // Only packages are cached.
+  // Because this test doesn't import a package, it doesn't really test
   // that the `moduleCacheDir` option takes effect.
   @Test
   fun `evaluate a module with enabled module cache`(@TempDir tempDir: Path) {

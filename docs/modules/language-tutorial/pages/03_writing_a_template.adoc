@@ -256,7 +256,7 @@ By "precisely" we mean, that amending an object also can't "turn it into" an ins
 == A new template
 
 Now that you know about types, you can start writing your first template.
-So far, you've written configurations with Pkl, either without a template, or using a template on Pkl Hub.
+So far, you've written configurations with Pkl, either without a template, or using the `acmecicd` template from .
 It is often easiest to first write a (typical) configuration for which you want to create a template.
 Suppose you want to define what a live workshop for this tutorial looks like.
 Consider this example:

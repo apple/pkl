@@ -143,7 +143,7 @@ issueTracker: Uri
 /// The packages depended on by this package.
 ///
 /// Used to display package dependencies and to create documentation links.
-/// Set automatically for Pkl Hub packages.
+/// Set automatically for packages that are part of a docsite.
 dependencies: Listing<PackageDependency>(isDistinctBy((it) -> it.name))
 
 /// Any extra attributes to add to the documentation.
