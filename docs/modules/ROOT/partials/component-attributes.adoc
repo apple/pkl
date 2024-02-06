@@ -39,10 +39,9 @@ endif::[]
 :uri-pkl-stdlib-docs: {uri-pkl-stdlib-docs-base}/{pkl-version}
 :uri-pkl-stdlib-docs-index: {uri-pkl-stdlib-docs}/
 
-// TODO(oss): check these links when we have tags
 :github-branch: main
 ifdef::is-release-version[]
-:github-branch: v{pkl-version-no-suffix}
+:github-branch: {pkl-version-no-suffix}
 endif::[]
 :uri-github-tree: https://github.com/apple/pkl/tree/{github-branch}
 :uri-pkl-stdlib-sources: {uri-github-tree}/stdlib
