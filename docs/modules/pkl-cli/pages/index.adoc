@@ -342,7 +342,7 @@ The following command prints `Pigeon` to the console:
 
 [source,shell]
 ----
-pkl eval -x metadata.name pigeon.pkl
+pkl eval -x metadata.species pigeon.pkl
 # => Pigeon
 ----
 
@@ -356,7 +356,7 @@ metadata {
 }
 
 output {
-  text = metadata.name.toString()
+  text = metadata.species.toString()
 }
 ----
 ====
