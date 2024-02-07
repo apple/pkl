@@ -650,7 +650,7 @@ To load <<config.pkl,`config.pkl`>> into the REPL, run:
 pkl> :load config.pkl
 ----
 
-To evaluate the `bird.name` property, run:
+To evaluate the `bird.species` property, run:
 
 [source,shell]
 ----
