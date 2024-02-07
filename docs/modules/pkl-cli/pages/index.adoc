@@ -738,9 +738,9 @@ pkl> species
 pkl> species = "Barn"
 pkl> species
 "Barn"
-pkl> species += " Owl"
+pkl> species + " Owl"
 pkl> species
-"Barn owl"
+"Barn Owl"
 ----
 
 Due to Pkl's late binding semantics, redefining a member affects dependent members:
@@ -750,7 +750,7 @@ Due to Pkl's late binding semantics, redefining a member affects dependent membe
 pkl> name = "Barn"
 pkl> species = "$name Owl"
 pkl> species
-"Barn owl"
+"Barn Owl"
 pkl> name = "Elf"
 pkl> species
 "Elf Owl"
