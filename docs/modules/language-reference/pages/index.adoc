@@ -2584,7 +2584,7 @@ This behavior is similar to the behavior of Bash with `shopt -s dotglob` enabled
 
 === Security Checks
 
-When attempting to directly evaluate a module, as in `pkl myModule.pkl`,
+When attempting to directly evaluate a module, as in `pkl eval myModule.pkl`,
 the following security checks are performed:
 
 * The module URI is checked against the module allowlist (`--allowed-modules`).
@@ -2637,7 +2637,7 @@ b {
 }
 ----
 
-`pkl config.pkl`, which is shorthand for `pkl --format pcf config.pkl`, renders the module as Pcf:
+`pkl eval config.pkl`, which is shorthand for `pkl eval --format pcf config.pkl`, renders the module as Pcf:
 
 [source,{pkl}]
 ----
@@ -2647,7 +2647,7 @@ b {
 }
 ----
 
-`pkl --format yaml config.pkl` renders the module as YAML:
+`pkl eval --format yaml config.pkl` renders the module as YAML:
 
 [source,yaml]
 ----
@@ -2656,7 +2656,7 @@ b:
   c: 20
 ----
 
-Likewise, `pkl --format json config.pkl` renders the module as JSON.
+Likewise, `pkl eval --format json config.pkl` renders the module as JSON.
 
 [[in-language]]
 ==== In-language
@@ -2812,7 +2812,7 @@ output {
 }
 ----
 
-Running `pkl -m output/ pigeon.pkl` produces the following output files:
+Running `pkl eval -m output/ pigeon.pkl` produces the following output files:
 
 .output/birds/pigeon.json
 [source,json]
