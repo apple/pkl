@@ -17,7 +17,7 @@ package org.pkl.core;
 
 /** Information about the Pkl package index. */
 public final class PklInfo {
-  private static final String PACKAGE_INDEX_HOMEPAGE = "https://pkl-lang.org/package-docs";
+  private static final String PACKAGE_INDEX_HOMEPAGE = "https://pkl-lang.org/package-docs/";
 
   private static final PklInfo CURRENT;
   private final PackageIndex packageIndex;
