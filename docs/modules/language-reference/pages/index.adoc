@@ -844,7 +844,7 @@ The resulting dynamic object is equivalent to `dodo`, except that it no longer h
 [IMPORTANT]
 .Lazy vs. Eager Data Types
 ====
-Converting an object to a map is a transitition from a _lazy_ to an _eager_ data type.
+Converting an object to a map is a transition from a _lazy_ to an _eager_ data type.
 All of the object's properties are evaluated and all references between them are resolved.
 
 If the map is later converted back to an object, subsequent changes to the object's properties no longer propagate to (previously) dependent properties.
@@ -1485,7 +1485,7 @@ reversedbirds = birds
 [IMPORTANT]
 .Lazy vs. Eager Data Types
 ====
-Converting a listing to a list is a transitition from a _lazy_ to an _eager_ data type.
+Converting a listing to a list is a transition from a _lazy_ to an _eager_ data type.
 All of the listing's elements are evaluated and all references between them are resolved.
 
 If the list is later converted back to a listing, subsequent changes to the listing's elements no longer propagate to (previously) dependent elements.
@@ -1865,7 +1865,7 @@ result = birds
 [IMPORTANT]
 .Lazy vs. Eager Data Types
 ====
-Converting a mapping to a map is a transitition from a _lazy_ to an _eager_ data type.
+Converting a mapping to a map is a transition from a _lazy_ to an _eager_ data type.
 All of the mapping's values are evaluated and all references between them are resolved.
 (Mapping keys are eagerly evaluated.)
 
