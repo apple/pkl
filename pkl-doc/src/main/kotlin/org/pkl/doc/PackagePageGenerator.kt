@@ -86,7 +86,7 @@ internal class PackagePageGenerator(
   }
 
   // example output:
-  // package io.k8s (befa7c51) • Pkl Hub
+  // package pkg.pkl-lang.org/pkl-k8s/k8s (1.0.0) • Package Docs
   override fun HTMLTag.renderPageTitle() {
     +pageScope.name
     +" ("
