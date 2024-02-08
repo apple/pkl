@@ -95,6 +95,11 @@ open class BuildInfo(project: Project) {
     java.lang.Boolean.getBoolean("releaseBuild")
   }
 
+  val hasMuslToolchain: Boolean by lazy {
+    // see "install musl" in .circleci/jobs/BuildNativeJob.pkl
+    File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
+  }
+
   val os: org.gradle.internal.os.OperatingSystem by lazy {
     org.gradle.internal.os.OperatingSystem.current()
   }
