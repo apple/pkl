@@ -1,8 +1,47 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.25.2]]
+== 0.25.2 (2024-02-08)
+
+=== Fixes
+
+* Fixes some issues with generated pkldoc websites (link:https://github.com/apple/pkl/pull/70[#70],
+link:https://github.com/apple/pkl/pull/81[#81], link:https://github.com/apple/pkl/pull/96[#96])
+* Removes errorneously published artifact called "pkl-cli" (link:https://github.com/apple/pkl/pull/98[#98])
+* Fixes an issue where a PklBugException produces an incorrect URL to file issues (link:https://github.com/apple/pkl/pull/73[#73])
+
+=== Miscellaneous
+
+* Documentation fixes (link:https://github.com/apple/pkl/pull/21[#21], link:https://github.com/apple/pkl/pull/29[#29], link:https://github.com/apple/pkl/pull/41[#41], link:https://github.com/apple/pkl/pull/44[#44], link:https://github.com/apple/pkl/pull/51[#51], link:https://github.com/apple/pkl/pull/57[#57], link:https://github.com/apple/pkl/pull/60[#60], link:https://github.com/apple/pkl/pull/64[#64], link:https://github.com/apple/pkl/pull/68[#68], link:https://github.com/apple/pkl/pull/74[#74], link:https://github.com/apple/pkl/pull/77[#77], link:https://github.com/apple/pkl/pull/78[#78], link:https://github.com/apple/pkl/pull/82[#82], link:https://github.com/apple/pkl/pull/84[#84], link:https://github.com/apple/pkl/pull/86[#86], link:https://github.com/apple/pkl/pull/89[#89], link:https://github.com/apple/pkl/pull/91[#91])
+* Build script improvements (https://github.com/apple/pkl/pull/53[#53], link:https://github.com/apple/pkl/pull/83[#83])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/uhooi[@uhooi]
+* link:https://github.com/mnin[@mnin]
+* link:https://github.com/TinkoLiu[@TinkoLiu]
+* link:https://github.com/shufanhao[@shufanhao]
+* link:https://github.com/pfeilbr[@pfeilbr]
+* link:https://github.com/KadoBOT[@KadoBOT]
+* link:https://github.com/KushalP[@KushalP]
+* link:https://github.com/translatenix[@translatenix]
+* link:https://github.com/Edward-Knight[@Edward-Knight]
+* link:https://github.com/jamesward[@jamesward]
+* link:https://github.com/shubhgng[@shubhgng]
+* link:https://github.com/hayashikun[@hayashikun]
+* link:https://github.com/lanzafame[@lanzafame]
+* link:https://github.com/igmrrf[@igmrrf]
+* link:https://github.com/kelvinelove[@kelvinelove]
+* link:https://github.com/lilyball[@lilyball]
+* link:https://github.com/maiph[@maiph]
+
 [[release-0.25.1]]
 == 0.25.1 (2024-02-01)
+
+=== Fixes
 
 * Fixes an issue where pkl-tools fat jar is empty.
 
