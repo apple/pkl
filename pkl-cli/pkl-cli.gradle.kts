@@ -17,6 +17,17 @@ plugins {
 // make Java executable available to other subprojects
 val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
 
+publishing {
+  publications {
+    named<MavenPublication>("library") {
+      pom {
+        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
+        description.set("Pkl CLI Java library.")
+      }
+    }
+  }
+}
+
 val stagedMacAmd64Executable: Configuration by configurations.creating
 val stagedMacAarch64Executable: Configuration by configurations.creating
 val stagedLinuxAmd64Executable: Configuration by configurations.creating
