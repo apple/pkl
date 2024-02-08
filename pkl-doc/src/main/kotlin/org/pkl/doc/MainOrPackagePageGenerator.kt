@@ -70,7 +70,11 @@ internal abstract class MainOrPackagePageGenerator<S>(
                 } else {
                   link
                 }
-              +name
+              if (moduleOrPackageScope is ModuleScope) {
+                +name.asModuleName
+              } else {
+                +name
+              }
             }
           }
 

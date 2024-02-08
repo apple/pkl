@@ -23,7 +23,6 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.isSameFileAs
 import org.pkl.commons.deleteRecursively
-import org.pkl.commons.toUri
 import org.pkl.core.ModuleSchema
 import org.pkl.core.PClassInfo
 import org.pkl.core.Version
@@ -180,7 +179,7 @@ internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<
         mod,
         docPackageInfo.version,
         docPackageInfo.getModuleImportUri(mod.moduleName),
-        docPackageInfo.getModuleSourceCode(mod.moduleName)?.toUri(),
+        docPackageInfo.getModuleSourceCode(mod.moduleName)?.toEncodedUri(),
         exampleModulesBySubject[mod.moduleName] ?: listOf()
       )
     }
