@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A YAML 1.2 compliant YAML parser.
-@ModuleInfo { minPklVersion = "0.25.1" }
+@ModuleInfo { minPklVersion = "0.25.2" }
 module pkl.yaml
 
 /// A YAML parser.

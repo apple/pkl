@@ -36,7 +36,7 @@
 ///
 /// Warning: Although this module is ready for initial use,
 /// benchmark results may be inaccurate or inconsistent.
-@ModuleInfo { minPklVersion = "0.25.1" }
+@ModuleInfo { minPklVersion = "0.25.2" }
 module pkl.Benchmark
 
 import "pkl:platform" as _platform

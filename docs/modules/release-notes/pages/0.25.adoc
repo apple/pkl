@@ -1,6 +1,6 @@
 = Pkl 0.25 Release Notes
 :version: 0.25
-:version-minor: 0.25.1
+:version-minor: 0.25.2
 :release-date: February 1st, 2024
 
 Pkl {version} was released on {release-date}. +

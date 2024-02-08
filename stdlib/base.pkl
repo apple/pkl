@@ -17,7 +17,7 @@
 /// Fundamental properties, methods, and classes for writing Pkl programs.
 ///
 /// Members of this module are automatically available in every Pkl module.
-@ModuleInfo { minPklVersion = "0.25.1" }
+@ModuleInfo { minPklVersion = "0.25.2" }
 module pkl.base
 
 import "pkl:jsonnet"
@@ -195,7 +195,7 @@ class SourceCode extends Annotation {
 /// before the `module`, `amends`, or `extends` keyword, whichever comes first.
 ///
 /// ```
-/// @ModuleInfo { minPklVersion = "1.2.3"; author = "author@apple.com" }
+/// @ModuleInfo { minPklVersion = "1.2.3" }
 /// module myModule
 /// ```
 ///
