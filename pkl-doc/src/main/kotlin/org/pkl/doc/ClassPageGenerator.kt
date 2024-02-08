@@ -116,7 +116,7 @@ internal class ClassPageGenerator(
   }
 
   // example output:
-  // class HostAlias (io.k8s/api/core/v1/PodSpec:befa7c51) • Pkl Hub
+  // HostAlias (pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0) • Package Docs
   override fun HTMLTag.renderPageTitle() {
     val classScope = pageScope
     val moduleScope = classScope.parent!!
