@@ -15,12 +15,12 @@
 //===----------------------------------------------------------------------===//
 extends "GradleJob.pkl"
 
-import ".../pkl-pantry/packages/com.circleci.v2/CircleCI.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.0.0#/Config.pkl"
 
 javaVersion: "11.0"|"17.0"
 
 steps {
-  new CircleCI.RunStep {
+  new Config.RunStep {
     name = "gradle check"
     command = "./gradlew \(module.gradleArgs) check"
   }
