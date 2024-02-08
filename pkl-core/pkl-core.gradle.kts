@@ -256,7 +256,7 @@ val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
 }
 
 val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64"
+  enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain
   dependsOn(":pkl-cli:alpineExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
