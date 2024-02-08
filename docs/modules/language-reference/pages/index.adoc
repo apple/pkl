@@ -991,6 +991,7 @@ class Bird {
 
 pigeon = new Bird { // <3>
   name = "Pigeon"
+  lifespan = 8
 }
 
 pigeonInIndex = pigeon.nameAndLifespanInIndex // <4>
@@ -1012,7 +1013,7 @@ pigeon {
   lifespan = 8
   nameSignWidth = 9
 }
-pigeonInIndex = "Pigeon, 5"
+pigeonInIndex = "Pigeon, 8"
 pigeonDynamic {
   name = "Pigeon"
   lifespan = 8
