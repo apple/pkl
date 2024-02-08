@@ -1,8 +1,8 @@
 = pkl-config-kotlin Library
 include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-config-kotlin-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-config-kotlin
-:uri-pkl-config-kotlin-main-sources: {uri-github-tree}/pkl-config-kotlin/src/main/kotlin/org/pkl/kotlin
-:uri-pkl-config-kotlin-test-sources: {uri-github-tree}/pkl-config-kotlin/src/test/kotlin/org/pkl/kotlin
+:uri-pkl-config-kotlin-main-sources: {uri-github-tree}/pkl-config-kotlin/src/main/kotlin/org/pkl/config/kotlin
+:uri-pkl-config-kotlin-test-sources: {uri-github-tree}/pkl-config-kotlin/src/test/kotlin/org/pkl/config/kotlin
 :uri-pkl-config-kotlin-ConverterFactories: {uri-pkl-config-kotlin-main-sources}/ConverterFactories.kt
 :uri-pkl-config-kotlin-ConfigExtensions: {uri-pkl-config-kotlin-main-sources}/ConfigExtensions.kt
 

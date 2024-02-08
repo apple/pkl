@@ -2,7 +2,7 @@
 include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-core-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-core
 :uri-pkl-core-main-sources: {uri-github-tree}/pkl-core/src/main/java/org/pkl/core
-:uri-pkl-core-test-sources: {uri-github-tree}/pkl-core/src/test/java/org/pkl/core
+:uri-pkl-core-test-sources: {uri-github-tree}/pkl-core/src/test/kotlin/org/pkl/core
 :uri-pkl-core-Evaluator: {uri-pkl-core-main-sources}/Evaluator.java
 :uri-pkl-core-PModule: {uri-pkl-core-main-sources}/PModule.java
 :uri-pkl-core-PklException: {uri-pkl-core-main-sources}/PklException.java

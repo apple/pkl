@@ -1,6 +1,6 @@
 = pkl-config-java Library
 include::ROOT:partial$component-attributes.adoc[]
-:uri-pkl-core-EvalException: {uri-pkl-core-main-sources}/EvalException.java
+:uri-pkl-core-PklException: {uri-pkl-core-main-sources}/PklException.java
 
 :uri-pkl-config-java-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-config-java-all
 :uri-pkl-config-java-main-sources: {uri-github-tree}/pkl-config-java/src/main/java/org/pkl/config/java
@@ -15,8 +15,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-config-java-ConverterFactories: {uri-pkl-config-java-main-sources}/mapper/ConverterFactories.java
 :uri-pkl-config-java-Converter: {uri-pkl-config-java-main-sources}/mapper/Converter.java
 :uri-pkl-config-java-ConverterFactory: {uri-pkl-config-java-main-sources}/mapper/ConverterFactory.java
-:uri-pkl-config-java-PObjectToObjectByCtorTestJava: {uri-pkl-config-java-test-sources}/mapper/PObjectToObjectByCtorTest.java
-:uri-pkl-config-java-PObjectToObjectByCtorTestPkl: {uri-pkl-config-java-test-resources}/mapper/PObjectToObjectByCtorTest.pkl
+:uri-pkl-config-java-PObjectToDataObjectTestJava: {uri-pkl-config-java-test-sources}/mapper/PObjectToDataObjectTest.java
 
 The _pkl-config-java_ library builds upon xref:pkl-core:index.adoc[pkl-core].
 It offers a higher-level API specifically designed for consuming application runtime configuration.
@@ -100,7 +99,7 @@ Unlike `pkl-config-java`, `pkl-config-java__-all__` is a fat Jar with renamed th
 
 The {uri-pkl-config-java-ConfigEvaluator}[`ConfigEvaluator`] class loads and evaluates Pkl modules.
 If evaluation succeeds, a {uri-pkl-config-java-Config}[`Config`] object is returned.
-Otherwise, an {uri-pkl-core-EvalException}[`EvalException`] with error details is thrown.
+Otherwise, a {uri-pkl-core-PklException}[`PklException`] with error details is thrown.
 
 The returned `Config` object represents the root of the Pkl configuration tree.
 Intermediate and leaf nodes are also represented as `Config` objects.
@@ -124,7 +123,7 @@ In this example, this is done with a try-with-resources statement.
 Note that objects returned by the evaluator remain valid after calling `close()`.
 <2> Evaluate the given text.
 Other `evaluate` methods read from files, URLs, and other sources.
-If evaluation fails, an {uri-pkl-core-EvalException}[`EvalException`] is thrown.
+If evaluation fails, an {uri-pkl-core-PklException}[`PklException`] is thrown.
 <3> Navigate from the config root to its `"pigeon"` child.
 <4> Navigate from `"pigeon"` to `"age"` and get the latter's value as an `int`.
 If conversion to the requested type fails, a `ConversionException` is thrown.
@@ -136,7 +135,7 @@ A `ConfigEvaluator` caches module sources and evaluation results.
 To clear the cache, for example to evaluate the same module again, close the evaluator and create a new one.
 
 For a ready-to-go example with full source code,
-see link:{uri-config-java-example}[config-java] in the _pkl/pkl-examples_ repository.
+see link:{uri-config-java-example}[config-java] in the _pkl-jvm-examples_ repository.
 
 [[object-mapping]]
 === Object Mapping
@@ -182,7 +181,7 @@ They need to be provided in one of the following ways:
 
 For a complete object mapping example, see:
 
-* {uri-pkl-config-java-PObjectToObjectByCtorTestJava}[`PObjectToObjectByCtorTest.java`]
+* {uri-pkl-config-java-PObjectToDataObjectTestJava}[`PObjectToDataObjectTest.java`]
 
 TIP: Together with xref:java-binding:codegen.adoc[code generation], object mapping provides a complete solution for consuming Pkl configuration as statically typed Java objects.
 Java code never drifts from the configuration structure defined in Pkl, and the entire configuration tree can be code-completed in Java IDEs.
