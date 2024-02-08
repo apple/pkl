@@ -47,7 +47,7 @@ internal class ModulePageGenerator(
         h1 {
           id = "declaration-title"
 
-          +docModule.name
+          +docModule.name.asModuleName
 
           span {
             id = "declaration-version"
@@ -87,7 +87,7 @@ internal class ModulePageGenerator(
             span {
               classes = setOf("name-decl")
 
-              +docModule.name
+              +docModule.name.asModuleName
             }
 
             renderModuleAmendsOrExtendsClause(module)

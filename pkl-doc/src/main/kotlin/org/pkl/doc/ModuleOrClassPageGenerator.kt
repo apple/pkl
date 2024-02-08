@@ -99,7 +99,7 @@ internal abstract class ModuleOrClassPageGenerator<S>(
                   span {
                     classes = setOf("name-decl")
 
-                    +propertyName
+                    +propertyName.asIdentifier
                   }
 
                   +": "
@@ -210,7 +210,7 @@ internal abstract class ModuleOrClassPageGenerator<S>(
                   span {
                     classes = setOf("name-decl")
 
-                    +method.simpleName
+                    +method.simpleName.asIdentifier
                   }
 
                   renderTypeParameters(method.typeParameters)

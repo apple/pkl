@@ -365,13 +365,13 @@ public final class IoUtils {
       return uri;
     }
 
-    var basePath = Path.of(base.getRawPath());
+    var basePath = Path.of(base.getPath());
     if (!base.getRawPath().endsWith("/")) basePath = basePath.getParent();
-    var resultPath = basePath.relativize(Path.of(uri.getRawPath()));
+    var resultPath = basePath.relativize(Path.of(uri.getPath()));
 
     try {
       return new URI(
-          null, null, null, -1, resultPath.toString(), uri.getRawQuery(), uri.getRawFragment());
+          null, null, null, -1, resultPath.toString(), uri.getQuery(), uri.getFragment());
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException(e);
     }
