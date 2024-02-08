@@ -2,7 +2,7 @@ amends "pkl:DocPackageInfo"
 
 name = "com.externalpackage"
 version = "1.2.3"
-importUri = "https://pkl.io/"
+importUri = "https://example.com/"
 authors {
   "publisher-externalpackage@group.apple.com"
 }

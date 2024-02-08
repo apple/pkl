@@ -163,7 +163,7 @@
 //            Arrays.asList("file:///pkl/.*", "https://.*\\.apple\\.com"));
 //
 //    resolver.resolve("file:///pkl/foo.pkl", fileUrlModule, sourceSection);
-//    resolver.resolve("https://pkl.io/foo.pkl", fileUrlModule, sourceSection);
+//    resolver.resolve("https://example.com/foo.pkl", fileUrlModule, sourceSection);
 //  }
 //
 //  @Test(expected = EvalException.class)

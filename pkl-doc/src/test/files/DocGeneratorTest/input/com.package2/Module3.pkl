@@ -1,6 +1,9 @@
 module com.package2.Module3
 
+/// Something something [`property {} <> four`]
 property3: String
+
+`property {} <> four`: String
 
 function function3(n: Int): String = n.toString()
 
@@ -8,4 +11,8 @@ class Class3 {
   property3: String
 
   function function3(n: Int): String = n.toString()
+}
+
+class `Class Two {}` {
+  prop: String
 }

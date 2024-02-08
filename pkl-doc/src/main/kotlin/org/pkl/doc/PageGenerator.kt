@@ -268,12 +268,12 @@ internal abstract class PageGenerator<out S>(
       a {
         href = targetScope.urlRelativeTo(pageScope).toString()
         classes = setOf(cssClass)
-        +clazz.simpleDisplayName
+        +clazz.simpleDisplayName.asIdentifier
       }
     } else {
       span {
         classes = setOf(cssClass)
-        +clazz.simpleDisplayName
+        +clazz.simpleDisplayName.asIdentifier
       }
     }
   }
@@ -289,12 +289,12 @@ internal abstract class PageGenerator<out S>(
       a {
         href = targetScope.urlRelativeTo(pageScope).toString()
         classes = setOf(cssClass)
-        +typeAlias.simpleName
+        +typeAlias.simpleName.asIdentifier
       }
     } else {
       span {
         classes = setOf(cssClass)
-        +typeAlias.simpleName
+        +typeAlias.simpleName.asIdentifier
       }
     }
   }
@@ -426,7 +426,7 @@ internal abstract class PageGenerator<out S>(
   // anchors, and requires no JS
   protected fun HtmlBlockTag.renderAnchor(anchorId: String, cssClass: String = "anchor") {
     div {
-      id = anchorId
+      id = anchorId.uriEncoded
       classes = setOf(cssClass)
       +" " // needs some content to be considered a valid anchor by browsers
     }
@@ -457,7 +457,7 @@ internal abstract class PageGenerator<out S>(
   protected fun HtmlBlockTag.renderSelfLink(memberName: String) {
     a {
       classes = setOf("member-selflink", "material-icons")
-      href = "#$memberName"
+      href = "#${memberName.uriEncoded}"
       +"link"
     }
   }
