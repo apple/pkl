@@ -119,6 +119,15 @@ internal fun String.replaceSourceCodePlaceholders(
     .replace("%{endLine}", sourceLocation.endLine.toString())
 }
 
+internal val String.xmlSafe
+  get(): String =
+    replace("&", "&amp;")
+      .replace(">", "&gt;")
+      .replace("<", "&lt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&apos;")
+      .replace("\"", "&quot;")
+
 internal val String.uriEncoded
   get(): String {
     val ret = URLEncoder.encode(this, StandardCharsets.UTF_8)
