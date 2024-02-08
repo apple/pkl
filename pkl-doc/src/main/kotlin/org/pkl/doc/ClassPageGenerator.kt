@@ -41,7 +41,7 @@ internal class ClassPageGenerator(
 
         h1 {
           id = "declaration-title"
-          +clazz.simpleName
+          +clazz.simpleName.asIdentifier
 
           span {
             id = "declaration-version"
@@ -98,7 +98,7 @@ internal class ClassPageGenerator(
             span {
               classes = setOf("name-decl")
 
-              +clazz.simpleName
+              +clazz.simpleName.asIdentifier
             }
 
             renderTypeParameters(clazz.typeParameters)

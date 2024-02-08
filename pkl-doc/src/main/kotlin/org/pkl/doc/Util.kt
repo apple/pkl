@@ -16,11 +16,15 @@
 package org.pkl.doc
 
 import java.io.InputStream
+import java.net.URI
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.outputStream
 import org.pkl.commons.createParentDirectories
 import org.pkl.core.*
+import org.pkl.core.parser.Lexer
 import org.pkl.core.util.json.JsonWriter
 
 // overwrites any existing file
@@ -114,3 +118,32 @@ internal fun String.replaceSourceCodePlaceholders(
     .replace("%{line}", sourceLocation.startLine.toString())
     .replace("%{endLine}", sourceLocation.endLine.toString())
 }
+
+internal val String.uriEncoded
+  get(): String {
+    val ret = URLEncoder.encode(this, StandardCharsets.UTF_8)
+    // Replace `+` with `%20` to be safe
+    // (see
+    // https://stackoverflow.com/questions/2678551/when-should-space-be-encoded-to-plus-or-20#:~:text=%20%20is%20a%20valid%20way,encodeURIComponent()%20does%20in%20JavaScript.)
+    return ret.replace("+", "%20")
+  }
+
+internal val String.uriEncodedPath
+  get(): String = split("/").map { it.uriEncoded }.joinToString("/") { it }
+
+fun getModulePath(moduleName: String, packagePrefix: String): String =
+  moduleName.substring(packagePrefix.length).replace('.', '/')
+
+internal fun String.toEncodedUri(): URI = URI(uriEncodedPath)
+
+/**
+ * Turns `"foo.bar.baz-biz"` into ``"foo.bar.`baz-biz`"``.
+ *
+ * There's a chance that this is wrong; a module might look like: ``"module foo.`bar.baz`.biz"``.
+ * However, we don't keep around enough information to render this faithfully.
+ */
+internal val String.asModuleName: String
+  get() = split(".").map(Lexer::maybeQuoteIdentifier).joinToString(".") { it }
+
+internal val String.asIdentifier: String
+  get() = Lexer.maybeQuoteIdentifier(this)

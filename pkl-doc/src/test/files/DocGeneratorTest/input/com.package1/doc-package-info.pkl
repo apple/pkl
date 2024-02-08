@@ -17,7 +17,7 @@ import "../com.externalpackage/external1.pkl"
 
 name = "com.package1"
 version = "1.2.3"
-importUri = "https://pkl.io/"
+importUri = "https://example.com/"
 authors {
   "package1-publisher@group.apple.com"
 }

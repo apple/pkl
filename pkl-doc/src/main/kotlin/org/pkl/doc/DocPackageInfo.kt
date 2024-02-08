@@ -159,7 +159,14 @@ data class DocPackageInfo(
   internal fun getModuleImportUri(moduleName: String): URI =
     when (importUri) {
       "pkl:/" -> "pkl:${moduleName.substring(4)}".toUri()
-      else -> "$importUri${getModulePath(moduleName, moduleNamePrefix)}.pkl".toUri()
+      else -> {
+        val path =
+          getModulePath(moduleName, moduleNamePrefix)
+            .split("/")
+            .map { it.uriEncoded }
+            .joinToString("/") { it } + ".pkl"
+        URI(importUri).resolve(path)
+      }
     }
 
   internal fun getModuleSourceCode(moduleName: String): String? {
@@ -167,9 +174,6 @@ data class DocPackageInfo(
     // assumption: the fragment is only used for line numbers
     return sourceCodeUrlScheme?.replace("%{path}", path)?.substringBefore('#')
   }
-
-  private fun getModulePath(moduleName: String, packagePrefix: String): String =
-    moduleName.substring(packagePrefix.length).replace('.', '/')
 
   /** Information about a depended-on package. */
   data class PackageDependency(
