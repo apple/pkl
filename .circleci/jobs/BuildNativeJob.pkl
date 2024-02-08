@@ -16,9 +16,8 @@
 /// Builds the native `pkl` CLI
 extends "GradleJob.pkl"
 
-// TODO(oss) replace these with package imports
-import ".../pkl-pantry/packages/com.circleci.v2/CircleCI.pkl"
-import ".../pkl-pantry/packages/pkl.experimental.uri/URI.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.0.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0#/URI.pkl"
 
 /// The OS to run on
 os: "macOS"|"linux"
@@ -29,7 +28,7 @@ arch: "amd64"|"aarch64"
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean = false
 
-local setupLinuxEnvironment: CircleCI.RunStep =
+local setupLinuxEnvironment: Config.RunStep =
   let (jdkVersion = "11.0.20.1+1")
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
@@ -96,12 +95,12 @@ local setupLinuxEnvironment: CircleCI.RunStep =
 
 steps {
   when (os == "linux") {
-    new CircleCI.RestoreCacheStep {
+    new Config.RestoreCacheStep {
       name = "Restore static deps from cache"
       key = "staticdeps-\(arch)"
     }
     setupLinuxEnvironment
-    new CircleCI.SaveCacheStep {
+    new Config.SaveCacheStep {
       name = "Save statics deps to cache"
       key = "staticdeps-\(arch)"
       paths {
@@ -110,7 +109,7 @@ steps {
     }
   }
   when (os == "macOS" && arch == "amd64") {
-    new CircleCI.RunStep {
+    new Config.RunStep {
       name = "Installing Rosetta 2"
       command = """
         /usr/sbin/softwareupdate --install-rosetta --agree-to-license
@@ -121,11 +120,11 @@ steps {
   // We can't use GraalVM 23 for any other build because we need to support Java 11, which was
   // dropped in GraalVM 23.
   when (os == "macOS" && arch == "aarch64") {
-    new CircleCI.RunStep {
+    new Config.RunStep {
       command = "git apply patches/graalVm23.patch"
     }
   }
-  new CircleCI.RunStep {
+  new Config.RunStep {
     name = "gradle buildNative"
     local _os =
       if (os == "macOS") "mac"
@@ -137,7 +136,7 @@ steps {
       ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize())
       """#
   }
-  new CircleCI.PersistToWorkspaceStep {
+  new Config.PersistToWorkspaceStep {
     root = "."
     paths {
       "pkl-cli/build/executable/"

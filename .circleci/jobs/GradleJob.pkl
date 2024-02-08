@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 abstract module GradleJob
 
-import ".../pkl-pantry/packages/com.circleci.v2/CircleCI.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.0.0#/Config.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
@@ -28,16 +28,16 @@ fixed gradleArgs = new Listing {
   }
 }.join(" ")
 
-steps: Listing<CircleCI.Step>
+steps: Listing<Config.Step>
 
-job: CircleCI.Job = new {
+job: Config.Job = new {
   environment {
     ["LANG"] = "en_US.UTF-8"
   }
   steps {
     "checkout"
     ...module.steps
-    new CircleCI.RunStep {
+    new Config.RunStep {
       // find all test results and write them to the home dir
       name = "Gather test results"
       command = """
@@ -46,7 +46,7 @@ job: CircleCI.Job = new {
         """
       `when` = "always"
     }
-    new CircleCI.StoreTestResults {
+    new Config.StoreTestResults {
       path = "~/test-results"
     }
   }
