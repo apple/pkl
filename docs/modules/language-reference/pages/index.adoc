@@ -2169,7 +2169,7 @@ A package is a shareable archive of modules and resources that are published to 
 
 To import `package://example.com/mypackage@1.0.0#/my_module.pkl`, Pkl follows these steps:
 
-1. Make an HTTPS GET request to `https://example.com/mypackage@1.0.0` to retrieve the package's metadata.
+1. Make an HTTPS GET request to `\https://example.com/mypackage@1.0.0` to retrieve the package's metadata.
 2. From the package metadata, download the referenced zip archive, and validate its checksum.
 3. Resolve path `/my_module.pkl` within the package's zip archive.
 

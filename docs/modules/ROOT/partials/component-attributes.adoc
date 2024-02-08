@@ -21,7 +21,7 @@ ifdef::is-release-version[]
 :pkl-artifact-version: {pkl-version}
 endif::[]
 
-:uri-maven-docsite: https://central.sonatype.com/
+:uri-maven-docsite: https://central.sonatype.com
 
 :uri-sonatype: https://s01.oss.sonatype.org/content/groups/public
 
