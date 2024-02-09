@@ -8,7 +8,6 @@ include::ROOT:partial$component-attributes.adoc[]
 
 * Fixes some issues with generated pkldoc websites (link:https://github.com/apple/pkl/pull/70[#70],
 link:https://github.com/apple/pkl/pull/81[#81], link:https://github.com/apple/pkl/pull/96[#96])
-* Removes errorneously published artifact called "pkl-cli" (link:https://github.com/apple/pkl/pull/98[#98])
 * Fixes an issue where a PklBugException produces an incorrect URL to file issues (link:https://github.com/apple/pkl/pull/73[#73])
 
 === Miscellaneous
