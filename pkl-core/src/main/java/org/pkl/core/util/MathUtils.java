@@ -63,7 +63,7 @@ public final strictfp class MathUtils {
    * Long.bitCount(Long.MIN_VALUE) == 1}, but {@link Long#MIN_VALUE} is not a power of two.
    */
   public static boolean isPowerOfTwo(long x) {
-    return x > 0 & (x & (x - 1)) == 0;
+    return x > 0 && (x & (x - 1)) == 0;
   }
 
   /**
