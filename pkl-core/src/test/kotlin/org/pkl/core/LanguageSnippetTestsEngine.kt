@@ -1,5 +1,9 @@
 package org.pkl.core
 
+import org.junit.platform.engine.EngineDiscoveryRequest
+import org.junit.platform.engine.TestDescriptor
+import org.junit.platform.engine.UniqueId
+import org.junit.platform.engine.support.descriptor.EngineDescriptor
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.project.Project
@@ -7,6 +11,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
@@ -137,6 +142,15 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
     Regex(".*/import1b\\.pkl"),
   )
 
+  override fun discover(discoveryRequest: EngineDiscoveryRequest, uniqueId: UniqueId): TestDescriptor {
+    if (!pklExecutablePath.exists()) {
+      // return empty descriptor w/o children
+      return EngineDescriptor(uniqueId, javaClass.simpleName)
+    }
+    
+    return super.discover(discoveryRequest, uniqueId)
+  }
+  
   override fun generateOutputFor(inputFile: Path): kotlin.Pair<Boolean, String> {
     val args = buildList {
       add(pklExecutablePath.toString())
