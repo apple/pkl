@@ -58,11 +58,11 @@ parrot {
 }
 ----
 
-[IMPORTANT]
+[NOTE]
 ====
-_Amending_ does not allow us to _add_ properties to the (typed) object we are amending.
+So far, we have only worked with link:{uri-stdlib-Dynamic}[Dynamic] objects. The other type available to us is link:{uri-stdlib-Typed}[Typed] objects. _Amending_ allows us to override, amend, and add new properties to a dynamic object, but a typed object will only let us amend or override existing properties, not add entirely new ones.
 The xref:03_writing_a_template.adoc[next part of the tutorial] discusses types in more detail.
-There, you see that amending _never changes the type_ of the object.
+There, you see that amending _never changes the type_ of a typed object.
 ====
 
 You can also amend nested objects.
