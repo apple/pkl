@@ -32,7 +32,7 @@ parrot = (bird) {
 }
 ----
 
-Parrot and Pigeon have nearly identical properties.
+`parrot` and `bird` have nearly identical properties.
 They only differ in their name and taxonomy, so if you have already written out `bird`, you can say that `parrot` is just like `pigeon` except `name` is `"Parrot"`, diet is `"Berries"` the `taxonomy.order` is `"Psittaciformes"`.
 When you run this, Pkl expands everything fully.
 
