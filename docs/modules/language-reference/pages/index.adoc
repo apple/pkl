@@ -685,7 +685,7 @@ dodo {
 As you probably guessed, the nested property `class` can be accessed with `dodo.taxonomy.class`.
 
 Like all values, objects are _immutable_, which is just a fancy (and short!) way to say that their properties never change.
-So what happens when Pigeon moves to a different street? Do we have to construct a new object from scratch?
+So what happens when dodo moves to a different street? Do we have to construct a new object from scratch?
 
 [[amending-objects]]
 === Amending Objects
