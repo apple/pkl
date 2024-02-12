@@ -36,11 +36,14 @@ dependencies {
   compile "org.pkl-lang:pkl-codegen-kotlin:{pkl-artifact-version}"
 }
 
-ifndef::is-release-build[]
 repositories {
-  maven { url "{uri-sonatype}" }
-}
+ifdef::is-release-version[]
+  mavenCentral()
 endif::[]
+ifndef::is-release-version[]
+  maven { url "{uri-sonatype}" }
+endif::[]
+}
 ----
 
 Kotlin::
@@ -52,11 +55,14 @@ dependencies {
   compile("org.pkl-lang:pkl-codegen-kotlin:{pkl-artifact-version}")
 }
 
-ifndef::is-release-build[]
 repositories {
-  maven { url = uri("{uri-sonatype}") }
-}
+ifdef::is-release-version[]
+  mavenCentral()
 endif::[]
+ifndef::is-release-version[]
+  maven { url = uri("{uri-sonatype}") }
+endif::[]
+}
 ----
 ====
 

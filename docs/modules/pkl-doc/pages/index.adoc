@@ -95,11 +95,14 @@ dependencies {
   compile "org.pkl-lang:pkl-doc:{pkl-artifact-version}"
 }
 
-ifndef::is-release-build[]
 repositories {
-  maven { url "{uri-sonatype}" }
-}
+ifdef::is-release-version[]
+  mavenCentral()
 endif::[]
+ifndef::is-release-version[]
+  maven { url "{uri-sonatype}" }
+endif::[]
+}
 ----
 
 Kotlin::
@@ -111,11 +114,14 @@ dependencies {
   compile("org.pkl-lang:pkl-doc:{pkl-artifact-version}")
 }
 
-ifndef::is-release-build[]
 repositories {
-  maven { url = uri("{uri-sonatype}") }
-}
+ifdef::is-release-version[]
+  mavenCentral()
 endif::[]
+ifndef::is-release-version[]
+  maven { url = uri("{uri-sonatype}") }
+endif::[]
+}
 ----
 ====
 
@@ -132,7 +138,7 @@ To use the library in a Maven project, declare the following dependency:
     <artifactId>pkl-doc</artifactId>
     <version>{pkl-artifact-version}</version>
   </dependency>
-ifndef::is-release-build[]
+ifndef::is-release-version[]
   <repositories>
     <repository>
       <id>sonatype-s01</id>

@@ -47,10 +47,10 @@ plugins {
 ----
 pluginManagement {
     repositories {
-ifdef::is-release-build[]
+ifdef::is-release-version[]
         mavenCentral()
 endif::[]
-ifndef::is-release-build[]
+ifndef::is-release-version[]
         maven { url "{uri-sonatype}" }
 endif::[]
     }
@@ -72,10 +72,10 @@ plugins {
 ----
 pluginManagement {
     repositories {
-ifdef::is-release-build[]
+ifdef::is-release-version[]
         mavenCentral()
 endif::[]
-ifndef::is-release-build[]
+ifndef::is-release-version[]
         maven { url = uri("{uri-sonatype}") }
 endif::[]
     }
