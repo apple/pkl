@@ -7,7 +7,6 @@
 == Setup
 
 . (mandatory) Install {uri-jdk}[OpenJDK 11 HotSpot] (as long as we support JDK11)
-. (mandatory) Setup Gradle on your system
 . (recommended) Install {uri-intellij}[IntelliJ IDEA 2023.x] +
 To import the project into IntelliJ, go to File->Open and select the project's root directory.
 If the project is opened but not imported, look for a popup in the lower right corner
@@ -30,13 +29,16 @@ jenv enable-plugin export
 ----
 gw clean
 gw test
+gw spotlessApply # fix code formatting
 gw build         # build everything except native executables
 gw buildNative   # build macOS executable on macOS,
                  # Linux and Alpine executables on Linux
-gw pkldoc        # generate standard library docs
+                 # (Alpine executable is only built if ~/staticdeps/bin/musl-gcc exists)
 
-pkl-cli/build/executable/jpkl                # run Java executable
-pkl-cli/build/executable/pkl-macos-amd64     # run Mac executable
+pkl-cli/build/executable/jpkl                   # run Java executable
+pkl-cli/build/executable/pkl-macos-amd64        # run Mac executable
+pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
+pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
 ----
 
 == Update Gradle
