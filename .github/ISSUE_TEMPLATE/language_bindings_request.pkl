@@ -67,3 +67,10 @@ body {
     }
   }
 }
+
+output {
+  text = """
+    # This file is GENERATED and should not be edited manually.  Edit \(reflect.Module(module).name).pkl instead.
+    \(super.text)
+    """
+}
