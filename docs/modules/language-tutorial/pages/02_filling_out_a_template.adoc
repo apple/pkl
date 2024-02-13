@@ -372,7 +372,7 @@ pipelines {
 <1> There is no pipeline object to amend. The `new` keyword gives you an object to amend.
 
 So far, you've defined objects the same way you amended them.
-When the `name` didn't occur before, `new { ... }` _creates_ a property called `name` and assigns to it the object specified on the `Listing`.
+If the name `foo` didn't occur before, `foo { ... }` _creates_ a property called `foo` and assigns to it the contents in place of the `...` (given that `...` is not valid Pkl, but an abbreviation for illustration purposes).
 If `name` is an existing object, this notation is an _amend expression_; resulting in a new _object_ (value), but _not_ a new (named) property.
 Since `pipelines` is a listing, you can _add_ elements by writing expressions in an amend expression.
 
