@@ -142,6 +142,9 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
     Regex(".*/import1b\\.pkl"),
   )
 
+  /**
+   * Avoid running tests for native binaries when those native binaries have not been built.
+   */
   override fun discover(discoveryRequest: EngineDiscoveryRequest, uniqueId: UniqueId): TestDescriptor {
     if (!pklExecutablePath.exists()) {
       // return empty descriptor w/o children
