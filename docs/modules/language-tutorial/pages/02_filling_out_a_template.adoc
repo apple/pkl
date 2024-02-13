@@ -206,6 +206,8 @@ Going back to the example above, you can write `parrot` as a separate module.
 name = "Common wood pigeon"
 diet = "Seeds"
 taxonomy {
+  kingdom = "Animalia"
+  clade = "Dinosauria"
   species = "Columba palumbus"
 }
 ----
@@ -236,6 +238,8 @@ $ pkl eval /Users/me/tutorial/pigeon.pkl
 name = "Common wood pigeon"
 diet = "Seeds"
 taxonomy {
+  kingdom = "Animalia"
+  clade = "Dinosauria"
   species = "Columba palumbus"
 }
 
@@ -244,6 +248,8 @@ parrot {
   name = "Great green macaw"
   diet = "Berries"
   taxonomy {
+    kingdom = "Animalia"
+    clade = "Dinosauria"
     species = "Ara ambiguus"
   }
 }
