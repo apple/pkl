@@ -1,3 +1,4 @@
+import "pkl:reflect"
 name = "Output Format Request"
 description = "Request for a output format to be added to Pkl"
 title = "[Output Format Request]: "
@@ -66,4 +67,11 @@ body {
       required = false
     }
   }
+}
+
+output {
+  text = """
+    # This file is GENERATED and should not be edited manually.  Edit \(reflect.Module(module).name).pkl instead.
+    \(super.text)
+    """
 }

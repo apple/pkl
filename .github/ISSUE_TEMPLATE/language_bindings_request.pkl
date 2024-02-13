@@ -1,3 +1,4 @@
+import "pkl:reflect"
 name = "Language Bindings Request"
 description = "Request for Pkl bindings for a programming language."
 title = "[Bindings Request]: "
