@@ -136,6 +136,10 @@ public final class VmUtils {
     return result;
   }
 
+  public static void setReceiver(Frame frame, Object receiver) {
+    frame.getArguments()[0] = receiver;
+  }
+
   public static VmObjectLike getObjectReceiver(Frame frame) {
     return (VmObjectLike) getReceiver(frame);
   }
@@ -154,6 +158,10 @@ public final class VmUtils {
     var result = getOwnerOrNull(frame);
     assert result != null;
     return result;
+  }
+
+  public static void setOwner(Frame frame, VmObjectLike owner) {
+    frame.getArguments()[1] = owner;
   }
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */

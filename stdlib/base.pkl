@@ -1058,7 +1058,7 @@ external class Boolean extends Any {
 }
 
 /// A Unicode character (code point).
-typealias Char = String(this.length == 1) // `this.` works around rdar://75074742
+typealias Char = String(length == 1)
 
 /// A sequence of Unicode characters (code points).
 ///
