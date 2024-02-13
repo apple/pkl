@@ -39,7 +39,7 @@ When you run this, Pkl expands everything fully.
 [source,{pkl}]
 ----
 bird {
-  name = "Common wood pigeon"
+  name = "Pigeon"
   diet = "Seeds"
   taxonomy {
     kingdom = "Animalia"
@@ -230,7 +230,7 @@ parrot = (pigeon) {
   }
 }
 ----
-<1> Importing `foo.pkl` creates the object `foo`, so you can refer to `pigeon` in this code, like you did before.
+<1> Importing `pigeon.pkl` creates the object `pigeon`, so you can refer to `pigeon` in this code, like you did before.
 
 If you run Pkl on both, you will see that it works.
 Looking at the result, however, you see a (possibly) unexpected difference.
@@ -381,11 +381,11 @@ pipelines {
 <1> There is no pipeline object to amend. The `new` keyword gives you an object to amend.
 
 So far, you've defined objects the same way you amended them.
-When the name `foo` didn't occur before, `foo { ... }` _creates_ a property called `foo` and assigns to it the object specified on the `...`.
-If `foo` is an existing object, this notation is an _amend expression_; resulting in a new _object_ (value), but _not_ a new (named) property.
+When the `name` didn't occur before, `new { ... }` _creates_ a property called `name` and assigns to it the object specified on the `Listing`.
+If `name` is an existing object, this notation is an _amend expression_; resulting in a new _object_ (value), but _not_ a new (named) property.
 Since `pipelines` is a listing, you can _add_ elements by writing expressions in an amend expression.
 
-In this case, though, there is no object to amend. Writing `myNewPipeline { ... }` defines a _property_, but listings may only include _elements_.
+In this case, though, there is no object to amend. Writing `pipelines { ... }` defines a _property_, but listings may only include _elements_.
 This is where you can use the keyword `new`.
 
 `new` gives you an object to amend.
