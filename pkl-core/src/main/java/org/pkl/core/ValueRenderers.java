@@ -67,4 +67,15 @@ public final class ValueRenderers {
       Writer writer, boolean omitNullProperties, boolean restrictCharset) {
     return new PropertiesRenderer(writer, omitNullProperties, restrictCharset);
   }
+
+  /**
+   * Creates a renderer for INI file format. If {@code omitNullProperties} is {@code true}, object
+   * properties and map entries whose value is {@code null} will not be rendered. If {@code
+   * restrictCharset} is {@code true} characters outside the printable US-ASCII charset range will
+   * be rendered as Unicode escapes
+   */
+  public static ValueRenderer ini(
+      Writer writer, boolean omitNullProperties, boolean restrictCharset) {
+    return new IniRenderer(writer, omitNullProperties, restrictCharset);
+  }
 }
