@@ -271,7 +271,7 @@ val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
   }
 }
 
-tasks.checkNative {
+tasks.testNative {
   dependsOn(testLinuxExecutableAmd64)
   dependsOn(testLinuxExecutableAarch64)
   dependsOn(testMacExecutableAmd64)
