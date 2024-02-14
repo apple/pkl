@@ -28,7 +28,8 @@ jenv enable-plugin export
 [source,shell]
 ----
 gw clean
-gw test
+gw test          # run all tests except native executable tests
+gw testNative    # run native executable tests
 gw spotlessApply # fix code formatting
 gw build         # build everything except native executables
 gw buildNative   # build macOS executable on macOS,
