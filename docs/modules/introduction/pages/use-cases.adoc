@@ -22,7 +22,7 @@ At the same time, anyone configuring your application -- whether that's your use
 +
 At the time of writing, Pkl offers configuration libraries for the JVM runtime, Swift, and also for Golang.
 +
-We maintian the following libraries:
+We maintain the following libraries:
 +
 * xref:java-binding:pkl-config-java.adoc[pkl-config-java] for Java compatible languages
 * xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin] for the {uri-kotlin-homepage}[Kotlin] language.
