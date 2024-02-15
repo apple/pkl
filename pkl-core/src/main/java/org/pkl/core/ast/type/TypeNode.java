@@ -1614,13 +1614,36 @@ public abstract class TypeNode extends PklNode {
       return getMirrors(typeArgumentNodes);
     }
 
+    /**
+     * A typealias body is effectively inlined into the type node, and not executed in its own
+     * frame.
+     *
+     * <p>Before executing the typealias body, use the owner and receiver of the original frame
+     * where the typealias was declared, so that we preserve its original scope.
+     */
     public void execute(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
       aliasedTypeNode.execute(frame, value);
+      VmUtils.setOwner(frame, prevOwner);
+      VmUtils.setReceiver(frame, prevReceiver);
     }
 
+    /** See docstring on {@link TypeAliasTypeNode#execute}. */
     @Override
     public void executeAndSet(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
       aliasedTypeNode.executeAndSet(frame, value);
+
+      VmUtils.setOwner(frame, prevOwner);
+      VmUtils.setReceiver(frame, prevReceiver);
     }
 
     @Override

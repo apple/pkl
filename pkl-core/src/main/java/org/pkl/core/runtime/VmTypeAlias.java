@@ -16,6 +16,8 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,7 @@ public final class VmTypeAlias extends VmValue {
   private final VmTyped module;
   private final String qualifiedName;
   private final List<TypeParameter> typeParameters;
+  private final MaterializedFrame enclosingFrame;
 
   @LateInit private TypeNode typeNode;
 
@@ -66,7 +69,8 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      List<TypeParameter> typeParameters) {
+      List<TypeParameter> typeParameters,
+      MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
     this.docComment = docComment;
@@ -76,6 +80,7 @@ public final class VmTypeAlias extends VmValue {
     this.module = module;
     this.qualifiedName = qualifiedName;
     this.typeParameters = typeParameters;
+    this.enclosingFrame = enclosingFrame;
   }
 
   public void initTypeCheckNode(TypeNode typeNode) {
@@ -153,6 +158,10 @@ public final class VmTypeAlias extends VmValue {
 
   public TypeNode getTypeNode() {
     return typeNode;
+  }
+
+  public Frame getEnclosingFrame() {
+    return enclosingFrame;
   }
 
   @TruffleBoundary

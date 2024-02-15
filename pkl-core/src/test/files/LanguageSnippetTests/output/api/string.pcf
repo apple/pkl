@@ -341,8 +341,8 @@ examples {
     "abcdefg"
     "abcdefg"
     "   abcdefg"
-    "Type constraint `this.length == 1` violated. Value: \"\""
-    "Type constraint `this.length == 1` violated. Value: \"aa\""
+    "Type constraint `length == 1` violated. Value: \"\""
+    "Type constraint `length == 1` violated. Value: \"aa\""
   }
   ["padEnd()"] {
     ""
@@ -351,8 +351,8 @@ examples {
     "abcdefg"
     "abcdefg"
     "abcdefg   "
-    "Type constraint `this.length == 1` violated. Value: \"\""
-    "Type constraint `this.length == 1` violated. Value: \"aa\""
+    "Type constraint `length == 1` violated. Value: \"\""
+    "Type constraint `length == 1` violated. Value: \"aa\""
   }
   ["toBooleanOrNull()"] {
     true
