@@ -24,7 +24,7 @@ import org.pkl.core.packages.PackageUri
 class CliDownloadPackageCommand(
   baseOptions: CliBaseOptions,
   private val packageUris: List<PackageUri>,
-  private val noTranstive: Boolean
+  private val noTransitive: Boolean
 ) : CliCommand(baseOptions) {
 
   override fun doRun() {
@@ -35,7 +35,7 @@ class CliDownloadPackageCommand(
     val errors = mutableMapOf<PackageUri, Throwable>()
     for (pkg in packageUris) {
       try {
-        packageResolver.downloadPackage(pkg, pkg.checksums, noTranstive)
+        packageResolver.downloadPackage(pkg, pkg.checksums, noTransitive)
       } catch (e: Throwable) {
         errors[pkg] = e
       }
