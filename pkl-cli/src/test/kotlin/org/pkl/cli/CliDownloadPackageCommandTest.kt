@@ -50,7 +50,7 @@ class CliDownloadPackageCommandTest {
             PackageUri("package://localhost:12110/fruit@1.0.5"),
             PackageUri("package://localhost:12110/fruit@1.1.0")
           ),
-        noTranstive = true
+        noTransitive = true
       )
     cmd.run()
     assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
@@ -83,7 +83,7 @@ class CliDownloadPackageCommandTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate)
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
-        noTranstive = true
+        noTransitive = true
       )
     cmd.run()
     assertThat(tempDir.resolve(".my-cache/package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip"))
@@ -107,7 +107,7 @@ class CliDownloadPackageCommandTest {
               "package://localhost:12110/birds@0.5.0::sha256:3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
             ),
           ),
-        noTranstive = true
+        noTransitive = true
       )
     cmd.run()
     assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
@@ -127,7 +127,7 @@ class CliDownloadPackageCommandTest {
           listOf(
             PackageUri("package://localhost:12110/birds@0.5.0::sha256:intentionallyBogusChecksum"),
           ),
-        noTranstive = true
+        noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessage(
@@ -148,7 +148,7 @@ class CliDownloadPackageCommandTest {
       CliDownloadPackageCommand(
         baseOptions = CliBaseOptions(workingDir = tempDir, noCache = true),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
-        noTranstive = true
+        noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessage("Cannot download packages because no cache directory is specified.")
@@ -164,7 +164,7 @@ class CliDownloadPackageCommandTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate)
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/badChecksum@1.0.0")),
-        noTranstive = true
+        noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessageStartingWith(
@@ -186,7 +186,7 @@ class CliDownloadPackageCommandTest {
             PackageUri("package://localhost:12110/badChecksum@1.0.0"),
             PackageUri("package://bogus.domain/notAPackage@1.0.0")
           ),
-        noTranstive = true
+        noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessage(
@@ -218,7 +218,7 @@ class CliDownloadPackageCommandTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate)
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
-        noTranstive = false
+        noTransitive = false
       )
       .run()
     assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
