@@ -554,7 +554,7 @@ class PackageResolvers {
     private FileSystem getZipFileSystem(PackageAssetUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
-      synchronized (fileSystems) {
+      synchronized (lock) {
         var fs = fileSystems.get(packageUri);
         if (fs == null) {
           var metadata = getDependencyMetadata(packageUri, checksums);
