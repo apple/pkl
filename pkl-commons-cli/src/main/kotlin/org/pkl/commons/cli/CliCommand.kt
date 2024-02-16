@@ -76,9 +76,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   /** The Project used by this command. */
   protected val project: Project? by lazy {
     if (cliOptions.noProject) {
-      return@lazy null
+      null
+    } else {
+      cliOptions.normalizedProjectFile?.let { loadProject(it) }
     }
-    cliOptions.normalizedProjectFile?.let { loadProject(it) }
   }
 
   protected fun loadProject(projectFile: Path): Project {
@@ -103,10 +104,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val projectSettings: Project.EvaluatorSettings? by lazy {
-    if (cliOptions.omitProjectSettings) {
-      return@lazy null
-    }
-    project?.settings
+    if (cliOptions.omitProjectSettings) null else project?.settings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
