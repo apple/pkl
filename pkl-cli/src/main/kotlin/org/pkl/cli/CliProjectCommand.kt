@@ -23,10 +23,8 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME
 
-abstract class CliAbstractProjectCommand(
-  cliOptions: CliBaseOptions,
-  private val projectDirs: List<Path>
-) : CliCommand(cliOptions) {
+abstract class CliProjectCommand(cliOptions: CliBaseOptions, private val projectDirs: List<Path>) :
+  CliCommand(cliOptions) {
 
   protected val normalizedProjectFiles: List<Path> by lazy {
     if (projectDirs.isEmpty()) {

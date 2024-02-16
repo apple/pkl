@@ -28,7 +28,7 @@ class CliProjectResolver(
   projectDirs: List<Path>,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer()
-) : CliAbstractProjectCommand(baseOptions, projectDirs) {
+) : CliProjectCommand(baseOptions, projectDirs) {
   override fun doRun() {
     for (projectFile in normalizedProjectFiles) {
       val project = loadProject(projectFile)

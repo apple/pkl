@@ -21,7 +21,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.core.packages.PackageResolver
 import org.pkl.core.packages.PackageUri
 
-class CliDownloadPackageCommand(
+class CliPackageDownloader(
   baseOptions: CliBaseOptions,
   private val packageUris: List<PackageUri>,
   private val noTransitive: Boolean

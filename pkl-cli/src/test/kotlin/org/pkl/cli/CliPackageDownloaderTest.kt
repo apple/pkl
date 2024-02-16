@@ -26,7 +26,7 @@ import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.packages.PackageUri
 
-class CliDownloadPackageCommandTest {
+class CliPackageDownloaderTest {
   companion object {
     @BeforeAll
     @JvmStatic
@@ -38,7 +38,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `download packages`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
@@ -76,7 +76,7 @@ class CliDownloadPackageCommandTest {
     )
 
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             workingDir = tempDir,
@@ -95,7 +95,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `download package while specifying checksum`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
@@ -117,7 +117,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `download package with invalid checksum`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
@@ -145,7 +145,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `disabling caching is an error`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions = CliBaseOptions(workingDir = tempDir, noCache = true),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
         noTransitive = true
@@ -157,7 +157,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `download packages with bad checksum`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
@@ -175,7 +175,7 @@ class CliDownloadPackageCommandTest {
   @Test
   fun `download multiple failing packages`(@TempDir tempDir: Path) {
     val cmd =
-      CliDownloadPackageCommand(
+      CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
@@ -211,7 +211,7 @@ class CliDownloadPackageCommandTest {
 
   @Test
   fun `download package, including transitive dependencies`(@TempDir tempDir: Path) {
-    CliDownloadPackageCommand(
+    CliPackageDownloader(
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
