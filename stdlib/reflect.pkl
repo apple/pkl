@@ -159,7 +159,7 @@ external const function TypeVariable(referent: TypeParameter): TypeVariable
 /// A program declaration.
 abstract external class Declaration {
   /// The source location of this declaration.
-  location: SourceLocation
+  hidden location: SourceLocation
 
   /// The documentation comment for this declaration, if any.
   docComment: String?
