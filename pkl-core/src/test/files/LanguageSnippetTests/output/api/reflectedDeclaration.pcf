@@ -1,0 +1,1182 @@
+alias {
+  location {
+    line = 3
+    column = 1
+    displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+  }
+  docComment = null
+  annotations = List()
+  modifiers = Set()
+  name = "MyAlias"
+  typeParameters = List()
+  referent {
+    members = List(new {
+      referent {
+        location {
+          line = 1034
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1034"
+        }
+        docComment = """
+          A boolean value, either [true] or [false].
+          
+          The following operators are supported for booleans:
+          ```
+          !bool          // logical negation
+          bool1 && bool2 // logical conjunction
+          bool1 || bool2 // logical disjunction
+          ```
+          """
+        annotations = List()
+        modifiers = Set("external")
+        name = "Boolean"
+        typeParameters = List()
+        properties = Map()
+        methods = Map("xor", new {
+          location {
+            line = 1044
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1044"
+          }
+          docComment = """
+            Tells if exactly one of [this] and [other] is [true] (exclusive or).
+            
+            Facts:
+            ```
+            !true.xor(true)
+            true.xor(false)
+            false.xor(true)
+            !false.xor(false)
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "xor"
+          typeParameters = List()
+          parameters = Map("other", new {
+            name = "other"
+          })
+        }, "implies", new {
+          location {
+            line = 1057
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1057"
+          }
+          docComment = """
+            Tells if [this] implies [other] (logical consequence).
+            
+            *Note*: This function does not short-circuit; [other] is always evaluated.
+            
+            Facts:
+            ```
+            true.implies(true)
+            !true.implies(false)
+            false.implies(true)
+            false.implies(false)
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "implies"
+          typeParameters = List()
+          parameters = Map("other", new {
+            name = "other"
+          })
+        })
+      }
+      typeArguments = List()
+    }, new {
+      referent {
+        location {
+          line = 1070
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1070"
+        }
+        docComment = """
+          A sequence of Unicode characters (code points).
+          
+          The following operators are supported for strings:
+          ```
+          str[3]      // subscript
+          str1 + str2 // concatenation
+          ```
+          """
+        annotations = List()
+        modifiers = Set("external")
+        name = "String"
+        typeParameters = List()
+        properties = Map("length", new {
+          location {
+            line = 1081
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1081"
+          }
+          docComment = """
+            The number of characters in this string.
+            
+            *Note*: The runtime complexity of this operation is `O(n)`.
+            
+            Facts:
+            ```
+            "".length == 0
+            "abc".length == 3
+            ```
+            """
+          annotations = List(new {
+            names {
+              "size"
+              "count"
+            }
+          })
+          modifiers = Set()
+          name = "length"
+        }, "lastIndex", new {
+          location {
+            line = 1094
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1094"
+          }
+          docComment = """
+            The index of the last character in this string (same as `length - 1`).
+            
+            Returns `-1` for an empty string.
+            
+            *Note*: The runtime complexity of this operation is `O(n)`.
+            
+            Facts:
+            ```
+            "".lastIndex == -1
+            "abc".lastIndex == 2
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "lastIndex"
+        }, "isEmpty", new {
+          location {
+            line = 1104
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1104"
+          }
+          docComment = """
+            Tells whether this string is empty.
+            
+            Facts:
+            ```
+            "".isEmpty
+            !("   ".isEmpty)
+            !("abc".isEmpty)
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "isEmpty"
+        }, "isBlank", new {
+          location {
+            line = 1115
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1115"
+          }
+          docComment = """
+            Tells if all characters in this string have Unicode property "White_Space".
+            
+            Facts:
+            ```
+            "".isBlank
+            "   ".isBlank
+            "\\t\\n\\r".isBlank
+            !("abc".isBlank)
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "isBlank"
+        }, "isRegex", new {
+          location {
+            line = 1118
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1118"
+          }
+          docComment = "Tells if this string is a valid regular expression according to [Regex]."
+          annotations = List()
+          modifiers = Set()
+          name = "isRegex"
+        }, "md5", new {
+          location {
+            line = 1125
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1125"
+          }
+          docComment = """
+            The [MD5](https://en.wikipedia.org/wiki/MD5)
+            hash of this string's UTF-8 byte sequence
+            as hexadecimal string.
+            
+            MD5 is cryptographically broken and should not be used for secure applications.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "md5"
+        }, "sha1", new {
+          location {
+            line = 1131
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1131"
+          }
+          docComment = """
+            The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
+            hash of this string's UTF-8 byte sequence.
+            
+            SHA-1 is cryptographically broken and should not be used for secure applications.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "sha1"
+        }, "sha256", new {
+          location {
+            line = 1136
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1136"
+          }
+          docComment = """
+            The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+            cryptographic hash of this string's UTF-8 byte sequence
+            as hexadecimal string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "sha256"
+        }, "sha256Int", new {
+          location {
+            line = 1140
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1140"
+          }
+          docComment = """
+            The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+            cryptographic hash of this string's UTF-8 byte sequence.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "sha256Int"
+        }, "base64", new {
+          location {
+            line = 1143
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1143"
+          }
+          docComment = "The Base64 encoding of this string's UTF-8 byte sequence."
+          annotations = List()
+          modifiers = Set()
+          name = "base64"
+        }, "base64Decoded", new {
+          location {
+            line = 1151
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1151"
+          }
+          docComment = """
+            The inverse of [base64].
+            
+            Facts:
+            ```
+            "abc".base64.base64Decoded == "abc"
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "base64Decoded"
+        }, "chars", new {
+          location {
+            line = 1159
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1159"
+          }
+          docComment = """
+            The Unicode characters in this string.
+            
+            Facts:
+            ```
+            "abc".chars == List("a", "b", "c")
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "chars"
+        }, "codePoints", new {
+          location {
+            line = 1167
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1167"
+          }
+          docComment = """
+            The Unicode code points in this string.
+            
+            Facts:
+            ```
+            "abc".codePoints == List(0x61, 0x62, 0x63)
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "codePoints"
+        })
+        methods = Map("getOrNull", new {
+          location {
+            line = 1179
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1179"
+          }
+          docComment = """
+            Returns the character at [index], or [null] if [index] is out of range.
+            
+            Facts:
+            ```
+            "abcde".getOrNull(-1) == null
+            "abcde".getOrNull(0) == "a"
+            "abcde".getOrNull(2) == "c"
+            "abcde".getOrNull(4) == "e"
+            "abcde".getOrNull(5) == null
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "getOrNull"
+          typeParameters = List()
+          parameters = Map("index", new {
+            name = "index"
+          })
+        }, "substring", new {
+          location {
+            line = 1193
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1193"
+          }
+          docComment = """
+            Returns the substring from [start] until [exclusiveEnd].
+            
+            Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+            
+            Facts:
+            ```
+            "abcde".substring(0, 0) == ""
+            "abcde".substring(0, 1) == "a"
+            "abcde".substring(1, 4) == "bcd"
+            "abcde".substring(4, 5) == "e"
+            "abcde".substring(5, 5) == ""
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "substring"
+          typeParameters = List()
+          parameters = Map("start", new {
+            name = "start"
+          }, "exclusiveEnd", new {
+            name = "exclusiveEnd"
+          })
+        }, "substringOrNull", new {
+          location {
+            line = 1211
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1211"
+          }
+          docComment = """
+            Returns the substring from [start] until [exclusiveEnd].
+            
+            Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+            
+            Facts:
+            ```
+            "abcde".substringOrNull(0, 0) == ""
+            "abcde".substringOrNull(0, 1) == "a"
+            "abcde".substringOrNull(1, 4) == "bcd"
+            "abcde".substringOrNull(4, 5) == "e"
+            "abcde".substringOrNull(5, 5) == ""
+            
+            "abcde".substringOrNull(-1, 3) == null
+            "abcde".substringOrNull(0, 6) == null
+            "abcde".substringOrNull(3, 2) == null
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "substringOrNull"
+          typeParameters = List()
+          parameters = Map("start", new {
+            name = "start"
+          }, "exclusiveEnd", new {
+            name = "exclusiveEnd"
+          })
+        }, "repeat", new {
+          location {
+            line = 1221
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1221"
+          }
+          docComment = """
+            Concatenates [count] copies of this string.
+            
+            Facts:
+            ```
+            "abc".repeat(0) == ""
+            "abc".repeat(1) == "abc"
+            "abc".repeat(3) == "abcabcabc"
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "repeat"
+          typeParameters = List()
+          parameters = Map("count", new {
+            name = "count"
+          })
+        }, "contains", new {
+          location {
+            line = 1224
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1224"
+          }
+          docComment = "Tells whether this string contains [pattern]."
+          annotations = List()
+          modifiers = Set()
+          name = "contains"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "matches", new {
+          location {
+            line = 1228
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1228"
+          }
+          docComment = "Tells whether this string matches [regex] in its entirety."
+          annotations = List(new {
+            names {
+              "test"
+            }
+          })
+          modifiers = Set()
+          name = "matches"
+          typeParameters = List()
+          parameters = Map("regex", new {
+            name = "regex"
+          })
+        }, "startsWith", new {
+          location {
+            line = 1231
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1231"
+          }
+          docComment = "Tells whether this string starts with [pattern]."
+          annotations = List()
+          modifiers = Set()
+          name = "startsWith"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "endsWith", new {
+          location {
+            line = 1234
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1234"
+          }
+          docComment = "Tells whether this string ends with [pattern]."
+          annotations = List()
+          modifiers = Set()
+          name = "endsWith"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "indexOf", new {
+          location {
+            line = 1240
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1240"
+          }
+          docComment = """
+            Returns the zero-based index of the first occurrence of [pattern]
+            in this string.
+            
+            Throws if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "indexOf"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "indexOfOrNull", new {
+          location {
+            line = 1244
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1244"
+          }
+          docComment = """
+            Returns the zero-based index of the first occurrence of [pattern]
+            in this string, or [null] if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "indexOfOrNull"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "lastIndexOf", new {
+          location {
+            line = 1250
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1250"
+          }
+          docComment = """
+            Returns the zero-based index of the last occurrence of [pattern]
+            in this string.
+            
+            Throws if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "lastIndexOf"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "lastIndexOfOrNull", new {
+          location {
+            line = 1254
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1254"
+          }
+          docComment = """
+            Returns the zero-based index of the last occurrence of [pattern]
+            in this string, or [null] if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "lastIndexOfOrNull"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "take", new {
+          location {
+            line = 1260
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1260"
+          }
+          docComment = """
+            Returns the first [n] characters of this string.
+            
+            Returns [this] if [n] is greater than or equal to [length].
+            """
+          annotations = List(new {
+            names {
+              "limit"
+            }
+          })
+          modifiers = Set()
+          name = "take"
+          typeParameters = List()
+          parameters = Map("n", new {
+            name = "n"
+          })
+        }, "takeWhile", new {
+          location {
+            line = 1263
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1263"
+          }
+          docComment = "Returns the longest prefix of this string that satisfies [predicate]."
+          annotations = List()
+          modifiers = Set()
+          name = "takeWhile"
+          typeParameters = List()
+          parameters = Map("predicate", new {
+            name = "predicate"
+          })
+        }, "takeLast", new {
+          location {
+            line = 1268
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1268"
+          }
+          docComment = """
+            Returns the last [n] characters of this string.
+            
+            Returns [this] if [n] is greater than or equal to [length].
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "takeLast"
+          typeParameters = List()
+          parameters = Map("n", new {
+            name = "n"
+          })
+        }, "takeLastWhile", new {
+          location {
+            line = 1271
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1271"
+          }
+          docComment = "Returns the longest suffix of this string that satisfies [predicate]."
+          annotations = List()
+          modifiers = Set()
+          name = "takeLastWhile"
+          typeParameters = List()
+          parameters = Map("predicate", new {
+            name = "predicate"
+          })
+        }, "drop", new {
+          location {
+            line = 1277
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1277"
+          }
+          docComment = """
+            Removes the first [n] characters of this string.
+            
+            Returns the empty string if [n] is greater than or equal to [length].
+            """
+          annotations = List(new {
+            names {
+              "skip"
+            }
+          })
+          modifiers = Set()
+          name = "drop"
+          typeParameters = List()
+          parameters = Map("n", new {
+            name = "n"
+          })
+        }, "dropWhile", new {
+          location {
+            line = 1281
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1281"
+          }
+          docComment = "Removes the longest prefix of this string that satisfies [predicate]."
+          annotations = List(new {
+            names {
+              "skipWhile"
+            }
+          })
+          modifiers = Set()
+          name = "dropWhile"
+          typeParameters = List()
+          parameters = Map("predicate", new {
+            name = "predicate"
+          })
+        }, "dropLast", new {
+          location {
+            line = 1287
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1287"
+          }
+          docComment = """
+            Removes the last [n] characters of this string.
+            
+            Returns the empty string if [n] is greater than or equal to [length].
+            """
+          annotations = List(new {
+            names {
+              "skipLast"
+            }
+          })
+          modifiers = Set()
+          name = "dropLast"
+          typeParameters = List()
+          parameters = Map("n", new {
+            name = "n"
+          })
+        }, "dropLastWhile", new {
+          location {
+            line = 1291
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1291"
+          }
+          docComment = "Removes the longest suffix of this string that satisfies [predicate]."
+          annotations = List(new {
+            names {
+              "skipLastWhile"
+            }
+          })
+          modifiers = Set()
+          name = "dropLastWhile"
+          typeParameters = List()
+          parameters = Map("predicate", new {
+            name = "predicate"
+          })
+        }, "replaceFirst", new {
+          location {
+            line = 1296
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1296"
+          }
+          docComment = """
+            Replaces the first occurrence of [pattern] in this string with [replacement].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceFirst"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "replacement", new {
+            name = "replacement"
+          })
+        }, "replaceLast", new {
+          location {
+            line = 1301
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1301"
+          }
+          docComment = """
+            Replaces the last occurrence of [pattern] in this string with [replacement].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceLast"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "replacement", new {
+            name = "replacement"
+          })
+        }, "replaceAll", new {
+          location {
+            line = 1306
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1306"
+          }
+          docComment = """
+            Replaces all occurrences of [pattern] in this string with [replacement].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceAll"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "replacement", new {
+            name = "replacement"
+          })
+        }, "replaceFirstMapped", new {
+          location {
+            line = 1311
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1311"
+          }
+          docComment = """
+            Replaces the first occurrence of [pattern] in this string with the return value of [mapper].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceFirstMapped"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "mapper", new {
+            name = "mapper"
+          })
+        }, "replaceLastMapped", new {
+          location {
+            line = 1316
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1316"
+          }
+          docComment = """
+            Replaces the last occurrence of [pattern] in this string with the return value of [mapper].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceLastMapped"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "mapper", new {
+            name = "mapper"
+          })
+        }, "replaceAllMapped", new {
+          location {
+            line = 1321
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1321"
+          }
+          docComment = """
+            Replaces all occurrences of [pattern] in this string with the return value of [mapper].
+            
+            Returns this string unchanged if [pattern] does not occur in this string.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceAllMapped"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          }, "mapper", new {
+            name = "mapper"
+          })
+        }, "replaceRange", new {
+          location {
+            line = 1326
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1326"
+          }
+          docComment = """
+            Replaces the characters between [start] and [exclusiveEnd] with [replacement].
+            
+            Inserts [replacement] at index [start] if `start == exclusiveEnd`.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "replaceRange"
+          typeParameters = List()
+          parameters = Map("start", new {
+            name = "start"
+          }, "exclusiveEnd", new {
+            name = "exclusiveEnd"
+          }, "replacement", new {
+            name = "replacement"
+          })
+        }, "toUpperCase", new {
+          location {
+            line = 1329
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1329"
+          }
+          docComment = "Performs a locale-independent character-by-character conversion of this string to uppercase."
+          annotations = List()
+          modifiers = Set()
+          name = "toUpperCase"
+          typeParameters = List()
+          parameters = Map()
+        }, "toLowerCase", new {
+          location {
+            line = 1332
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1332"
+          }
+          docComment = "Performs a locale-independent character-by-character conversion of this string to lowercase."
+          annotations = List()
+          modifiers = Set()
+          name = "toLowerCase"
+          typeParameters = List()
+          parameters = Map()
+        }, "reverse", new {
+          location {
+            line = 1335
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1335"
+          }
+          docComment = "Reverses the order of characters in this string."
+          annotations = List()
+          modifiers = Set()
+          name = "reverse"
+          typeParameters = List()
+          parameters = Map()
+        }, "trim", new {
+          location {
+            line = 1339
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1339"
+          }
+          docComment = "Removes any leading and trailing characters with Unicode property \"White_Space\" from this string."
+          annotations = List(new {
+            names {
+              "strip"
+            }
+          })
+          modifiers = Set()
+          name = "trim"
+          typeParameters = List()
+          parameters = Map()
+        }, "trimStart", new {
+          location {
+            line = 1343
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1343"
+          }
+          docComment = "Removes any leading characters with Unicode property \"White_Space\" from this string."
+          annotations = List(new {
+            names {
+              "stripLeft"
+              "stripStart"
+              "stripLeading"
+              "trimLeft"
+              "trimLeading"
+            }
+          })
+          modifiers = Set()
+          name = "trimStart"
+          typeParameters = List()
+          parameters = Map()
+        }, "trimEnd", new {
+          location {
+            line = 1347
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1347"
+          }
+          docComment = "Removes any trailing characters with Unicode property \"White_Space\" from this string."
+          annotations = List(new {
+            names {
+              "stripRight"
+              "stripEnd"
+              "stripTrailing"
+              "trimRight"
+              "trimTrailin"
+            }
+          })
+          modifiers = Set()
+          name = "trimEnd"
+          typeParameters = List()
+          parameters = Map()
+        }, "padStart", new {
+          location {
+            line = 1353
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1353"
+          }
+          docComment = """
+            Increases the length of this string to [width] by adding leading [char]s.
+            
+            Returns this string unchanged if its length is already equal to or greater than [width].
+            """
+          annotations = List(new {
+            names {
+              "padLeft"
+            }
+          })
+          modifiers = Set()
+          name = "padStart"
+          typeParameters = List()
+          parameters = Map("width", new {
+            name = "width"
+          }, "char", new {
+            name = "char"
+          })
+        }, "padEnd", new {
+          location {
+            line = 1359
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1359"
+          }
+          docComment = """
+            Increases the length of this string to [width] by adding trailing [char]s.
+            
+            Returns this string unchanged if its length is already equal to or greater than [width].
+            """
+          annotations = List(new {
+            names {
+              "padRight"
+            }
+          })
+          modifiers = Set()
+          name = "padEnd"
+          typeParameters = List()
+          parameters = Map("width", new {
+            name = "width"
+          }, "char", new {
+            name = "char"
+          })
+        }, "split", new {
+          location {
+            line = 1362
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1362"
+          }
+          docComment = "Splits this string around matches of [pattern]."
+          annotations = List()
+          modifiers = Set()
+          name = "split"
+          typeParameters = List()
+          parameters = Map("pattern", new {
+            name = "pattern"
+          })
+        }, "capitalize", new {
+          location {
+            line = 1372
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1372"
+          }
+          docComment = """
+            Converts the first character of this string to title case.
+            
+            Facts:
+            ```
+            "pigeon".capitalize() == "Pigeon"
+            "pigeon bird".capitalize() == "Pigeon bird"
+            "".capitalize() == ""
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "capitalize"
+          typeParameters = List()
+          parameters = Map()
+        }, "decapitalize", new {
+          location {
+            line = 1382
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1382"
+          }
+          docComment = """
+            Converts the first character of this string to lower case.
+            
+            Facts:
+            ```
+            "Pigeon".decapitalize() == "pigeon"
+            "Pigeon Bird".decapitalize() == "pigeon Bird"
+            "".decapitalize() == ""
+            ```
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "decapitalize"
+          typeParameters = List()
+          parameters = Map()
+        }, "toInt", new {
+          location {
+            line = 1388
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1388"
+          }
+          docComment = """
+            Parses this string as a signed decimal (base 10) integer.
+            
+            Throws if this string cannot be parsed as a signed decimal integer,
+            or if the integer is too large to fit into [Int].
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toInt"
+          typeParameters = List()
+          parameters = Map()
+        }, "toIntOrNull", new {
+          location {
+            line = 1394
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1394"
+          }
+          docComment = """
+            Parses this string as a signed decimal (base 10) integer.
+            
+            Returns [null] if this string cannot be parsed as a signed decimal integer,
+            or if the integer is too large to fit into [Int].
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toIntOrNull"
+          typeParameters = List()
+          parameters = Map()
+        }, "toFloat", new {
+          location {
+            line = 1399
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1399"
+          }
+          docComment = """
+            Parses this string as a floating point number.
+            
+            Throws if this string cannot be parsed as a floating point number.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toFloat"
+          typeParameters = List()
+          parameters = Map()
+        }, "toFloatOrNull", new {
+          location {
+            line = 1404
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1404"
+          }
+          docComment = """
+            Parses this string as a floating point number.
+            
+            Returns [null] if this string cannot be parsed as a floating point number.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toFloatOrNull"
+          typeParameters = List()
+          parameters = Map()
+        }, "toBoolean", new {
+          location {
+            line = 1409
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1409"
+          }
+          docComment = """
+            Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
+            
+            Throws if this string is neither `"true"` nor `"false"` (case-insensitive).
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toBoolean"
+          typeParameters = List()
+          parameters = Map()
+        }, "toBooleanOrNull", new {
+          location {
+            line = 1414
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/3b2feb4/stdlib/base.pkl#L1414"
+          }
+          docComment = """
+            Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
+            
+            Returns [null] if this string is neither `"true"` nor `"false"` (case-insensitive).
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "toBooleanOrNull"
+          typeParameters = List()
+          parameters = Map()
+        })
+      }
+      typeArguments = List()
+    })
+  }
+}
+rec {
+  referent {
+    location {
+      line = 5
+      column = 1
+      displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+    }
+    docComment = null
+    annotations = List()
+    modifiers = Set()
+    name = "Rec"
+    typeParameters = List()
+    properties = Map("rec", new {
+      location {
+        line = 6
+        column = 3
+        displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+      }
+      docComment = null
+      annotations = List()
+      modifiers = Set()
+      name = "rec"
+    })
+    methods = Map()
+  }
+  typeArguments = List()
+}
