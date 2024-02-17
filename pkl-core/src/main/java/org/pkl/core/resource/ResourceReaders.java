@@ -299,16 +299,6 @@ public final class ResourceReaders {
         return Optional.empty();
       }
     }
-
-    @Override
-    public boolean hasHierarchicalUris() {
-      return true;
-    }
-
-    @Override
-    public boolean isGlobbable() {
-      return false;
-    }
   }
 
   private static final class ClassPathResource implements ResourceReader {
@@ -487,8 +477,7 @@ public final class ResourceReaders {
       var dependency = getProjectDepsResolver().getResolvedDependency(assetUri.getPackageUri());
       var path = getLocalPath(dependency, assetUri);
       if (path != null) {
-        var url = path.toUri().toURL();
-        var bytes = IoUtils.readBytes(url);
+        var bytes = Files.readAllBytes(path);
         return Optional.of(new Resource(uri, bytes));
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
