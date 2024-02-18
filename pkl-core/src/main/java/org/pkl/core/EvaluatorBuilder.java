@@ -16,8 +16,10 @@
 package org.pkl.core;
 
 import com.oracle.truffle.api.TruffleOptions;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -25,13 +27,19 @@ import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.Project;
+import org.pkl.core.project.Project.EvaluatorSettings;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.LoggerImpl;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
-/** A builder for an {@link Evaluator}. Can be reused to build multiple evaluators. */
+/**
+ * A builder of {@linkplain Evaluator evaluators}.
+ *
+ * <p>To create a new builder, use {@link #preconfigured} or {@link #unconfigured}. To build an
+ * evaluator from the current builder state, use {@link #build}.
+ */
 @SuppressWarnings({"UnusedReturnValue", "unused"})
 public final class EvaluatorBuilder {
   private final StandardBuilder securityManagerBuilder = SecurityManagers.standardBuilder();
@@ -50,41 +58,37 @@ public final class EvaluatorBuilder {
 
   private java.time.@Nullable Duration timeout;
 
-  private @Nullable Path moduleCacheDir = IoUtils.getDefaultModuleCacheDir();
+  private @Nullable Path moduleCacheDir = getDefaultModuleCacheDir();
 
   private @Nullable String outputFormat;
 
-  private @Nullable StackFrameTransformer stackFrameTransformer;
+  private StackFrameTransformer stackFrameTransformer = StackFrameTransformers.empty;
 
   private @Nullable DeclaredDependencies dependencies;
 
   private EvaluatorBuilder() {}
 
   /**
-   * Creates a builder preconfigured with:
+   * Creates a builder with defaults for the following options:
    *
    * <ul>
-   *   <li>{@link SecurityManagers#defaultAllowedModules}
-   *   <li>{@link SecurityManagers#defaultAllowedResources}
-   *   <li>{@link Loggers#noop()}
-   *   <li>{@link ModuleKeyFactories#standardLibrary}
-   *   <li>{@link ModuleKeyFactories#classPath}
-   *   <li>{@link ModuleKeyFactories#fromServiceProviders}
-   *   <li>{@link ModuleKeyFactories#file}
-   *   <li>{@link ModuleKeyFactories#pkg}
-   *   <li>{@link ModuleKeyFactories#projectpackage}
-   *   <li>{@link ModuleKeyFactories#genericUrl}
-   *   <li>{@link ResourceReaders#environmentVariable}
-   *   <li>{@link ResourceReaders#externalProperty}
-   *   <li>{@link ResourceReaders#classPath}
-   *   <li>{@link ResourceReaders#file}
-   *   <li>{@link ResourceReaders#http}
-   *   <li>{@link ResourceReaders#https}
-   *   <li>{@link ResourceReaders#pkg}
-   *   <li>{@link ResourceReaders#projectpackage}
-   *   <li>{@link System#getProperties}
+   *   <li>{@link #setStackFrameTransformer}
+   *   <li>{@link #setAllowedModules}
+   *   <li>{@link #setAllowedResources}
+   *   <li>{@link #setTrustLevels}
+   *   <li>{@link #setLogger}
+   *   <li>{@link #setModuleCacheDir}
+   *   <li>{@link #setModuleKeyFactories}
+   *   <li>{@link #setResourceReaders}
+   *   <li>{@link #setExternalProperties}
+   *   <li>{@link #setEnvironmentVariables}
    * </ul>
+   *
+   * <p>See each of the above options for its default.
+   *
+   * @see #unconfigured
    */
+  // update defaults documented in set* methods when making any changes here
   public static EvaluatorBuilder preconfigured() {
     EvaluatorBuilder builder = new EvaluatorBuilder();
 
@@ -129,106 +133,295 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Creates a builder that is unconfigured. At a minimum, a security manager will need to be set
-   * before building an instance.
+   * Creates a builder with defaults for the following options:
+   *
+   * <ul>
+   *   <li>{@link #setStackFrameTransformer}
+   *   <li>{@link #setTrustLevels}
+   *   <li>{@link #setLogger}
+   *   <li>{@link #setModuleCacheDir}
+   * </ul>
+   *
+   * <p>See each of the above options for its default.
+   *
+   * <p>To complete the configuration of the returned builder, at least one of the following methods
+   * must be called:
+   *
+   * <ul>
+   *   <li>{@link #addAllowedModule}
+   *   <li>{@link #setAllowedModules}
+   *   <li>{@link #setSecurityManager}
+   * </ul>
+   *
+   * @see #preconfigured
    */
   public static EvaluatorBuilder unconfigured() {
     return new EvaluatorBuilder();
   }
 
-  /** Sets the given stack frame transformer, replacing any previously set transformer. */
+  /**
+   * Sets the stack frame transformer that adds information to Pkl stack traces.
+   *
+   * <p>Stack frame transformers can be composed with {@link Function#andThen}. Class {@link
+   * StackFrameTransformers} provides several implementations.
+   *
+   * <p>Default when {@link #unconfigured}: {@link StackFrameTransformers#empty}
+   *
+   * <p>Default when {@link #preconfigured}: {@link StackFrameTransformers#defaultTransformer}
+   *
+   * @see #getStackFrameTransformer
+   */
   public EvaluatorBuilder setStackFrameTransformer(StackFrameTransformer stackFrameTransformer) {
     this.stackFrameTransformer = stackFrameTransformer;
     return this;
   }
 
-  /** Returns the currently set stack frame transformer. */
+  /**
+   * Returns the stack frame transformer that adds information to Pkl stack traces.
+   *
+   * <p>For more information, see {@link #setStackFrameTransformer}.
+   */
   public @Nullable StackFrameTransformer getStackFrameTransformer() {
     return stackFrameTransformer;
   }
 
-  /** Sets the given security manager, replacing any previously set security manager. */
+  /**
+   * Sets a custom security manager.
+   *
+   * <p>If {@code null}, a {@link SecurityManagers#standard standard} security manager built from
+   * the following options is used:
+   *
+   * <ul>
+   *   <li>{@link #setAllowedModules allowedModules}
+   *   <li>{@link #setAllowedResources allowedResources}
+   *   <li>{@link #setTrustLevels trustLevels}
+   *   <li>{@link #setRootDir rootDir}
+   * </ul>
+   *
+   * <p>Otherwise, the given custom security manager is used, and the above options are ignored.
+   *
+   * <p>Default: {@code null}
+   */
   public EvaluatorBuilder setSecurityManager(@Nullable SecurityManager manager) {
     this.securityManager = manager;
     return this;
   }
 
+  /**
+   * Same as {@code setSecurityManager(null)}.
+   *
+   * <p>For more information, see {@link #setSecurityManager}.
+   */
   public EvaluatorBuilder unsetSecurityManager() {
     this.securityManager = null;
     return this;
   }
 
-  /** Returns the currently set security manager. */
+  /**
+   * Returns the custom security manager.
+   *
+   * <p>For more information, see {@link #setSecurityManager}.
+   */
   public @Nullable SecurityManager getSecurityManager() {
     return securityManager;
   }
 
   /**
-   * Sets the set of URI patterns to be allowed when importing modules.
+   * Adds a URI pattern that determines if a module import is allowed.
    *
-   * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
+   * <p>For more information, see {@link #setAllowedModules}.
+   *
+   * @see #getAllowedModules
+   * @see #setTrustLevels
+   */
+  public EvaluatorBuilder addAllowedModule(Pattern pattern) {
+    requireNullSecurityManager("addAllowedModule");
+    securityManagerBuilder.addAllowedModule(pattern);
+    return this;
+  }
+
+  /**
+   * Sets the URI patterns that determine if a module import is allowed.
+   *
+   * <p>Pkl code can import a module with {@code import "moduleUri"}, {@code amends "moduleUri},
+   * {@code extends "moduleUri"}, or an {@code import("moduleUri")} expression. The import is
+   * allowed only if {@code moduleUri} matches at least one of the given patterns.
+   *
+   * <p>Setting a {@linkplain #setSecurityManager custom security manager} causes this option to be
+   * ignored.
+   *
+   * <p>Default when {@link #unconfigured}: empty list
+   *
+   * <p>Default when {@link #preconfigured}: {@link SecurityManagers#defaultAllowedModules}
+   *
+   * @throws IllegalStateException if a {@linkplain #setSecurityManager custom security manager} has
+   *     been set
+   * @see #addAllowedModule
+   * @see #getAllowedModules
+   * @see #setTrustLevels
    */
   public EvaluatorBuilder setAllowedModules(Collection<Pattern> patterns) {
-    if (securityManager != null) {
-      throw new IllegalStateException(
-          "Cannot call both `setSecurityManager` and `setAllowedModules`, because both define security manager settings.");
-    }
+    requireNullSecurityManager("setAllowedModules");
     securityManagerBuilder.setAllowedModules(patterns);
     return this;
   }
 
-  /** Returns the set of patterns to be allowed when importing modules. */
+  /**
+   * Returns the URI patterns that determine if a module import is allowed.
+   *
+   * <p>For more information, see {@link #setAllowedModules}.
+   *
+   * @see #addAllowedModule
+   * @see #setTrustLevels
+   */
   public List<Pattern> getAllowedModules() {
     return securityManagerBuilder.getAllowedModules();
   }
 
   /**
-   * Sets the set of URI patterns to be allowed when reading resources.
+   * Adds a URI pattern that determines if a resource read is allowed.
    *
-   * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
+   * <p>For more information, see {@link #setAllowedResources}.
+   *
+   * @see #getAllowedResources
+   */
+  public EvaluatorBuilder addAllowedResource(Pattern pattern) {
+    requireNullSecurityManager("addAllowedResource");
+    securityManagerBuilder.addAllowedResource(pattern);
+    return this;
+  }
+
+  /**
+   * Sets the URI patterns that determine if a resource read is allowed.
+   *
+   * <p>Pkl code can read a resource with {@code read(resourceUri)}. The read is allowed only if
+   * {@code resourceUri} matches at least one of the given patterns.
+   *
+   * <p>Setting a {@linkplain #setSecurityManager custom security manager} causes this option to be
+   * ignored.
+   *
+   * <p>Default when {@link #unconfigured}: empty list
+   *
+   * <p>Default when {@link #preconfigured}: {@link SecurityManagers#defaultAllowedResources}
+   *
+   * <ul>
+   *   <li>{@link SecurityManagers#defaultAllowedResources} for a {@link #preconfigured} builder
+   *   <li>empty list for an {@link #unconfigured} builder
+   * </ul>
+   *
+   * @throws IllegalStateException if a {@linkplain #setSecurityManager custom security manager} has
+   *     been set
+   * @see #addAllowedResource
+   * @see #getAllowedResources
    */
   public EvaluatorBuilder setAllowedResources(Collection<Pattern> patterns) {
-    if (securityManager != null) {
-      throw new IllegalStateException(
-          "Cannot call both `setSecurityManager` and `setAllowedResources`, because both define security manager settings.");
-    }
+    requireNullSecurityManager("setAllowedResources");
     securityManagerBuilder.setAllowedResources(patterns);
     return this;
   }
 
-  /** Returns the set of patterns to be allowed when reading resources. */
+  /**
+   * Returns the URI patterns that determine if a resource read is allowed.
+   *
+   * <p>For more information, see {@link #setAllowedResources}.
+   *
+   * @see #addAllowedResource
+   */
   public List<Pattern> getAllowedResources() {
     return securityManagerBuilder.getAllowedResources();
   }
 
   /**
-   * Sets the root directory, which restricts access to file-based modules and resources located
-   * under this directory.
+   * Sets the root directory that file-based module imports and resource reads are restricted to.
+   *
+   * <p>If {@code null}, file-based module imports and resource reads are not restricted to a root
+   * directory. However, they are still subject to other security manager checks.
+   *
+   * <p>Setting a {@linkplain #setSecurityManager custom security manager} causes this option to be
+   * ignored.
+   *
+   * <p>Default: {@code null}
+   *
+   * @throws IllegalStateException if a {@linkplain #setSecurityManager custom security manager} has
+   *     been set
+   * @see #setAllowedModules
+   * @see #setAllowedResources
+   * @see #setTrustLevels
+   * @see #getRootDir
    */
   public EvaluatorBuilder setRootDir(@Nullable Path rootDir) {
+    requireNullSecurityManager("setRootDir");
     securityManagerBuilder.setRootDir(rootDir);
     return this;
   }
 
-  /** Returns the currently set root directory, if set. */
+  /**
+   * Returns the root directory that file-based module imports and resource reads are restricted to.
+   *
+   * <p>For more information, see {@link #setRootDir}.
+   */
   public @Nullable Path getRootDir() {
     return securityManagerBuilder.getRootDir();
   }
 
-  /** Sets the given logger, replacing any previously set logger. */
+  /**
+   * Sets the module trust levels that determine if a module import is allowed.
+   *
+   * <p>Pkl code can import a module with {@code import "moduleUri"}, {@code amends "moduleUri},
+   * {@code extends "moduleUri"}, or an {@code import("moduleUri")} expression. The import is
+   * allowed only if the importing module has a higher trust level than the imported module.
+   *
+   * <p>Setting a {@linkplain #setSecurityManager custom security manager} causes this option to be
+   * ignored.
+   *
+   * <p>Default: {@link SecurityManagers#defaultTrustLevels}
+   *
+   * @throws IllegalStateException if a custom security manager has been set
+   * @see #getTrustLevels
+   */
+  public EvaluatorBuilder setTrustLevels(Function<URI, Integer> trustLevels) {
+    requireNullSecurityManager("setTrustLevels");
+    securityManagerBuilder.setTrustLevels(trustLevels);
+    return this;
+  }
+
+  /**
+   * Returns the module trust levels that determine if a module import is allowed.
+   *
+   * <p>For more information, see {@link #setTrustLevels}.
+   */
+  public Function<URI, Integer> getTrustLevels() {
+    return securityManagerBuilder.getTrustLevels();
+  }
+
+  /**
+   * Sets the logger for trace and warn messages.
+   *
+   * <p>Default: {@link Loggers#noop}
+   *
+   * @see #getLogger
+   */
   public EvaluatorBuilder setLogger(Logger logger) {
     this.logger = logger;
     return this;
   }
 
-  /** Returns the currently set logger. */
+  /**
+   * Returns the logger for trace and warn messages.
+   *
+   * <p>For more information, see {@link #setLogger}.
+   */
   public Logger getLogger() {
     return logger;
   }
 
   /**
-   * Adds the given module key factory. Factories will be asked to resolve module keys in the order
-   * they have been added to this builder.
+   * Adds a {@code ModuleKeyFactory} object that handles module imports.
+   *
+   * <p>For more information, see {@link #setModuleKeyFactories}.
+   *
+   * @see #addModuleKeyFactories
+   * @see #getModuleKeyFactories
    */
   public EvaluatorBuilder addModuleKeyFactory(ModuleKeyFactory factory) {
     moduleKeyFactories.add(factory);
@@ -236,50 +429,138 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Adds the given module key factories. Factories will be asked to resolve module keys in the
-   * order they have been added to this builder.
+   * Adds {@code ModuleKeyFactory} objects that handle module imports.
+   *
+   * <p>For more information, see {@link #setModuleKeyFactories}.
+   *
+   * @see #addModuleKeyFactory
+   * @see #getModuleKeyFactories
    */
   public EvaluatorBuilder addModuleKeyFactories(Collection<ModuleKeyFactory> factories) {
     moduleKeyFactories.addAll(factories);
     return this;
   }
 
-  /** Removes any existing module key factories, then adds the given factories. */
+  /**
+   * Sets the {@code ModuleKeyFactory} objects that handle module imports.
+   *
+   * <p>Pkl code can import a module with {@code import "moduleUri"}, {@code amends "moduleUri},
+   * {@code extends "moduleUri"}, or an {@code import("moduleUri")} expression. The import is
+   * handled by the first element in {@code factories} (according to iteration order) that can
+   * handle {@code moduleUri}.
+   *
+   * <p>Default when {@link #unconfigured}: empty list
+   *
+   * <p>Default when {@link #preconfigured}:
+   *
+   * <ul>
+   *   <li>{@link ModuleKeyFactories#standardLibrary}
+   *   <li>{@link ModuleKeyFactories#classPath}
+   *   <li>{@link ModuleKeyFactories#fromServiceProviders}
+   *   <li>{@link ModuleKeyFactories#file}
+   *   <li>{@link ModuleKeyFactories#pkg}
+   *   <li>{@link ModuleKeyFactories#projectpackage}
+   *   <li>{@link ModuleKeyFactories#genericUrl}
+   * </ul>
+   *
+   * @see #addModuleKeyFactory
+   * @see #addModuleKeyFactories
+   * @see #getModuleKeyFactories
+   */
   public EvaluatorBuilder setModuleKeyFactories(Collection<ModuleKeyFactory> factories) {
     moduleKeyFactories.clear();
     return addModuleKeyFactories(factories);
   }
 
-  /** Returns the currently set module key factories. */
+  /**
+   * Returns the {@code ModuleKeyFactory} objects that handle module imports.
+   *
+   * <p>For more information, see {@link #setModuleKeyFactories}.
+   *
+   * @see #addModuleKeyFactory
+   * @see #addModuleKeyFactories
+   */
   public List<ModuleKeyFactory> getModuleKeyFactories() {
     return moduleKeyFactories;
   }
 
+  /**
+   * Adds a {@code ResourceReader} object that handles resource reads.
+   *
+   * <p>For more information, see {@link #setResourceReaders}.
+   *
+   * @see #addResourceReaders
+   * @see #getResourceReaders
+   */
   public EvaluatorBuilder addResourceReader(ResourceReader reader) {
     resourceReaders.add(reader);
     return this;
   }
 
+  /**
+   * Adds {@code ResourceReader} objects that handle resource reads.
+   *
+   * <p>For more information, see {@link #setResourceReaders}.
+   *
+   * @see #addResourceReader
+   * @see #getResourceReaders
+   */
   public EvaluatorBuilder addResourceReaders(Collection<ResourceReader> readers) {
     resourceReaders.addAll(readers);
     return this;
   }
 
+  /**
+   * Sets the {@code ResourceReader} objects that handle resource reads.
+   *
+   * <p>Pkl code can read a resource with {@code read(resourceUri)}. The read is handled by the
+   * {@code ResourceReader} registered for {@code resourceUri}'s scheme. The iteration order of
+   * {@code readers} is irrelevant.
+   *
+   * <p>Default when {@link #unconfigured}: empty list
+   *
+   * <p>Default when {@link #preconfigured}:
+   *
+   * <ul>
+   *   <li>{@link ResourceReaders#environmentVariable}
+   *   <li>{@link ResourceReaders#externalProperty}
+   *   <li>{@link ResourceReaders#file}
+   *   <li>{@link ResourceReaders#http}
+   *   <li>{@link ResourceReaders#https}
+   *   <li>{@link ResourceReaders#pkg}
+   *   <li>{@link ResourceReaders#projectpackage}
+   * </ul>
+   *
+   * @see #addResourceReader
+   * @see #addResourceReaders
+   * @see #getResourceReaders
+   */
   public EvaluatorBuilder setResourceReaders(Collection<ResourceReader> readers) {
     resourceReaders.clear();
     return addResourceReaders(readers);
   }
 
-  /** Returns the currently set resource readers. */
+  /**
+   * Returns the {@code ResourceReader} objects that handle resource reads.
+   *
+   * <p>For more information, see {@link #setResourceReaders}.
+   *
+   * @see #addResourceReader
+   * @see #addResourceReaders
+   */
   public List<ResourceReader> getResourceReaders() {
     return resourceReaders;
   }
 
   /**
-   * Adds the given environment variable, overriding any environment variable previously added under
-   * the same name.
+   * Adds an environment variable available to Pkl code.
    *
-   * <p>Pkl code can read environment variables with {@code read("env:<NAME>")}.
+   * <p>Overrides any equally named environment variable that has been added previously.
+   *
+   * <p>For more information, see {@link #setResourceReaders}.
+   *
+   * @see #addEnvironmentVariables
+   * @see #getEnvironmentVariables
    */
   public EvaluatorBuilder addEnvironmentVariable(String name, String value) {
     environmentVariables.put(name, value);
@@ -287,31 +568,59 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Adds the given environment variables, overriding any environment variables previously added
-   * under the same name.
+   * Adds environment variables available to Pkl code.
    *
-   * <p>Pkl code can read environment variables with {@code read("env:<NAME>")}.
+   * <p>Overrides any equally named environment variables that have been added previously.
+   *
+   * <p>For more information, see {@link #setResourceReaders}.
+   *
+   * @see #addEnvironmentVariable
+   * @see #getEnvironmentVariables
    */
   public EvaluatorBuilder addEnvironmentVariables(Map<String, String> envVars) {
     environmentVariables.putAll(envVars);
     return this;
   }
 
-  /** Removes any existing environment variables, then adds the given environment variables. */
+  /**
+   * Sets the environment variables available to Pkl code.
+   *
+   * <p>Pkl code can read environment variables with {@code read("env:<NAME>")}.
+   *
+   * <p>Default when {@link #unconfigured}: empty map
+   *
+   * <p>Default when {@link #preconfigured}: {@code System.getenv()}
+   *
+   * @see #addEnvironmentVariable
+   * @see #addEnvironmentVariables
+   * @see #getEnvironmentVariables
+   */
   public EvaluatorBuilder setEnvironmentVariables(Map<String, String> envVars) {
     environmentVariables.clear();
     return addEnvironmentVariables(envVars);
   }
 
-  /** Returns the currently set environment variables. */
+  /**
+   * Returns the environment variables available to Pkl code.
+   *
+   * <p>For more information, see {@link #setEnvironmentVariables}.
+   *
+   * @see #addEnvironmentVariable
+   * @see #addEnvironmentVariables
+   */
   public Map<String, String> getEnvironmentVariables() {
     return environmentVariables;
   }
 
   /**
-   * Adds the given external property, overriding any property previously set under the same name.
+   * Adds an external property available to Pkl code.
    *
-   * <p>Pkl code can read external properties with {@code read("prop:<name>")}.
+   * <p>Overrides any equally named external property that has been added previously.
+   *
+   * <p>For more information, see {@link #setExternalProperties}.
+   *
+   * @see #addExternalProperties
+   * @see #getExternalProperties
    */
   public EvaluatorBuilder addExternalProperty(String name, String value) {
     externalProperties.put(name, value);
@@ -319,44 +628,81 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Adds the given external properties, overriding any properties previously set under the same
-   * name.
+   * Adds external properties available to Pkl code.
    *
-   * <p>Pkl code can read external properties with {@code read("prop:<name>")}.
+   * <p>Overrides any equally named external properties that have been added previously.
+   *
+   * <p>For more information, see {@link #setExternalProperties}.
+   *
+   * @see #addExternalProperty
+   * @see #getExternalProperties
    */
   public EvaluatorBuilder addExternalProperties(Map<String, String> properties) {
     externalProperties.putAll(properties);
     return this;
   }
 
-  /** Removes any existing external properties, then adds the given properties. */
+  /**
+   * Sets the external properties available to Pkl code.
+   *
+   * <p>Pkl code can read external properties with {@code read("prop:<name>")}.
+   *
+   * <p>Default when {@link #unconfigured}: empty map
+   *
+   * <p>Default when {@link #preconfigured}: {@code System.getProperties()}
+   *
+   * @see #addExternalProperty
+   * @see #addExternalProperties
+   * @see #getExternalProperties
+   */
   public EvaluatorBuilder setExternalProperties(Map<String, String> properties) {
     externalProperties.clear();
     return addExternalProperties(properties);
   }
 
-  /** Returns the currently set external properties. */
+  /**
+   * Returns the external properties available to Pkl code.
+   *
+   * <p>For more information, see {@link #setExternalProperties}.
+   *
+   * @see #addExternalProperty
+   * @see #addExternalProperties
+   */
   public Map<String, String> getExternalProperties() {
     return externalProperties;
   }
 
   /**
-   * Sets an evaluation timeout to be enforced by the {@link Evaluator}'s {@code evaluate} methods.
+   * Sets the duration after which evaluation of a source module is timed out.
+   *
+   * <p>If {@code null}, no timeout is enforced.
+   *
+   * <p>Default: {@code null}
+   *
+   * @see #getTimeout
    */
   public EvaluatorBuilder setTimeout(java.time.@Nullable Duration timeout) {
     this.timeout = timeout;
     return this;
   }
 
-  /** Returns the currently set evaluation timeout. */
+  /**
+   * Returns the duration after which evaluation of a source module is timed out.
+   *
+   * <p>For more information, see {@link #setTimeout}.
+   */
   public java.time.@Nullable Duration getTimeout() {
     return timeout;
   }
 
   /**
-   * Sets the directory where `package:` modules are cached.
+   * Sets the directory where {@code package:} modules are cached.
    *
-   * <p>If {@code null}, the module cache is disabled.
+   * <p>If {@code null}, {@code package:} modules are not cached.
+   *
+   * <p>Default: {@link #getDefaultModuleCacheDir}
+   *
+   * @see #getDefaultModuleCacheDir
    */
   public EvaluatorBuilder setModuleCacheDir(@Nullable Path moduleCacheDir) {
     this.moduleCacheDir = moduleCacheDir;
@@ -364,22 +710,34 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Returns the directory where `package:` modules are cached. If {@code null}, the module cache is
-   * disabled.
+   * Returns the directory where {@code package:} modules are cached.
+   *
+   * <p>For more information, see {@link #setModuleCacheDir}.
    */
   public @Nullable Path getModuleCacheDir() {
     return moduleCacheDir;
   }
 
   /**
-   * Sets the desired output format, if any.
+   * Returns the default directory where {@code package:} modules are cached, namely {@code
+   * ~/.pkl/cache}.
+   */
+  public static Path getDefaultModuleCacheDir() {
+    return IoUtils.getDefaultModuleCacheDir();
+  }
+
+  /**
+   * Sets the desired output format.
    *
-   * <p>By default, modules support the formats described by {@link OutputFormat}. and fall back to
-   * {@link OutputFormat#PCF} if no format is specified.
+   * <p>The output formats supported by default are defined in {@link OutputFormat}. Modules may
+   * override their {@code output.renderer} property to support other formats or to always render
+   * the same format. In particular, most templates always render the same format, ignoring this
+   * option.
    *
-   * <p>Modules that override {@code output.renderer} in their source code may ignore this option or
-   * may support formats other than those described by {@link OutputFormat}. In particular, most
-   * templates ignore this option and always render the same format.
+   * <p>Default: {@code null}
+   *
+   * @see #getOutputFormat
+   * @see #setOutputFormat(OutputFormat)
    */
   public EvaluatorBuilder setOutputFormat(@Nullable String outputFormat) {
     this.outputFormat = outputFormat;
@@ -387,43 +745,83 @@ public final class EvaluatorBuilder {
   }
 
   /**
-   * Sets the desired output format, if any.
+   * Sets the desired output format.
    *
-   * <p>By default, modules support the formats described by {@link OutputFormat}. and fall back to
-   * {@link OutputFormat#PCF} if no format is specified.
+   * <p>For more information, see {@link #setOutputFormat(String)}.
    *
-   * <p>Modules that override {@code output.renderer} in their source code may ignore this option or
-   * may support formats other than those described by {@link OutputFormat}. In particular, most
-   * templates ignore this option and always render the same format.
+   * @see #getOutputFormat
    */
   public EvaluatorBuilder setOutputFormat(@Nullable OutputFormat outputFormat) {
     this.outputFormat = outputFormat == null ? null : outputFormat.toString();
     return this;
   }
 
-  /** Returns the currently set output format, if any. */
+  /**
+   * Returns the desired output format.
+   *
+   * <p>For more information, see {@link #setOutputFormat(String)}.
+   *
+   * @see #setOutputFormat(OutputFormat)
+   */
   public @Nullable String getOutputFormat() {
     return outputFormat;
   }
 
-  /** Sets the project dependencies for the evaluator. */
-  public EvaluatorBuilder setProjectDependencies(DeclaredDependencies dependencies) {
+  /**
+   * Sets the project dependencies available to Pkl code.
+   *
+   * <p>Default: {@code null}
+   *
+   * @see #getProjectDependencies
+   */
+  public EvaluatorBuilder setProjectDependencies(@Nullable DeclaredDependencies dependencies) {
     this.dependencies = dependencies;
     return this;
   }
 
   /**
-   * Given a project, sets its dependencies, and also applies any evaluator settings if set.
+   * Returns the project dependencies available to Pkl code.
    *
-   * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
+   * <p>For more information, see {@link #setProjectDependencies}.
+   */
+  public @Nullable DeclaredDependencies getProjectDependencies() {
+    return dependencies;
+  }
+
+  /**
+   * Applies a project's dependencies and evaluator settings.
+   *
+   * <p>Project dependencies are applied by calling {@link #setProjectDependencies}. Evaluator
+   * settings are applied by calling the following builder methods:
+   *
+   * <ul>
+   *   <li>{@link #setExternalProperties}
+   *   <li>{@link #setEnvironmentVariables}
+   *   <li>{@link #setTimeout}
+   *   <li>{@link #setModuleCacheDir}
+   *   <li>{@link #addResourceReader} (to access the project's {@linkplain
+   *       EvaluatorSettings#getModulePath module path})
+   *   <li>{@link #addModuleKeyFactory} (to access the project's {@linkplain
+   *       EvaluatorSettings#getModulePath module path})
+   *   <li>{@link #setAllowedModules}
+   *   <li>{@link #setAllowedResources}
+   *   <li>{@link #setRootDir}
+   * </ul>
+   *
+   * <p>The above methods are only called if the project defines a corresponding evaluator setting.
+   *
+   * <p>To apply project dependencies but not evaluator settings, use {@code
+   * setProjectDependencies(project.getDependencies())}.
+   *
+   * @throws IllegalStateException if a {@linkplain #setSecurityManager custom security manager} has
+   *     been set and the given project defines {@link EvaluatorSettings#getAllowedModules
+   *     allowedModules}, {@link EvaluatorSettings#getAllowedResources allowedResources}, or {@link
+   *     EvaluatorSettings#getRootDir rootDir}
    */
   public EvaluatorBuilder applyFromProject(Project project) {
     this.dependencies = project.getDependencies();
     var settings = project.getSettings();
-    if (securityManager != null) {
-      throw new IllegalStateException(
-          "Cannot call both `setSecurityManager` and `setProject`, because both define security manager settings. Call `setProjectOnly` if the security manager is desired.");
-    }
+    requireNullSecurityManager("applyFromProject");
     if (settings.getAllowedModules() != null) {
       setAllowedModules(settings.getAllowedModules());
     }
@@ -456,27 +854,36 @@ public final class EvaluatorBuilder {
     return this;
   }
 
+  /**
+   * Builds a new evaluator from this builder's current state. Subsequent changes to the builder's
+   * state will not affect previously returned evaluators.
+   */
   public Evaluator build() {
-    if (securityManager == null) {
-      securityManager = securityManagerBuilder.build();
-    }
-
-    if (stackFrameTransformer == null) {
-      throw new IllegalStateException("No stack frame transformer set.");
-    }
+    var securityManager =
+        this.securityManager != null ? this.securityManager : securityManagerBuilder.build();
 
     return new EvaluatorImpl(
         stackFrameTransformer,
         securityManager,
         new LoggerImpl(logger, stackFrameTransformer),
         // copy to shield against subsequent modification through builder
-        new ArrayList<>(moduleKeyFactories),
-        new ArrayList<>(resourceReaders),
-        new HashMap<>(environmentVariables),
-        new HashMap<>(externalProperties),
+        List.copyOf(moduleKeyFactories),
+        List.copyOf(resourceReaders),
+        Map.copyOf(environmentVariables),
+        Map.copyOf(externalProperties),
         timeout,
         moduleCacheDir,
         dependencies,
         outputFormat);
+  }
+
+  private void requireNullSecurityManager(String methodName) {
+    if (securityManager != null) {
+      throw new IllegalStateException(
+          "Method `"
+              + methodName
+              + "` cannot be used "
+              + "if a custom security manager has been set with `setSecurityManager`.");
+    }
   }
 }
