@@ -82,6 +82,21 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
   }
 
   @Test
+  fun `compile generated code with kserialization support`() {
+    writeBuildFile(kotlinxSerde = true)
+    writePklFile()
+    runTask("compileKotlin")
+
+    val classesDir = testProjectDir.resolve("build/classes/kotlin/main")
+    val moduleClassFile = classesDir.resolve("org/Mod.class")
+    val personClassFile = classesDir.resolve("org/Mod\$Person.class")
+    val addressClassFile = classesDir.resolve("org/Mod\$Address.class")
+    assertThat(moduleClassFile).exists()
+    assertThat(personClassFile).exists()
+    assertThat(addressClassFile).exists()
+  }
+
+  @Test
   fun `no source modules`() {
     writeFile(
       "build.gradle", """
@@ -103,8 +118,14 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     assertThat(result.output).contains("No source modules specified.")
   }
 
-  private fun writeBuildFile(kotlinPackage: String? = null) {
-    val kotlinVersion = "1.6.0"
+  private fun writeBuildFile(kotlinPackage: String? = null, kotlinxSerde: Boolean = false) {
+    val kotlinVersion = "1.7.10"
+    val kotlinXSerdeVersion = "1.5.0"
+    val kotlinXRuntimeDependency = StringBuilder().apply {
+      append("org.jetbrains.kotlinx:kotlinx-serialization-core")
+      append(":")
+      append(kotlinXSerdeVersion)
+    }.toString()
 
     writeFile(
       "build.gradle", """
@@ -117,6 +138,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
           classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion") {
             exclude module: "kotlin-android-extensions"
           }
+          classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion")
         }
       }
 
@@ -125,6 +147,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
       }
 
       apply plugin: "kotlin"
+      ${if (kotlinxSerde) "apply plugin: 'kotlinx-serialization'" else ""}
 
       repositories {
         mavenCentral()
@@ -132,6 +155,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
 
       dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+        ${if (kotlinxSerde) "implementation '$kotlinXRuntimeDependency'" else ""}
       }
 
       pkl {

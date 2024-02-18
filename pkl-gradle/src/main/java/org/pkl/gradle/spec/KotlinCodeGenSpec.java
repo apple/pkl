@@ -24,4 +24,8 @@ public interface KotlinCodeGenSpec extends CodeGenSpec {
   Property<String> getKotlinPackage();
 
   Property<Boolean> getGenerateKdoc();
+
+  Property<Boolean> getImplementSerializable();
+
+  Property<Boolean> getImplementKSerializable();
 }

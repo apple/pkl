@@ -28,6 +28,9 @@ public abstract class KotlinCodeGenTask extends CodeGenTask {
   @Input
   public abstract Property<String> getKotlinPackage();
 
+  @Input
+  public abstract Property<Boolean> getImplementKSerializable();
+
   @Override
   protected void doRunTask() {
     //noinspection ResultOfMethodCallIgnored
@@ -41,7 +44,8 @@ public abstract class KotlinCodeGenTask extends CodeGenTask {
                 getKotlinPackage().get(),
                 getGenerateKdoc().get(),
                 getGenerateSpringBootConfig().get(),
-                getImplementSerializable().get()))
+                getImplementSerializable().get(),
+                getImplementKSerializable().get()))
         .run();
   }
 }
