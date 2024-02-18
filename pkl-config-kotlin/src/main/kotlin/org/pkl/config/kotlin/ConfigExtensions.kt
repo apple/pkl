@@ -39,6 +39,8 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
 inline fun <reified T> Config.to(): T {
   val javaType = object : JavaType<T>() {}
   val result = `as`<T>(javaType.type)
+
+  @Suppress("SENSELESS_COMPARISON")
   if (result == null && null !is T) {
     throw ConversionException(
       "Expected a non-null value but got `null`. " +

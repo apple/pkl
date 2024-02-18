@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:JavaCodeGenerator.kt$JavaCodeGenerator$@Suppress("NAME_SHADOWING") private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): TypeSpec.Builder</ID>
+    <ID>CyclomaticComplexMethod:JavaCodeGenerator.kt$JavaCodeGenerator$private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName</ID>
+    <ID>LargeClass:JavaCodeGenerator.kt$JavaCodeGenerator</ID>
+    <ID>LargeClass:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest</ID>
+    <ID>LongMethod:CliJavaCodeGeneratorTest.kt$CliJavaCodeGeneratorTest$@Test fun `module inheritance`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:JavaCodeGenerator.kt$JavaCodeGenerator$private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName</ID>
+    <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun `generates serializable classes`()</ID>
+    <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun `generic type aliases`()</ID>
+    <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun `pkl_base type aliases`()</ID>
+    <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun testToString()</ID>
+    <ID>LongParameterList:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest.Companion$( pklCode: String, generateGetters: Boolean = false, generateJavadoc: Boolean = false, generateSpringBootConfig: Boolean = false, nonNullAnnotation: String? = null, implementSerializable: Boolean = false )</ID>
+    <ID>NestedBlockDepth:CliJavaCodeGenerator.kt$CliJavaCodeGenerator$override fun doRun()</ID>
+    <ID>NestedBlockDepth:JavaCodeGenerator.kt$JavaCodeGenerator$@Suppress("NAME_SHADOWING") private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): TypeSpec.Builder</ID>
+    <ID>NestedBlockDepth:JavaCodeGenerator.kt$JavaCodeGenerator$private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName</ID>
+    <ID>SpreadOperator:JavaCodeGenerator.kt$JavaCodeGenerator.Companion$(packageName, classParts.first(), *classParts.drop(1).toTypedArray())</ID>
+    <ID>SwallowedException:CliJavaCodeGenerator.kt$CliJavaCodeGenerator$e: IOException</ID>
+    <ID>SwallowedException:CliJavaCodeGenerator.kt$CliJavaCodeGenerator$e: JavaCodeGeneratorException</ID>
+    <ID>TooManyFunctions:JavaCodeGenerator.kt$JavaCodeGenerator</ID>
+  </CurrentIssues>
+</SmellBaseline>

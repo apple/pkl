@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:KotlinCodeGenerator.kt$KotlinCodeGenerator$private fun PType.toKotlinPoetName(): TypeName</ID>
+    <ID>CyclomaticComplexMethod:KotlinCodeGenerator.kt$KotlinCodeGenerator$private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): TypeSpec.Builder</ID>
+    <ID>LargeClass:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest</ID>
+    <ID>LongMethod:CliKotlinCodeGeneratorTest.kt$CliKotlinCodeGeneratorTest$@Test fun `module inheritance`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:KotlinCodeGenerator.kt$KotlinCodeGenerator$private fun PType.toKotlinPoetName(): TypeName</ID>
+    <ID>LongMethod:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest$@Test fun `generates serializable classes`()</ID>
+    <ID>LongMethod:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest$@Test fun `pkl_base type aliases`()</ID>
+    <ID>LongMethod:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest$@Test fun `user defined type aliases`()</ID>
+    <ID>LongMethod:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest$@Test fun genericTypeAliases()</ID>
+    <ID>LongMethod:KotlinCodeGeneratorTest.kt$KotlinCodeGeneratorTest$@Test fun testToString()</ID>
+    <ID>NestedBlockDepth:CliKotlinCodeGenerator.kt$CliKotlinCodeGenerator$override fun doRun()</ID>
+    <ID>SpreadOperator:KotlinCodeGenerator.kt$KotlinCodeGenerator$(*typeArgs)</ID>
+    <ID>SpreadOperator:KotlinCodeGenerator.kt$KotlinCodeGenerator$(*typeArguments.toKotlinPoet())</ID>
+    <ID>SwallowedException:CliKotlinCodeGenerator.kt$CliKotlinCodeGenerator$e: IOException</ID>
+    <ID>SwallowedException:CliKotlinCodeGenerator.kt$CliKotlinCodeGenerator$e: KotlinCodeGeneratorException</ID>
+    <ID>TooManyFunctions:KotlinCodeGenerator.kt$KotlinCodeGenerator</ID>
+  </CurrentIssues>
+</SmellBaseline>

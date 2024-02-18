@@ -47,8 +47,8 @@ tasks.processResources {
 
 val mainSourceSet by sourceSets.named("main") {
   resources {
-    srcDir(buildDir.resolve("test-packages/"))
-    srcDir(buildDir.resolve("keystore/"))
+    srcDir(layout.buildDirectory.dir("test-packages"))
+    srcDir(layout.buildDirectory.dir("keystore"))
   }
 }
 
@@ -56,16 +56,16 @@ val sourcesJar = tasks.named("sourcesJar").get()
 
 for (packageDir in file("src/main/files/packages").listFiles()!!) {
   if (!packageDir.isDirectory) continue
-  val destinationDir = buildDir.resolve("test-packages/org/pkl/commons/test/packages/${packageDir.name}")
+  val destinationDir = layout.buildDirectory.dir("test-packages/org/pkl/commons/test/packages/${packageDir.name}").get().asFile
   val metadataJson = packageDir.resolve("${packageDir.name}.json")
   val packageContents = packageDir.resolve("package")
   val zipFileName = "${packageDir.name}.zip"
   val archiveFile = destinationDir.resolve(zipFileName)
 
   tasks.create("zip-${packageDir.name}", Zip::class) {
-    archiveFileName.set(zipFileName)
+    archiveFileName = zipFileName
     from(packageContents)
-    destinationDirectory.set(destinationDir)
+    destinationDirectory = destinationDir
     // required so that checksums are reproducible
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
@@ -91,9 +91,9 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
 }
 
 val generateKeys by tasks.registering(JavaExec::class) {
-  val outputFile = file("$buildDir/keystore/localhost.p12")
+  val outputFile = layout.buildDirectory.file("keystore/localhost.p12")
   outputs.file(outputFile)
-  mainClass.set("sun.security.tools.keytool.Main")
+  mainClass = "sun.security.tools.keytool.Main"
   args = listOf(
     "-genkeypair",
     "-keyalg", "RSA",
@@ -102,8 +102,8 @@ val generateKeys by tasks.registering(JavaExec::class) {
     "-storepass", "password",
     "-dname", "CN=localhost"
   )
-  workingDir = file("$buildDir/keystore/")
-  onlyIf { !outputFile.exists() }
+  workingDir = layout.buildDirectory.dir("keystore").get().asFile
+  onlyIf { !outputFile.get().asFile.exists() }
   doFirst {
     workingDir.mkdirs()
   }
@@ -111,9 +111,9 @@ val generateKeys by tasks.registering(JavaExec::class) {
 
 val generateCerts by tasks.registering(JavaExec::class) {
   dependsOn("generateKeys")
-  val outputFile = file("$buildDir/keystore/localhost.pem")
+  val outputFile = layout.buildDirectory.file("keystore/localhost.pem")
   outputs.file(outputFile)
-  mainClass.set("sun.security.tools.keytool.Main")
+  mainClass = "sun.security.tools.keytool.Main"
   args = listOf(
     "-exportcert",
     "-alias", "integ_tests",
@@ -122,8 +122,8 @@ val generateCerts by tasks.registering(JavaExec::class) {
     "-rfc",
     "-file", "localhost.pem"
   )
-  workingDir = file("$buildDir/keystore/")
-  onlyIf { !outputFile.exists() }
+  workingDir = layout.buildDirectory.dir("keystore").get().asFile
+  onlyIf { !outputFile.get().asFile.exists() }
   doFirst {
     workingDir.mkdirs()
   }

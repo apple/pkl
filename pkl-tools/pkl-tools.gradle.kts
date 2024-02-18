@@ -46,11 +46,11 @@ java {
 
 val javadocJar by tasks.existing(Jar::class) {
   from(javadocDummy.outputs.files)
-  archiveBaseName.set("pkl-tools-all")
+  archiveBaseName = "pkl-tools-all"
 }
 
 tasks.shadowJar {
-  archiveBaseName.set("pkl-tools-all")
+  archiveBaseName = "pkl-tools-all"
 }
 
 publishing {
@@ -63,38 +63,39 @@ publishing {
         classifier = "javadoc"
       }
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-tools")
-        description.set("Fat Jar containing pkl-cli, pkl-codegen-java, " +
+        url = "https://github.com/apple/pkl/tree/main/pkl-tools"
+        description = "Fat Jar containing pkl-cli, pkl-codegen-java, " +
           "pkl-codegen-kotlin, pkl-config-java, pkl-core, pkl-doc, " +
-          "and their shaded third-party dependencies.")
-        name.set(artifactId)
+          "and their shaded third-party dependencies."
+        name = artifactId
         // keep in sync with pklPublishLibrary
         licenses {
           license {
-            name.set("The Apache Software License, Version 2.0")
-            url.set("https://github.com/apple/pkl/blob/main/LICENSE.txt")
+            name = "The Apache Software License, Version 2.0"
+            url = "https://github.com/apple/pkl/blob/main/LICENSE.txt"
           }
         }
         developers {
           developer {
-            id.set("pkl-authors")
-            name.set("The Pkl Authors")
-            email.set("pkl-oss@group.apple.com")
+            id = "pkl-authors"
+            name = "The Pkl Authors"
+            email = "pkl-oss@group.apple.com"
           }
         }
         scm {
-          connection.set("scm:git:git://github.com/apple/pkl.git")
-          developerConnection.set("scm:git:ssh://github.com/apple/pkl.git")
+          connection = "scm:git:git://github.com/apple/pkl.git"
+          developerConnection = "scm:git:ssh://github.com/apple/pkl.git"
+
           val buildInfo = project.extensions.getByType<BuildInfo>()
-          url.set("https://github.com/apple/pkl/tree/${buildInfo.commitish}")
+          url = "https://github.com/apple/pkl/tree/${buildInfo.commitish}"
         }
         issueManagement {
-          system.set("GitHub Issues")
-          url.set("https://github.com/apple/pkl/issues")
+          system = "GitHub Issues"
+          url = "https://github.com/apple/pkl/issues"
         }
         ciManagement {
-          system.set("Circle CI")
-          url.set("https://app.circleci.com/pipelines/github/apple/pkl")
+          system = "Circle CI"
+          url = "https://app.circleci.com/pipelines/github/apple/pkl"
         }
       }
     }

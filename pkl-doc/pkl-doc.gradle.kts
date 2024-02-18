@@ -36,8 +36,8 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-doc")
-        description.set("Documentation generator for Pkl modules.")
+        url = "https://github.com/apple/pkl/tree/main/pkl-doc"
+        description = "Documentation generator for Pkl modules."
       }
     }
   }

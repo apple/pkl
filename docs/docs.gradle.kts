@@ -8,14 +8,14 @@ plugins {
 sourceSets {
   test {
     java {
-      srcDir(file("modules/pkl-core/examples"))
-      srcDir(file("modules/pkl-config-java/examples"))
+      srcDir(layout.projectDirectory.file("modules/pkl-core/examples"))
+      srcDir(layout.projectDirectory.file("modules/pkl-config-java/examples"))
     }
     val kotlin = project.extensions
       .getByType<KotlinJvmProjectExtension>()
       .sourceSets[name]
       .kotlin
-    kotlin.srcDir(file("modules/pkl-config-kotlin/examples"))
+    kotlin.srcDir(layout.projectDirectory.file("modules/pkl-config-kotlin/examples"))
   }
 }
 

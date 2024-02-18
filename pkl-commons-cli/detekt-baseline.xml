@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>MaxLineLength:ProjectOptions.kt$ProjectOptions$"The project directory to use for this command. By default, searches up from the working directory for a PklProject file."</ID>
+    <ID>MemberNameEqualsClassName:BaseOptions.kt$BaseOptions$fun baseOptions( modules: List&lt;URI&gt;, projectOptions: ProjectOptions? = null, testMode: Boolean = false ): CliBaseOptions</ID>
+    <ID>SwallowedException:CliCommand.kt$CliCommand$e: PklException</ID>
+    <ID>ThrowsCount:CliCommand.kt$CliCommand$fun run()</ID>
+    <ID>TooGenericExceptionCaught:CliCommand.kt$CliCommand$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CliMain.kt$e: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -38,7 +38,7 @@ val verifyGraalVm by tasks.registering(Verify::class) {
   algorithm("SHA-256")
 }
 
-// minimize chance of corruption by extract-to-random-dir-and-flip-symlink
+// minimize chances of corruption by extract-to-random-dir-and-flip-symlink
 val installGraalVm by tasks.registering {
   dependsOn(verifyGraalVm)
 

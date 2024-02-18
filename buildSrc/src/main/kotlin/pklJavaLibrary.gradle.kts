@@ -3,24 +3,43 @@
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
+  pmd
   `java-library`
   id("pklKotlinTest")
   id("com.diffplug.spotless")
 }
 
-// make sources Jar available to other subprojects
-val sourcesJarConfiguration = configurations.register("sourcesJar")
+// JVM toolchain defaults, properties, and resolved configuration.
+private val defaultJvmTarget = "11"
+private val jvmVendor = JvmVendorSpec.GRAAL_VM
+private val jvmTargetVersion =
+  (findProperty("javaTarget") as? String ?: defaultJvmTarget)
 
-// Version Catalog library symbols.
+// Version catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
+// make source jar available to other subprojects
+val sourcesJarConfiguration: Provider<Configuration> = configurations.register("sourcesJar")
+
+pmd {
+  isConsoleOutput = true
+  toolVersion = libs.versions.pmd.get()
+  threads = 4
+  isIgnoreFailures = true
+  incrementalAnalysis = true
+}
+
 java {
+  // obtain and use a Java toolchain from GraalVM, at the version specified for the project.
+  sourceCompatibility = JavaVersion.toVersion(jvmTargetVersion)
+  targetCompatibility = JavaVersion.toVersion(jvmTargetVersion)
+
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
 }
 
 artifacts {
-  // make sources Jar available to other subprojects
+  // make source jar available to other subprojects
   add("sourcesJar", tasks["sourcesJar"])
 }
 
@@ -55,7 +74,7 @@ val workAroundKotlinGradlePluginBug by tasks.registering {
     // A problem was found with the configuration of task ':pkl-executor:compileJava' (type 'JavaCompile').
     // > Directory '[...]/pkl/pkl-executor/build/classes/kotlin/main'
     // specified for property 'compileKotlinOutputClasses' does not exist.
-    file("$buildDir/classes/kotlin/main").mkdirs()
+    layout.buildDirectory.dir("classes/kotlin/main").get().asFile.mkdirs()
   }
 }
 

@@ -109,7 +109,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
             val project = Project.loadFromPath(
               projectDir.resolve("PklProject"),
               SecurityManagers.defaultManager,
-              null,
+              Duration.ofSeconds(30.0).toJavaDuration(),
               StackFrameTransformers.empty,
               mapOf()
             )

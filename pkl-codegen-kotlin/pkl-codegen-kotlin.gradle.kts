@@ -8,11 +8,11 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-codegen-kotlin")
-        description.set("""
+        url = "https://github.com/apple/pkl/tree/main/pkl-codegen-kotlin"
+        description = """
           Kotlin source code generator that generates corresponding Kotlin classes for Pkl classes,
           simplifying consumption of Pkl configuration as statically typed Kotlin objects.
-        """.trimIndent())
+        """.trimIndent()
       }
     }
   }
@@ -40,5 +40,5 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.kotlinCompilerEmbeddable)
   testRuntimeOnly(libs.kotlinScriptingCompilerEmbeddable)
-  testRuntimeOnly(libs.kotlinScriptUtil)
+  testRuntimeOnly(libs.kotlinScriptingJsr223)
 }

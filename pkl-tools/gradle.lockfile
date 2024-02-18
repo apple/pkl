@@ -1,34 +1,4 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.github.ajalt.clikt:clikt:3.5.1=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.squareup:javapoet:1.13.0=default,runtimeClasspath,testRuntimeClasspath
-com.squareup:kotlinpoet:1.6.0=default,runtimeClasspath,testRuntimeClasspath
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=default,runtimeClasspath,testRuntimeClasspath
-io.leangen.geantyref:geantyref:1.3.14=default,runtimeClasspath,testRuntimeClasspath
-org.commonmark:commonmark-ext-gfm-tables:0.21.0=default,runtimeClasspath,testRuntimeClasspath
-org.commonmark:commonmark:0.21.0=default,runtimeClasspath,testRuntimeClasspath
-org.fusesource.jansi:jansi:2.4.0=default,runtimeClasspath,testRuntimeClasspath
-org.graalvm.sdk:graal-sdk:22.3.3=default,runtimeClasspath,testRuntimeClasspath
-org.graalvm.truffle:truffle-api:22.3.3=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlin:kotlin-reflect:1.7.10=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlin:kotlin-stdlib-common:1.7.10=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.10=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.jetbrains.kotlin:kotlin-stdlib:1.7.10=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-html-jvm:0.8.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-serialization-bom:1.5.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.5.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-serialization-core:1.5.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.5.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1=default,runtimeClasspath,testRuntimeClasspath
-org.jetbrains:annotations:13.0=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-org.jline:jline-native:3.23.0=default,runtimeClasspath,testRuntimeClasspath
-org.jline:jline-reader:3.23.0=default,runtimeClasspath,testRuntimeClasspath
-org.jline:jline-terminal-jansi:3.23.0=default,runtimeClasspath,testRuntimeClasspath
-org.jline:jline-terminal:3.23.0=default,runtimeClasspath,testRuntimeClasspath
-org.msgpack:msgpack-core:0.9.0=default,runtimeClasspath,testRuntimeClasspath
-org.organicdesign:Paguro:3.10.3=default,runtimeClasspath,testRuntimeClasspath
-org.snakeyaml:snakeyaml-engine:2.5=default,runtimeClasspath,testRuntimeClasspath
-empty=annotationProcessor,archives,fatJar,firstPartySourcesJars,shadow,testAnnotationProcessor
+empty=annotationProcessor

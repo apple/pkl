@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ForbiddenComment:CliRepl.kt$CliRepl$// TODO: send options as command</ID>
+    <ID>LargeClass:CliEvaluatorTest.kt$CliEvaluatorTest</ID>
+    <ID>LargeClass:CliProjectPackagerTest.kt$CliProjectPackagerTest</ID>
+    <ID>LongMethod:CliProjectPackagerTest.kt$CliProjectPackagerTest$@Test fun `apiTests that import dependencies`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectPackagerTest.kt$CliProjectPackagerTest$@Test fun `generate package with local dependencies fails if local dep is not included for packaging`( @TempDir tempDir: Path )</ID>
+    <ID>LongMethod:CliProjectPackagerTest.kt$CliProjectPackagerTest$@Test fun `generate package`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectPackagerTest.kt$CliProjectPackagerTest$@Test fun `generate packages with local dependencies`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectPackagerTest.kt$CliProjectPackagerTest$@Test fun `multiple projects`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectResolverTest.kt$CliProjectResolverTest$@Test @Ignore("sgammon: Broken checksums") fun `local dependencies`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectResolverTest.kt$CliProjectResolverTest$@Test @Ignore("sgammon: Broken checksums") fun `resolving multiple projects`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliProjectResolverTest.kt$CliProjectResolverTest$@Test fun `local dependency overridden by remote dependency`(@TempDir tempDir: Path)</ID>
+    <ID>LongParameterList:CliProjectPackager.kt$CliProjectPackager$( baseOptions: CliBaseOptions, projectDirs: List&lt;Path&gt;, private val testOptions: CliTestOptions, private val outputPath: String, private val skipPublishCheck: Boolean, private val consoleWriter: Writer = System.out.writer(), private val errWriter: Writer = System.err.writer() )</ID>
+    <ID>MaxLineLength:CliAbstractProjectCommand.kt$CliAbstractProjectCommand$"No project visible to the working directory. Ensure there is a PklProject file in the workspace, or provide an explicit project directory as an argument."</ID>
+    <ID>MaxLineLength:CliDownloadPackageCommandTest.kt$CliDownloadPackageCommandTest$"Cannot download package `package://localhost:12110/badChecksum@1.0.0` because the computed checksum does not match the expected checksum."</ID>
+    <ID>MaxLineLength:CliDownloadPackageCommandTest.kt$CliDownloadPackageCommandTest$"package://localhost:12110/birds@0.5.0::sha256:3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"</ID>
+    <ID>MaxLineLength:CliEvaluator.kt$CliEvaluator$"Output file conflict: `output.files` entries `\"${previousOutput.pathSpec}\"` in module `${previousOutput.moduleUri}` and `\"$pathSpec\"` in module `$moduleUri` resolve to the same file path `$realPath`."</ID>
+    <ID>MaxLineLength:CliEvaluator.kt$CliEvaluator$"Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is a directory."</ID>
+    <ID>MaxLineLength:CliEvaluator.kt$CliEvaluator$"Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$outputDir`."</ID>
+    <ID>MaxLineLength:CliMainTest.kt$CliMainTest$"""Invalid value for "--multiple-file-output-path": Option is mutually exclusive with -o, --output-path and -x, --expression."""</ID>
+    <ID>MaxLineLength:CliProjectResolverTest.kt$CliProjectResolverTest$"WARN: local dependency `package://localhost:12110/fruit@1.0.0` was overridden to remote dependency `package://localhost:12110/fruit@1.0.5`.\n"</ID>
+    <ID>NestedBlockDepth:CliEvaluator.kt$CliEvaluator$private fun writeOutput(builder: EvaluatorBuilder)</ID>
+    <ID>NestedBlockDepth:CliTestRunner.kt$CliTestRunner$private fun evalTest(builder: EvaluatorBuilder)</ID>
+    <ID>NestedBlockDepth:Repl.kt$Repl$fun run()</ID>
+    <ID>NestedBlockDepth:ReplCompleters.kt$JLineFileNameCompleter$override fun complete( reader: LineReader, commandLine: ParsedLine, candidates: MutableList&lt;Candidate&gt; )</ID>
+    <ID>SpreadOperator:Main.kt$(*commands)</ID>
+    <ID>SwallowedException:CliEvaluator.kt$CliEvaluator$e: VmException</ID>
+    <ID>SwallowedException:CliProjectPackager.kt$CliProjectPackager$e: CliTestException</ID>
+    <ID>SwallowedException:CliServer.kt$CliServer$e: ProtocolException</ID>
+    <ID>SwallowedException:Repl.kt$Repl$e: EndOfFileException</ID>
+    <ID>SwallowedException:Repl.kt$Repl$e: UserInterruptException</ID>
+    <ID>SwallowedException:ReplCompleters.kt$JLineFileNameCompleter$e: IOException</ID>
+    <ID>ThrowsCount:CliEvaluator.kt$CliEvaluator$private fun writeMultipleFileOutput(builder: EvaluatorBuilder)</ID>
+    <ID>ThrowsCount:CliTestRunner.kt$CliTestRunner$private fun evalTest(builder: EvaluatorBuilder)</ID>
+    <ID>TooGenericExceptionCaught:CliDownloadPackageCommand.kt$CliDownloadPackageCommand$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CliTestRunner.kt$CliTestRunner$ex: Exception</ID>
+    <ID>TooGenericExceptionThrown:CliTestRunner.kt$CliTestRunner$throw RuntimeException( """ Cannot generate JUnit report for $moduleUri. A report with the same name was already generated. To fix, provide a different name for this module by adding a module header. """ .trimIndent() )</ID>
+    <ID>TooManyFunctions:Repl.kt$Repl</ID>
+    <ID>UseCheckOrError:Repl.kt$Repl$throw IllegalStateException("Unexpected response: $response")</ID>
+  </CurrentIssues>
+</SmellBaseline>

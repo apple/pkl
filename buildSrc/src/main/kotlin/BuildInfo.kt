@@ -108,8 +108,9 @@ open class BuildInfo(project: Project) {
   val commitId: String by lazy {
     // only run command once per build invocation
     if (project === project.rootProject) {
-      Runtime.getRuntime()
-        .exec("git rev-parse --short HEAD", arrayOf(), project.rootDir)
+      ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+        .directory(project.rootDir)
+        .start()
         .inputStream.reader().readText().trim()
     } else {
       project.rootProject.extensions.getByType(BuildInfo::class.java).commitId

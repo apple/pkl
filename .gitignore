@@ -1,5 +1,6 @@
 # macOS
 .DS_STORE
+.codebase/
 
 # Gradle
 .gradle/

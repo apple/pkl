@@ -17,8 +17,10 @@ dependencyResolutionManagement {
   }
 
   repositories {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositoriesMode = RepositoriesMode.PREFER_SETTINGS
     mavenCentral()
     gradlePluginPortal()
   }
 }
+
+rootProject.name = "buildSrc"
