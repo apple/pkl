@@ -8,6 +8,7 @@ dependencies {
   implementation(libs.kotlinPlugin) {
     exclude(module = "kotlin-android-extensions")
   }
+  implementation(libs.kotlinPluginSerialization)
   implementation(libs.shadowPlugin)
 
   // fix from the Gradle team: makes version catalog symbols available in build scripts

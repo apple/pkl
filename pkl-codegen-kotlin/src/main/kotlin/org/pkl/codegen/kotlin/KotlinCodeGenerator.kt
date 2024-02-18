@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
 import java.net.URI
 import java.util.*
+import kotlinx.serialization.Serializable
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 
@@ -37,7 +38,10 @@ data class KotlinCodegenOptions(
   val generateSpringBootConfig: Boolean = false,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+
+  /** Whether to annotate data classes with [kotlinx.serialization.Serializable] */
+  val implementKSerializable: Boolean = false,
 )
 
 class KotlinCodeGeneratorException(message: String) : RuntimeException(message)
@@ -138,7 +142,14 @@ class KotlinCodeGenerator(
         }
 
       for (pClass in moduleSchema.classes.values) {
-        moduleType.addType(generateTypeSpec(pClass, moduleSchema).ensureSerializable().build())
+        moduleType.addType(
+          generateTypeSpec(pClass, moduleSchema)
+            .apply {
+              ensureSerializable()
+              ensureKSerializable()
+            }
+            .build()
+        )
       }
 
       // generate append method for module classes w/o parent class; reuse in subclasses and nested
@@ -520,6 +531,18 @@ class KotlinCodeGenerator(
 
     return if (superclass == null && !pClass.isAbstract && !pClass.isOpen) generateDataClass()
     else generateRegularClass()
+  }
+
+  private fun TypeSpec.Builder.ensureKSerializable(): TypeSpec.Builder {
+    if (!options.implementKSerializable) {
+      return this
+    }
+
+    val spec = AnnotationSpec.builder(Serializable::class).build()
+    if (!this.annotationSpecs.contains(spec)) {
+      addAnnotation(spec)
+    }
+    return this
   }
 
   private fun TypeSpec.Builder.ensureSerializable(): TypeSpec.Builder {

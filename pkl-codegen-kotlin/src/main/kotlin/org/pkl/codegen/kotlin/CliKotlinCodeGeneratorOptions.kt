@@ -39,7 +39,10 @@ data class CliKotlinCodeGeneratorOptions(
   val generateSpringBootConfig: Boolean = false,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+
+  /** Whether to annotate generated data classes with [kotlinx.serialization.Serializable] */
+  val implementKSerializable: Boolean = false
 ) {
   fun toKotlinCodegenOptions(): KotlinCodegenOptions =
     KotlinCodegenOptions(
@@ -48,5 +51,6 @@ data class CliKotlinCodeGeneratorOptions(
       generateSpringBootConfig = generateSpringBootConfig,
       implementSerializable = implementSerializable,
       kotlinPackage = kotlinPackage,
+      implementKSerializable = implementKSerializable,
     )
 }

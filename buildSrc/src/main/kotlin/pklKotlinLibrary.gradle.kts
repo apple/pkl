@@ -4,6 +4,7 @@ plugins {
   id("pklJavaLibrary")
 
   kotlin("jvm")
+  kotlin("plugin.serialization")
 }
 
 val buildInfo = project.extensions.getByType<BuildInfo>()

@@ -31,6 +31,10 @@ dependencies {
   
   implementation(libs.kotlinPoet)
   implementation(libs.kotlinReflect)
+  implementation(libs.kotlinxSerializationCore) {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
+  }
 
   testImplementation(projects.pklConfigKotlin)
   testImplementation(projects.pklCommonsTest)

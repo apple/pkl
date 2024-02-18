@@ -197,6 +197,8 @@ public class PklPlugin implements Plugin<Project> {
 
           spec.getGenerateKdoc().convention(false);
           spec.getKotlinPackage().convention("");
+          spec.getImplementSerializable().convention(false);
+          spec.getImplementKSerializable().convention(false);
 
           createModulesTask(KotlinCodeGenTask.class, spec)
               .configure(
@@ -204,6 +206,8 @@ public class PklPlugin implements Plugin<Project> {
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
                     task.getIndent().set(spec.getIndent());
+                    task.getImplementSerializable().set(spec.getImplementSerializable());
+                    task.getImplementKSerializable().set(spec.getImplementKSerializable());
                     task.getKotlinPackage().set(spec.getKotlinPackage());
                   });
         });
