@@ -9,12 +9,14 @@ plugins {
   `maven-publish`
   pklPublishLibrary
   signing
+
+  alias(libs.plugins.buildconfig)
 }
 
 dependencies {
   // Declare a `compileOnly` dependency on `project(":pkl-tools")`
   // to ensure correct code navigation in IntelliJ.
-  compileOnly(project(":pkl-tools"))
+  compileOnly(projects.pklTools)
 
   // Declare a `runtimeOnly` dependency on `project(":pkl-tools", "fatJar")`
   // to ensure that the published plugin 
@@ -31,16 +33,16 @@ dependencies {
     runtimeOnly(project(":pkl-tools", "fatJar"))
   }
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 }
 
 publishing {
   publications {
     withType<MavenPublication>().configureEach {
       pom {
-        name.set("pkl-gradle plugin")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-gradle")
-        description.set("Gradle plugin for the Pkl configuration language.")
+        name = "pkl-gradle plugin"
+        url = "https://github.com/apple/pkl/tree/main/pkl-gradle"
+        description = "Gradle plugin for the Pkl configuration language."
       }
     }
   }
@@ -68,6 +70,17 @@ signing {
   publishing.publications.withType(MavenPublication::class.java).configureEach {
     if (name != "library") {
       sign(this)
+    }
+  }
+}
+
+buildConfig {
+  sourceSets {
+    named("test") {
+      packageName("org.pkl.gradle.constants.test")
+      useKotlinOutput { topLevelConstants = true }
+
+      buildConfigField("KOTLIN_VERSION", libs.versions.kotlin)
     }
   }
 }

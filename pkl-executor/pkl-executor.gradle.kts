@@ -16,8 +16,8 @@ dependencies {
 
   implementation(libs.slf4jApi)
 
-  testImplementation(project(":pkl-commons-test"))
-  testImplementation(project(":pkl-core"))
+  testImplementation(projects.pklCommonsTest)
+  testImplementation(projects.pklCore)
   testImplementation(libs.slf4jSimple)
 }
 
@@ -32,10 +32,10 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-executor")
-        description.set("""
+        url = "https://github.com/apple/pkl/tree/main/pkl-executor"
+        description = """
           Library for executing Pkl code in a sandboxed environment.
-        """.trimIndent())
+        """.trimIndent()
       }
     }
   }

@@ -2,6 +2,7 @@ package org.pkl.gradle
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.pkl.gradle.constants.test.KOTLIN_VERSION
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 
@@ -89,7 +90,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
   }
 
   private fun writeBuildFile() {
-    val kotlinVersion = "1.6.0"
+    val kotlinVersion = KOTLIN_VERSION
 
     writeFile(
       "build.gradle", """

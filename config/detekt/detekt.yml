@@ -1,0 +1,16 @@
+config:
+  validation: true
+  warningsAsErrors: false
+  checkExhaustiveness: false
+
+output-reports:
+  active: true
+  exclude:
+   - 'TxtOutputReport'
+   - 'MdOutputReport'
+
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: false

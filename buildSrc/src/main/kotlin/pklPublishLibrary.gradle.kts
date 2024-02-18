@@ -50,15 +50,18 @@ publishing {
 }
 
 val validatePom by tasks.registering {
+  if (tasks.findByName("generatePomFileForLibraryPublication") == null) {
+    return@registering
+  }
   val generatePomFileForLibraryPublication by tasks.existing(GenerateMavenPom::class)
-  val outputFile = file("$buildDir/validatePom") // dummy output to satisfy up-to-date check
+  val outputFile = layout.buildDirectory.dir("validatePom")
 
   dependsOn(generatePomFileForLibraryPublication)
   inputs.file(generatePomFileForLibraryPublication.get().destination)
   outputs.file(outputFile)
 
   doLast {
-    outputFile.delete()
+    outputFile.get().asFile.delete()
 
     val pomFile = generatePomFileForLibraryPublication.get().destination
     assert(pomFile.exists())
@@ -92,7 +95,7 @@ val validatePom by tasks.registering {
       }
     }
 
-    outputFile.writeText("OK")
+    outputFile.get().asFile.writeText("OK")
   }
 }
 

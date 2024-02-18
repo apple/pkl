@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:InputOutputTestEngine.kt$InputOutputTestEngine$methodSelectors.isEmpty() &amp;&amp; (packageSelectors.isEmpty() || packageSelectors.any { it.packageName == packageName }) &amp;&amp; (classSelectors.isEmpty() || classSelectors.any { it.className == className })</ID>
+    <ID>CyclomaticComplexMethod:FileTestUtils.kt$SnippetOutcome$fun check()</ID>
+    <ID>MaxLineLength:PackageServer.kt$PackageServer$"Port $PORT in use after $i/20 attempt(s), probably another test running in parallel. Sleeping for 1 second and trying again"</ID>
+    <ID>NestedBlockDepth:FileTestUtils.kt$SnippetOutcome$fun check()</ID>
+    <ID>SwallowedException:PackageServer.kt$PackageServer$e: FileSystemNotFoundException</ID>
+  </CurrentIssues>
+</SmellBaseline>

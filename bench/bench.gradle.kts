@@ -10,7 +10,7 @@ val graal: Configuration by configurations.creating
 
 @Suppress("UnstableApiUsage")
 dependencies {
-  jmh(project(":pkl-core"))
+  jmh(projects.pklCore)
   // necessary because antlr4-runtime is declared as implementation dependency in pkl-core.gradle
   jmh(libs.antlrRuntime)
   truffle(libs.truffleApi)
@@ -20,19 +20,17 @@ dependencies {
 jmh {
   //include = ["fib_class_java"]
   //include = ["fib_class_constrained1", "fib_class_constrained2"]
-  jmhVersion.set(libs.versions.jmh)
+  jmhVersion = libs.versions.jmh
   // jvmArgsAppend = "-Dgraal.TruffleCompilationExceptionsAreFatal=true " +
   //  "-Dgraal.Dump=Truffle,TruffleTree -Dgraal.TraceTruffleCompilation=true " +
   //  "-Dgraal.TruffleFunctionInlining=false"
-  jvm.set("${buildInfo.graalVm.baseDir}/bin/java")
+  jvm = "${buildInfo.graalVm.baseDir}/bin/java"
   // see: https://docs.oracle.com/en/graalvm/enterprise/20/docs/graalvm-as-a-platform/implement-language/#disable-class-path-separation
-  jvmArgs.set(
-    listOf(
-      // one JVM arg per list element doesn't work, but the following does
-      "-Dgraalvm.locatorDisabled=true --module-path=${truffle.asPath} --upgrade-module-path=${graal.asPath}"
-    )
+  jvmArgs = listOf(
+    // one JVM arg per list element doesn't work, but the following does
+    "-Dgraalvm.locatorDisabled=true --module-path=${truffle.asPath} --upgrade-module-path=${graal.asPath}"
   )
-  includeTests.set(false)
+  includeTests = false
   //threads = Runtime.runtime.availableProcessors() / 2 + 1
   //synchronizeIterations = false
 }

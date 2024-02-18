@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:Message.kt$CreateEvaluatorRequest$override fun equals(other: Any?): Boolean</ID>
+    <ID>CyclomaticComplexMethod:MessagePackDecoder.kt$MessagePackDecoder$override fun decode(): Message?</ID>
+    <ID>CyclomaticComplexMethod:MessagePackEncoder.kt$MessagePackEncoder$override fun encode(msg: Message)</ID>
+    <ID>EmptyFunctionBlock:MessageTransports.kt$MessageTransports.DirectMessageTransport${}</ID>
+    <ID>EmptyFunctionBlock:TestUtils.kt$&lt;no name provided&gt;${}</ID>
+    <ID>ForbiddenComment:MessageTransports.kt$MessageTransports.AbstractMessageTransport$// TODO: clean up callbacks if evaluation fails for some reason (ThreadInterrupt, timeout, etc)</ID>
+    <ID>LargeClass:ServerTest.kt$ServerTest</ID>
+    <ID>LongMethod:MessagePackCodecTest.kt$MessagePackCodecTest$@Test fun `round-trip CreateEvaluatorRequest`()</ID>
+    <ID>LongMethod:MessagePackDecoder.kt$MessagePackDecoder$override fun decode(): Message?</ID>
+    <ID>LongMethod:MessagePackEncoder.kt$MessagePackEncoder$override fun encode(msg: Message)</ID>
+    <ID>LongMethod:ServerTest.kt$ServerTest$@Test fun `concurrent evaluations`()</ID>
+    <ID>LongMethod:ServerTest.kt$ServerTest$@Test fun `evaluate with project dependencies`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:ServerTest.kt$ServerTest$@Test fun `glob module`()</ID>
+    <ID>LongParameterList:BinaryEvaluator.kt$BinaryEvaluator$( transformer: StackFrameTransformer, manager: SecurityManager, logger: Logger, factories: Collection&lt;ModuleKeyFactory?&gt;, readers: Collection&lt;ResourceReader?&gt;, environmentVariables: Map&lt;String, String&gt;, externalProperties: Map&lt;String, String&gt;, timeout: Duration?, moduleCacheDir: Path?, declaredDependencies: DeclaredDependencies?, outputFormat: String? )</ID>
+    <ID>LongParameterList:MessagePackEncoder.kt$MessagePackEncoder$( size: Int, value1: Any?, value2: Any?, value3: Any?, value4: Any?, value5: Any? )</ID>
+    <ID>LongParameterList:ServerTest.kt$ServerTest$( requestId: Long = 123, resourceReaders: List&lt;ResourceReaderSpec&gt; = listOf(), moduleReaders: List&lt;ModuleReaderSpec&gt; = listOf(), modulePaths: List&lt;Path&gt; = listOf(), project: Project? = null, cacheDir: Path? = null )</ID>
+    <ID>NestedBlockDepth:MessagePackEncoder.kt$MessagePackEncoder$override fun encode(msg: Message)</ID>
+    <ID>SwallowedException:ClientModuleKeyFactory.kt$ClientModuleKeyFactory.Companion.ClientModuleKeyResolver$e: IOException</ID>
+    <ID>SwallowedException:ClientResourceReader.kt$ClientResourceReader$e: IOException</ID>
+    <ID>SwallowedException:Utils.kt$e: ExecutionException</ID>
+    <ID>TooGenericExceptionCaught:Utils.kt$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:MessagePackEncoder.kt$MessagePackEncoder$throw RuntimeException("Missing encoding for ${msg.javaClass.simpleName}")</ID>
+    <ID>TooManyFunctions:BinaryEvaluator.kt$BinaryEvaluator$ValueEncoder : VmValueVisitor</ID>
+    <ID>TooManyFunctions:MessagePackDecoder.kt$MessagePackDecoder : MessageDecoder</ID>
+    <ID>TooManyFunctions:MessagePackEncoder.kt$MessagePackEncoder : MessageEncoder</ID>
+    <ID>UnusedPrivateMember:MessagePackDecoder.kt$MessagePackDecoder$private fun Map&lt;Value, Value&gt;.unpackBooleanOrNull(key: String): Boolean?</ID>
+    <ID>UnusedPrivateProperty:MessagePackDebugRenderer.kt$MessagePackDebugRenderer$i</ID>
+    <ID>UseCheckOrError:MessagePackDebugRenderer.kt$MessagePackDebugRenderer$throw IllegalStateException("Unexpected value type ${mf.valueType}")</ID>
+  </CurrentIssues>
+</SmellBaseline>

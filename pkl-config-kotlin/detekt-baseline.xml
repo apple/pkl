@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>EnumNaming:ConfigExtensionsTest.kt$ConfigExtensionsTest.MangledNameEnum$_42_FROM_INVALID_START : MangledNameEnum</ID>
+    <ID>EnumNaming:ConfigExtensionsTest.kt$ConfigExtensionsTest.MangledNameEnum$__EMOJI__ : MangledNameEnum</ID>
+    <ID>EnumNaming:ConfigExtensionsTest.kt$ConfigExtensionsTest.MangledNameEnum$ÀŒÜ : MangledNameEnum</ID>
+    <ID>EnumNaming:ConfigExtensionsTest.kt$ConfigExtensionsTest.MangledNameEnum$ᾊ_ᾨ : MangledNameEnum</ID>
+    <ID>EnumNaming:ConfigExtensionsTest.kt$ConfigExtensionsTest.MangledNameEnum$日本_つくば : MangledNameEnum</ID>
+    <ID>LongMethod:KotlinObjectMappingTest.kt$KotlinObjectMappingTest$@Test fun `generic types correspond`()</ID>
+    <ID>MaxLineLength:ConfigExtensionsTest.kt$ConfigExtensionsTest$"""friends = Map("l", new Dynamic { name = "lilly"}, "b", new Dynamic { name = "bob"}, "s", new Dynamic { name = "susan"})"""</ID>
+    <ID>ReturnCount:PPairToKotlinPair.kt$PPairToKotlinPair$override fun create(sourceType: PClassInfo&lt;*&gt;, targetType: Type): Optional&lt;Converter&lt;*, *&gt;&gt;</ID>
+  </CurrentIssues>
+</SmellBaseline>

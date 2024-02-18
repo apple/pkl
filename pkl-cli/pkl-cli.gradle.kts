@@ -7,9 +7,11 @@ plugins {
 
   // already on build script class path (see buildSrc/build.gradle.kts),
   // hence must only specify plugin ID here
+  // https://youtrack.jetbrains.com/issue/KTIJ-19369
   @Suppress("DSL_SCOPE_VIOLATION")
   id(libs.plugins.shadow.get().pluginId)
 
+  // https://youtrack.jetbrains.com/issue/KTIJ-19369
   @Suppress("DSL_SCOPE_VIOLATION")
   alias(libs.plugins.checksum)
 }
@@ -21,8 +23,8 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Pkl CLI Java library.")
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Pkl CLI Java library."
       }
     }
   }
@@ -34,33 +36,35 @@ val stagedLinuxAmd64Executable: Configuration by configurations.creating
 val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 
+private fun stagedDir(dir: String): File = layout.buildDirectory.dir(dir).get().asFile
+
 dependencies {
   compileOnly(libs.svm)
 
   // CliEvaluator exposes PClass
-  api(project(":pkl-core"))
+  api(projects.pklCore)
   // CliEvaluatorOptions exposes CliBaseOptions
-  api(project(":pkl-commons-cli"))
+  api(projects.pklCommonsCli)
 
-  implementation(project(":pkl-commons"))
+  implementation(projects.pklCommons)
   implementation(libs.jansi)
   implementation(libs.jlineReader)
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
-  implementation(project(":pkl-server"))
+  implementation(projects.pklServer)
   implementation(libs.clikt) {
     // force clikt to use our version of the kotlin stdlib
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 
-  stagedMacAmd64Executable(files("$buildDir/executable/pkl-macos-amd64"))
-  stagedMacAarch64Executable(files("$buildDir/executable/pkl-macos-aarch64"))
-  stagedLinuxAmd64Executable(files("$buildDir/executable/pkl-linux-amd64"))
-  stagedLinuxAarch64Executable(files("$buildDir/executable/pkl-linux-aarch64"))
-  stagedAlpineLinuxAmd64Executable(files("$buildDir/executable/pkl-alpine-linux-amd64"))
+  stagedMacAmd64Executable(files(stagedDir("executable/pkl-macos-amd64")))
+  stagedMacAarch64Executable(files(stagedDir("executable/pkl-macos-aarch64")))
+  stagedLinuxAmd64Executable(files(stagedDir("executable/pkl-linux-amd64")))
+  stagedLinuxAarch64Executable(files(stagedDir("executable/pkl-linux-aarch64")))
+  stagedAlpineLinuxAmd64Executable(files(stagedDir("executable/pkl-alpine-linux-amd64")))
 }
 
 tasks.jar {
@@ -77,7 +81,7 @@ tasks.javadoc {
 }
 
 tasks.shadowJar {
-  archiveFileName.set("jpkl")
+  archiveFileName = "jpkl"
 
   exclude("META-INF/maven/**")
   exclude("META-INF/upgrade/**")
@@ -89,8 +93,8 @@ tasks.shadowJar {
 }
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
-  inJar.set(tasks.shadowJar.flatMap { it.archiveFile })
-  outJar.set(file("$buildDir/executable/jpkl"))
+  inJar = tasks.shadowJar.flatMap { it.archiveFile }
+  outJar = layout.buildDirectory.dir("executable/jpkl").get().asFile
 
   // uncomment for debugging
   //jvmArgs.addAll("-ea", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005")
@@ -117,7 +121,8 @@ tasks.check {
 // To catch this and similar problems, test that Java executable starts successfully.
 val testStartJavaExecutable by tasks.registering(Exec::class) {
   dependsOn(javaExecutable)
-val outputFile = file("$buildDir/testStartJavaExecutable") // dummy output to satisfy up-to-date check
+  // dummy output to satisfy up-to-date check
+  val outputFile = layout.buildDirectory.dir("testStartJavaExecutable").get().asFile
   outputs.file(outputFile)
   
   executable = javaExecutable.get().outputs.files.singleFile.toString()
@@ -209,7 +214,10 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, file("$buildDir/executable/pkl-macos-amd64"))
+  configureExecutable(
+    buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22,
+    layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile
+  )
 }
 
 /**
@@ -221,7 +229,7 @@ val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
-    file("$buildDir/executable/pkl-macos-aarch64"),
+    layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
     listOf(
       "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
       "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
@@ -233,7 +241,10 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", file("$buildDir/executable/pkl-linux-amd64"))
+  configureExecutable(
+    buildInfo.os.isLinux && buildInfo.arch == "amd64",
+    layout.buildDirectory.file("executable/pkl-linux-amd64").get().asFile
+  )
 }
 
 /**
@@ -243,7 +254,10 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", file("$buildDir/executable/pkl-linux-aarch64"))
+  configureExecutable(
+    buildInfo.os.isLinux && buildInfo.arch == "aarch64",
+    layout.buildDirectory.file("executable/pkl-linux-aarch64").get().asFile
+  )
 }
 
 /**
@@ -255,7 +269,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
       buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
-      file("$buildDir/executable/pkl-alpine-linux-amd64"),
+    layout.buildDirectory.file("executable/pkl-alpine-linux-amd64").get().asFile,
       listOf(
         "--static",
         "--libc=musl",
@@ -293,12 +307,12 @@ publishing {
       }
 
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("""
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = """
           Pkl CLI executable for Java.
           Can be executed directly on *nix (if the `java` command is found on the PATH) and with `java -jar` otherwise.
           Requires Java 11 or higher.
-        """.trimIndent())
+        """.trimIndent()
       }
     }
     create<MavenPublication>("macExecutableAmd64") {
@@ -309,9 +323,9 @@ publishing {
         builtBy(stagedMacAmd64Executable)
       }
       pom {
-        name.set("pkl-cli-macos-amd64")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Native Pkl CLI executable for macOS/amd64.")
+        name = "pkl-cli-macos-amd64"
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Native Pkl CLI executable for macOS/amd64."
       }
     }
     create<MavenPublication>("macExecutableAarch64") {
@@ -322,9 +336,9 @@ publishing {
         builtBy(stagedMacAarch64Executable)
       }
       pom {
-        name.set("pkl-cli-macos-aarch64")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Native Pkl CLI executable for macOS/aarch64.")
+        name = "pkl-cli-macos-aarch64"
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Native Pkl CLI executable for macOS/aarch64."
       }
     }
     create<MavenPublication>("linuxExecutableAmd64") {
@@ -335,9 +349,9 @@ publishing {
         builtBy(stagedLinuxAmd64Executable)
       }
       pom {
-        name.set("pkl-cli-linux-amd64")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Native Pkl CLI executable for linux/amd64.")
+        name = "pkl-cli-linux-amd64"
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Native Pkl CLI executable for linux/amd64."
       }
     }
     create<MavenPublication>("linuxExecutableAarch64") {
@@ -348,9 +362,9 @@ publishing {
         builtBy(stagedLinuxAarch64Executable)
       }
       pom {
-        name.set("pkl-cli-linux-aarch64")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Native Pkl CLI executable for linux/aarch64.")
+        name = "pkl-cli-linux-aarch64"
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Native Pkl CLI executable for linux/aarch64."
       }
     }
     create<MavenPublication>("alpineLinuxExecutableAmd64") {
@@ -361,9 +375,9 @@ publishing {
         builtBy(stagedAlpineLinuxAmd64Executable)
       }
       pom {
-        name.set("pkl-cli-alpine-linux-amd64")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
-        description.set("Native Pkl CLI executable for linux/amd64 and statically linked to musl.")
+        name = "pkl-cli-alpine-linux-amd64"
+        url = "https://github.com/apple/pkl/tree/main/pkl-cli"
+        description = "Native Pkl CLI executable for linux/amd64 and statically linked to musl."
       }
     }
   }

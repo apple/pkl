@@ -1,10 +1,15 @@
+import com.adarshr.gradle.testlogger.theme.ThemeType
+import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.net.URI
 
 plugins {
   kotlin("jvm")
+  `jvm-test-suite`
+  id("com.adarshr.test-logger")
 }
 
+val libs = the<LibrariesForLibs>()
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
 dependencies {
@@ -18,6 +23,8 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   val testTask = this
+  forkEvery = 100
+  maxParallelForks = 4
 
   useJUnitPlatform()
 
@@ -54,4 +61,30 @@ tasks.withType<Test>().configureEach {
       return uri
     }
   })
+}
+
+testlogger {
+  theme = ThemeType.MOCHA_PARALLEL
+  showPassed = true
+  showFailed = true
+  showSkipped = true
+  showExceptions = false
+  showStackTraces = false
+  showStandardStreams = false
+  slowThreshold = 45_000L
+  isShowCauses = true
+}
+
+tasks.test {
+  forkEvery = 100
+  maxParallelForks = 4
+}
+
+testing {
+  suites {
+    @Suppress("UnstableApiUsage") val test by getting(JvmTestSuite::class) {
+      useJUnitJupiter(libs.versions.junit)
+      useKotlinTest(libs.versions.kotlin)
+    }
+  }
 }

@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CliDocGenerator.kt$CliDocGenerator$override fun doRun()</ID>
+    <ID>CyclomaticComplexMethod:PackageDataGenerator.kt$private fun findTypesUsedBy( type: PType, enclosingType: Member /* PClass|TypeAlias */, enclosingPackage: DocPackageInfo, result: MutableSet&lt;TypeRef&gt; )</ID>
+    <ID>CyclomaticComplexMethod:PageGenerator.kt$PageGenerator$protected fun HtmlBlockTag.renderType( type: PType, currScope: DocScope, isNested: Boolean = false )</ID>
+    <ID>CyclomaticComplexMethod:PageGenerator.kt$PageGenerator.MemberDocs$fun renderDocComment(tag: HtmlBlockTag)</ID>
+    <ID>CyclomaticComplexMethod:SearchIndexGenerator.kt$SearchIndexGenerator$fun generate(docPackage: DocPackage)</ID>
+    <ID>CyclomaticComplexMethod:SearchIndexGenerator.kt$SearchIndexGenerator$private fun StringBuilder.appendType(type: PType)</ID>
+    <ID>LongMethod:CliDocGenerator.kt$CliDocGenerator$override fun doRun()</ID>
+    <ID>LongMethod:ModuleOrClassPageGenerator.kt$ModuleOrClassPageGenerator$protected fun HtmlBlockTag.renderMethods()</ID>
+    <ID>LongMethod:ModuleOrClassPageGenerator.kt$ModuleOrClassPageGenerator$protected fun HtmlBlockTag.renderProperties()</ID>
+    <ID>LongMethod:ModulePageGenerator.kt$ModulePageGenerator$private fun HtmlBlockTag.renderClasses()</ID>
+    <ID>LongMethod:ModulePageGenerator.kt$ModulePageGenerator$private fun HtmlBlockTag.renderTypeAliases()</ID>
+    <ID>LongMethod:PageGenerator.kt$PageGenerator$protected fun HtmlBlockTag.renderType( type: PType, currScope: DocScope, isNested: Boolean = false )</ID>
+    <ID>LongMethod:PageGenerator.kt$PageGenerator$protected fun collectMemberInfoForPackage( docPackage: DocPackage ): Map&lt;MemberInfoKey, HtmlBlockTag.() -&gt; Unit&gt;</ID>
+    <ID>LongMethod:PageGenerator.kt$PageGenerator.MemberDocs$fun renderDocComment(tag: HtmlBlockTag)</ID>
+    <ID>LongMethod:SearchIndexGenerator.kt$SearchIndexGenerator$fun generate(docPackage: DocPackage)</ID>
+    <ID>LongMethod:SearchIndexGenerator.kt$SearchIndexGenerator$private fun StringBuilder.appendType(type: PType)</ID>
+    <ID>LongParameterList:PackageDataGenerator.kt$ModuleData$( /** The ref of this module. */ val ref: ModuleRef, /** The first paragraph of the overview documentation for this module. */ val summary: String? = null, /** The deprecation message, or `null` if this module isn't deprecated. */ val deprecation: String? = null, /** The supermodules of this module, starting from the direct supermodule. */ @Suppress("unused") val supermodules: List&lt;ModuleRef&gt; = listOf(), /** The class of this module, or `null` if this module amends another module. */ val moduleClass: ClassData? = null, /** The classes declared in this module. */ val classes: List&lt;ClassData&gt; = listOf(), /** The type aliases declared in this module. */ val typeAliases: List&lt;TypeAliasData&gt; = listOf() )</ID>
+    <ID>LongParameterList:PackageDataGenerator.kt$PackageData$( /** The ref of this package. */ val ref: PackageRef, /** The first paragraph of the overview documentation for this package. */ val summary: String? = null, /** The deprecation message of this package, or `null` if this package isn't deprecated. */ val deprecation: String? = null, /** The web URL of the source code for this package. */ val sourceCode: @Contextual URI?, /** The source code pattern, with placeholders (e.g. `%{path}`) */ val sourceCodeUrlScheme: String?, /** The dependencies of this package. */ val dependencies: List&lt;DependencyData&gt; = listOf(), /** The modules in this package. */ val modules: List&lt;ModuleData&gt; = listOf() )</ID>
+    <ID>MaxLineLength:CliDocGenerator.kt$CliDocGenerator$"`sourceModules` must contain at least one module named `doc-package-info.pkl`, or an argument must be a package URI."</ID>
+    <ID>NestedBlockDepth:CliDocGenerator.kt$CliDocGenerator$override fun doRun()</ID>
+    <ID>NestedBlockDepth:SearchIndexGenerator.kt$SearchIndexGenerator$private fun StringBuilder.appendType(type: PType)</ID>
+    <ID>ReturnCount:DocPackageInfo.kt$DocPackageInfo$internal fun getModuleRef(moduleName: String): ModuleRef?</ID>
+    <ID>ReturnCount:DocPackageInfo.kt$DocPackageInfo$internal fun getTypeRef(type: Member /* PClass|TypeAlias */): TypeRef?</ID>
+    <ID>ReturnCount:DocScope.kt$DocScope$fun resolveDocLink(text: String): DocScope?</ID>
+    <ID>ReturnCount:DocScope.kt$PackageScope$override fun resolveModuleNameToDocUrl(name: String): URI?</ID>
+    <ID>SwallowedException:CliDocGenerator.kt$CliDocGenerator$e: DocGeneratorException</ID>
+    <ID>SwallowedException:CliDocGenerator.kt$CliDocGenerator$e: Exception</ID>
+    <ID>SwallowedException:CliDocGenerator.kt$CliDocGenerator$e: PackageLoadError</ID>
+    <ID>SwallowedException:CliDocGenerator.kt$CliDocGenerator$e: URISyntaxException</ID>
+    <ID>TooGenericExceptionCaught:CliDocGenerator.kt$CliDocGenerator$e: Exception</ID>
+    <ID>TooManyFunctions:DocScope.kt$PackageScope : PageScope</ID>
+    <ID>TooManyFunctions:PageGenerator.kt$PageGenerator&lt;out S&gt;</ID>
+    <ID>TooManyFunctions:RuntimeDataGenerator.kt$RuntimeDataGenerator</ID>
+    <ID>TooManyFunctions:Util.kt$org.pkl.doc.Util.kt</ID>
+    <ID>UnusedPrivateMember:CliDocGeneratorTest.kt$CliDocGeneratorTest.Companion$@JvmStatic private fun generateDocs(): List&lt;String&gt;</ID>
+    <ID>UnusedPrivateMember:DocScopeTest.kt$DocScopeTest.Companion$@JvmStatic private fun scopes(): Collection&lt;DocScope&gt;</ID>
+    <ID>UnusedPrivateMember:ModuleOrClassPageGenerator.kt$ModuleOrClassPageGenerator$private fun renderExportedValue(value: Any): String</ID>
+    <ID>UnusedPrivateProperty:MainOrPackagePageGenerator.kt$MainOrPackagePageGenerator$private val siteScope: SiteScope</ID>
+    <ID>UnusedPrivateProperty:ModuleOrClassPageGenerator.kt$ModuleOrClassPageGenerator$private val docModule: DocModule</ID>
+  </CurrentIssues>
+</SmellBaseline>

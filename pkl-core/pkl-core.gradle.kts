@@ -44,7 +44,7 @@ dependencies {
 
   compileOnly(libs.jsr305)
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
-  compileOnly(project(":pkl-executor"))
+  compileOnly(projects.pklExecutor)
 
   implementation(libs.antlrRuntime)
   implementation(libs.truffleApi)
@@ -56,7 +56,7 @@ dependencies {
 
   implementation(libs.snakeYaml)
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
@@ -69,12 +69,12 @@ publishing {
   publications {
     named<MavenPublication>("library") {
       pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-core")
-        description.set("""
+        url = "https://github.com/apple/pkl/tree/main/pkl-core"
+        description = """
           Core implementation of the Pkl configuration language.
           Includes Java APIs for embedding the language into JVM applications,
           and for building libraries and tools on top of the language.
-        """.trimIndent())
+        """.trimIndent()
       }
     }
   }
@@ -128,7 +128,7 @@ tasks.processResources {
       include("*.pkl") 
       exclude("doc-package-info.pkl")
     }.map { "pkl:" + it.nameWithoutExtension } 
-      .sortedBy { it.toLowerCase() }
+      .sortedBy { it.lowercase() }
     
     filter<ReplaceTokens>("tokens" to mapOf(
         "version" to buildInfo.pklVersion,
@@ -145,7 +145,7 @@ tasks.processResources {
 }
 
 tasks.compileJava {
-  options.generatedSourceOutputDirectory.set(file("generated/truffle"))
+  options.generatedSourceOutputDirectory = file("generated/truffle")
 }
 
 tasks.compileKotlin {
@@ -281,7 +281,7 @@ tasks.testNative {
 
 tasks.clean {
   delete("generated/")
-  delete("$buildDir/test-packages")
+  delete(layout.buildDirectory.dir("test-packages"))
 }
 
 spotless {

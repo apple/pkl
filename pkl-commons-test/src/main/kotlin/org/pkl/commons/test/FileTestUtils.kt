@@ -20,6 +20,7 @@ import kotlin.io.path.*
 import kotlin.streams.toList
 import org.assertj.core.api.Assertions.fail
 import org.pkl.commons.*
+import org.pkl.commons.createParentDirectories
 
 object FileTestUtils {
   val rootProjectDir: Path by lazy {
