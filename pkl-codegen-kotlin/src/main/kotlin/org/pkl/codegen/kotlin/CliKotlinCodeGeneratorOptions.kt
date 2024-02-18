@@ -39,5 +39,5 @@ data class CliKotlinCodeGeneratorOptions(
   val implementSerializable: Boolean = false
 ) {
   fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig)
+    KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig, implementSerializable)
 }
