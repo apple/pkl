@@ -1,0 +1,66 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// An ini renderer.
+@ModuleInfo { minPklVersion = "0.26.0" }
+module pkl.ini
+
+
+/// An INI Renderer
+/// 
+/// Values are rendered as follows depending on there type:
+/// - `Int`, `Float`, `Boolean`, `String`: INI key-value pair
+/// - `Map<String, ?>`, `Mapping<String, ?>`, `Typed`, `Dynamic`: sequence of INI sections with INI key-value pairs
+/// - `List`, `Set`, `Listing`: are Unsupported for the time being but will consist of commer seperated values or array style values.
+/// 
+/// The element order of the INI sequences, sets, and mappings is maintained.
+/// 
+/// Known Limitations:
+/// - Unsupported Types: `Duration`, `DataSize`, `IntSeq`, `Pair`, `Regex`, `List`, `Set`, `Listing`
+/// - Comments are not maintained.
+class Renderer extends ValueRenderer {
+  extension = "ini"
+
+  /// Whether to skip rendering keys whose value is [null].
+  omitNullProperties: Boolean = true
+
+  /// Whether to render characters outside the printable US-ASCII charset range as
+  /// [Unicode escapes](https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.3).
+  restrictCharset: Boolean = false
+  
+  // Commented out for now
+  // Whether to render `List`, `Set`, `Listing` and there style
+  // - comma:
+  // 
+  //   `list = element1, element2, element3`
+  // - bracket:
+  // 
+  //   `list[] = element1`
+  // 
+  //   `list[] = element2`
+  //
+  //   `list[] = element3`
+  // 
+  // - left or set to null (default):
+  // 
+  //   Wont render `List`, `Set`, `Listing`
+  // arrayStyle: ("comma"|"bracket")? = null
+  
+
+  external function renderDocument(value: Any): String
+
+  external function renderValue(value: Any): String
+}
