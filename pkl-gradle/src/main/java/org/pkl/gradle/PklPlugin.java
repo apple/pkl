@@ -71,6 +71,12 @@ public class PklPlugin implements Plugin<Project> {
 
   private static final String MIN_GRADLE_VERSION = "8.2";
 
+  /** Gradle task group for code generation tasks. */
+  public static final String CODEGEN_GROUP = "codegen";
+
+  /** Gradle task group for documentation tasks. */
+  public static final String DOCUMENTATION_GROUP = "documentation";
+
   @Override
   public void apply(Project project) {
 
@@ -208,6 +214,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, JavaCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Java code from Pkl modules.");
+                    task.setGroup(CODEGEN_GROUP);
                     configureCodeGenTask(task, spec);
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
@@ -238,6 +246,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, KotlinCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Kotlin code from Pkl modules.");
+                    task.setGroup(CODEGEN_GROUP);
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
                   });
@@ -270,6 +280,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(project, PkldocTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription("Generates Pkldoc documentation from Pkl modules.");
+                    task.setGroup(DOCUMENTATION_GROUP);
                     task.getOutputDir().set(spec.getOutputDir());
                     task.getNoSymlinks().set(spec.getNoSymlinks());
                   });
@@ -286,6 +298,8 @@ public class PklPlugin implements Plugin<Project> {
           var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(
               task -> {
+                task.setDescription("Runs Pkl tests.");
+                task.setGroup(LifecycleBasePlugin.VERIFICATION_GROUP);
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
                 task.getTestReporter().set(spec.getTestReporter());
