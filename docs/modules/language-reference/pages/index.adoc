@@ -5120,11 +5120,9 @@ They cannot be used as a regular identifier, and currently do not have any meani
 * `override`
 * `record`
 * `delete`
-* `match`
 * `case`
 * `switch`
 * `vararg`
-* `const`
 
 To use these names in an identifier, <<quoted-identifiers, surround them with backticks>>.
 
