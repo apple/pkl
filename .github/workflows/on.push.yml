@@ -1,0 +1,77 @@
+name: "CI"
+
+"on":
+  merge_group: {}
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "push-${{ github.ref }}"
+
+jobs:
+  ##
+  ## Job: Build Dependency Graph
+  ##
+  build-graph:
+    name: "Checks"
+    uses: ./.github/workflows/job.dependency-graph.yml
+    permissions:
+      ## Needed for submission of dependency graphs
+      contents: "write"
+
+  ##
+  ## Job: Checks with Scorecard
+  ##
+  check-scorecard:
+    name: "Checks"
+    uses: ./.github/workflows/checks.scorecards.yml
+    permissions:
+      actions: "read"
+      contents: "read"
+      checks: "read"
+      deployments: "read"
+      discussions: "read"
+      id-token: "write"
+      issues: "read"
+      packages: "read"
+      pages: "read"
+      pull-requests: "read"
+      repository-projects: "read"
+      security-events: "write"
+      statuses: "read"
+
+  ##
+  ## Job: Check for Wrapper
+  ##
+  check-wrapper:
+    name: "Checks"
+    uses: ./.github/workflows/checks.gradle-wrapper.yml
+    permissions:
+      contents: "read"
+
+  ##
+  ## Job: Checks with CodeQL
+  ##
+  check-codeql:
+    name: "Checks"
+    uses: ./.github/workflows/checks.codeql.yml
+    needs: [build]
+    permissions:
+      actions: "read"
+      contents: "read"
+      security-events: "write"
+
+  ##
+  ## Job: Checks with Detekt
+  ##
+  check-detekt:
+    name: "Checks"
+    uses: ./.github/workflows/checks.detekt.yml
+    needs: [preflight-checks]
+    permissions:
+      contents: "read"
+      security-events: "write"
