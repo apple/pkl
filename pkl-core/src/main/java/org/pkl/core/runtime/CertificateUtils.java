@@ -72,7 +72,10 @@ public class CertificateUtils {
   }
 
   private static void setupX509CertificatesGlobally(Collection<X509Certificate> certs)
-      throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException,
+      throws KeyStoreException,
+          CertificateException,
+          IOException,
+          NoSuchAlgorithmException,
           KeyManagementException {
     System.setProperty("com.sun.net.ssl.checkRevocation", "true");
     Security.setProperty("ocsp.enable", "true");
