@@ -67,7 +67,7 @@ jobs:
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
     permissions:
-      contents: "read"
+      contents: "write"
 
   ##
   ## Job: API Check
