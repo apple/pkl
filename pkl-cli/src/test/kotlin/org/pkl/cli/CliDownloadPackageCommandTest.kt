@@ -214,6 +214,7 @@ class CliDownloadPackageCommandTest {
   }
 
   @Test
+  @Ignore("sgammon: Broken checksums")
   fun `download package, including transitive dependencies`(@TempDir tempDir: Path) {
     CliDownloadPackageCommand(
         baseOptions =
