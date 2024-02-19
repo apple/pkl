@@ -30,6 +30,7 @@ jmhPlugin = "0.7.2"
 jsr305 = "3.+"
 junit = "5.+"
 kotlin = "1.9.22"
+kotlinBinaryApiValidator = "0.14.0"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
 kotlinxHtml = "0.11.0"
@@ -117,6 +118,7 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 gradleDoctor = { id = "com.osacky.doctor", version.ref = "gradleDoctor" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
+kotlinValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "kotlinBinaryApiValidator" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }

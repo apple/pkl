@@ -19,6 +19,7 @@ plugins {
   alias(libs.plugins.versionCheck)
   alias(libs.plugins.owasp)
   alias(libs.plugins.sbom)
+  alias(libs.plugins.kotlinValidator)
   id(libs.plugins.kover.get().pluginId)
   id(libs.plugins.detekt.get().pluginId)
 }
