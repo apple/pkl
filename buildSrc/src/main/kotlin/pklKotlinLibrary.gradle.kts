@@ -8,6 +8,7 @@ import org.gradle.accessors.dm.LibrariesForLibs
 plugins {
   id("pklJavaLibrary")
   id("io.gitlab.arturbosch.detekt")
+  id("org.jetbrains.kotlinx.kover")
   kotlin("jvm")
   kotlin("plugin.serialization")
 }
