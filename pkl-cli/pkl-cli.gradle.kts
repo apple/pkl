@@ -40,6 +40,7 @@ private fun stagedDir(dir: String): File = layout.buildDirectory.dir(dir).get().
 
 dependencies {
   compileOnly(libs.svm)
+  compileOnly(libs.kotlinStdlib)
 
   // CliEvaluator exposes PClass
   api(projects.pklCore)

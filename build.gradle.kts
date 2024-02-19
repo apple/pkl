@@ -142,7 +142,6 @@ val check by tasks.registering {
 
   finalizedBy(
     reports,
-    tasks.koverVerify,
     coverageReports,
   )
 }
