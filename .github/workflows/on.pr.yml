@@ -37,8 +37,6 @@ jobs:
         with:
           submodules: true
           persist-credentials: false
-      - name: "Setup: Buildless"
-        uses: buildless/setup@30e82389418c7f17046606183bc4c78b2c8913e0 # v1.0.2
       - name: "Setup: GraalVM (Java 21)"
         uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
         with:
