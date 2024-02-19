@@ -1,0 +1,132 @@
+name: "PR"
+
+# Labels to control this PR flow:
+#
+# - ci:api-check-bypass - Bypass API check failures.
+# - ci:fmt-ignore - Ignore formatting failures.
+
+"on":
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "pr-${{ github.event.pull_request.number }}"
+  cancel-in-progress: true
+
+jobs:
+  ##
+  ## Job: Pre-flight Checks
+  ##
+  preflight-checks:
+    name: "Pre-flight Checks"
+    runs-on: ${{ vars.RUNNER_DEFAULT || 'ubuntu-latest' }}
+    permissions:
+      contents: "read"
+      checks: "read"
+      packages: "read"
+    steps:
+      - name: "Setup: Harden Runner"
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+      - name: "Setup: Checkout"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: "Setup: Buildless"
+        uses: buildless/setup@30e82389418c7f17046606183bc4c78b2c8913e0 # v1.0.2
+      - name: "Setup: GraalVM (Java 21)"
+        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
+        with:
+          distribution: "graalvm"
+          java-version: "21"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Check: Build Compile"
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'ci:api-check-bypass') }}
+        env:
+          CI: true
+          GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+        with:
+          cache-read-only: false
+          cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+          arguments: |
+            projects
+            tasks
+
+  ##
+  ## Job: API Check
+  ##
+  check-api:
+    name: "Checks"
+    uses: ./.github/workflows/checks.apicheck.yml
+    needs: [preflight-checks]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+    permissions:
+      contents: "read"
+
+  ##
+  ## Job: Checks for Formatting/Style
+  ##
+  check-format:
+    name: "Checks"
+    uses: ./.github/workflows/checks.formatting.yml
+    needs: [preflight-checks]
+    secrets: inherit
+    permissions:
+      contents: "read"
+    with:
+      ignore_failures: ${{ contains(github.event.pull_request.labels.*.name, 'ci:fmt-ignore') }}
+
+  ##
+  ## Job: Check for Wrapper
+  ##
+  check-wrapper:
+    name: "Checks"
+    uses: ./.github/workflows/checks.gradle-wrapper.yml
+    needs: [preflight-checks]
+    permissions:
+      contents: "read"
+
+  ##
+  ## Job: Checks for Vulnerabilities/Licensing
+  ##
+  check-dependencies:
+    name: "Checks"
+    uses: ./.github/workflows/checks.dependency-review.yml
+    needs: [preflight-checks]
+    permissions:
+      contents: "read"
+
+  ##
+  ## Job: Checks with CodeQL
+  ##
+  check-codeql:
+    name: "Checks"
+    uses: ./.github/workflows/checks.codeql.yml
+    needs: [preflight-checks]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+    permissions:
+      actions: "read"
+      contents: "read"
+      security-events: "write"
+
+  ##
+  ## Job: Checks with Detekt
+  ##
+  check-detekt:
+    name: "Checks"
+    uses: ./.github/workflows/checks.detekt.yml
+    needs: [preflight-checks]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+    permissions:
+      contents: "read"
+      security-events: "write"

@@ -1,0 +1,74 @@
+name: "API Check"
+
+"on":
+  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      ignore_failures:
+        description: "Ignore failures"
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      GRADLE_CONFIGURATION_KEY:
+        description: "Gradle cache key"
+        required: false
+
+permissions:
+  contents: "read"
+
+jobs:
+  api-check:
+    name: "API Check"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: "Setup: Harden Runner"
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+      - name: "Setup: Checkout"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: "Setup: Cache Restore (Build)"
+        id: cache-restore-build
+        uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          key: pkl-v1-build-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: |
+            pkl-v1-build-${{ hashFiles('gradle/libs.versions.toml') }}
+            pkl-v1-build-
+            pkl-v1-
+            pkl-
+          path: |
+            .gradle/
+            build/
+            .codebase/
+            .kotlin/
+            ./*/build/bin
+            ./*/build/classes
+            ./*/build/kotlin
+            ./*/build/klib
+            ./*/build/generated
+            ./*/build/generated-sources
+      - name: "Setup: GraalVM (Java 21)"
+        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
+        with:
+          distribution: "graalvm"
+          java-version: 21
+          check-for-updates: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Analysis: API Check"
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        continue-on-error: ${{ inputs.ignore_failures }}
+        env:
+          CI: true
+        with:
+          cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+          arguments: |
+            apiCheck
+            -x test

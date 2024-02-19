@@ -1,0 +1,5 @@
+license-check: true
+vulnerability-check: true
+fail-on-severity: "high"
+
+allow-ghsas: []
