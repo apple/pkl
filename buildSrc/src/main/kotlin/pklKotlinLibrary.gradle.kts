@@ -73,11 +73,11 @@ tasks.withType<Detekt>().configureEach {
 }
 
 val reportMergeXml by tasks.registering(ReportMergeTask::class) {
-  output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.xml"))
+  output.set(rootProject.layout.buildDirectory.file("reports/detekt/detekt.xml"))
 }
 
 val reportMergeSarif by tasks.registering(ReportMergeTask::class) {
-  output.set(rootProject.layout.buildDirectory.file("reports/detekt/merge.xml"))
+  output.set(rootProject.layout.buildDirectory.file("reports/detekt/detekt.sarif"))
 }
 
 reportMergeXml {
