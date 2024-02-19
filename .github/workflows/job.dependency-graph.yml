@@ -23,7 +23,7 @@ jobs:
         os: [Ubuntu]
         mode: ["Strict"]
         machine:
-          - ${{ inputs.runner }}
+          - "ubuntu-latest"
 
     name: "Build (${{ matrix.os }})"
     runs-on: ${{ matrix.machine }}
