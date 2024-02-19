@@ -33,6 +33,18 @@ nexusPublishing {
   }
 }
 
+val apiLockedProjects = listOf(
+  projects.pklCli,
+  projects.pklConfigKotlin,
+  projects.pklGradle,
+).map { it.name }
+
+apiValidation {
+  ignoredProjects = ignoredProjects.plus(allprojects.filter {
+    it.name !in apiLockedProjects
+  }.map { it.name }).toMutableSet()
+}
+
 idea {
   project {
     this as ExtensionAware
