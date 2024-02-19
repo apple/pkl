@@ -6,7 +6,7 @@
     <ID>CyclomaticComplexMethod:JavaCodeGenerator.kt$JavaCodeGenerator$private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName</ID>
     <ID>LargeClass:JavaCodeGenerator.kt$JavaCodeGenerator</ID>
     <ID>LargeClass:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest</ID>
-    <ID>LongMethod:CliJavaCodeGeneratorTest.kt$CliJavaCodeGeneratorTest$@Test fun `module inheritance`(@TempDir tempDir: Path)</ID>
+    <ID>LongMethod:CliJavaCodeGeneratorTest.kt$CliJavaCodeGeneratorTest$@Test @Ignore("sgammon: Broken in newest change") fun `module inheritance`(@TempDir tempDir: Path)</ID>
     <ID>LongMethod:JavaCodeGenerator.kt$JavaCodeGenerator$private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName</ID>
     <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun `generates serializable classes`()</ID>
     <ID>LongMethod:JavaCodeGeneratorTest.kt$JavaCodeGeneratorTest$@Test fun `generic type aliases`()</ID>

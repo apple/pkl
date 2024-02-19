@@ -23,6 +23,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.test.Ignore
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -131,7 +132,7 @@ class KotlinCodeGeneratorTest {
     private val propertyTypesClasses by lazy { compileKotlinCode(propertyTypesKotlinCode) }
 
     private fun generateKotlinCode(
-      pklCode: String,
+      @Language("pkl") pklCode: String,
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
       implementSerializable: Boolean = false,
