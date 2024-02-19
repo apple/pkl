@@ -120,7 +120,7 @@ jobs:
   check-codeql:
     name: "Checks"
     uses: ./.github/workflows/checks.codeql.yml
-    needs: [preflight-checks]
+    needs: [preflight-checks, dependency-graph]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
     permissions:
