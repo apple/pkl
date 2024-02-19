@@ -24,27 +24,6 @@ jobs:
       contents: "write"
 
   ##
-  ## Job: Checks with Scorecard
-  ##
-  check-scorecard:
-    name: "Checks"
-    uses: ./.github/workflows/checks.scorecards.yml
-    permissions:
-      actions: "read"
-      contents: "read"
-      checks: "read"
-      deployments: "read"
-      discussions: "read"
-      id-token: "write"
-      issues: "read"
-      packages: "read"
-      pages: "read"
-      pull-requests: "read"
-      repository-projects: "read"
-      security-events: "write"
-      statuses: "read"
-
-  ##
   ## Job: Check for Wrapper
   ##
   check-wrapper:
@@ -75,3 +54,25 @@ jobs:
     permissions:
       contents: "read"
       security-events: "write"
+
+  ##
+  ## Job: Checks with Scorecard
+  ##
+  check-scorecard:
+    name: "Checks"
+    uses: ./.github/workflows/checks.scorecards.yml
+    needs: [build-graph]
+    permissions:
+      actions: "read"
+      contents: "read"
+      checks: "read"
+      deployments: "read"
+      discussions: "read"
+      id-token: "write"
+      issues: "read"
+      packages: "read"
+      pages: "read"
+      pull-requests: "read"
+      repository-projects: "read"
+      security-events: "write"
+      statuses: "read"

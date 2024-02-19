@@ -61,7 +61,7 @@ jobs:
   ## Job: Build + Submit Dependency Graph
   ##
   dependency-graph:
-    name: "Checks"
+    name: "Build"
     uses: ./.github/workflows/job.dependency-graph.yml
     needs: [preflight-checks]
     secrets:

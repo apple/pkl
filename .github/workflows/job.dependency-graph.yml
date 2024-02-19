@@ -12,9 +12,6 @@ name: "Dependency Graph"
 permissions:
   contents: read
 
-concurrency:
-  group: "push-${{ github.ref }}"
-
 jobs:
   ##
   ## Job: Build+Submit Dependency Graph
