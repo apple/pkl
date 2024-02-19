@@ -9,7 +9,7 @@ commonMark = "0.+"
 detekt = "1.23.5"
 downloadTaskPlugin = "4.1.2"
 geantyref = "1.+"
-googleJavaFormat = "1.15.0"
+googleJavaFormat = "1.19.2"
 # must not use `+` because used in download URL
 graalVm = "22.3.3"
 # intentionally empty; replaced by patch file when building pkl-cli macos/aarch64
