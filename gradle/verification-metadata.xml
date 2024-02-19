@@ -5,6 +5,7 @@
       <verify-signatures>true</verify-signatures>
       <trusted-artifacts>
          <trust group="gradle" reason="download over TLS"/>
+         <trust group="org.gradle" reason="injected for dependency graph submission by gradle plugin"/>
          <trust group="gradle.plugin.org.gradle.crypto" reason="from gradle team"/>
          <trust group="org.jetbrains.kotlin"/>
          <trust group="org.jetbrains.kotlin.mulitplatform" reason="specifies verified dependencies"/>
