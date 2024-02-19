@@ -114,6 +114,10 @@ detekt {
   enableCompilerPlugin = true
 }
 
+dependencyCheck {
+  nvd.apiKey = System.getenv("NVD_API_KEY")
+}
+
 val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {
   description = "Aggregates all test reports"
   group = "Reporting"
