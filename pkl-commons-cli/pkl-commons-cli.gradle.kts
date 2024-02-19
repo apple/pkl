@@ -12,6 +12,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
 
+  compileOnly(libs.kotlinStdlib)
   implementation(projects.pklCommons)
   testImplementation(projects.pklCommonsTest)
 }
