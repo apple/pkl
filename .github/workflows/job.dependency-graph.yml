@@ -87,7 +87,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
           dependency-graph: generate-and-submit
           gradle-home-cache-cleanup: true
-          arguments: dependencies --scan
+          arguments: dependencies build -x test -x check --scan
       - name: "🛠️ Dependency Graph"
         uses: gradle/actions/dependency-submission@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
         continue-on-error: true
