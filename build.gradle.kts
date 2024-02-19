@@ -125,6 +125,10 @@ val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {
   testType = TestSuiteType.UNIT_TEST
 }
 
+val coverageReports by tasks.registering {
+  dependsOn(tasks.koverBinaryReport, tasks.koverXmlReport, tasks.koverHtmlReport)
+}
+
 val reports by tasks.registering {
   description = "Generates all reports"
   group = "Reporting"
@@ -136,5 +140,9 @@ val check by tasks.registering {
   description = "Runs all checks"
   group = "Verification"
 
-  finalizedBy(reports)
+  finalizedBy(
+    reports,
+    tasks.koverVerify,
+    coverageReports,
+  )
 }
