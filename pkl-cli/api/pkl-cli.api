@@ -1,0 +1,139 @@
+public abstract class org/pkl/cli/CliAbstractProjectCommand : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;)V
+	protected final fun getNormalizedProjectFiles ()Ljava/util/List;
+}
+
+public final class org/pkl/cli/CliDownloadPackageCommand : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;Z)V
+}
+
+public final class org/pkl/cli/CliEvaluator : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/cli/CliEvaluatorOptions;)V
+	public fun <init> (Lorg/pkl/cli/CliEvaluatorOptions;Ljava/io/Reader;)V
+	public fun <init> (Lorg/pkl/cli/CliEvaluatorOptions;Ljava/io/Reader;Ljava/io/Writer;)V
+	public synthetic fun <init> (Lorg/pkl/cli/CliEvaluatorOptions;Ljava/io/Reader;Ljava/io/Writer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getFileOutputPaths ()Ljava/util/Map;
+	public final fun getOutputDirectories ()Ljava/util/Set;
+	public final fun getOutputFiles ()Ljava/util/Set;
+}
+
+public final class org/pkl/cli/CliEvaluatorOptions {
+	public static final field Companion Lorg/pkl/cli/CliEvaluatorOptions$Companion;
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/pkl/cli/CliEvaluatorOptions;
+	public static synthetic fun copy$default (Lorg/pkl/cli/CliEvaluatorOptions;Lorg/pkl/commons/cli/CliBaseOptions;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/pkl/cli/CliEvaluatorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBase ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun getExpression ()Ljava/lang/String;
+	public final fun getModuleOutputSeparator ()Ljava/lang/String;
+	public final fun getMultipleFileOutputPath ()Ljava/lang/String;
+	public final fun getOutputFormat ()Ljava/lang/String;
+	public final fun getOutputPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/cli/CliEvaluatorOptions$Companion {
+	public final fun getDefaults ()Lorg/pkl/cli/CliEvaluatorOptions;
+}
+
+public final class org/pkl/cli/CliProjectPackager : org/pkl/cli/CliAbstractProjectCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;Lorg/pkl/commons/cli/CliTestOptions;Ljava/lang/String;ZLjava/io/Writer;Ljava/io/Writer;)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;Lorg/pkl/commons/cli/CliTestOptions;Ljava/lang/String;ZLjava/io/Writer;Ljava/io/Writer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/pkl/cli/CliProjectResolver : org/pkl/cli/CliAbstractProjectCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;Ljava/io/Writer;Ljava/io/Writer;)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/util/List;Ljava/io/Writer;Ljava/io/Writer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/pkl/cli/CliServer : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;)V
+}
+
+public final class org/pkl/cli/CliTestRunner : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Lorg/pkl/commons/cli/CliTestOptions;)V
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Lorg/pkl/commons/cli/CliTestOptions;Ljava/io/Writer;)V
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Lorg/pkl/commons/cli/CliTestOptions;Ljava/io/Writer;Ljava/io/Writer;)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Lorg/pkl/commons/cli/CliTestOptions;Ljava/io/Writer;Ljava/io/Writer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/pkl/cli/commands/DownloadPackageCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/EvalCommand : org/pkl/commons/cli/commands/ModulesCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/ProjectCommand : com/github/ajalt/clikt/core/NoOpCliktCommand {
+	public static final field Companion Lorg/pkl/cli/commands/ProjectCommand$Companion;
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/pkl/cli/commands/ProjectCommand$Companion {
+}
+
+public final class org/pkl/cli/commands/ProjectCommand$Companion$PackageCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/ProjectCommand$Companion$ResolveCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/ReplCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/RootCommand : com/github/ajalt/clikt/core/NoOpCliktCommand {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class org/pkl/cli/commands/ServerCommand : com/github/ajalt/clikt/core/CliktCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public fun run ()V
+}
+
+public final class org/pkl/cli/commands/TestCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getModules ()Ljava/util/List;
+	public fun run ()V
+}
+
+public final class org/pkl/cli/svm/InitFeature : org/graalvm/nativeimage/hosted/Feature {
+	public fun <init> ()V
+	public fun duringSetup (Lorg/graalvm/nativeimage/hosted/Feature$DuringSetupAccess;)V
+}
+
+public final class org/pkl/cli/svm/PolyglotContextImplTarget {
+	public field cachedThreadInfo Lorg/pkl/cli/svm/PolyglotThreadInfoTarget;
+	public field singleThreadValue Lorg/pkl/cli/svm/WeakAssumedValueTarget;
+	public field threads Ljava/util/Map;
+	public fun <init> ()V
+}
+
+public final class org/pkl/cli/svm/PolyglotThreadInfoTarget {
+	public fun <init> ()V
+}
+
+public final class org/pkl/cli/svm/ThreadLocalHandshakeTarget {
+	public fun <init> ()V
+}
+
+public final class org/pkl/cli/svm/WeakAssumedValueTarget {
+	public fun <init> ()V
+}
+
