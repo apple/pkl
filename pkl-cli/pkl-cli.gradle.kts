@@ -13,6 +13,7 @@ plugins {
 }
 
 description = "Pkl command line interface entrypoint"
+val entrypoint = "org.pkl.cli.Main"
 
 // make Java executable available to other subprojects
 val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
@@ -64,6 +65,10 @@ dependencies {
   stagedLinuxAmd64Executable(files(stagedDir("executable/pkl-linux-amd64")))
   stagedLinuxAarch64Executable(files(stagedDir("executable/pkl-linux-aarch64")))
   stagedAlpineLinuxAmd64Executable(files(stagedDir("executable/pkl-alpine-linux-amd64")))
+}
+
+application {
+  mainClass = entrypoint
 }
 
 tasks.jar {
