@@ -20,6 +20,9 @@ dependencies {
   // to ensure correct code navigation in IntelliJ.
   compileOnly(projects.pklTools)
 
+  // Depends on `CliEvaluatorOptions` and other classes from the CLI
+  implementation(projects.pklCli)
+
   // Declare a `runtimeOnly` dependency on `project(":pkl-tools", "fatJar")`
   // to ensure that the published plugin 
   // (and also plugin tests, see the generated `plugin-under-test-metadata.properties`) 
