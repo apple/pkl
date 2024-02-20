@@ -8,7 +8,8 @@ plugins {
 val truffle: Configuration by configurations.creating
 val graal: Configuration by configurations.creating
 
-@Suppress("UnstableApiUsage")
+description = "JMH benchmarks for Pkl Core"
+
 dependencies {
   jmh(projects.pklCore)
   // necessary because antlr4-runtime is declared as implementation dependency in pkl-core.gradle

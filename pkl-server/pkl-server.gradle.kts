@@ -1,8 +1,9 @@
 plugins {
   id("pklAllProjects")
-  id("pklJavaLibrary")
   id("pklKotlinLibrary")
 }
+
+description = "Pkl packaging server"
 
 dependencies {
   implementation(projects.pklCore)

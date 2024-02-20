@@ -5,6 +5,8 @@ plugins {
   id("pklKotlinLibrary")
 }
 
+description = "Pkl commons for testing (internal)"
+
 // note: no need to publish this library
 
 dependencies {

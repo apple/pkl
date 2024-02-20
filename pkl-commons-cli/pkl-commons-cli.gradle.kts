@@ -4,6 +4,8 @@ plugins {
   id("pklPublishLibrary")
 }
 
+description = "Pkl commons for CLI (internal)"
+
 dependencies {
   api(projects.pklCore)
   api(libs.clikt) {

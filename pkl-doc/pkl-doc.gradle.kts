@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   id("pklAllProjects")
   id("pklKotlinLibrary")
@@ -8,6 +6,8 @@ plugins {
   @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
   id(libs.plugins.kotlinxSerialization.get().pluginId)
 }
+
+description = "Pkl documentation generator"
 
 val graalVmBaseDir = buildInfo.graalVm.baseDir
 

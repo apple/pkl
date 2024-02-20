@@ -12,6 +12,8 @@ plugins {
   alias(libs.plugins.checksum)
 }
 
+description = "Pkl command line interface entrypoint"
+
 // make Java executable available to other subprojects
 val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
 

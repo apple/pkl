@@ -4,6 +4,8 @@ plugins {
   id("pklPublishLibrary")
 }
 
+description = "Pkl commons (internal)"
+
 publishing {
   publications {
     named<MavenPublication>("library") {

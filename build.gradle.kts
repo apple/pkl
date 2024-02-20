@@ -24,6 +24,9 @@ plugins {
   alias(libs.plugins.detekt)
 }
 
+group = "org.pkl-lang"
+description = "Configuration that is Programmable, Scalable, and Safe"
+
 nexusPublishing {
   repositories {
     sonatype {
@@ -119,9 +122,6 @@ dependencyCheck {
 }
 
 val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {
-  description = "Aggregates all test reports"
-  group = "Reporting"
-
   testType = TestSuiteType.UNIT_TEST
 }
 

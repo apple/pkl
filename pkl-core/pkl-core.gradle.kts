@@ -10,6 +10,8 @@ plugins {
   idea
 }
 
+description = "Pkl core language"
+
 val generatorSourceSet = sourceSets.register("generator")
 
 sourceSets {

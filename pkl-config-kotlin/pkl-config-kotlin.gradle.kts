@@ -4,6 +4,8 @@ plugins {
   id("pklPublishLibrary")
 }
 
+description = "Pkl runtime library for Kotlin"
+
 val pklConfigJava: Configuration by configurations.creating
 
 val pklConfigJavaAll: Configuration by configurations.creating

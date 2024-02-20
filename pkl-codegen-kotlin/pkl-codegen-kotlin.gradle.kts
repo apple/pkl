@@ -4,6 +4,8 @@ plugins {
   id("pklPublishLibrary")
 }
 
+description = "Pkl code generator for Kotlin"
+
 publishing {
   publications {
     named<MavenPublication>("library") {

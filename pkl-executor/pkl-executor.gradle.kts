@@ -2,8 +2,9 @@ plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
   id("pklPublishLibrary")
-  id("pklKotlinTest")
 }
+
+description = "Pkl execution engine"
 
 val pklDistribution: Configuration by configurations.creating
 

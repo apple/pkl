@@ -7,6 +7,8 @@ plugins {
   signing
 }
 
+description = "Pkl tooling and utilities"
+
 val dummy: SourceSet by sourceSets.creating
 
 val firstPartySourcesJars by configurations.existing

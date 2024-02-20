@@ -7,6 +7,8 @@ plugins {
   signing
 }
 
+description = "Pkl language standard library"
+
 // create and publish a self-contained stdlib archive
 // purpose is to provide non-jvm tools/projects with a versioned stdlib
 val stdlibZip by tasks.registering(Zip::class) {

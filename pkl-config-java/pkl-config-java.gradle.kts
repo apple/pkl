@@ -6,6 +6,8 @@ plugins {
   signing
 }
 
+description = "Pkl code generator for Java"
+
 val pklCodegenJava: Configuration by configurations.creating
 val firstPartySourcesJars by configurations.existing
 

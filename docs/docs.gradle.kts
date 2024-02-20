@@ -5,6 +5,8 @@ plugins {
   id("pklKotlinTest")
 }
 
+description = "Pkl documentation site"
+
 sourceSets {
   test {
     java {
