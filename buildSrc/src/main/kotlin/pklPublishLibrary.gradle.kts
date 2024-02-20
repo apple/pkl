@@ -50,6 +50,9 @@ publishing {
 }
 
 val validatePom by tasks.registering {
+  if (tasks.findByName("generatePomFileForLibraryPublication") == null) {
+    return@registering
+  }
   val generatePomFileForLibraryPublication by tasks.existing(GenerateMavenPom::class)
   val outputFile = file("$buildDir/validatePom") // dummy output to satisfy up-to-date check
 
