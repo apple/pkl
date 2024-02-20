@@ -67,7 +67,7 @@ buildless {
   }
 
   remoteCache {
-    enabled = extra.properties["remoteCache"] != "false"
+    enabled = extra.properties["remoteCache"] == "true"
     push.set(extra.properties["cachePush"] != "false")
   }
 }
