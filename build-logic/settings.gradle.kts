@@ -35,3 +35,22 @@ plugins {
 rootProject.name = "build-logic"
 
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
+
+buildless {
+  localCache {
+    enabled = true
+  }
+
+  remoteCache {
+    enabled = extra.properties["remoteCache"] != "false"
+    push.set(extra.properties["cachePush"] != "false")
+  }
+}
+
+buildCache {
+  local {
+    isEnabled = true
+    removeUnusedEntriesAfterDays = 14
+    directory = file("../.codebase/build-cache")
+  }
+}
