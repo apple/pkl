@@ -1,8 +1,8 @@
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklPublishLibrary
-  pklKotlinTest
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklPublishLibrary")
+  id("pklKotlinTest")
 }
 
 val pklDistribution: Configuration by configurations.creating

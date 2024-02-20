@@ -1,7 +1,7 @@
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklKotlinLibrary
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklKotlinLibrary")
 }
 
 dependencies {

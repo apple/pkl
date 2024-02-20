@@ -1,7 +1,7 @@
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklGraalVm
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklGraalVm")
   id("me.champeau.jmh")
 }
 

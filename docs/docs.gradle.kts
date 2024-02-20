@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
-  pklAllProjects
-  pklKotlinTest
+  id("pklAllProjects")
+  id("pklKotlinTest")
 }
 
 sourceSets {

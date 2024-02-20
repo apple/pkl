@@ -7,8 +7,8 @@ import org.jetbrains.gradle.ext.ProjectSettings
 import org.jetbrains.gradle.ext.TaskTriggersConfig
 
 plugins {
-  pklAllProjects
-  pklGraalVm
+  id("pklAllProjects")
+  id("pklGraalVm")
   `project-reports`
   `test-report-aggregation`
 
@@ -20,8 +20,8 @@ plugins {
   alias(libs.plugins.owasp)
   alias(libs.plugins.sbom)
   alias(libs.plugins.kotlinValidator)
-  id(libs.plugins.kover.get().pluginId)
-  id(libs.plugins.detekt.get().pluginId)
+  alias(libs.plugins.kover)
+  alias(libs.plugins.detekt)
 }
 
 nexusPublishing {

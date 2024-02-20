@@ -1,8 +1,8 @@
 import java.security.MessageDigest
 
 plugins {
-  pklAllProjects
-  pklKotlinLibrary
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
 }
 
 // note: no need to publish this library

@@ -2,8 +2,8 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 plugins {
-  pklAllProjects
-  pklFatJar
+  id("pklAllProjects")
+  id("pklFatJar")
   signing
 }
 

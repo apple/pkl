@@ -1,8 +1,8 @@
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklFatJar
-  pklPublishLibrary
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklFatJar")
+  id("pklPublishLibrary")
   signing
 }
 

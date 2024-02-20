@@ -1,11 +1,11 @@
 plugins {
-  pklAllProjects
-  pklKotlinLibrary
-  pklPublishLibrary
-  pklNativeBuild
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklPublishLibrary")
+  id("pklNativeBuild")
   `maven-publish`
 
-  // already on build script class path (see buildSrc/build.gradle.kts),
+  // already on build script class path (see build-logic/build.gradle.kts),
   // hence must only specify plugin ID here
   // https://youtrack.jetbrains.com/issue/KTIJ-19369
   @Suppress("DSL_SCOPE_VIOLATION")

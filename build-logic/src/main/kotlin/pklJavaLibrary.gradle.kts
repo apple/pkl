@@ -47,7 +47,7 @@ spotless {
   java {
     googleJavaFormat(libs.versions.googleJavaFormat.get())
     targetExclude("**/generated/**", "**/build/**")
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
+    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
   }
 }
 

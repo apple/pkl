@@ -1,13 +1,13 @@
 import org.jetbrains.kotlin.utils.keysToMap
 
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklGradlePluginTest
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklGradlePluginTest")
 
   `java-gradle-plugin`
   `maven-publish`
-  pklPublishLibrary
+  id("pklPublishLibrary")
   signing
 
   alias(libs.plugins.buildconfig)

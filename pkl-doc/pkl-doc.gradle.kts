@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  pklAllProjects
-  pklKotlinLibrary
-  pklPublishLibrary
-  pklHtmlValidator
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklPublishLibrary")
+  id("pklHtmlValidator")
   @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
   id(libs.plugins.kotlinxSerialization.get().pluginId)
 }

@@ -2,10 +2,10 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
   kotlin("jvm") // for `src/generator/kotlin`
-  pklAllProjects
-  pklJavaLibrary
-  pklPublishLibrary
-  pklNativeBuild
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklPublishLibrary")
+  id("pklNativeBuild")
   antlr
   idea
 }
@@ -297,7 +297,7 @@ tasks.clean {
 
 spotless {
   antlr4 {
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
+    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
     target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
   }
 }
