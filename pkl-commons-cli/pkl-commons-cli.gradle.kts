@@ -5,15 +5,15 @@ plugins {
 }
 
 dependencies {
-  api(project(":pkl-core"))
+  api(projects.pklCore)
   api(libs.clikt) {
     // force clikt to use our version of the kotlin stdlib
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
 
-  implementation(project(":pkl-commons"))
-  testImplementation(project(":pkl-commons-test"))
+  implementation(projects.pklCommons)
+  testImplementation(projects.pklCommonsTest)
 }
 
 publishing {

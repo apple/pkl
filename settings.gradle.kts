@@ -47,3 +47,5 @@ if (gradle.startParameter.taskNames.contains("updateDependencyLocks") ||
 for (prj in rootProject.children) {
   prj.buildFileName = "${prj.name}.gradle.kts"
 }
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

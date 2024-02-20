@@ -10,7 +10,7 @@ val graal: Configuration by configurations.creating
 
 @Suppress("UnstableApiUsage")
 dependencies {
-  jmh(project(":pkl-core"))
+  jmh(projects.pklCore)
   // necessary because antlr4-runtime is declared as implementation dependency in pkl-core.gradle
   jmh(libs.antlrRuntime)
   truffle(libs.truffleApi)

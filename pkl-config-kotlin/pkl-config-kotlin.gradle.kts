@@ -16,11 +16,11 @@ val pklCodegenKotlin: Configuration by configurations.creating
 configurations.api.get().extendsFrom(pklConfigJava)
 
 dependencies {
-  pklConfigJava(project(":pkl-config-java"))
+  pklConfigJava(projects.pklConfigJava)
 
   pklConfigJavaAll(project(":pkl-config-java", "fatJar"))
 
-  pklCodegenKotlin(project(":pkl-codegen-kotlin"))
+  pklCodegenKotlin(projects.pklCodegenKotlin)
 
   implementation(libs.kotlinReflect)
   

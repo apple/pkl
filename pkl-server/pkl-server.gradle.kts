@@ -5,12 +5,12 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":pkl-core"))
+  implementation(projects.pklCore)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
   implementation(libs.antlrRuntime)
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 }
 
 tasks.test {
