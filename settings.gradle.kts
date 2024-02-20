@@ -31,7 +31,6 @@ include("pkl-tools")
 include("pkl-server")
 
 plugins {
-  id("build.less") version "1.0.0-rc2"
   id("com.gradle.enterprise") version "3.16.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
@@ -61,22 +60,23 @@ for (prj in rootProject.children) {
   prj.buildFileName = "${prj.name}.gradle.kts"
 }
 
-buildless {
-  localCache {
-    enabled = true
-  }
-
-  remoteCache {
-    enabled = extra.properties["remoteCache"] == "true"
-    push.set(extra.properties["cachePush"] != "false")
-  }
-}
-
 buildCache {
   local {
     isEnabled = true
     removeUnusedEntriesAfterDays = 14
-    directory = file(".codebase/build-cache")
+    directory = file("../.codebase/build-cache")
+  }
+
+  System.getenv("BUILDLESS_API_KEY")?.ifBlank { null }?.let { apiKey ->
+    remote<HttpBuildCache> {
+      isEnabled = extra.properties["remoteCache"] == "true"
+      isPush = extra.properties["cachePush"] != "false"
+      url = uri("https://gradle.less.build/cache/generic")
+      credentials {
+        username = "apikey"
+        password = apiKey
+      }
+    }
   }
 }
 
