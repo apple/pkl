@@ -62,7 +62,14 @@ for (prj in rootProject.children) {
 }
 
 buildless {
-  // Nothing at this time.
+  localCache {
+    enabled = true
+  }
+
+  remoteCache {
+    enabled = extra.properties["remoteCache"] != "false"
+    push.set(extra.properties["cachePush"] != "false")
+  }
 }
 
 buildCache {
