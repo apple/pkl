@@ -7,6 +7,7 @@ plugins {
   java
   application
   kotlin("jvm")
+  id("pklKotlinLibrary")
 }
 
 // Properties and defaults for JVM entrypoints.
