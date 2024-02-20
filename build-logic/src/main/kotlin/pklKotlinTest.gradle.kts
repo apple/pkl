@@ -23,8 +23,8 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   val testTask = this
-  forkEvery = 100
-  maxParallelForks = 4
+  forkEvery = 250
+  maxParallelForks = 2
 
   useJUnitPlatform()
 
@@ -73,11 +73,6 @@ testlogger {
   showStandardStreams = false
   slowThreshold = 45_000L
   isShowCauses = true
-}
-
-tasks.test {
-  forkEvery = 100
-  maxParallelForks = 4
 }
 
 testing {
