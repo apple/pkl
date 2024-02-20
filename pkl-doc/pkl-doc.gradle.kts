@@ -1,5 +1,6 @@
 plugins {
   id("pklAllProjects")
+  id("pklJvmLibrary")
   id("pklKotlinLibrary")
   id("pklPublishLibrary")
   id("pklHtmlValidator")

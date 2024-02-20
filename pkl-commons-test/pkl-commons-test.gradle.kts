@@ -2,6 +2,7 @@ import java.security.MessageDigest
 
 plugins {
   id("pklAllProjects")
+  id("pklJvmLibrary")
   id("pklKotlinLibrary")
 }
 
