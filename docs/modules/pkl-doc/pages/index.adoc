@@ -92,7 +92,7 @@ Groovy::
 [source,groovy,subs="+attributes"]
 ----
 dependencies {
-  compile "org.pkl-lang:pkl-doc:{pkl-artifact-version}"
+  implementation "org.pkl-lang:pkl-doc:{pkl-artifact-version}"
 }
 
 repositories {
@@ -111,7 +111,7 @@ Kotlin::
 [source,kotlin,subs="+attributes"]
 ----
 dependencies {
-  compile("org.pkl-lang:pkl-doc:{pkl-artifact-version}")
+  implementation("org.pkl-lang:pkl-doc:{pkl-artifact-version}")
 }
 
 repositories {

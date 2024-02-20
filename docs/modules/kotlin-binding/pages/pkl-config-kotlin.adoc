@@ -26,7 +26,7 @@ Groovy::
 [source,groovy,subs="+attributes"]
 ----
 dependencies {
-  compile "org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}"
+  implementation "org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}"
 }
 
 repositories {
@@ -45,7 +45,7 @@ Kotlin::
 [source,kotlin,subs="+attributes"]
 ----
 dependencies {
-  compile("org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}")
+  implementation("org.pkl-lang:pkl-config-kotlin:{pkl-artifact-version}")
 }
 
 repositories {
