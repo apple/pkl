@@ -9,6 +9,10 @@ dependencies {
     exclude(module = "kotlin-android-extensions")
   }
   implementation(libs.shadowPlugin)
+
+  // fix from the Gradle team: makes version catalog symbols available in build scripts
+  // see here for more: https://github.com/gradle/gradle/issues/15383
+  implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
 java {
