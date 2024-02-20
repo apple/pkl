@@ -133,7 +133,8 @@ class KotlinCodeGeneratorTest {
       pklCode: String,
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
-      implementSerializable: Boolean = false
+      implementSerializable: Boolean = false,
+      kotlinPackage: String? = null,
     ): String {
 
       val module = Evaluator.preconfigured().evaluateSchema(ModuleSource.text(pklCode))
@@ -144,7 +145,8 @@ class KotlinCodeGeneratorTest {
           KotlinCodegenOptions(
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
-            implementSerializable = implementSerializable
+            implementSerializable = implementSerializable,
+            kotlinPackage = kotlinPackage ?: "",
           )
         )
       return generator.kotlinFile
@@ -526,6 +528,92 @@ class KotlinCodeGeneratorTest {
         sibling: Person?
       }
     """
+      )
+
+    assertEqualTo(
+      """
+      package my
+
+      import kotlin.Long
+      import kotlin.String
+      import kotlin.collections.List
+      import kotlin.collections.Map
+
+      object Mod {
+        data class Person(
+          val name: String,
+          val age: Long,
+          val hobbies: List<String>,
+          val friends: Map<String, Person>,
+          val sibling: Person?
+        )
+      }
+    """,
+      kotlinCode
+    )
+
+    assertCompilesSuccessfully(kotlinCode)
+  }
+
+  @Test
+  fun `custom kotlin package prefix`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Person {
+        name: String
+        age: Int
+        hobbies: List<String>
+        friends: Map<String, Person>
+        sibling: Person?
+      }
+    """,
+        kotlinPackage = "cool.pkg.path",
+      )
+
+    assertEqualTo(
+      """
+      package cool.pkg.path.my
+
+      import kotlin.Long
+      import kotlin.String
+      import kotlin.collections.List
+      import kotlin.collections.Map
+
+      object Mod {
+        data class Person(
+          val name: String,
+          val age: Long,
+          val hobbies: List<String>,
+          val friends: Map<String, Person>,
+          val sibling: Person?
+        )
+      }
+    """,
+      kotlinCode
+    )
+
+    assertCompilesSuccessfully(kotlinCode)
+  }
+
+  @Test
+  fun `empty kotlin package prefix`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Person {
+        name: String
+        age: Int
+        hobbies: List<String>
+        friends: Map<String, Person>
+        sibling: Person?
+      }
+    """,
+        kotlinPackage = "",
       )
 
     assertEqualTo(
