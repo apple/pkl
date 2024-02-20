@@ -2813,7 +2813,7 @@ output {
 }
 ----
 
-Running `pkl eval -m output/ pigeon.pkl` produces the following output files:
+Running `pkl eval -m output/ birds.pkl` produces the following output files:
 
 .output/birds/pigeon.json
 [source,json]
