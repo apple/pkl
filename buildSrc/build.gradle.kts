@@ -31,6 +31,10 @@ dependencyLocking {
   lockAllConfigurations()
 }
 
+tasks.jar {
+  outputs.cacheIf { true }
+}
+
 // These are toolchain-level settings; for artifact targets, see convention plugins.
 private val defaultJvmTarget = "11"
 private val defaultKotlinTarget = "1.9"

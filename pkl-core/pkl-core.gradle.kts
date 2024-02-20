@@ -103,6 +103,16 @@ tasks.sourcesJar {
   dependsOn(tasks.generateGrammarSource)
 }
 
+listOf(
+  tasks.jar,
+  tasks.javadocJar,
+  tasks.sourcesJar,
+).forEach {
+  it {
+    outputs.cacheIf { true }
+  }
+}
+
 tasks.generateTestGrammarSource {
   enabled = false
 }
