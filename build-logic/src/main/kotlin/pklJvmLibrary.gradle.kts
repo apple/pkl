@@ -7,7 +7,7 @@ plugins {
 
 // JVM toolchain defaults, properties, and resolved configuration.
 private val defaultJvmTarget = "11"
-private val jvmVendor = JvmVendorSpec.GRAAL_VM
+private val jvmVendor = JvmVendorSpec.ADOPTIUM
 private val jvmTargetVersion =
   (findProperty("javaTarget") as? String ?: defaultJvmTarget)
 

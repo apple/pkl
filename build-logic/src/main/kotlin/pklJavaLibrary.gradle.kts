@@ -1,53 +1,79 @@
 @file:Suppress("HttpUrlsUsage")
 
+import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
   pmd
   id("pklJvmLibrary")
-  id("com.diffplug.spotless")
 }
 
 // Version catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
-pmd {
-  isConsoleOutput = true
-  toolVersion = libs.versions.pmd.get()
-  threads = 4
-  isIgnoreFailures = true
-  incrementalAnalysis = true
-}
+// Properties which govern analysis.
+private val enableAnalysisProperty = "enableAnalysis"
+private val isPublishing = gradle.startParameter.taskNames.any { "publish" in it.lowercase() }
+private val enableAnalysis =
+  (findProperty(enableAnalysisProperty) == "true" || "check" in gradle.startParameter.taskNames )
 
-spotless {
-  java {
-    googleJavaFormat(libs.versions.googleJavaFormat.get())
-    targetExclude("**/generated/**", "**/build/**")
-    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
+// Conditional plugin application.
+if (enableAnalysis) apply(plugin = "pmd").also {
+  configure<PmdExtension> {
+    isConsoleOutput = true
+    toolVersion = libs.versions.pmd.get()
+    threads = 4
+    isIgnoreFailures = true
+    incrementalAnalysis = true
   }
 }
 
-tasks.compileKotlin {
-  enabled = false
-}
-
-tasks.javadoc {
-  classpath = sourceSets.main.get().output + sourceSets.main.get().compileClasspath
-  source = sourceSets.main.get().allJava
-  title = "${project.name} ${project.version} API"
-  (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
-}
-
-val workAroundKotlinGradlePluginBug by tasks.registering {
-  doLast {
-    // Works around this problem, which sporadically appears and disappears in different subprojects:
-    // A problem was found with the configuration of task ':pkl-executor:compileJava' (type 'JavaCompile').
-    // > Directory '[...]/pkl/pkl-executor/build/classes/kotlin/main'
-    // specified for property 'compileKotlinOutputClasses' does not exist.
-    project.layout.buildDirectory.dir("classes/kotlin/main").get().asFile.mkdirs()
+if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
+  configure<SpotlessExtension> {
+    java {
+      googleJavaFormat(libs.versions.googleJavaFormat.get())
+      targetExclude("**/generated/**", "**/build/**")
+      licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
+    }
   }
 }
 
-tasks.compileJava {
-  dependsOn(workAroundKotlinGradlePluginBug)
+tasks {
+  // No need to run PMD on tests.
+  if (enableAnalysis) named("pmdTest") {
+    enabled = false
+  }
+
+  // This is a pure-Java target convention; see `pklKotlinLibrary` for Kotlin support.
+  compileKotlin {
+    enabled = false
+  }
+
+  val workAroundKotlinGradlePluginBug by registering {
+    doLast {
+      // Works around this problem, which sporadically appears and disappears in different subprojects:
+      // A problem was found with the configuration of task ':pkl-executor:compileJava' (type 'JavaCompile').
+      // > Directory '[...]/pkl/pkl-executor/build/classes/kotlin/main'
+      // specified for property 'compileKotlinOutputClasses' does not exist.
+      project.layout.buildDirectory.dir("classes/kotlin/main").get().asFile.mkdirs()
+    }
+  }
+
+  compileJava {
+    dependsOn(workAroundKotlinGradlePluginBug)
+  }
+
+  // Signing is only needed if we are publishing.
+  withType(Sign::class.java).configureEach {
+    onlyIf { isPublishing }
+  }
+
+  // Javadoc JARs are only needed if we are publishing.
+  javadoc {
+    classpath = sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    source = sourceSets.main.get().allJava
+    title = "${project.name} ${project.version} API"
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+    onlyIf { isPublishing }
+  }
 }

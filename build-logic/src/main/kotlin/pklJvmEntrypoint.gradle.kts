@@ -2,12 +2,14 @@
 @file:Suppress("DSL_SCOPE_VIOLATION")
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
   java
   application
   kotlin("jvm")
   id("pklKotlinLibrary")
+  id("pklKotlinTest")
 }
 
 // Properties and defaults for JVM entrypoints.
@@ -22,6 +24,12 @@ java {
 }
 
 kotlin {
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(javaVersion)
+  }
+}
+
+tasks.withType(KotlinJvmCompile::class).configureEach {
   compilerOptions {
     jvmTarget = JvmTarget.fromTarget(javaVersion)
   }
