@@ -8,6 +8,7 @@ plugins {
   java
   application
   kotlin("jvm")
+  id("pklJvmLibrary")
   id("pklKotlinLibrary")
   id("pklKotlinTest")
 }
