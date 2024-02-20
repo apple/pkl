@@ -8,6 +8,7 @@ generated/
 
 # IntelliJ
 .idea/
+!.idea/icon.svg
 !.idea/codestyles/
 !.idea/inspectionProfiles/
 !.idea/runConfigurations/
