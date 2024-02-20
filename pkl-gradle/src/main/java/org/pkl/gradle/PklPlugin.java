@@ -196,12 +196,15 @@ public class PklPlugin implements Plugin<Project> {
           configureCodeGenSpec(spec);
 
           spec.getGenerateKdoc().convention(false);
+          spec.getKotlinPackage().convention("");
 
           createModulesTask(KotlinCodeGenTask.class, spec)
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
+                    task.getIndent().set(spec.getIndent());
+                    task.getKotlinPackage().set(spec.getKotlinPackage());
                   });
         });
 

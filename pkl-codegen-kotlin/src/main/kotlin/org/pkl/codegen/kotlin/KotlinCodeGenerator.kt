@@ -27,6 +27,9 @@ data class KotlinCodegenOptions(
   /** The characters to use for indenting generated Kotlin code. */
   val indent: String = "  ",
 
+  /** Kotlin package to use for generated code; if none is provided, the root package is used. */
+  val kotlinPackage: String = "",
+
   /** Whether to generate KDoc based on doc comments for Pkl modules, classes, and properties. */
   val generateKdoc: Boolean = false,
 
@@ -111,6 +114,9 @@ class KotlinCodeGenerator(
       append("lin/${relativeOutputPathFor(moduleSchema.moduleName)}")
     }
 
+  val kotlinPackage: String?
+    get() = options.kotlinPackage.ifEmpty { null }
+
   val kotlinFile: String
     get() {
       if (moduleSchema.moduleUri.scheme == "pkl") {
@@ -123,6 +129,7 @@ class KotlinCodeGenerator(
 
       val hasProperties = pModuleClass.properties.any { !it.value.isHidden }
       val isGenerateClass = hasProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+      val packagePrefix = kotlinPackage?.let { "$it." } ?: ""
       val moduleType =
         if (isGenerateClass) {
           generateTypeSpec(pModuleClass, moduleSchema)
@@ -172,7 +179,9 @@ class KotlinCodeGenerator(
       val packageName = if (index == -1) "" else moduleName.substring(0, index)
       val moduleTypeName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
 
-      val fileSpec = FileSpec.builder(packageName, moduleTypeName).indent(options.indent)
+      val packagePath =
+        if (packagePrefix.isNotBlank()) "$packagePrefix.$packageName" else packageName
+      val fileSpec = FileSpec.builder(packagePath, moduleTypeName).indent(options.indent)
 
       for (typeAlias in moduleSchema.typeAliases.values) {
         if (typeAlias.aliasedType is PType.Alias) {
@@ -269,7 +278,7 @@ class KotlinCodeGenerator(
       return methodBuilder.addCode(codeBuilder.build()).build()
     }
 
-    // besides generating copy method for current class,
+    // besides generating copy method for the current class,
     // override copy methods inherited from parent classes
     fun generateCopyMethods(typeBuilder: TypeSpec.Builder) {
       var prevParameterCount = Int.MAX_VALUE
@@ -638,10 +647,14 @@ class KotlinCodeGenerator(
     val index = moduleName.lastIndexOf(".")
     val packageName = if (index == -1) "" else moduleName.substring(0, index)
     val moduleTypeName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val packagePrefix = kotlinPackage?.let { "$it." } ?: ""
+    val renderedPackage =
+      if (packagePrefix.isNotBlank()) "$packagePrefix.$packageName" else packageName
+
     return if (isModuleClass) {
-      ClassName(packageName, moduleTypeName)
+      ClassName(renderedPackage, moduleTypeName)
     } else {
-      ClassName(packageName, moduleTypeName, simpleName)
+      ClassName(renderedPackage, moduleTypeName, simpleName)
     }
   }
 
