@@ -277,6 +277,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(() -> VmUtils.readTextProperty(fileOutput));
   }
 
+  @SuppressWarnings("removal")
   private <T> T doEvaluate(Supplier<T> supplier) {
     @Nullable TimeoutTask timeoutTask = null;
     logger.clear();
