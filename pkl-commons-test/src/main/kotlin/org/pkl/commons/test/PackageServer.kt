@@ -15,11 +15,7 @@
  */
 package org.pkl.commons.test
 
-import com.sun.net.httpserver.HttpHandler
-import com.sun.net.httpserver.HttpsConfigurator
-import com.sun.net.httpserver.HttpsParameters
-import com.sun.net.httpserver.HttpsServer
-import java.net.BindException
+import com.sun.net.httpserver.*
 import java.net.InetSocketAddress
 import java.nio.file.*
 import java.security.KeyStore
@@ -30,61 +26,103 @@ import kotlin.io.path.isRegularFile
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.deleteRecursively
 
-object PackageServer {
-  private val keystore = javaClass.getResource("/localhost.p12")!!
-
-  // When tests are run via Gradle (i.e. from ./gradlew check), resources are packaged into a jar.
-  // When run directly in IntelliJ, resources are just directories.
-  private val packagesDir: Path = let {
-    val uri = javaClass.getResource("packages")!!.toURI()
-    try {
-      Path.of(uri)
-    } catch (e: FileSystemNotFoundException) {
-      FileSystems.newFileSystem(uri, mapOf<String, String>())
-      Path.of(uri)
+/**
+ * A test HTTP server that serves the Pkl packages defined under
+ * `pkl-commons-test/src/main/files/packages`.
+ *
+ * To use this server from a test,
+ * 1. Instantiate the server.
+ * 2. (optional) Store the server in a companion or instance field.
+ * 3. When setting up your test, pass the server [port] to one of the following:
+ *     * `HttpClient.Builder.setTestPort`
+ *     * `CliBaseOptions` constructor
+ *     * `ExecutorOptions` constructor
+ *     * `testPort` Gradle property
+ *
+ *   If the server isn't already running, it is automatically started.
+ * 4. Use port `12110` in your test. `HttpClient` will replace this port with the server port.
+ * 4. [Close][close] the server, for example in [AfterAll][org.junit.jupiter.api.AfterAll].
+ */
+class PackageServer : AutoCloseable {
+  companion object {
+    fun populateCacheDir(cacheDir: Path) {
+      val basePath = cacheDir.resolve("package-1/localhost:$PORT")
+      basePath.deleteRecursively()
+      Files.walk(packagesDir).use { stream ->
+        stream.forEach { source ->
+          if (!source.isRegularFile()) return@forEach
+          val relativized =
+            source.toString().replaceFirst(packagesDir.toString(), "").drop(1).ifEmpty {
+              return@forEach
+            }
+          val dest = basePath.resolve(relativized)
+          dest.createParentDirectories()
+          Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING)
+        }
+      }
     }
-  }
 
-  fun populateCacheDir(cacheDir: Path) {
-    val basePath = cacheDir.resolve("package-1/localhost:$PORT")
-    basePath.deleteRecursively()
-    Files.walk(packagesDir).use { stream ->
-      stream.forEach { source ->
-        if (!source.isRegularFile()) return@forEach
-        val relativized =
-          source.toString().replaceFirst(packagesDir.toString(), "").drop(1).ifEmpty {
-            return@forEach
-          }
-        val dest = basePath.resolve(relativized)
-        dest.createParentDirectories()
-        Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING)
+    // Port declared in tests.
+    // Modified by RequestRewritingClient if testPort is set.
+    private const val PORT = 12110
+
+    // When tests are run via Gradle (i.e. from ./gradlew check), resources are packaged into a jar.
+    // When run directly in IntelliJ, resources are just directories.
+    private val packagesDir: Path by lazy {
+      val uri = PackageServer::class.java.getResource("packages")!!.toURI()
+      try {
+        Path.of(uri)
+      } catch (e: FileSystemNotFoundException) {
+        FileSystems.newFileSystem(uri, mapOf<String, String>())
+        Path.of(uri)
+      }
+    }
+
+    private val simpleHttpsConfigurator by lazy {
+      val sslContext =
+        SSLContext.getInstance("SSL").apply {
+          val pass = "password".toCharArray()
+          val keystore = PackageServer::class.java.getResource("/localhost.p12")!!
+          val ks = KeyStore.getInstance("PKCS12").apply { load(keystore.openStream(), pass) }
+          val kmf = KeyManagerFactory.getInstance("SunX509").apply { init(ks, pass) }
+          init(kmf.keyManagers, null, null)
+        }
+      val engine = sslContext.createSSLEngine()
+      object : HttpsConfigurator(sslContext) {
+        override fun configure(params: HttpsParameters) {
+          params.needClientAuth = false
+          params.cipherSuites = engine.enabledCipherSuites
+          params.protocols = engine.enabledProtocols
+          params.setSSLParameters(sslContext.supportedSSLParameters)
+        }
       }
     }
   }
 
-  private const val PORT = 12110
-  private var started = false
-
-  private val sslContext by lazy {
-    SSLContext.getInstance("SSL").apply {
-      val pass = "password".toCharArray()
-      val ks = KeyStore.getInstance("PKCS12").apply { load(keystore.openStream(), pass) }
-      val kmf = KeyManagerFactory.getInstance("SunX509").apply { init(ks, pass) }
-      init(kmf.keyManagers, null, null)
+  /** The ephemeral listening port of this server. Automatically starts the server if necessary. */
+  val port: Int by lazy {
+    with(server.value) {
+      bind(InetSocketAddress(0), 0)
+      start()
+      address.port
     }
   }
 
-  private val engine by lazy { sslContext.createSSLEngine() }
-
-  private val simpleHttpsConfigurator =
-    object : HttpsConfigurator(sslContext) {
-      override fun configure(params: HttpsParameters) {
-        params.needClientAuth = false
-        params.cipherSuites = engine.enabledCipherSuites
-        params.protocols = engine.enabledProtocols
-        params.setSSLParameters(sslContext.supportedSSLParameters)
-      }
+  /** Closes this server. */
+  override fun close() {
+    // don't start server just to stop it
+    if (server.isInitialized()) {
+      server.value.stop(0)
     }
+  }
+
+  private val server: Lazy<HttpsServer> = lazy {
+    HttpsServer.create().apply {
+      httpsConfigurator = simpleHttpsConfigurator
+      createContext("/", handler)
+      executor = Executors.newFixedThreadPool(1)
+    }
+  }
 
   private val handler = HttpHandler { exchange ->
     if (exchange.requestMethod != "GET") {
@@ -105,41 +143,4 @@ object PackageServer {
     exchange.responseBody.use { outputStream -> Files.copy(localPath, outputStream) }
     exchange.close()
   }
-
-  private val myExecutor = Executors.newFixedThreadPool(1)
-
-  private val server by lazy {
-    HttpsServer.create().apply {
-      httpsConfigurator = simpleHttpsConfigurator
-      createContext("/", handler)
-      executor = myExecutor
-    }
-  }
-
-  fun ensureStarted() =
-    synchronized(this) {
-      if (!started) {
-        // Crude hack to make sure that parallel tests don't try and use each others mock server
-        // otherwise you get flaky tests when a server instance is shutdown by one set of tests
-        // while another set of tests is still relying on it.
-        // Side effect is that tests that spin up a mock package server are now serialised, rather
-        // than running in parallel. But that seems like a reasonable tradeoff to avoid flaky
-        // tests.
-        for (i in 1..20) {
-          try {
-            server.bind(InetSocketAddress(PORT), 0)
-            server.start()
-            started = true
-            println("Mock package server started after $i attempt(s)")
-            return@synchronized
-          } catch (_: BindException) {
-            println(
-              "Port $PORT in use after $i/20 attempt(s), probably another test running in parallel. Sleeping for 1 second and trying again"
-            )
-            Thread.sleep(1000)
-          }
-        }
-        println("Unable to start package server! This will probably result in a test failures")
-      }
-    }
 }

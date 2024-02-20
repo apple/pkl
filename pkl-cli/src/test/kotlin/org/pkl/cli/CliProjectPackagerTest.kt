@@ -24,6 +24,7 @@ import java.util.stream.Collectors
 import kotlin.io.path.createDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -36,6 +37,16 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 
 class CliProjectPackagerTest {
+  companion object {
+    private val packageServer = PackageServer()
+
+    @AfterAll
+    @JvmStatic
+    fun afterAll() {
+      packageServer.close()
+    }
+  }
+
   @Test
   fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
     val packager =
@@ -866,7 +877,6 @@ class CliProjectPackagerTest {
 
   @Test
   fun `publish checks`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
@@ -888,7 +898,8 @@ class CliProjectPackagerTest {
         CliProjectPackager(
             CliBaseOptions(
               workingDir = tempDir,
-              caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+              caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+              testPort = packageServer.port
             ),
             listOf(tempDir.resolve("project")),
             CliTestOptions(),
@@ -912,7 +923,6 @@ class CliProjectPackagerTest {
 
   @Test
   fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
-    PackageServer.ensureStarted()
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
@@ -932,7 +942,8 @@ class CliProjectPackagerTest {
     CliProjectPackager(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port
         ),
         listOf(tempDir.resolve("project")),
         CliTestOptions(),

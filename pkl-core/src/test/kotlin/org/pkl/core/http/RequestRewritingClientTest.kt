@@ -6,14 +6,13 @@ import org.junit.jupiter.api.Test
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
-import java.net.http.HttpResponse
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
 import java.net.http.HttpClient as JdkHttpClient
 
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
-  private val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), captured)
+  private val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured)
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
 
@@ -102,6 +101,26 @@ class RequestRewritingClientTest {
     client.send(request, BodyHandlers.discarding())
     
     assertThat(captured.request.bodyPublisher().get()).isSameAs(publisher)
+  }
+  
+  @Test
+  fun `rewrites port 12110 if test port is set`() {
+    val captured = RequestCapturingClient()
+    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured)
+    val request = HttpRequest.newBuilder(URI("https://example.com:12110")).build()
+
+    client.send(request, BodyHandlers.discarding())
+
+    assertThat(captured.request.uri().port).isEqualTo(5000)
+  }
+  
+  @Test
+  fun `leaves port 12110 intact if no test port is set`() {
+    val request = HttpRequest.newBuilder(URI("https://example.com:12110")).build()
+
+    client.send(request, BodyHandlers.discarding())
+    
+    assertThat(captured.request.uri().port).isEqualTo(12110)
   }
 }
 

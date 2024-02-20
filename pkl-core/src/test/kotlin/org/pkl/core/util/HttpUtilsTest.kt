@@ -39,4 +39,22 @@ class HttpUtilsTest {
       HttpUtils.checkHasStatusCode200(response2)
     }
   }
+  
+  @Test
+  fun setPort() {
+    assertThrows<IllegalArgumentException> {
+      HttpUtils.setPort(URI("https://example.com"), -1)
+    }
+    assertThrows<IllegalArgumentException> {
+      HttpUtils.setPort(URI("https://example.com"), 65536)
+    }
+    assertThat(HttpUtils.setPort(URI("http://example.com"), 123))
+      .isEqualTo(URI("http://example.com:123"))
+    assertThat(HttpUtils.setPort(URI("http://example.com:456"), 123))
+      .isEqualTo(URI("http://example.com:123"))
+    assertThat(HttpUtils.setPort(URI("https://example.com/foo/bar.baz?query=1#fragment"), 123))
+      .isEqualTo(URI("https://example.com:123/foo/bar.baz?query=1#fragment"))
+    assertThat(HttpUtils.setPort(URI("https://example.com:456/foo/bar.baz?query=1#fragment"), 123))
+      .isEqualTo(URI("https://example.com:123/foo/bar.baz?query=1#fragment"))
+  }
 }

@@ -24,6 +24,7 @@ import java.time.Duration
 import kotlin.io.path.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -40,12 +41,22 @@ import org.pkl.core.util.IoUtils
 
 class CliEvaluatorTest {
   companion object {
-    const val defaultContents = """
-person {
-  name = "pigeon"
-  age = 20 + 10
-}
+    private val defaultContents =
+      """
+      person {
+        name = "pigeon"
+        age = 20 + 10
+      }
     """
+        .trimIndent()
+
+    private val packageServer = PackageServer()
+
+    @AfterAll
+    @JvmStatic
+    fun afterAll() {
+      packageServer.close()
+    }
   }
 
   // use manually constructed temp dir instead of @TempDir to work around
@@ -1117,7 +1128,6 @@ result = someLib.x
 
   @Test
   fun `setting noCache will skip writing to the cache dir`() {
-    PackageServer.ensureStarted()
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1136,7 +1146,8 @@ result = someLib.x
           workingDir = tempDir,
           moduleCacheDir = tempDir,
           noCache = true,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port
         ),
       )
     CliEvaluator(options, consoleWriter = buffer).run()
@@ -1185,10 +1196,10 @@ result = someLib.x
 
   @Test
   fun `gives decent error message if CLI doesn't have the required CA certificate`() {
-    PackageServer.ensureStarted()
     // provide SOME certs to prevent CliEvaluator from falling back to ~/.pkl/cacerts
     val builtInCerts = FileTestUtils.writePklBuiltInCertificates(tempDir)
-    val err = assertThrows<CliException> { evalModuleThatImportsPackage(builtInCerts) }
+    val err =
+      assertThrows<CliException> { evalModuleThatImportsPackage(builtInCerts, packageServer.port) }
     assertThat(err)
       // on some JDK11's this doesn't cause SSLHandshakeException but some other SSLException
       // .hasMessageContaining("Error during SSL handshake with host `localhost`:")
@@ -1196,7 +1207,7 @@ result = someLib.x
       .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
   }
 
-  private fun evalModuleThatImportsPackage(certsFile: Path) {
+  private fun evalModuleThatImportsPackage(certsFile: Path, testPort: Int = -1) {
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1212,7 +1223,9 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
           caCertificates = listOf(certsFile),
-          noCache = true
+          workingDir = tempDir,
+          noCache = true,
+          testPort = testPort
         ),
       )
     CliEvaluator(options).run()

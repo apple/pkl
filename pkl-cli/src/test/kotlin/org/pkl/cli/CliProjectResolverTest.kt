@@ -18,7 +18,7 @@ package org.pkl.cli
 import java.io.StringWriter
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -29,10 +29,12 @@ import org.pkl.commons.test.PackageServer
 
 class CliProjectResolverTest {
   companion object {
-    @BeforeAll
+    private val packageServer = PackageServer()
+
+    @AfterAll
     @JvmStatic
-    fun beforeAll() {
-      PackageServer.ensureStarted()
+    fun afterAll() {
+      packageServer.close()
     }
   }
 
@@ -40,7 +42,7 @@ class CliProjectResolverTest {
   fun `missing PklProject when inferring a project dir`(@TempDir tempDir: Path) {
     val packager =
       CliProjectResolver(
-        CliBaseOptions(workingDir = tempDir),
+        CliBaseOptions(workingDir = tempDir, noCache = true),
         emptyList(),
         consoleWriter = StringWriter(),
         errWriter = StringWriter()
@@ -53,7 +55,7 @@ class CliProjectResolverTest {
   fun `missing PklProject when explicit dir is provided`(@TempDir tempDir: Path) {
     val packager =
       CliProjectResolver(
-        CliBaseOptions(),
+        CliBaseOptions(noCache = true),
         listOf(tempDir),
         consoleWriter = StringWriter(),
         errWriter = StringWriter()
@@ -80,7 +82,9 @@ class CliProjectResolverTest {
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port,
+          noCache = true
         ),
         listOf(tempDir),
         consoleWriter = StringWriter(),
@@ -133,7 +137,9 @@ class CliProjectResolverTest {
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port,
+          noCache = true
         ),
         emptyList(),
         consoleWriter = StringWriter(),
@@ -228,7 +234,11 @@ class CliProjectResolverTest {
         .trimIndent()
     )
     CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+        CliBaseOptions(
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port,
+          noCache = true
+        ),
         listOf(projectDir),
         consoleWriter = StringWriter(),
         errWriter = StringWriter()
@@ -306,7 +316,11 @@ class CliProjectResolverTest {
     val consoleOut = StringWriter()
     val errOut = StringWriter()
     CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+        CliBaseOptions(
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port,
+          noCache = true
+        ),
         listOf(projectDir),
         consoleWriter = consoleOut,
         errWriter = errOut
@@ -377,7 +391,11 @@ class CliProjectResolverTest {
     val consoleOut = StringWriter()
     val errOut = StringWriter()
     CliProjectResolver(
-        CliBaseOptions(caCertificates = listOf(FileTestUtils.selfSignedCertificate)),
+        CliBaseOptions(
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          testPort = packageServer.port,
+          noCache = true
+        ),
         listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
         consoleWriter = consoleOut,
         errWriter = errOut

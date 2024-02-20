@@ -48,4 +48,6 @@ public interface BasePklSpec {
 
   // use same type (Duration) as Gradle's `Task.timeout`
   Property<Duration> getEvalTimeout();
+
+  Property<Integer> getTestPort();
 }

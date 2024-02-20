@@ -123,6 +123,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract Property<Duration> getEvalTimeout();
 
+  @Input
+  @Optional
+  public abstract Property<Integer> getTestPort();
+
   @TaskAction
   public void runTask() {
     doRunTask();
@@ -153,6 +157,7 @@ public abstract class BasePklTask extends DefaultTask {
               false,
               false,
               false,
+              getTestPort().getOrElse(-1),
               Collections.emptyList());
     }
     return cachedOptions;

@@ -15,47 +15,226 @@
  */
 package org.pkl.executor;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 
 /**
  * Options for {@link Executor#evaluatePath}.
  *
- * <p>Note that subclasses of {@code ExecutorOptions} offer additional options.
+ * <p>To create {@code ExecutorOptions}, use its {@linkplain #builder builder}.
  */
-public class ExecutorOptions {
-  protected final List<String> allowedModules;
+public final class ExecutorOptions {
+  private final List<String> allowedModules;
 
-  protected final List<String> allowedResources;
+  private final List<String> allowedResources;
 
-  protected final Map<String, String> environmentVariables;
+  private final Map<String, String> environmentVariables;
 
-  protected final Map<String, String> externalProperties;
+  private final Map<String, String> externalProperties;
 
-  protected final List<Path> modulePath;
+  private final List<Path> modulePath;
 
-  protected final /* @Nullable */ Path rootDir;
+  private final /* @Nullable */ Path rootDir;
 
-  protected final /* @Nullable */ Duration timeout;
+  private final /* @Nullable */ Duration timeout;
 
-  protected final /* @Nullable */ String outputFormat;
+  private final /* @Nullable */ String outputFormat;
 
-  protected final /* @Nullable */ Path moduleCacheDir;
+  private final /* @Nullable */ Path moduleCacheDir;
 
-  protected final /* @Nullable */ Path projectDir;
+  private final /* @Nullable */ Path projectDir;
+
+  private final List<Path> certificateFiles;
+
+  private final List<URI> certificateUris;
+
+  private final int testPort; // -1 means disabled
+
+  private final int spiOptionsVersion; // -1 means use latest
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
     return Path.of(System.getProperty("user.home"), ".pkl", "cache");
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /**
+   * A builder of {@link ExecutorOptions}.
+   *
+   * <p>It is safe to create multiple options objects with the same builder.
+   */
+  public static final class Builder {
+    private List<String> allowedModules = List.of();
+    private List<String> allowedResources = List.of();
+    private Map<String, String> environmentVariables = Map.of();
+    private Map<String, String> externalProperties = Map.of();
+    private List<Path> modulePath = List.of();
+    private /* @Nullable */ Path rootDir;
+    private /* @Nullable */ Duration timeout;
+    private /* @Nullable */ String outputFormat;
+    private /* @Nullable */ Path moduleCacheDir;
+    private /* @Nullable */ Path projectDir;
+    private List<Path> certificateFiles = List.of();
+    private List<URI> certificateUris = List.of();
+    private int testPort = -1; // -1 means disabled
+    private int spiOptionsVersion = -1; // -1 means use latest
+
+    private Builder() {}
+
+    /** API equivalent of the {@code --allowed-modules} CLI option. */
+    public Builder allowedModules(List<String> allowedModules) {
+      this.allowedModules = allowedModules;
+      return this;
+    }
+
+    /** API equivalent of the {@code --allowed-modules} CLI option. */
+    public Builder allowedModules(String... allowedModules) {
+      this.allowedModules = List.of(allowedModules);
+      return this;
+    }
+
+    /** API equivalent of the {@code --allowed-resources} CLI option. */
+    public Builder allowedResources(List<String> allowedResources) {
+      this.allowedResources = allowedResources;
+      return this;
+    }
+
+    /** API equivalent of the {@code --allowed-resources} CLI option. */
+    public Builder allowedResources(String... allowedResources) {
+      this.allowedResources = List.of(allowedResources);
+      return this;
+    }
+
+    /** API equivalent of the repeatable {@code --env-var} CLI option. */
+    public Builder environmentVariables(Map<String, String> environmentVariables) {
+      this.environmentVariables = environmentVariables;
+      return this;
+    }
+
+    /** API equivalent of the repeatable {@code --property} CLI option. */
+    public Builder externalProperties(Map<String, String> externalProperties) {
+      this.externalProperties = externalProperties;
+      return this;
+    }
+
+    /** API equivalent of the {@code --module-path} CLI option. */
+    public Builder modulePath(List<Path> modulePath) {
+      this.modulePath = modulePath;
+      return this;
+    }
+
+    /** API equivalent of the {@code --module-path} CLI option. */
+    public Builder modulePath(Path... modulePath) {
+      this.modulePath = List.of(modulePath);
+      return this;
+    }
+
+    /** API equivalent of the {@code --root-dir} CLI option. */
+    public Builder rootDir(/*Nullable*/ Path rootDir) {
+      this.rootDir = rootDir;
+      return this;
+    }
+
+    /** API equivalent of the {@code --timeout} CLI option. */
+    public Builder timeout(/*Nullable*/ Duration timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    /** API equivalent of the {@code --format} CLI option. */
+    public Builder outputFormat(/*Nullable*/ String outputFormat) {
+      this.outputFormat = outputFormat;
+      return this;
+    }
+
+    /**
+     * API equivalent of the {@code --cache-dir} CLI option. Passing {@code null} is equivalent to
+     * {@code --no-cache}.
+     */
+    public Builder moduleCacheDir(/*Nullable*/ Path moduleCacheDir) {
+      this.moduleCacheDir = moduleCacheDir;
+      return this;
+    }
+
+    /**
+     * API equivalent of the {@code --project-dir} CLI option.
+     *
+     * <p>Unlike the CLI, this option only sets project dependencies. It does not set evaluator
+     * settings.
+     */
+    public Builder projectDir(/*Nullable*/ Path projectDir) {
+      this.projectDir = projectDir;
+      return this;
+    }
+
+    /** API equivalent of the {@code --ca-certificates} CLI option. */
+    public Builder certificateFiles(List<Path> certificateFiles) {
+      this.certificateFiles = certificateFiles;
+      return this;
+    }
+
+    /** API equivalent of the {@code --ca-certificates} CLI option. */
+    public Builder certificateFiles(Path... certificateFiles) {
+      this.certificateFiles = List.of(certificateFiles);
+      return this;
+    }
+
+    /** API equivalent of the {@code --ca-certificates} CLI option. */
+    public Builder certificateUris(List<URI> certificateUris) {
+      this.certificateUris = certificateUris;
+      return this;
+    }
+
+    /** API equivalent of the {@code --ca-certificates} CLI option. */
+    public Builder certificateUris(URI... certificateUris) {
+      this.certificateUris = List.of(certificateUris);
+      return this;
+    }
+
+    /** Internal test option. -1 means disabled. */
+    Builder testPort(int testPort) {
+      this.testPort = testPort;
+      return this;
+    }
+
+    /** Internal test option. -1 means use latest. */
+    Builder spiOptionsVersion(int version) {
+      this.spiOptionsVersion = version;
+      return this;
+    }
+
+    public ExecutorOptions build() {
+      return new ExecutorOptions(
+          allowedModules,
+          allowedResources,
+          environmentVariables,
+          externalProperties,
+          modulePath,
+          rootDir,
+          timeout,
+          outputFormat,
+          moduleCacheDir,
+          projectDir,
+          certificateFiles,
+          certificateUris,
+          testPort,
+          spiOptionsVersion);
+    }
+  }
+
   /**
    * Constructs an options object.
    *
+   * @deprecated use {@link #builder} instead
    * @param allowedModules API equivalent of the {@code --allowed-modules} CLI option
    * @param allowedResources API equivalent of the {@code --allowed-resources} CLI option
    * @param environmentVariables API equivalent of the repeatable {@code --env-var} CLI option
@@ -69,6 +248,7 @@ public class ExecutorOptions {
    *     null} is equivalent to {@code --no-cache}.
    * @param projectDir API equivalent of the {@code --project-dir} CLI option.
    */
+  @Deprecated(forRemoval = true)
   public ExecutorOptions(
       List<String> allowedModules,
       List<String> allowedResources,
@@ -81,16 +261,53 @@ public class ExecutorOptions {
       /* @Nullable */ Path moduleCacheDir,
       /* @Nullable */ Path projectDir) {
 
-    this.allowedModules = allowedModules;
-    this.allowedResources = allowedResources;
-    this.environmentVariables = environmentVariables;
-    this.externalProperties = externalProperties;
+    this(
+        allowedModules,
+        allowedResources,
+        environmentVariables,
+        externalProperties,
+        modulePath,
+        rootDir,
+        timeout,
+        outputFormat,
+        moduleCacheDir,
+        projectDir,
+        List.of(),
+        List.of(),
+        -1,
+        -1);
+  }
+
+  private ExecutorOptions(
+      List<String> allowedModules,
+      List<String> allowedResources,
+      Map<String, String> environmentVariables,
+      Map<String, String> externalProperties,
+      List<Path> modulePath,
+      /* @Nullable */ Path rootDir,
+      /* @Nullable */ Duration timeout,
+      /* @Nullable */ String outputFormat,
+      /* @Nullable */ Path moduleCacheDir,
+      /* @Nullable */ Path projectDir,
+      List<Path> certificateFiles,
+      List<URI> certificateUris,
+      int testPort,
+      int spiOptionsVersion) {
+
+    this.allowedModules = List.copyOf(allowedModules);
+    this.allowedResources = List.copyOf(allowedResources);
+    this.environmentVariables = Map.copyOf(environmentVariables);
+    this.externalProperties = Map.copyOf(externalProperties);
     this.modulePath = modulePath;
     this.rootDir = rootDir;
     this.timeout = timeout;
     this.outputFormat = outputFormat;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDir = projectDir;
+    this.certificateFiles = List.copyOf(certificateFiles);
+    this.certificateUris = List.copyOf(certificateUris);
+    this.testPort = testPort;
+    this.spiOptionsVersion = spiOptionsVersion;
   }
 
   /** API equivalent of the {@code --allowed-modules} CLI option. */
@@ -151,6 +368,16 @@ public class ExecutorOptions {
     return projectDir;
   }
 
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<Path> getCertificateFiles() {
+    return certificateFiles;
+  }
+
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<URI> getCertificateUris() {
+    return certificateUris;
+  }
+
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
@@ -166,7 +393,11 @@ public class ExecutorOptions {
         && Objects.equals(timeout, other.timeout)
         && Objects.equals(outputFormat, other.outputFormat)
         && Objects.equals(moduleCacheDir, other.moduleCacheDir)
-        && Objects.equals(projectDir, other.projectDir);
+        && Objects.equals(projectDir, other.projectDir)
+        && Objects.equals(certificateFiles, other.certificateFiles)
+        && Objects.equals(certificateUris, other.certificateUris)
+        && testPort == other.testPort
+        && spiOptionsVersion == other.spiOptionsVersion;
   }
 
   @Override
@@ -181,7 +412,11 @@ public class ExecutorOptions {
         timeout,
         outputFormat,
         moduleCacheDir,
-        projectDir);
+        projectDir,
+        certificateFiles,
+        certificateUris,
+        testPort,
+        spiOptionsVersion);
   }
 
   @Override
@@ -207,20 +442,49 @@ public class ExecutorOptions {
         + moduleCacheDir
         + ", projectDir="
         + projectDir
+        + ", certificateFiles="
+        + certificateFiles
+        + ", certificateUris="
+        + certificateUris
+        + ", testPort="
+        + testPort
+        + ", spiOptionsVersion="
+        + spiOptionsVersion
         + '}';
   }
 
   ExecutorSpiOptions toSpiOptions() {
-    return new ExecutorSpiOptions(
-        allowedModules,
-        allowedResources,
-        environmentVariables,
-        externalProperties,
-        modulePath,
-        rootDir,
-        timeout,
-        outputFormat,
-        moduleCacheDir,
-        projectDir);
+    switch (spiOptionsVersion) {
+      case -1:
+      case 2:
+        return new ExecutorSpiOptions2(
+            allowedModules,
+            allowedResources,
+            environmentVariables,
+            externalProperties,
+            modulePath,
+            rootDir,
+            timeout,
+            outputFormat,
+            moduleCacheDir,
+            projectDir,
+            certificateFiles,
+            certificateUris,
+            testPort);
+      case 1: // for testing only
+        return new ExecutorSpiOptions(
+            allowedModules,
+            allowedResources,
+            environmentVariables,
+            externalProperties,
+            modulePath,
+            rootDir,
+            timeout,
+            outputFormat,
+            moduleCacheDir,
+            projectDir);
+      default:
+        throw new AssertionError("Unknown ExecutorSpiOptions version: " + spiOptionsVersion);
+    }
   }
 }

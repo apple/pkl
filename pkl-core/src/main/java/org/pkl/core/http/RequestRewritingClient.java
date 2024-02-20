@@ -16,12 +16,14 @@
 package org.pkl.core.http;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.ThreadSafe;
+import org.pkl.core.util.HttpUtils;
 
 /**
  * An {@code HttpClient} decorator that
@@ -40,13 +42,16 @@ final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;
   final Duration requestTimeout;
+  final int testPort;
   final HttpClient delegate;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
-  RequestRewritingClient(String userAgent, Duration requestTimeout, HttpClient delegate) {
+  RequestRewritingClient(
+      String userAgent, Duration requestTimeout, int testPort, HttpClient delegate) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
+    this.testPort = testPort;
     this.delegate = delegate;
   }
 
@@ -67,7 +72,7 @@ final class RequestRewritingClient implements HttpClient {
     HttpRequest.Builder builder = HttpRequest.newBuilder();
 
     builder
-        .uri(original.uri())
+        .uri(rewriteUri(original.uri()))
         .expectContinue(original.expectContinue())
         .timeout(original.timeout().orElse(requestTimeout))
         .version(original.version().orElse(java.net.http.HttpClient.Version.HTTP_2));
@@ -97,6 +102,15 @@ final class RequestRewritingClient implements HttpClient {
             });
 
     return builder.build();
+  }
+
+  private URI rewriteUri(URI uri) {
+    // Would be nice to use port 0 instead of 12110,
+    // but this is best done in a separate commit.
+    if (testPort != -1 && uri.getPort() == 12110) {
+      return HttpUtils.setPort(uri, testPort);
+    }
+    return uri;
   }
 
   private void checkNotClosed(HttpRequest request) {
