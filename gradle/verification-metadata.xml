@@ -7,8 +7,9 @@
          <trust group="gradle" reason="download over TLS"/>
          <trust group="gradle.plugin.org.gradle.crypto" reason="from gradle team"/>
          <trust group="org.gradle" reason="injected for dependency graph submission by gradle plugin"/>
-         <trust group="org.jetbrains.kotlin"/>
+         <trust group="org.jetbrains.kotlin" reason="specifies verified dependencies"/>
          <trust group="org.jetbrains.kotlin.mulitplatform" reason="specifies verified dependencies"/>
+         <trust group="io.gitlab.arturbosch.detekt" reason="utility-only; not included in classpath"/>
          <trust file=".*-javadoc[.]jar" regex="true" reason="javadoc (not included in code)"/>
          <trust file=".*-sources[.]jar" regex="true" reason="sources (not included in code)"/>
          <trust file="^gradle-.*[.]zip$" regex="true" reason="download over TLS"/>
