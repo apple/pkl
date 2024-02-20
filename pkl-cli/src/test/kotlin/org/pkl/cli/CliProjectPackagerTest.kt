@@ -34,7 +34,6 @@ import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
-import org.pkl.core.runtime.CertificateUtils
 
 class CliProjectPackagerTest {
   @Test
@@ -868,7 +867,6 @@ class CliProjectPackagerTest {
   @Test
   fun `publish checks`(@TempDir tempDir: Path) {
     PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
@@ -888,7 +886,10 @@ class CliProjectPackagerTest {
     val e =
       assertThrows<CliException> {
         CliProjectPackager(
-            CliBaseOptions(workingDir = tempDir),
+            CliBaseOptions(
+              workingDir = tempDir,
+              caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            ),
             listOf(tempDir.resolve("project")),
             CliTestOptions(),
             ".out/%{name}@%{version}",
@@ -912,7 +913,6 @@ class CliProjectPackagerTest {
   @Test
   fun `publish check when package is not yet published`(@TempDir tempDir: Path) {
     PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
@@ -930,7 +930,10 @@ class CliProjectPackagerTest {
     )
     val out = StringWriter()
     CliProjectPackager(
-        CliBaseOptions(workingDir = tempDir),
+        CliBaseOptions(
+          workingDir = tempDir,
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+        ),
         listOf(tempDir.resolve("project")),
         CliTestOptions(),
         ".out/%{name}@%{version}",

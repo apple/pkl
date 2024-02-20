@@ -19,6 +19,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ import org.pkl.core.packages.PackageAssetUri;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -291,6 +294,15 @@ public final class ResourceReaders {
   private abstract static class UrlResource implements ResourceReader {
     @Override
     public Optional<Object> read(URI uri) throws IOException {
+      if (HttpUtils.isHttpUrl(uri)) {
+        var httpClient = VmContext.get(null).getHttpClient();
+        var request = HttpRequest.newBuilder(uri).build();
+        var response = httpClient.send(request, BodyHandlers.ofByteArray());
+        if (response.statusCode() == 404) return Optional.empty();
+        HttpUtils.requireStatusCode200(response);
+        return Optional.of(new Resource(uri, response.body()));
+      }
+
       try {
         var url = IoUtils.toUrl(uri);
         var content = IoUtils.readBytes(url);

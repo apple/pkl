@@ -202,7 +202,7 @@ class CliPackageDownloaderTest {
 
         Failed to download package://bogus.domain/notAPackage@1.0.0 because:
         Exception when making request `GET https://bogus.domain/notAPackage@1.0.0`:
-        bogus.domain
+        Error connecting to host `bogus.domain`.
 
       """
           .trimIndent()

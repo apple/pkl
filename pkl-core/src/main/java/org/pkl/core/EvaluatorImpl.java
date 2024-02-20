@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.packages.PackageResolver;
@@ -69,6 +70,7 @@ public class EvaluatorImpl implements Evaluator {
   public EvaluatorImpl(
       StackFrameTransformer transformer,
       SecurityManager manager,
+      HttpClient httpClient,
       Logger logger,
       Collection<ModuleKeyFactory> factories,
       Collection<ResourceReader> readers,
@@ -83,7 +85,7 @@ public class EvaluatorImpl implements Evaluator {
     frameTransformer = transformer;
     moduleResolver = new ModuleResolver(factories);
     this.logger = new BufferedLogger(logger);
-    packageResolver = PackageResolver.getInstance(securityManager, moduleCacheDir);
+    packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
     polyglotContext =
         VmUtils.createContext(
             () -> {
@@ -92,6 +94,7 @@ public class EvaluatorImpl implements Evaluator {
                   new VmContext.Holder(
                       transformer,
                       manager,
+                      httpClient,
                       moduleResolver,
                       new ResourceManager(manager, readers),
                       this.logger,

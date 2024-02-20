@@ -100,6 +100,9 @@ public final class IoUtils {
   }
 
   public static String readString(URL url) throws IOException {
+    if (HttpUtils.isHttpUrl(url)) {
+      throw new IllegalArgumentException("Should use HTTP client to GET " + url);
+    }
     try (var stream = url.openStream()) {
       return readString(stream);
     }
@@ -110,6 +113,9 @@ public final class IoUtils {
   }
 
   public static byte[] readBytes(URL url) throws IOException {
+    if (HttpUtils.isHttpUrl(url)) {
+      throw new IllegalArgumentException("Should use HTTP client to GET " + url);
+    }
     try (var stream = url.openStream()) {
       return stream.readAllBytes();
     }

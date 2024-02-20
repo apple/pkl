@@ -40,6 +40,7 @@ class CliProjectResolver(
             SecurityManagers.defaultTrustLevels,
             rootDir
           ),
+          httpClient,
           moduleCacheDir
         )
       val dependencies = ProjectDependenciesResolver(project, packageResolver, errWriter).resolve()

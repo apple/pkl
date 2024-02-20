@@ -33,6 +33,7 @@ import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.parser.LexParseException;
@@ -67,6 +68,7 @@ public class ReplServer implements AutoCloseable {
 
   public ReplServer(
       SecurityManager securityManager,
+      HttpClient httpClient,
       Logger logger,
       Collection<ModuleKeyFactory> moduleKeyFactories,
       Collection<ResourceReader> resourceReaders,
@@ -85,7 +87,7 @@ public class ReplServer implements AutoCloseable {
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);
-    packageResolver = PackageResolver.getInstance(securityManager, moduleCacheDir);
+    packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
     projectDependenciesManager =
         projectDependencies == null ? null : new ProjectDependenciesManager(projectDependencies);
     polyglotContext =
@@ -97,6 +99,7 @@ public class ReplServer implements AutoCloseable {
                   new VmContext.Holder(
                       frameTransformer,
                       securityManager,
+                      httpClient,
                       moduleResolver,
                       new ResourceManager(securityManager, resourceReaders),
                       logger,

@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.cli
+package org.pkl.core.http;
 
-import org.pkl.commons.cli.CliBaseOptions
-import org.pkl.commons.cli.CliCommand
-import org.pkl.commons.cli.CliException
-import org.pkl.server.MessageTransports
-import org.pkl.server.ProtocolException
-import org.pkl.server.Server
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
+import javax.annotation.concurrent.ThreadSafe;
 
-class CliServer(options: CliBaseOptions) : CliCommand(options) {
-  override fun doRun() =
-    try {
-      val server = Server(MessageTransports.stream(System.`in`, System.out), httpClient)
-      server.use { it.start() }
-    } catch (e: ProtocolException) {
-      throw CliException(e.message!!)
-    }
+@ThreadSafe
+final class DummyHttpClient implements HttpClient {
+  @Override
+  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
+    throw new AssertionError("Dummy HTTP client cannot send request: " + request);
+  }
+
+  @Override
+  public void close() {}
 }

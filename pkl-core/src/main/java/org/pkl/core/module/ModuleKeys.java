@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,6 +36,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
@@ -481,6 +484,18 @@ public final class ModuleKeys {
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
 
+      if (HttpUtils.isHttpUrl(uri)) {
+        var httpClient = VmContext.get(null).getHttpClient();
+        var request = HttpRequest.newBuilder(uri).build();
+        var response = httpClient.send(request, BodyHandlers.ofInputStream());
+        try (var body = response.body()) {
+          HttpUtils.requireStatusCode200(response);
+          securityManager.checkResolveModule(response.uri());
+          String text = IoUtils.readString(body);
+          return ResolvedModuleKeys.virtual(this, response.uri(), text, true);
+        }
+      }
+
       var url = IoUtils.toUrl(uri);
       var conn = url.openConnection();
       conn.connect();
@@ -494,7 +509,7 @@ public final class ModuleKeys {
         }
         securityManager.checkResolveModule(redirected);
         var text = IoUtils.readString(stream);
-        return ResolvedModuleKeys.virtual(this, uri, text, true);
+        return ResolvedModuleKeys.virtual(this, redirected, text, true);
       }
     }
   }

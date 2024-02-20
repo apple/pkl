@@ -22,6 +22,7 @@ import java.util.List;
 import javax.naming.OperationNotSupportedException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.packages.PackageResolvers.DiskCachedPackageResolver;
 import org.pkl.core.packages.PackageResolvers.InMemoryPackageResolver;
@@ -30,10 +31,11 @@ import org.pkl.core.util.Pair;
 
 public interface PackageResolver extends Closeable {
 
-  static PackageResolver getInstance(SecurityManager securityManager, @Nullable Path cachedDir) {
+  static PackageResolver getInstance(
+      SecurityManager securityManager, HttpClient httpClient, @Nullable Path cachedDir) {
     return cachedDir == null
-        ? new InMemoryPackageResolver(securityManager)
-        : new DiskCachedPackageResolver(securityManager, cachedDir);
+        ? new InMemoryPackageResolver(securityManager, httpClient)
+        : new DiskCachedPackageResolver(securityManager, httpClient, cachedDir);
   }
 
   DependencyMetadata getDependencyMetadata(PackageUri uri, @Nullable Checksums checksums)

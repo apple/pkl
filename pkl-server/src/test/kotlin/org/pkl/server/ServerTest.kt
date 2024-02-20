@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.PathElement
 
 class ServerTest {
@@ -67,7 +68,7 @@ class ServerTest {
   }
 
   private val client: TestTransport = TestTransport(transports.first)
-  private val server: Server = Server(transports.second)
+  private val server: Server = Server(transports.second, HttpClient.dummyClient())
 
   @BeforeEach
   fun before() {

@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModulePathResolver;
@@ -37,6 +38,10 @@ public final class EvaluatorBuilder {
   private final StandardBuilder securityManagerBuilder = SecurityManagers.standardBuilder();
 
   private @Nullable SecurityManager securityManager;
+
+  // Default to a client with a fixed set of built-in certificates.
+  // Make it lazy to avoid creating a client unnecessarily.
+  private HttpClient httpClient = HttpClient.builder().buildLazily();
 
   private Logger logger = Loggers.noop();
 
@@ -224,6 +229,21 @@ public final class EvaluatorBuilder {
   /** Returns the currently set logger. */
   public Logger getLogger() {
     return logger;
+  }
+
+  /**
+   * Sets the HTTP client to be used.
+   *
+   * <p>Defaults to {@code HttpClient.builder().buildLazily()}.
+   */
+  public EvaluatorBuilder setHttpClient(HttpClient httpClient) {
+    this.httpClient = httpClient;
+    return this;
+  }
+
+  /** Returns the currently set HTTP client. */
+  public HttpClient getHttpClient() {
+    return httpClient;
   }
 
   /**
@@ -468,6 +488,7 @@ public final class EvaluatorBuilder {
     return new EvaluatorImpl(
         stackFrameTransformer,
         securityManager,
+        httpClient,
         new LoggerImpl(logger, stackFrameTransformer),
         // copy to shield against subsequent modification through builder
         new ArrayList<>(moduleKeyFactories),

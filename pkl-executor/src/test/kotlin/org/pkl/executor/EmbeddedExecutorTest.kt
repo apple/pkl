@@ -8,7 +8,6 @@ import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
 import org.pkl.commons.walk
-import org.pkl.core.runtime.CertificateUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -422,7 +421,6 @@ class EmbeddedExecutorTest {
     """.trimIndent()
     )
     PackageServer.ensureStarted()
-    CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
     val executor = Executors.embedded(listOf(pklDistribution))
     val result = executor.use {
       it.evaluatePath(pklFile,

@@ -20,27 +20,15 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
-import java.io.InputStream
 import java.net.URI
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
-import java.util.stream.Collectors
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseOptions : OptionGroup() {
-  companion object {
-    fun includedCARootCerts(): InputStream {
-      return BaseOptions::class.java.getResourceAsStream("IncludedCARoots.pem")!!
-    }
-  }
-
   private val defaults = CliBaseOptions()
 
   private val output =
@@ -142,27 +130,10 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--ca-certificates"),
         metavar = "<path>",
-        help = "Replaces the built-in CA certificates with the provided certificate file."
+        help = "Trust CA certificates from the provided file."
       )
       .path()
       .multiple()
-
-  /**
-   * 1. If `--ca-certificates` option is not empty, use that.
-   * 2. If directory `~/.pkl/cacerts` is not empty, use that.
-   * 3. Use the bundled CA certificates.
-   */
-  private fun getEffectiveCaCertificates(): List<Any> {
-    return caCertificates
-      .ifEmpty {
-        val home = System.getProperty("user.home")
-        val cacerts = Path.of(home, ".pkl", "cacerts")
-        if (cacerts.exists() && cacerts.isDirectory())
-          Files.list(cacerts).filter(Path::isRegularFile).collect(Collectors.toList())
-        else emptyList()
-      }
-      .ifEmpty { listOf(includedCARootCerts()) }
-  }
 
   fun baseOptions(
     modules: List<URI>,
@@ -186,7 +157,7 @@ class BaseOptions : OptionGroup() {
       testMode = testMode,
       omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
       noProject = projectOptions?.noProject ?: false,
-      caCertificates = getEffectiveCaCertificates()
+      caCertificates = caCertificates
     )
   }
 }

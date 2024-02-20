@@ -21,6 +21,7 @@ import org.pkl.commons.toPath
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
@@ -30,6 +31,7 @@ class ReplMessagesTest {
   private val server =
     ReplServer(
       SecurityManagers.defaultManager,
+      HttpClient.dummyClient(),
       Loggers.stdErr(),
       listOf(ModuleKeyFactories.standardLibrary),
       listOf(),

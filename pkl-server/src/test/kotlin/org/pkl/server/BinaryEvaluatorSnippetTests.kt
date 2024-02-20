@@ -16,13 +16,12 @@
 package org.pkl.server
 
 import java.nio.file.Path
+import kotlin.Pair
 import kotlin.reflect.KClass
 import org.junit.platform.commons.annotation.Testable
 import org.pkl.commons.test.InputOutputTestEngine
-import org.pkl.core.Loggers
-import org.pkl.core.ModuleSource
-import org.pkl.core.SecurityManagers
-import org.pkl.core.StackFrameTransformers
+import org.pkl.core.*
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 
 @Testable class BinaryEvaluatorSnippetTests
@@ -47,6 +46,7 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
     BinaryEvaluator(
       StackFrameTransformers.empty,
       SecurityManagers.defaultManager,
+      HttpClient.dummyClient(),
       Loggers.stdErr(),
       listOf(ModuleKeyFactories.file),
       listOf(),

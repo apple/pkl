@@ -156,7 +156,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         ,"--no-fallback"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
-        ,"-H:IncludeResources=org/pkl/commons/cli/commands/IncludedCARoots.pem"
+        ,"-H:IncludeResources=org/pkl/core/http/IncludedCARoots.pem"
         //,"-H:IncludeResources=org/pkl/core/Release.properties"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle"

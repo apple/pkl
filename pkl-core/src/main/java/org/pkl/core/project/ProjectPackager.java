@@ -43,6 +43,7 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.module.ResolvedModuleKeys;
@@ -105,6 +106,7 @@ public class ProjectPackager {
       String outputPathPattern,
       StackFrameTransformer stackFrameTransformer,
       SecurityManager securityManager,
+      HttpClient httpClient,
       boolean skipPublishCheck,
       Writer outputWriter) {
     this.projects = projects;
@@ -112,7 +114,7 @@ public class ProjectPackager {
     this.outputPathPattern = outputPathPattern;
     this.stackFrameTransformer = stackFrameTransformer;
     // intentionally use InMemoryPackageResolver
-    this.packageResolver = PackageResolver.getInstance(securityManager, null);
+    this.packageResolver = PackageResolver.getInstance(securityManager, httpClient, null);
     this.skipPublishCheck = skipPublishCheck;
     this.outputWriter = outputWriter;
   }
