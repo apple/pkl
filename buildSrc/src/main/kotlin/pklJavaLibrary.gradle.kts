@@ -1,5 +1,7 @@
 @file:Suppress("HttpUrlsUsage")
 
+import org.gradle.accessors.dm.LibrariesForLibs
+
 plugins {
   `java-library`
   id("pklKotlinTest")
@@ -8,6 +10,9 @@ plugins {
 
 // make sources Jar available to other subprojects
 val sourcesJarConfiguration = configurations.register("sourcesJar")
+
+// Version Catalog library symbols.
+val libs = the<LibrariesForLibs>()
 
 java {
   withSourcesJar() // creates `sourcesJar` task
@@ -21,7 +26,7 @@ artifacts {
 
 spotless {
   java {
-    googleJavaFormat("1.15.0")
+    googleJavaFormat(libs.versions.googleJavaFormat.get())
     targetExclude("**/generated/**", "**/build/**")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }

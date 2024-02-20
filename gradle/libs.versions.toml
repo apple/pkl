@@ -7,6 +7,7 @@ clikt = "3.5.1"
 commonMark = "0.+"
 downloadTaskPlugin = "4.1.2"
 geantyref = "1.+"
+googleJavaFormat = "1.15.0"
 # must not use `+` because used in download URL
 graalVm = "22.3.3"
 # intentionally empty; replaced by patch file when building pkl-cli macos/aarch64
@@ -30,6 +31,7 @@ kotlin = "1.7.10"
 kotlinPoet = "1.6.+" 
 kotlinxHtml = "0.+"
 kotlinxSerialization = "1.+"
+ktfmt = "0.44"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
 log4j = "2.17.1"

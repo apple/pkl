@@ -1,3 +1,5 @@
+import org.gradle.accessors.dm.LibrariesForLibs
+
 plugins {
   id("pklJavaLibrary")
 
@@ -5,6 +7,9 @@ plugins {
 }
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
+
+// Version Catalog library symbols.
+val libs = the<LibrariesForLibs>()
 
 dependencies {
   // At least some of our kotlin APIs contain Kotlin stdlib types
@@ -21,7 +26,7 @@ tasks.compileKotlin {
 
 spotless {
   kotlin {
-    ktfmt("0.44").googleStyle()
+    ktfmt(libs.versions.ktfmt.get()).googleStyle()
     targetExclude("**/generated/**", "**/build/**")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
