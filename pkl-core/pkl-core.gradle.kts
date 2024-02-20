@@ -1,3 +1,4 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -297,9 +298,11 @@ tasks.clean {
   delete(layout.buildDirectory.dir("test-packages"))
 }
 
-spotless {
-  antlr4 {
-    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
-    target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
+if (findProperty("enableAnalysis") == "true" || "check" in gradle.startParameter.taskNames) {
+  configure<SpotlessExtension> {
+    antlr4 {
+      licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
+      target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
+    }
   }
 }
