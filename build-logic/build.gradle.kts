@@ -6,6 +6,8 @@ plugins {
   `kotlin-dsl`
 }
 
+description = "Reusable convention plugins for Pkl's build"
+
 dependencies {
   // prevent other versions of stdlib from creeping in
   implementation(libs.kotlinStdlib)

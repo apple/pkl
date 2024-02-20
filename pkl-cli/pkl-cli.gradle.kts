@@ -1,18 +1,14 @@
+// https://youtrack.jetbrains.com/issue/KTIJ-19369
+@file:Suppress("DSL_SCOPE_VIOLATION")
+
 plugins {
   id("pklAllProjects")
-  id("pklKotlinLibrary")
+  id("pklJvmEntrypoint")
   id("pklPublishLibrary")
   id("pklNativeBuild")
   `maven-publish`
 
-  // already on build script class path (see build-logic/build.gradle.kts),
-  // hence must only specify plugin ID here
-  // https://youtrack.jetbrains.com/issue/KTIJ-19369
-  @Suppress("DSL_SCOPE_VIOLATION")
   id(libs.plugins.shadow.get().pluginId)
-
-  // https://youtrack.jetbrains.com/issue/KTIJ-19369
-  @Suppress("DSL_SCOPE_VIOLATION")
   alias(libs.plugins.checksum)
 }
 

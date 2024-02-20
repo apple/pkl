@@ -6,9 +6,10 @@ import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
-  id("pklJavaLibrary")
+  id("pklJvmLibrary")
   id("io.gitlab.arturbosch.detekt")
   id("org.jetbrains.kotlinx.kover")
+  id("com.diffplug.spotless")
   kotlin("jvm")
   kotlin("plugin.serialization")
 }
@@ -34,10 +35,6 @@ dependencies {
   // For Kotlin APIs that only target Kotlin users (e.g., pkl-config-kotlin),
   // it won't make a difference.
   api(buildInfo.libs.findLibrary("kotlinStdLib").get())
-}
-
-tasks.compileKotlin {
-  enabled = true // disabled by pklJavaLibrary
 }
 
 spotless {

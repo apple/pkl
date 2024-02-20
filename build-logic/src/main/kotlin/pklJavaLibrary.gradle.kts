@@ -4,22 +4,12 @@ import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
   pmd
-  `java-library`
-  id("pklKotlinTest")
+  id("pklJvmLibrary")
   id("com.diffplug.spotless")
 }
 
-// JVM toolchain defaults, properties, and resolved configuration.
-private val defaultJvmTarget = "11"
-private val jvmVendor = JvmVendorSpec.GRAAL_VM
-private val jvmTargetVersion =
-  (findProperty("javaTarget") as? String ?: defaultJvmTarget)
-
 // Version catalog library symbols.
 val libs = the<LibrariesForLibs>()
-
-// make source jar available to other subprojects
-val sourcesJarConfiguration: Provider<Configuration> = configurations.register("sourcesJar")
 
 pmd {
   isConsoleOutput = true
@@ -27,20 +17,6 @@ pmd {
   threads = 4
   isIgnoreFailures = true
   incrementalAnalysis = true
-}
-
-java {
-  // obtain and use a Java toolchain from GraalVM, at the version specified for the project.
-  sourceCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-  targetCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-
-  withSourcesJar() // creates `sourcesJar` task
-  withJavadocJar()
-}
-
-artifacts {
-  // make source jar available to other subprojects
-  add("sourcesJar", tasks["sourcesJar"])
 }
 
 spotless {
@@ -53,12 +29,6 @@ spotless {
 
 tasks.compileKotlin {
   enabled = false
-}
-
-tasks.jar {
-  manifest {
-    attributes += mapOf("Automatic-Module-Name" to "org.${project.name.replace("-", ".")}")
-  }
 }
 
 tasks.javadoc {
