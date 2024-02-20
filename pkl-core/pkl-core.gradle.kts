@@ -22,10 +22,11 @@ sourceSets {
 
 idea {
   module {
-    // mark src/main/antlr as source dir,
-    // and generated/antlr as generated source dir
-    sourceDirs = sourceDirs + files("src/main/antlr", "generated/antlr")
-    generatedSourceDirs = generatedSourceDirs + files("generated/antlr")
+    // mark src/main/antlr as source dir
+    // mark generated/antlr as generated source dir
+    // mark generated/truffle as generated source dir
+    sourceDirs = sourceDirs + files("src/main/antlr", "generated/antlr", "generated/truffle")
+    generatedSourceDirs = generatedSourceDirs + files("generated/antlr", "generated/truffle")
   }
 }
 
