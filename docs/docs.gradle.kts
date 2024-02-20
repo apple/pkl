@@ -20,10 +20,10 @@ sourceSets {
 }
 
 dependencies {
-  testImplementation(project(":pkl-core"))
-  testImplementation(project(":pkl-config-java"))
-  testImplementation(project(":pkl-config-kotlin"))
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCore)
+  testImplementation(projects.pklConfigJava)
+  testImplementation(projects.pklConfigKotlin)
+  testImplementation(projects.pklCommonsTest)
   testImplementation(libs.junitEngine)
   testImplementation(libs.antlrRuntime)
 }

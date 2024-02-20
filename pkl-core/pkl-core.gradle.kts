@@ -45,7 +45,7 @@ dependencies {
 
   compileOnly(libs.jsr305)
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
-  compileOnly(project(":pkl-executor"))
+  compileOnly(projects.pklExecutor)
 
   implementation(libs.antlrRuntime)
   implementation(libs.truffleApi)
@@ -57,7 +57,7 @@ dependencies {
 
   implementation(libs.snakeYaml)
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)

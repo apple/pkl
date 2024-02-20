@@ -12,9 +12,9 @@ plugins {
 val graalVmBaseDir = buildInfo.graalVm.baseDir
 
 dependencies {
-  implementation(project(":pkl-core"))
-  implementation(project(":pkl-commons-cli"))
-  implementation(project(":pkl-commons"))
+  implementation(projects.pklCore)
+  implementation(projects.pklCommonsCli)
+  implementation(projects.pklCommons)
   implementation(libs.commonMark)
   implementation(libs.commonMarkTables)
   implementation(libs.kotlinxHtml)
@@ -24,7 +24,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin")
   }
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
   testImplementation(libs.jimfs)
 
   // Graal.JS

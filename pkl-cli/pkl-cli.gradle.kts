@@ -38,23 +38,23 @@ dependencies {
   compileOnly(libs.svm)
 
   // CliEvaluator exposes PClass
-  api(project(":pkl-core"))
+  api(projects.pklCore)
   // CliEvaluatorOptions exposes CliBaseOptions
-  api(project(":pkl-commons-cli"))
+  api(projects.pklCommonsCli)
 
-  implementation(project(":pkl-commons"))
+  implementation(projects.pklCommons)
   implementation(libs.jansi)
   implementation(libs.jlineReader)
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
-  implementation(project(":pkl-server"))
+  implementation(projects.pklServer)
   implementation(libs.clikt) {
     // force clikt to use our version of the kotlin stdlib
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 
   stagedMacAmd64Executable(files("$buildDir/executable/pkl-macos-amd64"))
   stagedMacAarch64Executable(files("$buildDir/executable/pkl-macos-aarch64"))

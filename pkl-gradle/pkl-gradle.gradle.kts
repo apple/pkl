@@ -12,9 +12,9 @@ plugins {
 }
 
 dependencies {
-  // Declare a `compileOnly` dependency on `project(":pkl-tools")`
+  // Declare a `compileOnly` dependency on `projects.pklTools`
   // to ensure correct code navigation in IntelliJ.
-  compileOnly(project(":pkl-tools"))
+  compileOnly(projects.pklTools)
 
   // Declare a `runtimeOnly` dependency on `project(":pkl-tools", "fatJar")`
   // to ensure that the published plugin 
@@ -31,7 +31,7 @@ dependencies {
     runtimeOnly(project(":pkl-tools", "fatJar"))
   }
 
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklCommonsTest)
 }
 
 publishing {

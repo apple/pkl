@@ -62,7 +62,7 @@ sourceSets.getByName("test") {
 
 dependencies {
   // "api" because ConfigEvaluator extends Evaluator
-  api(project(":pkl-core"))
+  api(projects.pklCore)
 
   implementation(libs.geantyref)
 
@@ -70,7 +70,7 @@ dependencies {
 
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
 
-  pklCodegenJava(project(":pkl-codegen-java"))
+  pklCodegenJava(projects.pklCodegenJava)
 }
 
 tasks.shadowJar {

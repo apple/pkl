@@ -18,12 +18,12 @@ dependencies {
   // can declare a normal project dependency on this project, 
   // which is desirable for IntelliJ integration.
   // The published fat JAR doesn't declare any dependencies.
-  api(project(":pkl-cli"))
-  api(project(":pkl-codegen-java"))
-  api(project(":pkl-codegen-kotlin"))
-  api(project(":pkl-config-java"))
-  api(project(":pkl-core"))
-  api(project(":pkl-doc"))
+  api(projects.pklCli)
+  api(projects.pklCodegenJava)
+  api(projects.pklCodegenKotlin)
+  api(projects.pklConfigJava)
+  api(projects.pklCore)
+  api(projects.pklDoc)
   
   // used by `pklFatJar` plugin (ideally this would be inferred automatically)
   firstPartySourcesJars(project(":pkl-cli", "sourcesJar"))

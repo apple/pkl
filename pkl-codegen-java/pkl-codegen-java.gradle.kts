@@ -6,14 +6,14 @@ plugins {
 
 dependencies {
   // CliJavaCodeGeneratorOptions exposes CliBaseOptions
-  api(project(":pkl-commons-cli"))
+  api(projects.pklCommonsCli)
 
-  implementation(project(":pkl-commons"))
-  implementation(project(":pkl-core"))
+  implementation(projects.pklCommons)
+  implementation(projects.pklCore)
   implementation(libs.javaPoet)
 
-  testImplementation(project(":pkl-config-java"))
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklConfigJava)
+  testImplementation(projects.pklCommonsTest)
 }
 
 // with `org.gradle.parallel=true` and without the line below, `test` strangely runs into:

@@ -25,15 +25,15 @@ tasks.jar {
 }
 
 dependencies {
-  implementation(project(":pkl-commons"))
-  api(project(":pkl-commons-cli"))
-  api(project(":pkl-core"))
+  implementation(projects.pklCommons)
+  api(projects.pklCommonsCli)
+  api(projects.pklCore)
   
   implementation(libs.kotlinPoet)
   implementation(libs.kotlinReflect)
 
-  testImplementation(project(":pkl-config-kotlin"))
-  testImplementation(project(":pkl-commons-test"))
+  testImplementation(projects.pklConfigKotlin)
+  testImplementation(projects.pklCommonsTest)
   testImplementation(libs.kotlinCompilerEmbeddable)
   testRuntimeOnly(libs.kotlinScriptingCompilerEmbeddable)
   testRuntimeOnly(libs.kotlinScriptUtil)
