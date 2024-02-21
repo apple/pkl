@@ -1,6 +1,9 @@
 // https://youtrack.jetbrains.com/issue/KTIJ-19369
 @file:Suppress("DSL_SCOPE_VIOLATION")
 
+import org.gradle.configurationcache.extensions.capitalized
+
+
 plugins {
   id("pklAllProjects")
   id("pklJvmEntrypoint")
@@ -19,7 +22,7 @@ private val module = "pkl.cli"
 // make Java executable available to other subprojects
 private val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
 
-val enablePgo = true
+val enablePgo = false
 val oracleGvm = false
 val pgoInstrument = enablePgo
 val enableExperimental = true
@@ -248,6 +251,56 @@ val kernel32Init = listOf(
   "org.jline.nativ.Kernel32${'$'}WINDOW_BUFFER_SIZE_RECORD",
 ).joinToString(",")
 
+fun createArchiveTasks(
+  exec: Provider<Exec>,
+  isEnabled: Boolean,
+  outputFile: File,
+  release: Boolean = enableRelease,
+) {
+  val filenameBase = outputFile.nameWithoutExtension  // accounts for `.exe`
+  val zipName = "$filenameBase.zip"
+  val tgzName = "$filenameBase.tgz"
+  val filenameSplit = filenameBase.split("-")
+
+  // `pkl-macos-<arch>` -> `macos-<arch>-<release>`
+  val releaseTag = filenameSplit.drop(1).plus(listOf(
+    if (release) "opt" else "dev"
+  )).joinToString("-")
+
+  // `macos-<arch>` -> `Macos<Arch>`
+  val taskPostfix = "${filenameSplit[1].capitalized()}${filenameSplit[2].capitalized()}"
+  val zipTaskName = "zipDist$taskPostfix"  // `zipDistMacosAmd64`
+  val tgzTaskName = "tarDist$taskPostfix"  // `tarDistMacosAmd64`
+  val distOutputDir = "distributions"
+  val zipOutputFile = layout.buildDirectory.file("$distOutputDir/$zipName")
+  val tgzOutputFile = layout.buildDirectory.file("$distOutputDir/$tgzName")
+
+  val zipTask = project.tasks.register(zipTaskName, Zip::class) {
+    group = "Distribution"
+    description = "Build zip distribution for native CLI with tag '$releaseTag'"
+
+    this.isEnabled = isEnabled
+    dependsOn(exec)
+    from(exec.get().outputs.files)
+    into(zipOutputFile.get().asFile)
+    outputs.cacheIf { true }
+  }
+
+  val tarTask = project.tasks.register(tgzTaskName, Tar::class) {
+    group = "Distribution"
+    description = "Build tar distribution for native CLI with tag '$releaseTag'"
+
+    this.isEnabled = isEnabled
+    dependsOn(exec)
+    from(exec.get().outputs.files)
+    into(tgzOutputFile.get().asFile)
+    outputs.cacheIf { true }
+  }
+  exec.get().apply {
+    finalizedBy(zipTask, tarTask)
+  }
+}
+
 fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
   enabled = isEnabled
   dependsOn(":installGraalVm", releasePrep)
@@ -258,6 +311,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
 
   workingDir = outputFile.parentFile
   executable = "${buildInfo.graalVm.baseDir}/bin/native-image"
+  outputs.cacheIf { true }
 
   // JARs to exclude from the class path for the native-image build.
   val exclusions =
@@ -337,13 +391,19 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
-    buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22,
+    buildInfo.os.isMacOsX,
     layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile,
     listOf(
       "--initialize-at-run-time=$kernel32Init",
     )
   )
 }
+
+createArchiveTasks(
+  macExecutableAmd64,
+  buildInfo.os.isMacOsX,
+  layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile,
+)
 
 /**
  * Builds the pkl CLI for macOS/aarch64.
@@ -355,7 +415,7 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   dependsOn(tasks.compileJava, tasks.compileKotlin)
 
   configureExecutable(
-    buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
+    buildInfo.os.isMacOsX,
     layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
     listOf(
       "-H:+AllowDeprecatedBuilderClassesOnImageClasspath",
@@ -363,6 +423,12 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
     )
   )
 }
+
+createArchiveTasks(
+  macExecutableAarch64,
+  buildInfo.os.isMacOsX,
+  layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
+)
 
 /**
  * Builds the pkl CLI for linux/amd64.
