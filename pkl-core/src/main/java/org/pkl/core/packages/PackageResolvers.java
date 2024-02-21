@@ -446,13 +446,12 @@ class PackageResolvers {
       return path.substring(lastSep + 1);
     }
 
-    private byte[] downloadUriToPathAndComputeChecksum(URI downloadUri, Path relativePath)
+    private byte[] downloadUriToPathAndComputeChecksum(URI downloadUri, Path path)
         throws IOException, SecurityManagerException {
-      var tmpPath = tmpDir.resolve(relativePath);
-      Files.createDirectories(tmpPath.getParent());
+      Files.createDirectories(path.getParent());
       var inputStream = openExternalUri(downloadUri);
       try (var digestInputStream = newDigestInputStream(inputStream)) {
-        Files.copy(digestInputStream, tmpPath);
+        Files.copy(digestInputStream, path);
         return digestInputStream.getMessageDigest().digest();
       }
     }
