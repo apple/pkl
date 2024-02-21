@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.lang.Error
 
-class ExceptionUtilsTest {
+class ExceptionsTest {
   @Test
   fun `get root cause of simple exception`() {
     val e = IOException("io")
-    assertThat(ExceptionUtils.getRootCause(e)).isSameAs(e)
+    assertThat(Exceptions.getRootCause(e)).isSameAs(e)
   }
   
   @Test
@@ -19,7 +19,7 @@ class ExceptionUtilsTest {
     val e3 = Error("error")
     e.initCause(e2)
     e2.initCause(e3)
-    assertThat(ExceptionUtils.getRootCause(e)).isSameAs(e3)
+    assertThat(Exceptions.getRootCause(e)).isSameAs(e3)
   }
 
   @Test
@@ -27,7 +27,7 @@ class ExceptionUtilsTest {
     val e = IOException("io")
     val e2 = RuntimeException("the root reason")
     e.initCause(e2)
-    assertThat(ExceptionUtils.getRootReason(e)).isEqualTo("the root reason")
+    assertThat(Exceptions.getRootReason(e)).isEqualTo("the root reason")
   }
   
   @Test
@@ -35,7 +35,7 @@ class ExceptionUtilsTest {
     val e = IOException("io")
     val e2 = RuntimeException(null as String?)
     e.initCause(e2)
-    assertThat(ExceptionUtils.getRootReason(e)).isEqualTo("(unknown reason)")
+    assertThat(Exceptions.getRootReason(e)).isEqualTo("(unknown reason)")
   }
 
   @Test
@@ -43,6 +43,6 @@ class ExceptionUtilsTest {
     val e = IOException("io")
     val e2 = RuntimeException("")
     e.initCause(e2)
-    assertThat(ExceptionUtils.getRootReason(e)).isEqualTo("(unknown reason)")
+    assertThat(Exceptions.getRootReason(e)).isEqualTo("(unknown reason)")
   }
 }

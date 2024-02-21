@@ -15,8 +15,8 @@
  */
 package org.pkl.core.util;
 
-public final class ExceptionUtils {
-  private ExceptionUtils() {}
+public final class Exceptions {
+  private Exceptions() {}
 
   public static Throwable getRootCause(Throwable t) {
     var result = t;
