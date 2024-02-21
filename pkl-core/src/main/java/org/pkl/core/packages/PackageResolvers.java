@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipInputStream;
@@ -71,7 +72,7 @@ class PackageResolvers {
 
     private final SecurityManager securityManager;
 
-    private boolean isClosed = false;
+    private final AtomicBoolean isClosed = new AtomicBoolean();
 
     protected final Object lock = new Object();
 
@@ -83,9 +84,7 @@ class PackageResolvers {
     /** Retrieves a dependency's metadata file. */
     public DependencyMetadata getDependencyMetadata(PackageUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
-      if (isClosed) {
-        throw new IllegalStateException();
-      }
+      checkNotClosed();
       synchronized (lock) {
         var metadata = cachedDependencyMetadata.get(uri);
         if (metadata == null) {
@@ -125,29 +124,23 @@ class PackageResolvers {
     @Override
     public List<PathElement> listElements(PackageAssetUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
-      if (isClosed) {
-        throw new IllegalStateException();
-      }
+      checkNotClosed();
       return doListElements(uri, checksums);
     }
 
     @Override
     public boolean hasElement(PackageAssetUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
-      if (isClosed) {
-        throw new IllegalStateException();
-      }
+      checkNotClosed();
       return doHasElement(uri, checksums);
     }
 
     @Override
     public void close() throws IOException {
-      synchronized (lock) {
-        if (isClosed) {
-          return;
+      if (!isClosed.getAndSet(true)) {
+        synchronized (lock) {
+          cachedDependencyMetadata.clear();
         }
-        cachedDependencyMetadata.clear();
-        isClosed = true;
       }
     }
 
@@ -235,6 +228,12 @@ class PackageResolvers {
           "invalidPackageZipUrl",
           packageUri.getDisplayName(),
           dependencyMetadata.getPackageZipUrl());
+    }
+
+    private void checkNotClosed() {
+      if (isClosed.get()) {
+        throw new IllegalStateException("Package resolver has already been closed.");
+      }
     }
   }
 
