@@ -79,3 +79,5 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
           arguments: |
             spotlessCheck
+            -PenableAnalysis=true
+            -x spotlessKotlinGradleCheck

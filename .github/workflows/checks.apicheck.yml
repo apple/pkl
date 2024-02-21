@@ -72,3 +72,4 @@ jobs:
           arguments: |
             apiCheck
             -x test
+            -PenableAnalysis=true
