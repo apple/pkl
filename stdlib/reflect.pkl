@@ -159,7 +159,7 @@ external const function TypeVariable(referent: TypeParameter): TypeVariable
 /// A program declaration.
 abstract external class Declaration {
   /// The source location of this declaration.
-  location: SourceLocation
+  hidden location: SourceLocation
 
   /// The documentation comment for this declaration, if any.
   docComment: String?
@@ -236,12 +236,12 @@ external class Class extends TypeDeclaration {
   /// The superclass of this class.
   ///
   /// All classes except [Any] have a superclass.
-  superclass: Class?
+  hidden superclass: Class?
 
   /// The supertype of this class.
   ///
   /// All classes except [Any] have a supertype.
-  supertype: Type?
+  hidden supertype: Type?
 
   /// The properties declared in this class.
   ///
@@ -274,7 +274,7 @@ external class TypeAlias extends TypeDeclaration {
 /// A property declaration.
 external class Property extends Declaration {
   /// The declared type of this property.
-  type: Type
+  hidden type: Type
 
   /// The (explicit or implicit) default value of this property.
   ///
@@ -293,7 +293,7 @@ external class Method extends Declaration {
   parameters: Map<String, MethodParameter>
 
   /// The return type of this method.
-  returnType: Type
+  hidden returnType: Type
 }
 
 /// A method parameter.
@@ -302,7 +302,7 @@ external class MethodParameter {
   name: String
 
   /// The type of this method parameter.
-  type: Type
+  hidden type: Type
 }
 
 /// A type parameter of a generic type or method declaration.
