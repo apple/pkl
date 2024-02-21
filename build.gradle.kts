@@ -22,6 +22,7 @@ plugins {
   alias(libs.plugins.kotlinValidator)
   alias(libs.plugins.kover)
   alias(libs.plugins.detekt)
+  alias(libs.plugins.spotless)
 }
 
 group = "org.pkl-lang"
@@ -61,6 +62,12 @@ idea {
         afterSync(provider { project(":pkl-core").tasks.named("makeIntelliJAntlrPluginHappy") })
       }
     }
+  }
+}
+
+spotless {
+  kotlinGradle {
+    ktfmt(libs.versions.ktfmt.get()).googleStyle()
   }
 }
 

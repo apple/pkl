@@ -129,5 +129,6 @@ powerassert = { id = "com.bnorm.power.kotlin-power-assert", version.ref = "power
 sbom = { id = "org.spdx.sbom", version.ref = "spdx" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
 sigstore = { id = "dev.sigstore.sign", version.ref = "sigstore" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin"}
 testlogger = { id = "com.adarshr.test-logger", version.ref = "testlogger" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }

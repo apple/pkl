@@ -55,6 +55,9 @@ if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
       targetExclude("**/generated/**", "**/build/**")
       licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
     }
+    kotlinGradle {
+      ktfmt(libs.versions.ktfmt.get()).googleStyle()
+    }
   }
 }
 
