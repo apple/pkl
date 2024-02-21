@@ -19,9 +19,9 @@ graalVM23JdkVersion = "21.0.2"
 # slightly hacky but convenient place so we remember to update the checksum
 graalVmSha256-darwin-amd64 = "cab6a1436626adc28ec0f72791772315678e7c758e2fbae2cb6758a38f27c56a" # 22.x
 graalVmSha256-darwin-aarch64 = "bec4222f43ac021ca120ca6ea409148709414e898ee74668e157f0dcfd3c9ffb" # 22.x
-graalVmSha256-linux-amd64 = "36cd5e9661360a8fece4fd31cf678cd6611f3742633dab3b3244e037ba0b095f"
+graalVmSha256-linux-amd64 = "ee6286773c659afeefdf2f989a133e7a631c60897f2263ac183794ee1d6438f4"
 graalVmSha256-linux-aarch64 = "bdff2b8e9d1380cf3f39a78b4b1e09b7d52506b1e7e165d5c0062011c4c68257"
-graalVmSha256-macos-amd64 = "0dc6ee3c46e91322f59bcc17efc60c11e744b6ee865a0489545883aa7c550bea" # 23.x
+graalVmSha256-macos-amd64 = "3e24632f27be74d039508ea2b0b7862ef8c40784f55785cf6b6e40b4b28d9d53" # 23.x
 graalVmSha256-macos-aarch64 = "b504f7c570836a9c6b1b92813c5123718636d0ff0f832321129a4fe3a7b9a0b3" # 23.x
 gradleDoctor = "0.9.1"
 ideaExtPlugin = "1.1.7"
