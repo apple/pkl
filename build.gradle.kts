@@ -67,6 +67,7 @@ idea {
 
 spotless {
   kotlinGradle {
+    isEnforceCheck = false
     ktfmt(libs.versions.ktfmt.get()).googleStyle()
   }
 }

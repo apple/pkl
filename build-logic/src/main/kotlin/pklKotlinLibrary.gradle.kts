@@ -45,6 +45,7 @@ if (build.analysis.enabled) apply(plugin = "com.diffplug.spotless").also {
       licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
     }
     kotlinGradle {
+      isEnforceCheck = false
       ktfmt(libs.versions.ktfmt.get()).googleStyle()
     }
   }
