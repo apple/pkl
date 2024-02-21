@@ -4,7 +4,6 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
-  pmd
   id("pklJvmLibrary")
 }
 
