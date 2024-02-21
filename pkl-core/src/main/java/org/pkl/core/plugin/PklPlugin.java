@@ -37,7 +37,7 @@ public interface PklPlugin {
   /**
    * Context event listener
    *
-   * <p>Provides the optional {@link ContextEventListener} for a Pkl plugin.</p>
+   * <p>Provides the optional {@link ContextEventListener} for a Pkl plugin.
    *
    * @return Context listener or {@link Optional#empty()}.
    */

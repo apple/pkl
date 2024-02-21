@@ -21,12 +21,12 @@ import org.pkl.core.util.Nullable;
  * Pkl Plugin Error API
  *
  * <p>Describes the API expected to be implemented by all thrown exceptions within the scope of a
- * {@link PklPlugin}'s hook methods.</p>
+ * {@link PklPlugin}'s hook methods.
  *
- * <p>Exceptions which don't follow this interface will be swallowed.</p>
+ * <p>Exceptions which don't follow this interface will be swallowed.
  *
- * <p>The `E` generic parameter is expected to be an enumeration of error codes which relate to
- * this plug-in type.</p>
+ * <p>The `E` generic parameter is expected to be an enumeration of error codes which relate to this
+ * plug-in type.
  */
 public interface PklPluginError<E extends Enum<E>> {
   /**

@@ -20,7 +20,7 @@ public enum PluginEventType {
   /**
    * VM context create
    *
-   * <p>Pkl execution context was created.</p>
+   * <p>Pkl execution context was created.
    */
   CONTEXT_CREATE,
 }

@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Engine;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;

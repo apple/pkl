@@ -21,10 +21,9 @@ import org.graalvm.polyglot.Context;
 public interface ContextEventListener {
   /**
    * Context creation event
-   * 
+   *
    * <p>This hook is dispatched right before the {@link Context} is built for execution; plug-ins
-   * providing logic at this stage have a chance to customize the context builder before it is
-   * used.</p>
+   * providing logic at this stage have a chance to customize the context builder before it is used.
    *
    * @param builder Context which is being constructed
    */

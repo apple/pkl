@@ -32,24 +32,26 @@ class VmEngineManager implements Supplier<Context.Builder> {
     this.pluginManager = pluginManager;
   }
 
-  private static final Engine PKL_ENGINE = Engine
-    .newBuilder("pkl")
-    .option("engine.WarnInterpreterOnly", "false")
-    .build();
+  private static final Engine PKL_ENGINE =
+      Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
 
   @Override
   public Context.Builder get() {
-    var builder = Context.newBuilder("pkl")
-      .engine(PKL_ENGINE);
+    var builder = Context.newBuilder("pkl").engine(PKL_ENGINE);
 
     var payload = ContextCreate.of(builder);
     var event = PluginEvent.ofType(PluginEventType.CONTEXT_CREATE, payload);
-    pluginManager.dispatchEvent(event, ctx -> {
-      ctx.getPlugin().contextEventListener().ifPresent(listener -> {
-        listener.onCreateContext(builder);
-      });
-      return EventResult.success();
-    });
+    pluginManager.dispatchEvent(
+        event,
+        ctx -> {
+          ctx.getPlugin()
+              .contextEventListener()
+              .ifPresent(
+                  listener -> {
+                    listener.onCreateContext(builder);
+                  });
+          return EventResult.success();
+        });
     return builder;
   }
 }

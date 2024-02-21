@@ -15,9 +15,7 @@
  */
 package org.pkl.core.plugins;
 
-/**
- * Describes the concept of an event which plug-ins are notified about
- */
+/** Describes the concept of an event which plug-ins are notified about */
 public interface PluginEvent<Data, Payload extends PluginEventInfo<Data>> {
   /**
    * @return Type enumeration for this event
@@ -38,8 +36,7 @@ public interface PluginEvent<Data, Payload extends PluginEventInfo<Data>> {
    * @param <Payload> Payload type expected
    */
   static <D, Payload extends PluginEventInfo<D>> PluginEvent<D, Payload> ofType(
-    PluginEventType type,
-    Payload data) {
+      PluginEventType type, Payload data) {
     return new PluginEvent<>() {
       @Override
       public PluginEventType type() {

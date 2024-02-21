@@ -37,7 +37,7 @@ public interface PluginManager {
    * Resolve all installed plug-ins available to service loader
    *
    * <p>Implementations are allowed the space to cache the result of this call, especially in AOT
-   * circumstances.</p>
+   * circumstances.
    *
    * @return Installed suite of Pkl engine plug-ins
    */
@@ -49,16 +49,15 @@ public interface PluginManager {
    * Resolve all installed plug-ins available to service loader
    *
    * <p>Implementations are allowed the space to cache the result of this call, especially in AOT
-   * circumstances.</p>
+   * circumstances.
    *
    * @param event Event to dispatch to listening plugins
    * @param exec Function which dispatches the event for a given plug-in, to produce a result
-   * @return Stream of event dispatch results, aligned with the list returned by
-   *   {@link #installedPlugins()}
+   * @return Stream of event dispatch results, aligned with the list returned by {@link
+   *     #installedPlugins()}
    */
   default Stream<EventResult> dispatchEvent(
-    PluginEvent<?, ?> event,
-    Function<PklPluginContext<? extends PklPlugin>, EventResult> exec) {
+      PluginEvent<?, ?> event, Function<PklPluginContext<? extends PklPlugin>, EventResult> exec) {
     return Stream.empty();
   }
 }

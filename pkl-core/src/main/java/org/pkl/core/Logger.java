@@ -23,7 +23,9 @@ import java.util.logging.Level;
  */
 @SuppressWarnings("unused")
 public interface Logger {
-  /** @return Whether the provided logging level is enabled; defaults to `false` */
+  /**
+   * @return Whether the provided logging level is enabled; defaults to `false`
+   */
   default boolean isLevelEnabled(Level level) {
     return false;
   }

@@ -24,7 +24,7 @@ public interface PklPluginConfiguration {
 
   /**
    * @return Whether the current Pkl run is happening via a native binary; if `false`, this run is
-   *   happening on the JVM.
+   *     happening on the JVM.
    */
   Boolean isNative();
 }

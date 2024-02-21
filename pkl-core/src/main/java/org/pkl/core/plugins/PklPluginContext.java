@@ -21,7 +21,7 @@ import org.pkl.core.plugin.PklPlugin;
  * Context API for the execution of a Pkl Plugin event
  *
  * <p>This interface is provided to each execution of a Pkl Plugin's event pipeline, so that it may
- * declare errors, log messages, and so on</p>
+ * declare errors, log messages, and so on
  */
 public interface PklPluginContext<Plugin extends PklPlugin> {
   /**

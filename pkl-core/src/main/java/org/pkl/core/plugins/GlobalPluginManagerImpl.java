@@ -37,45 +37,50 @@ class GlobalPluginManagerImpl implements PluginManager {
   private final AtomicBoolean initialized = new AtomicBoolean(false);
   private final ConcurrentMap<String, PklPlugin> pluginMap = new ConcurrentSkipListMap<>();
 
-  protected GlobalPluginManagerImpl() { /* protected construction */ }
+  protected GlobalPluginManagerImpl() {
+    /* protected construction */
+  }
 
   // Plug-in loader
   private final ServiceLoader<PklPlugin> loader = ServiceLoader.loadInstalled(PklPlugin.class);
 
   // Log about a plug-in event, if configured to do so.
   private void maybeLog(
-    PklPluginContext<? extends PklPlugin> pluginContext,
-    PluginEvent<?, ?> event) {
+      PklPluginContext<? extends PklPlugin> pluginContext, PluginEvent<?, ?> event) {
     if (logger.isLevelEnabled(Level.FINE)) {
-      String msg = "Dispatching event type '"
-          + event.type().name()
-          + "' via plugin '"
-          + pluginContext.getPlugin().getName()
-          + "'";
+      String msg =
+          "Dispatching event type '"
+              + event.type().name()
+              + "' via plugin '"
+              + pluginContext.getPlugin().getName()
+              + "'";
       logger.debug(msg);
     }
   }
 
   private void loadAllPlugins() {
     initialized.compareAndSet(false, true);
-    var configuration = new PklPluginConfiguration() {
-      @Override
-      public String getPklVersion() {
-        return VmInfo.PKL_CORE_VERSION;
-      }
+    var configuration =
+        new PklPluginConfiguration() {
+          @Override
+          public String getPklVersion() {
+            return VmInfo.PKL_CORE_VERSION;
+          }
 
-      @Override
-      public Boolean isNative() {
-        return ImageInfo.inImageCode();
-      }
-    };
+          @Override
+          public Boolean isNative() {
+            return ImageInfo.inImageCode();
+          }
+        };
 
     synchronized (this) {
-      loader.stream().map(Provider::get).filter(
-        plugin -> plugin.isInConfiguration(configuration)
-      ).forEach(plugin -> {
-        pluginMap.put(plugin.getName(), plugin);
-      });
+      loader.stream()
+          .map(Provider::get)
+          .filter(plugin -> plugin.isInConfiguration(configuration))
+          .forEach(
+              plugin -> {
+                pluginMap.put(plugin.getName(), plugin);
+              });
     }
   }
 
@@ -89,31 +94,32 @@ class GlobalPluginManagerImpl implements PluginManager {
 
   @Override
   public Stream<EventResult> dispatchEvent(
-    PluginEvent<?, ?> event,
-    Function<PklPluginContext<? extends PklPlugin>, EventResult> exec) {
+      PluginEvent<?, ?> event, Function<PklPluginContext<? extends PklPlugin>, EventResult> exec) {
     // resolve each installed plugin
-    return installedPlugins().map(pklPlugin -> {
-      // and, for each, prepare an event context...
-      var context = PklPluginContext.of(pklPlugin);
+    return installedPlugins()
+        .map(
+            pklPlugin -> {
+              // and, for each, prepare an event context...
+              var context = PklPluginContext.of(pklPlugin);
 
-      try {
-        maybeLog(context, event);
-        return exec.apply(context);
-      } catch (Throwable err) {
-        if (err instanceof PklPluginError<?>) {
-          return EventResult.failure(
-            PklPluginException.wrapping(pklPlugin, (PklPluginError<?>) err)
-          );
-        } else {
-          String msg = "PklPlugin '"
-              + pklPlugin.getName()
-              + "' failed with unexpected exception of type '"
-              + err.getClass().getName()
-              + "'. Normally, this exception would be swallowed, but assertions are on.";
-          assert false : msg;
-        }
-      }
-      return EventResult.failure();
-    });
+              try {
+                maybeLog(context, event);
+                return exec.apply(context);
+              } catch (Throwable err) {
+                if (err instanceof PklPluginError<?>) {
+                  return EventResult.failure(
+                      PklPluginException.wrapping(pklPlugin, (PklPluginError<?>) err));
+                } else {
+                  String msg =
+                      "PklPlugin '"
+                          + pklPlugin.getName()
+                          + "' failed with unexpected exception of type '"
+                          + err.getClass().getName()
+                          + "'. Normally, this exception would be swallowed, but assertions are on.";
+                  assert false : msg;
+                }
+              }
+              return EventResult.failure();
+            });
   }
 }

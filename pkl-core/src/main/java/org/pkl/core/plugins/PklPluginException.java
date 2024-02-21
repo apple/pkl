@@ -20,9 +20,7 @@ import org.pkl.core.plugin.PklPluginError;
 
 /** Wraps a caught exception which was encountered while executing a plug-in hook */
 public class PklPluginException<
-  Plugin extends PklPlugin,
-  Err extends Enum<Err>,
-  Exc extends Throwable & PklPluginError<Err>> {
+    Plugin extends PklPlugin, Err extends Enum<Err>, Exc extends Throwable & PklPluginError<Err>> {
   // Private (use static methods).
   private PklPluginException(Plugin plugin, PklPluginError<Err> err) {
     this.err = err;
@@ -45,10 +43,10 @@ public class PklPluginException<
    * @param <Exc> Exception type
    */
   static <
-    Plugin extends PklPlugin,
-    Err extends Enum<Err>,
-    Exc extends Throwable & PklPluginError<Err>
-  > PklPluginException<Plugin, Err, Exc> wrapping(Plugin plugin, PklPluginError<Err> err) {
+          Plugin extends PklPlugin,
+          Err extends Enum<Err>,
+          Exc extends Throwable & PklPluginError<Err>>
+      PklPluginException<Plugin, Err, Exc> wrapping(Plugin plugin, PklPluginError<Err> err) {
     return new PklPluginException<>(plugin, err);
   }
 
