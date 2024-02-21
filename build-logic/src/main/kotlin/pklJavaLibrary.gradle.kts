@@ -34,9 +34,11 @@ configure<SpotlessExtension> {
 }
 
 tasks {
-  // No need to run PMD on tests.
-  findByName("pmdTest")?.configure<Task> {
-    enabled = false
+  // No need to run PMD or Detekt on tests.
+  listOf("pmdTest", "detektTest").forEach {
+    findByName(it)?.configure<Task> {
+      enabled = false
+    }
   }
 
   // This is a pure-Java target convention; see `pklKotlinLibrary` for Kotlin support.

@@ -50,7 +50,7 @@ configure<DetektExtension> {
 }
 
 tasks.withType<Detekt>().configureEach {
-  isEnabled = build.analysis.autofix
+  isEnabled = build.analysis.enabled
   autoCorrect = build.analysis.autofix
   jvmTarget = build.jvm.lib.target.toString()
 
