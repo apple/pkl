@@ -18,6 +18,14 @@ dependencies {
   implementation(libs.assertj)
 }
 
+val isTesting = gradle.startParameter.taskNames.any {
+  it == "test" || it == "check"
+}
+
+private fun Task.onlyIfTesting(and: Task.() -> Boolean = { true }) {
+  enabled = isTesting
+  onlyIf { isTesting && and() }
+}
 
 /**
  * Creates test packages from the `src/test/files/packages` directory.
@@ -43,7 +51,12 @@ fun File.computeChecksum(): String {
   return toHex(hash)
 }
 
+tasks.jar {
+  onlyIfTesting()
+}
+
 tasks.processResources {
+  onlyIfTesting()
   dependsOn(createTestPackages)
   dependsOn(generateCerts)
 }
@@ -94,6 +107,7 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
 }
 
 val generateKeys by tasks.registering(JavaExec::class) {
+  onlyIfTesting()
   val outputFile = layout.buildDirectory.file("keystore/localhost.p12")
   outputs.file(outputFile)
   mainClass = "sun.security.tools.keytool.Main"
@@ -113,6 +127,7 @@ val generateKeys by tasks.registering(JavaExec::class) {
 }
 
 val generateCerts by tasks.registering(JavaExec::class) {
+  onlyIfTesting { generateKeys.get().isEnabled }
   dependsOn("generateKeys")
   val outputFile = layout.buildDirectory.file("keystore/localhost.pem")
   outputs.file(outputFile)
