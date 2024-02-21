@@ -54,13 +54,11 @@ jobs:
             ./*/build/klib
             ./*/build/generated
             ./*/build/generated-sources
-      - name: "Setup: GraalVM (Java 21)"
-        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
+      - name: "Setup: Java 21"
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
         with:
-          distribution: "graalvm"
-          java-version: 21
-          check-for-updates: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          distribution: 'adopt'
+          java-version: '21'
       - name: "Analysis: API Check"
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
         continue-on-error: ${{ inputs.ignore_failures }}

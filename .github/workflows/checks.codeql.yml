@@ -57,12 +57,11 @@ jobs:
             ./*/build/klib
             ./*/build/generated
             ./*/build/generated-sources
-      - name: "Setup: GraalVM (Java 21)"
-        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
+      - name: "Setup: Java 21"
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
         with:
-          distribution: "graalvm"
-          java-version: "21"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          distribution: 'adopt'
+          java-version: '21'
       - name: "Setup: Initialize CodeQL"
         uses: github/codeql-action/init@379614612a29c9e28f31f39a59013eb8012a51f0 # v3.24.3
         with:
