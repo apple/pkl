@@ -78,3 +78,11 @@ val reportMergeSarif by tasks.registering(ReportMergeTask::class) {
   dependsOn(detektTasks)
   input.from(detektTasks.map { it.sarifReportFile })
 }
+
+tasks.compileJava {
+  mustRunAfter(tasks.compileKotlin)
+}
+
+tasks.compileTestJava {
+  mustRunAfter(tasks.compileTestKotlin)
+}
