@@ -142,6 +142,8 @@ class EmbeddedExecutorTest {
             mapOf(),
             mapOf(),
             listOf(),
+            listOf(),
+            listOf(),
             tempDir,
             null,
             null,
@@ -178,6 +180,8 @@ class EmbeddedExecutorTest {
             listOf("prop:"),
             mapOf(),
             mapOf(),
+            listOf(),
+            listOf(),
             listOf(),
             tempDir,
             null,
@@ -216,6 +220,8 @@ class EmbeddedExecutorTest {
           listOf("prop:", "env:"),
           mapOf("ENV_VAR" to "ENV_VAR"),
           mapOf("property" to "property"),
+          listOf(),
+          listOf(),
           listOf(),
           null,
           null,
@@ -269,6 +275,8 @@ class EmbeddedExecutorTest {
           mapOf(),
           mapOf(),
           listOf(),
+          listOf(),
+          listOf(),
           null,
           null,
           null,
@@ -309,6 +317,8 @@ class EmbeddedExecutorTest {
             listOf("prop:"),
             mapOf(),
             mapOf(),
+            listOf(),
+            listOf(),
             listOf(),
             tempDir,
             null,
@@ -352,6 +362,8 @@ class EmbeddedExecutorTest {
             mapOf(),
             mapOf(),
             listOf(),
+            listOf(),
+            listOf(),
             tempDir,
             Duration.ofSeconds(1),
             null,
@@ -365,50 +377,10 @@ class EmbeddedExecutorTest {
     assertThat(e.message)
       .contains("Evaluation timed out after 1 second(s).")
   }
-
-  // Only packages are cached.
-  // Because this test doesn't import a package, it doesn't really test
-  // that the `moduleCacheDir` option takes effect.
-  @Test
-  fun `evaluate a module with enabled module cache`(@TempDir tempDir: Path) {
-    val pklFile = tempDir.resolve("test.pkl")
-    pklFile.toFile().writeText(
-      """
-      @ModuleInfo { minPklVersion = "0.16.0" }
-      module test
-
-      x = 42
-    """.trimIndent()
-    )
-
-    val executor = Executors.embedded(listOf(pklDistribution))
-    val result = executor.use {
-      it.evaluatePath(
-        pklFile,
-        ExecutorOptions(
-          listOf("file:"),
-          listOf("prop:"),
-          mapOf(),
-          mapOf(),
-          listOf(),
-          null,
-          null,
-          null,
-          ExecutorOptions.defaultModuleCacheDir(),
-          null
-        )
-      )
-    }
-
-    assertThat(result.trim()).isEqualTo(
-      """
-      x = 42
-    """.trimIndent().trim()
-    )
-  }
   
   @Test
   fun `evaluate a module that loads a package`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("cache")
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
       """
@@ -430,10 +402,12 @@ class EmbeddedExecutorTest {
           mapOf(),
           mapOf(),
           listOf(),
+          listOf(FileTestUtils.selfSignedCertificate),
+          listOf(),
           null,
           null,
           null,
-          ExecutorOptions.defaultModuleCacheDir(),
+          cacheDir,
           null)
       )
     }
@@ -445,6 +419,9 @@ class EmbeddedExecutorTest {
         }
       }
     """.trimIndent())
+    
+    // verify that cache was populated
+    assertThat(cacheDir.toFile().list()).isNotEmpty()
   }
 
   @Test
@@ -501,6 +478,8 @@ class EmbeddedExecutorTest {
           listOf("prop:", "package:", "projectpackage:", "https:"),
           mapOf(),
           mapOf(),
+          listOf(),
+          listOf(),
           listOf(),
           null,
           null,
