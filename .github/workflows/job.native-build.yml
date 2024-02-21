@@ -31,9 +31,11 @@ jobs:
           - os: macOS aarch64
             machine: macos-13-xlarge
             target: :pkl-cli:macExecutableAarch64
-          - os: Windows
-            machine: windows-latest
-            target: :pkl-cli:windowsAmd64
+          # Windows build is currently broken.
+          #
+          # - os: Windows
+          #   machine: windows-latest
+          #   target: :pkl-cli:windowsAmd64
 
     name: "Native CLI (${{ matrix.os }})"
     runs-on: ${{ matrix.machine }}
