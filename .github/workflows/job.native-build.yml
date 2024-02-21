@@ -104,7 +104,6 @@ jobs:
           arguments: |
             ${{ matrix.target || ':pkl-cli:assembleNative' }}
             -PnativeRelease=true
-        continue-on-error: true
       - name: "Artifact: Caches"
         uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
