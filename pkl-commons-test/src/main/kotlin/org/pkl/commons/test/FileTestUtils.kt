@@ -17,7 +17,6 @@ package org.pkl.commons.test
 
 import java.nio.file.Path
 import kotlin.io.path.*
-import kotlin.streams.toList
 import org.assertj.core.api.Assertions.fail
 import org.pkl.commons.*
 
@@ -31,6 +30,17 @@ object FileTestUtils {
   }
   val selfSignedCertificate: Path by lazy {
     rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.pem")
+  }
+
+  fun writeCertificateWithMissingLines(dir: Path): Path {
+    val lines = selfSignedCertificate.readLines()
+    // drop some lines in the middle
+    return dir.resolve("invalidCerts.pem").writeLines(lines.take(5) + lines.takeLast(5))
+  }
+
+  fun writePklBuiltInCertificates(dir: Path): Path {
+    val text = javaClass.getResource("/org/pkl/core/http/IncludedCARoots.pem")!!.readText()
+    return dir.resolve("IncludedCARoots.pem").apply { writeText(text) }
   }
 }
 

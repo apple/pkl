@@ -1,13 +1,11 @@
 package org.pkl.core.http
 
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse.BodyHandlers
-import java.security.cert.CertificateException
 
 class LazyHttpClientTest {
   @Test

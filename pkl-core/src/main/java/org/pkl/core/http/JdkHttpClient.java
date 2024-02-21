@@ -46,8 +46,10 @@ import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.CertPathTrustManagerParameters;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.ExceptionUtils;
 
 @ThreadSafe
 final class JdkHttpClient implements HttpClient {
@@ -89,6 +91,10 @@ final class JdkHttpClient implements HttpClient {
       // original exception has no message
       throw new ConnectException(
           ErrorMessages.create("errorConnectingToHost", request.uri().getHost()));
+    } catch (SSLHandshakeException e) {
+      throw new SSLHandshakeException(
+          ErrorMessages.create(
+              "errorSslHandshake", request.uri().getHost(), ExceptionUtils.getRootReason(e)));
     } catch (InterruptedException e) {
       // next best thing after letting (checked) InterruptedException bubble up
       Thread.currentThread().interrupt();
@@ -134,7 +140,7 @@ final class JdkHttpClient implements HttpClient {
       return sslContext;
     } catch (GeneralSecurityException e) {
       throw new HttpClientInitException(
-          ErrorMessages.create("cannotInitHttpClient", e.getMessage()), e);
+          ErrorMessages.create("cannotInitHttpClient", ExceptionUtils.getRootReason(e)), e);
     }
   }
 
@@ -149,7 +155,7 @@ final class JdkHttpClient implements HttpClient {
         throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
       } catch (IOException e) {
         throw new HttpClientInitException(
-            ErrorMessages.create("cannotReadCertFile", e.getMessage()));
+            ErrorMessages.create("cannotReadCertFile", ExceptionUtils.getRootReason(e)));
       }
     }
 
@@ -158,7 +164,7 @@ final class JdkHttpClient implements HttpClient {
         collectTrustAnchors(anchors, factory, stream, url);
       } catch (IOException e) {
         throw new HttpClientInitException(
-            ErrorMessages.create("cannotReadCertFile", e.getMessage()));
+            ErrorMessages.create("cannotReadCertFile", ExceptionUtils.getRootReason(e)));
       }
     }
 
@@ -176,7 +182,7 @@ final class JdkHttpClient implements HttpClient {
       certificates = (Collection<X509Certificate>) factory.generateCertificates(stream);
     } catch (CertificateException e) {
       throw new HttpClientInitException(
-          ErrorMessages.create("cannotParseCertFile", source, e.getMessage()));
+          ErrorMessages.create("cannotParseCertFile", source, ExceptionUtils.getRootReason(e)));
     }
     if (certificates.isEmpty()) {
       throw new HttpClientInitException(ErrorMessages.create("emptyCertFile", source));

@@ -11,7 +11,6 @@ import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Path
-import java.security.cert.CertificateException
 import java.time.Duration
 import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
@@ -19,7 +18,7 @@ import kotlin.io.path.createFile
 
 class HttpClientTest {
   @Test
-  fun `build default client`() {
+  fun `can build default client`() {
     val client = assertDoesNotThrow {
       HttpClient.builder().build()
     } // means we loaded some (built-in) certificates
@@ -38,7 +37,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `build custom client`() {
+  fun `can build custom client`() {
     val client = HttpClient.builder()
       .setUserAgent("Agent 1")
       .setRequestTimeout(Duration.ofHours(86))
@@ -53,7 +52,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `load certificates from file system`() {
+  fun `can load certificates from file system`() {
     assertDoesNotThrow {
       HttpClient.builder().addCertificates(FileTestUtils.selfSignedCertificate).build()
     }
@@ -71,7 +70,7 @@ class HttpClientTest {
   }
 
   @Test
-  fun `load certificates from class path`() {
+  fun `can load certificates from class path`() {
     assertDoesNotThrow {
       HttpClient.builder().addCertificates(javaClass.getResource("IncludedCARoots.pem")).build()
     }
@@ -89,14 +88,14 @@ class HttpClientTest {
   }
 
   @Test
-  fun `load built-in certificates`() {
+  fun `can load built-in certificates`() {
     assertDoesNotThrow {  
       HttpClient.builder().addBuiltInCertificates().build()
     }
   }
   
   @Test
-  fun `load certificates from default location`(@TempDir userHome: Path) {
+  fun `can load certificates from default location`(@TempDir userHome: Path) {
     val certFile = userHome.resolve(".pkl")
       .resolve("cacerts")
       .createDirectories()
@@ -116,7 +115,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `client can be closed multiple times`() {
+  fun `can be closed multiple times`() {
     val client = HttpClient.builder().build()
     
     assertDoesNotThrow { 
@@ -126,7 +125,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `client refuses to send messages once closed`() {
+  fun `refuses to send messages once closed`() {
     val client = HttpClient.builder().build()
     val request = HttpRequest.newBuilder(URI("https://example.com")).build()
     
