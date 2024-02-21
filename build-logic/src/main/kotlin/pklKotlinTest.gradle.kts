@@ -72,6 +72,7 @@ testlogger {
   showStandardStreams = false
   slowThreshold = 45_000L
   isShowCauses = true
+  isShowSimpleNames = true
 }
 
 testing {
