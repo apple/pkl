@@ -3,7 +3,12 @@ name: "Native Build"
 "on":
   workflow_dispatch: {}
   workflow_call:
-    inputs: {}
+    inputs:
+      release:
+        type: boolean
+        default: false
+        description: "Release build"
+
     secrets:
       GRADLE_CONFIGURATION_KEY:
         description: "Gradle cache key"
@@ -109,7 +114,7 @@ jobs:
           gradle-home-cache-cleanup: true
           arguments: |
             ${{ matrix.target || ':pkl-cli:assembleNative' }}
-            -PnativeRelease=true
+            -PnativeRelease=${{ inputs.release }}
       - name: "Artifact: Native CLI"
         if: success()
         uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
