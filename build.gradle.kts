@@ -1,6 +1,8 @@
 // https://youtrack.jetbrains.com/issue/KTIJ-19369
 @file:Suppress("DSL_SCOPE_VIOLATION", "UnstableApiUsage")
 
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.jetbrains.gradle.ext.ActionDelegationConfig
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
 import org.jetbrains.gradle.ext.ProjectSettings
@@ -92,14 +94,6 @@ dependencies {
   }
 }
 
-val clean by tasks.getting(Delete::class) {
-  delete(layout.buildDirectory)
-}
-
-val printVersion by tasks.registering {
-  doFirst { println(buildInfo.pklVersion) }
-}
-
 val message = """
 ====
 Gradle version : ${gradle.gradleVersion}
@@ -133,23 +127,49 @@ val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {
   testType = TestSuiteType.UNIT_TEST
 }
 
-val coverageReports by tasks.registering {
-  dependsOn(tasks.koverBinaryReport, tasks.koverXmlReport, tasks.koverHtmlReport)
-}
+tasks {
+  val clean by getting(Delete::class) {
+    delete(layout.buildDirectory)
+  }
 
-val reports by tasks.registering {
-  description = "Generates all reports"
-  group = "Reporting"
+  val printVersion by registering {
+    doFirst { println(buildInfo.pklVersion) }
+  }
 
-  dependsOn(tasks.named("allTestsReport"))
-}
+  // --- Tasks: Detekt
+  //
+  if (buildInfo.analysis.enabled) {
+    val detektMergeSarif: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
+      output.set(layout.buildDirectory.file("reports/detekt/detekt.sarif"))
+    }
+    val detektMergeXml: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
+      output.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
+    }
+    withType(Detekt::class) detekt@{
+      finalizedBy(detektMergeSarif, detektMergeXml)
+      reports.sarif.required = true
+      reports.xml.required = true
+    }
+  }
 
-val check: Task by tasks.getting {
-  description = "Runs all checks"
-  group = "Verification"
+  val coverageReports by registering {
+    dependsOn(koverBinaryReport, koverXmlReport, koverHtmlReport)
+  }
 
-  finalizedBy(
-    reports,
-    coverageReports,
-  )
+  val reports by registering {
+    description = "Generates all reports"
+    group = "Reporting"
+
+    dependsOn(named("allTestsReport"))
+  }
+
+  val check: Task by getting {
+    description = "Runs all checks"
+    group = "Verification"
+
+    finalizedBy(
+      reports,
+      coverageReports,
+    )
+  }
 }

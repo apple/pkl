@@ -85,7 +85,9 @@ open class BuildInfo(private val project: Project) {
 
   inner class Analysis {
     val enabled =
-      (project.findProperty(enableAnalysisProperty) == "true" || "check" in project.gradle.startParameter.taskNames )
+      (project.findProperty(enableAnalysisProperty) == "true" ||
+        project.gradle.taskGraph.hasTask("check") ||
+        project.gradle.taskGraph.hasTask("detekt"))
 
     val autofix = (project.findProperty(autofixProperty) == "true")
 
