@@ -8,6 +8,10 @@ plugins {
 
 description = "Reusable convention plugins for Pkl's build"
 
+val dependencyPins = listOf(
+  "commons-io:commons-io" to libs.versions.commonsIo,  // CVE-2021-29425
+).toMap()
+
 dependencies {
   // prevent other versions of stdlib from creeping in
   implementation(libs.kotlinStdlib)
@@ -18,6 +22,7 @@ dependencies {
   implementation(libs.detektPlugin)
   implementation(libs.kotlinPluginKover)
   implementation(libs.powerassertPlugin)
+  implementation(libs.shadowPlugin)
   implementation(libs.kotlinPlugin) {
     exclude(module = "kotlin-android-extensions")
   }
@@ -35,6 +40,20 @@ dependencyLocking {
 
 tasks.jar {
   outputs.cacheIf { true }
+}
+
+configurations.all {
+  resolutionStrategy {
+    eachDependency {
+      when (val dep = dependencyPins["${requested.group}:${requested.name}"]) {
+        null -> {}
+        else -> dep.get().let {
+          useVersion(it)
+          because("pinned dependencies")
+        }
+      }
+    }
+  }
 }
 
 // These are toolchain-level settings; for artifact targets, see convention plugins.

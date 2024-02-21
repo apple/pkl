@@ -1,9 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 @Suppress("unused")
 val buildInfo = extensions.create<BuildInfo>("buildInfo", project)
+
+val libs = the<LibrariesForLibs>()
 
 // Default JVM bytecode target, and Java language level.
 private val defaultJavaTarget = "11"
@@ -46,7 +49,16 @@ private val lockedConfigurations = listOf(
   "truffle",
 )
 
+// Compiler strict mode.
 private val strictMode = findProperty(buildPropertyStrictMode) == "true"
+
+// Dependency pins.
+val dependencyPins = listOf(
+  "org.jetbrains.kotlin:kotlin-stdlib" to libs.versions.kotlin,  // general pins (critical dependency)
+  "org.jetbrains.kotlin:kotlin-stdlib-common" to libs.versions.kotlin,  // general pins (critical dependency)
+  "commons-io:commons-io" to libs.versions.commonsIo,  // CVE-2021-29425
+  "org.apache.httpcomponents:httpclient" to libs.versions.cvePins.apacheHttpClient,  // CVE-2020-13956
+).toMap()
 
 configurations {
   val rejectedVersionSuffix = Regex("-alpha|-beta|-eap|-m|-rc|-snapshot", RegexOption.IGNORE_CASE)
@@ -79,6 +91,18 @@ configurations {
     if ("detached" in name) resolutionStrategy {
       disableDependencyVerification()
       deactivateDependencyLocking()
+    }
+
+    resolutionStrategy {
+      eachDependency {
+        when (val pin = dependencyPins["${requested.group}:${requested.name}"]) {
+          null -> {}
+          else -> pin.get().let {
+            useVersion(it)
+            because("pinned dependencies")
+          }
+        }
+      }
     }
   }
 }

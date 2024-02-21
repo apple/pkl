@@ -121,6 +121,9 @@ detekt {
 
 dependencyCheck {
   nvd.apiKey = System.getenv("NVD_API_KEY")
+  suppressionFiles = listOf(
+    "config/owasp/suppressions.xml"
+  )
 }
 
 val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {

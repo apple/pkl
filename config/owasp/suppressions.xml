@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+    <notes><![CDATA[
+      file name: graal-sdk-23.1.2.jar
+      notes: CVE relates to client-side use (applets, etc), which does not apply to pkl's use of GVM
+      ]]></notes>
+    <cve>CVE-2023-22006</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      file name: cssvalidator-1.0.8.jar
+      notes: only used at build time by 'nuValidator' which is on its way out anyway
+      ]]></notes>
+    <cve>CVE-2020-4070</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      notes: unrelated project (false positive)
+      ]]></notes>
+    <cve>CVE-2016-10538</cve>
+  </suppress>
+</suppressions>

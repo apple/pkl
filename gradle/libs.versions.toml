@@ -6,6 +6,8 @@ buildconfigPlugin = "5.3.5"
 checksumPlugin = "1.4.0"
 clikt = "3.5.1"
 commonMark = "0.+"
+commonsIo = "2.15.1"
+cvePins-apacheHttpClient = "4.5.13"
 detekt = "1.23.5"
 downloadTaskPlugin = "4.1.2"
 geantyref = "1.+"
@@ -67,6 +69,7 @@ assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
+commonsIo = { group = "commons-io", name = "commons-io", version.ref = "commonsIo" }
 detektPlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
