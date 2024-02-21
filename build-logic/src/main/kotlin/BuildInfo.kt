@@ -115,6 +115,10 @@ open class BuildInfo(private val project: Project) {
       version.startsWith("22")
     }
 
+    val isGraal23: Boolean by lazy {
+      version.startsWith("23")
+    }
+
     val arch by lazy {
       if (os.isMacOsX && isGraal22) {
         "amd64"
@@ -136,7 +140,8 @@ open class BuildInfo(private val project: Project) {
       if (graalVm.isGraal22) {
         "graalvm-ce-java11-${osName}-${arch}-${version}"
       } else {
-        "graalvm-jdk-${graalVM23JdkVersion}_${osName}-${arch}_bin"
+        val archFixed = if (isGraal23 && arch == "amd64") "x64" else arch
+        "graalvm-jdk-${graalVM23JdkVersion}_${osName}-${archFixed}_bin"
       }
     }
 
