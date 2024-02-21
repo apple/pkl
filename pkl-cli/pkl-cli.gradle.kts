@@ -413,8 +413,33 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
   )
 }
 
+/**
+ * Builds a statically linked CLI for Windows.
+ *
+ * Experimental.
+ */
+val windowsAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  configureExecutable(
+    buildInfo.os.isWindows,
+    layout.buildDirectory.file("executable/pkl-windows-amd64").get().asFile,
+    listOf(
+      "--static",
+      "--libc=musl",
+      "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
+      "-Dorg.pkl.compat=windows",
+    )
+  )
+}
+
 tasks.assembleNative {
-  dependsOn(macExecutableAmd64, macExecutableAarch64, linuxExecutableAmd64, linuxExecutableAarch64, alpineExecutableAmd64)
+  dependsOn(
+    macExecutableAmd64,
+    macExecutableAarch64,
+    linuxExecutableAmd64,
+    linuxExecutableAarch64,
+    alpineExecutableAmd64,
+    windowsAmd64,
+  )
 }
 
 // make Java executable available to other subprojects
