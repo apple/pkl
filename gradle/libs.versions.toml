@@ -48,7 +48,7 @@ owasp = "9.0.9"
 paguro = "3.+"
 pmd = "6.55.0"
 powerassert = "0.13.0"
-shadowPlugin = "7.1.0"
+shadowPlugin = "8.1.1"
 sigstore = "0.7.0"
 slf4j = "1.+"
 spdx = "0.6.0"
@@ -105,7 +105,7 @@ nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuVal
 owaspPlugin = { group = "org.owasp", name = "dependency-check-gradle", version.ref = "owasp" }
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 powerassertPlugin = { group = "com.bnorm.power", name = "kotlin-power-assert-plugin", version.ref = "powerassert" }
-shadowPlugin = { group = "gradle.plugin.com.github.johnrengelman", name = "shadow", version.ref = "shadowPlugin" }
+shadowPlugin = { group = "com.github.johnrengelman", name = "shadow", version.ref = "shadowPlugin" }
 sigstorePlugin = { group = "dev.sigstore", name = "sigstore-gradle-sign-plugin", version.ref = "sigstore" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
