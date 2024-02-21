@@ -3946,7 +3946,7 @@ nullish: Null                  // = null <11>
 <2> Properties of type `List` default to the empty list.
 <3> Properties of type `Set` default to the empty set.
 <4> Properties of type `Map` default to the empty map.
-<5> Properties of type `Listing<X>` default to an empty listing whose default element is the default for `Y`.
+<5> Properties of type `Listing<X>` default to an empty listing whose default element is the default for `X`.
 <6> Properties of type `Mapping<X, Y>` default to an empty mapping whose default value is the default for `Y`.
 <7> Properties of non-external class type `X` default to `new X {}`.
 <8> Properties of type `X?` default to `Null(x)` where `x` is the default for `X`.
