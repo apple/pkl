@@ -55,7 +55,7 @@ jobs:
         env:
           CI: true
           GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
         with:
           cache-read-only: false
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
@@ -72,6 +72,7 @@ jobs:
     needs: [preflight-checks]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     permissions:
       ## Needed for build graph publishing
       contents: "write"
@@ -85,6 +86,7 @@ jobs:
     needs: [preflight-checks, dependency-graph]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     permissions:
       contents: "read"
 
@@ -97,6 +99,7 @@ jobs:
     needs: [preflight-checks]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     permissions:
       contents: "read"
 
@@ -107,9 +110,11 @@ jobs:
     name: "Checks"
     uses: ./.github/workflows/checks.formatting.yml
     needs: [preflight-checks]
-    secrets: inherit
     permissions:
       contents: "read"
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     with:
       ignore_failures: ${{ contains(github.event.pull_request.labels.*.name, 'ci:fmt-ignore') }}
 
@@ -142,6 +147,7 @@ jobs:
     needs: [preflight-checks, dependency-graph]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     permissions:
       actions: "read"
       contents: "read"
@@ -156,6 +162,7 @@ jobs:
     needs: [preflight-checks]
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
     permissions:
       contents: "read"
       security-events: "write"

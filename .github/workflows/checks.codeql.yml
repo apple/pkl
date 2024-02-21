@@ -8,6 +8,10 @@ name: "CodeQL"
       GRADLE_CONFIGURATION_KEY:
         description: "Gradle cache key"
         required: false
+      BUILDLESS_APIKEY:
+        description: "Buildless key"
+        required: false
+
   schedule:
     - cron: "0 0-23/2 * * *"
 
