@@ -321,7 +321,6 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
         "--strict-image-heap"
-        ,"--gc=epsilon"
         // currently gives a deprecation warning, but we've been told 
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         ,"--initialize-at-build-time="
