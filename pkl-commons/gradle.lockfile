@@ -1,4 +1,13 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
+org.jetbrains.intellij.deps:trove4j:1.0.20200330=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-daemon-embeddable:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-reflect:1.6.10=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-script-runtime:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22=compileClasspath
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22=compileClasspath
+org.jetbrains.kotlin:kotlin-stdlib:1.9.22=compileClasspath,kotlinCompilerClasspath
+org.jetbrains:annotations:13.0=compileClasspath,kotlinCompilerClasspath
 empty=annotationProcessor

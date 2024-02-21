@@ -1,4 +1,40 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
+com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,runtimeClasspath
+com.github.ajalt.clikt:clikt:3.5.1=compileClasspath,runtimeClasspath
+com.tunnelvisionlabs:antlr4-runtime:4.9.0=runtimeClasspath
+org.fusesource.jansi:jansi:2.4.1=compileClasspath,runtimeClasspath
+org.graalvm.compiler:compiler:23.1.2=compileClasspath
+org.graalvm.nativeimage:native-image-base:23.1.2=compileClasspath
+org.graalvm.nativeimage:objectfile:23.1.2=compileClasspath
+org.graalvm.nativeimage:pointsto:23.1.2=compileClasspath
+org.graalvm.nativeimage:svm:23.1.2=compileClasspath
+org.graalvm.nativeimage:truffle-runtime-svm:23.1.2=compileClasspath
+org.graalvm.polyglot:polyglot:23.1.2=compileClasspath,runtimeClasspath
+org.graalvm.sdk:collections:23.1.2=compileClasspath,runtimeClasspath
+org.graalvm.sdk:graal-sdk:23.1.2=runtimeClasspath
+org.graalvm.sdk:jniutils:23.1.2=compileClasspath
+org.graalvm.sdk:nativeimage:23.1.2=compileClasspath,runtimeClasspath
+org.graalvm.sdk:word:23.1.2=compileClasspath,runtimeClasspath
+org.graalvm.truffle:truffle-api:23.1.2=compileClasspath,runtimeClasspath
+org.graalvm.truffle:truffle-compiler:23.1.2=compileClasspath
+org.graalvm.truffle:truffle-runtime:23.1.2=compileClasspath
+org.jetbrains.intellij.deps:trove4j:1.0.20200330=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-daemon-embeddable:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-reflect:1.6.10=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-script-runtime:1.9.22=kotlinCompilerClasspath
+org.jetbrains.kotlin:kotlin-stdlib-common:1.9.22=compileClasspath,runtimeClasspath
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22=compileClasspath,runtimeClasspath
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.22=compileClasspath,runtimeClasspath
+org.jetbrains.kotlin:kotlin-stdlib:1.9.22=compileClasspath,kotlinCompilerClasspath,runtimeClasspath
+org.jetbrains:annotations:13.0=compileClasspath,kotlinCompilerClasspath,runtimeClasspath
+org.jline:jline-native:3.25.1=compileClasspath,runtimeClasspath
+org.jline:jline-reader:3.25.1=compileClasspath,runtimeClasspath
+org.jline:jline-terminal-jansi:3.25.1=compileClasspath,runtimeClasspath
+org.jline:jline-terminal:3.25.1=compileClasspath,runtimeClasspath
+org.msgpack:msgpack-core:0.9.8=runtimeClasspath
+org.organicdesign:Paguro:3.10.3=runtimeClasspath
+org.snakeyaml:snakeyaml-engine:2.5=runtimeClasspath
 empty=annotationProcessor
