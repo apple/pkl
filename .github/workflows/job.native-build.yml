@@ -23,20 +23,20 @@ jobs:
         os: [Ubuntu]
         mode: ["Strict"]
         machine: ["ubuntu-latest"]
-        target: ["linuxExecutableAmd64"]
+        target: [":pkl-cli:linuxExecutableAmd64"]
         include:
           - os: macOS x64
             mode: Strict
             machine: macos-13
-            target: macExecutableAmd64
+            target: :pkl-cli:macExecutableAmd64
           - os: macOS aarch64
             mode: Strict
             machine: macos-13-xlarge
-            target: macExecutableAarch64
+            target: :pkl-cli:macExecutableAarch64
           - os: Windows
             mode: Strict
             machine: windows-latest
-            target: windowsAmd64
+            target: :pkl-cli:windowsAmd64
 
     name: "Native CLI (${{ matrix.os }})"
     runs-on: ${{ matrix.machine }}
@@ -103,9 +103,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
           dependency-graph: generate-and-submit
           gradle-home-cache-cleanup: true
-          arguments: dependencies build -x test -x check --scan
-      - name: "🛠️ Dependency Graph"
-        uses: gradle/actions/dependency-submission@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+          arguments: ${{ matrix.target || ':pkl-cli:assembleNative' }}
         continue-on-error: true
       - name: "Artifact: Caches"
         uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0

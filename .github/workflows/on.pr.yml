@@ -73,7 +73,20 @@ jobs:
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
     permissions:
+      ## Needed for build graph publishing
       contents: "write"
+
+  ##
+  ## Job: Native Build
+  ##
+  native-build:
+    name: "Build"
+    uses: ./.github/workflows/job.native-build.yml
+    needs: [preflight-checks, dependency-graph]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+    permissions:
+      contents: "read"
 
   ##
   ## Job: API Check
