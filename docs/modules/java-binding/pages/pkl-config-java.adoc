@@ -37,7 +37,7 @@ Groovy::
 [source,groovy,subs="+attributes"]
 ----
 dependencies {
-  compile "org.pkl-lang:pkl-config-java:{pkl-artifact-version}"
+  implementation "org.pkl-lang:pkl-config-java:{pkl-artifact-version}"
 }
 
 ifdef::is-release-version[]
@@ -59,7 +59,7 @@ Kotlin::
 [source,kotlin,subs="+attributes"]
 ----
 dependencies {
-  compile("org.pkl-lang:pkl-config-java:{pkl-artifact-version}")
+  implementation("org.pkl-lang:pkl-config-java:{pkl-artifact-version}")
 }
 
 repositories {
