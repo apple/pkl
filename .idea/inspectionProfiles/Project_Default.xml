@@ -12,6 +12,7 @@
       <option name="REPORT_FIELDS" value="true" />
     </inspection_tool>
     <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="ClassEscapesItsScope" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="FieldMayBeFinal" enabled="true" level="INFORMATION" enabled_by_default="true">
       <scope name="AllExceptTruffleAst" level="WARNING" enabled="true" />
     </inspection_tool>
