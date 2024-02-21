@@ -33,6 +33,10 @@ private val kotlincArgs = listOf(
   "-Xjsr305=strict",
   "-Xjvm-default=all",
   "-Xextended-compiler-checks",
+  "-Xemit-jvm-type-annotations",
+  "-Xlambdas=indy",
+  "-Xsam-conversions=indy",
+  "-Xcontext-receivers",
 )
 
 // Configurations which are subject to dependency locking.
