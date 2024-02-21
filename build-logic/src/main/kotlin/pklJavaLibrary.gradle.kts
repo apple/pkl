@@ -5,6 +5,7 @@ import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
   id("pklJvmLibrary")
+  id("com.diffplug.spotless")
 }
 
 // Main build info extension.
@@ -24,13 +25,11 @@ if (info.analysis.enablePmd) apply(plugin = "pmd").also {
   }
 }
 
-if (info.analysis.enabled) apply(plugin = "com.diffplug.spotless").also {
-  configure<SpotlessExtension> {
-    java {
-      googleJavaFormat(libs.versions.googleJavaFormat.get())
-      targetExclude("**/generated/**", "**/build/**")
-      licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
-    }
+configure<SpotlessExtension> {
+  java {
+    googleJavaFormat(libs.versions.googleJavaFormat.get())
+    targetExclude("**/generated/**", "**/build/**")
+    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
   }
 }
 

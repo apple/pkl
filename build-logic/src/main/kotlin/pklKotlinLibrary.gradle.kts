@@ -8,7 +8,9 @@ import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
+  id("com.diffplug.spotless")
   id("org.jetbrains.kotlinx.kover")
+  id("io.gitlab.arturbosch.detekt")
   kotlin("jvm")
   kotlin("plugin.serialization")
 }
@@ -28,31 +30,24 @@ dependencies {
   api(libs.bundles.kotlin.stdlib)
 }
 
-if (build.analysis.enabled) apply(plugin = "io.gitlab.arturbosch.detekt").also {
-  configure<DetektExtension> {
-    toolVersion = libs.versions.detekt.get()
-    config.from(rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
-    baseline = project.layout.projectDirectory.file("detekt-baseline.xml").asFile
-    buildUponDefaultConfig = true
-    enableCompilerPlugin = true
-  }
+configure<DetektExtension> {
+  toolVersion = libs.versions.detekt.get()
+  config.from(rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
+  baseline = project.layout.projectDirectory.file("detekt-baseline.xml").asFile
+  buildUponDefaultConfig = true
+  enableCompilerPlugin = true
 }
-if (build.analysis.enabled) apply(plugin = "com.diffplug.spotless").also {
-  configure<SpotlessExtension> {
-    kotlin {
-      ktfmt(libs.versions.ktfmt.get()).googleStyle()
-      targetExclude("**/generated/**", "**/build/**")
-      licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
-    }
-    kotlinGradle {
-      isEnforceCheck = false
-      ktfmt(libs.versions.ktfmt.get()).googleStyle()
-    }
+
+configure<SpotlessExtension> {
+  kotlin {
+    ktfmt(libs.versions.ktfmt.get()).googleStyle()
+    targetExclude("**/generated/**", "**/build/**")
+    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
   }
 }
 
 tasks.withType<Detekt>().configureEach {
-  autoCorrect = findProperty("autofixDetekt") as? String == "true"
+  autoCorrect = build.analysis.autofix
   jvmTarget = build.jvm.lib.target.toString()
 
   reports {
