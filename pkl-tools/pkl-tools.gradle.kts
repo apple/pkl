@@ -26,7 +26,7 @@ dependencies {
   api(projects.pklConfigJava)
   api(projects.pklCore)
   api(projects.pklDoc)
-  
+
   // used by `pklFatJar` plugin (ideally this would be inferred automatically)
   firstPartySourcesJars(project(":pkl-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-codegen-java", "sourcesJar"))
