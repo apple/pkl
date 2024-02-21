@@ -44,7 +44,7 @@ buildCache {
 
   System.getenv("BUILDLESS_API_KEY")?.ifBlank { null }?.let { apiKey ->
     remote<HttpBuildCache> {
-      isEnabled = extra.properties["remoteCache"] == "true"
+      isEnabled = extra.properties["remoteCache"] == "true" || !System.getenv("CI").isNullOrBlank()
       isPush = extra.properties["cachePush"] != "false"
       url = uri("https://gradle.less.build/cache/generic")
       credentials {
