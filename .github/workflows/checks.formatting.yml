@@ -22,6 +22,9 @@ name: "Formatting"
       GRADLE_CONFIGURATION_KEY:
         description: "Gradle cache key"
         required: false
+      BUILDLESS_APIKEY:
+        description: "Buildless key"
+        required: false
 
 permissions:
   contents: "read"
