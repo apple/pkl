@@ -34,7 +34,13 @@ val verifyGraalVm by tasks.registering(Verify::class) {
 
   dependsOn(downloadGraalVm)
   src(downloadFile)
-  checksum(buildInfo.libs.findVersion("graalVmSha256-${buildInfo.graalVm.osName}-${buildInfo.graalVm.arch}").get().toString())
+
+  // set checksum
+  val checksumKey = "graalVmSha256-${buildInfo.graalVm.osName}-${buildInfo.graalVm.arch}"
+  (buildInfo.libs.findVersion(checksumKey)
+    .orElse(null) ?: error("Failed to locate GraalVM at key: `$checksumKey`"))
+    .toString().let { checksum(it) }
+
   algorithm("SHA-256")
 }
 
@@ -58,14 +64,6 @@ val installGraalVm by tasks.registering {
         workingDir = file(distroDir)
         executable = "tar"
         args("--strip-components=1", "-xzf", downloadFile)
-      }
-
-      val distroBinDir = if (buildInfo.os.isMacOsX) "$distroDir/Contents/Home/bin" else "$distroDir/bin"
-
-      println("Installing native-image into $distroDir")
-      exec {
-        executable = "$distroBinDir/gu"
-        args("install", "--no-progress", "native-image")
       }
 
       println("Creating symlink $installDir for $distroDir")

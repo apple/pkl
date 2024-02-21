@@ -13,10 +13,18 @@ plugins {
 }
 
 description = "Pkl command line interface entrypoint"
-val entrypoint = "org.pkl.cli.Main"
+private val entrypoint = "org.pkl.cli.Main"
 
 // make Java executable available to other subprojects
-val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
+private val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
+
+val enableExperimental = false
+val extraJavacArgs: List<String> = listOf()
+val experimentalGvmNativeFlags: List<String> = listOf()
+
+private val nativeImageExclusions = listOf(
+  libs.graalSdk,
+)
 
 publishing {
   publications {
@@ -38,7 +46,6 @@ val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 private fun stagedDir(dir: String): File = layout.buildDirectory.dir(dir).get().asFile
 
 dependencies {
-  compileOnly(libs.svm)
   compileOnly(libs.kotlinStdlib)
 
   // CliEvaluator exposes PClass
@@ -59,6 +66,11 @@ dependencies {
   }
 
   testImplementation(projects.pklCommonsTest)
+
+  compileOnly(libs.svm)
+  compileOnly(libs.svmTruffle)
+  compileOnly(libs.truffleApi)
+  compileOnly(libs.truffleRuntime)
 
   stagedMacAmd64Executable(files(stagedDir("executable/pkl-macos-amd64")))
   stagedMacAarch64Executable(files(stagedDir("executable/pkl-macos-aarch64")))
@@ -137,9 +149,31 @@ val testStartJavaExecutable by tasks.registering(Exec::class) {
   doLast { outputFile.writeText("OK") }
 }
 
+tasks.compileJava {
+  options.compilerArgumentProviders.add(CommandLineArgumentProvider {
+    extraJavacArgs
+  })
+}
+
 tasks.check {
   dependsOn(testStartJavaExecutable)
 }
+
+val kernel32Init = listOf(
+  "org.msgpack.core.buffer.DirectBufferAccess",
+  "org.jline.nativ.Kernel32",
+  "org.jline.nativ.Kernel32${'$'}COORD",
+  "org.jline.nativ.Kernel32${'$'}SMALL_RECT",
+  "org.jline.nativ.Kernel32${'$'}INPUT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}KEY_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}MENU_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}MOUSE_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}INPUT_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}FOCUS_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}WINDOW_BUFFER_SIZE_RECORD",
+  "org.jline.nativ.Kernel32${'$'}CHAR_INFO",
+  "org.jline.nativ.Kernel32${'$'}CONSOLE_SCREEN_BUFFER_INFO",
+).joinToString(",")
 
 fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
   enabled = isEnabled
@@ -155,7 +189,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   // JARs to exclude from the class path for the native-image build.
   val exclusions =
     if (buildInfo.graalVm.isGraal22) emptyList()
-    else listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
+    else nativeImageExclusions.map { it.get().module.name }
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
@@ -168,7 +202,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         ,"-H:IncludeResources=org/pkl/commons/cli/commands/IncludedCARoots.pem"
         //,"-H:IncludeResources=org/pkl/core/Release.properties"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
-        ,"--macro:truffle"
+        ,"--macro:truffle-svm"
         ,"-H:Class=org.pkl.cli.Main"
         ,"-H:Name=${outputFile.name}"
         //,"--native-image-info"
@@ -210,7 +244,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         ,"-J-XX:ActiveProcessorCount=${
           Runtime.getRuntime().availableProcessors() / (if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1)
         }"
-    ) + extraArgs
+    ) + extraArgs + extraJavacArgs + (if (enableExperimental) experimentalGvmNativeFlags else emptyList())
   })
 }
 
@@ -220,7 +254,10 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22,
-    layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile
+    layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile,
+    listOf(
+      "--initialize-at-run-time=$kernel32Init",
+    )
   )
 }
 
@@ -235,8 +272,8 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
     buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
     layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
     listOf(
-      "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
-      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
+      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath",
+      "--initialize-at-run-time=$kernel32Init",
     )
   )
 }
@@ -247,7 +284,10 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isLinux && buildInfo.arch == "amd64",
-    layout.buildDirectory.file("executable/pkl-linux-amd64").get().asFile
+    layout.buildDirectory.file("executable/pkl-linux-amd64").get().asFile,
+    listOf(
+      "--initialize-at-run-time=$kernel32Init",
+    )
   )
 }
 
@@ -260,7 +300,10 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isLinux && buildInfo.arch == "aarch64",
-    layout.buildDirectory.file("executable/pkl-linux-aarch64").get().asFile
+    layout.buildDirectory.file("executable/pkl-linux-aarch64").get().asFile,
+    listOf(
+      "--initialize-at-run-time=$kernel32Init",
+    )
   )
 }
 
@@ -278,7 +321,8 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
         "--static",
         "--libc=musl",
         "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
-        "-Dorg.pkl.compat=alpine"
+        "-Dorg.pkl.compat=alpine",
+        "--initialize-at-run-time=$kernel32Init",
       )
   )
 }
