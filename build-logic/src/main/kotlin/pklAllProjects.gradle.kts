@@ -2,6 +2,7 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+@Suppress("unused")
 val buildInfo = extensions.create<BuildInfo>("buildInfo", project)
 
 // Default JVM bytecode target, and Java language level.

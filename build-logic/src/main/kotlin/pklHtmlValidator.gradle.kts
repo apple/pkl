@@ -1,16 +1,18 @@
+import org.gradle.accessors.dm.LibrariesForLibs
+
 plugins {
   base
 }
 
 val htmlValidator = extensions.create<HtmlValidator>("htmlValidator", project)
 
-val buildInfo = project.extensions.getByType<BuildInfo>()
+val libs = the<LibrariesForLibs>()
 
 val validatorConfiguration: Configuration = configurations.create("validator") {
   resolutionStrategy.eachDependency {
     if (requested.group == "log4j" && requested.name == "log4j") {
       @Suppress("UnstableApiUsage")
-      useTarget(buildInfo.libs.findLibrary("log4j12Api").get())
+      useTarget(libs.log4j12Api)
       because("mitigate critical security vulnerabilities")
     }
   }
@@ -18,7 +20,7 @@ val validatorConfiguration: Configuration = configurations.create("validator") {
 
 dependencies {
   @Suppress("UnstableApiUsage")
-  validatorConfiguration(buildInfo.libs.findLibrary("nuValidator").get()) {
+  validatorConfiguration(libs.nuValidator) {
     // we only want jetty-util and jetty-util-ajax (with the right version)
     // couldn't find a more robust way to express this
     exclude(group = "org.eclipse.jetty", module = "jetty-continuation")

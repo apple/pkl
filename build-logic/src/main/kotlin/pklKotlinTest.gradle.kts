@@ -10,15 +10,14 @@ plugins {
 }
 
 val libs = the<LibrariesForLibs>()
-val buildInfo = project.extensions.getByType<BuildInfo>()
 
 dependencies {
-  testImplementation(buildInfo.libs.findLibrary("assertj").get())
-  testImplementation(buildInfo.libs.findLibrary("junitApi").get())
-  testImplementation(buildInfo.libs.findLibrary("junitParams").get())
-  testImplementation(buildInfo.libs.findLibrary("kotlinStdLib").get())
+  testImplementation(libs.assertj)
+  testImplementation(libs.junitApi)
+  testImplementation(libs.junitParams)
+  testImplementation(libs.kotlinStdlib)
 
-  testRuntimeOnly(buildInfo.libs.findLibrary("junitEngine").get())
+  testRuntimeOnly(libs.junitEngine)
 }
 
 tasks.withType<Test>().configureEach {
@@ -44,9 +43,9 @@ tasks.withType<Test>().configureEach {
     override fun beforeTest(testDescriptor: TestDescriptor) {}
     override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
 
-    // print report link at end of task, not just at end of build
+    // print report link at the end of the task, not just at the end of the build
     override fun afterSuite(descriptor: TestDescriptor, result: TestResult) {
-      if (descriptor.parent != null) return // only interested in overall result
+      if (descriptor.parent != null) return // only interested in the overall result
 
       if (result.resultType == TestResult.ResultType.FAILURE) {
         println("\nThere were failing tests. See the report at: ${fixFileUri(testTask.reports.html.entryPoint.toURI())}")

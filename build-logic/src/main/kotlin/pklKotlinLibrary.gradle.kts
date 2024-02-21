@@ -28,7 +28,6 @@ private val enableAnalysis =
 
 // Version Catalog libraries, and build info.
 private val libs = the<LibrariesForLibs>()
-private val buildInfo = project.extensions.getByType<BuildInfo>()
 
 dependencies {
   // At least some of our kotlin APIs contain Kotlin stdlib types
@@ -36,7 +35,7 @@ dependencies {
   // So let's be conservative and default to `api` for now.
   // For Kotlin APIs that only target Kotlin users (e.g., pkl-config-kotlin),
   // it won't make a difference.
-  api(buildInfo.libs.findLibrary("kotlinStdLib").get())
+  api(libs.bundles.kotlinStdlib)
 }
 
 if (enableAnalysis) apply(plugin = "io.gitlab.arturbosch.detekt").also {

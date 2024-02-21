@@ -64,15 +64,16 @@ assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
+detektPlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
-graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
+graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
+jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
 javaPoet = { group = "com.squareup", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
-jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
 jlineTerminalJansi = { group = "org.jline", name = "jline-terminal-jansi", version.ref = "jline" }
@@ -81,23 +82,23 @@ junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.re
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
 kotlinCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable", version.ref = "kotlin" }
-kotlinScriptingCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-compiler-embeddable", version.ref = "kotlin" }
-kotlinScriptingJsr223 = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlin" }
-kotlinStdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPluginKover = { group = "org.jetbrains.kotlinx", name = "kover-gradle-plugin", version.ref = "kover" }
 kotlinPluginSerialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
-kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlinScriptingCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-compiler-embeddable", version.ref = "kotlin" }
+kotlinScriptingJsr223 = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlin" }
+kotlinStdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+kotlinStdlibJdk7 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk7", version.ref = "kotlin" }
+kotlinStdlibJdk8 = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlinStdlibCommon = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
-nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
-# to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
-detektPlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
+nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }  # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 owaspPlugin = { group = "org.owasp", name = "dependency-check-gradle", version.ref = "owasp" }
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 powerassertPlugin = { group = "com.bnorm.power", name = "kotlin-power-assert-plugin", version.ref = "powerassert" }
@@ -132,3 +133,12 @@ sigstore = { id = "dev.sigstore.sign", version.ref = "sigstore" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotlessPlugin"}
 testlogger = { id = "com.adarshr.test-logger", version.ref = "testlogger" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
+
+[bundles]
+
+kotlin-stdlib = [
+  "kotlinStdlib",
+  "kotlinStdlibCommon",
+  "kotlinStdlibJdk7",
+  "kotlinStdlibJdk8",
+]

@@ -64,7 +64,7 @@ dependencies {
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
-  add("generatorImplementation", libs.kotlinStdLib)
+  add("generatorImplementation", libs.kotlinStdlib)
 
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
