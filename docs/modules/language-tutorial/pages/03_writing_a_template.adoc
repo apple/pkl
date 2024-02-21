@@ -167,7 +167,7 @@ pklTutorialPart3 {
 
 ----
 
-Sadly, `pklTutorialParts.pkl` is a _rewrite_ of `pklTutorial.pkl`.
+Sadly, `pklTutorialParts.pkl` is a _rewrite_ of `pklTutorialPart3.pkl`.
 It creates a separate `class TutorialPart` and instantiates three properties with it (`pklTutorialPart1`, `pklTutorialPart2` and `pklTutorialPart3`).
 In doing so, it implicitly moves everything "down" one level (`pklTutorialPart3` is now a property in the module `pklTutorialParts`, whereas above, in `pklTutorialPart3.pkl` it was its own module).
 This is not very DRY.
@@ -262,7 +262,7 @@ Suppose you want to define what a live workshop for this tutorial looks like.
 Consider this example:
 
 [source,{pkl}]
-.workshop2023.pkl
+.workshop2024.pkl
 ----
 title = "Pkl: Configure your Systems in New Ways"
 interactive = true
@@ -278,7 +278,7 @@ duration = 1.5.h
 
 event {
   name = "Migrating Birds between hemispheres"
-  year = 2023
+  year = 2024
 }
 
 instructors {
@@ -288,11 +288,11 @@ instructors {
 
 sessions {
   new {
-    date = "8/14/2023"
+    date = "2/1/2024"
     time = 30.min
   }
   new {
-    date = "8/15/2023"
+    date = "2/1/2024"
     time = 30.min
   }
 }
