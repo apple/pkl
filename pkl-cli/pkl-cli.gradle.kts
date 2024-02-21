@@ -1,5 +1,5 @@
 // https://youtrack.jetbrains.com/issue/KTIJ-19369
-@file:Suppress("DSL_SCOPE_VIOLATION")
+@file:Suppress("DSL_SCOPE_VIOLATION", "UnstableApiUsage")
 
 import org.gradle.configurationcache.extensions.capitalized
 
@@ -10,6 +10,7 @@ plugins {
   id("pklPublishLibrary")
   id("pklNativeBuild")
   `maven-publish`
+  distribution
 
   id(libs.plugins.shadow.get().pluginId)
   alias(libs.plugins.checksum)
@@ -253,13 +254,10 @@ val kernel32Init = listOf(
 
 fun createArchiveTasks(
   exec: Provider<Exec>,
-  isEnabled: Boolean,
   outputFile: File,
   release: Boolean = enableRelease,
 ) {
   val filenameBase = outputFile.nameWithoutExtension  // accounts for `.exe`
-  val zipName = "$filenameBase.zip"
-  val tgzName = "$filenameBase.tgz"
   val filenameSplit = filenameBase.split("-")
 
   // `pkl-macos-<arch>` -> `macos-<arch>-<release>`
@@ -267,37 +265,26 @@ fun createArchiveTasks(
     if (release) "opt" else "dev"
   )).joinToString("-")
 
-  // `macos-<arch>` -> `Macos<Arch>`
-  val taskPostfix = "${filenameSplit[1].capitalized()}${filenameSplit[2].capitalized()}"
-  val zipTaskName = "zipDist$taskPostfix"  // `zipDistMacosAmd64`
-  val tgzTaskName = "tarDist$taskPostfix"  // `tarDistMacosAmd64`
-  val distOutputDir = "distributions"
-  val zipOutputFile = layout.buildDirectory.file("$distOutputDir/$zipName")
-  val tgzOutputFile = layout.buildDirectory.file("$distOutputDir/$tgzName")
+  // `macos-<arch>` -> `macos<Arch>`
+  val taskPostfix = "${filenameSplit[1]}${filenameSplit[2].capitalized()}"
 
-  val zipTask = project.tasks.register(zipTaskName, Zip::class) {
-    group = "Distribution"
-    description = "Build zip distribution for native CLI with tag '$releaseTag'"
+  // `macos<Arch>` -> `macos<Arch>DistZip
+  val zipTaskName = "${taskPostfix}DistZip"  // `macosAmd64DistZip`
+  val tarTaskName = "${taskPostfix}DistTar"  // `macosAmd64DistTar`
 
-    this.isEnabled = isEnabled
-    dependsOn(exec)
-    from(exec.get().outputs.files)
-    into(zipOutputFile.get().asFile)
-    outputs.cacheIf { true }
-  }
-
-  val tarTask = project.tasks.register(tgzTaskName, Tar::class) {
-    group = "Distribution"
-    description = "Build tar distribution for native CLI with tag '$releaseTag'"
-
-    this.isEnabled = isEnabled
-    dependsOn(exec)
-    from(exec.get().outputs.files)
-    into(tgzOutputFile.get().asFile)
-    outputs.cacheIf { true }
+  distributions.create(taskPostfix) {
+    distributionBaseName = "pkl-cli"
+    distributionClassifier = releaseTag
+    contents {
+      from(layout.projectDirectory.dir("src/dist"), exec.get().outputs.files)
+      include("*")
+      rename {
+        if (!it.startsWith("pkl-")) it else "pkl"
+      }
+    }
   }
   exec.get().apply {
-    finalizedBy(zipTask, tarTask)
+    finalizedBy(zipTaskName, tarTaskName)
   }
 }
 
@@ -400,7 +387,6 @@ val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 
 createArchiveTasks(
   macExecutableAmd64,
-  buildInfo.os.isMacOsX,
   layout.buildDirectory.file("executable/pkl-macos-amd64").get().asFile,
 )
 
@@ -425,7 +411,6 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 
 createArchiveTasks(
   macExecutableAarch64,
-  buildInfo.os.isMacOsX,
   layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
 )
 
@@ -442,6 +427,11 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   )
 }
 
+createArchiveTasks(
+  linuxExecutableAmd64,
+  layout.buildDirectory.file("executable/pkl-linux-amd64").get().asFile,
+)
+
 /**
  * Builds the pkl CLI for linux/aarch64.
  *
@@ -457,6 +447,11 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
     )
   )
 }
+
+createArchiveTasks(
+  linuxExecutableAarch64,
+  layout.buildDirectory.file("executable/pkl-linux-aarch64").get().asFile,
+)
 
 /**
  * Builds a statically linked CLI for linux/amd64.
@@ -478,6 +473,11 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
   )
 }
 
+createArchiveTasks(
+  alpineExecutableAmd64,
+  layout.buildDirectory.file("executable/pkl-alpine-linux-amd64").get().asFile,
+)
+
 /**
  * Builds a statically linked CLI for Windows.
  *
@@ -495,6 +495,10 @@ val windowsAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
     )
   )
 }
+createArchiveTasks(
+  windowsAmd64,
+  layout.buildDirectory.file("executable/pkl-windows-amd64").get().asFile,
+)
 
 tasks.assembleNative {
   dependsOn(

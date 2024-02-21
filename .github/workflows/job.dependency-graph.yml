@@ -92,7 +92,6 @@ jobs:
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
-          dependency-graph: generate-and-submit
           gradle-home-cache-cleanup: true
           arguments: dependencies build -x test -x check --scan
       - name: "🛠️ Dependency Graph"

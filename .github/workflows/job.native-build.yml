@@ -22,13 +22,16 @@ jobs:
       matrix:
         os: [Ubuntu]
         mode: ["Strict"]
+        tag: ["linux-amd64"]
         machine: ["ubuntu-latest"]
         target: [":pkl-cli:linuxExecutableAmd64"]
         include:
           - os: macOS x64
+            tag: macos-x64
             machine: macos-13
             target: :pkl-cli:macExecutableAmd64
           - os: macOS aarch64
+            tag: macos-aarch64
             machine: macos-13-xlarge
             target: :pkl-cli:macExecutableAarch64
           # Windows build is currently broken.
@@ -36,6 +39,7 @@ jobs:
           # - os: Windows
           #   machine: windows-latest
           #   target: :pkl-cli:windowsAmd64
+          #   tag: windows-x64
 
     name: "Native CLI (${{ matrix.os }})"
     runs-on: ${{ matrix.machine }}
@@ -99,11 +103,18 @@ jobs:
         with:
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
-          dependency-graph: generate-and-submit
           gradle-home-cache-cleanup: true
           arguments: |
             ${{ matrix.target || ':pkl-cli:assembleNative' }}
             -PnativeRelease=true
+      - name: "Artifact: Native CLI"
+        if: success()
+        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          key: pkl-native-${{ matrix.tag }}
+          path: |
+            ./pkl-cli/build/distributions/pkl-*.zip
+            ./pkl-cli/build/distributions/pkl-*.tar
       - name: "Artifact: Caches"
         uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
