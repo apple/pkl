@@ -47,10 +47,8 @@ val verifyGraalVm by tasks.registering(Verify::class) {
 // minimize chances of corruption by extract-to-random-dir-and-flip-symlink
 val installGraalVm by tasks.registering {
   dependsOn(verifyGraalVm)
-
-  onlyIf {
-    !installDir.exists()
-  }
+  outputs.cacheIf { installDir.exists() }
+  onlyIf { !installDir.exists() }
 
   doLast {
     val distroDir = "$homeDir/${UUID.randomUUID()}"

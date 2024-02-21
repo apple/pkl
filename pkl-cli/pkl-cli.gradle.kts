@@ -29,6 +29,11 @@ val pgoInstrument = enablePgo
 val enableExperimental = true
 val profilesZip = layout.projectDirectory.file("pgo.zip")
 val enableRelease = findProperty("nativeRelease") == "true"
+val isNativeBuildEnabled = gradle.startParameter.taskNames.any { subject ->
+  subject.lowercase().let {
+    "native" in it || "executable" in it
+  }
+}
 val extraJavacArgs: List<String> = listOfNotNull(
   "--add-exports=org.graalvm.truffle.runtime.svm/com.oracle.svm.truffle=$module",
   if (oracleGvm) null else "--add-reads=org.graalvm.truffle.runtime.svm=$module",
@@ -82,7 +87,7 @@ val experimentalGvmNativeFlags: List<String> = listOf(
   )
 )
 
-private val nativeImageExclusions = listOf(
+val nativeImageExclusions = listOf(
   libs.graalSdk,
 )
 
@@ -189,6 +194,7 @@ val inflateProfiles by tasks.registering(Copy::class) {
 val releasePrep by tasks.registering {
   onlyIf { enableRelease }
   dependsOn(inflateProfiles)
+  outputs.cacheIf { true }
 }
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
@@ -223,12 +229,11 @@ val testStartJavaExecutable by tasks.registering(Exec::class) {
   // dummy output to satisfy up-to-date check
   val outputFile = layout.buildDirectory.dir("testStartJavaExecutable").get().asFile
   outputs.file(outputFile)
-  
+
   executable = javaExecutable.get().outputs.files.singleFile.toString()
   args("--version")
-  
+
   doFirst { outputFile.delete() }
-  
   doLast { outputFile.writeText("OK") }
 }
 
@@ -289,7 +294,7 @@ fun createArchiveTasks(
 }
 
 fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
-  enabled = isEnabled
+  enabled = isEnabled && isNativeBuildEnabled
   dependsOn(":installGraalVm", releasePrep)
 
   inputs.files(sourceSets.main.map { it.output })
@@ -500,15 +505,17 @@ createArchiveTasks(
   layout.buildDirectory.file("executable/pkl-windows-amd64").get().asFile,
 )
 
+val nativeTargets = listOf(
+  macExecutableAmd64,
+  macExecutableAarch64,
+  linuxExecutableAmd64,
+  linuxExecutableAarch64,
+  alpineExecutableAmd64,
+  windowsAmd64,
+)
+
 tasks.assembleNative {
-  dependsOn(
-    macExecutableAmd64,
-    macExecutableAarch64,
-    linuxExecutableAmd64,
-    linuxExecutableAarch64,
-    alpineExecutableAmd64,
-    windowsAmd64,
-  )
+  dependsOn(nativeTargets)
 }
 
 // make Java executable available to other subprojects
