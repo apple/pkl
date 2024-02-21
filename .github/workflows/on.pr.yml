@@ -58,6 +58,9 @@ jobs:
           BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
         with:
           cache-read-only: false
+          build-scan-publish: true
+          build-scan-terms-of-service-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-service-agree: "yes"
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
           arguments: |
             projects

@@ -109,6 +109,9 @@ jobs:
         env:
           CI: true
         with:
+          build-scan-publish: true
+          build-scan-terms-of-service-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-service-agree: "yes"
           cache-read-only: true
           cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
           gradle-home-cache-cleanup: true
