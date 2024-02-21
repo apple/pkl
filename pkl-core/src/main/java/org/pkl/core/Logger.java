@@ -15,12 +15,22 @@
  */
 package org.pkl.core;
 
+import java.util.logging.Level;
+
 /**
  * SPI for log messages emitted by the Pkl evaluator. Use {@link EvaluatorBuilder#setLogger} to set
  * a logger. See {@link Loggers} for predefined loggers.
  */
 @SuppressWarnings("unused")
 public interface Logger {
+  /** @return Whether the provided logging level is enabled; defaults to `false` */
+  default boolean isLevelEnabled(Level level) {
+    return false;
+  }
+
+  /** Logs a debug message of some kind. */
+  default void debug(String message) {}
+
   /** Logs the given message on level TRACE. */
   default void trace(String message, StackFrame frame) {}
 

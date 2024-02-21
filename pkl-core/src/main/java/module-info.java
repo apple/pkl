@@ -12,36 +12,33 @@
  * limitations under the License.
  */
 
-/** Pkl: Core. */
-@SuppressWarnings("module")
-open module pkl.core {
+/**
+ * Pkl: Core.
+ */
+@SuppressWarnings("module") open module pkl.core {
   requires java.base;
   requires java.naming;
+
   requires org.graalvm.nativeimage;
   requires org.graalvm.truffle;
+
   requires org.snakeyaml.engine.v2;
 
-  exports org.pkl.core.module to
-      pkl.cli;
-  exports org.pkl.core.packages to
-      pkl.cli;
-  exports org.pkl.core.project to
-      pkl.cli;
-  exports org.pkl.core.repl to
-      pkl.cli;
-  exports org.pkl.core.resource to
-      pkl.cli;
-  exports org.pkl.core.runtime to
-      pkl.cli;
-  exports org.pkl.core.stdlib.test.report to
-      pkl.cli;
-  exports org.pkl.core.util to
-      pkl.cli;
+  exports org.pkl.core.module to pkl.cli;
+  exports org.pkl.core.packages to pkl.cli;
+  exports org.pkl.core.project to pkl.cli;
+  exports org.pkl.core.repl to pkl.cli;
+  exports org.pkl.core.resource to pkl.cli;
+  exports org.pkl.core.runtime to pkl.cli;
+  exports org.pkl.core.stdlib.test.report to pkl.cli;
+  exports org.pkl.core.util to pkl.cli;
+  exports org.pkl.core.plugin;
   exports org.pkl.core;
 
   uses org.pkl.core.StackFrameTransformer;
   uses org.pkl.core.module.ModuleKeyFactory;
+  uses org.pkl.core.plugin.PklPlugin;
 
   provides com.oracle.truffle.api.provider.TruffleLanguageProvider with
-      org.pkl.core.runtime.VmLanguageProvider;
+    org.pkl.core.runtime.VmLanguageProvider;
 }

@@ -58,6 +58,7 @@ import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.antlr.PklParser.ExprContext;
+import org.pkl.core.plugins.PluginManager;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
@@ -70,8 +71,9 @@ public final class VmUtils {
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
 
-  private static final Engine PKL_ENGINE =
-      Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  private static final PluginManager PLUGIN_MANAGER = PluginManager.DEFAULT;
+
+  private static final VmEngineManager PKL_ENGINE = new VmEngineManager(PLUGIN_MANAGER);
 
   private static final Pattern DOC_COMMENT_LINE_START =
       Pattern.compile(
@@ -101,7 +103,7 @@ public final class VmUtils {
   }
 
   public static Context createContext(Runnable initializer) {
-    var context = Context.newBuilder("pkl").engine(PKL_ENGINE).build();
+    var context = PKL_ENGINE.get().build();
     context.initialize("pkl");
     context.enter();
     try {

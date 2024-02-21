@@ -56,6 +56,12 @@ public final class Loggers {
         stream.println(formatMessage("WARN", message, frame));
         stream.flush();
       }
+
+      @Override
+      public void debug(String message) {
+        stream.println(formatMessage("DEBUG", message));
+        stream.flush();
+      }
     };
   }
 
@@ -77,7 +83,39 @@ public final class Loggers {
     };
   }
 
+  /** Returns a logger that sends log messages to the logger for the provided class. */
+  @SuppressWarnings("DuplicatedCode")
+  public static Logger logger(Class<?> kls) {
+    return logger(kls.getName());
+  }
+
+  /** Returns a logger that sends log messages to the logger at the provided name. */
+  @SuppressWarnings("DuplicatedCode")
+  public static Logger logger(String name) {
+    var target = stdErr();
+    return new Logger() {
+      @Override
+      public void trace(String message, StackFrame frame) {
+        stdErr().trace(message, frame);
+      }
+
+      @Override
+      public void warn(String message, StackFrame frame) {
+        stdErr().warn(message, frame);
+      }
+
+      @Override
+      public void debug(String message) {
+        stdErr().debug(message);
+      }
+    };
+  }
+
   private static String formatMessage(String level, String message, StackFrame frame) {
     return "pkl: " + level + ": " + message + " (" + frame.getModuleUri() + ')';
+  }
+
+  private static String formatMessage(String level, String message) {
+    return "pkl: " + level + ": " + message + " (debug)";
   }
 }
