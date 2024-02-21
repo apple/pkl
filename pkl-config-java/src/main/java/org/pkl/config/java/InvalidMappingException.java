@@ -24,9 +24,9 @@ import java.lang.reflect.Type;
  * <p>When this happens, the most likely explanation is that the generated code is not up-to-date.
  */
 public class InvalidMappingException extends RuntimeException {
-  String pklName;
+  private final String pklName;
 
-  String javaName;
+  private final String javaName;
 
   public InvalidMappingException(String pklName, String javaName, Exception cause) {
     super(cause);
