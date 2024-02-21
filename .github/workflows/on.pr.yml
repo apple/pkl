@@ -78,6 +78,19 @@ jobs:
       contents: "write"
 
   ##
+  ## Job: Tests
+  ##
+  pr-tests:
+    name: "Tests"
+    uses: ./.github/workflows/job.tests.yml
+    needs: [preflight-checks, dependency-graph]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+    with:
+      native: false
+
+  ##
   ## Job: Native Build
   ##
   native-build:

@@ -1,0 +1,119 @@
+name: "Tests"
+
+"on":
+  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      native:
+        description: "Native Tests"
+        default: false
+        type: boolean
+      runner:
+        description: "Runner"
+        default: "ubuntu-latest"
+        type: string
+
+    secrets:
+      GRADLE_CONFIGURATION_KEY:
+        description: "Gradle cache key"
+        required: false
+      CODECOV_TOKEN:
+        description: "Codecov token"
+        required: false
+      BUILDLESS_APIKEY:
+        description: "Buildless key"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  ##
+  ## Job: Testsuite
+  ##
+  gradle:
+    name: "Testsuite"
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+
+    defaults:
+      run:
+        shell: bash
+
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+
+    steps:
+      - name: "Setup: Harden Runner"
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+      - name: "Setup: Checkout"
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: "Setup: Cache Restore (Build)"
+        id: cache-restore-build
+        uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          key: pkl-v1-build-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: |
+            pkl-v1-build-${{ hashFiles('gradle/libs.versions.toml') }}
+            pkl-v1-build-
+            pkl-v1-
+            pkl-
+          path: |
+            .gradle/
+            build/
+            .codebase/
+            .kotlin/
+            ./*/build/bin
+            ./*/build/classes
+            ./*/build/kotlin
+            ./*/build/klib
+            ./*/build/generated
+            ./*/build/generated-sources
+      - name: "Setup: Java 21"
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        with:
+          distribution: 'adopt'
+          java-version: '21'
+      - name: "Setup: GraalVM (Java 21)"
+        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
+        with:
+          distribution: "graalvm"
+          java-version: 21
+          check-for-updates: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          set-java-home: 'false'
+      - name: "🛠️ Build"
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+        id: gradlebuild
+        env:
+          CI: true
+        with:
+          cache-read-only: true
+          cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+          gradle-home-cache-cleanup: true
+          arguments: test koverVerify reports -x check
+      - name: "Reporting: Coverage"
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
+        continue-on-error: true
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: elide-dev/pkl
+      - name: "Artifact: Caches"
+        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+          path: |
+            .gradle/
+            build/
+            .codebase/
+            .kotlin/
+            ./*/build/bin
+            ./*/build/classes
+            ./*/build/kotlin
+            ./*/build/klib
+            ./*/build/generated
+            ./*/build/generated-sources
