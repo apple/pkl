@@ -91,7 +91,7 @@ dependencies {
   }
 }
 
-val clean by tasks.registering(Delete::class) {
+val clean by tasks.getting(Delete::class) {
   delete(layout.buildDirectory)
 }
 
@@ -143,7 +143,7 @@ val reports by tasks.registering {
   dependsOn(tasks.named("allTestsReport"))
 }
 
-val check by tasks.registering {
+val check: Task by tasks.getting {
   description = "Runs all checks"
   group = "Verification"
 
