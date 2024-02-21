@@ -28,6 +28,7 @@ plugins {
 }
 
 group = "org.pkl-lang"
+
 description = "Configuration that is Programmable, Scalable, and Safe"
 
 nexusPublishing {
@@ -39,16 +40,19 @@ nexusPublishing {
   }
 }
 
-val apiLockedProjects = listOf(
-  projects.pklCli,
-  projects.pklConfigKotlin,
-  projects.pklGradle,
-).map { it.name }
+val apiLockedProjects =
+  listOf(
+      projects.pklCli,
+      projects.pklConfigKotlin,
+      projects.pklGradle,
+    )
+    .map { it.name }
 
 apiValidation {
-  ignoredProjects = ignoredProjects.plus(allprojects.filter {
-    it.name !in apiLockedProjects
-  }.map { it.name }).toMutableSet()
+  ignoredProjects =
+    ignoredProjects
+      .plus(allprojects.filter { it.name !in apiLockedProjects }.map { it.name })
+      .toMutableSet()
 }
 
 idea {
@@ -76,25 +80,27 @@ spotless {
 
 dependencies {
   listOf(
-    projects.pklCli,
-    projects.pklCodegenJava,
-    projects.pklCodegenKotlin,
-    projects.pklCommons,
-    projects.pklCommonsCli,
-    projects.pklConfigJava,
-    projects.pklConfigKotlin,
-    projects.pklDoc,
-    projects.pklExecutor,
-    projects.pklGradle,
-    projects.pklServer,
-    projects.pklTools,
-  ).forEach {
-    kover(it)
-    testReportAggregation(it)
-  }
+      projects.pklCli,
+      projects.pklCodegenJava,
+      projects.pklCodegenKotlin,
+      projects.pklCommons,
+      projects.pklCommonsCli,
+      projects.pklConfigJava,
+      projects.pklConfigKotlin,
+      projects.pklDoc,
+      projects.pklExecutor,
+      projects.pklGradle,
+      projects.pklServer,
+      projects.pklTools,
+    )
+    .forEach {
+      kover(it)
+      testReportAggregation(it)
+    }
 }
 
-val message = """
+val message =
+  """
 ====
 Gradle version : ${gradle.gradleVersion}
 Java version   : ${System.getProperty("java.version")}
@@ -109,7 +115,9 @@ Git Commit ID          : ${buildInfo.commitId}
 ====
 """
 
-val formattedMessage = message.replace("\n====", "\n" + "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
+val formattedMessage =
+  message.replace("\n====", "\n" + "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
+
 logger.info(formattedMessage)
 
 detekt {
@@ -121,32 +129,27 @@ detekt {
 
 dependencyCheck {
   nvd.apiKey = System.getenv("NVD_API_KEY")
-  suppressionFiles = listOf(
-    "config/owasp/suppressions.xml"
-  )
+  suppressionFiles = listOf("config/owasp/suppressions.xml")
 }
 
-val allTestsReport by reporting.reports.creating(AggregateTestReport::class) {
-  testType = TestSuiteType.UNIT_TEST
-}
+val allTestsReport by
+  reporting.reports.creating(AggregateTestReport::class) { testType = TestSuiteType.UNIT_TEST }
 
 tasks {
-  val clean by getting(Delete::class) {
-    delete(layout.buildDirectory)
-  }
+  val clean by getting(Delete::class) { delete(layout.buildDirectory) }
 
-  val printVersion by registering {
-    doFirst { println(buildInfo.pklVersion) }
-  }
+  val printVersion by registering { doFirst { println(buildInfo.pklVersion) } }
 
   // --- Tasks: Detekt
   //
-  val detektMergeSarif: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
-    output.set(layout.buildDirectory.file("reports/detekt/detekt.sarif"))
-  }
-  val detektMergeXml: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
-    output.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
-  }
+  val detektMergeSarif: TaskProvider<ReportMergeTask> by
+    registering(ReportMergeTask::class) {
+      output.set(layout.buildDirectory.file("reports/detekt/detekt.sarif"))
+    }
+  val detektMergeXml: TaskProvider<ReportMergeTask> by
+    registering(ReportMergeTask::class) {
+      output.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
+    }
   withType(Detekt::class) detekt@{
     finalizedBy(detektMergeSarif, detektMergeXml)
     reports.sarif.required = true

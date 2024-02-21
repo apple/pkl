@@ -16,7 +16,9 @@
 package org.pkl.core.runtime;
 
 public class VmInfo {
-  private VmInfo() { /* no instantiation */ }
+  private VmInfo() {
+    /* no instantiation */
+  }
 
   /** Pkl core engine version */
   public static final String PKL_CORE_VERSION = "0.26.0-dev";
