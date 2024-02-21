@@ -29,6 +29,7 @@ private val javacArgs = listOf(
 private val kotlincArgs = listOf(
   "-Xjsr305=strict",
   "-Xjvm-default=all",
+  "-Xextended-compiler-checks",
 )
 
 // Configurations which are subject to dependency locking.
