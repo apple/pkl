@@ -38,7 +38,7 @@ tasks.jar {
 }
 
 // These are toolchain-level settings; for artifact targets, see convention plugins.
-private val defaultJvmTarget = "11"
+private val defaultJvmToolchainTarget = "21"
 private val defaultKotlinTarget = "1.9"
 
 // Toolchain Kotlin target.
@@ -47,7 +47,7 @@ private val kotlinVersion =
 
 // JVM toolchain defaults, properties, and resolved configuration.
 private val javaToolchainVersion =
-  (findProperty("javaToolchainTarget") as? String ?: defaultJvmTarget)
+  (findProperty("javaToolchainTarget") as? String ?: defaultJvmToolchainTarget)
 
 java {
   sourceCompatibility = JavaVersion.toVersion(javaToolchainVersion)

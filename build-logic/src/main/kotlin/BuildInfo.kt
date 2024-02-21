@@ -18,9 +18,12 @@ private const val htmlReportingBuildProperty = "htmlReporting"
 // JVM target, vendor, and bytecode defaults and properties.
 private const val defaultJvmTarget = "11"
 private const val defaultJvmToolchain = "21"
+private const val defaultJvmEntrypointTarget = "21"
+private const val defaultKotlinTarget = "1.9"
 private const val javaTargetProperty = "javaTarget"
 private const val javaEntrypointProperty = "javaEntrypointTarget"
 private const val javaToolchainProperty = "javaToolchainTarget"
+private const val kotlinVersionProperty = "kotlinTarget"
 private val jvmVendor = JvmVendorSpec.ADOPTIUM
 
 // `buildInfo` in main build scripts
@@ -36,31 +39,46 @@ open class BuildInfo(private val project: Project) {
     val vendor: JvmVendorSpec
   }
 
+  interface KotlinSettings : JvmTargetInfo {
+    val kotlinTarget: String
+  }
+
+  interface EntrypointSettings : JvmTargetInfo, KotlinSettings
+
   interface JvmSettings {
     val lib: JvmTargetInfo
-    val entrypoint: JvmTargetInfo
+    val kotlin: KotlinSettings
+    val entrypoint: EntrypointSettings
     val toolchain: JvmToolchain
   }
 
   inner class Jvm : JvmSettings {
     // JVM toolchain defaults, properties, and resolved configuration.
     private val targetVersion =
-      (project.findProperty(javaTargetProperty) as? String ?: defaultJvmTarget)
+      (project.findProperty(javaTargetProperty) as? String ?: defaultJvmTarget).toInt()
     private val toolchainTarget =
-      (project.findProperty(javaToolchainProperty) as? String ?: defaultJvmToolchain)
+      (project.findProperty(javaToolchainProperty) as? String ?: defaultJvmToolchain).toInt()
     private val entrypointVersion =
-      (project.findProperty(javaEntrypointProperty) as? String ?: defaultJvmTarget)
+      (project.findProperty(javaEntrypointProperty) as? String ?: defaultJvmEntrypointTarget).toInt()
+    private val kotlinVersion =
+      (project.findProperty(kotlinVersionProperty) as? String ?: defaultKotlinTarget)
 
-    override val lib: JvmTargetInfo get() = object : JvmTargetInfo {
-      override val target: Int get() = targetVersion.toInt()
+    override val kotlin: KotlinSettings get() = object : KotlinSettings {
+      override val target: Int get() = targetVersion
+      override val kotlinTarget: String get() = kotlinVersion
     }
 
-    override val entrypoint: JvmTargetInfo get() = object : JvmTargetInfo {
-      override val target: Int get() = entrypointVersion.toInt()
+    override val lib: JvmTargetInfo get() = object : JvmTargetInfo {
+      override val target: Int get() = targetVersion
+    }
+
+    override val entrypoint: EntrypointSettings get() = object : EntrypointSettings {
+      override val target: Int get() = entrypointVersion
+      override val kotlinTarget: String get() = kotlinVersion
     }
 
     override val toolchain: JvmToolchain get() = object : JvmToolchain {
-      override val target: Int get() = toolchainTarget.toInt()
+      override val target: Int get() = toolchainTarget
       override val vendor: JvmVendorSpec get() = jvmVendor
     }
   }
@@ -77,6 +95,9 @@ open class BuildInfo(private val project: Project) {
 
     val sarifReporting = project.findProperty(sarifReportingBuildProperty) == "true"
     val htmlReporting = project.findProperty(htmlReportingBuildProperty) == "true"
+
+    // Whether to enable PMD.
+    val enablePmd = enabled && (project.findProperty("enablePmd") == "true")
   }
 
   inner class GraalVm {
@@ -160,6 +181,18 @@ open class BuildInfo(private val project: Project) {
 
   val isCiBuild: Boolean by lazy {
     System.getenv("CI") != null
+  }
+
+  val isPublishing: Boolean by lazy {
+    project.gradle.startParameter.taskNames.any { "publish" in it.lowercase() }
+  }
+
+  val isTesting: Boolean by lazy {
+    project.gradle.startParameter.taskNames.any {
+      it.lowercase().let { lower ->
+        "test" in lower || "check" in lower
+      }
+    }
   }
 
   val isReleaseBuild: Boolean by lazy {

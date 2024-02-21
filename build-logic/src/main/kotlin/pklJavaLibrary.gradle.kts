@@ -7,18 +7,14 @@ plugins {
   id("pklJvmLibrary")
 }
 
+// Main build info extension.
+val info = the<BuildInfo>()
+
 // Version catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
-// Properties which govern analysis.
-private val enableAnalysisProperty = "enableAnalysis"
-private val isPublishing = gradle.startParameter.taskNames.any { "publish" in it.lowercase() }
-private val enableAnalysis =
-  (findProperty(enableAnalysisProperty) == "true" || "check" in gradle.startParameter.taskNames)
-private val enablePmd = (findProperty("enablePmd") == "true")
-
 // Conditional plugin application.
-if (enableAnalysis && enablePmd) apply(plugin = "pmd").also {
+if (info.analysis.enablePmd) apply(plugin = "pmd").also {
   configure<PmdExtension> {
     isConsoleOutput = false
     toolVersion = libs.versions.pmd.get()
@@ -28,7 +24,7 @@ if (enableAnalysis && enablePmd) apply(plugin = "pmd").also {
   }
 }
 
-if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
+if (info.analysis.enabled) apply(plugin = "com.diffplug.spotless").also {
   configure<SpotlessExtension> {
     java {
       googleJavaFormat(libs.versions.googleJavaFormat.get())
@@ -40,7 +36,7 @@ if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
 
 tasks {
   // No need to run PMD on tests.
-  if (enableAnalysis) findByName("pmdTest")?.configure<Task> {
+  if (info.analysis.enabled) findByName("pmdTest")?.configure<Task> {
     enabled = false
   }
 
@@ -65,7 +61,7 @@ tasks {
 
   // Signing is only needed if we are publishing.
   withType(Sign::class.java).configureEach {
-    onlyIf { isPublishing }
+    onlyIf { info.isPublishing }
   }
 
   // Javadoc JARs are only needed if we are publishing.
@@ -74,6 +70,6 @@ tasks {
     source = sourceSets.main.get().allJava
     title = "${project.name} ${project.version} API"
     (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
-    onlyIf { isPublishing }
+    onlyIf { info.isPublishing }
   }
 }
