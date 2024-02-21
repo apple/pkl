@@ -70,7 +70,7 @@ configurations {
   all {
     // don't spend the extra cycles to verify dependencies for linters
     if ("spotless" in name) resolutionStrategy {
-      disableDependencyVerification()
+      deactivateDependencyLocking()
     }
 
     // don't verify or lock detached configurations

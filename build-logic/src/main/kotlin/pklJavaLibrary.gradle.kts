@@ -14,14 +14,15 @@ val libs = the<LibrariesForLibs>()
 private val enableAnalysisProperty = "enableAnalysis"
 private val isPublishing = gradle.startParameter.taskNames.any { "publish" in it.lowercase() }
 private val enableAnalysis =
-  (findProperty(enableAnalysisProperty) == "true" || "check" in gradle.startParameter.taskNames )
+  (findProperty(enableAnalysisProperty) == "true" || "check" in gradle.startParameter.taskNames)
+private val enablePmd = (findProperty("enablePmd") == "true")
 
 // Conditional plugin application.
-if (enableAnalysis) apply(plugin = "pmd").also {
+if (enableAnalysis && enablePmd) apply(plugin = "pmd").also {
   configure<PmdExtension> {
-    isConsoleOutput = true
+    isConsoleOutput = false
     toolVersion = libs.versions.pmd.get()
-    threads = 4
+    threads = Runtime.getRuntime().availableProcessors()
     isIgnoreFailures = true
     incrementalAnalysis = true
   }
@@ -39,7 +40,7 @@ if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
 
 tasks {
   // No need to run PMD on tests.
-  if (enableAnalysis) named("pmdTest") {
+  if (enableAnalysis) findByName("pmdTest")?.configure<Task> {
     enabled = false
   }
 
