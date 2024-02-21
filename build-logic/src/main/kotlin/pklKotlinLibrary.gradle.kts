@@ -30,14 +30,6 @@ dependencies {
   api(libs.bundles.kotlin.stdlib)
 }
 
-configure<DetektExtension> {
-  toolVersion = libs.versions.detekt.get()
-  config.from(rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
-  baseline = project.layout.projectDirectory.file("detekt-baseline.xml").asFile
-  buildUponDefaultConfig = true
-  enableCompilerPlugin = true
-}
-
 configure<SpotlessExtension> {
   kotlin {
     ktfmt(libs.versions.ktfmt.get()).googleStyle()
@@ -46,7 +38,19 @@ configure<SpotlessExtension> {
   }
 }
 
+configure<DetektExtension> {
+  ignoreFailures = true
+  parallel = true
+  autoCorrect = build.analysis.autofix
+  toolVersion = libs.versions.detekt.get()
+  config.from(rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
+  baseline = project.layout.projectDirectory.file("detekt-baseline.xml").asFile
+  buildUponDefaultConfig = true
+  enableCompilerPlugin = true
+}
+
 tasks.withType<Detekt>().configureEach {
+  isEnabled = build.analysis.autofix
   autoCorrect = build.analysis.autofix
   jvmTarget = build.jvm.lib.target.toString()
 
@@ -56,24 +60,21 @@ tasks.withType<Detekt>().configureEach {
     html.required = build.analysis.htmlReporting
   }
 
-  if (build.analysis.xmlReporting) finalizedBy(reportMergeXml)
-  if (build.analysis.htmlReporting) finalizedBy(reportMergeSarif)
+  finalizedBy(reportMergeXml, reportMergeSarif)
 }
 
 val reportMergeXml by tasks.registering(ReportMergeTask::class) {
+  onlyIf { build.analysis.xmlReporting }
   output.set(rootProject.layout.buildDirectory.file("reports/detekt/detekt.xml"))
+  val detektTasks = tasks.withType<Detekt>()
+  dependsOn(detektTasks)
+  input.from(detektTasks.map { it.sarifReportFile })
 }
 
 val reportMergeSarif by tasks.registering(ReportMergeTask::class) {
-  output.set(rootProject.layout.buildDirectory.file("reports/detekt/detekt.sarif"))
-}
-
-reportMergeXml {
-  onlyIf { build.analysis.xmlReporting }
-  input.from(tasks.withType<Detekt>().map { it.xmlReportFile })
-}
-
-reportMergeSarif {
   onlyIf { build.analysis.sarifReporting }
-  input.from(tasks.withType<Detekt>().map { it.sarifReportFile })
+  output.set(rootProject.layout.buildDirectory.file("reports/detekt/detekt.sarif"))
+  val detektTasks = tasks.withType<Detekt>()
+  dependsOn(detektTasks)
+  input.from(detektTasks.map { it.sarifReportFile })
 }
