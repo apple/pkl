@@ -10,6 +10,7 @@
          <trust group="org.gradle" reason="injected for dependency graph submission by gradle plugin"/>
          <trust group="org.jetbrains.kotlin" reason="specifies verified dependencies"/>
          <trust group="org.jetbrains.kotlin.mulitplatform" reason="specifies verified dependencies"/>
+         <trust group="org.springframework" reason="BOM-only"/>
          <trust file=".*-javadoc[.]jar" regex="true" reason="javadoc (not included in code)"/>
          <trust file=".*-sources[.]jar" regex="true" reason="sources (not included in code)"/>
          <trust file="^gradle-.*[.]zip$" regex="true" reason="download over TLS"/>
