@@ -141,18 +141,16 @@ tasks {
 
   // --- Tasks: Detekt
   //
-  if (buildInfo.analysis.enabled) {
-    val detektMergeSarif: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
-      output.set(layout.buildDirectory.file("reports/detekt/detekt.sarif"))
-    }
-    val detektMergeXml: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
-      output.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
-    }
-    withType(Detekt::class) detekt@{
-      finalizedBy(detektMergeSarif, detektMergeXml)
-      reports.sarif.required = true
-      reports.xml.required = true
-    }
+  val detektMergeSarif: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
+    output.set(layout.buildDirectory.file("reports/detekt/detekt.sarif"))
+  }
+  val detektMergeXml: TaskProvider<ReportMergeTask> by registering(ReportMergeTask::class) {
+    output.set(layout.buildDirectory.file("reports/detekt/detekt.xml"))
+  }
+  withType(Detekt::class) detekt@{
+    finalizedBy(detektMergeSarif, detektMergeXml)
+    reports.sarif.required = true
+    reports.xml.required = true
   }
 
   val coverageReports by registering {

@@ -38,8 +38,6 @@ tasks {
   }
 
   withType<Detekt>().configureEach {
-    onlyIf { info.analysis.enabled }
-    isEnabled = info.analysis.enabled
     autoCorrect = info.analysis.autofix
     jvmTarget = info.jvm.lib.target.toString()
   }

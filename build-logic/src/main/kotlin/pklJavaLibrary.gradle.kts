@@ -35,7 +35,7 @@ configure<SpotlessExtension> {
 
 tasks {
   // No need to run PMD on tests.
-  if (info.analysis.enabled) findByName("pmdTest")?.configure<Task> {
+  findByName("pmdTest")?.configure<Task> {
     enabled = false
   }
 
