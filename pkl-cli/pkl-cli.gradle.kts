@@ -14,13 +14,69 @@ plugins {
 
 description = "Pkl command line interface entrypoint"
 private val entrypoint = "org.pkl.cli.Main"
+private val module = "pkl.cli"
 
 // make Java executable available to other subprojects
 private val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
 
-val enableExperimental = false
-val extraJavacArgs: List<String> = listOf()
-val experimentalGvmNativeFlags: List<String> = listOf()
+val enablePgo = true
+val oracleGvm = false
+val pgoInstrument = enablePgo
+val enableExperimental = true
+val profilesZip = layout.projectDirectory.file("pgo.zip")
+val enableRelease = findProperty("nativeRelease") == "true"
+val extraJavacArgs: List<String> = listOfNotNull(
+  "--add-exports=org.graalvm.truffle.runtime.svm/com.oracle.svm.truffle=$module",
+  if (oracleGvm) null else "--add-reads=org.graalvm.truffle.runtime.svm=$module",
+  if (!oracleGvm) null else "--add-reads=com.oracle.svm.truffle=$module",
+  "--add-reads=$module=ALL-UNNAMED",
+)
+val extraJvmArgs: List<String> = listOf(
+  "--enable-native-access=ALL-UNNAMED",
+)
+
+val devNativeImageFlags = listOfNotNull(
+  "-Ob",
+  if (!enablePgo) null else "--pgo-instrument",
+)
+
+val releaseCFlags: List<String> = listOf(
+  "-O3",
+  "-v",
+)
+
+val releaseNativeImageFlags = listOf(
+  "-O3",
+  "-march=native",
+  if (!enablePgo) null else "--pgo=pkl-cli.iprof",
+).plus(releaseCFlags.flatMap {
+  listOf(
+    "-H:NativeLinkerOption=$it",
+    "--native-compiler-options=$it",
+  )
+})
+
+val experimentalGvmNativeFlags: List<String> = listOf(
+  "--enable-preview",
+  "--add-modules=jdk.incubator.vector",
+  "--enable-native-access=pkl.core,pkl.cli,ALL-UNNAMED",
+
+  // Native Image Runtime Options
+  "-J-Dpolyglot.image-build-time.PreinitializeContextsWithNative=true",
+
+  // Hosted Runtime Options
+  "-H:CStandard=C11",
+  "-H:+UnlockExperimentalVMOptions",
+).plus(
+  if (!oracleGvm) emptyList() else listOf(
+    "-H:+AOTInline",
+    "-H:+VectorizeSIMD",
+    "-H:+LSRAOptimization",
+    "-H:+MLProfileInference",
+    "-H:+VectorPolynomialIntrinsics",
+    "-H:+UseCompressedReferences",
+  )
+)
 
 private val nativeImageExclusions = listOf(
   libs.graalSdk,
@@ -42,11 +98,23 @@ val stagedMacAarch64Executable: Configuration by configurations.creating
 val stagedLinuxAmd64Executable: Configuration by configurations.creating
 val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
+val modulepath: Configuration by configurations.creating
+val compileClasspath: Configuration by configurations.getting {
+  extendsFrom(modulepath)
+}
 
 private fun stagedDir(dir: String): File = layout.buildDirectory.dir(dir).get().asFile
 
 dependencies {
   compileOnly(libs.kotlinStdlib)
+
+  // JPMS module path
+  modulepath(libs.kotlinStdlib)
+  modulepath(libs.jlineReader)
+  modulepath(libs.svmTruffle)
+  modulepath(libs.truffleApi)
+  modulepath(libs.truffleRuntime)
+  modulepath(projects.pklCore)
 
   // CliEvaluator exposes PClass
   api(projects.pklCore)
@@ -55,7 +123,6 @@ dependencies {
 
   implementation(projects.pklCommons)
   implementation(libs.jansi)
-  implementation(libs.jlineReader)
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
   implementation(projects.pklServer)
@@ -68,9 +135,7 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
 
   compileOnly(libs.svm)
-  compileOnly(libs.svmTruffle)
-  compileOnly(libs.truffleApi)
-  compileOnly(libs.truffleRuntime)
+  if (oracleGvm) modulepath(libs.truffleEnterprise)
 
   stagedMacAmd64Executable(files(stagedDir("executable/pkl-macos-amd64")))
   stagedMacAarch64Executable(files(stagedDir("executable/pkl-macos-aarch64")))
@@ -96,6 +161,10 @@ tasks.javadoc {
   enabled = false
 }
 
+tasks.withType(JavaExec::class).configureEach {
+  jvmArgs = extraJvmArgs.plus(jvmArgs ?: emptyList())
+}
+
 tasks.shadowJar {
   archiveFileName = "jpkl"
 
@@ -106,6 +175,16 @@ tasks.shadowJar {
   exclude("META-INF/services/javax.annotation.processing.Processor")
 
   exclude("module-info.*")
+}
+
+val inflateProfiles by tasks.registering(Copy::class) {
+  from(zipTree(profilesZip))
+  into(layout.buildDirectory.dir("executable"))
+}
+
+val releasePrep by tasks.registering {
+  onlyIf { enableRelease }
+  dependsOn(inflateProfiles)
 }
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
@@ -149,12 +228,6 @@ val testStartJavaExecutable by tasks.registering(Exec::class) {
   doLast { outputFile.writeText("OK") }
 }
 
-tasks.compileJava {
-  options.compilerArgumentProviders.add(CommandLineArgumentProvider {
-    extraJavacArgs
-  })
-}
-
 tasks.check {
   dependsOn(testStartJavaExecutable)
 }
@@ -162,22 +235,22 @@ tasks.check {
 val kernel32Init = listOf(
   "org.msgpack.core.buffer.DirectBufferAccess",
   "org.jline.nativ.Kernel32",
+  "org.jline.nativ.Kernel32${'$'}CHAR_INFO",
+  "org.jline.nativ.Kernel32${'$'}CONSOLE_SCREEN_BUFFER_INFO",
   "org.jline.nativ.Kernel32${'$'}COORD",
-  "org.jline.nativ.Kernel32${'$'}SMALL_RECT",
+  "org.jline.nativ.Kernel32${'$'}FOCUS_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}INPUT_EVENT_RECORD",
   "org.jline.nativ.Kernel32${'$'}INPUT_RECORD",
   "org.jline.nativ.Kernel32${'$'}KEY_EVENT_RECORD",
   "org.jline.nativ.Kernel32${'$'}MENU_EVENT_RECORD",
   "org.jline.nativ.Kernel32${'$'}MOUSE_EVENT_RECORD",
-  "org.jline.nativ.Kernel32${'$'}INPUT_EVENT_RECORD",
-  "org.jline.nativ.Kernel32${'$'}FOCUS_EVENT_RECORD",
+  "org.jline.nativ.Kernel32${'$'}SMALL_RECT",
   "org.jline.nativ.Kernel32${'$'}WINDOW_BUFFER_SIZE_RECORD",
-  "org.jline.nativ.Kernel32${'$'}CHAR_INFO",
-  "org.jline.nativ.Kernel32${'$'}CONSOLE_SCREEN_BUFFER_INFO",
 ).joinToString(",")
 
 fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
   enabled = isEnabled
-  dependsOn(":installGraalVm")
+  dependsOn(":installGraalVm", releasePrep)
 
   inputs.files(sourceSets.main.map { it.output })
   inputs.files(configurations.runtimeClasspath)
@@ -193,9 +266,11 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
+        "--strict-image-heap"
+        ,"--gc=epsilon"
         // currently gives a deprecation warning, but we've been told 
         // that the "initialize everything at build time" *CLI* option is likely here to stay
-        "--initialize-at-build-time="
+        ,"--initialize-at-build-time="
         ,"--no-fallback"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
@@ -203,10 +278,11 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         //,"-H:IncludeResources=org/pkl/core/Release.properties"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle-svm"
+        ,"-H:Module=$module"
         ,"-H:Class=org.pkl.cli.Main"
         ,"-H:Name=${outputFile.name}"
         //,"--native-image-info"
-        //,"-Dpolyglot.image-build-time.PreinitializeContexts=pkl"
+        ,"-Dpolyglot.image-build-time.PreinitializeContexts=pkl"
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to compensate for Truffle's own nodes)
         ,"-H:MaxRuntimeCompileMethods=1800"
         ,"-H:+EnforceMaxRuntimeCompileMethods"
@@ -217,7 +293,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         //,"-H:+PrintAnalysisCallTree"
         //,"-H:PrintAnalysisCallTreeType=CSV"
         //,"-H:+PrintImageObjectTree"
-        //,"--features=org.pkl.cli.svm.InitFeature"
+//        ,"--features=org.pkl.cli.svm.InitFeature"
         //,"-H:Dump=:2"
         //,"-H:MethodFilter=ModuleCache.getOrLoad*,VmLanguage.loadModule"
         //,"-g"
@@ -230,21 +306,29 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         //,"-H:+PrintRuntimeCompileMethods"
         //,"-H:NumberOfThreads=1"
         //,"-J-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime"
-        //,"-J-Dcom.oracle.truffle.aot=true"
+        ,"-J-Dcom.oracle.truffle.aot=true"
         //,"-J:-ea"
         //,"-J:-esa"
         // for use with https://www.graalvm.org/docs/tools/dashboard/
         //,"-H:DashboardDump=dashboard.dump", "-H:+DashboardAll"
         // native-image rejects non-existing class path entries -> filter
-        ,"--class-path"
-        ,((sourceSets.main.get().output + configurations.runtimeClasspath.get())
+        ,"--module-path"
+        ,(sourceSets.main.get().output + modulepath
             .filter { it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }})
             .asPath
+        ,"--class-path"
+        ,(configurations.runtimeClasspath.get()
+          .filter { it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }})
+          .asPath
         // make sure dev machine stays responsive (15% slowdown on my laptop)
         ,"-J-XX:ActiveProcessorCount=${
           Runtime.getRuntime().availableProcessors() / (if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1)
         }"
-    ) + extraArgs + extraJavacArgs + (if (enableExperimental) experimentalGvmNativeFlags else emptyList())
+    ) + extraArgs + extraJavacArgs + extraJvmArgs + (
+      if (enableExperimental) experimentalGvmNativeFlags else emptyList()
+    ) + (
+      if (enableRelease) releaseNativeImageFlags else devNativeImageFlags
+    )
   })
 }
 
@@ -268,6 +352,8 @@ val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * os/arch pair.
  */
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  dependsOn(tasks.compileJava, tasks.compileKotlin)
+
   configureExecutable(
     buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
     layout.buildDirectory.dir("executable/pkl-macos-aarch64").get().asFile,
@@ -440,3 +526,26 @@ signing {
   sign(publishing.publications["alpineLinuxExecutableAmd64"])
 }
 //endregion
+
+val javac: JavaCompile by tasks.named("compileJava", JavaCompile::class)
+tasks.compileKotlin.configure {
+  destinationDirectory = javac.destinationDirectory
+}
+
+javac.apply {
+  dependsOn(tasks.compileKotlin)
+
+  options.compilerArgumentProviders.add(CommandLineArgumentProvider {
+    extraJavacArgs
+  })
+
+  options.compilerArgumentProviders.add(object : CommandLineArgumentProvider {
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    val kotlinClasses = tasks.compileKotlin.get().destinationDirectory
+
+    override fun asArguments() = listOf(
+      "--patch-module", "$module=${kotlinClasses.get().asFile.absolutePath}"
+    )
+  })
+}

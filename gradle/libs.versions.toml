@@ -120,6 +120,7 @@ svmTruffle = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", 
 testloggerPlugin = { group = "com.adarshr", name = "gradle-test-logger-plugin", version.ref = "testlogger" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
+truffleEnterprise = { group = "org.graalvm.truffle", name = "truffle-enterprise", version.ref = "graalVm" }
 truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
 
 [plugins] # ordered alphabetically

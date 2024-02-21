@@ -13,7 +13,12 @@ plugins {
 
 description = "Pkl core language"
 
+val moduleName = "pkl.core"
 val generatorSourceSet = sourceSets.register("generator")
+val extraJavacArgs = listOf(
+  "--add-reads=$moduleName=ALL-UNNAMED",
+  "--add-reads=$moduleName=org.pkl.executor",
+)
 
 sourceSets {
   main {
@@ -100,6 +105,10 @@ tasks.generateGrammarSource {
 
 tasks.compileJava {
   dependsOn(tasks.generateGrammarSource)
+
+  options.compilerArgumentProviders.add(CommandLineArgumentProvider {
+    extraJavacArgs
+  })
 }
 
 tasks.sourcesJar {
@@ -167,6 +176,8 @@ tasks.compileKotlin {
 }
 
 tasks.test {
+  jvmArgs(extraJavacArgs)
+
   inputs.dir("src/test/files/LanguageSnippetTests/input")
   inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
   inputs.dir("src/test/files/LanguageSnippetTests/output")
@@ -298,11 +309,9 @@ tasks.clean {
   delete(layout.buildDirectory.dir("test-packages"))
 }
 
-if (findProperty("enableAnalysis") == "true" || "check" in gradle.startParameter.taskNames) {
-  configure<SpotlessExtension> {
-    antlr4 {
-      licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
-      target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
-    }
+spotless {
+  antlr4 {
+    licenseHeaderFile(rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"))
+    target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
   }
 }

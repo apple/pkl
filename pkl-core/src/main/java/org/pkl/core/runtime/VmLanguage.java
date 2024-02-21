@@ -35,7 +35,7 @@ import org.pkl.core.util.Nullable;
 @TruffleLanguage.Registration(
     id = "pkl",
     name = "Pkl",
-    version = "0.26.0-dev",
+    version = VmInfo.PKL_CORE_VERSION,
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
 public final class VmLanguage extends TruffleLanguage<VmContext> {
@@ -113,5 +113,11 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
     var moduleNode = builder.visitModule(moduleContext);
     moduleNode.getCallTarget().call(emptyModule, emptyModule);
     MinPklVersionChecker.check(emptyModule, importNode);
+  }
+
+  @Override
+  protected boolean patchContext(VmContext context, Env newEnv) {
+    // no-op
+    return true;
   }
 }
