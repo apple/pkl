@@ -22,6 +22,7 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
@@ -60,7 +61,7 @@ public final class ImportNode extends AbstractImportNode {
         context.getSecurityManager().checkImportModule(currentModule.getUri(), importUri);
         var moduleToImport = context.getModuleResolver().resolve(importUri, this);
         importedModule = language.loadModule(moduleToImport, this);
-      } catch (SecurityManagerException | PackageLoadError e) {
+      } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
         throw exceptionBuilder().withCause(e).build();
       }
     }

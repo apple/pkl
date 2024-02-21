@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
@@ -105,7 +106,7 @@ public final class ResourceManager {
                 .withHint(e.getMessage())
                 .withLocation(readNode)
                 .build();
-          } catch (SecurityManagerException e) {
+          } catch (SecurityManagerException | HttpClientInitException e) {
             throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
           } catch (IOException e) {
             throw new VmExceptionBuilder()
@@ -151,7 +152,7 @@ public final class ResourceManager {
                 .withHint(e.getReason())
                 .withLocation(readNode)
                 .build();
-          } catch (SecurityManagerException | PackageLoadError e) {
+          } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
             throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
           }
           if (resource.isEmpty()) return resource;

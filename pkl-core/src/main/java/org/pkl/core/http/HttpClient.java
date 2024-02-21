@@ -16,7 +16,6 @@
 package org.pkl.core.http;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URL;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -96,8 +95,7 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.
      *
-     * @throws UncheckedIOException if a certificate file cannot be read
-     * @throws RuntimeException if a certificate related problem occurs
+     * @throws HttpClientInitException if an error occurs while initializing the client
      */
     HttpClient build();
 
@@ -146,6 +144,10 @@ public interface HttpClient extends AutoCloseable {
    *
    * <p>For additional information on how to use this method, see {@link
    * java.net.http.HttpClient#send}.
+   *
+   * @throws IOException if an I/O error occurs when sending or receiving
+   * @throws HttpClientInitException if an error occurs while initializing a {@linkplain
+   *     Builder#buildLazily lazy} client
    */
   <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
       throws IOException;

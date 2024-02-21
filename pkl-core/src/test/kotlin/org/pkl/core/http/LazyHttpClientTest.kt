@@ -17,10 +17,9 @@ class LazyHttpClientTest {
       .buildLazily()
     val request = HttpRequest.newBuilder(URI("https://example.com")).build()
     
-    val e = assertThrows<RuntimeException> {
+    assertThrows<HttpClientInitException> {
       client.send(request, BodyHandlers.discarding())
     }
-    assertThat(e).hasCauseInstanceOf(CertificateException::class.java)
   }
   
   @Test

@@ -63,11 +63,11 @@ class HttpClientTest {
   fun `certificate file located on file system cannot be empty`(@TempDir tempDir: Path) {
     val file = tempDir.resolve("certs.pem").createFile()
 
-    val e = assertThrows<RuntimeException> {
+    val e = assertThrows<HttpClientInitException> {
       HttpClient.builder().addCertificates(file).build()
     }
 
-    assertThat(e).hasCauseInstanceOf(CertificateException::class.java)
+    assertThat(e).hasMessageContaining("empty")
   }
 
   @Test
@@ -81,11 +81,11 @@ class HttpClientTest {
   fun `certificate file located on class path cannot be empty`() {
     val url = javaClass.getResource("emptyCerts.pem")
 
-    val e = assertThrows<RuntimeException> {
+    val e = assertThrows<HttpClientInitException> {
       HttpClient.builder().addCertificates(url).build()
     }
 
-    assertThat(e).hasCauseInstanceOf(CertificateException::class.java)
+    assertThat(e).hasMessageContaining("empty")
   }
 
   @Test

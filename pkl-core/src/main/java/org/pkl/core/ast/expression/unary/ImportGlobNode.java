@@ -30,6 +30,7 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.BaseModule;
@@ -113,7 +114,7 @@ public class ImportGlobNode extends AbstractImportNode {
                 frame.materialize(), BaseModule.getMappingClass().getPrototype(), members);
       } catch (IOException e) {
         throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
-      } catch (SecurityManagerException e) {
+      } catch (SecurityManagerException | HttpClientInitException e) {
         throw exceptionBuilder().withCause(e).build();
       } catch (PackageLoadError e) {
         throw exceptionBuilder().adhocEvalError(e.getMessage()).build();

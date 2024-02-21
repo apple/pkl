@@ -17,7 +17,6 @@ package org.pkl.core.http;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -27,6 +26,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -39,6 +39,7 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,7 +117,9 @@ final class JdkHttpClient implements HttpClient {
       var revocationChecker = (PKIXRevocationChecker) certPathBuilder.getRevocationChecker();
       revocationChecker.setOptions(Set.of()); // prefer OCSP, fall back to CRLs
 
-      Set<TrustAnchor> trustAnchors = createTrustAnchors(certificateFiles, certificateUrls);
+      var certFactory = CertificateFactory.getInstance("X.509");
+      Set<TrustAnchor> trustAnchors =
+          createTrustAnchors(certFactory, certificateFiles, certificateUrls);
       var pkixParameters = new PKIXBuilderParameters(trustAnchors, new X509CertSelector());
       // equivalent of "com.sun.net.ssl.checkRevocation=true"
       pkixParameters.setRevocationEnabled(true);
@@ -129,49 +132,57 @@ final class JdkHttpClient implements HttpClient {
       sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
 
       return sslContext;
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
     } catch (GeneralSecurityException e) {
-      throw new RuntimeException(e);
+      throw new HttpClientInitException(
+          ErrorMessages.create("cannotInitHttpClient", e.getMessage()), e);
     }
   }
 
   private static Set<TrustAnchor> createTrustAnchors(
-      List<Path> certificateFiles, List<URL> certificateUrls)
-      throws CertificateException, IOException {
+      CertificateFactory factory, List<Path> certificateFiles, List<URL> certificateUrls) {
     var anchors = new HashSet<TrustAnchor>();
 
     for (var file : certificateFiles) {
       try (var stream = Files.newInputStream(file)) {
-        var certificates = generateCertificates(stream);
-        if (certificates.isEmpty()) {
-          throw new CertificateException(ErrorMessages.create("emptyCertificateFile", file));
-        }
-        for (var certificate : certificates) {
-          anchors.add(new TrustAnchor(certificate, null));
-        }
+        collectTrustAnchors(anchors, factory, stream, file);
+      } catch (NoSuchFileException e) {
+        throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
+      } catch (IOException e) {
+        throw new HttpClientInitException(
+            ErrorMessages.create("cannotReadCertFile", e.getMessage()));
       }
     }
 
     for (var url : certificateUrls) {
       try (var stream = url.openStream()) {
-        var certificates = generateCertificates(stream);
-        if (certificates.isEmpty()) {
-          throw new CertificateException(ErrorMessages.create("emptyCertificateFile", url));
-        }
-        for (var certificate : certificates) {
-          anchors.add(new TrustAnchor(certificate, null));
-        }
+        collectTrustAnchors(anchors, factory, stream, url);
+      } catch (IOException e) {
+        throw new HttpClientInitException(
+            ErrorMessages.create("cannotReadCertFile", e.getMessage()));
       }
     }
 
     return anchors;
   }
 
-  private static List<X509Certificate> generateCertificates(InputStream stream)
-      throws CertificateException {
-    var factory = CertificateFactory.getInstance("X.509");
-    //noinspection unchecked
-    return (List<X509Certificate>) factory.generateCertificates(stream);
+  private static void collectTrustAnchors(
+      Collection<TrustAnchor> anchors,
+      CertificateFactory factory,
+      InputStream stream,
+      Object source) {
+    Collection<X509Certificate> certificates;
+    try {
+      //noinspection unchecked
+      certificates = (Collection<X509Certificate>) factory.generateCertificates(stream);
+    } catch (CertificateException e) {
+      throw new HttpClientInitException(
+          ErrorMessages.create("cannotParseCertFile", source, e.getMessage()));
+    }
+    if (certificates.isEmpty()) {
+      throw new HttpClientInitException(ErrorMessages.create("emptyCertFile", source));
+    }
+    for (var certificate : certificates) {
+      anchors.add(new TrustAnchor(certificate, null));
+    }
   }
 }

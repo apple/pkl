@@ -185,7 +185,8 @@ data class CliBaseOptions(
       for (file in normalizedCaCertificates) builder.addCertificates(file)
     }
     // Lazy building significantly reduces execution time of commands that do minimal work.
-    // However, it means that certificate loading errors won't surface until an HTTP request is
+    // However, it means that HTTP client initialization errors won't surface until an HTTP request
+    // is
     // made. A middleground would be to only build lazily if built-in certificates are used.
     builder.buildLazily()
   }

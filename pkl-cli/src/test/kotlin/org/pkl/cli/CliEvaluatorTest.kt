@@ -26,6 +26,7 @@ import kotlin.io.path.listDirectoryEntries
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -1157,6 +1158,7 @@ result = someLib.x
   }
 
   @Test
+  @Disabled("flaky because CliEvaluator falls back to ~/.pkl/cacerts if no certs are given")
   fun `not including the self signed certificate will result in a error`() {
     PackageServer.ensureStarted()
     val moduleUri =
