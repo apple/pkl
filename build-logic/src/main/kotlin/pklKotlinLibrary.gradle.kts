@@ -13,18 +13,8 @@ plugins {
   kotlin("plugin.serialization")
 }
 
-// Build properties that control reporting and analysis.
-private val enableAnalysisProperty = "enableAnalysis"
-private val xmlReportingBuildProperty = "xmlReporting"
-private val sarifReportingBuildProperty = "sarifReporting"
-private val htmlReportingBuildProperty = "htmlReporting"
-
-// Resolved build properties for reporting within this project.
-private val xmlReportingEnabled = findProperty(xmlReportingBuildProperty) == "true"
-private val sarifReportingEnabled = findProperty(sarifReportingBuildProperty) == "true"
-private val htmlReportingEnabled = findProperty(htmlReportingBuildProperty) == "true"
-private val enableAnalysis =
-  (findProperty(enableAnalysisProperty) == "true" || "check" in gradle.startParameter.taskNames )
+// Main build info extension.
+private val build = the<BuildInfo>()
 
 // Version Catalog libraries, and build info.
 private val libs = the<LibrariesForLibs>()
@@ -35,10 +25,10 @@ dependencies {
   // So let's be conservative and default to `api` for now.
   // For Kotlin APIs that only target Kotlin users (e.g., pkl-config-kotlin),
   // it won't make a difference.
-  api(libs.bundles.kotlinStdlib)
+  api(libs.bundles.kotlin.stdlib)
 }
 
-if (enableAnalysis) apply(plugin = "io.gitlab.arturbosch.detekt").also {
+if (build.analysis.enabled) apply(plugin = "io.gitlab.arturbosch.detekt").also {
   configure<DetektExtension> {
     toolVersion = libs.versions.detekt.get()
     config.from(rootProject.layout.projectDirectory.file("config/detekt/detekt.yml"))
@@ -47,7 +37,7 @@ if (enableAnalysis) apply(plugin = "io.gitlab.arturbosch.detekt").also {
     enableCompilerPlugin = true
   }
 }
-if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
+if (build.analysis.enabled) apply(plugin = "com.diffplug.spotless").also {
   configure<SpotlessExtension> {
     kotlin {
       ktfmt(libs.versions.ktfmt.get()).googleStyle()
@@ -61,20 +51,17 @@ if (enableAnalysis) apply(plugin = "com.diffplug.spotless").also {
 }
 
 tasks.withType<Detekt>().configureEach {
-  autoCorrect =
-    findProperty("autofixDetekt") as? String == "true"
-
-  jvmTarget =
-    findProperty("javaTarget") as? String ?: error("Please set `javaTarget` property")
+  autoCorrect = findProperty("autofixDetekt") as? String == "true"
+  jvmTarget = build.jvm.lib.target.toString()
 
   reports {
-    xml.required = xmlReportingEnabled
-    sarif.required = sarifReportingEnabled
-    html.required = htmlReportingEnabled
+    xml.required = build.analysis.xmlReporting
+    sarif.required = build.analysis.sarifReporting
+    html.required = build.analysis.htmlReporting
   }
 
-  if (xmlReportingEnabled) finalizedBy(reportMergeXml)
-  if (sarifReportingEnabled) finalizedBy(reportMergeSarif)
+  if (build.analysis.xmlReporting) finalizedBy(reportMergeXml)
+  if (build.analysis.htmlReporting) finalizedBy(reportMergeSarif)
 }
 
 val reportMergeXml by tasks.registering(ReportMergeTask::class) {
@@ -86,11 +73,11 @@ val reportMergeSarif by tasks.registering(ReportMergeTask::class) {
 }
 
 reportMergeXml {
-  onlyIf { xmlReportingEnabled }
+  onlyIf { build.analysis.xmlReporting }
   input.from(tasks.withType<Detekt>().map { it.xmlReportFile })
 }
 
 reportMergeSarif {
-  onlyIf { sarifReportingEnabled }
+  onlyIf { build.analysis.sarifReporting }
   input.from(tasks.withType<Detekt>().map { it.sarifReportFile })
 }

@@ -1,6 +1,7 @@
 // https://youtrack.jetbrains.com/issue/KTIJ-19369
 @file:Suppress("DSL_SCOPE_VIOLATION")
 
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
@@ -13,25 +14,33 @@ plugins {
   id("pklKotlinTest")
 }
 
-// Properties and defaults for JVM entrypoints.
-private val defaultJvmEntrypointTarget = "11"
-private val javaEntrypointTargetProperty = "javaEntrypointTarget"
-private val javaVersion =
-  (findProperty(javaEntrypointTargetProperty) as? String ?: defaultJvmEntrypointTarget)
+// Main build info extension.
+val info = the<BuildInfo>()
 
 java {
-  sourceCompatibility = JavaVersion.toVersion(javaVersion)
-  targetCompatibility = JavaVersion.toVersion(javaVersion)
+  JavaVersion.toVersion(info.jvm.entrypoint.target).let {
+    sourceCompatibility = it
+    targetCompatibility = it
+  }
 }
 
 kotlin {
   compilerOptions {
-    jvmTarget = JvmTarget.fromTarget(javaVersion)
+    jvmTarget = JvmTarget.fromTarget(info.jvm.entrypoint.target.toString())
   }
 }
 
-tasks.withType(KotlinJvmCompile::class).configureEach {
-  compilerOptions {
-    jvmTarget = JvmTarget.fromTarget(javaVersion)
+tasks {
+  withType(KotlinJvmCompile::class).configureEach {
+    compilerOptions {
+      jvmTarget = JvmTarget.fromTarget(info.jvm.entrypoint.target.toString())
+    }
+  }
+
+  withType<Detekt>().configureEach {
+    onlyIf { info.analysis.enabled }
+    isEnabled = info.analysis.enabled
+    autoCorrect = info.analysis.autofix
+    jvmTarget = info.jvm.lib.target.toString()
   }
 }

@@ -5,25 +5,29 @@ plugins {
   id("pklKotlinTest")
 }
 
-// JVM toolchain defaults, properties, and resolved configuration.
-private val defaultJvmTarget = "11"
-private val jvmVendor = JvmVendorSpec.ADOPTIUM
-private val jvmTargetVersion =
-  (findProperty("javaTarget") as? String ?: defaultJvmTarget)
+// Main build info extension.
+val build = the<BuildInfo>()
 
 // Version catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
 // make source jar available to other subprojects
-val sourcesJarConfiguration: Provider<Configuration> = configurations.register("sourcesJar")
+val sourceJarConfiguration: Provider<Configuration> = configurations.register("sourcesJar")
 
 java {
-  // obtain and use a Java toolchain from GraalVM, at the version specified for the project.
-  sourceCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-  targetCompatibility = JavaVersion.toVersion(jvmTargetVersion)
-
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
+
+  // obtain and use a Java toolchain from GraalVM, at the version specified for the project.
+  JavaVersion.toVersion(build.jvm.lib.target).let {
+    sourceCompatibility = it
+    targetCompatibility = it
+  }
+
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(build.jvm.toolchain.target))
+    vendor.set(build.jvm.toolchain.vendor)
+  }
 }
 
 artifacts {

@@ -5,12 +5,79 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.artifacts.VersionConstraint
+import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.getByType
+
+// Build properties that control reporting and analysis.
+private const val autofixProperty = "autofix"
+private const val enableAnalysisProperty = "enableAnalysis"
+private const val xmlReportingBuildProperty = "xmlReporting"
+private const val sarifReportingBuildProperty = "sarifReporting"
+private const val htmlReportingBuildProperty = "htmlReporting"
+
+// JVM target, vendor, and bytecode defaults and properties.
+private const val defaultJvmTarget = "11"
+private const val defaultJvmToolchain = "21"
+private const val javaTargetProperty = "javaTarget"
+private const val javaEntrypointProperty = "javaEntrypointTarget"
+private const val javaToolchainProperty = "javaToolchainTarget"
+private val jvmVendor = JvmVendorSpec.ADOPTIUM
 
 // `buildInfo` in main build scripts
 // `project.extensions.getByType<BuildInfo>()` in precompiled script plugins
-open class BuildInfo(project: Project) {
+open class BuildInfo(private val project: Project) {
   val self = this
+
+  interface JvmTargetInfo {
+    val target: Int
+  }
+
+  interface JvmToolchain : JvmTargetInfo {
+    val vendor: JvmVendorSpec
+  }
+
+  interface JvmSettings {
+    val lib: JvmTargetInfo
+    val entrypoint: JvmTargetInfo
+    val toolchain: JvmToolchain
+  }
+
+  inner class Jvm : JvmSettings {
+    // JVM toolchain defaults, properties, and resolved configuration.
+    private val targetVersion =
+      (project.findProperty(javaTargetProperty) as? String ?: defaultJvmTarget)
+    private val toolchainTarget =
+      (project.findProperty(javaToolchainProperty) as? String ?: defaultJvmToolchain)
+    private val entrypointVersion =
+      (project.findProperty(javaEntrypointProperty) as? String ?: defaultJvmTarget)
+
+    override val lib: JvmTargetInfo get() = object : JvmTargetInfo {
+      override val target: Int get() = targetVersion.toInt()
+    }
+
+    override val entrypoint: JvmTargetInfo get() = object : JvmTargetInfo {
+      override val target: Int get() = entrypointVersion.toInt()
+    }
+
+    override val toolchain: JvmToolchain get() = object : JvmToolchain {
+      override val target: Int get() = toolchainTarget.toInt()
+      override val vendor: JvmVendorSpec get() = jvmVendor
+    }
+  }
+
+  inner class Analysis {
+    val enabled =
+      (project.findProperty(enableAnalysisProperty) == "true" || "check" in project.gradle.startParameter.taskNames )
+
+    val autofix = (project.findProperty(autofixProperty) == "true")
+
+    // Resolved build properties for reporting within this project.
+    val xmlReporting: Boolean get() =
+      project.findProperty(xmlReportingBuildProperty) == "true"
+
+    val sarifReporting = project.findProperty(sarifReportingBuildProperty) == "true"
+    val htmlReporting = project.findProperty(htmlReportingBuildProperty) == "true"
+  }
 
   inner class GraalVm {
     val homeDir: String by lazy {
@@ -86,6 +153,10 @@ open class BuildInfo(project: Project) {
   }
 
   val graalVm: GraalVm = GraalVm()
+
+  val jvm: Jvm = Jvm()
+
+  val analysis: Analysis = Analysis()
 
   val isCiBuild: Boolean by lazy {
     System.getenv("CI") != null
