@@ -64,7 +64,7 @@ class PackageResolvers {
 
     static {
       var release = Release.current();
-      USER_AGENT = "Pkl/" + release.version() + " (" + release.os() + " " + release.flavor() + ")";
+      USER_AGENT = "Pkl/" + release.version() + " (" + release.os() + "; " + release.flavor() + ")";
     }
 
     @GuardedBy("lock")
