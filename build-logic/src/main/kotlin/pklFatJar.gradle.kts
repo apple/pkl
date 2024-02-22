@@ -37,7 +37,6 @@ val relocations = mapOf(
   "org.jline." to "org.pkl.thirdparty.jline.",
   "com.github.ajalt.clikt." to "org.pkl.thirdparty.clikt.",
   "kotlin." to "org.pkl.thirdparty.kotlin.",
-  "kotlinx." to "org.pkl.thirdparty.kotlinx.",
   "org.intellij." to "org.pkl.thirdparty.intellij.",
   "org.fusesource.jansi." to "org.pkl.thirdparty.jansi",
   "org.fusesource.hawtjni." to "org.pkl.thirdparty.hawtjni",
@@ -73,6 +72,7 @@ tasks.shadowJar {
   exclude("META-INF/services/javax.annotation.processing.Processor")
 
   exclude("module-info.*")
+  exclude("kotlinx/")
 
   for ((from, to) in relocations) {
     relocate(from, to)
