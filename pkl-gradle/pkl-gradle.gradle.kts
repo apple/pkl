@@ -18,6 +18,9 @@ dependencies {
   // to ensure correct code navigation in IntelliJ.
   compileOnly(projects.pklTools)
 
+  // Annotations are used
+  api(projects.pklCommons)
+
   // Depends on `CliEvaluatorOptions` and other classes from the CLI
   implementation(projects.pklCli)
 
