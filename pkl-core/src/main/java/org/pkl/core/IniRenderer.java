@@ -59,9 +59,6 @@ final class IniRenderer implements ValueRenderer {
         doVisitMap(null, ((Composite) value).getProperties());
       } else if (value instanceof Map) {
         doVisitMap(null, (Map<?, ?>) value);
-      } else if (value instanceof Pair) {
-        Pair<?, ?> pair = (Pair<?, ?>) value;
-        doVisitKeyAndValue(null, pair.getFirst(), pair.getSecond());
       } else {
         throw new RendererException(
             String.format(
