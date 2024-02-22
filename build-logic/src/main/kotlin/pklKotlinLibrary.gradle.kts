@@ -88,6 +88,9 @@ javac.apply {
   dependsOn(tasks.compileKotlin)
   mustRunAfter(tasks.compileKotlin)
 
+  doFirst {
+    Thread.sleep(1000)  // fix: wait for outputs to settle
+  }
   options.compilerArgumentProviders.add(object : CommandLineArgumentProvider {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
