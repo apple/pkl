@@ -33,18 +33,6 @@ jobs:
       contents: "read"
 
   ##
-  ## Job: Checks with CodeQL
-  ##
-  check-codeql:
-    name: "Checks"
-    uses: ./.github/workflows/checks.codeql.yml
-    needs: [build]
-    permissions:
-      actions: "read"
-      contents: "read"
-      security-events: "write"
-
-  ##
   ## Job: Checks with Detekt
   ##
   check-detekt:

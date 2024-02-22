@@ -68,10 +68,45 @@ jobs:
             tasks
 
   ##
-  ## Job: Build + Submit Dependency Graph
+  ## Job: Build
+  ##
+  build:
+    name: "Build"
+    uses: ./.github/workflows/job.build.yml
+    needs: [preflight-checks]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+
+  ##
+  ## Job: Native Build
+  ##
+  native-build:
+    name: "Build"
+    uses: ./.github/workflows/job.native-build.yml
+    needs: [preflight-checks, build]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+    permissions:
+      contents: "read"
+
+  ##
+  ## Job: Tests
+  ##
+  pr-tests:
+    name: "Tests"
+    uses: ./.github/workflows/job.tests.yml
+    needs: [preflight-checks, build]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+
+  ##
+  ## Job: Submit Dependency Graph
   ##
   dependency-graph:
-    name: "Build"
+    name: "Checks"
     uses: ./.github/workflows/job.dependency-graph.yml
     needs: [preflight-checks]
     secrets:
@@ -80,32 +115,6 @@ jobs:
     permissions:
       ## Needed for build graph publishing
       contents: "write"
-
-  ##
-  ## Job: Tests
-  ##
-  pr-tests:
-    name: "Tests"
-    uses: ./.github/workflows/job.tests.yml
-    needs: [preflight-checks, dependency-graph]
-    secrets:
-      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
-      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
-    with:
-      native: false
-
-  ##
-  ## Job: Native Build
-  ##
-  native-build:
-    name: "Build"
-    uses: ./.github/workflows/job.native-build.yml
-    needs: [preflight-checks, dependency-graph]
-    secrets:
-      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
-      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
-    permissions:
-      contents: "read"
 
   ##
   ## Job: API Check

@@ -98,10 +98,21 @@ jobs:
           build-scan-publish: true
           build-scan-terms-of-service-url: "https://gradle.com/terms-of-service"
           build-scan-terms-of-service-agree: "yes"
-          arguments: test koverVerify reports -x check
+          arguments: test koverVerify koverXmlReport koverHtmlReport koverBinaryReport reports -x check
+      - name: "Artifact: Test Reports"
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+        if: success() || failure()
+        with:
+          name: "pkl-test-reports-${{ github.ref }}"
+          path: "./build/reports/**/*.*"
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 4
+          overwrite: true
       - name: "Reporting: Coverage"
         uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # v4.0.1
         continue-on-error: true
+        if: success()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: elide-dev/pkl

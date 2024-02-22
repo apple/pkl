@@ -1,13 +1,51 @@
 name: "Native Build"
 
 "on":
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      release:
+        type: boolean
+        default: false
+        description: "Release build"
+      macos:
+        type: boolean
+        default: true
+        description: "macOS"
+      linux:
+        type: boolean
+        default: true
+        description: "Linux"
+      windows:
+        type: boolean
+        default: false
+        description: "Windows"
+      artifact:
+        type: string
+        default: ""
+        description: "Artifact prefix"
+
   workflow_call:
     inputs:
       release:
         type: boolean
         default: false
         description: "Release build"
+      macos:
+        type: boolean
+        default: true
+        description: "macOS"
+      linux:
+        type: boolean
+        default: true
+        description: "Linux"
+      windows:
+        type: boolean
+        default: false
+        description: "Windows"
+      artifact:
+        type: string
+        default: ""
+        description: "Artifact prefix"
 
     secrets:
       GRADLE_CONFIGURATION_KEY:
@@ -30,18 +68,23 @@ jobs:
       matrix:
         os: [Ubuntu]
         mode: ["Strict"]
-        tag: ["linux-amd64"]
+        tag: ["linux-amd64-${{ fromJson(inputs.release) && 'opt' || 'dev' }}"]
         machine: ["ubuntu-latest"]
         target: [":pkl-cli:linuxExecutableAmd64"]
+        enabled:
+          - ${{ fromJson(inputs.linux) }}
         include:
           - os: macOS x64
-            tag: macos-x64
+            tag: macos-x64-${{ fromJson(inputs.release) && 'opt' || 'dev' }}
             machine: macos-13
             target: :pkl-cli:macExecutableAmd64
+            enabled: ${{ fromJson(inputs.macos) }}
           - os: macOS aarch64
-            tag: macos-aarch64
+            tag: macos-aarch64-${{ fromJson(inputs.release) && 'opt' || 'dev' }}
             machine: macos-13-xlarge
             target: :pkl-cli:macExecutableAarch64
+            enabled: ${{ fromJson(inputs.macos) }}
+
           # Windows build is currently broken.
           #
           # - os: Windows
@@ -51,6 +94,7 @@ jobs:
 
     name: "Native CLI (${{ matrix.os }})"
     runs-on: ${{ matrix.machine }}
+    if: ${{ matrix.enabled }}
 
     defaults:
       run:
@@ -119,13 +163,14 @@ jobs:
             ${{ matrix.target || ':pkl-cli:assembleNative' }}
             -PnativeRelease=${{ inputs.release }}
       - name: "Artifact: Native CLI"
-        if: success()
-        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         with:
-          key: pkl-native-${{ matrix.tag }}
-          path: |
-            ./pkl-cli/build/distributions/pkl-*.zip
-            ./pkl-cli/build/distributions/pkl-*.tar
+          name: "${{ inputs.artifact || 'pkl-cli-latest' }}-${{ matrix.tag }}"
+          path: ./pkl-cli/build/distributions/pkl*.*
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 1
+          overwrite: true
       - name: "Artifact: Caches"
         uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:

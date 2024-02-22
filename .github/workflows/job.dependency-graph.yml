@@ -20,17 +20,8 @@ jobs:
   ## Job: Build+Submit Dependency Graph
   ##
   gradle:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [Ubuntu]
-        mode: ["Strict"]
-        machine:
-          - "ubuntu-latest"
-
-    name: "Build (${{ matrix.os }})"
-    runs-on: ${{ matrix.machine }}
-    continue-on-error: ${{ matrix.mode != 'Strict' }}
+    name: "Dependency Graph"
+    runs-on: "ubuntu-latest"
 
     permissions:
       ## Needed for submission of dependency graphs
@@ -79,39 +70,6 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '21'
-      - name: "Setup: GraalVM (Java 21)"
-        uses: graalvm/setup-graalvm@d72e3dbf5f44eb0b78c4f8ec61a262d8bf9b94af # v1.1.7
-        with:
-          distribution: "graalvm"
-          java-version: 21
-          check-for-updates: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          set-java-home: 'false'
-      - name: "🛠️ Build"
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
-        id: gradlebuild
-        env:
-          CI: true
-        with:
-          cache-read-only: true
-          cache-encryption-key: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
-          gradle-home-cache-cleanup: true
-          arguments: dependencies build -x test -x check --scan
       - name: "🛠️ Dependency Graph"
         uses: gradle/actions/dependency-submission@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
         continue-on-error: true
-      - name: "Artifact: Caches"
-        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
-        with:
-          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
-          path: |
-            .gradle/
-            build/
-            .codebase/
-            .kotlin/
-            ./*/build/bin
-            ./*/build/classes
-            ./*/build/kotlin
-            ./*/build/klib
-            ./*/build/generated
-            ./*/build/generated-sources

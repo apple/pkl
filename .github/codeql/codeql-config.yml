@@ -5,10 +5,3 @@ languages:
 
 queries:
   - uses: security-and-quality
-
-paths:
-  - packages
-
-paths-ignore:
-  - .codebase
-  - build
