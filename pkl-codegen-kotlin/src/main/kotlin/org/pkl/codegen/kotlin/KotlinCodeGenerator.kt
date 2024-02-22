@@ -538,7 +538,8 @@ class KotlinCodeGenerator(
       return this
     }
 
-    val spec = AnnotationSpec.builder(Serializable::class).build()
+    val serializableK = ClassName("kotlinx.serialization", "Serializable")
+    val spec = AnnotationSpec.builder(serializableK).build()
     if (!this.annotationSpecs.contains(spec)) {
       addAnnotation(spec)
     }
@@ -604,8 +605,13 @@ class KotlinCodeGenerator(
           )
         }
 
+    val qualifiedBuilder =
+      when (val pkg = kotlinPackage?.ifBlank { null }) {
+        null -> TypeSpec.enumBuilder(typeAlias.simpleName)
+        else -> TypeSpec.enumBuilder(ClassName(pkg, typeAlias.simpleName))
+      }
     val builder =
-      TypeSpec.enumBuilder(typeAlias.simpleName)
+      qualifiedBuilder
         .primaryConstructor(
           FunSpec.constructorBuilder().addParameter("value", String::class).build()
         )
