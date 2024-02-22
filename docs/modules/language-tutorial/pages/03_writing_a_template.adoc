@@ -18,11 +18,11 @@ Before you can write types for them, you need to know how to write the types for
 These are all Pkl's _basic_ types:
 
 [source,{pkl}]
-.pklTutorialPart3.pkl
+.pklTutorial.pkl
 ----
 name: String = "Writing a Template"
 
-part: Int = 3
+part: Int = 0
 
 hasExercises: Boolean = true
 
@@ -39,9 +39,9 @@ Since `pcf` does not have type signatures, running Pkl on this example removes t
 
 [source,shell]
 ----
-$ pkl eval pklTutorialPart3.pkl
+$ pkl eval pklTutorial.pkl
 name = "Writing a Template"
-part = 3
+part = 0
 hasExercises = true
 amountLearned = 13.37
 duration = 30.min
@@ -167,16 +167,16 @@ pklTutorialPart3 {
 
 ----
 
-Sadly, `pklTutorialParts.pkl` is a _rewrite_ of `pklTutorial.pkl`.
+Sadly, `pklTutorialParts.pkl` is only a _rewrite_ of `pklTutorial.pkl` discussed in the chapter above.
 It creates a separate `class TutorialPart` and instantiates three properties with it (`pklTutorialPart1`, `pklTutorialPart2` and `pklTutorialPart3`).
-In doing so, it implicitly moves everything "down" one level (`pklTutorialPart3` is now a property in the module `pklTutorialParts`, whereas above, in `pklTutorialPart3.pkl` it was its own module).
+In doing so, it implicitly moves everything "down" one level (`pklTutorialPart3` is now a property in the module `pklTutorialParts`, whereas above, in `pklTutorial.pkl` it was its own module).
 This is not very DRY.
 As a matter of fact, you don't need this rewrite.
 
 Any `.pkl` file defines a _module_ in Pkl.
 Any module is represented by a _module class_, which is an actual Pkl `class`.
 A module is not quite the same as any other class, because Pkl never renders class definitions on the output.
-However, when you ran Pkl on `pklTutorialPart3.pkl`, it _did_ produce an output.
+However, when you ran Pkl on `pklTutorial.pkl`, it _did_ produce an output.
 This is because a module also defines an _instance_ of the module class.
 
 The values given to properties in a module (or in any "normal" class) are called _default values_.
