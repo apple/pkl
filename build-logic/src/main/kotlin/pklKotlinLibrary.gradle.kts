@@ -98,3 +98,7 @@ javac.apply {
     )
   })
 }
+
+tasks.jar.configure {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
