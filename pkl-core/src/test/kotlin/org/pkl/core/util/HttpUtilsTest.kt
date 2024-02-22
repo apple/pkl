@@ -24,19 +24,19 @@ class HttpUtilsTest {
   }
   
   @Test
-  fun require200StatusCode() {
+  fun checkHasStatusCode200() {
     val response = FakeHttpResponse.withoutBody { 
       statusCode = 200 
     }
     assertDoesNotThrow {  
-      HttpUtils.requireStatusCode200(response)
+      HttpUtils.checkHasStatusCode200(response)
     }
 
     val response2 = FakeHttpResponse.withoutBody { 
       statusCode = 404 
     }
     assertThrows<IOException> {
-      HttpUtils.requireStatusCode200(response2)
+      HttpUtils.checkHasStatusCode200(response2)
     }
   }
 }

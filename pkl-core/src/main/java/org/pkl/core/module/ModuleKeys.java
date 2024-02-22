@@ -489,7 +489,7 @@ public final class ModuleKeys {
         var request = HttpRequest.newBuilder(uri).build();
         var response = httpClient.send(request, BodyHandlers.ofInputStream());
         try (var body = response.body()) {
-          HttpUtils.requireStatusCode200(response);
+          HttpUtils.checkHasStatusCode200(response);
           securityManager.checkResolveModule(response.uri());
           String text = IoUtils.readString(body);
           return ResolvedModuleKeys.virtual(this, response.uri(), text, true);

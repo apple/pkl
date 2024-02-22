@@ -33,7 +33,7 @@ public final class HttpUtils {
     return "https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme);
   }
 
-  public static void requireStatusCode200(HttpResponse<?> response) throws IOException {
+  public static void checkHasStatusCode200(HttpResponse<?> response) throws IOException {
     if (response.statusCode() == 200) return;
 
     var body = response.body();

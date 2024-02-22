@@ -110,7 +110,7 @@ public final class ResolvedModuleKeys {
         var httpClient = VmContext.get(null).getHttpClient();
         var request = HttpRequest.newBuilder(uri).build();
         var response = httpClient.send(request, BodyHandlers.ofString());
-        HttpUtils.requireStatusCode200(response);
+        HttpUtils.checkHasStatusCode200(response);
         return response.body();
       }
 

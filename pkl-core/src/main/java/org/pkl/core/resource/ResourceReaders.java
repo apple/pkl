@@ -299,7 +299,7 @@ public final class ResourceReaders {
         var request = HttpRequest.newBuilder(uri).build();
         var response = httpClient.send(request, BodyHandlers.ofByteArray());
         if (response.statusCode() == 404) return Optional.empty();
-        HttpUtils.requireStatusCode200(response);
+        HttpUtils.checkHasStatusCode200(response);
         return Optional.of(new Resource(uri, response.body()));
       }
 

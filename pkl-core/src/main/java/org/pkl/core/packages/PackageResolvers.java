@@ -203,7 +203,7 @@ class PackageResolvers {
         throw new PackageLoadError(e, "ioErrorMakingHttpGet", uri, e.getMessage());
       }
       try {
-        HttpUtils.requireStatusCode200(response);
+        HttpUtils.checkHasStatusCode200(response);
       } catch (IOException e) {
         throw new PackageLoadError("badHttpStatusCode", response.statusCode(), response.uri());
       }

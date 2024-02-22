@@ -41,7 +41,7 @@ final class RequestRewritingClient implements HttpClient {
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
       throws IOException {
-    requireNotClosed(request);
+    checkNotClosed(request);
     return delegate.send(rewriteRequest(request), responseBodyHandler);
   }
 
@@ -87,7 +87,7 @@ final class RequestRewritingClient implements HttpClient {
     return builder.build();
   }
 
-  private void requireNotClosed(HttpRequest request) {
+  private void checkNotClosed(HttpRequest request) {
     if (closed.get()) {
       throw new IllegalStateException(
           "Cannot send request " + request + " because this client has already been closed.");
