@@ -225,7 +225,7 @@ parrot = (pigeon) {
   }
 }
 ----
-<1> Importing `foo.pkl` creates the object `foo`, so you can refer to `pigeon` in this code, like you did before.
+<1> Importing `pigeon.pkl` creates the object `pigeon`, so you can refer to `pigeon` in this code, like you did before.
 
 If you run Pkl on both, you will see that it works.
 Looking at the result, however, you see a (possibly) unexpected difference.
