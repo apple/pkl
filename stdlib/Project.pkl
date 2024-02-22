@@ -91,18 +91,25 @@ package: Package?
 /// ```
 tests: Listing<String>(isDistinct)
 
-/// Tells if the project is a file-based module named `PklProject`.
-local isLocalPklProject = (it: Project) -> 
-  it.projectFileUri.startsWith("file:") && it.projectFileUri.endsWith("/PklProject")
+/// Tells if the project is a file-based module named `PklProject`, is not self, and has a [package] section
+local isValidLoadDependency = (it: Project) ->
+    isUriLocal(projectFileUri, it.projectFileUri)
+    && it.projectFileUri.endsWith("/PklProject")
+    && it != module
+    && it.package != null
+
+// this regex is an approximation but is good enough to handle URIs returned by `reflect`
+const local uriRegex = Regex(#"^(?:([^:/?#]+):)?(?://([^/?#]*))?[^?#]*(?:\?[^#]*)?(?:#.*)?"#)
+
+const local function isUriLocal(uri1: String, uri2: String): Boolean =
+  let (uri1Match = uriRegex.matchEntire(uri1)?.ifNonNull((it) -> Pair(it.groups[1]?.value, it.groups[2]?.value)))
+    let (uri2Match = uriRegex.matchEntire(uri2).ifNonNull((it) -> Pair(it.groups[1]?.value, it.groups[2]?.value)))
+      uri1Match == uri2Match
 
 /// A local dependency is another [Project] that is local to the file system.
 ///
 /// To declare, use `import("path/to/PklProject")`
-typealias LocalDependency = Project(
-  isLocalPklProject,
-  this != module,
-  this.package != null
-)
+typealias LocalDependency = Project(isValidLoadDependency)
 
 /// The dependencies of this project.
 ///
@@ -176,7 +183,7 @@ typealias LocalDependency = Project(
 ///   1. Gather all dependencies, both direct and transitive.
 ///   2. For each package's major version, determine the highest declared minor version.
 ///   3. Write each resolved dependency to sibling file `PklProject.deps.json`.
-dependencies: Mapping<String(!contains("/")), *RemoteDependency|LocalDependency>
+dependencies: Mapping<String(!contains("/")), * RemoteDependency|Project(isValidLoadDependency)>
 
 /// If set, controls the base evaluator settings when running the evaluator.
 ///
@@ -211,10 +218,10 @@ function newInstance(enclosingModule: Module): Project = new {
 }
 
 local hasVersion = (it: Uri) ->
-  let (versionSep = it.lastIndexOf("@"))
-    if (versionSep == -1) false
-    else let (version = it.drop(versionSep + 1))
-      semver.parseOrNull(version) != null
+    let (versionSep = it.lastIndexOf("@"))
+      if (versionSep == -1) false
+      else let (version = it.drop(versionSep + 1))
+        semver.parseOrNull(version) != null
 
 typealias PackageUri = Uri(startsWith("package:"), hasVersion)
 

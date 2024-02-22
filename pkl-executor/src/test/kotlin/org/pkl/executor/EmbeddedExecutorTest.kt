@@ -478,7 +478,7 @@ class EmbeddedExecutorTest {
     )
     val result = executor.evaluatePath(pklFile) {
       allowedModules("file:", "package:", "projectpackage:", "https:")
-      allowedResources("prop:", "package:", "projectpackage:", "https:")
+      allowedResources("file:", "prop:", "package:", "projectpackage:", "https:")
       moduleCacheDir(cacheDir)
       projectDir(projectDir)
     }
