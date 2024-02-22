@@ -111,11 +111,11 @@ public final class IoUtils {
     return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
   }
 
-  public static byte[] readBytes(URL url) throws IOException {
-    if (HttpUtils.isHttpUrl(url)) {
-      throw new IllegalArgumentException("Should use HTTP client to GET " + url);
+  public static byte[] readBytes(URI uri) throws IOException {
+    if (HttpUtils.isHttpUrl(uri)) {
+      throw new IllegalArgumentException("Should use HTTP client to GET " + uri);
     }
-    try (var stream = url.openStream()) {
+    try (var stream = IoUtils.toUrl(uri).openStream()) {
       return stream.readAllBytes();
     }
   }

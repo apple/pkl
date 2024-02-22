@@ -415,20 +415,20 @@ class IoUtilsTest {
   @Test
   fun `readBytes(URL) does not support HTTP URLs`() {
     assertThrows<IllegalArgumentException> {
-      IoUtils.readBytes(URL("https://example.com"))
+      IoUtils.readBytes(URI("https://example.com"))
     }
     assertThrows<IllegalArgumentException> {
-      IoUtils.readBytes(URL("http://example.com"))
+      IoUtils.readBytes(URI("http://example.com"))
     }
   }
 
   @Test
   fun `readString(URL) does not support HTTP URLs`() {
     assertThrows<IllegalArgumentException> {
-      IoUtils.readString(URL("https://example.com"))
+      IoUtils.readString(URI("https://example.com").toURL())
     }
     assertThrows<IllegalArgumentException> {
-      IoUtils.readString(URL("http://example.com"))
+      IoUtils.readString(URI("http://example.com").toURL())
     }
   }
 }
