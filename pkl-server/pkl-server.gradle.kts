@@ -1,7 +1,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJvmLibrary")
-  id("pklKotlinLibrary")
+  id("pklPureKotlin")
 }
 
 description = "Pkl packaging server"
