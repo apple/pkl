@@ -29,3 +29,7 @@ publishing {
     }
   }
 }
+
+tasks.javadoc {
+  enabled = false
+}

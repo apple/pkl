@@ -19,6 +19,8 @@ module pkl.commons.cli {
   requires java.base;
   requires kotlin.stdlib;
 
+  requires com.github.ajalt.clikt;
+
   exports org.pkl.commons.cli;
   exports org.pkl.commons.cli.commands;
 }
