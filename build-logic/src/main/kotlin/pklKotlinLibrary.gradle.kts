@@ -79,19 +79,11 @@ val reportMergeSarif by tasks.registering(ReportMergeTask::class) {
   input.from(detektTasks.map { it.sarifReportFile })
 }
 
-tasks.compileJava {
-  mustRunAfter(tasks.compileKotlin)
-}
-
 tasks.compileTestJava {
   mustRunAfter(tasks.compileTestKotlin)
 }
 
 val javac: JavaCompile by tasks.named("compileJava", JavaCompile::class)
-tasks.compileKotlin.configure {
-  destinationDirectory = javac.destinationDirectory
-}
-
 javac.apply {
   dependsOn(tasks.compileKotlin)
   mustRunAfter(tasks.compileKotlin)
