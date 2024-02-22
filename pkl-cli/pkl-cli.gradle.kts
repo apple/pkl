@@ -21,12 +21,16 @@ private val entrypoint = "org.pkl.cli.Main"
 private val module = "pkl.cli"
 
 // make Java executable available to other subprojects
-private val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
+val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
+
+// make Java executable available to other subprojects
+val nativeCliExecutableConfiguration: Configuration = configurations.create("nativeExecutable")
 
 val enablePgo = false
 val oracleGvm = false
 val pgoInstrument = enablePgo
 val enableExperimental = true
+val profileName = "pkl-cli.iprof"
 val profilesZip = layout.projectDirectory.file("pgo.zip")
 val enableRelease = findProperty("nativeRelease") == "true"
 val isNativeBuildEnabled = gradle.startParameter.taskNames.any { subject ->
@@ -57,7 +61,7 @@ val releaseCFlags: List<String> = listOf(
 val releaseNativeImageFlags = listOf(
   "-O3",
   "-march=native",
-  if (!enablePgo) null else "--pgo=pkl-cli.iprof",
+  if (!enablePgo) null else "--pgo=../profiles/$profileName",
 ).plus(releaseCFlags.flatMap {
   listOf(
     "-H:NativeLinkerOption=$it",
@@ -188,13 +192,34 @@ tasks.shadowJar {
 
 val inflateProfiles by tasks.registering(Copy::class) {
   from(zipTree(profilesZip))
-  into(layout.buildDirectory.dir("executable"))
+  into(layout.buildDirectory.dir("profiles"))
+  outputs.files(layout.buildDirectory.files("profiles/$profileName"))
 }
 
 val releasePrep by tasks.registering {
   onlyIf { enableRelease }
   dependsOn(inflateProfiles)
   outputs.cacheIf { true }
+}
+
+fun selectNativeHostExecutable(): TaskProvider<Exec> {
+  return when {
+    buildInfo.os.isMacOsX && (buildInfo.arch == "amd64") -> macExecutableAmd64
+    buildInfo.os.isMacOsX && (buildInfo.arch == "aarch64") -> macExecutableAarch64
+    buildInfo.os.isLinux && (buildInfo.arch == "amd64") -> linuxExecutableAmd64
+    buildInfo.os.isLinux && (buildInfo.arch == "aarch64") -> linuxExecutableAarch64
+    buildInfo.os.isWindows -> windowsAmd64
+    else -> error("No host binary could be selected; please check your OS for Pkl support")
+  }
+}
+
+val nativeHostExecutable by tasks.registering {
+  selectNativeHostExecutable().get().let {
+    dependsOn(it)
+    inputs.files(it.outputs.files)
+    outputs.files(it.outputs.files)
+    outputs.cacheIf { true }
+  }
 }
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
@@ -518,14 +543,20 @@ tasks.assembleNative {
   dependsOn(nativeTargets)
 }
 
-// make Java executable available to other subprojects
-// (we don't do the same for native executables because we don't want tasks assemble/build to build them)
 artifacts {
-  add("javaExecutable", javaExecutable.map { it.outputs.files.singleFile }) {
+  // make Java executable available to other subprojects
+  add(javaExecutableConfiguration.name, javaExecutable.map { it.outputs.files.singleFile }) {
     name = "pkl-cli-java"
     classifier = null
     extension = "jar"
     builtBy(javaExecutable)
+  }
+
+  // add native CLI for downstream smoke tests
+  add(nativeCliExecutableConfiguration.name, nativeHostExecutable.map { it.outputs.files.singleFile }) {
+    name = "pkl-cli"
+    classifier = null
+    builtBy(nativeHostExecutable)
   }
 }
 
