@@ -32,7 +32,16 @@ examples {
     }
   }
   ["glob-import local project"] {
-    new {}
+    new {
+      ["@project2/penguin.pkl"] {
+        bird {
+          name = "Penguin"
+          favoriteFruit {
+            name = "Ice Fruit"
+          }
+        }
+      }
+    }
   }
   ["glob-import using dependency notation"] {
     Set("@birds/catalog/Ostritch.pkl", "@birds/catalog/Swallow.pkl")
