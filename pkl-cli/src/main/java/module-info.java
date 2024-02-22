@@ -14,5 +14,4 @@ open module pkl.cli {
 
   requires pkl.core;
   requires pkl.commons;
-  requires pkl.server;
 }
