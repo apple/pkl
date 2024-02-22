@@ -20,5 +20,6 @@ package org.pkl.tools;
  */
 // TODO: figure out how to generate javadoc for a shadow jar.
 @SuppressWarnings("unused")
-public class Empty {
+public final class Empty {
+  private Empty() {}
 }

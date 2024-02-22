@@ -97,22 +97,21 @@ class CliJavaCodeGeneratorTest {
 
     val module1PropertiesFile = resourcesDir.resolve("org.mod1.properties")
 
+    val module1PropertiesString = module1PropertiesFile.readString()
+    // use two assertions because java.util.Properties doesn't guarantee order
     assertContains(
-      """
-        org.pkl.config.java.mapper.org.mod1\#Person=org.Mod1${dollar}Person
-        org.pkl.config.java.mapper.org.mod1\#ModuleClass=org.Mod1
-      """
-        .trimIndent(),
-      module1PropertiesFile.readString()
+      """org.pkl.config.java.mapper.org.mod1\#Person=org.Mod1${dollar}Person""",
+      module1PropertiesString
+    )
+    assertContains(
+      """org.pkl.config.java.mapper.org.mod1\#ModuleClass=org.Mod1""",
+      module1PropertiesString
     )
 
     val module2PropertiesFile = resourcesDir.resolve("org.mod2.properties")
 
     assertContains(
-      """
-        org.pkl.config.java.mapper.org.mod2\#ModuleClass=org.Mod2
-      """
-        .trimIndent(),
+      """org.pkl.config.java.mapper.org.mod2\#ModuleClass=org.Mod2""",
       module2PropertiesFile.readString()
     )
   }

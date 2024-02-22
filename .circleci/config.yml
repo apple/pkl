@@ -615,6 +615,24 @@ jobs:
       LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:17.0
+  gradle-check-jdk21:
+    steps:
+    - checkout
+    - run:
+        command: ./gradlew --info --stacktrace check
+        name: gradle check
+    - run:
+        command: |-
+          mkdir ~/test-results/
+          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
+        name: Gather test results
+        when: always
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    docker:
+    - image: cimg/openjdk:21.0
   bench:
     steps:
     - checkout
@@ -765,6 +783,9 @@ workflows:
     - gradle-check-jdk17:
         requires:
         - hold
+    - gradle-check-jdk21:
+        requires:
+        - hold
     - check-patch-file:
         requires:
         - hold
@@ -776,6 +797,7 @@ workflows:
     jobs:
     - gradle-check-jdk11
     - gradle-check-jdk17
+    - gradle-check-jdk21
     - check-patch-file
     - bench
     - gradle-compatibility
@@ -788,6 +810,7 @@ workflows:
         requires:
         - gradle-check-jdk11
         - gradle-check-jdk17
+        - gradle-check-jdk21
         - check-patch-file
         - bench
         - gradle-compatibility
@@ -815,6 +838,12 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk17:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - gradle-check-jdk21:
         filters:
           branches:
             ignore: /.*/
@@ -872,6 +901,7 @@ workflows:
         requires:
         - gradle-check-jdk11
         - gradle-check-jdk17
+        - gradle-check-jdk21
         - check-patch-file
         - bench
         - gradle-compatibility
@@ -915,6 +945,9 @@ workflows:
         requires:
         - hold
     - gradle-check-jdk17:
+        requires:
+        - hold
+    - gradle-check-jdk21:
         requires:
         - hold
     - check-patch-file:
