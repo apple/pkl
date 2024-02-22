@@ -95,15 +95,15 @@ class HttpClientTest {
   }
   
   @Test
-  fun `can load certificates from default location`(@TempDir userHome: Path) {
-    val certFile = userHome.resolve(".pkl")
+  fun `can load certificates from default location`(@TempDir tempDir: Path) {
+    val certFile = tempDir.resolve(".pkl")
       .resolve("cacerts")
       .createDirectories()
       .resolve("certs.pem")
     FileTestUtils.selfSignedCertificate.copyTo(certFile)
     
     assertDoesNotThrow {
-      HttpClientBuilder(userHome).addDefaultCliCertificates().build()
+      HttpClientBuilder(tempDir).addDefaultCliCertificates().build()
     }
   }
   
