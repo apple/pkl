@@ -34,7 +34,7 @@ dependencies {
   implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }
 
-dependencyLocking {
+if (properties["lockDependencies"] == "true") dependencyLocking {
   lockAllConfigurations()
 }
 
