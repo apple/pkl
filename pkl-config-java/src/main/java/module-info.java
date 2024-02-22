@@ -12,15 +12,11 @@
  * limitations under the License.
  */
 
-/**
- * Pkl: Configuration Runtime for JVM.
- */
+/** Pkl: Configuration Runtime for JVM. */
 open module pkl.config.java {
   requires java.base;
   requires java.desktop;
-
   requires io.leangen.geantyref;
-
   requires pkl.core;
 
   exports org.pkl.config.java;

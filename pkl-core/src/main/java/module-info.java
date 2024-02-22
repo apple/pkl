@@ -22,21 +22,29 @@ open module pkl.core {
   requires org.snakeyaml.engine.v2;
 
   exports org.pkl.core.module to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.packages to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.project to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.repl to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.resource to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.runtime to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.stdlib.test.report to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.util to
-      pkl.cli,pkl.config.java;
+      pkl.cli,
+      pkl.config.java;
   exports org.pkl.core.plugin;
   exports org.pkl.core;
 
