@@ -3,11 +3,10 @@
 
 import org.gradle.configurationcache.extensions.capitalized
 
-
 plugins {
   id("pklAllProjects")
   id("pklJvmEntrypoint")
-  id("pklPureKotlin")
+  id("pklKotlinLibrary")
   id("pklPublishLibrary")
   id("pklNativeBuild")
   `maven-publish`
@@ -129,6 +128,9 @@ dependencies {
   modulepath(libs.truffleApi)
   modulepath(libs.truffleRuntime)
   modulepath(projects.pklCore)
+  modulepath(projects.pklCommons)
+  modulepath(projects.pklCommonsCli)
+  modulepath(projects.pklExecutor)
 
   // CliEvaluator exposes PClass
   api(projects.pklCore)
@@ -315,9 +317,22 @@ fun createArchiveTasks(
   }
 }
 
+val copyKotlinClasses by tasks.registering(Copy::class) {
+  from(tasks.compileKotlin.get().outputs.files)
+  into(tasks.compileJava.get().destinationDirectory)
+  include("*", "*/**/*.*")
+}
+
+listOf(tasks.jar, tasks.shadowJar, tasks.testClasses, tasks.test).forEach {
+  it.configure {
+    dependsOn(copyKotlinClasses)
+  }
+}
+
 fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
   enabled = isEnabled && isNativeBuildEnabled
-  dependsOn(":installGraalVm", releasePrep)
+  dependsOn(":installGraalVm", releasePrep, copyKotlinClasses)
+  mustRunAfter(copyKotlinClasses)
 
   inputs.files(sourceSets.main.map { it.output })
   inputs.files(configurations.runtimeClasspath)
@@ -331,6 +346,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   val exclusions =
     if (buildInfo.graalVm.isGraal22) emptyList()
     else nativeImageExclusions.map { it.get().module.name }
+
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
@@ -661,4 +677,16 @@ javac.apply {
   options.compilerArgumentProviders.add(CommandLineArgumentProvider {
     extraJavacArgs
   })
+}
+
+tasks.javadoc {
+  enabled = false
+}
+
+// fix: API build depends on kotlin classes, but the task is not added until later in gradle's
+// configuration phase.
+afterEvaluate {
+  tasks.named("apiBuild").configure {
+    dependsOn(copyKotlinClasses)
+  }
 }
