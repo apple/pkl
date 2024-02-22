@@ -66,6 +66,10 @@ public abstract interface class org/pkl/gradle/spec/JavaCodeGenSpec : org/pkl/gr
 
 public abstract interface class org/pkl/gradle/spec/KotlinCodeGenSpec : org/pkl/gradle/spec/CodeGenSpec {
 	public abstract fun getGenerateKdoc ()Lorg/gradle/api/provider/Property;
+	public abstract fun getImplementKSerializable ()Lorg/gradle/api/provider/Property;
+	public abstract fun getImplementSerializable ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIndent ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKotlinPackage ()Lorg/gradle/api/provider/Property;
 }
 
 public abstract interface class org/pkl/gradle/spec/ModulesSpec : org/pkl/gradle/spec/BasePklSpec {
@@ -156,6 +160,8 @@ public abstract class org/pkl/gradle/task/KotlinCodeGenTask : org/pkl/gradle/tas
 	public fun <init> ()V
 	protected fun doRunTask ()V
 	public abstract fun getGenerateKdoc ()Lorg/gradle/api/provider/Property;
+	public abstract fun getImplementKSerializable ()Lorg/gradle/api/provider/Property;
+	public abstract fun getKotlinPackage ()Lorg/gradle/api/provider/Property;
 }
 
 public abstract class org/pkl/gradle/task/ModulesTask : org/pkl/gradle/task/BasePklTask {
