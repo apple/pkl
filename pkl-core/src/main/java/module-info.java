@@ -17,9 +17,13 @@
 open module pkl.core {
   requires java.base;
   requires java.naming;
+
   requires org.graalvm.nativeimage;
   requires org.graalvm.truffle;
+
   requires org.snakeyaml.engine.v2;
+
+  requires pkl.executor;
 
   exports org.pkl.core.module to
       pkl.cli,
@@ -69,6 +73,7 @@ open module pkl.core {
   uses org.pkl.core.StackFrameTransformer;
   uses org.pkl.core.module.ModuleKeyFactory;
   uses org.pkl.core.plugin.PklPlugin;
+  uses org.pkl.executor.Executor;
 
   provides com.oracle.truffle.api.provider.TruffleLanguageProvider with
       org.pkl.core.runtime.VmLanguageProvider;
