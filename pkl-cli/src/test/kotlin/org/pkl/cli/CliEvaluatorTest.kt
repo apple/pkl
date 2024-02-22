@@ -1178,8 +1178,8 @@ result = someLib.x
     val invalidCerts = FileTestUtils.writeCertificateWithMissingLines(tempDir)
     val err = assertThrows<CliException> { evalModuleThatImportsPackage(invalidCerts) }
     assertThat(err)
+      // no assert for detail message because it differs between JDK implementations
       .hasMessageContaining("Error parsing CA certificate file `${invalidCerts.pathString}`:")
-      .hasMessageContaining("not enough content")
       .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
   }
 
