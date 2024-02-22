@@ -16,6 +16,7 @@
 package org.pkl.commons.test
 
 import java.nio.file.Path
+import java.util.stream.Collectors
 import kotlin.io.path.*
 import org.assertj.core.api.Assertions.fail
 import org.pkl.commons.*
@@ -45,7 +46,9 @@ object FileTestUtils {
 }
 
 fun Path.listFilesRecursively(): List<Path> =
-  walk(99).use { paths -> paths.filter { it.isRegularFile() || it.isSymbolicLink() }.toList() }
+  walk(99).use { paths ->
+    paths.filter { it.isRegularFile() || it.isSymbolicLink() }.collect(Collectors.toList())
+  }
 
 data class SnippetOutcome(val expectedOutFile: Path, val actual: String, val success: Boolean) {
   private val expectedErrFile =
