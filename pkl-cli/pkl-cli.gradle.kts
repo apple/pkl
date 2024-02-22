@@ -7,6 +7,7 @@ import org.gradle.configurationcache.extensions.capitalized
 plugins {
   id("pklAllProjects")
   id("pklJvmEntrypoint")
+  id("pklPureKotlin")
   id("pklPublishLibrary")
   id("pklNativeBuild")
   `maven-publish`
@@ -168,10 +169,6 @@ tasks.jar {
 
   // not required at runtime
   exclude("org/pkl/cli/svm/**")
-}
-
-tasks.javadoc {
-  enabled = false
 }
 
 tasks.withType(JavaExec::class).configureEach {

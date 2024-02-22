@@ -3,7 +3,7 @@ import java.security.MessageDigest
 plugins {
   id("pklAllProjects")
   id("pklJvmLibrary")
-  id("pklKotlinLibrary")
+  id("pklPureKotlin")
 }
 
 description = "Pkl commons for testing (internal)"
@@ -145,8 +145,4 @@ val generateCerts by tasks.registering(JavaExec::class) {
   doFirst {
     workingDir.mkdirs()
   }
-}
-
-tasks.javadoc {
-  enabled = false
 }

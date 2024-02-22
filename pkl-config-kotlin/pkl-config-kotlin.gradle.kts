@@ -1,7 +1,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJvmLibrary")
-  id("pklKotlinLibrary")
+  id("pklPureKotlin")
   id("pklPublishLibrary")
 }
 
@@ -47,10 +47,6 @@ sourceSets.getByName("test") {
 
 tasks.processTestResources {
   dependsOn(generateTestConfigClasses)
-}
-
-tasks.javadoc {
-  enabled = false
 }
 
 tasks.compileTestKotlin {

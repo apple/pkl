@@ -1,7 +1,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJvmLibrary")
-  id("pklKotlinLibrary")
+  id("pklPureKotlin")
   id("pklPublishLibrary")
   id("pklHtmlValidator")
   @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369

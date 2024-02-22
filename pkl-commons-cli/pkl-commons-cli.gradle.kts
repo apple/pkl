@@ -1,7 +1,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJvmLibrary")
-  id("pklKotlinLibrary")
+  id("pklPureKotlin")
   id("pklPublishLibrary")
 }
 
@@ -28,8 +28,4 @@ publishing {
       }
     }
   }
-}
-
-tasks.javadoc {
-  enabled = false
 }

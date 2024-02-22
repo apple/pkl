@@ -24,11 +24,13 @@ open module pkl.core {
   exports org.pkl.core.module to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.doc;
   exports org.pkl.core.packages to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.doc;
   exports org.pkl.core.project to
       pkl.cli,
       pkl.commons.cli,
@@ -52,10 +54,15 @@ open module pkl.core {
   exports org.pkl.core.util to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.doc;
   exports org.pkl.core.settings to
       pkl.cli,
       pkl.commons.cli;
+  exports org.pkl.core.parser to
+      pkl.doc;
+  exports org.pkl.core.util.json to
+      pkl.doc;
   exports org.pkl.core.plugin;
   exports org.pkl.core;
 
