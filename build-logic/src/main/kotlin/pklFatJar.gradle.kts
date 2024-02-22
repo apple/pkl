@@ -36,6 +36,7 @@ val relocations = mapOf(
   // pkl-cli dependencies
   "org.jline." to "org.pkl.thirdparty.jline.",
   "com.github.ajalt.clikt." to "org.pkl.thirdparty.clikt.",
+  "kotlin." to "org.pkl.thirdparty.kotlin.",
   "kotlinx." to "org.pkl.thirdparty.kotlinx.",
   "org.intellij." to "org.pkl.thirdparty.intellij.",
   "org.fusesource.jansi." to "org.pkl.thirdparty.jansi",
