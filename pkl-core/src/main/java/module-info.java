@@ -14,7 +14,7 @@
 
 /** Pkl: Core. */
 @SuppressWarnings("module")
-open module pkl.core {
+module pkl.core {
   requires java.base;
   requires java.naming;
 
