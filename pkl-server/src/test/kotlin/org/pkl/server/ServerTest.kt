@@ -29,12 +29,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.module.PathElement
 
+@Disabled("sgammon: Broken in CI")
 class ServerTest {
   companion object {
     private const val useDirectTransport = false

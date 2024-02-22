@@ -101,6 +101,7 @@ jobs:
     secrets:
       GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
       BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   ##
   ## Job: Submit Dependency Graph

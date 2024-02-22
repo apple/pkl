@@ -24,13 +24,27 @@ jobs:
       contents: "write"
 
   ##
-  ## Job: Check for Wrapper
+  ## Job: Build
   ##
-  check-wrapper:
-    name: "Checks"
-    uses: ./.github/workflows/checks.gradle-wrapper.yml
-    permissions:
-      contents: "read"
+  build:
+    name: "Build"
+    uses: ./.github/workflows/job.build.yml
+    needs: [preflight-checks]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+
+  ##
+  ## Job: Tests
+  ##
+  tests:
+    name: "Tests"
+    uses: ./.github/workflows/job.tests.yml
+    needs: [build]
+    secrets:
+      GRADLE_CONFIGURATION_KEY: ${{ secrets.GRADLE_CONFIGURATION_KEY }}
+      BUILDLESS_APIKEY: ${{ secrets.BUILDLESS_APIKEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   ##
   ## Job: Checks with Detekt
