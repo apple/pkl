@@ -68,10 +68,12 @@ internal class ClientResourceReader(
           transport.send(request) { response ->
             when (response) {
               is ListResourcesResponse ->
-                if (response.pathElements != null) {
+                if (response.error != null) {
+                  completeExceptionally(IOException(response.error))
+                } else if (response.pathElements != null) {
                   complete(response.pathElements)
                 } else {
-                  completeExceptionally(IOException(response.error))
+                  complete(emptyList())
                 }
               else -> completeExceptionally(ProtocolException("Unexpected response"))
             }

@@ -29,6 +29,7 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
+import org.pkl.core.module.PathElement;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
@@ -36,6 +37,7 @@ import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
+import org.pkl.core.util.Nullable;
 
 public final class ResourceManager {
   private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
@@ -119,20 +121,20 @@ public final class ResourceManager {
   }
 
   @TruffleBoundary
-  public Optional<Object> read(URI resourceUri, Node readNode) {
+  public Optional<Object> read(URI resourceUri, @Nullable Node readNode) {
     return resources.computeIfAbsent(
         resourceUri.normalize(),
         uri -> {
           try {
             securityManager.checkReadResource(uri);
           } catch (SecurityManagerException e) {
-            throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
+            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
           }
 
           var reader = resourceReaders.get(uri.getScheme());
           if (reader == null) {
             throw new VmExceptionBuilder()
-                .withLocation(readNode)
+                .withOptionalLocation(readNode)
                 .evalError("noResourceReaderRegistered", resourceUri.getScheme())
                 .build();
           }
@@ -144,16 +146,16 @@ public final class ResourceManager {
             throw new VmExceptionBuilder()
                 .evalError("ioErrorReadingResource", uri)
                 .withCause(e)
-                .withLocation(readNode)
+                .withOptionalLocation(readNode)
                 .build();
           } catch (URISyntaxException e) {
             throw new VmExceptionBuilder()
                 .evalError("invalidResourceUri", resourceUri)
                 .withHint(e.getReason())
-                .withLocation(readNode)
+                .withOptionalLocation(readNode)
                 .build();
           } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
-            throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
+            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
           }
           if (resource.isEmpty()) return resource;
 
@@ -166,8 +168,38 @@ public final class ResourceManager {
 
           throw new VmExceptionBuilder()
               .evalError("unsupportedResourceType", reader.getClass().getName(), res.getClass())
-              .withLocation(readNode)
+              .withOptionalLocation(readNode)
               .build();
         });
+  }
+
+  /**
+   * Used by ResourceReaders.ProjectPackageResource to resolve resources from projects that may not
+   * be on the local filesystem
+   */
+  public List<PathElement> listElements(URI baseUri) throws IOException, SecurityManagerException {
+    var reader = resourceReaders.get(baseUri.getScheme());
+    if (reader == null) {
+      throw new VmExceptionBuilder()
+          .evalError("noResourceReaderRegistered", baseUri.getScheme())
+          .build();
+    }
+
+    return reader.listElements(securityManager, baseUri);
+  }
+
+  /**
+   * Used by ResourceReaders.ProjectPackageResource to resolve resources from projects that may not
+   * be on the local filesystem
+   */
+  public boolean hasElement(URI elementUri) throws IOException, SecurityManagerException {
+    var reader = resourceReaders.get(elementUri.getScheme());
+    if (reader == null) {
+      throw new VmExceptionBuilder()
+          .evalError("noResourceReaderRegistered", elementUri.getScheme())
+          .build();
+    }
+
+    return reader.hasElement(securityManager, elementUri);
   }
 }

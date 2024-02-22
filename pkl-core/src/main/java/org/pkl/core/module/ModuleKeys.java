@@ -326,7 +326,7 @@ public final class ModuleKeys {
     @Override
     protected Map<String, ? extends Dependency> getDependencies() {
       var projectDepsManager = VmContext.get(null).getProjectDependenciesManager();
-      if (projectDepsManager == null || !projectDepsManager.hasPath(path)) {
+      if (projectDepsManager == null || !projectDepsManager.hasUri(uri)) {
         throw new PackageLoadError("cannotResolveDependencyNoProject");
       }
       return projectDepsManager.getDependencies();
@@ -517,11 +517,11 @@ public final class ModuleKeys {
   }
 
   /** Base implementation; knows how to resolve dependencies prefixed with <code>@</code>. */
-  private abstract static class DependencyAwareModuleKey implements ModuleKey {
+  public abstract static class DependencyAwareModuleKey implements ModuleKey {
 
     protected final URI uri;
 
-    DependencyAwareModuleKey(URI uri) {
+    protected DependencyAwareModuleKey(URI uri) {
       this.uri = uri;
     }
 
@@ -672,12 +672,12 @@ public final class ModuleKeys {
       return projectDepsManager;
     }
 
-    private @Nullable Path getLocalPath(Dependency dependency) {
+    private @Nullable URI getLocalUri(Dependency dependency, PackageAssetUri assetUri) {
       if (!(dependency instanceof LocalDependency)) {
         return null;
       }
       return ((LocalDependency) dependency)
-          .resolveAssetPath(getProjectDepsResolver().getProjectDir(), packageAssetUri);
+          .resolveAssetUri(getProjectDepsResolver().getProjectBaseUri(), assetUri);
     }
 
     @Override
@@ -686,10 +686,9 @@ public final class ModuleKeys {
       securityManager.checkResolveModule(packageAssetUri.getUri());
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency);
-      if (path != null) {
-        securityManager.checkResolveModule(path.toUri());
-        return ResolvedModuleKeys.file(this, path.toUri(), path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        return VmContext.get(null).getModuleResolver().resolve(local).resolve(securityManager);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
@@ -704,10 +703,12 @@ public final class ModuleKeys {
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency);
-      if (path != null) {
-        securityManager.checkResolveModule(path.toUri());
-        return FileResolver.listElements(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        return VmContext.get(null)
+            .getModuleResolver()
+            .resolve(local)
+            .listElements(securityManager, local);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
@@ -721,10 +722,12 @@ public final class ModuleKeys {
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency);
-      if (path != null) {
-        securityManager.checkResolveModule(path.toUri());
-        return FileResolver.hasElement(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        return VmContext.get(null)
+            .getModuleResolver()
+            .resolve(local)
+            .hasElement(securityManager, local);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
