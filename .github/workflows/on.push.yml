@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: "push-${{ github.ref }}"
+  group: "push-${{ github.sha }}"
 
 jobs:
   ##
