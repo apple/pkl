@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.utils.keysToMap
-
 plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")

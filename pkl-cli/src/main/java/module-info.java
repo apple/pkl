@@ -13,4 +13,5 @@ open module pkl.cli {
   requires org.graalvm.truffle.runtime.svm;
 
   requires pkl.core;
+  requires pkl.commons;
 }

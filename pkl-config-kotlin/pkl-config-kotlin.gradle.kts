@@ -49,6 +49,10 @@ tasks.processTestResources {
   dependsOn(generateTestConfigClasses)
 }
 
+tasks.javadoc {
+  enabled = false
+}
+
 tasks.compileTestKotlin {
   dependsOn(generateTestConfigClasses)
 }

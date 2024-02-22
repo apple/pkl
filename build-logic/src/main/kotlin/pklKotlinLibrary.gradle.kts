@@ -86,3 +86,23 @@ tasks.compileJava {
 tasks.compileTestJava {
   mustRunAfter(tasks.compileTestKotlin)
 }
+
+val javac: JavaCompile by tasks.named("compileJava", JavaCompile::class)
+tasks.compileKotlin.configure {
+  destinationDirectory = javac.destinationDirectory
+}
+
+javac.apply {
+  dependsOn(tasks.compileKotlin)
+  mustRunAfter(tasks.compileKotlin)
+
+  options.compilerArgumentProviders.add(object : CommandLineArgumentProvider {
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    val kotlinClasses = tasks.compileKotlin.get().destinationDirectory
+
+    override fun asArguments() = listOf(
+      "--patch-module", "${project.name.replace("-", ".")}=${kotlinClasses.get().asFile.absolutePath}"
+    )
+  })
+}

@@ -660,24 +660,8 @@ signing {
 //endregion
 
 val javac: JavaCompile by tasks.named("compileJava", JavaCompile::class)
-tasks.compileKotlin.configure {
-  destinationDirectory = javac.destinationDirectory
-}
-
 javac.apply {
-  dependsOn(tasks.compileKotlin)
-
   options.compilerArgumentProviders.add(CommandLineArgumentProvider {
     extraJavacArgs
-  })
-
-  options.compilerArgumentProviders.add(object : CommandLineArgumentProvider {
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    val kotlinClasses = tasks.compileKotlin.get().destinationDirectory
-
-    override fun asArguments() = listOf(
-      "--patch-module", "$module=${kotlinClasses.get().asFile.absolutePath}"
-    )
   })
 }
