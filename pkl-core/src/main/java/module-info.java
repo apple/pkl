@@ -17,12 +17,9 @@
 module pkl.core {
   requires java.base;
   requires java.naming;
-
   requires org.graalvm.nativeimage;
   requires org.graalvm.truffle;
-
   requires org.snakeyaml.engine.v2;
-
   requires pkl.executor;
 
   exports org.pkl.core.module to

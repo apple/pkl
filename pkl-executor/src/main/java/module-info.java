@@ -12,15 +12,16 @@
  * limitations under the License.
  */
 
-/**
- * Pkl: Executor.
- */
-@SuppressWarnings("module") module pkl.executor {
+/** Pkl: Executor. */
+@SuppressWarnings("module")
+module pkl.executor {
   requires java.base;
   requires org.slf4j;
 
   exports org.pkl.executor;
+  exports org.pkl.executor.spi.v1 to
+      pkl.core;
 
-  exports org.pkl.executor.spi.v1 to pkl.core;
-  opens org.pkl.executor.spi.v1 to pkl.core;
+  opens org.pkl.executor.spi.v1 to
+      pkl.core;
 }
