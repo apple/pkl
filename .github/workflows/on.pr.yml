@@ -49,7 +49,6 @@ jobs:
           java-version: "21"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           set-java-home: 'false'
-          native-image-job-reports: 'true'
       - name: "Check: Build Compile"
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
         continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'ci:api-check-bypass') }}
@@ -66,6 +65,7 @@ jobs:
           arguments: |
             projects
             tasks
+            --scan
 
   ##
   ## Job: Build
