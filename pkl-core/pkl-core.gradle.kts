@@ -17,7 +17,6 @@ val moduleName = "pkl.core"
 val generatorSourceSet = sourceSets.register("generator")
 val extraJavacArgs = listOf(
   "--add-reads=$moduleName=ALL-UNNAMED",
-  "--add-reads=$moduleName=org.pkl.executor",
 )
 
 sourceSets {
