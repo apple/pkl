@@ -15,6 +15,9 @@
 /** Pkl: Server. */
 module pkl.server {
   requires java.base;
+  requires kotlin.stdlib;
+
+  requires pkl.core;
 
   exports org.pkl.server;
 }

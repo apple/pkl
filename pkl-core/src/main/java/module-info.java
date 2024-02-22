@@ -26,16 +26,19 @@ module pkl.core {
       pkl.cli,
       pkl.commons.cli,
       pkl.config.java,
-      pkl.doc;
+      pkl.doc,
+      pkl.server;
   exports org.pkl.core.packages to
       pkl.cli,
       pkl.commons.cli,
       pkl.config.java,
-      pkl.doc;
+      pkl.doc,
+      pkl.server;
   exports org.pkl.core.project to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.server;
   exports org.pkl.core.repl to
       pkl.cli,
       pkl.commons.cli,
@@ -43,11 +46,13 @@ module pkl.core {
   exports org.pkl.core.resource to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.server;
   exports org.pkl.core.runtime to
       pkl.cli,
       pkl.commons.cli,
-      pkl.config.java;
+      pkl.config.java,
+      pkl.server;
   exports org.pkl.core.stdlib.test.report to
       pkl.cli,
       pkl.commons.cli,
@@ -64,6 +69,8 @@ module pkl.core {
       pkl.doc;
   exports org.pkl.core.util.json to
       pkl.doc;
+  exports org.pkl.core.ast.member to
+      pkl.server;
   exports org.pkl.core.plugin;
   exports org.pkl.core;
 
