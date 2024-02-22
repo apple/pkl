@@ -82,6 +82,7 @@ org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:1.9.20=kotlinComp
 org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:1.9.22=buildScriptClasspath,runtimeClasspath,testRuntimeClasspath
 org.jetbrains.kotlin:kotlin-scripting-jvm:1.9.20=kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest
 org.jetbrains.kotlin:kotlin-scripting-jvm:1.9.22=buildScriptClasspath,runtimeClasspath,testRuntimeClasspath
+org.jetbrains.kotlin:kotlin-serialization:1.9.22=compileClasspath,runtimeClasspath
 org.jetbrains.kotlin:kotlin-stdlib-common:1.9.22=runtimeClasspath,testRuntimeClasspath
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20=buildScriptClasspath,compileClasspath,implementationDependenciesMetadata,testCompileClasspath,testImplementationDependenciesMetadata
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10=runtimeClasspath,testRuntimeClasspath
