@@ -67,7 +67,7 @@ public final class Project {
   public static Project loadFromPath(
       Path path,
       SecurityManager securityManager,
-      java.time.@Nullable Duration timeout,
+      @Nullable java.time.Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars) {
     try (var evaluator =
@@ -90,7 +90,7 @@ public final class Project {
 
   /** Convenience method to load a project with the default stack frame transformer. */
   public static Project loadFromPath(
-      Path path, SecurityManager securityManager, java.time.@Nullable Duration timeout) {
+      Path path, SecurityManager securityManager, @Nullable java.time.Duration timeout) {
     return loadFromPath(
         path, securityManager, timeout, StackFrameTransformers.defaultTransformer, System.getenv());
   }

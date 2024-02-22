@@ -2169,7 +2169,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     return builder;
   }
 
-  private FrameDescriptor.@Nullable Builder createFrameDescriptorBuilder(ObjectBodyContext ctx) {
+  private @Nullable FrameDescriptor.Builder createFrameDescriptorBuilder(ObjectBodyContext ctx) {
     if (ctx.ps.isEmpty()) return null;
 
     checkCommaSeparatedElements(ctx, ctx.ps, ctx.errs);

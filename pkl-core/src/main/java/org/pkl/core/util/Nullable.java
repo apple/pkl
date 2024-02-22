@@ -20,7 +20,13 @@ import static javax.annotation.meta.When.MAYBE;
 import java.lang.annotation.*;
 import javax.annotation.meta.TypeQualifierNickname;
 
-@Target({ElementType.TYPE_PARAMETER, ElementType.TYPE_USE})
+@Target({
+  ElementType.TYPE_PARAMETER,
+  ElementType.TYPE_USE,
+  ElementType.PARAMETER,
+  ElementType.FIELD,
+  ElementType.METHOD
+})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @javax.annotation.Nonnull(when = MAYBE)
