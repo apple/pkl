@@ -146,3 +146,7 @@ val generateCerts by tasks.registering(JavaExec::class) {
     workingDir.mkdirs()
   }
 }
+
+tasks.javadoc {
+  enabled = false
+}
