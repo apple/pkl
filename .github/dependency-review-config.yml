@@ -2,4 +2,10 @@ license-check: true
 vulnerability-check: true
 fail-on-severity: "high"
 
-allow-ghsas: []
+allow-ghsas:
+  - GHSA-22wj-vf5f-wrvj # build-time only (com.h2database:h2)
+  - GHSA-4265-ccf5-phj5 # build-time only (org.apache.commons:commons-compress)
+  - GHSA-7g45-4rm6-3mm3 # build-time only (com.google.guava:guava)
+  - GHSA-5mg8-w23w-74h3 # build-time only (com.google.guava:guava)
+  - GHSA-hr8g-6v94-x4m9 # build-time only (org.bouncycastle:bcprov-*)
+  - GHSA-wjxj-5m7g-mg7q # build-time only (org.bouncycastle:bcp*)
