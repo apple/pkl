@@ -34,9 +34,3 @@ artifacts {
   // make source jar available to other subprojects
   add("sourcesJar", tasks["sourcesJar"])
 }
-
-tasks.jar {
-  manifest {
-    attributes += mapOf("Automatic-Module-Name" to "org.${project.name.replace("-", ".")}")
-  }
-}

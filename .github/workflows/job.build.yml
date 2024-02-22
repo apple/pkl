@@ -20,17 +20,8 @@ jobs:
   ## Job: Build
   ##
   gradle:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [Ubuntu]
-        mode: ["Strict"]
-        machine:
-          - "ubuntu-latest"
-
-    name: "Build (${{ matrix.os }})"
-    runs-on: ${{ matrix.machine }}
-    continue-on-error: ${{ matrix.mode != 'Strict' }}
+    name: "Build (Ubuntu)"
+    runs-on: ubuntu-latest
 
     defaults:
       run:
