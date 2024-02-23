@@ -11,7 +11,7 @@ class LazyHttpClientTest {
   @Test
   fun `builds underlying client on first send`() {
     val client = HttpClient.builder()
-      .addCertificates(javaClass.getResource("brokenCerts.pem"))
+      .addCertificates(javaClass.getResource("brokenCerts.pem")!!.toURI())
       .buildLazily()
     val request = HttpRequest.newBuilder(URI("https://example.com")).build()
     
@@ -23,7 +23,7 @@ class LazyHttpClientTest {
   @Test
   fun `does not build underlying client unnecessarily`() {
     val client = HttpClient.builder()
-      .addCertificates(javaClass.getResource("brokenCerts.pem"))
+      .addCertificates(javaClass.getResource("brokenCerts.pem")!!.toURI())
       .buildLazily()
     
     assertDoesNotThrow {

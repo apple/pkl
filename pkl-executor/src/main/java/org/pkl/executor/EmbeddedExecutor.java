@@ -231,7 +231,7 @@ final class EmbeddedExecutor implements Executor {
           options.getExternalProperties(),
           options.getModulePath(),
           options.getCertificateFiles(),
-          options.getCertificateUrls(),
+          options.getCertificateUris(),
           options.getRootDir(),
           options.getTimeout(),
           options.getOutputFormat(),

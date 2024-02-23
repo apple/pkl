@@ -40,8 +40,8 @@ object FileTestUtils {
   }
 
   fun writePklBuiltInCertificates(dir: Path): Path {
-    val text = javaClass.getResource("/org/pkl/core/http/IncludedCARoots.pem")!!.readText()
-    return dir.resolve("IncludedCARoots.pem").apply { writeText(text) }
+    val text = javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.readText()
+    return dir.resolve("PklCARoots.pem").apply { writeText(text) }
   }
 }
 

@@ -25,9 +25,8 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * An {@code HttpClient} implementation that defers creating the underlying HTTP client until the
- * first send. A potential drawback of using {@code LazyHttpClient} is that any {@link
- * HttpClientInitException} thrown by the underlying client is equally deferred.
+ * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
+ * send.
  */
 @ThreadSafe
 class LazyHttpClient implements HttpClient {

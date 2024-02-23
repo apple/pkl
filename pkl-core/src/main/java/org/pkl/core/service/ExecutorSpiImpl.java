@@ -17,7 +17,7 @@ package org.pkl.core.service;
 
 import static org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME;
 
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -136,8 +136,8 @@ public class ExecutorSpiImpl implements ExecutorSpi {
           for (var file : key.certificateFiles) {
             builder.addCertificates(file);
           }
-          for (var url : key.certificateUrls) {
-            builder.addCertificates(url);
+          for (var uri : key.certificateUris) {
+            builder.addCertificates(uri);
           }
           // If the above didn't add any certificates,
           // builder will fall back to Pkl's built-in certificates.
@@ -147,14 +147,12 @@ public class ExecutorSpiImpl implements ExecutorSpi {
 
   private static final class HttpClientKey {
     final Set<Path> certificateFiles;
-
-    @SuppressWarnings("UrlHashCode") // only intended to be used for class path URLs
-    final Set<URL> certificateUrls;
+    final Set<URI> certificateUris;
 
     HttpClientKey(ExecutorSpiOptions options) {
       // make defensive copies
       certificateFiles = Set.copyOf(options.getCertificateFiles());
-      certificateUrls = Set.copyOf(options.getCertificateUrls());
+      certificateUris = Set.copyOf(options.getCertificateUris());
     }
 
     @Override
@@ -167,12 +165,12 @@ public class ExecutorSpiImpl implements ExecutorSpi {
       }
       HttpClientKey that = (HttpClientKey) obj;
       return certificateFiles.equals(that.certificateFiles)
-          && certificateUrls.equals(that.certificateUrls);
+          && certificateUris.equals(that.certificateUris);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(certificateFiles, certificateUrls);
+      return Objects.hash(certificateFiles, certificateUris);
     }
   }
 }

@@ -15,7 +15,7 @@
  */
 package org.pkl.executor;
 
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -36,7 +36,7 @@ public final class ExecutorOptions {
 
   private final List<Path> certificateFiles;
 
-  private final List<URL> certificateUrls;
+  private final List<URI> certificateUris;
 
   private final /* @Nullable */ Path rootDir;
 
@@ -61,7 +61,7 @@ public final class ExecutorOptions {
    * @param externalProperties API equivalent of the repeatable {@code --property} CLI option
    * @param modulePath API equivalent of the {@code --module-path} CLI option
    * @param certificateFiles API equivalent of the {@code --ca-certificates} CLI option
-   * @param certificateUrls API equivalent of the {@code --ca-certificates} CLI option
+   * @param certificateUris API equivalent of the {@code --ca-certificates} CLI option
    * @param rootDir API equivalent of the {@code --root-dir} CLI option
    * @param timeout API equivalent of the {@code --timeout} CLI option
    * @param outputFormat API equivalent of the {@code --format} CLI option
@@ -77,7 +77,7 @@ public final class ExecutorOptions {
       Map<String, String> externalProperties,
       List<Path> modulePath,
       List<Path> certificateFiles,
-      List<URL> certificateUrls,
+      List<URI> certificateUris,
       /* @Nullable */ Path rootDir,
       /* @Nullable */ Duration timeout,
       /* @Nullable */ String outputFormat,
@@ -90,7 +90,7 @@ public final class ExecutorOptions {
     this.externalProperties = externalProperties;
     this.modulePath = modulePath;
     this.certificateFiles = certificateFiles;
-    this.certificateUrls = certificateUrls;
+    this.certificateUris = certificateUris;
     this.rootDir = rootDir;
     this.timeout = timeout;
     this.outputFormat = outputFormat;
@@ -129,8 +129,8 @@ public final class ExecutorOptions {
   }
 
   /** API equivalent of the {@code --ca-certificates} CLI option. */
-  public List<URL> getCertificateUrls() {
-    return certificateUrls;
+  public List<URI> getCertificateUris() {
+    return certificateUris;
   }
 
   /** API equivalent of the {@code --root-dir} CLI option. */
@@ -178,7 +178,7 @@ public final class ExecutorOptions {
         && externalProperties.equals(other.externalProperties)
         && modulePath.equals(other.modulePath)
         && certificateFiles.equals(other.certificateFiles)
-        && certificateUrls.equals(other.certificateUrls)
+        && certificateUris.equals(other.certificateUris)
         && Objects.equals(rootDir, other.rootDir)
         && Objects.equals(timeout, other.timeout)
         && Objects.equals(outputFormat, other.outputFormat)
@@ -195,7 +195,7 @@ public final class ExecutorOptions {
         externalProperties,
         modulePath,
         certificateFiles,
-        certificateUrls,
+        certificateUris,
         rootDir,
         timeout,
         outputFormat,
@@ -218,8 +218,8 @@ public final class ExecutorOptions {
         + modulePath
         + ", certificateFiles="
         + certificateFiles
-        + ", certificateUrls="
-        + certificateUrls
+        + ", certificateUris="
+        + certificateUris
         + ", rootDir="
         + rootDir
         + ", timeout="

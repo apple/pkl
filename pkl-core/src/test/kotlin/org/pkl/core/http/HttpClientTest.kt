@@ -21,7 +21,7 @@ class HttpClientTest {
   fun `can build default client`() {
     val client = assertDoesNotThrow {
       HttpClient.builder().build()
-    } // means we loaded some (built-in) certificates
+    }
     
     assertThat(client).isInstanceOf(RequestRewritingClient::class.java)
     client as RequestRewritingClient
@@ -72,16 +72,23 @@ class HttpClientTest {
   @Test
   fun `can load certificates from class path`() {
     assertDoesNotThrow {
-      HttpClient.builder().addCertificates(javaClass.getResource("IncludedCARoots.pem")).build()
+      HttpClient.builder().addCertificates(javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.toURI()).build()
+    }
+  }
+  
+  @Test
+  fun `only allows loading jar and file certificate URIs`() {
+    assertThrows<HttpClientInitException> {
+      HttpClient.builder().addCertificates(URI("https://example.com"))
     }
   }
 
   @Test
   fun `certificate file located on class path cannot be empty`() {
-    val url = javaClass.getResource("emptyCerts.pem")
+    val uri = javaClass.getResource("emptyCerts.pem")!!.toURI()
 
     val e = assertThrows<HttpClientInitException> {
-      HttpClient.builder().addCertificates(url).build()
+      HttpClient.builder().addCertificates(uri).build()
     }
 
     assertThat(e).hasMessageContaining("empty")
@@ -95,7 +102,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `can load certificates from default location`(@TempDir tempDir: Path) {
+  fun `can load certificates from Pkl user home cacerts directory`(@TempDir tempDir: Path) {
     val certFile = tempDir.resolve(".pkl")
       .resolve("cacerts")
       .createDirectories()
@@ -108,7 +115,7 @@ class HttpClientTest {
   }
   
   @Test
-  fun `loading certificates from default location falls back to built-in certificates`(@TempDir userHome: Path) {
+  fun `loading certificates from cacerts directory falls back to built-in certificates`(@TempDir userHome: Path) {
     assertDoesNotThrow {
       HttpClientBuilder(userHome).addDefaultCliCertificates().build()
     }

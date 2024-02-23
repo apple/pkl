@@ -15,7 +15,7 @@
  */
 package org.pkl.executor.spi.v1;
 
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -33,7 +33,7 @@ public class ExecutorSpiOptions {
   private final List<Path> modulePath;
 
   private final List<Path> certificateFiles;
-  private final List<URL> certificateUrls;
+  private final List<URI> certificateUris;
 
   private final Path rootDir;
 
@@ -50,7 +50,7 @@ public class ExecutorSpiOptions {
       Map<String, String> externalProperties,
       List<Path> modulePath,
       List<Path> certificateFiles,
-      List<URL> certificateUrls,
+      List<URI> certificateUris,
       /* @Nullable */ Path rootDir,
       /* @Nullable */ Duration timeout,
       /* @Nullable */ String outputFormat,
@@ -63,7 +63,7 @@ public class ExecutorSpiOptions {
     this.externalProperties = externalProperties;
     this.modulePath = modulePath;
     this.certificateFiles = certificateFiles;
-    this.certificateUrls = certificateUrls;
+    this.certificateUris = certificateUris;
     this.rootDir = rootDir;
     this.timeout = timeout;
     this.outputFormat = outputFormat;
@@ -95,8 +95,8 @@ public class ExecutorSpiOptions {
     return certificateFiles;
   }
 
-  public List<URL> getCertificateUrls() {
-    return certificateUrls;
+  public List<URI> getCertificateUris() {
+    return certificateUris;
   }
 
   public /* @Nullable */ Path getRootDir() {

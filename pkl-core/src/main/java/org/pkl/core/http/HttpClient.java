@@ -16,7 +16,7 @@
 package org.pkl.core.http;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -40,7 +40,7 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Sets the {@code User-Agent} header.
      *
-     * <p>Defaults to {@code "Pkl/$version ($os $flavor)"}.
+     * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
      */
     Builder setUserAgent(String userAgent);
 
@@ -73,10 +73,13 @@ public interface HttpClient extends AutoCloseable {
      * <p>The given file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
      * certificates in PEM format.
      *
-     * <p>This method can be used to add certificate files located on the JVM class path. To add
-     * certificate files located on the file system, use {@link #addCertificates(Path)}.
+     * <p>This method is intended to be used for adding certificate files located on the class path.
+     * To add certificate files located on the file system, use {@link #addCertificates(Path)}.
+     *
+     * @throws HttpClientInitException if the given URI has a scheme other than {@code jar:} or
+     *     {@code file:}
      */
-    Builder addCertificates(URL file);
+    Builder addCertificates(URI file);
 
     /**
      * Adds the CA certificate files in {@code ~/.pkl/cacerts/} to the client's trust store.
@@ -86,10 +89,23 @@ public interface HttpClient extends AutoCloseable {
      * {@link #addBuiltInCertificates() built-in certificates} are added instead.
      *
      * <p>This method implements the default behavior of Pkl CLIs.
+     *
+     * <p>NOTE: This method requires the optional {@code pkl-certs} JAR to be present on the class
+     * path.
+     *
+     * @throws HttpClientInitException if an I/O error occurs while scanning {@code ~/.pkl/cacerts/}
+     *     or the {@code pkl-certs} JAR is not found on the class path
      */
-    Builder addDefaultCliCertificates() throws IOException;
+    Builder addDefaultCliCertificates();
 
-    /** Adds Pkl's built-in CA certificates to the client's trust store. */
+    /**
+     * Adds Pkl's built-in CA certificates to the client's trust store.
+     *
+     * <p>NOTE: This method requires the optional {@code pkl-certs} JAR to be present on the class
+     * path.
+     *
+     * @throws HttpClientInitException if the {@code pkl-certs} JAR is not found on the class path
+     */
     Builder addBuiltInCertificates();
 
     /**
@@ -117,7 +133,8 @@ public interface HttpClient extends AutoCloseable {
    * <ul>
    *   <li>Connect timeout: 60 seconds
    *   <li>Request timeout: 60 seconds
-   *   <li>CA certificates: none (falls back to {@link Builder#addBuiltInCertificates})
+   *   <li>CA certificates: none (falls back to the JVM's {@linkplain SSLContext#getDefault()
+   *       default SSL context})
    * </ul>
    */
   static Builder builder() {

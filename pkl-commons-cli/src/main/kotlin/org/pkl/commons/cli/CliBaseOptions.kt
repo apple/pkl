@@ -178,16 +178,16 @@ data class CliBaseOptions(
    * To release the resources held by the HTTP client in a timely manner, call its `close()` method.
    */
   val httpClient: HttpClient by lazy {
-    val builder = HttpClient.builder()
-    if (normalizedCaCertificates.isEmpty()) {
-      builder.addDefaultCliCertificates()
-    } else {
-      for (file in normalizedCaCertificates) builder.addCertificates(file)
+    with(HttpClient.builder()) {
+      if (normalizedCaCertificates.isEmpty()) {
+        addDefaultCliCertificates()
+      } else {
+        for (file in normalizedCaCertificates) addCertificates(file)
+      }
+      // Lazy building significantly reduces execution time of commands that do minimal work.
+      // However, it means that HTTP client initialization errors won't surface until an HTTP
+      // request is made.
+      buildLazily()
     }
-    // Lazy building significantly reduces execution time of commands that do minimal work.
-    // However, it means that HTTP client initialization errors won't surface until an HTTP request
-    // is
-    // made. A middleground would be to only build lazily if built-in certificates are used.
-    builder.buildLazily()
   }
 }

@@ -26,6 +26,10 @@ public class HttpClientInitException extends PklException {
     super(message);
   }
 
+  public HttpClientInitException(Throwable cause) {
+    super(cause);
+  }
+
   public HttpClientInitException(String message, Throwable cause) {
     super(message, cause);
   }
