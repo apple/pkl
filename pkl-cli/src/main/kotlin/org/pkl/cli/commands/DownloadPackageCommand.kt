@@ -21,7 +21,7 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import org.pkl.cli.CliDownloadPackageCommand
+import org.pkl.cli.CliPackageDownloader
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.single
@@ -62,7 +62,7 @@ class DownloadPackageCommand(helpLink: String) :
       .flag()
 
   override fun run() {
-    CliDownloadPackageCommand(
+    CliPackageDownloader(
         baseOptions.baseOptions(emptyList(), projectOptions),
         packageUris,
         noTransitive
