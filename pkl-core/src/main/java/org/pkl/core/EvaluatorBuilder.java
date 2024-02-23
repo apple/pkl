@@ -48,7 +48,7 @@ public final class EvaluatorBuilder {
 
   private final Map<String, String> externalProperties = new HashMap<>();
 
-  private java.time.@Nullable Duration timeout;
+  private @Nullable java.time.Duration timeout;
 
   private @Nullable Path moduleCacheDir = IoUtils.getDefaultModuleCacheDir();
 
@@ -343,7 +343,7 @@ public final class EvaluatorBuilder {
   /**
    * Sets an evaluation timeout to be enforced by the {@link Evaluator}'s {@code evaluate} methods.
    */
-  public EvaluatorBuilder setTimeout(java.time.@Nullable Duration timeout) {
+  public EvaluatorBuilder setTimeout(@Nullable java.time.Duration timeout) {
     this.timeout = timeout;
     return this;
   }
