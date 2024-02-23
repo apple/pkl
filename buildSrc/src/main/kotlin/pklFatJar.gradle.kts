@@ -23,9 +23,7 @@ val firstPartySourcesJarsConfiguration: Configuration = configurations.create("f
 val relocations = mapOf(
   // pkl-core dependencies
   "org.antlr.v4." to "org.pkl.thirdparty.antlr.v4.",
-  // https://github.com/oracle/graal/issues/1644 has been fixed,
-  // but native-image still fails when shading com.oracle.truffle 
-  //"com.oracle.truffle" to "org.pkl.thirdparty.truffle",
+  "com.oracle.truffle" to "org.pkl.thirdparty.truffle",
   "org.graalvm." to "org.pkl.thirdparty.graalvm.",
   "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
   "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
