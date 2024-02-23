@@ -16,14 +16,4 @@ dependencies {
 tasks.test {
   inputs.dir("src/test/files/SnippetTests/input")
   inputs.dir("src/test/files/SnippetTests/output")
-  dependsOn(unitTests)
-
-  useJUnitPlatform {
-    includeEngines("SnippetTestEngine")
-  }
-}
-
-val unitTests by tasks.registering(Test::class) {
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
 }
