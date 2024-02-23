@@ -1,0 +1,15 @@
+= Windows Platform Notes
+
+:uri-ci-artifacts: https://s01.oss.sonatype.org/content/groups/public/org/pkl-lang/
+
+Some additional tips for working with Pkl on Windows:
+
+* Issue https://github.com/apple/pkl/issues/20[#20] tracks most of the Windows related issues
+* You cannot checkout this repo on Windows currently due to invalid paths
+* You can use the CLI tools on Windows they can be downloaded either from the CI output in the {uri-ci-artifacts}[Sonatype Repository] or from maven ie:
+** https://search.maven.org/remote_content?g=org.pkl-lang&a=pkl-cli-java&v=LATEST
+** https://search.maven.org/remote_content?g=org.pkl-lang&a=pkl-codegen-java&v=LATEST
+* Backslashes for paths do not work
+* For paths any internal path checks do not take into account Windows being case-insensitive and can address files through a few different prefixes
+* Prefix all paths like: "file:///c:/My/dir", note if you use relative paths they are converted to full paths (but c:/My/dir will not).  If this is for something like `--allowed-modules` the exact case and prefix must match the error on the whitelist to work (so copying the error notice is easiest).
+* For tools like pkl-codegen-java there are dependencies that are also required, see the java codegen sample page for more details
