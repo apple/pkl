@@ -492,7 +492,8 @@ public final class ModuleKeys {
           HttpUtils.checkHasStatusCode200(response);
           securityManager.checkResolveModule(response.uri());
           String text = IoUtils.readString(body);
-          return ResolvedModuleKeys.virtual(this, response.uri(), text, true);
+          // intentionally use uri instead of response.uri()
+          return ResolvedModuleKeys.virtual(this, uri, text, true);
         }
       }
 
@@ -509,7 +510,8 @@ public final class ModuleKeys {
         }
         securityManager.checkResolveModule(redirected);
         var text = IoUtils.readString(stream);
-        return ResolvedModuleKeys.virtual(this, redirected, text, true);
+        // intentionally use uri instead of redirected
+        return ResolvedModuleKeys.virtual(this, uri, text, true);
       }
     }
   }

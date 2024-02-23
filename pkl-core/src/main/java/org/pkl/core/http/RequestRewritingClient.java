@@ -23,6 +23,18 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.ThreadSafe;
 
+/**
+ * An {@code HttpClient} decorator that
+ *
+ * <ul>
+ *   <li>overrides the {@code User-Agent} header of {@code HttpRequest}s
+ *   <li>sets a request timeout if none is present
+ *   <li>ensures that {@link #close()} is idempotent.
+ * </ul>
+ *
+ * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
+ * HttpClient.Builder}.
+ */
 @ThreadSafe
 final class RequestRewritingClient implements HttpClient {
   // non-private for testing

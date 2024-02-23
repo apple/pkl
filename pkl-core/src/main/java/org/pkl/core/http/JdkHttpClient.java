@@ -51,6 +51,7 @@ import javax.net.ssl.TrustManagerFactory;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
+/** An {@code HttpClient} implementation backed by {@link java.net.http.HttpClient}. */
 @ThreadSafe
 final class JdkHttpClient implements HttpClient {
   // non-private for testing

@@ -20,6 +20,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import javax.annotation.concurrent.ThreadSafe;
 
+/** An {@code HttpClient} implementation that throws {@code AssertionError} on every send. */
 @ThreadSafe
 final class DummyHttpClient implements HttpClient {
   @Override
