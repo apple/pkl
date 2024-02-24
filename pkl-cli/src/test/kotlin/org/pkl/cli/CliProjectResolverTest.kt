@@ -102,14 +102,14 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
           },
           "package://localhost:12110/fruit@1": {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.0.5",
             "checksums": {
-              "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+              "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
             }
           }
         }
@@ -157,14 +157,14 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
           },
           "package://localhost:12110/fruit@1": {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.0.5",
             "checksums": {
-              "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+              "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
             }
           }
         }
@@ -255,14 +255,14 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
           },
           "package://localhost:12110/fruit@1": {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.1.0",
             "checksums": {
-              "sha256": "98ad9fc407a79dc3fd5595e7a29c3803ade0a6957c18ec94b8a1624360b24f01"
+              "sha256": "a82e92e0c259591111d09d18a14f5ad66e2b6e13d827ee3e6f7ce06f5d0fbe0c"
             }
           },
           "package://localhost:12110/package2@5": {
@@ -337,14 +337,14 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
           },
           "package://localhost:12110/fruit@1": {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.0.5",
             "checksums": {
-              "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+              "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
             }
           }
         }
@@ -420,14 +420,14 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
           },
           "package://localhost:12110/fruit@1": {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.0.5",
             "checksums": {
-              "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+              "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
             }
           }
         }
@@ -445,7 +445,7 @@ class CliProjectResolverTest {
             "type": "remote",
             "uri": "projectpackage://localhost:12110/fruit@1.1.0",
             "checksums": {
-              "sha256": "98ad9fc407a79dc3fd5595e7a29c3803ade0a6957c18ec94b8a1624360b24f01"
+              "sha256": "a82e92e0c259591111d09d18a14f5ad66e2b6e13d827ee3e6f7ce06f5d0fbe0c"
             }
           }
         }

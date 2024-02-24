@@ -54,7 +54,7 @@ val validatePom by tasks.registering {
     return@registering
   }
   val generatePomFileForLibraryPublication by tasks.existing(GenerateMavenPom::class)
-  val outputFile = file("$buildDir/validatePom") // dummy output to satisfy up-to-date check
+  val outputFile = file("build/validatePom") // dummy output to satisfy up-to-date check
 
   dependsOn(generatePomFileForLibraryPublication)
   inputs.file(generatePomFileForLibraryPublication.get().destination)

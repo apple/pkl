@@ -248,7 +248,7 @@ class CliProjectPackagerTest {
               "type": "remote",
               "uri": "projectpackage://localhost:12110/fruit@1.0.5",
               "checksums": {
-                "sha256": "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+                "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
               }
             }
           }
@@ -915,7 +915,7 @@ class CliProjectPackagerTest {
       Package `package://localhost:12110/birds@0.5.0` was already published with different contents.
       
       Computed checksum: 7324e17214b6dcda63ebfb57d5a29b077af785c13bed0dc22b5138628a3f8d8f
-      Published checksum: 3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118
+      Published checksum: 0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453
     """
           .trimIndent()
       )

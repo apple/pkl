@@ -41,7 +41,7 @@ idea {
 }
 
 val clean by tasks.registering(Delete::class) {
-  delete(buildDir)
+  delete("build")
 }
 
 val printVersion by tasks.registering {

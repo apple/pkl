@@ -153,7 +153,7 @@ class ProjectTest {
         –– Pkl Error ––
         Cannot download package `package://localhost:12110/fruit@1.0.5` because the computed checksum for package metadata does not match the expected checksum.
         
-        Computed checksum: "b4ea243de781feeab7921227591e6584db5d0673340f30fab2ffe8ad5c9f75f5"
+        Computed checksum: "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
         Expected checksum: "intentionally bogus checksum"
         Asset URL: "https://localhost:12110/fruit@1.0.5"
         

@@ -129,7 +129,7 @@ tasks.processResources {
       include("*.pkl") 
       exclude("doc-package-info.pkl")
     }.map { "pkl:" + it.nameWithoutExtension } 
-      .sortedBy { it.toLowerCase() }
+      .sortedBy { it.lowercase() }
     
     filter<ReplaceTokens>("tokens" to mapOf(
         "version" to buildInfo.pklVersion,
@@ -282,7 +282,7 @@ tasks.testNative {
 
 tasks.clean {
   delete("generated/")
-  delete("$buildDir/test-packages")
+  delete("build/test-packages")
 }
 
 spotless {

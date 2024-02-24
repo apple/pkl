@@ -105,7 +105,7 @@ tasks.check {
 }
 
 val validateFatJar by tasks.registering {
-  val outputFile = file("$buildDir/validateFatJar/result.txt")
+  val outputFile = file("build/validateFatJar/result.txt")
   inputs.files(tasks.shadowJar)
   inputs.property("nonRelocations", nonRelocations)
   outputs.file(outputFile)
@@ -138,7 +138,7 @@ tasks.check {
 
 val resolveSourcesJars by tasks.registering(ResolveSourcesJars::class) {
   configuration.set(configurations.runtimeClasspath)
-  outputDir.set(project.file("$buildDir/resolveSourcesJars"))
+  outputDir.set(project.file("build/resolveSourcesJars"))
 }
 
 val fatSourcesJar by tasks.registering(MergeSourcesJars::class) {

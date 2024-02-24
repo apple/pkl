@@ -109,7 +109,7 @@ class CliPackageDownloaderTest {
         packageUris =
           listOf(
             PackageUri(
-              "package://localhost:12110/birds@0.5.0::sha256:3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "package://localhost:12110/birds@0.5.0::sha256:0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             ),
           ),
         noTransitive = true
@@ -140,7 +140,7 @@ class CliPackageDownloaderTest {
         """
       Cannot download package `package://localhost:12110/birds@0.5.0` because the computed checksum for package metadata does not match the expected checksum.
 
-      Computed checksum: "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+      Computed checksum: "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
       Expected checksum: "intentionallyBogusChecksum"
       Asset URL: "https://localhost:12110/birds@0.5.0"
     """
@@ -204,7 +204,7 @@ class CliPackageDownloaderTest {
         Failed to download package://localhost:12110/badChecksum@1.0.0 because:
         Cannot download package `package://localhost:12110/badChecksum@1.0.0` because the computed checksum does not match the expected checksum.
 
-        Computed checksum: "0ec8a501e974802d0b71b8d58141e1e6eaa10bc2033e18200be3a978823d98aa"
+        Computed checksum: "a6bf858cdd1c09da475c2abe50525902580910ee5cc1ff624999170591bf8f69"
         Expected checksum: "intentionally bogus checksum"
         Asset URL: "https://localhost:12110/badChecksum@1.0.0/badChecksum@1.0.0.zip"
 
