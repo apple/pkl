@@ -1,4 +1,5 @@
-= Pkl
+
+==  image:https://pkl-lang.org/_/img/favicon.svg[width=20,height=20]  Pkl
 
 :uri-homepage: https://pkl-lang.org
 :uri-docs: {uri-homepage}/main/current
