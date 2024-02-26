@@ -1,11 +1,6 @@
 examples {
   ["file:"] {
     new {
-      ["../../input-helper/globtest/\\moduleC.pkl"] {
-        uri = "file:///$snippetsDir/input-helper/globtest/%5CmoduleC.pkl"
-        text = ""
-        base64 = ""
-      }
       ["../../input-helper/globtest/module with [weird] ~!characters.pkl"] {
         uri = "file:///$snippetsDir/input-helper/globtest/module%20with%20%5Bweird%5D%20~!characters.pkl"
         text = ""
