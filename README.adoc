@@ -1,4 +1,4 @@
-= Pkl
+= image:.idea/icon.svg[Pkl,30] Pkl 
 
 :uri-homepage: https://pkl-lang.org
 :uri-docs: {uri-homepage}/main/current
