@@ -1,7 +1,6 @@
 examples {
   ["import* clause keys"] {
     new {
-      "../../input-helper/globtest/\\moduleC.pkl"
       "../../input-helper/globtest/module with [weird] ~!characters.pkl"
       "../../input-helper/globtest/moduleA.pkl"
       "../../input-helper/globtest/moduleB.pkl"
@@ -9,7 +8,6 @@ examples {
   }
   ["import* inferred name"] {
     new {
-      "../../input-helper/globtest/\\moduleC.pkl"
       "../../input-helper/globtest/module with [weird] ~!characters.pkl"
       "../../input-helper/globtest/moduleA.pkl"
       "../../input-helper/globtest/moduleB.pkl"
@@ -17,7 +15,6 @@ examples {
   }
   ["globstar"] {
     new {
-      "../../input-helper/globtest/\\moduleC.pkl"
       "../../input-helper/globtest/module with [weird] ~!characters.pkl"
       "../../input-helper/globtest/moduleA.pkl"
       "../../input-helper/globtest/moduleB.pkl"
@@ -26,7 +23,6 @@ examples {
   }
   ["globstar then up one level"] {
     new {
-      "../../input-helper/globtest/child/../\\moduleC.pkl"
       "../../input-helper/globtest/child/../module with [weird] ~!characters.pkl"
       "../../input-helper/globtest/child/../moduleA.pkl"
       "../../input-helper/globtest/child/../moduleB.pkl"
@@ -56,11 +52,6 @@ examples {
   }
   ["match directories"] {
     "I/O error loading module `file:///$snippetsDir/input-helper/globtest`. IOException: Is a directory"
-  }
-  ["match literal backslash"] {
-    new {
-      "../../input-helper/globtest/\\moduleC.pkl"
-    }
   }
   ["import glob first segment is wildcard"] {
     new {

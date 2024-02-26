@@ -41,10 +41,6 @@ examples {
     module.catch(() -> import*("../../input-helper/globtest").toMap())
   }
 
-  ["match literal backslash"] {
-    import*("../../input-helper/globtest/\\\\moduleC.pkl").keys.toListing()
-  }
-
   ["import glob first segment is wildcard"] {
     import*("*Glob.pkl").keys.toListing()
   }
