@@ -21,7 +21,9 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
+local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
+  "check-patch-file"
+}
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
@@ -148,6 +150,25 @@ jobs {
             --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
             pkl-cli/build/executable/*
           """#
+      }
+    }
+  }
+  ["check-patch-file"] {
+    docker {
+      new { image = "cimg/base:current" }
+    }
+    steps {
+      "checkout"
+      new RunStep {
+        // language=bash
+        command = #"""
+        git am --reject < patches/graalVm23.patch
+        if [ $? -ne 0 ]; then
+          echo "Patch did not apply: patches/graalVm23.patch"
+          echo "Rejected files:"
+          find . -iname '*.rej' -exec basename {} .rej ';'
+        fi
+        """#
       }
     }
   }
