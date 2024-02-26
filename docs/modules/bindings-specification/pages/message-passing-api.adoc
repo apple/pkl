@@ -1,0 +1,527 @@
+= Message Passing API
+
+include::ROOT:partial$component-attributes.adoc[]
+include::partial$component-attributes.adoc[]
+
+All messages are encoded in link:{uri-messagepack}[MessagePack], as an array with two elements.
+
+The first element of the array is a code that designates the message's type, encoded as an int.
+The second element of the array is the message body, encoded as a map.
+
+Messages are passed between the _client_ and the _server_.
+The _client_ is the host language (for example, the Swift application when using pkl-swift).
+The _server_ is the entity that provides controls for interacting with Pkl.
+
+For example, in JSON representation:
+
+[source,json]
+----
+[
+  1,                           // <1>
+  { "someKey": "someValue" }   // <2>
+]
+----
+<1> Code indicating message type
+<2> Message body
+
+== Message types
+
+[[client-message]]
+=== Client Message
+A message passed from the client to the server.
+
+[[server-message]]
+=== Server Message
+A message passed from the server to the client.
+
+[[request-message]]
+=== Request Message
+A message sent with a `requestId` value.
+The `requestId` should be a unique number at the time of message send.
+The other side is expected to respond with a <<response-message>> with the same `requestId`.
+
+[[response-message]]
+=== Response Message
+A message that is the response to a <<request-message>>.
+It contains the same `requestId` of the request message.
+
+[[one-way-message]]
+=== One Way Message
+
+A fire-and-forget message where no response is expected.
+
+== Messages
+
+All messages have their schema described in Pkl.
+A nullable type means that the property should be omitted (as opposed to the property's value being `nil`).
+
+[[create-evaluator-request]]
+=== Create Evaluator Request
+
+Code: `0x20` +
+Type: <<client-message,Client>> <<request-message,Request>>
+
+Create an evaluator with the provided evaluator settings.
+Upon creating the evaluator, the server sends back a <<create-evaluator-response>> message.
+
+Schema:
+[source,pkl]
+----
+/// A number identifying this request
+requestId: Int
+
+/// Regex patterns to determine which modules are allowed for import.
+///
+/// API version of the CLI's `--allowed-modules` flag
+allowedModules: Listing<String>?
+
+/// Regex patterns to dettermine which resources are allowed to be read.
+///
+/// API version of the CLI's `--allowed-resources` flag
+allowedResources: Listing<String>?
+
+/// Register client-side module readers.
+clientModuleReaders: Listing<ClientModuleReader>?
+
+/// Register client-side resource readers.
+clientResourceReaders: Listing<ClientResourceReader>?
+
+/// Directories, ZIP archives, or JAR archives
+/// to search when resolving `modulepath:` URIs.
+///
+/// API version of the CLI's `--module-path` flag.
+modulePaths: Listing<String>?
+
+/// Environment variable to set.
+///
+/// API version of the CLI's `--env-var` flag.
+env: Mapping<String, String>?
+
+/// External properties to set.
+///
+/// API version of the CLI's `--properties` flag.
+properties: Mapping<String, String>?
+
+/// Duration, in seconds, after which evaluation of a source module will be timed out.
+///
+/// API version of the CLI's `--timeout` flag.
+timeoutSeconds: Int?
+
+/// Restricts access to file-based modules and resources to those located under the root directory.
+rootDir: String?
+
+/// The cache directory for storing packages.
+cacheDir: String?
+
+/// The format to generate.
+///
+/// This sets the `pkl.outputFormat` external property.
+outputFormat: String?
+
+/// The project dependency settings.
+project: Project?
+
+class ClientResourceReader {
+  /// The URI scheme this reader is responsible for reading.
+  scheme: String
+
+  /// Tells whether the path part of ths URI has a
+  /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
+  ///
+  /// An example of a hierarchical URI is `file:///path/to/my/file`, where
+  /// `/path/to/my/file` designates a nested path through the `/` character.
+  ///
+  /// An example of a non-hierarchical URI is `pkl.base`, where the `base` does not denote
+  /// any form of hierarchy.
+  hasHierarchicalUris: Boolean
+
+  /// Tells whether this reader supports globbing.
+  isGlobbable: Boolean
+}
+
+class ClientModuleReader {
+  /// The URI scheme this reader is responsible for reading.
+  scheme: String
+
+  /// Tells whether the path part of ths URI has a
+  /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
+  ///
+  /// An example of a hierarchical URI is `file:///path/to/my/file`, where
+  /// `/path/to/my/file` designates a nested path through the `/` character.
+  ///
+  /// An example of a non-hierarchical URI is `pkl.base`, where the `base` does not denote
+  /// any form of hierarchy.
+  hasHierarchicalUris: Boolean
+
+  /// Tells whether this reader supports globbing.
+  isGlobbable: Boolean
+
+  /// Tells whether the module is local to the system.
+  ///
+  /// A local resource that [hasHierarchicalUris] supports triple-dot imports.
+  isLocal: Boolean
+}
+
+class Project {
+  type: "local"
+
+  /// The canonical URI of this project's package
+  packageUri: String?
+
+  /// The URI pointing to the location of the project file.
+  projectFileUri: String
+
+  /// The dependencies of this project.
+  dependencies: Mapping<String, Project|RemoteDependency>
+}
+
+class RemoteDependency {
+  type: "remote"
+
+  /// The canonical URI of this dependency
+  packageUri: String?
+
+  /// The checksums of this remote dependency
+  checksums: Checksums?
+}
+
+class Checksums {
+  /// The sha-256 checksum of this dependency's metadata.
+  sha256: String
+}
+----
+
+Example:
+[source,json5]
+----
+[
+  0x20,
+  {
+    "requestId": 193501,
+    "allowedModules": ["pkl:", "repl:"],
+    "allowedResources": ["file:", "package:", "projectpackage:"]
+  }
+]
+----
+
+[[create-evaluator-response]]
+=== Create Evaluator Response
+
+Code: `0x21` +
+Type: <<server-message,Server>> <<response-message,Response>>
+
+The response for a <<create-evaluator-request>>.
+If the evaluator was created successfully, `evaluatorId` is set. Otherwise, `error` is set to the resulting error.
+
+[source,pkl]
+----
+/// A number identifying this request
+requestId: Int
+
+/// A number identifying the created evaluator.
+evaluatorId: Int?
+
+/// A message detailing why the evaluator was not created.
+error: String?
+----
+
+[[close-evaluator]]
+=== Close Evaluator
+
+Code: `0x22` +
+Type: <<client-message,Client>> <<one-way-message,One Way>>
+
+Tells the Pkl server to close an evaluator, releasing any resources it may be holding.
+
+[source,pkl]
+----
+/// A number identifying this evaluator.
+evaluatorId: Int
+----
+
+[[evaluate-request]]
+=== Evaluate Request
+
+Code: `0x23` +
+Type: <<client-message,Client>> <<request-message,Request>>
+
+Evaluate a module.
+
+[source,pkl]
+----
+/// A number identifying this request
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The absolute URI of the module to be evaluated.
+moduleUri: String
+
+/// The module's contents.
+///
+/// If [null], Pkl will load the module at runtime.
+moduleText: String?
+
+/// The Pkl expression to be evaluated within the module.
+///
+/// If [null], evaluates the whole module.
+expr: String?
+----
+
+[[evaluate-response]]
+=== Evaluate Response
+
+Code: `0x24` +
+Type: <<server-message,Server>> <<response-message,Response>>
+
+The server's response to <<evaluate-request>>.
+If the evaluation is successful, the response is the Pkl value encoded in xref:binary-encoding.adoc[binary encoding].
+
+[source,pkl]
+----
+/// The requestId of the Evaluate request
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The evaluation contents, if successful.
+result: <binary>? // <1>
+
+/// A message detailing why evaluation failed.
+error: String?
+----
+<1> xref:binary-encoding.adoc[Pkl Binary Encoding] in link:{uri-messagepack-bin}[bin format].
+
+[[log]]
+=== Log
+
+Code: `0x25` +
+Type: <<server-message,Server>> <<one-way-message,One Way>>
+
+Tells the client to emit a log message, during the execution of a Pkl program.
+A log can occur through a xref:language-reference:index.adoc#debugging[trace()] expression, or through a warning (for example, when encountering a link:{uri-stdlib-Deprecated}[Deprecated] value.)
+
+[source,pkl]
+----
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// A number identifying the log level.
+///
+/// - 0: trace
+/// - 1: warn
+level: Int(this == 0 || this == 1)
+
+/// The message to be logged
+message: String
+
+/// A string representing the source location within Pkl code producing this log output.
+frameUri: String
+----
+
+[[read-resource-request]]
+=== Read Resource Request
+
+Code: `0x26` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+Read a resource at the given URI.
+This message occurs when a read expression (`read`/`read?`/`read*`) is encountered within a program, and its scheme matches a client resource reader.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The URI of the resource.
+uri: String
+----
+
+[[read-resource-response]]
+=== Read Resource Response
+
+Code: `0x27` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+The response to <<read-resource-request>>.
+If successful, `contents` is set.
+Otherwise, `error` is set.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The contents of the resource.
+contents: <binary>? // <1>
+
+/// The description of the error that occured when reading this resource.
+error: String?
+----
+<1> MessagePack's link:https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family[bin format family]
+
+[[read-module-request]]
+=== Read Module Request
+
+Code: `0x28` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+Read a module at the given URI.
+This message occurs during the evaluation of an import statement or expression (`import`/`import*`), when a scheme matches a client module reader.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The URI of the module.
+uri: String
+----
+
+[[read-module-response]]
+=== Read Module Response
+
+Code: `0x29` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+The response to <<read-module-request>>.
+If successful, `contents` is set.
+Otherwise, `error` is set.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The string contents of the module.
+contents: String?
+
+/// The description of the error that occured when reading this resource.
+error: String?
+----
+
+[[list-resources-request]]
+=== List Resources Request
+
+Code: `0x2a` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+List resources at the specified base path.
+This message occurs during the evaluation of a xref:language-reference:index.adoc#globbed-reads[globbed read], when a scheme matches a client resource reader's scheme.
+
+If the resource reader does not have hierarchical URIs, `dummy` is used as the path, and the response is expected to contain all resource elements for that scheme.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The base URI to list resources.
+uri: String
+----
+
+[[list-resources-response]]
+=== List Resources Response
+
+Code: `0x2b` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+The response to <<list-resources-request>>.
+If successful, `pathElements` is set.
+Otherwise, `error` is set.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The elements at the provided base path.
+pathElements: Listing<PathElement>?
+
+/// The description of the error that occured when listing elements.
+error: String?
+
+class PathElement {
+  /// The name of the element at this path
+  name: String
+
+  /// Tells whether the element is a directory.
+  isDirectory: Boolean
+}
+----
+
+[[list-modules-request]]
+=== List Modules Request
+
+Code: `0x2c` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+List modules at the specified base path.
+This message occurs during the evaluation of a xref:language-reference:index.adoc#globbed-imports[globbed import], when a scheme matches a client resource reader's scheme.
+
+If the module reader does not have hierarchical URIs, `dummy` is used as the path, and the response is expected to contain all module elements for that scheme.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The base URI to list modules.
+uri: String
+----
+
+[[list-modules-response]]
+=== List Modules Response
+
+Code: `0x2d` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+The response to <<list-modules-request>>.
+If successful, `pathElements` is set.
+Otherwise, `error` is set.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// A number identifying this evaluator.
+evaluatorId: Int
+
+/// The elements at the provided base path.
+pathElements: Listing<PathElement>?
+
+/// The description of the error that occured when listing elements.
+error: String?
+
+class PathElement {
+  /// The name of the element at this path
+  name: String
+
+  /// Tells whether the element is a directory.
+  isDirectory: Boolean
+}
+----

@@ -1,0 +1,173 @@
+= Language Binding Specification
+
+:uri-pkl-go-github: https://github.com/apple/pkl-go
+:uri-pkl-swift-github: https://github.com/apple/pkl-swift
+
+Pkl can be embedded within any host application.
+The host application has access to low level controls.
+It is able to manage the lifecycle of evaluators, as well as provide custom modules and resources to Pkl.
+
+Currently, Pkl must be embedded as a child process, by shelling out to the CLI using the xref:pkl-cli:index.adoc#command-server[`pkl server`] command. In the future, a C library will also be provided.
+
+When embedded, communication between a host application and Pkl happens via message passing.
+The message passing specification can be found in xref:message-passing-api.adoc[].
+
+For examples of language bindings in practice, review the xref:{uri-pkl-go-github}[pkl-go], or the xref:{uri-pkl-swift-github}[pkl-swift] codebases.
+
+NOTE: Pkl's Java and Kotlin libraries binds to Pkl directly, and do not use message passing.
+
+== Features of a language binding
+
+A language binding for Pkl should generally have the following components:
+
+. A client that spawns `pkl server`, and talks to it using message passing.
+. A deserializer that turns xref:binary-encoding.adoc[pkl binary encoding] into a structure in the host language.
+. A code generator that transforms Pkl schemas into schemas written in the host language.
+  The code generator is mostly written in Pkl, with a lightweight executable that acts as the glue layer.
+  For examples of code generators, consult link:{uri-pkl-go-github}/tree/main/codegen[pkl-go] and link:{uri-pkl-swift-github}/tree/main/codegen[pkl-swift].
+
+== Sample flow
+
+Here is a sample flow for evaluating a module with the following contents:
+
+.\file:///path/to/myModule.pkl
+[source,{pkl}]
+----
+module MyModule
+
+theModules = import*("customfs:/*.pkl")
+----
+
+. Client sends xref:message-passing-api.adoc#create-evaluator-request[Create Evaluator Request], including `customfs` as a custom module reader.
++
+[source,json]
+----
+[
+  0x20,
+  {
+    "requestId": 135,
+    "allowedModules": ["pkl:", "repl:", "file:", "customfs:"],
+    "clientModuleReaders": [
+      {
+        "scheme": "customfs",
+        "hasHierarchicalUris": true,
+        "isGlobbable": true,
+        "isLocal": true
+      }
+    ]
+  }
+]
+----
+. Server sends xref:message-passing-api.adoc#create-evaluator-response[Create Evaluator Response], with an evaluator id.
++
+[source,json]
+----
+[
+  0x21,
+  {
+    "requestId": 135,
+    "evaluatorId": -135901
+  }
+]
+----
+. Client sends xref:message-passing-api.adoc#evaluate-request[Evaluate Request], providing the module's URI.
++
+[source,json]
+----
+[
+  0x23,
+  {
+    "requestId": 9805131,
+    "evaluatorId": -13901,
+    "moduleUri": "file:///path/to/myModule.pkl"
+  }
+]
+----
+. During evaluation, server evaluates `import*("customfs:/*.pkl")`, and sends xref:message-passing-api.adoc#list-modules-request[List Modules Request].
++
+[source,json]
+----
+[
+  0x2c,
+  {
+    "requestId": -6478924,
+    "evaluatorId": -13901,
+    "uri": "customfs:/"
+  }
+]
+----
+. Client responds with xref:message-passing-api.adoc#list-modules-response[List Modules Response].
+In our pretend scenario, there is only one file; `foo.pkl`.
++
+[source,json]
+----
+[
+  0x2d,
+  {
+    "requestId": -6478924,
+    "evaluatorId": -13901,
+    "pathElements": [
+      {
+        "name": "foo.pkl",
+        "isDirectory": false
+      }
+    ]
+  }
+]
+----
+. Server sends xref:message-passing-api.adoc#read-module-request[Read Module Request] to read `foo.pkl`.
++
+[source,json]
+----
+[
+  0x28,
+  {
+    "requestId": 36408291,
+    "evaluatorId": -13901,
+    "uri": "customfs:/foo.pkl"
+  }
+]
+----
+. Client responds with the module's contents
++
+[source,json]
+----
+[
+  0x29,
+  {
+    "requestId": 36408291,
+    "evaluatorId": -13901,
+    "contents": "foo = 1"
+  }
+]
+----
+. Server finishes evaluation, and responds with the xref:message-passing-api.adoc#evaluate-response[Evaluate Response].
++
+[source,json]
+----
+[
+  0x24,
+  {
+    "requestId": 9805131,
+    "evaluatorId": -13901,
+    "result": <pkl binary value>
+  }
+]
+----
+. Client sends xref:message-passing-api.adoc#close-evaluator[Close Evaluator].
++
+[source,json]
+----
+[
+  0x22,
+  {
+    "evaluatorId": -13901
+  }
+]
+----
+
+== Debug logs
+
+Set the env var `PKL_DEBUG=1` to enable more verbose logging from Pkl.
+It is recommended that clients also use this environment variable to enable debug logs of their own.
+

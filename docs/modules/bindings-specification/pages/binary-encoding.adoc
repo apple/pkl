@@ -1,0 +1,197 @@
+= Pkl Binary Encoding
+include::ROOT:partial$component-attributes.adoc[]
+include::partial$component-attributes.adoc[]
+
+Pkl values can be encoded into a binary format.
+This format is used for Pkl's non-JVM language bindings, for example, for its Go and Swift bindings.
+
+The binary format is uses link:{uri-messagepack}[MessagePack] encoding.
+
+== Primitives
+
+All Pkl primitives turn into their respective MessagePack primitive.
+
+|===
+|Pkl Type|MessagePack format
+
+|link:{uri-stdlib-Int}[Int]
+|link:{uri-messagepack-int}[int]
+
+|link:{uri-stdlib-Float}[Float]
+|link:{uri-messagepack-float}[float]
+
+|link:{uri-stdlib-String}[String]
+|link:{uri-messagepack-str}[string]
+
+|link:{uri-stdlib-Boolean}[Boolean]
+|link:{uri-messagepack-bool}[bool]
+
+|link:{uri-stdlib-Null}[Null]
+|link:{uri-messagepack-nil}[nil]
+|===
+
+NOTE: Pkl integers are encoded into the smallest int type that the number will fit into.
+For example, value `8` gets encoded as MessagePack `int8` format.
+
+== Non-primitives
+
+All non-primitive values are encoded as MessagePack arrays.
+The first slot of the array designates the value's type. The remaining slots have fixed meanings depending on the type.
+
+The array's length is the number of slots that are filled. For example, xref:{uri-stdlib-List}[List] is encoded as an MessagePack array with two elements.
+
+|===
+|Pkl type |Slot 1 2+|Slot 2 2+|Slot 3 2+|Slot 4
+
+||code |type |description |type |description |type |description
+
+|link:{uri-stdlib-Typed}[Typed], link:{uri-stdlib-Dynamic}[Dynamic]
+|`0x1`
+|link:{uri-messagepack-str}[str]
+|Fully qualified class name
+|link:{uri-messagepack-str}[str]
+|Enclosing module URI
+|link:{uri-messagepack-array}[array]
+|Array of <<object-members,object members>>
+
+|link:{uri-stdlib-Map}[Map]
+|`0x2`
+|link:{uri-messagepack-map}[map]
+|Map of `<value>` to `<value>`
+|
+|
+|
+|
+
+|link:{uri-stdlib-Mapping}[Mapping]
+|`0x3`
+|link:{uri-messagepack-map}[map]
+|Map of `<value>` to `<value>`
+|
+|
+|
+|
+
+|link:{uri-stdlib-List}[List]
+|`0x4`
+|link:{uri-messagepack-array}[array]
+|Array of `<value>`
+|
+|
+|
+|
+
+|link:{uri-stdlib-Listing}[Listing]
+|`0x5`
+|link:{uri-messagepack-array}[array]
+|Array of `<value>`
+|
+|
+|
+|
+
+|link:{uri-stdlib-Set}[Set]
+|`0x6`
+|link:{uri-messagepack-array}[array]
+|Array of `<value>`
+|
+|
+|
+|
+
+|link:{uri-stdlib-Duration}[Duration]
+|`0x7`
+|{uri-messagepack-float}[float64]
+|Duration value
+|link:{uri-messagepack-str}[str]
+|link:{uri-stdlib-DurationUnit}[Duration unit] (`"ns"`, `"ms"`, etc.)
+|
+|
+
+|link:{uri-stdlib-DataSize}[DataSize]
+|`0x8`
+|link:{uri-messagepack-float}[float64]
+|Value (float64)
+|link:{uri-messagepack-str}[str]
+|link:{uri-stdlib-DataSizeUnit}[DataSize unit] (`"b"`, `"kb"`, etc.)
+|
+|
+
+|link:{uri-stdlib-Pair}[Pair]
+|`0x9`
+|`<value>`
+|First value
+|`<value>`
+|Second value
+|
+|
+
+|link:{uri-stdlib-IntSeq}[IntSeq]
+|`0xA`
+|link:{uri-messagepack-int}[int]
+|Start
+|link:{uri-messagepack-int}[int]
+|End
+|link:{uri-messagepack-int}[int]
+|Step
+
+|link:{uri-stdlib-Regex}[Regex]
+|`0xB`
+|link:{uri-messagepack-str}[str]
+|Regex string representation
+|
+|
+|
+|
+
+|link:{uri-stdlib-Class}[Class]
+|`0xC`
+|
+|
+|
+|
+|
+|
+
+|link:{uri-stdlib-TypeAlias}[TypeAlias]
+|`0xD`
+|
+|
+|
+|
+|
+|
+|===
+
+[[object-members]]
+== Object Members
+
+Like non-primitive values, object members are encoded as MessagePack arrays, where the first slot designates the value's type.
+
+|===
+|Member type |Slot 1 2+|Slot 2 2+|Slot 3
+
+| |code |type |description |type |description
+
+|Property
+|`0x10`
+|link:{uri-messagepack-str}[str]
+|key
+|`<value>`
+|property value
+
+|Entry
+|`0x11`
+|`<value>`
+|entry key
+|`<value>`
+|entry value
+
+|Element
+|`0x12`
+|link:{uri-messagepack-int}[int]
+|index
+|`<value>`
+|element value
+|===
+
