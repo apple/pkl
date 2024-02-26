@@ -1190,7 +1190,8 @@ result = someLib.x
     val builtInCerts = FileTestUtils.writePklBuiltInCertificates(tempDir)
     val err = assertThrows<CliException> { evalModuleThatImportsPackage(builtInCerts) }
     assertThat(err)
-      .hasMessageContaining("Error during SSL handshake with host `localhost`:")
+      // on some JDK11's this doesn't cause SSLHandshakeException but some other SSLException
+      // .hasMessageContaining("Error during SSL handshake with host `localhost`:")
       .hasMessageContaining("unable to find valid certification path to requested target")
       .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
   }

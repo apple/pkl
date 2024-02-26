@@ -46,6 +46,7 @@ import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.CertPathTrustManagerParameters;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
 import org.pkl.core.util.ErrorMessages;
@@ -96,6 +97,8 @@ final class JdkHttpClient implements HttpClient {
       throw new SSLHandshakeException(
           ErrorMessages.create(
               "errorSslHandshake", request.uri().getHost(), Exceptions.getRootReason(e)));
+    } catch (SSLException e) {
+      throw new SSLException(Exceptions.getRootReason(e));
     } catch (InterruptedException e) {
       // next best thing after letting (checked) InterruptedException bubble up
       Thread.currentThread().interrupt();
