@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.executor.spi.v1;
+package org.pkl.executor.spi.v2;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-public class ExecutorSpiOptions {
+public class ExecutorSpiOptions2 {
   private final List<String> allowedModules;
 
   private final List<String> allowedResources;
@@ -39,18 +40,22 @@ public class ExecutorSpiOptions {
   private final Path moduleCacheDir;
   private final Path projectDir;
 
-  public ExecutorSpiOptions(
+  private final List<Path> certificateFiles;
+  private final List<URI> certificateUris;
+
+  public ExecutorSpiOptions2(
       List<String> allowedModules,
       List<String> allowedResources,
-      Map<String, String> environmentVariables,
-      Map<String, String> externalProperties,
       List<Path> modulePath,
-      /* @Nullable */ Path rootDir,
-      /* @Nullable */ Duration timeout,
+      Path rootDir,
+      Duration timeout,
       /* @Nullable */ String outputFormat,
       /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir) {
-
+      /* @Nullable */ Path projectDir,
+      /* @Nullable */ Map<String, String> environmentVariables,
+      /* @Nullable */ Map<String, String> externalProperties,
+      List<Path> certificateFiles,
+      List<URI> certificateUris) {
     this.allowedModules = allowedModules;
     this.allowedResources = allowedResources;
     this.environmentVariables = environmentVariables;
@@ -61,6 +66,8 @@ public class ExecutorSpiOptions {
     this.outputFormat = outputFormat;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDir = projectDir;
+    this.certificateFiles = certificateFiles;
+    this.certificateUris = certificateUris;
   }
 
   public List<String> getAllowedModules() {
@@ -101,5 +108,13 @@ public class ExecutorSpiOptions {
 
   public Path getProjectDir() {
     return projectDir;
+  }
+
+  public List<Path> getCertificateFiles() {
+    return certificateFiles;
+  }
+
+  public List<URI> getCertificateUris() {
+    return certificateUris;
   }
 }

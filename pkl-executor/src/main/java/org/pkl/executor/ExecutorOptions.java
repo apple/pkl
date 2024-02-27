@@ -34,10 +34,6 @@ public final class ExecutorOptions {
 
   private final List<Path> modulePath;
 
-  private final List<Path> certificateFiles;
-
-  private final List<URI> certificateUris;
-
   private final /* @Nullable */ Path rootDir;
 
   private final /* @Nullable */ Duration timeout;
@@ -46,6 +42,9 @@ public final class ExecutorOptions {
 
   private final /* @Nullable */ Path moduleCacheDir;
   private final /* @Nullable */ Path projectDir;
+
+  private final List<Path> certificateFiles;
+  private final List<URI> certificateUris;
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
@@ -60,8 +59,6 @@ public final class ExecutorOptions {
    * @param environmentVariables API equivalent of the repeatable {@code --env-var} CLI option
    * @param externalProperties API equivalent of the repeatable {@code --property} CLI option
    * @param modulePath API equivalent of the {@code --module-path} CLI option
-   * @param certificateFiles API equivalent of the {@code --ca-certificates} CLI option
-   * @param certificateUris API equivalent of the {@code --ca-certificates} CLI option
    * @param rootDir API equivalent of the {@code --root-dir} CLI option
    * @param timeout API equivalent of the {@code --timeout} CLI option
    * @param outputFormat API equivalent of the {@code --format} CLI option
@@ -69,6 +66,8 @@ public final class ExecutorOptions {
    *     #defaultModuleCacheDir()} is equivalent to omitting {@code --cache-dir}. Passing {@code
    *     null} is equivalent to {@code --no-cache}.
    * @param projectDir API equivalent of the {@code --project-dir} CLI option.
+   * @param certificateFiles API equivalent of the {@code --ca-certificates} CLI option
+   * @param certificateUris API equivalent of the {@code --ca-certificates} CLI option
    */
   public ExecutorOptions(
       List<String> allowedModules,
@@ -76,26 +75,26 @@ public final class ExecutorOptions {
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       List<Path> modulePath,
-      List<Path> certificateFiles,
-      List<URI> certificateUris,
       /* @Nullable */ Path rootDir,
       /* @Nullable */ Duration timeout,
       /* @Nullable */ String outputFormat,
       /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir) {
+      /* @Nullable */ Path projectDir,
+      List<Path> certificateFiles,
+      List<URI> certificateUris) {
 
     this.allowedModules = allowedModules;
     this.allowedResources = allowedResources;
     this.environmentVariables = environmentVariables;
     this.externalProperties = externalProperties;
     this.modulePath = modulePath;
-    this.certificateFiles = certificateFiles;
-    this.certificateUris = certificateUris;
     this.rootDir = rootDir;
     this.timeout = timeout;
     this.outputFormat = outputFormat;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDir = projectDir;
+    this.certificateFiles = certificateFiles;
+    this.certificateUris = certificateUris;
   }
 
   /** API equivalent of the {@code --allowed-modules} CLI option. */
@@ -121,16 +120,6 @@ public final class ExecutorOptions {
   /** API equivalent of the {@code --module-path} CLI option. */
   public List<Path> getModulePath() {
     return modulePath;
-  }
-
-  /** API equivalent of the {@code --ca-certificates} CLI option. */
-  public List<Path> getCertificateFiles() {
-    return certificateFiles;
-  }
-
-  /** API equivalent of the {@code --ca-certificates} CLI option. */
-  public List<URI> getCertificateUris() {
-    return certificateUris;
   }
 
   /** API equivalent of the {@code --root-dir} CLI option. */
@@ -166,6 +155,16 @@ public final class ExecutorOptions {
     return projectDir;
   }
 
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<Path> getCertificateFiles() {
+    return certificateFiles;
+  }
+
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<URI> getCertificateUris() {
+    return certificateUris;
+  }
+
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
@@ -177,13 +176,13 @@ public final class ExecutorOptions {
         && environmentVariables.equals(other.environmentVariables)
         && externalProperties.equals(other.externalProperties)
         && modulePath.equals(other.modulePath)
-        && certificateFiles.equals(other.certificateFiles)
-        && certificateUris.equals(other.certificateUris)
         && Objects.equals(rootDir, other.rootDir)
         && Objects.equals(timeout, other.timeout)
         && Objects.equals(outputFormat, other.outputFormat)
         && Objects.equals(moduleCacheDir, other.moduleCacheDir)
-        && Objects.equals(projectDir, other.projectDir);
+        && Objects.equals(projectDir, other.projectDir)
+        && certificateFiles.equals(other.certificateFiles)
+        && certificateUris.equals(other.certificateUris);
   }
 
   @Override
@@ -194,13 +193,13 @@ public final class ExecutorOptions {
         environmentVariables,
         externalProperties,
         modulePath,
-        certificateFiles,
-        certificateUris,
         rootDir,
         timeout,
         outputFormat,
         moduleCacheDir,
-        projectDir);
+        projectDir,
+        certificateFiles,
+        certificateUris);
   }
 
   @Override
@@ -216,10 +215,6 @@ public final class ExecutorOptions {
         + externalProperties
         + ", modulePath="
         + modulePath
-        + ", certificateFiles="
-        + certificateFiles
-        + ", certificateUris="
-        + certificateUris
         + ", rootDir="
         + rootDir
         + ", timeout="
@@ -230,6 +225,10 @@ public final class ExecutorOptions {
         + moduleCacheDir
         + ", projectDir="
         + projectDir
+        + ", certificateFiles="
+        + certificateFiles
+        + ", certificateUris="
+        + certificateUris
         + '}';
   }
 }

@@ -21,6 +21,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -36,8 +37,11 @@ import org.pkl.core.resource.ResourceReaders;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
+import org.pkl.executor.spi.v2.ExecutorSpi2;
+import org.pkl.executor.spi.v2.ExecutorSpiException2;
+import org.pkl.executor.spi.v2.ExecutorSpiOptions2;
 
-public class ExecutorSpiImpl implements ExecutorSpi {
+public class ExecutorSpiImpl implements ExecutorSpi, ExecutorSpi2 {
   private static final int MAX_HTTP_CLIENTS = 3;
 
   // Don't create a new HTTP client for every executor request.
@@ -66,33 +70,94 @@ public class ExecutorSpiImpl implements ExecutorSpi {
 
   @Override
   public String evaluatePath(Path modulePath, ExecutorSpiOptions options) {
-    var allowedModules =
-        options.getAllowedModules().stream().map(Pattern::compile).collect(Collectors.toList());
+    var builder =
+        createEvaluatorBuilder(
+            options.getAllowedModules(),
+            options.getAllowedResources(),
+            options.getRootDir(),
+            options.getModulePath(),
+            options.getEnvironmentVariables(),
+            options.getExternalProperties(),
+            options.getTimeout(),
+            options.getOutputFormat(),
+            options.getModuleCacheDir(),
+            options.getProjectDir(),
+            List.of(),
+            List.of());
 
-    var allowedResources =
-        options.getAllowedResources().stream().map(Pattern::compile).collect(Collectors.toList());
+    try (var evaluator = builder.build()) {
+      return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+    } catch (PklException e) {
+      throw new ExecutorSpiException(e.getMessage(), e.getCause());
+    } finally {
+      ModuleKeyFactories.closeQuietly(builder.getModuleKeyFactories());
+    }
+  }
+
+  @Override
+  public String evaluatePath(Path modulePath, ExecutorSpiOptions2 options) {
+    var builder =
+        createEvaluatorBuilder(
+            options.getAllowedModules(),
+            options.getAllowedResources(),
+            options.getRootDir(),
+            options.getModulePath(),
+            options.getEnvironmentVariables(),
+            options.getExternalProperties(),
+            options.getTimeout(),
+            options.getOutputFormat(),
+            options.getModuleCacheDir(),
+            options.getProjectDir(),
+            options.getCertificateFiles(),
+            options.getCertificateUris());
+
+    try (var evaluator = builder.build()) {
+      return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+    } catch (PklException e) {
+      throw new ExecutorSpiException2(e.getMessage(), e.getCause());
+    } finally {
+      ModuleKeyFactories.closeQuietly(builder.getModuleKeyFactories());
+    }
+  }
+
+  private EvaluatorBuilder createEvaluatorBuilder(
+      List<String> allowedModules,
+      List<String> allowedResources,
+      Path rootDir,
+      List<Path> modulePath,
+      Map<String, String> environmentVariables,
+      Map<String, String> externalProperties,
+      java.time.Duration timeout,
+      String outputFormat,
+      Path moduleCacheDir,
+      Path projectDir,
+      List<Path> certificateFiles,
+      List<URI> certificateUris) {
+    var allowedModulePatterns =
+        allowedModules.stream().map(Pattern::compile).collect(Collectors.toList());
+
+    var allowedResourcePatterns =
+        allowedResources.stream().map(Pattern::compile).collect(Collectors.toList());
 
     var securityManager =
         SecurityManagers.standard(
-            allowedModules,
-            allowedResources,
+            allowedModulePatterns,
+            allowedResourcePatterns,
             SecurityManagers.defaultTrustLevels,
-            options.getRootDir());
+            rootDir);
 
     var transformer = StackFrameTransformers.defaultTransformer;
-    if (options.getRootDir() != null) {
+    if (rootDir != null) {
       transformer =
-          transformer.andThen(
-              StackFrameTransformers.relativizeModuleUri(options.getRootDir().toUri()));
+          transformer.andThen(StackFrameTransformers.relativizeModuleUri(rootDir.toUri()));
     }
 
-    var resolver = new ModulePathResolver(options.getModulePath());
-
+    var resolver = new ModulePathResolver(modulePath);
     var builder =
         EvaluatorBuilder.unconfigured()
             .setStackFrameTransformer(transformer)
             .setSecurityManager(securityManager)
-            .setHttpClient(getOrCreateHttpClient(options))
+            .setHttpClient(getOrCreateHttpClient(certificateFiles, certificateUris))
             .addResourceReader(ResourceReaders.environmentVariable())
             .addResourceReader(ResourceReaders.externalProperty())
             .addResourceReader(ResourceReaders.modulePath(resolver))
@@ -108,27 +173,22 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             .addModuleKeyFactory(ModuleKeyFactories.projectpackage)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addModuleKeyFactory(ModuleKeyFactories.genericUrl)
-            .setEnvironmentVariables(options.getEnvironmentVariables())
-            .setExternalProperties(options.getExternalProperties())
-            .setTimeout(options.getTimeout())
-            .setOutputFormat(options.getOutputFormat())
-            .setModuleCacheDir(options.getModuleCacheDir());
-    if (options.getProjectDir() != null) {
-      var project = Project.loadFromPath(options.getProjectDir().resolve(PKL_PROJECT_FILENAME));
+            .setEnvironmentVariables(environmentVariables)
+            .setExternalProperties(externalProperties)
+            .setTimeout(timeout)
+            .setOutputFormat(outputFormat)
+            .setModuleCacheDir(moduleCacheDir);
+
+    if (projectDir != null) {
+      var project = Project.loadFromPath(projectDir.resolve(PKL_PROJECT_FILENAME));
       builder.setProjectDependencies(project.getDependencies());
     }
 
-    try (var evaluator = builder.build()) {
-      return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
-    } catch (PklException e) {
-      throw new ExecutorSpiException(e.getMessage(), e.getCause());
-    } finally {
-      ModuleKeyFactories.closeQuietly(builder.getModuleKeyFactories());
-    }
+    return builder;
   }
 
-  private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
-    var clientKey = new HttpClientKey(options);
+  private HttpClient getOrCreateHttpClient(List<Path> certificateFiles, List<URI> certificateUris) {
+    var clientKey = new HttpClientKey(certificateFiles, certificateUris);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
@@ -140,7 +200,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
             builder.addCertificates(uri);
           }
           // If the above didn't add any certificates,
-          // builder will fall back to Pkl's built-in certificates.
+          // builder will use the JVM's default SSL context.
           return builder.build();
         });
   }
@@ -149,10 +209,10 @@ public class ExecutorSpiImpl implements ExecutorSpi {
     final Set<Path> certificateFiles;
     final Set<URI> certificateUris;
 
-    HttpClientKey(ExecutorSpiOptions options) {
-      // make defensive copies
-      certificateFiles = Set.copyOf(options.getCertificateFiles());
-      certificateUris = Set.copyOf(options.getCertificateUris());
+    HttpClientKey(List<Path> certificateFiles, List<URI> certificateUris) {
+      // also serve as defensive copies
+      this.certificateFiles = Set.copyOf(certificateFiles);
+      this.certificateUris = Set.copyOf(certificateUris);
     }
 
     @Override
