@@ -1,6 +1,7 @@
 package org.pkl.executor
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -18,14 +19,26 @@ import kotlin.io.path.createDirectories
 class EmbeddedExecutorTest {
   companion object {
     @JvmStatic
-    fun allExecutors(): List<Executor> = listOf(
-      Executors.embedded(listOf(pklDistribution)), 
-      EmbeddedExecutor(listOf(pklDistribution), 1))
+    fun allExecutors(): List<Executor> = listOf(executor.value, executor1.value)
 
     @JvmStatic
-    fun executorsSinceV2(): List<Executor> = 
-      listOf(Executors.embedded(listOf(pklDistribution)))
-
+    fun executorsSinceV2(): List<Executor> = listOf(executor.value)
+    
+    @AfterAll
+    @JvmStatic
+    fun afterAll() {
+      if (executor.isInitialized()) executor.value.close()
+      if (executor1.isInitialized()) executor1.value.close()
+    }
+    
+    private val executor: Lazy<Executor> = lazy {
+      Executors.embedded(listOf(pklDistribution))
+    }
+    
+    private val executor1: Lazy<Executor> = lazy {
+      EmbeddedExecutor(listOf(pklDistribution), 1)
+    }
+    
     private val pklDistribution: Path by lazy {
       val libsDir = FileTestUtils.rootProjectDir.resolve("pkl-config-java/build/libs")
       if (!Files.isDirectory(libsDir)) {
@@ -132,9 +145,9 @@ class EmbeddedExecutorTest {
       .contains("Cannot find service")
       .contains("pkl.jar")
   }
-
-  @ParameterizedTest
+  
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module that is missing a ModuleInfo annotation`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -146,8 +159,7 @@ class EmbeddedExecutorTest {
     )
 
     val e = assertThrows<ExecutorException> {
-      executor.use {
-        it.evaluatePath(
+      executor.evaluatePath(
           pklFile,
           ExecutorOptions(
             listOf("file:"),
@@ -164,15 +176,14 @@ class EmbeddedExecutorTest {
             listOf()
           )
         )
-      }
     }
 
     assertThat(e.message)
       .contains("Pkl module `test.pkl` does not state which Pkl version it requires.")
   }
-  
-  @ParameterizedTest
+
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module that requests an incompatible Pkl version`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -185,8 +196,7 @@ class EmbeddedExecutorTest {
     )
 
     val e = assertThrows<ExecutorException> {
-      executor.use {
-        it.evaluatePath(
+      executor.evaluatePath(
           pklFile,
           ExecutorOptions(
             listOf("file:"),
@@ -203,15 +213,14 @@ class EmbeddedExecutorTest {
             listOf()
           )
         )
-      }
     }
 
     assertThat(e.message)
       .contains("Pkl version `99.99.99` requested by module `test.pkl` is not supported.")
   }
 
-  @ParameterizedTest
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module that reads environment variables and external properties`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -224,8 +233,7 @@ class EmbeddedExecutorTest {
     """.trimIndent()
     )
 
-    val result = executor.use {
-      it.evaluatePath(
+    val result = executor.evaluatePath(
         pklFile,
         ExecutorOptions(
           listOf("file:"),
@@ -243,7 +251,6 @@ class EmbeddedExecutorTest {
           listOf()
         )
       )
-    }
 
     assertThat(result.trim()).isEqualTo(
       """
@@ -253,8 +260,8 @@ class EmbeddedExecutorTest {
     )
   }
 
-  @ParameterizedTest
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module that depends on another module`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -279,8 +286,7 @@ class EmbeddedExecutorTest {
     """.trimIndent()
     )
 
-    val result = executor.use {
-      it.evaluatePath(
+    val result = executor.evaluatePath(
         pklFile,
         ExecutorOptions(
           listOf("file:"),
@@ -297,7 +303,6 @@ class EmbeddedExecutorTest {
           listOf()
         )
       )
-    }
 
     assertThat(result.trim()).isEqualTo(
       """
@@ -308,8 +313,8 @@ class EmbeddedExecutorTest {
     )
   }
 
-  @ParameterizedTest
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module whose evaluation fails`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -322,8 +327,7 @@ class EmbeddedExecutorTest {
     )
 
     val e = assertThrows<ExecutorException> {
-      executor.use {
-        it.evaluatePath(
+      executor.evaluatePath(
           pklFile,
           ExecutorOptions(
             listOf("file:"),
@@ -340,7 +344,6 @@ class EmbeddedExecutorTest {
             listOf()
           )
         )
-      }
     }
 
     assertThat(e.message)
@@ -350,8 +353,8 @@ class EmbeddedExecutorTest {
       .doesNotContain(tempDir.toString())
   }
 
-  @ParameterizedTest
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `time out a module`(executor: Executor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile.toFile().writeText(
@@ -366,8 +369,7 @@ class EmbeddedExecutorTest {
     )
 
     val e = assertThrows<ExecutorException> {
-      executor.use {
-        it.evaluatePath(
+      executor.evaluatePath(
           pklFile,
           ExecutorOptions(
             listOf("file:"),
@@ -384,15 +386,14 @@ class EmbeddedExecutorTest {
             listOf()
           )
         )
-      }
     }
 
     assertThat(e.message)
       .contains("Evaluation timed out after 1 second(s).")
   }
 
-  @ParameterizedTest
   @MethodSource("executorsSinceV2")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a module that loads a package`(executor: Executor, @TempDir tempDir: Path) {
     val cacheDir = tempDir.resolve("cache")
     val pklFile = tempDir.resolve("test.pkl")
@@ -407,8 +408,7 @@ class EmbeddedExecutorTest {
     """.trimIndent()
     )
     PackageServer.ensureStarted()
-    val result = executor.use {
-      it.evaluatePath(pklFile,
+    val result = executor.evaluatePath(pklFile,
         ExecutorOptions(
           listOf("file:", "package:", "https:"),
           listOf("prop:", "package:", "https:"),
@@ -423,7 +423,6 @@ class EmbeddedExecutorTest {
           listOf(FileTestUtils.selfSignedCertificate),
           listOf())
       )
-    }
     assertThat(result.trim()).isEqualTo("""
       chirpy {
         name = "Chirpy"
@@ -437,8 +436,8 @@ class EmbeddedExecutorTest {
     assertThat(cacheDir.toFile().list()).isNotEmpty()
   }
 
-  @ParameterizedTest
   @MethodSource("allExecutors")
+  @ParameterizedTest(autoCloseArguments = false)
   fun `evaluate a project dependency`(executor: Executor, @TempDir tempDir: Path) {
     val cacheDir = tempDir.resolve("packages")
     PackageServer.populateCacheDir(cacheDir)
@@ -484,8 +483,7 @@ class EmbeddedExecutorTest {
         result = Swallow
       """.trimIndent()
     )
-    val result = executor.use {
-      it.evaluatePath(pklFile,
+    val result = executor.evaluatePath(pklFile,
         ExecutorOptions(
           listOf("file:", "package:", "projectpackage:", "https:"),
           listOf("prop:", "package:", "projectpackage:", "https:"),
@@ -500,7 +498,6 @@ class EmbeddedExecutorTest {
           listOf(),
           listOf())
       )
-    }
     assertThat(result).isEqualTo("""
       result {
         name = "Swallow"
