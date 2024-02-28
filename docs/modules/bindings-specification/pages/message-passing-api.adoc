@@ -287,12 +287,14 @@ requestId: Int
 evaluatorId: Int
 
 /// The evaluation contents, if successful.
-result: <binary>? // <1>
+result: Binary? // <1>
 
 /// A message detailing why evaluation failed.
 error: String?
+
+typealias Binary = Any // <1>
 ----
-<1> xref:binary-encoding.adoc[Pkl Binary Encoding] in link:{uri-messagepack-bin}[bin format].
+<1> xref:binary-encoding.adoc[Pkl Binary Encoding] in link:{uri-messagepack-bin}[bin format] (not expressable in Pkl)
 
 [[log]]
 === Log
@@ -361,12 +363,14 @@ requestId: Int
 evaluatorId: Int
 
 /// The contents of the resource.
-contents: <binary>? // <1>
+contents: Binary? // <1>
 
 /// The description of the error that occured when reading this resource.
 error: String?
+
+typealias Binary = Any // <1>
 ----
-<1> MessagePack's link:https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family[bin format family]
+<1> MessagePack's link:https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family[bin format family] (not expressable in Pkl)
 
 [[read-module-request]]
 === Read Module Request
