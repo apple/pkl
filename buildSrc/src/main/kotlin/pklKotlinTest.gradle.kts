@@ -17,8 +17,8 @@ dependencies {
 }
 
 kotlin.jvmToolchain {
-  languageVersion.set(JavaLanguageVersion.of(11))
-  vendor.set(JvmVendorSpec.ADOPTIUM)
+  languageVersion.set(jvmToolchainVersion)
+  vendor.set(jvmToolchainVendor)
 }
 
 tasks.withType<Test>().configureEach {
