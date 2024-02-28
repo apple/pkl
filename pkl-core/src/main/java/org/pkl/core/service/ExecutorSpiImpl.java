@@ -201,7 +201,7 @@ public class ExecutorSpiImpl implements ExecutorSpi, ExecutorSpi2 {
           }
           // If the above didn't add any certificates,
           // builder will use the JVM's default SSL context.
-          return builder.build();
+          return builder.buildLazily();
         });
   }
 

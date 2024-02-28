@@ -28,7 +28,7 @@ import javax.net.ssl.SSLContext;
  *
  * <p>To create a new HTTP client, use a {@linkplain #builder() builder}. To send {@linkplain
  * HttpRequest requests} and retrieve their {@linkplain HttpResponse responses}, use {@link #send}.
- * To release resources held by the client in a timely manner, use {@link #close}.
+ * To release resources held by the client, use {@link #close}.
  *
  * <p>HTTP clients are thread-safe. Each client maintains its own connection pool and {@link
  * SSLContext}. For efficiency reasons, clients should be reused whenever possible.
