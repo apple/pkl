@@ -23,6 +23,9 @@
 **** xref:kotlin-binding:pkl-config-kotlin.adoc[pkl-config-kotlin Library]
 *** xref:swift:ROOT:index.adoc[Swift]
 *** xref:go:ROOT:index.adoc[Go]
+*** xref:bindings-specification:index.adoc[Specification]
+**** xref:bindings-specification:message-passing-api.adoc[Message Passing API]
+**** xref:bindings-specification:binary-encoding.adoc[Pkl Binary Encoding]
 
 * xref:ROOT:tools.adoc[Tools]
 ** xref:pkl-cli:index.adoc[CLI]
@@ -39,3 +42,4 @@
 ** xref:release-notes:0.26.adoc[0.26 Release Notes]
 ** xref:release-notes:0.25.adoc[0.25 Release Notes]
 ** xref:release-notes:changelog.adoc[Changelog]
+
