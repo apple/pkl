@@ -712,13 +712,7 @@ jobs:
     steps:
     - checkout
     - run:
-        command: |-
-          git am --reject < patches/graalVm23.patch
-          if [ $? -ne 0 ]; then
-            echo "Patch did not apply: patches/graalVm23.patch"
-            echo "Rejected files:"
-            find . -iname '*.rej' -exec basename {} .rej ';'
-          fi
+        command: git apply --reject patches/graalVm23.patch
     docker:
     - image: cimg/base:current
   trigger-docsite-build:
