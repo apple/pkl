@@ -22,15 +22,8 @@ configurations {
   }
 }
 
-plugins.withType(JavaPlugin::class).configureEach {
-  val java = project.extensions.getByType<JavaPluginExtension>()
-  java.sourceCompatibility = JavaVersion.VERSION_11
-  java.targetCompatibility = JavaVersion.VERSION_11
-}
-
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "11"
     freeCompilerArgs = freeCompilerArgs + listOf("-Xjsr305=strict", "-Xjvm-default=all")
   }
 }

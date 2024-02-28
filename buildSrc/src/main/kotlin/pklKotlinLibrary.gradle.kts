@@ -24,6 +24,11 @@ tasks.compileKotlin {
   enabled = true // disabled by pklJavaLibrary
 }
 
+kotlin.jvmToolchain {
+  languageVersion.set(JavaLanguageVersion.of(11))
+  vendor.set(JvmVendorSpec.ADOPTIUM)
+}
+
 spotless {
   kotlin {
     ktfmt(libs.versions.ktfmt.get()).googleStyle()

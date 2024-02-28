@@ -16,6 +16,11 @@ dependencies {
   testRuntimeOnly(buildInfo.libs.findLibrary("junitEngine").get())
 }
 
+kotlin.jvmToolchain {
+  languageVersion.set(JavaLanguageVersion.of(11))
+  vendor.set(JvmVendorSpec.ADOPTIUM)
+}
+
 tasks.withType<Test>().configureEach {
   val testTask = this
 

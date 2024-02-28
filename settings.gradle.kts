@@ -27,16 +27,15 @@ pluginManagement {
   }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+}
+
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
   repositories {
     mavenCentral()
   }
-}
-
-val javaVersion = JavaVersion.current()
-require(javaVersion.isJava11Compatible) {
-  "Project requires Java 11 or higher, but found ${javaVersion.majorVersion}."
 }
 
 if (gradle.startParameter.taskNames.contains("updateDependencyLocks") ||
