@@ -15,43 +15,22 @@
  */
 package org.pkl.executor;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.pkl.executor.spi.v1.ExecutorSpiOptions;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 
 /**
  * Options for {@link Executor#evaluatePath}.
  *
- * <p>Note that subclasses of {@code ExecutorOptions} offer additional options.
+ * <p>This class offers additional options not available in {@code ExecutorOptions}.
  */
-public class ExecutorOptions {
-  protected final List<String> allowedModules;
-
-  protected final List<String> allowedResources;
-
-  protected final Map<String, String> environmentVariables;
-
-  protected final Map<String, String> externalProperties;
-
-  protected final List<Path> modulePath;
-
-  protected final /* @Nullable */ Path rootDir;
-
-  protected final /* @Nullable */ Duration timeout;
-
-  protected final /* @Nullable */ String outputFormat;
-
-  protected final /* @Nullable */ Path moduleCacheDir;
-
-  protected final /* @Nullable */ Path projectDir;
-
-  /** Returns the module cache dir that the CLI uses by default. */
-  public static Path defaultModuleCacheDir() {
-    return Path.of(System.getProperty("user.home"), ".pkl", "cache");
-  }
+public class ExecutorOptions2 extends ExecutorOptions {
+  protected final List<Path> certificateFiles;
+  protected final List<URI> certificateUris;
 
   /**
    * Constructs an options object.
@@ -68,8 +47,10 @@ public class ExecutorOptions {
    *     #defaultModuleCacheDir()} is equivalent to omitting {@code --cache-dir}. Passing {@code
    *     null} is equivalent to {@code --no-cache}.
    * @param projectDir API equivalent of the {@code --project-dir} CLI option.
+   * @param certificateFiles API equivalent of the {@code --ca-certificates} CLI option
+   * @param certificateUris API equivalent of the {@code --ca-certificates} CLI option
    */
-  public ExecutorOptions(
+  public ExecutorOptions2(
       List<String> allowedModules,
       List<String> allowedResources,
       Map<String, String> environmentVariables,
@@ -79,84 +60,41 @@ public class ExecutorOptions {
       /* @Nullable */ Duration timeout,
       /* @Nullable */ String outputFormat,
       /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir) {
+      /* @Nullable */ Path projectDir,
+      List<Path> certificateFiles,
+      List<URI> certificateUris) {
 
-    this.allowedModules = allowedModules;
-    this.allowedResources = allowedResources;
-    this.environmentVariables = environmentVariables;
-    this.externalProperties = externalProperties;
-    this.modulePath = modulePath;
-    this.rootDir = rootDir;
-    this.timeout = timeout;
-    this.outputFormat = outputFormat;
-    this.moduleCacheDir = moduleCacheDir;
-    this.projectDir = projectDir;
+    super(
+        allowedModules,
+        allowedResources,
+        environmentVariables,
+        externalProperties,
+        modulePath,
+        rootDir,
+        timeout,
+        outputFormat,
+        moduleCacheDir,
+        projectDir);
+    this.certificateFiles = certificateFiles;
+    this.certificateUris = certificateUris;
   }
 
-  /** API equivalent of the {@code --allowed-modules} CLI option. */
-  public List<String> getAllowedModules() {
-    return allowedModules;
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<Path> getCertificateFiles() {
+    return certificateFiles;
   }
 
-  /** API equivalent of the {@code --allowed-resources} CLI option. */
-  public List<String> getAllowedResources() {
-    return allowedResources;
-  }
-
-  /** API equivalent of the repeatable {@code --env-var} CLI option. */
-  public Map<String, String> getEnvironmentVariables() {
-    return environmentVariables;
-  }
-
-  /** API equivalent of the repeatable {@code --property} CLI option. */
-  public Map<String, String> getExternalProperties() {
-    return externalProperties;
-  }
-
-  /** API equivalent of the {@code --module-path} CLI option. */
-  public List<Path> getModulePath() {
-    return modulePath;
-  }
-
-  /** API equivalent of the {@code --root-dir} CLI option. */
-  public /* @Nullable */ Path getRootDir() {
-    return rootDir;
-  }
-
-  /** API equivalent of the {@code --timeout} CLI option. */
-  public Duration getTimeout() {
-    return timeout;
-  }
-
-  /** API equivalent of the {@code --format} CLI option. */
-  public /* @Nullable */ String getOutputFormat() {
-    return outputFormat;
-  }
-
-  /**
-   * API equivalent of the {@code --cache-dir} CLI option. {@code null} is equivalent to {@code
-   * --no-cache}.
-   */
-  public /* @Nullable */ Path getModuleCacheDir() {
-    return moduleCacheDir;
-  }
-
-  /**
-   * API equivalent of the {@code --project-dir} CLI option.
-   *
-   * <p>Unlike the CLI, this option only sets project dependencies. It does not set evaluator
-   * settings.
-   */
-  public /* @Nullable */ Path getProjectDir() {
-    return projectDir;
+  /** API equivalent of the {@code --ca-certificates} CLI option. */
+  public List<URI> getCertificateUris() {
+    return certificateUris;
   }
 
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
-    if (obj.getClass() != ExecutorOptions.class) return false;
+    if (obj.getClass() != ExecutorOptions2.class) return false;
 
-    var other = (ExecutorOptions) obj;
+    var other = (ExecutorOptions2) obj;
     return allowedModules.equals(other.allowedModules)
         && allowedResources.equals(other.allowedResources)
         && environmentVariables.equals(other.environmentVariables)
@@ -166,7 +104,9 @@ public class ExecutorOptions {
         && Objects.equals(timeout, other.timeout)
         && Objects.equals(outputFormat, other.outputFormat)
         && Objects.equals(moduleCacheDir, other.moduleCacheDir)
-        && Objects.equals(projectDir, other.projectDir);
+        && Objects.equals(projectDir, other.projectDir)
+        && Objects.equals(certificateFiles, other.certificateFiles)
+        && Objects.equals(certificateUris, other.certificateUris);
   }
 
   @Override
@@ -181,12 +121,14 @@ public class ExecutorOptions {
         timeout,
         outputFormat,
         moduleCacheDir,
-        projectDir);
+        projectDir,
+        certificateFiles,
+        certificateUris);
   }
 
   @Override
   public String toString() {
-    return "ExecutorOptions{"
+    return "ExecutorOptions2{"
         + "allowedModules="
         + allowedModules
         + ", allowedResources="
@@ -207,11 +149,15 @@ public class ExecutorOptions {
         + moduleCacheDir
         + ", projectDir="
         + projectDir
+        + ", certificateFiles="
+        + certificateFiles
+        + ", certificateUris="
+        + certificateUris
         + '}';
   }
 
-  ExecutorSpiOptions toSpiOptions() {
-    return new ExecutorSpiOptions(
+  ExecutorSpiOptions2 toSpiOptions() {
+    return new ExecutorSpiOptions2(
         allowedModules,
         allowedResources,
         environmentVariables,
@@ -221,6 +167,8 @@ public class ExecutorOptions {
         timeout,
         outputFormat,
         moduleCacheDir,
-        projectDir);
+        projectDir,
+        certificateFiles,
+        certificateUris);
   }
 }

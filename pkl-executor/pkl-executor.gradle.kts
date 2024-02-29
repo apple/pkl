@@ -1,3 +1,5 @@
+import de.undercouch.gradle.tasks.download.Download
+
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -49,7 +51,17 @@ sourceSets {
   }
 }
 
-tasks.test {
+val downloadPkl025 by tasks.registering(Download::class) {
+  src("https://repo1.maven.org/maven2/org/pkl-lang/pkl-config-java-all/0.25.0/pkl-config-java-all-0.25.0.jar")
+  dest("build/download/pkl-config-java-all-0.25.0.jar")
+  doFirst { file("build/download").mkdirs() }
+}
+
+val prepareTest by tasks.registering {
   // used by EmbeddedExecutorTest
-  dependsOn(pklDistribution)
+  dependsOn(downloadPkl025, pklDistribution)
+}
+
+tasks.test {
+  dependsOn(prepareTest)
 }

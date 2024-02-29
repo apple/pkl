@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.executor.spi.v2;
+package org.pkl.commons.test
 
-public final class ExecutorSpiException2 extends RuntimeException {
-  public ExecutorSpiException2(String message, Throwable cause) {
-    super(message, cause);
+class FilteringClassLoader(parent: ClassLoader, private val includeFilter: (String) -> Boolean) :
+  ClassLoader(parent) {
+
+  init {
+    registerAsParallelCapable()
+  }
+
+  override fun loadClass(name: String, resolve: Boolean): Class<*> {
+    if (!includeFilter(name)) throw ClassNotFoundException(name)
+    return super.loadClass(name, resolve)
   }
 }

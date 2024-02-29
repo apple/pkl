@@ -27,10 +27,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
-import org.pkl.executor.spi.v1.ExecutorSpiOptions;
-import org.pkl.executor.spi.v2.ExecutorSpi2;
-import org.pkl.executor.spi.v2.ExecutorSpiException2;
-import org.pkl.executor.spi.v2.ExecutorSpiOptions2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +43,13 @@ final class EmbeddedExecutor implements Executor {
    *     distribution
    */
   public EmbeddedExecutor(List<Path> pklFatJars) {
-    this(pklFatJars, 0);
+    this(pklFatJars, Executor.class.getClassLoader());
   }
 
   // for testing only
-  EmbeddedExecutor(List<Path> pklFatJars, int spiVersion) {
+  EmbeddedExecutor(List<Path> pklFatJars, ClassLoader pklExecutorClassLoader) {
     for (var jarFile : pklFatJars) {
-      pklDistributions.add(new PklDistribution(jarFile, spiVersion));
+      pklDistributions.add(new PklDistribution(jarFile, pklExecutorClassLoader));
     }
   }
 
@@ -80,6 +76,7 @@ final class EmbeddedExecutor implements Executor {
       // (but not any modules imported by it) and only requires parsing (but not evaluating) the
       // module.
       requestedVersion = detectRequestedPklVersion(modulePath, options);
+      //noinspection resource
       distribution = findCompatibleDistribution(modulePath, requestedVersion, options);
       output = distribution.evaluatePath(modulePath, options);
     } catch (RuntimeException e) {
@@ -173,52 +170,30 @@ final class EmbeddedExecutor implements Executor {
   private static final class PklDistribution implements AutoCloseable {
     final URLClassLoader pklDistributionClassLoader;
     final /* @Nullable */ ExecutorSpi executorSpi;
-    final /* @Nullable */ ExecutorSpi2 executorSpi2;
     final Version version;
 
     /**
      * @throws IllegalArgumentException if the Jar file does not exist or is not a valid Pkl
      *     distribution
      */
-    PklDistribution(Path pklFatJar, /* 0 -> choose highest available */ int spiVersion) {
+    PklDistribution(Path pklFatJar, ClassLoader pklExecutorClassLoader) {
       if (!Files.isRegularFile(pklFatJar)) {
         throw new IllegalArgumentException(
             String.format("Invalid Pkl distribution: Cannot find Jar file `%s`.", pklFatJar));
       }
 
-      pklDistributionClassLoader = new PklDistributionClassLoader(pklFatJar);
+      pklDistributionClassLoader =
+          new PklDistributionClassLoader(pklFatJar, pklExecutorClassLoader);
+      var serviceLoader = ServiceLoader.load(ExecutorSpi.class, pklDistributionClassLoader);
 
       try {
-        if (spiVersion == 0 || spiVersion == 2) {
-          var serviceLoader2 = ServiceLoader.load(ExecutorSpi2.class, pklDistributionClassLoader);
-          executorSpi2 = serviceLoader2.findFirst().orElse(null);
-          if (executorSpi2 != null) {
-            executorSpi = null;
-            // convert to normal to allow running with a dev version
-            version = Version.parse(executorSpi2.getPklVersion()).toNormal();
-            return;
-          }
-        } else {
-          executorSpi2 = null;
-        }
-        if (spiVersion == 0 || spiVersion == 1) {
-          var serviceLoader = ServiceLoader.load(ExecutorSpi.class, pklDistributionClassLoader);
-          executorSpi = serviceLoader.findFirst().orElse(null);
-          if (executorSpi != null) {
-            // convert to normal to allow running with a dev version
-            version = Version.parse(executorSpi.getPklVersion()).toNormal();
-            return;
-          }
-        } else {
-          executorSpi = null;
-        }
-        if (spiVersion == 0) {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Invalid Pkl distribution: Cannot find service of type `%s` in Jar file `%s`.",
-                  ExecutorSpi.class.getTypeName(), pklFatJar));
-        }
-        throw new IllegalArgumentException("Invalid SPI version: " + spiVersion);
+        executorSpi = serviceLoader.iterator().next();
+      } catch (NoSuchElementException e) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Invalid Pkl distribution: Cannot find service of type `%s` in Jar file `%s`.",
+                ExecutorSpi.class.getTypeName(), pklFatJar));
+
       } catch (ServiceConfigurationError e) {
         throw new IllegalArgumentException(
             String.format(
@@ -226,6 +201,9 @@ final class EmbeddedExecutor implements Executor {
                 ExecutorSpi.class.getTypeName(), pklFatJar),
             e);
       }
+
+      // convert to normal to allow running with a dev version
+      version = Version.parse(executorSpi.getPklVersion()).toNormal();
     }
 
     Version getVersion() {
@@ -238,10 +216,8 @@ final class EmbeddedExecutor implements Executor {
       // Truffle loads stuff from context class loader, so set it to our class loader
       currentThread.setContextClassLoader(pklDistributionClassLoader);
       try {
-        return executorSpi2 != null
-            ? executorSpi2.evaluatePath(modulePath, toSpiOptions2(options))
-            : executorSpi.evaluatePath(modulePath, toSpiOptions(options));
-      } catch (ExecutorSpiException | ExecutorSpiException2 e) {
+        return executorSpi.evaluatePath(modulePath, options.toSpiOptions());
+      } catch (ExecutorSpiException e) {
         throw new ExecutorException(e.getMessage(), e.getCause());
       } finally {
         currentThread.setContextClassLoader(prevContextClassLoader);
@@ -252,44 +228,19 @@ final class EmbeddedExecutor implements Executor {
     public void close() throws IOException {
       pklDistributionClassLoader.close();
     }
-
-    ExecutorSpiOptions toSpiOptions(ExecutorOptions options) {
-      return new ExecutorSpiOptions(
-          options.getAllowedModules(),
-          options.getAllowedResources(),
-          options.getEnvironmentVariables(),
-          options.getExternalProperties(),
-          options.getModulePath(),
-          options.getRootDir(),
-          options.getTimeout(),
-          options.getOutputFormat(),
-          options.getModuleCacheDir(),
-          options.getProjectDir());
-    }
-
-    ExecutorSpiOptions2 toSpiOptions2(ExecutorOptions options) {
-      return new ExecutorSpiOptions2(
-          options.getAllowedModules(),
-          options.getAllowedResources(),
-          options.getModulePath(),
-          options.getRootDir(),
-          options.getTimeout(),
-          options.getOutputFormat(),
-          options.getModuleCacheDir(),
-          options.getProjectDir(),
-          options.getEnvironmentVariables(),
-          options.getExternalProperties(),
-          options.getCertificateFiles(),
-          options.getCertificateUris());
-    }
   }
 
   private static final class PklDistributionClassLoader extends URLClassLoader {
-    final ClassLoader spiClassLoader = ExecutorSpi.class.getClassLoader();
+    final ClassLoader pklExecutorClassLoader;
 
-    PklDistributionClassLoader(Path pklFatJar) {
+    static {
+      registerAsParallelCapable();
+    }
+
+    PklDistributionClassLoader(Path pklFatJar, ClassLoader pklExecutorClassLoader) {
       // pass `null` to make bootstrap class loader the effective parent
       super(toUrls(pklFatJar), null);
+      this.pklExecutorClassLoader = pklExecutorClassLoader;
     }
 
     @Override
@@ -299,7 +250,15 @@ final class EmbeddedExecutor implements Executor {
 
         if (clazz == null) {
           if (name.startsWith("org.pkl.executor.spi.")) {
-            clazz = spiClassLoader.loadClass(name);
+            try {
+              // give pkl-executor a chance to load the SPI clasa
+              clazz = pklExecutorClassLoader.loadClass(name);
+            } catch (ClassNotFoundException ignored) {
+              // The SPI class exists in this distribution but not in pkl-executor,
+              // so load it from the distribution.
+              // This can happen if the pkl-executor version is lower than the distribution version.
+              clazz = findClass(name);
+            }
           } else if (name.startsWith("java.")
               || name.startsWith("jdk.")
               || name.startsWith("sun.")
