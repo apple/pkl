@@ -67,7 +67,7 @@ facts {
 }
 examples {
   ["Reflected module properties of unknown type metadata"] {
-    Set("int", "float", "string", "boolean", "duration", "dataSize", "pair", "list", "set", "map", "listing", "mapping", "dynamic", "typed", "int2", "float2", "string2", "boolean2", "duration2", "dataSize2", "pair2", "list2", "set2", "map2", "listing2", "mapping2", "dynamic2", "typed2", "any", "noth", "unkn", "union", "nullable", "stringLiteral", "constrained", "aliased")
+    Set("int", "float", "string", "boolean", "duration", "dataSize", "pair", "list", "set", "map", "listing", "mapping", "dynamic", "typed", "int2", "float2", "string2", "boolean2", "duration2", "dataSize2", "pair2", "list2", "set2", "map2", "listing2", "mapping2", "dynamic2", "typed2", "any", "noth", "unkn", "union", "nullable", "stringLiteral", "constrained", "aliased", "hiddenProp", "constProp", "fixedProp")
     new {
       hasExpectedLocation = true
       docComment = "module property doc comment"
@@ -373,6 +373,9 @@ examples {
       defaultValue = 42
       hasExpectedType = true
     }
+    Set("hidden")
+    Set("const")
+    Set("fixed")
   }
   ["Reflected class methods metadata"] {
     Set("sing")
