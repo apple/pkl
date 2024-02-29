@@ -1,4 +1,0 @@
-res1 =
-  let (x = 1)
-    let (y = throw("ouch"))
-      y + 2

@@ -1,6 +1,0 @@
-–– Pkl Error ––
-No viable alternative at input `@11`.
-
-x | res1 = a@11
-             ^^
-at parser7 (file:///$snippetsDir/input/errors/parser7.pkl)

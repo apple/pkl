@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Cannot amend const property `constDyn`.
-
-x | constDyn {
-    ^^^^^^^^
-at constAmend (file:///$snippetsDir/input/errors/const/constAmend.pkl)

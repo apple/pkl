@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `abstract` is not applicable to object members.
-
-x | abstract bar = 42
-    ^^^^^^^^
-at invalidObjectPropertyModifier#foo (file:///$snippetsDir/input/errors/invalidObjectPropertyModifier.pkl)

@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Class needs a `local` modifier.
-
-x | class Other
-    ^^^^^^^^^^^
-at invalidAmend5 (file:///$snippetsDir/input/modules/invalidAmend5.pkl)
-
-To define a non-local class, extend rather than amend the parent module (which must be `open` for extension).

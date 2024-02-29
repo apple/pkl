@@ -1,4 +1,0 @@
-class Person
-foo {
-  for (_ in new Person {}) { 42 }
-}

@@ -1,3 +1,0 @@
-source = null
-
-res { ...source }

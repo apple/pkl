@@ -1,3 +1,0 @@
-class MyClass
-
-typealias MyTypeAlias = MyClass(getClass() == MyClass)

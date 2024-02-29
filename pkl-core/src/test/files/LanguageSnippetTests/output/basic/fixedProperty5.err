@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `fixed` is not applicable to object members.
-
-x | fixed bar = "bar"
-    ^^^^^
-at fixedProperty5#myObj (file:///$snippetsDir/input/basic/fixedProperty5.pkl)

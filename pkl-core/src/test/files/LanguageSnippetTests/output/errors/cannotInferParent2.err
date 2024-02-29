@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Cannot tell which parent to amend.
-
-x | foo = () -> new {}
-                ^^^
-at cannotInferParent2#foo.<function#1> (file:///$snippetsDir/input/errors/cannotInferParent2.pkl)
-
-Please specify a parent explicitly, for example `new Person { ... }` instead of `new { ... }`.

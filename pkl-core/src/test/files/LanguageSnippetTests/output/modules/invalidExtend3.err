@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Module `my.library` cannot be extended or used as type because it amends another module.
-
-x | extends "amendModule1.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-at invalidExtend3 (file:///$snippetsDir/input/modules/invalidExtend3.pkl)

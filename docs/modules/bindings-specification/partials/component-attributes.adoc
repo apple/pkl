@@ -1,9 +1,0 @@
-:uri-github-binary-encoding-snippet-tests: {uri-github-tree}/pkl-server/src/test/files/SnippetTests
-:uri-messagepack-bool: {uri-messagepack-spec}#bool-format-family
-:uri-messagepack-int: {uri-messagepack-spec}#int-format-family
-:uri-messagepack-float: {uri-messagepack-spec}#float-format-family
-:uri-messagepack-str: {uri-messagepack-spec}#str-format-family
-:uri-messagepack-bin: {uri-messagepack-spec}#bin-format-family
-:uri-messagepack-array: {uri-messagepack-spec}#array-format-family
-:uri-messagepack-map: {uri-messagepack-spec}#map-format-family
-:uri-messagepack-nil: {uri-messagepack-spec}#nil-format

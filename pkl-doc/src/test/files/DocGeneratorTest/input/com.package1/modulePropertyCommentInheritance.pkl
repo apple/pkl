@@ -1,5 +1,0 @@
-module com.package1.modulePropertyCommentInheritance
-
-extends "modulePropertyComments.pkl"
-
-property3: Float = 1.23

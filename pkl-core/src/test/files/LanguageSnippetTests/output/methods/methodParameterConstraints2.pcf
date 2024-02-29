@@ -1,8 +1,0 @@
-res1 = "Type constraint `isPositive` violated. Value: -3"
-res2 = "Type constraint `!isEmpty` violated. Value: \"\""
-res3 = "Type constraint `isPositive` violated. Value: -2"
-res4 = "Type constraint `!isEmpty` violated. Value: \"\""
-res5 = "Type constraint `isPositive` violated. Value: -3"
-res6 = "Type constraint `!isEmpty` violated. Value: \"\""
-res7 = "Type constraint `isPositive` violated. Value: -2"
-res8 = "Type constraint `!isEmpty` violated. Value: \"\""

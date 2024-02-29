@@ -1,7 +1,0 @@
-notConst = 10
-
-class Foo {
-  shouldBeConst = module.notConst
-}
-
-foo = new Foo {}

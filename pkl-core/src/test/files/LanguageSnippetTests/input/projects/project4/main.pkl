@@ -1,5 +1,0 @@
-import "@fruit/Fruit.pkl"
-
-orange = new Fruit {
-  name = "Orange"
-}

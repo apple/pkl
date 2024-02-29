@@ -1,2 +1,0 @@
-res1 = "Expected value of type `Boolean` or `Function`, but got type `String`. Value: \"not a boolean\""
-res2 = "Expected value of type `Boolean`, but got type `String`. Value: \"not a boolean\""

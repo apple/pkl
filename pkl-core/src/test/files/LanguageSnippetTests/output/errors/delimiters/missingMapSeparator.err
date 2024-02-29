@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | map = Map(1, 2, 3  4, 5, 6)
-                     ^
-at missingMapSeparator#map (file:///$snippetsDir/input/errors/delimiters/missingMapSeparator.pkl)

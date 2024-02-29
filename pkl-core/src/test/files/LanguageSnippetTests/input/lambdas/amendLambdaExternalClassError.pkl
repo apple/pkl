@@ -1,3 +1,0 @@
-hidden ab = (a, b) -> List(42)
-hidden amendAb = (ab) { amended = "amended" }
-res1 = amendAb.apply(1, 2)

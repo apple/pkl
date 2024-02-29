@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Cannot reference `module` from const property `x`.
-
-x | x = module
-        ^^^^^^
-at constModule3#foo.x (file:///$snippetsDir/input/errors/const/constModule3.pkl)

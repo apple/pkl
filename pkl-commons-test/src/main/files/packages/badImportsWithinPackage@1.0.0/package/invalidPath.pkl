@@ -1,1 +1,0 @@
-res = import("not/a/valid/path.pkl")

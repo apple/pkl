@@ -1,2 +1,0 @@
-res1: String(!isEmpty, length < 5 = "abc"
-res2 = 42

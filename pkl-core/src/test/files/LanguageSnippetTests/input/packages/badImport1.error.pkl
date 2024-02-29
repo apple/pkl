@@ -1,2 +1,0 @@
-// no semver
-res = import("package://localhost:12110/foo#/bar.pkl")

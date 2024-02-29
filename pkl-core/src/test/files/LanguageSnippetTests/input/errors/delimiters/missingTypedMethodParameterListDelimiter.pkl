@@ -1,2 +1,0 @@
-function foo(arg1: String, arg2: String = arg1 + arg2
-res1 = foo(1, 2)

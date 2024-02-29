@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Unmatched delimiter `]`.
-
-x | [name == "Pigeon"] ] { age = 42 }
-                       ^
-at unbalancedEntryBrackets4#res (file:///$snippetsDir/input/errors/delimiters/unbalancedEntryBrackets4.pkl)

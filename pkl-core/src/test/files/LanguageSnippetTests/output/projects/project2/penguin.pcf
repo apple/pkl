@@ -1,6 +1,0 @@
-bird {
-  name = "Penguin"
-  favoriteFruit {
-    name = "Ice Fruit"
-  }
-}

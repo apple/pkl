@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Keyword `outer` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
-
-x | x = outer.outer // nested syntax error
-              ^^^^^
-at nested1 (file:///$snippetsDir/input/errors/nested1.pkl)

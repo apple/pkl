@@ -1,3 +1,0 @@
-Core implementation of the Pkl language. Includes Java APIs for embedding the
-language into JVM applications, and for building libraries and tools on top of
-the language.

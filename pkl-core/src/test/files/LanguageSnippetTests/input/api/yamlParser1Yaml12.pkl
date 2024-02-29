@@ -1,3 +1,0 @@
-amends "yamlParser1Compat.pkl"
-
-parser { mode = "1.2" }

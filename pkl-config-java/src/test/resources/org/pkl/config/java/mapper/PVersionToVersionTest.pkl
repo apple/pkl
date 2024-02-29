@@ -1,7 +1,0 @@
-import "pkl:semver"
-
-ex1 = semver.Version("1.2.3")
-ex2 = semver.Version("1.2.3-rc.1")
-ex3 = semver.Version("1.2.3+456.789")
-ex4 = semver.Version("1.2.3-rc.1+456.789")
-ex5 = semver.Version("999999999999999.0.0")

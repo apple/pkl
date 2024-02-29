@@ -1,9 +1,0 @@
-amends ".../snippetTest.pkl"
-
-examples {
-  ["inherits all the imports of project1"] {
-    import("@birds/catalog/Swallow.pkl")
-    import("@fruits/catalog/apple.pkl")
-    import("@project2/penguin.pkl")
-  }
-}

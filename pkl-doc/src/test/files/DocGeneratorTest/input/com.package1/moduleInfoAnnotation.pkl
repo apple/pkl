@@ -1,2 +1,0 @@
-@ModuleInfo { minPklVersion = "0.10.0" }
-module com.package1.moduleInfoAnnotation

@@ -1,4 +1,0 @@
-amends "library.pkl"
-
-// non-local class definition
-class Other

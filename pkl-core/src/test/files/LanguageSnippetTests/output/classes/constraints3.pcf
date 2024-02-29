@@ -1,6 +1,0 @@
-res1 {
-  address {
-    street = "Hampton St."
-  }
-}
-res2 = "Type constraint `street.endsWith(\"St.\")` violated. Value: new Address { street = \"Garlic Blvd.\" }"

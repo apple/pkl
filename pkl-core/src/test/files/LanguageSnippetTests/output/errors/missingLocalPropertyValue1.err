@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing property value.
-
-x | local x: Int
-                ^
-at missingLocalPropertyValue1#x (file:///$snippetsDir/input/errors/missingLocalPropertyValue1.pkl)

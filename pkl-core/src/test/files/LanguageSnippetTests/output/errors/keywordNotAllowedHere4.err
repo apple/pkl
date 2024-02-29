@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Keyword `record` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
-
-x | record = 5
-    ^^^^^^
-at keywordNotAllowedHere4 (file:///$snippetsDir/input/errors/keywordNotAllowedHere4.pkl)

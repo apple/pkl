@@ -1,2 +1,0 @@
-map = Map("one", 1, "two", 2
-

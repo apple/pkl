@@ -1,9 +1,0 @@
-–– Pkl Error ––
-The top-level value of a Pcf document must have type `Typed` or `Dynamic`, but got type `String`.
-Value: "anyConverterError"
-
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at pkl.base#Module.output.text (pkl:base)
-
-This value was converted during rendering. Previous: new ModuleClass {}. After: "anyConverterError".

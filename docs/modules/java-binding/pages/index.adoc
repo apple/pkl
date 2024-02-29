@@ -1,4 +1,0 @@
-= Integration with Java
-
-Pkl provides rich integration with Java. Our integration allows you to embed the Pkl runtime into your Java program, and also provides code generation from Pkl source files.
-

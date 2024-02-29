@@ -1,9 +1,0 @@
-local notConstDyn = new Dynamic {
-  prop = 2
-}
-
-class Foo {
-  foo = notConstDyn.prop
-}
-
-foo = new Foo {}

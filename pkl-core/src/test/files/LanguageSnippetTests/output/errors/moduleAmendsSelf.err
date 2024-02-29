@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Module `moduleAmendsSelf` cannot amend itself.
-
-x | amends "moduleAmendsSelf.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at moduleAmendsSelf (file:///$snippetsDir/input/errors/moduleAmendsSelf.pkl)

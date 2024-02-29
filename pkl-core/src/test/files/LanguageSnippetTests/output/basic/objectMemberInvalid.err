@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Object members must be separated by whitespace, newline, or semicolon.
-
-x | 1.2.3
-       ^^
-at objectMemberInvalid#res1 (file:///$snippetsDir/input/basic/objectMemberInvalid.pkl)

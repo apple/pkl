@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Module `moduleExtendsSelf` cannot extend itself.
-
-x | extends "moduleExtendsSelf.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at moduleExtendsSelf (file:///$snippetsDir/input/errors/moduleExtendsSelf.pkl)

@@ -1,9 +1,0 @@
-–– Pkl Error ––
-Cannot extend non-open module `extendModule1`.
-
-x | extends "extendModule1.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at invalidExtend2 (file:///$snippetsDir/input/modules/invalidExtend2.pkl)
-
-By default, modules are closed for extension.
-To make a module extensible, add an `open` modifier: `open module my_module; ...`

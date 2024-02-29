@@ -1,4 +1,0 @@
-module birds.catalog
-
-catalog = import*("catalog/*.pkl")
-catalogFiles = read*("catalog/*.pkl")

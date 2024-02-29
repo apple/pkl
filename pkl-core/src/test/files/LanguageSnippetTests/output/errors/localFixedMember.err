@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `fixed` is redundant here; just use `local`.
-
-x | local fixed name: String = "hello"
-          ^^^^^
-at localFixedMember (file:///$snippetsDir/input/errors/localFixedMember.pkl)

@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Extraneous input: `<EOF>`. Expected one of: MLEndQuote, MLInterpolation, MLUnicodeEscape, MLCharacterEscape, MLNewline, MLCharacters
-
-x | res1 = """some string"
-                          ^
-at parser6 (file:///$snippetsDir/input/errors/parser6.pkl)

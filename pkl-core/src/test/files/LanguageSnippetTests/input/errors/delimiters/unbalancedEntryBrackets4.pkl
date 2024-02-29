@@ -1,3 +1,0 @@
-res = new {
-  [name == "Pigeon"] ] { age = 42 }
-}

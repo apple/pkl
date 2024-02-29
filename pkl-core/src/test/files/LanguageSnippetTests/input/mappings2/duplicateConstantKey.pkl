@@ -1,6 +1,0 @@
-res1 = new Mapping {
-  when (false) { [0] = 0 }
-  ["barn owl"] = 1
-  ["pigeon"] = 2
-  ["barn owl"] = 3
-}

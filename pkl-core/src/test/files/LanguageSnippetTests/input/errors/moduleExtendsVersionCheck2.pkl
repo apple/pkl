@@ -1,2 +1,0 @@
-@ModuleInfo { minPklVersion = "99.9.9" }
-extends "baseModule.pkl"

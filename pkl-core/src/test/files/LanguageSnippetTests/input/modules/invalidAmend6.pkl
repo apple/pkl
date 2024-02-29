@@ -1,4 +1,0 @@
-resource = new Resource {
-  // No property foo on Resource
-  foo = "bar"
-}

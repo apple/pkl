@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Mismatched input: `are`. Expected one of: `{`, `=`, `:`
-
-x | How are you today?
-        ^^^
-at stringError1 (file:///$snippetsDir/input/basic/stringError1.pkl)

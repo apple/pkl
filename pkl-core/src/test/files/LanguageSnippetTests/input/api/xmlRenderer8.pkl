@@ -1,8 +1,0 @@
-// Test that unrenderable types do have an informative location in the error message.
-import "pkl:xml"
-
-m = new Mixin {}
-
-output {
-  renderer = new xml.Renderer {}
-}

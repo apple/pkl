@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Expected `myAnn` to be a type, but it is not.
-
-x | @myAnn
-     ^^^^^
-at annotationIsNotExpression (file:///$snippetsDir/input/annotation/annotationIsNotExpression.pkl)

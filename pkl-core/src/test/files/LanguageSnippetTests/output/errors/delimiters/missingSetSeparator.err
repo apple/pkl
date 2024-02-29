@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | set = Set(1, 2  3, 4)
-                  ^
-at missingSetSeparator#set (file:///$snippetsDir/input/errors/delimiters/missingSetSeparator.pkl)

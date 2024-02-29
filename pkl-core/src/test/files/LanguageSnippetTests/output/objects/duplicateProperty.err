@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Duplicate definition of member `prop1`.
-
-x | prop1 = "other" // duplicate
-    ^^^^^
-at duplicateProperty#obj (file:///$snippetsDir/input/objects/duplicateProperty.pkl)

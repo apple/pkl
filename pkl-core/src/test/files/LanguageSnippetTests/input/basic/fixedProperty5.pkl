@@ -1,3 +1,0 @@
-myObj = new {
-  fixed bar = "bar"
-}

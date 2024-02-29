@@ -1,7 +1,0 @@
-open module moduleRefLibrary
-
-const a = 42
-
-aa = module.a
-
-foo {}

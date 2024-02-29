@@ -1,2 +1,0 @@
-/// This is a module that has spaces in its name.
-module com.package1.`Module Containing Spaces`

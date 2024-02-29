@@ -1,7 +1,0 @@
-foo {
-  xbar = 1
-  barx = 2
-  other = 3
-}
-
-res1 = foo.bar

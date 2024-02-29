@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `fixed` is not applicable to modules.
-
-x | fixed module foo
-    ^^^^^
-at foo (file:///$snippetsDir/input/basic/fixedProperty4.pkl)

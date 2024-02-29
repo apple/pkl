@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `)` delimiter.
-
-x | map = Map("one", 1, "two", 2
-                                ^
-at missingMapDelimiter#map (file:///$snippetsDir/input/errors/delimiters/missingMapDelimiter.pkl)

@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Did not find a resolved dependency for package `package://localhost:12110/birds@0.5.0`.
-
-Run `pkl project resolve` to update resolved dependencies.
-
-x | import "@bird/Bird.pkl"
-           ^^^^^^^^^^^^^^^^
-at bug (file:///$snippetsDir/input/projects/badProjectDeps3/bug.pkl)

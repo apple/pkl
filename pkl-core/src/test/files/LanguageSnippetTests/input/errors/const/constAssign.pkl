@@ -1,3 +1,0 @@
-amends "../../basic/constModifier.pkl"
-
-constantSimpleValue = "1"

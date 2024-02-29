@@ -1,7 +1,0 @@
-amends "yamlRendererIndentationWidth2.yml.pkl"
-
-output {
-  renderer = new YamlRenderer {
-    indentWidth = 4
-  }
-}

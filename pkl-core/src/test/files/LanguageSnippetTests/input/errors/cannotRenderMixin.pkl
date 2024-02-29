@@ -1,7 +1,0 @@
-m: Mixin = new {
-    mixinVal = "anything"
-}
-
-foo = new Dynamic {
-    bar = "baz"
-} |> m

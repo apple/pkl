@@ -1,1 +1,0 @@
-res1 = List(1, 2, 3).sublist(2, 1)

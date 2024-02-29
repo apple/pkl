@@ -1,4 +1,0 @@
-import* "https://www.apple.com/**.pkl" as allPklModules
-
-res = allPklModules
-

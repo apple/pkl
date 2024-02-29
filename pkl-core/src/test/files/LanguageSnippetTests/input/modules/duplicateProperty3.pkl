@@ -1,3 +1,0 @@
-test = "test" // this is considered the duplicate as ASTGenerator doesn't maintain order between props and classes
-
-class test

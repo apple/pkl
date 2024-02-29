@@ -1,3 +1,0 @@
-import "pkl:test"
-
-res1 = test.catch(() -> module.relativePathTo(import("../../module.pkl")))

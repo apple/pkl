@@ -1,7 +1,0 @@
-class Person {
-  name: String
-}
-
-res1: Mapping<Person, String> = new {
-  [new { name = "Pigeon" }] = "Pigeon"
-}

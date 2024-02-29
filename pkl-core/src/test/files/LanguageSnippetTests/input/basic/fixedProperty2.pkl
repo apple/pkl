@@ -1,5 +1,0 @@
-class Person {
-  fixed name: String = "The Person"
-}
-
-p: Person = new {}

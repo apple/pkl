@@ -1,3 +1,0 @@
-module com.package1.docExampleSubject1
-
-x: Int

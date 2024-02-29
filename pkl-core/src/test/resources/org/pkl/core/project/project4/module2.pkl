@@ -1,3 +1,0 @@
-module module2
-
-result = read("../project4/module1.pkl")

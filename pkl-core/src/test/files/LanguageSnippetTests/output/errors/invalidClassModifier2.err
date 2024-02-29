@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `fixed` is not applicable to classes.
-
-x | fixed class Foo
-    ^^^^^
-at invalidClassModifier2 (file:///$snippetsDir/input/errors/invalidClassModifier2.pkl)

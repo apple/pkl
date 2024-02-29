@@ -1,7 +1,0 @@
-abstract class Animal {
-  name: String
-}
-
-class Dog extends Animal {
-  fixed name = "Spot"
-}

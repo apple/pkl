@@ -1,8 +1,0 @@
-module com.package1.unlistedClass
-
-myProperty = 42
-
-function myMethod() = 42
-
-@Unlisted
-class MyClass {}

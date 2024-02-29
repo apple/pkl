@@ -1,9 +1,0 @@
-res1 = "str"
-res2 = "str"
-res3 {
-  name = "Pigeon"
-}
-res4 {
-  name = "Parrot"
-  subjects = List("Fire making, Stone age")
-}

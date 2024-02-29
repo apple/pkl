@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Duplicate definition of member `foo`.
-
-x | function foo(arg): String = "foo" // duplicate
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-at duplicateFunction#Person (file:///$snippetsDir/input/classes/duplicateFunction.pkl)

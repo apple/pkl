@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Expected an annotation class.
-
-x | @Mapping {
-     ^^^^^^^
-at annotation4 (file:///$snippetsDir/input/annotation/annotation4.pkl)

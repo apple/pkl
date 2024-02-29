@@ -1,4 +1,0 @@
-// Would like to provide the usual "missing closing delimiter" error message,
-// but adding EOF alternative to ML_END_QUOTE rule didn't have any effect.
-res1 = """
-res2 = 42

@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Cannot find a dependency named `fruities`, because it is not declared in the current project.
-
-To fix this, add it to the `dependencies` section of your `PklProject` file, and resolve your dependencies.
-
-x | import "@fruities/Fruit.pkl"
-           ^^^^^^^^^^^^^^^^^^^^^
-at badImport2.error (file:///$snippetsDir/input/projects/project1/badImport2.error.pkl)

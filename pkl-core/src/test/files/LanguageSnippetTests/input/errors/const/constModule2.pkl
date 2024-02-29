@@ -1,5 +1,0 @@
-class Foo {
-  foo = module
-}
-
-foo = new Foo {}

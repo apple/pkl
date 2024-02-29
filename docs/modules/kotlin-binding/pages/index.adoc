@@ -1,3 +1,0 @@
-= Integration with Kotlin
-
-Pkl provides rich integration with Kotlin. Our integration allows you to embed the Pkl runtime into your Kotlin application, and also provides code generation for from Pkl source code.

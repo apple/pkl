@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `)` delimiter.
-
-x | res1 = "abc".substring(0, 1 + "def"
-                                       ^
-at missingMethodArgumentListDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingMethodArgumentListDelimiter.pkl)

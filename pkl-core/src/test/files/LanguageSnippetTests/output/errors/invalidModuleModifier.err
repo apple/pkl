@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `abstract` is not applicable to modules that amend another module.
-
-x | abstract module foo
-    ^^^^^^^^
-at foo (file:///$snippetsDir/input/errors/invalidModuleModifier.pkl)

@@ -1,6 +1,0 @@
-class Person {
-  foo: Int
-  function foo(): Int = "foo" // OK
-  bar: String
-  foo: String // duplicate
-}

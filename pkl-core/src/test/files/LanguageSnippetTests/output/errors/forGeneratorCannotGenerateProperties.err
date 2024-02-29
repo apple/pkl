@@ -1,6 +1,0 @@
-–– Pkl Error ––
-A for-generator cannot generate object properties (only entries and elements).
-
-x | for (n in List(1, 2, 3)) { foo = n }
-    ^^^
-at forGeneratorCannotGenerateProperties#res (file:///$snippetsDir/input/errors/forGeneratorCannotGenerateProperties.pkl)

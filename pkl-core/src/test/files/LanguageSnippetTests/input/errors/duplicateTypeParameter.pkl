@@ -1,1 +1,0 @@
-typealias MyType<Elem, Elem> = List<Elem>

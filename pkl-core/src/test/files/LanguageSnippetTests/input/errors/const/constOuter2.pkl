@@ -1,6 +1,0 @@
-class Person {
-  name: String
-  const fancyName = new { title = "\(outer.name), Esq." }
-}
-
-person = new Person { name = "Foo" }

@@ -1,9 +1,0 @@
-class Person {
-  name: String
-  age: Int
-}
-
-pigeon = new Person {
-  name = "Pigeon"
-  age = "42"
-}

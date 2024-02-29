@@ -1,1 +1,0 @@
-amends "moduleWithHighMinPklVersion.pkl"

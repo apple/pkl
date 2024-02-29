@@ -1,5 +1,0 @@
-l: List = List(1, 2, 3, 4)
-
-m: Mapping = new {
-  ...l
-}

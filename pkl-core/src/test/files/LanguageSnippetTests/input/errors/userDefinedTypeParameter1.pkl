@@ -1,3 +1,0 @@
-class Box<A> {
-  element: A
-}

@@ -1,2 +1,0 @@
-// valid PklProject, but not valid as a local dependency because it is missing a `package` section.
-amends "pkl:Project"

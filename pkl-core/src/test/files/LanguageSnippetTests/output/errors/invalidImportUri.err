@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Module URI `file:///foo^bar.pkl` has invalid syntax.
-
-x | import "file:///foo^bar.pkl" as _foo
-           ^^^^^^^^^^^^^^^^^^^^^
-at invalidImportUri (file:///$snippetsDir/input/errors/invalidImportUri.pkl)
-
-Illegal character in path

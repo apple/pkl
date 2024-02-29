@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | res1 = foo(1, 2 3)
-                   ^
-at missingMethodArgumentListSeparator#res1 (file:///$snippetsDir/input/errors/delimiters/missingMethodArgumentListSeparator.pkl)

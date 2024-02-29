@@ -1,4 +1,0 @@
-// Should fail because dependency is out of date (PklProject.deps.json version is older)
-import "@birds/Bird.pkl"
-
-bird: Bird

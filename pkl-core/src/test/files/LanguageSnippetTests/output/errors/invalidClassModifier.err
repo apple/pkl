@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Modifier `hidden` is not applicable to classes.
-
-x | hidden class Foo
-    ^^^^^^
-at invalidClassModifier (file:///$snippetsDir/input/errors/invalidClassModifier.pkl)

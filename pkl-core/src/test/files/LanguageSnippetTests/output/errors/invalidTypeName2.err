@@ -1,9 +1,0 @@
-–– Pkl Error ––
-Invalid type name `x.y.Listing`.
-
-x | listing = new x.y.Listing {}
-                  ^^^^^^^^^^^
-at invalidTypeName2#listing (file:///$snippetsDir/input/errors/invalidTypeName2.pkl)
-
-A qualified type name consists of a module import name and a type name.
-Example: `importedModule.SomeClass`

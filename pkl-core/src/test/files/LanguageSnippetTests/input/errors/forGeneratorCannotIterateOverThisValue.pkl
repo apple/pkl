@@ -1,3 +1,0 @@
-foo {
-  for (n in 5) { n }
-}

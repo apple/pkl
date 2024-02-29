@@ -1,4 +1,0 @@
-amends "library.pkl"
-
-// non-local property definition
-name: String = "parrot"

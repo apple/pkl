@@ -1,3 +1,0 @@
-import "pkl:test"
-
-test = "test" // duplicate

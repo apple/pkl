@@ -1,5 +1,0 @@
-/// amending module doc comment
-@MyAnn { text = "amending module annotation" }
-amends "BaseModule.pkl"
-
-int = 22

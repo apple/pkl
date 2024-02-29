@@ -1,6 +1,0 @@
-Command-line interface for Pkl.
-
-The CLI provides the following tools:
-
-* Batch evaluator
-* REPL

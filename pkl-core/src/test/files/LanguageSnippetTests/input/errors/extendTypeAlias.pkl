@@ -1,4 +1,0 @@
-open class Foo
-typealias Bar = Foo(true)
-class Baz extends Bar
-qux = new Baz {}

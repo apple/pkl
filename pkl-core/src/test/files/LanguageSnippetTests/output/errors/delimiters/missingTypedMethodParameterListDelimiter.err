@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `)` delimiter.
-
-x | function foo(arg1: String, arg2: String = arg1 + arg2
-                                           ^
-at missingTypedMethodParameterListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingTypedMethodParameterListDelimiter.pkl)

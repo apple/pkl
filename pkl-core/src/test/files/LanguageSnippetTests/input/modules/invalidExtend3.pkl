@@ -1,2 +1,0 @@
-// extend an amended module
-extends "amendModule1.pkl"

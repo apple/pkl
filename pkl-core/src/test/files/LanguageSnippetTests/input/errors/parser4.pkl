@@ -1,2 +1,0 @@
-res1 = """some string
-res2 = 2

@@ -1,3 +1,0 @@
-res1 = new Listing {
-  for (n: Int in List(1, "other", 2)) { n }
-}

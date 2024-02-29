@@ -1,8 +1,0 @@
-import ".../input-helper/types/typeAliasConstraint2.pkl" as helper
-
-foo: Int = 1
-bar: helper.MyTypeAlias(foo == 1) = new helper.MyClass {}
-
-function qux(bar: helper.MyTypeAlias(foo == 1)) = (bar) {}
-
-qux = qux(new helper.MyTypeAlias {})

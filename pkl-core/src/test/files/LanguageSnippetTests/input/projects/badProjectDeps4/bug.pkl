@@ -1,3 +1,0 @@
-import "@badLocalProject/dog.pkl"
-
-res = dog

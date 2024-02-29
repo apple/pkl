@@ -1,6 +1,0 @@
-// amend an amended module
-amends "amendModule1.pkl"
-
-pigeon {
-  name = "pigeon3"
-}

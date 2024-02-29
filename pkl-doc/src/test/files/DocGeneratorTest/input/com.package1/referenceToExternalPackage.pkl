@@ -1,4 +1,0 @@
-import "../com.package2/Module3.pkl"
-
-/// Something something [Module3.`property {} four`].
-prop: Module3.`Class Two {}`

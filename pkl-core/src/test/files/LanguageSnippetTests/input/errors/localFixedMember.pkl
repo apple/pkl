@@ -1,1 +1,0 @@
-local fixed name: String = "hello"

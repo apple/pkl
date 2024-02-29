@@ -1,9 +1,0 @@
-pigeon {
-  name = "pigeon"
-  age = 30
-}
-
-output {
-  value = pigeon
-  renderer = new JsonRenderer {}
-}

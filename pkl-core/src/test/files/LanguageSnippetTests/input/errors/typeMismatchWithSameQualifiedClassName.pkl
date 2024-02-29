@@ -1,7 +1,0 @@
-module foo.bar
-
-import "typeMismatchHelper.pkl"
-
-class Baz
-
-baz: Baz = new typeMismatchHelper.Baz {}

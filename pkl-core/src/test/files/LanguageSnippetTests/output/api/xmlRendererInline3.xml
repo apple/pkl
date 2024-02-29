@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<root>
-  <pigeon2>
-    <name>Pigeon</name>
-    <age>42</age>
-  </pigeon2>
-  <res2>`xml.Element` is not supported here. Value: new Dynamic { _isXmlElement = true; name = ?; attributes = ?; isBlockFormat =...</res2>
-  <res3>`xml.Inline` is not supported here. Value: new Inline { value = ? }</res3>
-</root>

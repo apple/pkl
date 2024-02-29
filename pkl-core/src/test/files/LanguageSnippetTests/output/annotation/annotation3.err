@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Expected an annotation class.
-
-x | @NoAnn
-     ^^^^^
-at annotation3 (file:///$snippetsDir/input/annotation/annotation3.pkl)

@@ -1,3 +1,0 @@
-amends "yamlRendererStringsCompat.pkl"
-
-renderer { mode = "1.1" }

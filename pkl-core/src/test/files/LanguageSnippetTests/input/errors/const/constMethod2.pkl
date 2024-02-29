@@ -1,7 +1,0 @@
-function bar() = "bar"
-
-class Foo {
-  bar: String = module.bar()
-}
-
-foo: Foo = new {}

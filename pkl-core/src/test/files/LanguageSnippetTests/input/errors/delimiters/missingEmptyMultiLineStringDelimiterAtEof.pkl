@@ -1,2 +1,0 @@
-// no newline after opening quote
-res1 = """

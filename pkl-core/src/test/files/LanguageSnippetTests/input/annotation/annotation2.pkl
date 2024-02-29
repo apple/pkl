@@ -1,4 +1,0 @@
-class NoAnn
-
-@NoAnn
-invalidAnnotationOnTypeCheckedProperty = "hi"

@@ -1,4 +1,0 @@
-singleLineStringCannotSpanLines = "
-How are you today?
-Are you hungry?
-"

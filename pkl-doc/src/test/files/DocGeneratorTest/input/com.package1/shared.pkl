@@ -1,3 +1,0 @@
-module com.package1.shared
-
-class MyClass

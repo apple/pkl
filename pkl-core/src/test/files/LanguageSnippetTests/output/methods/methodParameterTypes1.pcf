@@ -1,6 +1,0 @@
-res1 = 3
-res2 = 3
-res3 = 3.3000000000000003
-res4 = "Expected value of type `Int`, but got type `Float`. Value: 1.1"
-res5 = "Expected value of type `Number`, but got type `String`. Value: \"2\""
-res6 = "Expected value of type `Int`, but got type `Float`. Value: 1.1"

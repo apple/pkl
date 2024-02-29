@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Expected `globbedImports` to be a type, but it is not.
-
-x | res: globbedImports.Foo
-         ^^^^^^^^^^^^^^
-at invalidGlobImport8 (file:///$snippetsDir/input/errors/invalidGlobImport8.pkl)

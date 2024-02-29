@@ -1,5 +1,0 @@
-typealias Foo = List<Bar>
-
-typealias Bar = Set<Baz>
-
-typealias Baz = Map<String, Foo>

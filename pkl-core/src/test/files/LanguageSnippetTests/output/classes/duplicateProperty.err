@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Duplicate definition of member `foo`.
-
-x | foo: String // duplicate
-    ^^^^^^^^^^^
-at duplicateProperty#Person (file:///$snippetsDir/input/classes/duplicateProperty.pkl)

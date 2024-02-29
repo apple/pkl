@@ -1,2 +1,0 @@
-prop = 42
-call = prop()

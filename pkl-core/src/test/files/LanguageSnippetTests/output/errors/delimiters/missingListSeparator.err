@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | list = List(1, 2  3, 4)
-                    ^
-at missingListSeparator#list (file:///$snippetsDir/input/errors/delimiters/missingListSeparator.pkl)

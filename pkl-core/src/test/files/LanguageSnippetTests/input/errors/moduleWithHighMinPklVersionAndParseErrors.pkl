@@ -1,4 +1,0 @@
-@ModuleInfo { minPklVersion = "99.9.9" }
-open module moduleWithHighMinPklVersionAndParseErrors
-
-Even though this line is not valid Pkl syntax, Pkl should give a "nice" minPklVersion error.

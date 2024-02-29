@@ -1,9 +1,0 @@
-open class Foo {
-  const x: Int
-}
-
-class Bar extends Foo {
-  x = 2
-}
-
-bar = new Bar {}

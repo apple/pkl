@@ -1,9 +1,0 @@
-examples {
-  ["relativePathTo()"] {
-    List("dir1", "dir2")
-    List()
-    List()
-    List()
-    "No descendent path exists between modules `file:///$snippetsDir/input/api/dir1/dir2/relativePathTo.pkl` and `file:///$snippetsDir/input/api/module.pkl`."
-  }
-}

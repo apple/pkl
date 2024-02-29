@@ -1,9 +1,0 @@
-examples {
-  ["minPklVersion check"] {
-    Class1 {}
-    Class2 {}
-  }
-}
-
-@ModuleInfo { minPklVersion = "0.8.0" }
-class Class1

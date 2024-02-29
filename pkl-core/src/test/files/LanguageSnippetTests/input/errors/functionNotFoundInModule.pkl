@@ -1,3 +1,0 @@
-function bar(x) = x
-
-res1 = module.baz(42)

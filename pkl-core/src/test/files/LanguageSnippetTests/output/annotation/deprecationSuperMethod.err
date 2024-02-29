@@ -1,7 +1,0 @@
-barCall = 42
-bazCall = "baz was called"
-quxCall = -1
-barCall2ShouldNotWarn = 42
-bazCall2ShouldNotWarn = "baz was called"
-pkl: WARN: Method `deprecationSuperMethod#Foo.bar` is deprecated (file:///$snippetsDir/input/annotation/deprecationSuperMethod.pkl)
-pkl: WARN: Method `deprecationSuperMethod#Foo.baz` is deprecated: Use only Foo#qux (file:///$snippetsDir/input/annotation/deprecationSuperMethod.pkl)

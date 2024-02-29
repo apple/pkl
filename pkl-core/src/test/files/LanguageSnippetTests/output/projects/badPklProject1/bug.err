@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Expected `output.value` of module `file:///$snippetsDir/input/projects/badPklProject1/PklProject` to be of type `pkl.Project`, but got type `invalid.project.Module`.
-
-x | module invalid.project.Module
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at invalid.project.Module (file:///$snippetsDir/input/projects/badPklProject1/PklProject)
-
-Try adding `amends "pkl:Project"` to the module header.

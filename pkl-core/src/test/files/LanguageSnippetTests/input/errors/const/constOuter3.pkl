@@ -1,5 +1,0 @@
-class Foo {
-  const prop = new { value = outer }
-}
-
-foo = new Foo {}

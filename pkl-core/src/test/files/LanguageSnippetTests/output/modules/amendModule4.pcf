@@ -1,8 +1,0 @@
-name = "Pigeon"
-pigeon {
-  name = "pigeon4"
-}
-parrot {
-  name = "parrot4"
-  subjects = List("Fire making", "Stone age")
-}

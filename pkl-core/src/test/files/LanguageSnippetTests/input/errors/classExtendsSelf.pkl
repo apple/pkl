@@ -1,5 +1,0 @@
-open class Recurring extends Recurring {
-
-}
-
-f: Recurring = new {}

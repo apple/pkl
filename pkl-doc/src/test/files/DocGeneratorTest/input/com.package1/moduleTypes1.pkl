@@ -1,3 +1,0 @@
-module com.package1.moduleTypes1
-
-n: Int

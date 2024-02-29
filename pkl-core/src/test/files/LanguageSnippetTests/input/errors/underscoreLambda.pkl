@@ -1,3 +1,0 @@
-local lambda = (_, x: Int) -> `_` + x
-
-res = lambda.apply(1, 1)

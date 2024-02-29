@@ -1,5 +1,0 @@
-class Foo {
-  function bar(x) = x
-}
-
-res1 = new Foo {}.baz(42)

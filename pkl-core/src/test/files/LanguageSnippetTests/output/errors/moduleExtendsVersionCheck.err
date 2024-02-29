@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Module `moduleWithHighMinPklVersion` requires Pkl version 99.9.9 or higher, but your Pkl version is xxx.
-
-x | extends "moduleWithHighMinPklVersion.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at moduleExtendsVersionCheck (file:///$snippetsDir/input/errors/moduleExtendsVersionCheck.pkl)

@@ -1,4 +1,0 @@
-/// This is a thing!!!
-module invalid.project.Module
-
-foo: String = "hello"

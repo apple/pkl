@@ -1,3 +1,0 @@
-abstract module cannotInstantiateAbstractModule
-
-res1 = new module {}

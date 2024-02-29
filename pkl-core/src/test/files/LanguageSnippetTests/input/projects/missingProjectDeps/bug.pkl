@@ -1,3 +1,0 @@
-import "@birds/Bird.pkl"
-
-res = new Bird {}

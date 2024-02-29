@@ -1,8 +1,0 @@
-local source {
-  ["foo"] = 1
-}
-
-res: Mapping = new {
-  ...source
-  ["foo"] = 2
-}

@@ -1,2 +1,0 @@
-f = (a1, a2, a3) -> a1
-res = f.applyToList(List(1, 2, 3, 4, 5, 6))

@@ -35,6 +35,7 @@
 *** xref:intellij:ROOT:index.adoc[IntelliJ]
 *** xref:vscode:ROOT:index.adoc[VSCode]
 *** xref:neovim:ROOT:index.adoc[Neovim]
+*** xref:sublime:ROOT:index.adoc[Sublime Text]
 
 * xref:ROOT:examples.adoc[Examples]
 

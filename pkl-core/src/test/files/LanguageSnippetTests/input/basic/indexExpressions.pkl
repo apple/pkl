@@ -1,9 +1,0 @@
-local mapping1 = new Mapping {
-  ["x"] = "y"
-}
-
-local mapping2 = new Mapping {
-  ["y"] = "z"
-}
-
-result = mapping2[mapping1["x"]]

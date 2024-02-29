@@ -1,5 +1,0 @@
-function nonConstFunction() = "hello"
-
-const function constFunctionCallingNonConst(): (String) -> String = (s) -> s + nonConstFunction()
-
-res = constFunctionCallingNonConst().apply("prefix")

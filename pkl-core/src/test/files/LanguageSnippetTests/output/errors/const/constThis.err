@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Cannot reference `this` from here because it is not `const`.
-
-x | const bar = this
-                ^^^^
-at constThis#bar (file:///$snippetsDir/input/errors/const/constThis.pkl)

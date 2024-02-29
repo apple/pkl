@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Token recognition error at: `#`
-
-x | res1 = 9#
-            ^
-at parser1 (file:///$snippetsDir/input/errors/parser1.pkl)

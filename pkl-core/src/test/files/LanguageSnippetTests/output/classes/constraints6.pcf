@@ -1,7 +1,0 @@
-res1 {
-  y = 99
-}
-res2 {
-  y = -99
-}
-res3 = "Type constraint `abs < 100` violated. Value: -100"

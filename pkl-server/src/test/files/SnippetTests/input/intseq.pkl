@@ -1,2 +1,0 @@
-res1 = IntSeq(1, 3)
-res2 = IntSeq(1, 4).step(5)

@@ -1,3 +1,0 @@
-open module baseModule
-
-x: Int = 42

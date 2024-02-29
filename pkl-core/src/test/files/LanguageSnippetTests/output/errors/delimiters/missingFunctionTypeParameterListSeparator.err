@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | f: (String, Int String) -> String
-                   ^
-at missingFunctionTypeParameterListSeparator#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionTypeParameterListSeparator.pkl)

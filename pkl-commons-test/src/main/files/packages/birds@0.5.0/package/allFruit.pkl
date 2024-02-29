@@ -1,4 +1,0 @@
-module birds.allFruit
-
-fruit = import*("@fruities/catalog/*.pkl")
-fruitFiles = read*("@fruities/catalog/*.pkl")

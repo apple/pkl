@@ -1,7 +1,0 @@
-function foo() = "foo"
-
-foo = "foo" // OK
-
-function bar() = "bar"
-
-function foo(arg) = "other" // duplicate

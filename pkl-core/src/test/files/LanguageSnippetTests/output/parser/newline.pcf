@@ -1,5 +1,0 @@
-facts {
-  ["parsed as two expressions because `String<newline>(foo)` is not a syntactically valid constrained type"] {
-    true
-  }
-}

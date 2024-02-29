@@ -1,9 +1,0 @@
-module com.package1.moduleExtend
-
-extends "baseModule.pkl"
-
-extendProperty = 42
-
-function extendMethod() = 42
-
-class ExtendClass {}

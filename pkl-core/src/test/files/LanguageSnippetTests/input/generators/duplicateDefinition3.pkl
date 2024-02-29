@@ -1,4 +1,0 @@
-x {
-  when (true) { y = 1 }
-  when (true) { y = 2 }
-}

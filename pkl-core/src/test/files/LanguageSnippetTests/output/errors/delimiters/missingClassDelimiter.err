@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `}` delimiter.
-
-x | name: String
-                ^
-at missingClassDelimiter (file:///$snippetsDir/input/errors/delimiters/missingClassDelimiter.pkl)

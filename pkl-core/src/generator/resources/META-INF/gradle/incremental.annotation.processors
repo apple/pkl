@@ -1,2 +1,0 @@
-# https://docs.gradle.org/current/userguide/java_plugin.html#aggregating_annotation_processors
-org.pkl.core.generator.MemberRegistryGenerator,aggregating

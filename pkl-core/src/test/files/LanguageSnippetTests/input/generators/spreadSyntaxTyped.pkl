@@ -1,9 +1,0 @@
-class Person {
-  name: String
-}
-
-local barnOwlDynamic { name = "Barn Owl" }
-
-res1: Person = new { ...barnOwlDynamic }
-
-res2 = res1 == new Person { name = "Barn Owl" }

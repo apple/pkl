@@ -1,5 +1,0 @@
-res1 = "hi"
-res2 = true
-res3 {
-  name = "Swallow"
-}

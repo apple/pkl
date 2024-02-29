@@ -1,4 +1,0 @@
-@ModuleInfo { minPklVersion = "99.9.9" }
-open module moduleWithHighMinPklVersion
-
-x = 1

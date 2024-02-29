@@ -1,3 +1,0 @@
-// Name shadowing check; package `birds` names this dependency "fruities" but this project
-// calls it `fruits`.
-import "@fruities/Fruit.pkl"

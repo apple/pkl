@@ -1,7 +1,0 @@
-class X {
-  a: "foo" | "bar" | "baz"
-}
-
-res1 = new X {
-  a = "foox"
-}

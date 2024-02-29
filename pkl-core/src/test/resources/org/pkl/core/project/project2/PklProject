@@ -1,8 +1,0 @@
-amends "pkl:Project"
-
-dependencies {
-  ["birds"] {
-    uri = "package://localhost:12110/birds@0.5.0"
-  }
-  ["project3"] = import("../project3/PklProject")
-}

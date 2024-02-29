@@ -1,8 +1,0 @@
-import "pkl:semver"
-
-ex1 = "1.2.3"
-ex2 = "1.2.3-rc.1"
-ex3 = "1.2.3+456.789"
-ex4 = "1.2.3-rc.1+456.789"
-ex5 = "999999999999999.0.0"
-ex6 = "not a version number"

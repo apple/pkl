@@ -1,2 +1,0 @@
-name = "pigeon"
-age = 10 + 20

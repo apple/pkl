@@ -1,2 +1,0 @@
-// non-open module
-extends "extendModule1.pkl"

@@ -1,4 +1,0 @@
-open module supercalls1
-
-prefix = ""
-function say(msg) = prefix + msg

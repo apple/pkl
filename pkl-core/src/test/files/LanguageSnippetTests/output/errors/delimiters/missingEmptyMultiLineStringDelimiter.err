@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Extraneous input: `<EOF>`. Expected one of: MLEndQuote, MLInterpolation, MLUnicodeEscape, MLCharacterEscape, MLNewline, MLCharacters
-
-x | res2 = 42
-             ^
-at missingEmptyMultiLineStringDelimiter (file:///$snippetsDir/input/errors/delimiters/missingEmptyMultiLineStringDelimiter.pkl)

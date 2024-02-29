@@ -1,8 +1,0 @@
-class Person { name: String }
-
-local personDynamic {
-  name = "Barn Owl"
-  age = 34
-}
-
-res1: Person = new { ...personDynamic }

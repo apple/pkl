@@ -1,8 +1,0 @@
-res: Mapping<String, Int> = new {
-  for (idx, o in List(1, 2)) {
-    ["\(idx)_1"] = o
-  }
-  for (idx, t in List(3, 4)) {
-    ["\(idx)_2"] = o // at this point, `o` should be out of scope
-  }
-}

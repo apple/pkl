@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `"` delimiter.
-
-x | res1 = "abc
-               ^
-at missingStringDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingStringDelimiter.pkl)

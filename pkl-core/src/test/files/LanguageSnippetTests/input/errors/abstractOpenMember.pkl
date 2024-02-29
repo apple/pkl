@@ -1,1 +1,0 @@
-abstract open class Person

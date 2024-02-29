@@ -1,5 +1,0 @@
-= Language
-
-* xref:language-tutorial:index.adoc[Tutorial]
-* xref:language-reference:index.adoc[Language Reference]
-* xref:standard-library.adoc[Standard Library]

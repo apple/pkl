@@ -1,7 +1,0 @@
-amends "typeResolution2.pkl"
-
-local class Person3 { name = "person3" }
-
-local ppp1: Person1 = new Person1 {}
-local ppp2: Person2 = new Person2 {}
-local ppp3: Person3 = new Person3 {}

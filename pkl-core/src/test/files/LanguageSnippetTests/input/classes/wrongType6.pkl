@@ -1,8 +1,0 @@
-import "pkl:test"
-
-open class Person {
-  names: List<String>(!isEmpty)
-}
-
-// property default value fails property type check
-pigeon = new Person {}

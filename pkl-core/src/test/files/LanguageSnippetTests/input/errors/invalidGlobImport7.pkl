@@ -1,3 +1,0 @@
-import* "../../input-helper/globtest/**.pkl" as globbedImports
-
-res: globbedImports

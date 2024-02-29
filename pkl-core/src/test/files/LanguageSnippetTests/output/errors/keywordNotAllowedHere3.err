@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Keyword `outer` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
-
-x | res1 = outer.outer
-                 ^^^^^
-at keywordNotAllowedHere3 (file:///$snippetsDir/input/errors/keywordNotAllowedHere3.pkl)

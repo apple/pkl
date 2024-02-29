@@ -1,2 +1,0 @@
-res1 = "Cannot find property `foo` in object of type `Class`."
-res2 = "Cannot find method `bar` in class `Class`."

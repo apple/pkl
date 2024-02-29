@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Expected an annotation class.
-
-x | @Int someProperty: String = "hi"
-     ^^^
-at annotation6 (file:///$snippetsDir/input/annotation/annotation6.pkl)

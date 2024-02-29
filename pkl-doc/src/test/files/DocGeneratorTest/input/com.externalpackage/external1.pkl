@@ -1,3 +1,0 @@
-module com.externalpackage.external1
-
-class MyClass

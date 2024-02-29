@@ -1,4 +1,0 @@
-local x = new {
-  y = import("pkl:base")
-}
-listing = new x.y.Listing {}

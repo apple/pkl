@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | x: Int(isPositive this > 10)
-                     ^
-at missingConstrainedTypeSeparator#x (file:///$snippetsDir/input/errors/delimiters/missingConstrainedTypeSeparator.pkl)

@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Cannot assign to fixed property `res1`.
-
-x | res1 = "bye"
-    ^^^^
-at cannotAssignFixedProperty2 (file:///$snippetsDir/input/errors/cannotAssignFixedProperty2.pkl)

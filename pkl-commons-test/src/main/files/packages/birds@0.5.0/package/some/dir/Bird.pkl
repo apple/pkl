@@ -1,7 +1,0 @@
-amends "..."
-
-name = "Bird"
-
-favoriteFruit {
-  name = "Fruit"
-}

@@ -1,3 +1,0 @@
-foo {
-  for (n in List(1, 2, 3)) { local function foo() = "foo" }
-}

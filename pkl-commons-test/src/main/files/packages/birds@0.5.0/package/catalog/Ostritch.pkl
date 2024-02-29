@@ -1,7 +1,0 @@
-amends "../Bird.pkl"
-
-name = "Ostritch"
-
-favoriteFruit {
-  name = "Orange"
-}

@@ -1,8 +1,0 @@
-amends "pkl:Project"
-
-dependencies {
-  ["fruit"] {
-    // should fail because the checksum is invalid
-    uri = "package://localhost:12110/fruit@1.0.5"
-  }
-}

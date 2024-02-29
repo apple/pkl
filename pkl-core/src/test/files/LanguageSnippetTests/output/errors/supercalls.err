@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Cannot invoke a supermethod from here.
-
-x | bar = super.bar()
-          ^^^^^^^^^^^
-at supercalls#foo.bar (file:///$snippetsDir/input/errors/supercalls.pkl)

@@ -1,4 +1,0 @@
-amends "library.pkl"
-
-// non-local function definition
-function foo() = "parrot"

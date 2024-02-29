@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `)` delimiter.
-
-x | f = (arg1, arg2, arg3 -> arg1 + arg2 + arg3
-                         ^
-at missingFunctionNParameterListDelimiter#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionNParameterListDelimiter.pkl)

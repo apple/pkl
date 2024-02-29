@@ -1,1 +1,0 @@
-res = read*("https://www.google.com/**.pkl")

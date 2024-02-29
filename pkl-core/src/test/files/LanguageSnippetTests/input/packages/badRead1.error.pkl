@@ -1,2 +1,0 @@
-// no semver
-res = read("package://localhost:12110/foo#/bar.pkl")

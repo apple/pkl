@@ -1,2 +1,0 @@
-foo: String = "foo"
-bar: Int = 42

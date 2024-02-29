@@ -1,8 +1,0 @@
-–– Pkl Error ––
-Cannot resolve dependency because file `PklProject.deps.json` is missing in project directory `/$snippetsDir/input/projects/missingProjectDeps`.
-
-x | import "@birds/Bird.pkl"
-           ^^^^^^^^^^^^^^^^^
-at bug (file:///$snippetsDir/input/projects/missingProjectDeps/bug.pkl)
-
-Run `pkl project resolve` to create a new set of dependencies.

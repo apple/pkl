@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Missing `,` separator.
-
-x | function foo(arg1 arg2) = arg1 + arg2
-                     ^
-at missingMethodParameterListSeparator (file:///$snippetsDir/input/errors/delimiters/missingMethodParameterListSeparator.pkl)

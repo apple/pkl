@@ -1,3 +1,0 @@
-import "moduleWithHighMinPklVersion.pkl"
-
-res1 = moduleWithHighMinPklVersion.x

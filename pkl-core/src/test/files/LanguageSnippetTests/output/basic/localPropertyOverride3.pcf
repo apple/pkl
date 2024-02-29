@@ -1,7 +1,0 @@
-foo1 {
-  x = "original"
-}
-foo2 {
-  x = "original"
-  y = "overridden"
-}

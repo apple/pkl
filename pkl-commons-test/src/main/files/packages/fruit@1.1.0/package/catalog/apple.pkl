@@ -1,3 +1,0 @@
-amends "../Fruit.pkl"
-
-name = "Apple 🍎"
