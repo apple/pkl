@@ -54,32 +54,31 @@ and runs complex Pkl code slower than the native executables.
 All flavors are built from the same codebase and undergo the same automated testing.
 Except where noted otherwise, the rest of this page discusses the native executables.
 
-//TODO uncomment this after brew formula is merged and available
-// [[homebrew]]
-// === Homebrew
-// 
-// Release versions can be installed with {uri-homebrew}[Homebrew].
-// 
-// ifdef::is-release-version[]
-// To install Pkl, run:
-// 
-// [source,shell]
-// ----
-// brew install pkl
-// ----
-// 
-// To update Pkl, run:
-// 
-// [source,shell]
-// ----
-// brew update
-// brew upgrade pkl   # or just `brew upgrade`
-// ----
-// endif::[]
-// 
-// ifndef::is-release-version[]
-// For instructions, switch to a release version of this page.
-// endif::[]
+[[homebrew]]
+=== Homebrew
+
+Release versions can be installed with {uri-homebrew}[Homebrew].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+----
+brew install pkl
+----
+
+To update Pkl, run:
+
+[source,shell]
+----
+brew update
+brew upgrade pkl   # or just `brew upgrade`
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
 
 [[download]]
 === Download
