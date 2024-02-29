@@ -152,8 +152,11 @@ examples {
     personClassProperties.keys
     testHelpers.property(personClassProperties["name"], reflect.stringType)
     testHelpers.property(personClassProperties["age"], reflect.intType)
+    modClassProps["hiddenProp"].modifiers
+    modClassProps["constProp"].modifiers
+    modClassProps["fixedProp"].modifiers
   }
-  
+
   ["Reflected class methods metadata"] {
     local personClassMethods = personClass.methods
     personClassMethods.keys
@@ -162,7 +165,7 @@ examples {
         List(reflect.listType.withTypeArgument(reflect.stringType)),
         reflect.stringType)
   }
-  
+
   ["Reflected annotation class properties metadata"] {
     testHelpers.property(myAnnClass.properties["text"], reflect.stringType)
   }
