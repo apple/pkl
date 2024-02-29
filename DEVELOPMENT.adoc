@@ -2,11 +2,9 @@
 :uri-gng: https://gng.dsun.org
 :uri-jenv: https://www.jenv.be
 :uri-intellij: https://www.jetbrains.com/idea/download/
-:uri-jdk: https://adoptopenjdk.net/releases.html
 
 == Setup
 
-. (mandatory) Install {uri-jdk}[OpenJDK 11 HotSpot] (as long as we support JDK11)
 . (recommended) Install {uri-intellij}[IntelliJ IDEA 2023.x] +
 To import the project into IntelliJ, go to File->Open and select the project's root directory.
 If the project is opened but not imported, look for a popup in the lower right corner
