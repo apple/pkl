@@ -19,27 +19,33 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
 class EmbeddedExecutorTest {
+  /**
+   * A combination of ExecutorOptions version, pkl-executor version, 
+   * and Pkl distribution version that parameterized tests should be run against.
+   */
   data class ExecutionContext(
     val executor: Executor,
-    val options: (ExecutorOptions) -> ExecutorOptions
-  )
+    val options: (ExecutorOptions) -> ExecutorOptions,
+    val name: String
+  ) {
+    override fun toString(): String = name
+  }
   
   companion object {
-    // valid combinations of ExecutorOptions versions, pkl-executor versions, and Pkl distribution versions
     @JvmStatic
     private val allExecutionContexts: List<ExecutionContext> by lazy {
       listOf(
-        ExecutionContext(executor1_1.value, ::convertToOptions1),
+        ExecutionContext(executor1_1.value, ::convertToOptions1, "Options1, Executor1, Distribution1"),
 
         // This context has a pkl-executor version that is lower than the distribution version.
         // It can be enabled once there is a distribution that ships (at least) with pkl-executor's SPI classes.
         //ExecutionContext(::convertToOptions1, executor1_2.value),
 
-        ExecutionContext(executor2_1.value, ::convertToOptions1),
-        ExecutionContext(executor2_1.value, ::convertToOptions2),
+        ExecutionContext(executor2_1.value, ::convertToOptions1, "Options1, Executor2, Distribution1"),
+        ExecutionContext(executor2_1.value, ::convertToOptions2, "Options2, Executor2, Distribution1"),
 
-        ExecutionContext(executor2_2.value, ::convertToOptions1),
-        ExecutionContext(executor2_2.value, ::convertToOptions2)
+        ExecutionContext(executor2_2.value, ::convertToOptions1, "Options1, Executor2, Distribution2"),
+        ExecutionContext(executor2_2.value, ::convertToOptions2, "Options2, Executor2, Distribution2")
       )
     }
 
