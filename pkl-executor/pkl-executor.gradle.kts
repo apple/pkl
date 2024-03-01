@@ -1,5 +1,3 @@
-import de.undercouch.gradle.tasks.download.Download
-
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -7,14 +5,17 @@ plugins {
   pklKotlinTest
 }
 
-val pklDistribution: Configuration by configurations.creating
+val pklDistributionCurrent: Configuration by configurations.creating
+val pklDistribution025: Configuration by configurations.creating
 
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
 // clients are free to use different versions of pkl-executor and (say) pkl-config-java-all.
 // (Pkl distributions used by EmbeddedExecutor are isolated via class loaders.)
 dependencies {
-  pklDistribution(project(":pkl-config-java", "fatJar"))
+  pklDistributionCurrent(project(":pkl-config-java", "fatJar"))
+  @Suppress("UnstableApiUsage")
+  pklDistribution025(libs.pklConfigJavaAll025)
 
   implementation(libs.slf4jApi)
 
@@ -51,17 +52,14 @@ sourceSets {
   }
 }
 
-val downloadPkl025 by tasks.registering(Download::class) {
-  src("https://repo1.maven.org/maven2/org/pkl-lang/pkl-config-java-all/0.25.0/pkl-config-java-all-0.25.0.jar")
-  dest("build/download/pkl-config-java-all-0.25.0.jar")
-  doFirst { file("build/download").mkdirs() }
-}
-
+// this task could be folded into tasks.test by switching to IntelliJ's Gradle test runner
 val prepareTest by tasks.registering {
   // used by EmbeddedExecutorTest
-  dependsOn(downloadPkl025, pklDistribution)
+  dependsOn(pklDistributionCurrent, pklDistribution025)
 }
 
 tasks.test {
   dependsOn(prepareTest)
+  systemProperty("pklDistributionCurrent", pklDistributionCurrent.singleFile)
+  systemProperty("pklDistribution025", pklDistribution025.singleFile)
 }

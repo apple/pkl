@@ -38,8 +38,8 @@ class EmbeddedExecutorTest {
         ExecutionContext(executor1_1.value, ::convertToOptions1, "Options1, Executor1, Distribution1"),
 
         // This context has a pkl-executor version that is lower than the distribution version.
-        // It can be enabled once there is a distribution that ships (at least) with pkl-executor's SPI classes.
-        //ExecutionContext(::convertToOptions1, executor1_2.value),
+        // It can be enabled once there is a distribution that includes pkl-executor.
+        //ExecutionContext(executor1_2.value, ::convertToOptions1, "Options1, Executor1, Distribution2"),
 
         ExecutionContext(executor2_1.value, ::convertToOptions1, "Options1, Executor2, Distribution1"),
         ExecutionContext(executor2_1.value, ::convertToOptions2, "Options2, Executor2, Distribution1"),
@@ -101,19 +101,28 @@ class EmbeddedExecutorTest {
     
     // a Pkl distribution that supports ExecutorSpiOptions up to v1
     private val pklDistribution1: Path by lazy {
-      FileTestUtils.rootProjectDir
-        .resolve("pkl-executor/build/download/pkl-config-java-all-0.25.0.jar").apply {
-          if (!exists()) throw AssertionError("Missing test fixture. Run `./gradlew :pkl-executor:prepareTest` to create it.")
+      val path = System.getProperty("pklDistribution025")?.toPath() ?:
+        // can get rid of this path by switching to IntelliJ's Gradle test runner
+        System.getProperty("user.home").toPath()
+          .resolve(".gradle/caches/modules-2/files-2.1/org.pkl-lang/pkl-config-java-all/" +
+            "0.25.0/e9451dda554f1659e49ff5bdd30accd26be7bf0f/pkl-config-java-all-0.25.0.jar")
+      path.apply {
+          if (!exists()) throw AssertionError("Missing test fixture. " +
+            "To fix this problem, run `./gradlew :pkl-executor:prepareTest`.")
         }
     }
 
     // a Pkl distribution that supports ExecutorSpiOptions up to v2
     private val pklDistribution2: Path by lazy {
-      val mavenVersion = Release.current().version().withBuild(null).toString().replaceFirst("dev", "SNAPSHOT")
-      FileTestUtils.rootProjectDir
-        .resolve("pkl-config-java/build/libs/pkl-config-java-all-$mavenVersion.jar").apply {
-          if (!exists()) throw AssertionError("Missing test fixture. Run `./gradlew :pkl-executor:prepareTest` to create it.")
-        }
+      val path = System.getProperty("pklDistributionCurrent")?.toPath() ?:
+        // can get rid of this path by switching to IntelliJ's Gradle test runner
+        FileTestUtils.rootProjectDir
+          .resolve("pkl-config-java/build/libs/pkl-config-java-all-" +
+            "${Release.current().version().withBuild(null).toString().replaceFirst("dev", "SNAPSHOT")}.jar")
+      path.apply {
+        if (!exists()) throw AssertionError("Missing test fixture. " +
+          "To fix this problem, run `./gradlew :pkl-executor:prepareTest`.")
+      }
     }
 
     private fun convertToOptions2(options: ExecutorOptions): ExecutorOptions2 =
