@@ -52,7 +52,7 @@ dependencies {
 
   compileOnly(libs.jsr305)
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
-  compileOnly(projects.pklExecutor)
+  api(projects.pklExecutor)
 
   implementation(files(rootProject.layout.projectDirectory.file("lib/antlr4-annotations-4.10.0-SNAPSHOT.jar")))
   implementation(files(rootProject.layout.projectDirectory.file("lib/antlr4-runtime-4.10.0-SNAPSHOT.jar")))
