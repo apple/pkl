@@ -41,6 +41,7 @@ val relocations = mapOf(
   "org.intellij." to "org.pkl.thirdparty.intellij.",
   "org.fusesource.jansi." to "org.pkl.thirdparty.jansi",
   "org.fusesource.hawtjni." to "org.pkl.thirdparty.hawtjni",
+  "org.slf4j." to "org.pkl.thirdparty.slf4j.",
 
   // pkl-doc dependencies
   "org.commonmark." to "org.pkl.thirdparty.commonmark.",
