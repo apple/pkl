@@ -46,7 +46,7 @@ class RepositoryHygiene {
   }
 
   companion object {
-    private val inputRegex = Regex("(.*)[.][^.]*([.]pkl)")
-    private val outputRegex = Regex("(.*)[.][^.]+$")
+    private val inputRegex = Regex("(.*)\\.[^.]*(\\.pkl)")
+    private val outputRegex = Regex("(.*)\\.[^.]+$")
   }
 }
