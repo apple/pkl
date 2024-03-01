@@ -35,7 +35,7 @@ The CLI comes in multiple flavors:
 * Native Linux executable for amd64 (tested on Oracle Linux 8)
 * Native Linux executable for aarch64 (tested on Oracle Linux 8)
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
-* Java executable (tested with Java 8/11/14 on macOS and Oracle Linux)
+* Java executable (tested with Java 11/17 on macOS and Oracle Linux)
 
 On macOS and Linux, we recommend using the native executables.
 They are self-contained, start up instantly, and run complex Pkl code much faster than the Java executable.
@@ -48,7 +48,7 @@ whereas, the Alpine Linux executable is statically linked against _musl libc_ an
 ====
 
 The Java executable works on multiple platforms and has a smaller binary size than the native executables.
-However, it requires a Java 8 (or higher) runtime on the system path, has a noticeable startup delay,
+However, it requires a Java 11 (or higher) runtime on the system path, has a noticeable startup delay,
 and runs complex Pkl code slower than the native executables.
 
 All flavors are built from the same codebase and undergo the same automated testing.
