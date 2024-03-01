@@ -3713,10 +3713,18 @@ The following class types are _generic types_:
 
 * `Pair`
 * `Collection`
+* `Listing`
 * `List`
+* `Mapping`
 * `Set`
 * `Map`
-* `Container`
+* `Function0`
+* `Function1`
+* `Function2`
+* `Function3`
+* `Function4`
+* `Function5`
+* `Class`
 
 A generic type has constituent types written in angle brackets (`<>`):
 
@@ -3727,7 +3735,7 @@ coll: Collection<Bird>      // <2>
 list: List<Bird>            // <3>
 set: Set<Bird>              // <4>
 map: Map<String, Bird>      // <5>
-cont: Mapping<String, Bird> // <6>
+mapping: Mapping<String, Bird> // <6>
 ----
 
 <1> a pair with first element of type `String` and second element of type `Bird`
@@ -3735,7 +3743,7 @@ cont: Mapping<String, Bird> // <6>
 <3> a list of `Bird` elements
 <4> a set of `Bird` elements
 <5> a map with `String` keys and `Bird` values
-<6> a container of `Bird` elements
+<6> a mapping of `String` keys and `Bird` values
 
 Omitting the constituent types is equivalent to declaring them as `unknown`:
 
@@ -3746,7 +3754,7 @@ coll: Collection // equivalent to `Collection<unknown>`
 list: List       // equivalent to `List<unknown>`
 set: Set         // equivalent to `Set<unknown>`
 map: Map         // equivalent to `Map<unknown, unknown>`
-cont: Mapping    // equivalent to `Mapping<unknown, unknown>`
+mapping: Mapping    // equivalent to `Mapping<unknown, unknown>`
 ----
 
 The `unknown` type is both a top and a bottom type.
