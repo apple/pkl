@@ -20,6 +20,8 @@ module pkl.core {
   requires org.graalvm.nativeimage;
   requires org.graalvm.truffle;
   requires org.snakeyaml.engine.v2;
+  requires paguro;
+  requires antlr.runtime;
   requires pkl.executor;
 
   exports org.pkl.core.module to

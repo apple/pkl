@@ -54,14 +54,12 @@ dependencies {
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
   compileOnly(projects.pklExecutor)
 
-  implementation(libs.antlrRuntime)
+  implementation(files(rootProject.layout.projectDirectory.file("lib/antlr4-annotations-4.10.0-SNAPSHOT.jar")))
+  implementation(files(rootProject.layout.projectDirectory.file("lib/antlr4-runtime-4.10.0-SNAPSHOT.jar")))
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
 
-  implementation(libs.paguro) {
-    exclude(group = "org.jetbrains", module = "annotations")
-  }
-
+  implementation(files(rootProject.layout.projectDirectory.file("lib/paguro-3.11.0.jar")))
   implementation(libs.snakeYaml)
 
   testImplementation(projects.pklCommonsTest)
