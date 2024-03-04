@@ -32,8 +32,8 @@ For interactive development, the CLI includes a Read-Eval-Print Loop (REPL).
 The CLI comes in multiple flavors:
 
 * Native macOS executable for amd64 (tested on macOS 10.15)
-* Native Linux executable for amd64 (tested on Oracle Linux 8)
-* Native Linux executable for aarch64 (tested on Oracle Linux 8)
+* Native Linux executable for amd64
+* Native Linux executable for aarch64
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
 * Java executable (tested with Java 11/17 on macOS and Oracle Linux)
 
