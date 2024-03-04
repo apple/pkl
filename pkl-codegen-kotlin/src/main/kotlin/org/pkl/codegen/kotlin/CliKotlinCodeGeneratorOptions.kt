@@ -29,9 +29,6 @@ data class CliKotlinCodeGeneratorOptions(
   /** The characters to use for indenting generated source code. */
   val indent: String = "  ",
 
-  /** Kotlin package to use for generated code; if none is provided, the root package is used. */
-  val kotlinPackage: String = "",
-
   /** Whether to generate Kdoc based on doc comments for Pkl modules, classes, and properties. */
   val generateKdoc: Boolean = false,
 
@@ -42,11 +39,5 @@ data class CliKotlinCodeGeneratorOptions(
   val implementSerializable: Boolean = false
 ) {
   fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(
-      indent = indent,
-      generateKdoc = generateKdoc,
-      generateSpringBootConfig = generateSpringBootConfig,
-      implementSerializable = implementSerializable,
-      kotlinPackage = kotlinPackage,
-    )
+    KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig, implementSerializable)
 }
