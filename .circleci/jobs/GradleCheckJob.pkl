@@ -22,7 +22,7 @@ javaVersion: "11.0"|"17.0"
 steps {
   new Config.RunStep {
     name = "gradle check"
-    command = "./gradlew \(module.gradleArgs) check"
+    command = "./gradlew \(module.gradleArgs) check -DPKL_JVM_VERSION=\(javaVersion.dropLast(2))"
   }
 }
 

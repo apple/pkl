@@ -583,7 +583,7 @@ jobs:
     steps:
     - checkout
     - run:
-        command: ./gradlew --info --stacktrace check
+        command: ./gradlew --info --stacktrace check -DPKL_JVM_VERSION=11
         name: gradle check
     - run:
         command: |-
@@ -601,7 +601,7 @@ jobs:
     steps:
     - checkout
     - run:
-        command: ./gradlew --info --stacktrace check
+        command: ./gradlew --info --stacktrace check -DPKL_JVM_VERSION=17
         name: gradle check
     - run:
         command: |-
