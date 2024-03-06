@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===// 
 // File gets rendered to .circleci/config.yml via git hook.
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.1#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
 import "jobs/GradleCheckJob.pkl"
@@ -124,24 +124,22 @@ jobs {
         :pkl-gradle:compatibilityTestCandidate
       """#
   }.job
-  ["deploy-snapshot"] = new DeployJob {
-    command = "publishToSonatype"
-  }.job
+  ["deploy-snapshot"] = new DeployJob { command = "publishToSonatype" }.job
   ["deploy-release"] = new DeployJob {
     isRelease = true
     command = "publishToSonatype closeAndReleaseSonatypeStagingRepository"
   }.job
   ["github-release"] {
     docker {
-      new {
-        image = "maniator/gh:v2.40.1"
-      }
+      new { image = "maniator/gh:v2.40.1" }
     }
     steps {
       new AttachWorkspaceStep { at = "." }
       new RunStep {
         name = "Publish release on GitHub"
         command = #"""
+          # exclude build_artifacts.txt from publish
+          rm pkl-cli/build/executable/*.build_artifacts.txt
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
