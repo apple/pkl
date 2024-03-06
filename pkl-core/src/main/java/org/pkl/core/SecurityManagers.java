@@ -229,7 +229,9 @@ public final class SecurityManagers {
 
     private final List<Pattern> allowedResources = new ArrayList<>();
 
-    private Path rootDir;
+    private Function<URI, Integer> trustLevels = SecurityManagers.defaultTrustLevels;
+
+    private @Nullable Path rootDir;
 
     private StandardBuilder() {}
 
@@ -281,6 +283,15 @@ public final class SecurityManagers {
       return allowedResources;
     }
 
+    public StandardBuilder setTrustLevels(Function<URI, Integer> trustLevels) {
+      this.trustLevels = trustLevels;
+      return this;
+    }
+
+    public Function<URI, Integer> getTrustLevels() {
+      return trustLevels;
+    }
+
     @Override
     public StandardBuilder setRootDir(@Nullable Path rootDir) {
       this.rootDir = rootDir;
@@ -294,11 +305,11 @@ public final class SecurityManagers {
 
     @Override
     public SecurityManager build() {
-      if (allowedResources.isEmpty() && allowedModules.isEmpty()) {
-        throw new IllegalStateException("No security manager set.");
+      if (allowedModules.isEmpty()) {
+        throw new IllegalStateException("allowedModules cannot be empty");
       }
 
-      return new Standard(allowedModules, allowedResources, defaultTrustLevels, rootDir);
+      return new Standard(allowedModules, allowedResources, trustLevels, rootDir);
     }
   }
 }
