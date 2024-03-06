@@ -52,10 +52,15 @@ sourceSets {
   }
 }
 
+val copyHistoricalDistribution by tasks.registering(Copy::class) {
+  from(pklDistribution025)
+  into(layout.buildDirectory.dir("pklDistributions"))
+}
+
 // this task could be folded into tasks.test by switching to IntelliJ's Gradle test runner
 val prepareTest by tasks.registering {
   // used by EmbeddedExecutorTest
-  dependsOn(pklDistributionCurrent, pklDistribution025)
+  dependsOn(pklDistributionCurrent, copyHistoricalDistribution)
 }
 
 tasks.test {

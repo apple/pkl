@@ -20,10 +20,8 @@ public final class Exceptions {
 
   public static Throwable getRootCause(Throwable t) {
     var result = t;
-    var cause = result.getCause();
-    while (cause != null) {
-      result = cause;
-      cause = cause.getCause();
+    while (result.getCause() != null) {
+      result = result.getCause();
     }
     return result;
   }

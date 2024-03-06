@@ -26,24 +26,26 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 
 final class HttpClientBuilder implements HttpClient.Builder {
-  private final Path userHome;
   private String userAgent;
   private Duration connectTimeout = Duration.ofSeconds(60);
   private Duration requestTimeout = Duration.ofSeconds(60);
+  private final Path caCertsDir;
   private final List<Path> certificateFiles = new ArrayList<>();
   private final List<URI> certificateUris = new ArrayList<>();
 
   HttpClientBuilder() {
-    this(Path.of(System.getProperty("user.home")));
+    this(IoUtils.getPklHomeDir().resolve("cacerts"));
   }
 
   // only exists for testing
-  HttpClientBuilder(Path userHome) {
-    this.userHome = userHome;
+  HttpClientBuilder(Path caCertsDir) {
     var release = Release.current();
-    userAgent = "Pkl/" + release.version() + " (" + release.os() + "; " + release.flavor() + ")";
+    this.caCertsDir = caCertsDir;
+    this.userAgent =
+        "Pkl/" + release.version() + " (" + release.os() + "; " + release.flavor() + ")";
   }
 
   public HttpClient.Builder setUserAgent(String userAgent) {
@@ -80,10 +82,9 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   public HttpClient.Builder addDefaultCliCertificates() {
-    var directory = userHome.resolve(".pkl").resolve("cacerts");
     var fileCount = certificateFiles.size();
-    if (Files.isDirectory(directory)) {
-      try (var files = Files.list(directory)) {
+    if (Files.isDirectory(caCertsDir)) {
+      try (var files = Files.list(caCertsDir)) {
         files.filter(Files::isRegularFile).forEach(certificateFiles::add);
       } catch (IOException e) {
         throw new HttpClientInitException(e);

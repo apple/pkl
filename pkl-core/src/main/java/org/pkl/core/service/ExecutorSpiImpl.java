@@ -132,11 +132,18 @@ public class ExecutorSpiImpl implements ExecutorSpi {
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
     List<Path> certificateFiles;
     List<URI> certificateUris;
-    if (options instanceof ExecutorSpiOptions2) {
-      var options2 = (ExecutorSpiOptions2) options;
-      certificateFiles = options2.getCertificateFiles();
-      certificateUris = options2.getCertificateUris();
-    } else {
+    try {
+      if (options instanceof ExecutorSpiOptions2) {
+        var options2 = (ExecutorSpiOptions2) options;
+        certificateFiles = options2.getCertificateFiles();
+        certificateUris = options2.getCertificateUris();
+      } else {
+        certificateFiles = List.of();
+        certificateUris = List.of();
+      }
+      // host pkl-executor does not have class ExecutorOptions2 defined.
+      // this will happen if the pkl-executor distribution is too old.
+    } catch (NoClassDefFoundError e) {
       certificateFiles = List.of();
       certificateUris = List.of();
     }

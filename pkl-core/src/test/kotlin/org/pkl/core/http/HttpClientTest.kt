@@ -22,42 +22,42 @@ class HttpClientTest {
     val client = assertDoesNotThrow {
       HttpClient.builder().build()
     }
-    
+
     assertThat(client).isInstanceOf(RequestRewritingClient::class.java)
     client as RequestRewritingClient
-    
+
     val release = Release.current()
     assertThat(client.userAgent).isEqualTo("Pkl/${release.version()} (${release.os()}; ${release.flavor()})")
     assertThat(client.requestTimeout).isEqualTo(Duration.ofSeconds(60))
-    
+
     assertThat(client.delegate).isInstanceOf(JdkHttpClient::class.java)
     val delegate = client.delegate as JdkHttpClient
-    
+
     assertThat(delegate.underlying.connectTimeout()).hasValue(Duration.ofSeconds(60))
   }
-  
+
   @Test
   fun `can build custom client`() {
     val client = HttpClient.builder()
       .setUserAgent("Agent 1")
       .setRequestTimeout(Duration.ofHours(86))
-      .setConnectTimeout(Duration.ofMinutes(42))  
+      .setConnectTimeout(Duration.ofMinutes(42))
       .build() as RequestRewritingClient
-    
+
     assertThat(client.userAgent).isEqualTo("Agent 1")
     assertThat(client.requestTimeout).isEqualTo(Duration.ofHours(86))
 
     val delegate = client.delegate as JdkHttpClient
     assertThat(delegate.underlying.connectTimeout()).hasValue(Duration.ofMinutes(42))
   }
-  
+
   @Test
   fun `can load certificates from file system`() {
     assertDoesNotThrow {
       HttpClient.builder().addCertificates(FileTestUtils.selfSignedCertificate).build()
     }
   }
-  
+
   @Test
   fun `certificate file located on file system cannot be empty`(@TempDir tempDir: Path) {
     val file = tempDir.resolve("certs.pem").createFile()
@@ -75,7 +75,7 @@ class HttpClientTest {
       HttpClient.builder().addCertificates(javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.toURI()).build()
     }
   }
-  
+
   @Test
   fun `only allows loading jar and file certificate URIs`() {
     assertThrows<HttpClientInitException> {
@@ -96,46 +96,47 @@ class HttpClientTest {
 
   @Test
   fun `can load built-in certificates`() {
-    assertDoesNotThrow {  
+    assertDoesNotThrow {
       HttpClient.builder().addBuiltInCertificates().build()
     }
   }
-  
+
   @Test
   fun `can load certificates from Pkl user home cacerts directory`(@TempDir tempDir: Path) {
-    val certFile = tempDir.resolve(".pkl")
+    val certsDir = tempDir.resolve(".pkl")
       .resolve("cacerts")
       .createDirectories()
-      .resolve("certs.pem")
-    FileTestUtils.selfSignedCertificate.copyTo(certFile)
-    
+      .also { dir ->
+        FileTestUtils.selfSignedCertificate.copyTo(dir.resolve("certs.pem"))
+      }
+
     assertDoesNotThrow {
-      HttpClientBuilder(tempDir).addDefaultCliCertificates().build()
+      HttpClientBuilder(certsDir).addDefaultCliCertificates().build()
     }
   }
-  
+
   @Test
-  fun `loading certificates from cacerts directory falls back to built-in certificates`(@TempDir userHome: Path) {
+  fun `loading certificates from cacerts directory falls back to built-in certificates`(@TempDir certsDir: Path) {
     assertDoesNotThrow {
-      HttpClientBuilder(userHome).addDefaultCliCertificates().build()
+      HttpClientBuilder(certsDir).addDefaultCliCertificates().build()
     }
   }
-  
+
   @Test
   fun `can be closed multiple times`() {
     val client = HttpClient.builder().build()
-    
+
     assertDoesNotThrow { 
       client.close() 
       client.close() 
     }
   }
-  
+
   @Test
   fun `refuses to send messages once closed`() {
     val client = HttpClient.builder().build()
     val request = HttpRequest.newBuilder(URI("https://example.com")).build()
-    
+
     client.close()
 
     assertThrows<IllegalStateException> {
