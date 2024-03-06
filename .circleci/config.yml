@@ -698,6 +698,8 @@ jobs:
         at: '.'
     - run:
         command: |-
+          # exclude build_artifacts.txt from publish
+          rm pkl-cli/build/executable/*.build_artifacts.txt
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
@@ -751,15 +753,12 @@ workflows:
     - gradle-check-jdk11:
         requires:
         - hold
-        - pr-approval/authenticate
     - gradle-check-jdk17:
         requires:
         - hold
-        - pr-approval/authenticate
     - check-patch-file:
         requires:
         - hold
-        - pr-approval/authenticate
     when:
       matches:
         value: << pipeline.git.branch >>
