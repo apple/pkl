@@ -58,7 +58,7 @@ dependencies {
   implementation(libs.snakeYaml)
 
   testImplementation(projects.pklCommonsTest)
-
+  
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
   add("generatorImplementation", libs.kotlinStdLib)

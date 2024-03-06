@@ -9,6 +9,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.test.FileTestUtils
+import org.pkl.core.http.HttpClient
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
@@ -137,9 +139,13 @@ class ProjectTest {
     PackageServer.ensureStarted()
     val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.path)
     val project = Project.loadFromPath(projectDir.resolve("PklProject"))
+    val httpClient = HttpClient.builder()
+      .addCertificates(FileTestUtils.selfSignedCertificate)
+      .build()
     val evaluator = EvaluatorBuilder.preconfigured()
       .applyFromProject(project)
       .setModuleCacheDir(null)
+      .setHttpClient(httpClient)
       .build()
     assertThatCode { evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl"))) }
       .hasMessageStartingWith("""

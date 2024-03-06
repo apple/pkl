@@ -17,10 +17,19 @@ package org.pkl.core.service;
 
 import static org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME;
 
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.*;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.project.Project;
@@ -28,9 +37,29 @@ import org.pkl.core.resource.ResourceReaders;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 
 public class ExecutorSpiImpl implements ExecutorSpi {
+  private static final int MAX_HTTP_CLIENTS = 3;
+
+  // Don't create a new HTTP client for every executor request.
+  // Instead, keep a cache of up to MAX_HTTP_CLIENTS clients.
+  // A cache size of 1 should be common.
+  private final Map<HttpClientKey, HttpClient> httpClients;
+
   private final String pklVersion = Release.current().version().toString();
+
+  public ExecutorSpiImpl() {
+    // only LRU cache available in JDK
+    var map =
+        new LinkedHashMap<HttpClientKey, HttpClient>(8, 0.75f, true) {
+          @Override
+          protected boolean removeEldestEntry(Entry<HttpClientKey, HttpClient> eldest) {
+            return size() > MAX_HTTP_CLIENTS;
+          }
+        };
+    httpClients = Collections.synchronizedMap(map);
+  }
 
   @Override
   public String getPklVersion() {
@@ -65,6 +94,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
         EvaluatorBuilder.unconfigured()
             .setStackFrameTransformer(transformer)
             .setSecurityManager(securityManager)
+            .setHttpClient(getOrCreateHttpClient(options))
             .addResourceReader(ResourceReaders.environmentVariable())
             .addResourceReader(ResourceReaders.externalProperty())
             .addResourceReader(ResourceReaders.modulePath(resolver))
@@ -96,6 +126,63 @@ public class ExecutorSpiImpl implements ExecutorSpi {
       throw new ExecutorSpiException(e.getMessage(), e.getCause());
     } finally {
       ModuleKeyFactories.closeQuietly(builder.getModuleKeyFactories());
+    }
+  }
+
+  private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
+    List<Path> certificateFiles;
+    List<URI> certificateUris;
+    if (options instanceof ExecutorSpiOptions2) {
+      var options2 = (ExecutorSpiOptions2) options;
+      certificateFiles = options2.getCertificateFiles();
+      certificateUris = options2.getCertificateUris();
+    } else {
+      certificateFiles = List.of();
+      certificateUris = List.of();
+    }
+    var clientKey = new HttpClientKey(certificateFiles, certificateUris);
+    return httpClients.computeIfAbsent(
+        clientKey,
+        (key) -> {
+          var builder = HttpClient.builder();
+          for (var file : key.certificateFiles) {
+            builder.addCertificates(file);
+          }
+          for (var uri : key.certificateUris) {
+            builder.addCertificates(uri);
+          }
+          // If the above didn't add any certificates,
+          // builder will use the JVM's default SSL context.
+          return builder.buildLazily();
+        });
+  }
+
+  private static final class HttpClientKey {
+    final Set<Path> certificateFiles;
+    final Set<URI> certificateUris;
+
+    HttpClientKey(List<Path> certificateFiles, List<URI> certificateUris) {
+      // also serve as defensive copies
+      this.certificateFiles = Set.copyOf(certificateFiles);
+      this.certificateUris = Set.copyOf(certificateUris);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      HttpClientKey that = (HttpClientKey) obj;
+      return certificateFiles.equals(that.certificateFiles)
+          && certificateUris.equals(that.certificateUris);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(certificateFiles, certificateUris);
     }
   }
 }

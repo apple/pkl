@@ -20,27 +20,33 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 
-/** Options for {@link Executor#evaluatePath}. */
-public final class ExecutorOptions {
-  private final List<String> allowedModules;
+/**
+ * Options for {@link Executor#evaluatePath}.
+ *
+ * <p>Note that subclasses of {@code ExecutorOptions} offer additional options.
+ */
+public class ExecutorOptions {
+  protected final List<String> allowedModules;
 
-  private final List<String> allowedResources;
+  protected final List<String> allowedResources;
 
-  private final Map<String, String> environmentVariables;
+  protected final Map<String, String> environmentVariables;
 
-  private final Map<String, String> externalProperties;
+  protected final Map<String, String> externalProperties;
 
-  private final List<Path> modulePath;
+  protected final List<Path> modulePath;
 
-  private final /* @Nullable */ Path rootDir;
+  protected final /* @Nullable */ Path rootDir;
 
-  private final /* @Nullable */ Duration timeout;
+  protected final /* @Nullable */ Duration timeout;
 
-  private final /* @Nullable */ String outputFormat;
+  protected final /* @Nullable */ String outputFormat;
 
-  private final /* @Nullable */ Path moduleCacheDir;
-  private final /* @Nullable */ Path projectDir;
+  protected final /* @Nullable */ Path moduleCacheDir;
+
+  protected final /* @Nullable */ Path projectDir;
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
@@ -148,7 +154,7 @@ public final class ExecutorOptions {
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof ExecutorOptions)) return false;
+    if (obj.getClass() != ExecutorOptions.class) return false;
 
     var other = (ExecutorOptions) obj;
     return allowedModules.equals(other.allowedModules)
@@ -202,5 +208,19 @@ public final class ExecutorOptions {
         + ", projectDir="
         + projectDir
         + '}';
+  }
+
+  ExecutorSpiOptions toSpiOptions() {
+    return new ExecutorSpiOptions(
+        allowedModules,
+        allowedResources,
+        environmentVariables,
+        externalProperties,
+        modulePath,
+        rootDir,
+        timeout,
+        outputFormat,
+        moduleCacheDir,
+        projectDir);
   }
 }

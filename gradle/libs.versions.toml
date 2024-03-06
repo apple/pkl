@@ -81,6 +81,7 @@ msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
+pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
 shadowPlugin = { group = "gradle.plugin.com.github.johnrengelman", name = "shadow", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }

@@ -18,24 +18,18 @@ package org.pkl.commons.cli
 import java.nio.file.Path
 import java.util.regex.Pattern
 import org.pkl.core.*
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.project.Project
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
-import org.pkl.core.runtime.CertificateUtils
 import org.pkl.core.settings.PklSettings
 import org.pkl.core.util.IoUtils
 
 /** Building block for CLI commands. Configured programmatically to allow for embedding. */
 abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
-  init {
-    if (cliOptions.caCertificates.isNotEmpty()) {
-      CertificateUtils.setupAllX509CertificatesGlobally(cliOptions.caCertificates)
-    }
-  }
-
   /** Runs this command. */
   fun run() {
     if (cliOptions.testMode) {
@@ -158,6 +152,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
+  // share HTTP client with other commands with the same cliOptions
+  protected val httpClient: HttpClient
+    get() = cliOptions.httpClient
+
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {
       add(ModuleKeyFactories.standardLibrary)
@@ -195,6 +193,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setStackFrameTransformer(stackFrameTransformer)
       .apply { project?.let { setProjectDependencies(it.dependencies) } }
       .setSecurityManager(securityManager)
+      .setHttpClient(httpClient)
       .setExternalProperties(externalProperties)
       .setEnvironmentVariables(environmentVariables)
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))

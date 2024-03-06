@@ -18,9 +18,13 @@ package org.pkl.core.module;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.pkl.core.runtime.VmContext;
+import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using resolved module keys. */
@@ -102,6 +106,14 @@ public final class ResolvedModuleKeys {
 
     @Override
     public String loadSource() throws IOException {
+      if (HttpUtils.isHttpUrl(url)) {
+        var httpClient = VmContext.get(null).getHttpClient();
+        var request = HttpRequest.newBuilder(uri).build();
+        var response = httpClient.send(request, BodyHandlers.ofString());
+        HttpUtils.checkHasStatusCode200(response);
+        return response.body();
+      }
+
       return IoUtils.readString(url);
     }
   }

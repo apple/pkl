@@ -5,14 +5,17 @@ plugins {
   pklKotlinTest
 }
 
-val pklDistribution: Configuration by configurations.creating
+val pklDistributionCurrent: Configuration by configurations.creating
+val pklDistribution025: Configuration by configurations.creating
 
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
 // clients are free to use different versions of pkl-executor and (say) pkl-config-java-all.
 // (Pkl distributions used by EmbeddedExecutor are isolated via class loaders.)
 dependencies {
-  pklDistribution(project(":pkl-config-java", "fatJar"))
+  pklDistributionCurrent(project(":pkl-config-java", "fatJar"))
+  @Suppress("UnstableApiUsage")
+  pklDistribution025(libs.pklConfigJavaAll025)
 
   implementation(libs.slf4jApi)
 
@@ -49,7 +52,14 @@ sourceSets {
   }
 }
 
-tasks.test {
+// this task could be folded into tasks.test by switching to IntelliJ's Gradle test runner
+val prepareTest by tasks.registering {
   // used by EmbeddedExecutorTest
-  dependsOn(pklDistribution)
+  dependsOn(pklDistributionCurrent, pklDistribution025)
+}
+
+tasks.test {
+  dependsOn(prepareTest)
+  systemProperty("pklDistributionCurrent", pklDistributionCurrent.singleFile)
+  systemProperty("pklDistribution025", pklDistribution025.singleFile)
 }

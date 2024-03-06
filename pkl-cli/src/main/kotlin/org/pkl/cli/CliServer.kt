@@ -25,7 +25,7 @@ import org.pkl.server.Server
 class CliServer(options: CliBaseOptions) : CliCommand(options) {
   override fun doRun() =
     try {
-      val server = Server(MessageTransports.stream(System.`in`, System.out))
+      val server = Server(MessageTransports.stream(System.`in`, System.out), httpClient)
       server.use { it.start() }
     } catch (e: ProtocolException) {
       throw CliException(e.message!!)

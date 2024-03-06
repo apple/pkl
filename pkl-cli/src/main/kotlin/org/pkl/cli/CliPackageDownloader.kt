@@ -31,7 +31,7 @@ class CliPackageDownloader(
     if (moduleCacheDir == null) {
       throw CliException("Cannot download packages because no cache directory is specified.")
     }
-    val packageResolver = PackageResolver.getInstance(securityManager, moduleCacheDir)
+    val packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir)
     val errors = mutableMapOf<PackageUri, Throwable>()
     for (pkg in packageUris) {
       try {

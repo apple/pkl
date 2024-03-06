@@ -13,9 +13,9 @@ import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
+import org.pkl.core.http.HttpClient
 import org.pkl.core.SecurityManagers
 import org.pkl.core.module.PathElement
-import org.pkl.core.runtime.CertificateUtils
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -34,9 +34,12 @@ class PackageResolversTest {
       @JvmStatic
       @BeforeAll
       fun beforeAll() {
-        CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
         PackageServer.ensureStarted()
       }
+      
+      val httpClient: HttpClient = HttpClient.builder()
+        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .build()
     }
 
     @Test
@@ -196,16 +199,17 @@ class PackageResolversTest {
       @BeforeAll
       @JvmStatic
       fun beforeAll() {
-        CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
         PackageServer.ensureStarted()
         cacheDir.deleteRecursively()
       }
     }
 
-    override val resolver: PackageResolver = PackageResolvers.DiskCachedPackageResolver(SecurityManagers.defaultManager, cacheDir)
+    override val resolver: PackageResolver = PackageResolvers.DiskCachedPackageResolver(
+      SecurityManagers.defaultManager, httpClient, cacheDir)
   }
 
   class InMemoryPackageResolverTest : AbstractPackageResolverTest() {
-    override val resolver: PackageResolver = PackageResolvers.InMemoryPackageResolver(SecurityManagers.defaultManager)
+    override val resolver: PackageResolver = PackageResolvers.InMemoryPackageResolver(
+      SecurityManagers.defaultManager, httpClient)
   }
 }

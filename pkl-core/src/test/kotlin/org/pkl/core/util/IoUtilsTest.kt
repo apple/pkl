@@ -14,6 +14,7 @@ import org.pkl.core.runtime.ModuleResolver
 import java.io.FileNotFoundException
 import java.net.URI
 import java.net.URISyntaxException
+import java.net.URL
 import java.nio.file.Path
 import kotlin.io.path.createFile
 
@@ -408,6 +409,26 @@ class IoUtilsTest {
     }
     assertThrows<URISyntaxException> {
       IoUtils.resolve(FakeSecurityManager, key2, URI("...NamedModuleResolversTest.pkl"))
+    }
+  }
+  
+  @Test
+  fun `readBytes(URL) does not support HTTP URLs`() {
+    assertThrows<IllegalArgumentException> {
+      IoUtils.readBytes(URL("https://example.com"))
+    }
+    assertThrows<IllegalArgumentException> {
+      IoUtils.readBytes(URL("http://example.com"))
+    }
+  }
+
+  @Test
+  fun `readString(URL) does not support HTTP URLs`() {
+    assertThrows<IllegalArgumentException> {
+      IoUtils.readString(URL("https://example.com"))
+    }
+    assertThrows<IllegalArgumentException> {
+      IoUtils.readString(URL("http://example.com"))
     }
   }
 }

@@ -25,6 +25,7 @@ import org.pkl.core.repl.ReplServer
 import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
 import org.antlr.v4.runtime.ParserRuleContext
+import org.pkl.core.http.HttpClient
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
@@ -78,6 +79,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
   override fun createExecutionContext(request: ExecutionRequest): ExecutionContext {
     val replServer = ReplServer(
       SecurityManagers.defaultManager,
+      HttpClient.dummyClient(),
       Loggers.stdErr(),
       listOf(
         ModuleKeyFactories.standardLibrary,

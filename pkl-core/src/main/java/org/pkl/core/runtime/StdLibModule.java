@@ -22,6 +22,7 @@ import java.util.Map;
 import org.pkl.core.Loggers;
 import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformers;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -39,6 +40,7 @@ public abstract class StdLibModule {
                   new VmContext.Holder(
                       StackFrameTransformers.defaultTransformer,
                       SecurityManagers.defaultManager,
+                      HttpClient.dummyClient(),
                       new ModuleResolver(List.of(ModuleKeyFactories.standardLibrary)),
                       new ResourceManager(SecurityManagers.defaultManager, List.of()),
                       Loggers.noop(),

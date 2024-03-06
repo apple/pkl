@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.util.TempFile;
 import org.openjdk.jmh.util.TempFileManager;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.repl.ReplRequest;
 import org.pkl.core.repl.ReplResponse;
@@ -39,6 +40,7 @@ public class ListSort {
   private static final ReplServer repl =
       new ReplServer(
           SecurityManagers.defaultManager,
+          HttpClient.dummyClient(),
           Loggers.stdErr(),
           List.of(ModuleKeyFactories.standardLibrary),
           List.of(ResourceReaders.file()),

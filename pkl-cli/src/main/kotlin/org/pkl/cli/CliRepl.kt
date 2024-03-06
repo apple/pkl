@@ -36,6 +36,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
             SecurityManagers.defaultTrustLevels,
             rootDir
           ),
+          httpClient,
           Loggers.stdErr(),
           listOf(
             ModuleKeyFactories.standardLibrary,

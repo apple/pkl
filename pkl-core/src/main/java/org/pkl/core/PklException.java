@@ -23,4 +23,8 @@ public class PklException extends RuntimeException {
   public PklException(String message) {
     super(message);
   }
+
+  public PklException(Throwable cause) {
+    super(cause);
+  }
 }

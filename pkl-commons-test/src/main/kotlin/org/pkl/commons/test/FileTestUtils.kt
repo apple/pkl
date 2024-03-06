@@ -16,8 +16,8 @@
 package org.pkl.commons.test
 
 import java.nio.file.Path
+import java.util.stream.Collectors
 import kotlin.io.path.*
-import kotlin.streams.toList
 import org.assertj.core.api.Assertions.fail
 import org.pkl.commons.*
 
@@ -32,10 +32,23 @@ object FileTestUtils {
   val selfSignedCertificate: Path by lazy {
     rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.pem")
   }
+
+  fun writeCertificateWithMissingLines(dir: Path): Path {
+    val lines = selfSignedCertificate.readLines()
+    // drop some lines in the middle
+    return dir.resolve("invalidCerts.pem").writeLines(lines.take(5) + lines.takeLast(5))
+  }
+
+  fun writePklBuiltInCertificates(dir: Path): Path {
+    val text = javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.readText()
+    return dir.resolve("PklCARoots.pem").apply { writeText(text) }
+  }
 }
 
 fun Path.listFilesRecursively(): List<Path> =
-  walk(99).use { paths -> paths.filter { it.isRegularFile() || it.isSymbolicLink() }.toList() }
+  walk(99).use { paths ->
+    paths.filter { it.isRegularFile() || it.isSymbolicLink() }.collect(Collectors.toList())
+  }
 
 data class SnippetOutcome(val expectedOutFile: Path, val actual: String, val success: Boolean) {
   private val expectedErrFile =

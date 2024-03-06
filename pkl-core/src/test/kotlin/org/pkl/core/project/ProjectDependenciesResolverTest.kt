@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.core.http.HttpClient
 import org.pkl.core.PklException
 import org.pkl.core.SecurityManagers
 import org.pkl.core.packages.PackageResolver
-import org.pkl.core.runtime.CertificateUtils
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -19,16 +19,19 @@ class ProjectDependenciesResolverTest {
     @JvmStatic
     @BeforeAll
     fun beforeAll() {
-      CertificateUtils.setupAllX509CertificatesGlobally(listOf(FileTestUtils.selfSignedCertificate))
       PackageServer.ensureStarted()
     }
+    
+    val httpClient: HttpClient = HttpClient.builder()
+      .addCertificates(FileTestUtils.selfSignedCertificate)
+      .build()
   }
 
   @Test
   fun resolveDependencies() {
     val project2Path = Path.of(javaClass.getResource("project2/PklProject")!!.path)
     val project = Project.loadFromPath(project2Path)
-    val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, null)
+    val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, httpClient, null)
     val deps = ProjectDependenciesResolver(project, packageResolver, System.out.writer()).resolve()
     val strDeps = ByteArrayOutputStream()
       .apply { deps.writeTo(this) }
@@ -66,7 +69,7 @@ class ProjectDependenciesResolverTest {
   fun `fails if project declares a package with an incorrect checksum`() {
     val projectPath = Path.of(javaClass.getResource("badProjectChecksum/PklProject")!!.path)
     val project = Project.loadFromPath(projectPath)
-    val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, null)
+    val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, httpClient, null)
     val e = assertThrows<PklException> {
       ProjectDependenciesResolver(project, packageResolver, System.err.writer()).resolve()
     }

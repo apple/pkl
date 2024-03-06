@@ -82,6 +82,7 @@ class CliProjectPackager(
         outputPath,
         stackFrameTransformer,
         securityManager,
+        httpClient,
         skipPublishCheck,
         consoleWriter
       )

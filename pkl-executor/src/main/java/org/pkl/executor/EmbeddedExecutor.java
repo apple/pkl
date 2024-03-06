@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
-import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,12 +39,17 @@ final class EmbeddedExecutor implements Executor {
   private final List<PklDistribution> pklDistributions = new ArrayList<>();
 
   /**
-   * @throws IllegalArgumentException if a Jar file cannot be found or is not a valid PklPkl
+   * @throws IllegalArgumentException if a Jar file cannot be found or is not a valid Pkl
    *     distribution
    */
   public EmbeddedExecutor(List<Path> pklFatJars) {
+    this(pklFatJars, Executor.class.getClassLoader());
+  }
+
+  // for testing only
+  EmbeddedExecutor(List<Path> pklFatJars, ClassLoader pklExecutorClassLoader) {
     for (var jarFile : pklFatJars) {
-      pklDistributions.add(new PklDistribution(jarFile));
+      pklDistributions.add(new PklDistribution(jarFile, pklExecutorClassLoader));
     }
   }
 
@@ -72,6 +76,7 @@ final class EmbeddedExecutor implements Executor {
       // (but not any modules imported by it) and only requires parsing (but not evaluating) the
       // module.
       requestedVersion = detectRequestedPklVersion(modulePath, options);
+      //noinspection resource
       distribution = findCompatibleDistribution(modulePath, requestedVersion, options);
       output = distribution.evaluatePath(modulePath, options);
     } catch (RuntimeException e) {
@@ -163,22 +168,23 @@ final class EmbeddedExecutor implements Executor {
   }
 
   private static final class PklDistribution implements AutoCloseable {
-    final URLClassLoader classLoader;
-    final ExecutorSpi executorSpi;
+    final URLClassLoader pklDistributionClassLoader;
+    final /* @Nullable */ ExecutorSpi executorSpi;
     final Version version;
 
     /**
      * @throws IllegalArgumentException if the Jar file does not exist or is not a valid Pkl
      *     distribution
      */
-    PklDistribution(Path pklFatJar) {
+    PklDistribution(Path pklFatJar, ClassLoader pklExecutorClassLoader) {
       if (!Files.isRegularFile(pklFatJar)) {
         throw new IllegalArgumentException(
             String.format("Invalid Pkl distribution: Cannot find Jar file `%s`.", pklFatJar));
       }
 
-      classLoader = new PklDistributionClassLoader(pklFatJar);
-      var serviceLoader = ServiceLoader.load(ExecutorSpi.class, classLoader);
+      pklDistributionClassLoader =
+          new PklDistributionClassLoader(pklFatJar, pklExecutorClassLoader);
+      var serviceLoader = ServiceLoader.load(ExecutorSpi.class, pklDistributionClassLoader);
 
       try {
         executorSpi = serviceLoader.iterator().next();
@@ -208,9 +214,9 @@ final class EmbeddedExecutor implements Executor {
       var currentThread = Thread.currentThread();
       var prevContextClassLoader = currentThread.getContextClassLoader();
       // Truffle loads stuff from context class loader, so set it to our class loader
-      currentThread.setContextClassLoader(classLoader);
+      currentThread.setContextClassLoader(pklDistributionClassLoader);
       try {
-        return executorSpi.evaluatePath(modulePath, toEvaluatorOptions(options));
+        return executorSpi.evaluatePath(modulePath, options.toSpiOptions());
       } catch (ExecutorSpiException e) {
         throw new ExecutorException(e.getMessage(), e.getCause());
       } finally {
@@ -220,30 +226,21 @@ final class EmbeddedExecutor implements Executor {
 
     @Override
     public void close() throws IOException {
-      classLoader.close();
-    }
-
-    ExecutorSpiOptions toEvaluatorOptions(ExecutorOptions options) {
-      return new ExecutorSpiOptions(
-          options.getAllowedModules(),
-          options.getAllowedResources(),
-          options.getEnvironmentVariables(),
-          options.getExternalProperties(),
-          options.getModulePath(),
-          options.getRootDir(),
-          options.getTimeout(),
-          options.getOutputFormat(),
-          options.getModuleCacheDir(),
-          options.getProjectDir());
+      pklDistributionClassLoader.close();
     }
   }
 
   private static final class PklDistributionClassLoader extends URLClassLoader {
-    final ClassLoader spiClassLoader = ExecutorSpi.class.getClassLoader();
+    final ClassLoader pklExecutorClassLoader;
 
-    PklDistributionClassLoader(Path pklFatJar) {
+    static {
+      registerAsParallelCapable();
+    }
+
+    PklDistributionClassLoader(Path pklFatJar, ClassLoader pklExecutorClassLoader) {
       // pass `null` to make bootstrap class loader the effective parent
       super(toUrls(pklFatJar), null);
+      this.pklExecutorClassLoader = pklExecutorClassLoader;
     }
 
     @Override
@@ -253,7 +250,15 @@ final class EmbeddedExecutor implements Executor {
 
         if (clazz == null) {
           if (name.startsWith("org.pkl.executor.spi.")) {
-            clazz = spiClassLoader.loadClass(name);
+            try {
+              // give pkl-executor a chance to load the SPI clasa
+              clazz = pklExecutorClassLoader.loadClass(name);
+            } catch (ClassNotFoundException ignored) {
+              // The SPI class exists in this distribution but not in pkl-executor,
+              // so load it from the distribution.
+              // This can happen if the pkl-executor version is lower than the distribution version.
+              clazz = findClass(name);
+            }
           } else if (name.startsWith("java.")
               || name.startsWith("jdk.")
               || name.startsWith("sun.")
@@ -282,18 +287,14 @@ final class EmbeddedExecutor implements Executor {
 
     @Override
     public URL getResource(String name) {
-      // try bootstrap class loader first
-      // once we move to JDK 9+, should use `getPlatformClassLoader().getResource()` instead of
-      // `super.getResource()`
-      var resource = super.getResource(name);
+      var resource = getPlatformClassLoader().getResource(name);
       return resource != null ? resource : findResource(name);
     }
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-      // once we move to JDK 9+, should use `getPlatformClassLoader().getResources()` instead of
-      // `super.getResources()`
-      return ConcatenatedEnumeration.create(super.getResources(name), findResources(name));
+      return ConcatenatedEnumeration.create(
+          getPlatformClassLoader().getResources(name), findResources(name));
     }
 
     static URL[] toUrls(Path pklFatJar) {

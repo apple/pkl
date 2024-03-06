@@ -21,6 +21,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.core.*
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.resource.ResourceReaders
 
@@ -34,6 +35,7 @@ class BinaryEvaluatorTest {
         SecurityManagers.defaultTrustLevels,
         Path.of("")
       ),
+      HttpClient.dummyClient(),
       Loggers.noop(),
       listOf(ModuleKeyFactories.standardLibrary),
       listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),

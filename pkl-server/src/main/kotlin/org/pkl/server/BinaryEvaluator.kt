@@ -20,6 +20,7 @@ import java.time.Duration
 import org.msgpack.core.MessagePacker
 import org.pkl.core.*
 import org.pkl.core.ast.member.ObjectMember
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
@@ -28,6 +29,7 @@ import org.pkl.core.runtime.*
 internal class BinaryEvaluator(
   transformer: StackFrameTransformer,
   manager: SecurityManager,
+  httpClient: HttpClient,
   logger: Logger,
   factories: Collection<ModuleKeyFactory?>,
   readers: Collection<ResourceReader?>,
@@ -41,6 +43,7 @@ internal class BinaryEvaluator(
   EvaluatorImpl(
     transformer,
     manager,
+    httpClient,
     logger,
     factories,
     readers,

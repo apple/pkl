@@ -21,19 +21,18 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
-import kotlin.io.path.createDirectories
-import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.pkl.commons.*
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.OutputFormat
@@ -1158,8 +1157,46 @@ result = someLib.x
   }
 
   @Test
-  fun `not including the self signed certificate will result in a error`() {
+  fun `gives decent error message if certificate file contains random text`() {
+    val certsFile = tempDir.writeFile("random.pem", "RANDOM")
+    val err = assertThrows<CliException> { evalModuleThatImportsPackage(certsFile) }
+    assertThat(err)
+      .hasMessageContaining("Error parsing CA certificate file `${certsFile.pathString}`:")
+      .hasMessageContaining("No certificate data found")
+      .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
+  }
+
+  @Test
+  fun `gives decent error message if certificate file is emtpy`(@TempDir tempDir: Path) {
+    val emptyCerts = tempDir.writeEmptyFile("empty.pem")
+    val err = assertThrows<CliException> { evalModuleThatImportsPackage(emptyCerts) }
+    assertThat(err).hasMessageContaining("CA certificate file `${emptyCerts.pathString}` is empty.")
+  }
+
+  @Test
+  fun `gives decent error message if certificate cannot be parsed`(@TempDir tempDir: Path) {
+    val invalidCerts = FileTestUtils.writeCertificateWithMissingLines(tempDir)
+    val err = assertThrows<CliException> { evalModuleThatImportsPackage(invalidCerts) }
+    assertThat(err)
+      // no assert for detail message because it differs between JDK implementations
+      .hasMessageContaining("Error parsing CA certificate file `${invalidCerts.pathString}`:")
+      .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
+  }
+
+  @Test
+  fun `gives decent error message if CLI doesn't have the required CA certificate`() {
     PackageServer.ensureStarted()
+    // provide SOME certs to prevent CliEvaluator from falling back to ~/.pkl/cacerts
+    val builtInCerts = FileTestUtils.writePklBuiltInCertificates(tempDir)
+    val err = assertThrows<CliException> { evalModuleThatImportsPackage(builtInCerts) }
+    assertThat(err)
+      // on some JDK11's this doesn't cause SSLHandshakeException but some other SSLException
+      // .hasMessageContaining("Error during SSL handshake with host `localhost`:")
+      .hasMessageContaining("unable to find valid certification path to requested target")
+      .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
+  }
+
+  private fun evalModuleThatImportsPackage(certsFile: Path) {
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1168,22 +1205,17 @@ result = someLib.x
       
       res = Swallow
     """
-          .trimIndent()
       )
-    val buffer = StringWriter()
+
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
-          workingDir = tempDir,
-          moduleCacheDir = tempDir,
-          noCache = true,
-          // ensure we override any previously set root cert to the default buundle.
-          caCertificates = listOf(BaseOptions.Companion.includedCARootCerts())
+          caCertificates = listOf(certsFile),
+          noCache = true
         ),
       )
-    val err = assertThrows<CliException> { CliEvaluator(options, consoleWriter = buffer).run() }
-    assertThat(err.message).contains("unable to find valid certification path to requested target")
+    CliEvaluator(options).run()
   }
 
   private fun writePklFile(fileName: String, contents: String = defaultContents): URI {

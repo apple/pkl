@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.random.Random
 import org.pkl.core.*
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
@@ -29,7 +30,8 @@ import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 
-class Server(private val transport: MessageTransport) : AutoCloseable {
+class Server(private val transport: MessageTransport, private val httpClient: HttpClient) :
+  AutoCloseable {
   private val evaluators: MutableMap<Long, BinaryEvaluator> = ConcurrentHashMap()
 
   // https://github.com/jano7/executor would be the perfect executor here
@@ -173,6 +175,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         SecurityManagers.defaultTrustLevels,
         rootDir
       ),
+      httpClient,
       ClientLogger(evaluatorId, transport),
       createModuleKeyFactories(message, evaluatorId, resolver),
       createResourceReaders(message, evaluatorId, resolver),
