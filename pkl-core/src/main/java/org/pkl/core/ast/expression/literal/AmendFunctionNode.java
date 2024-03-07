@@ -77,6 +77,9 @@ public final class AmendFunctionNode extends PklNode {
       //
       // As a remedy, we simply copy outer variables into this frame if there are any for generator
       // variables.
+      //
+      // We need to preserve the frame slot index, so we insert dummy identifiers
+      // for other slots that aren't for generator variables.
       if (slotInfo != null && slotInfo.equals(SymbolTable.FOR_GENERATOR_VARIABLE)) {
         if (!hasForGenVars) {
           hasForGenVars = true;
