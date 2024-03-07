@@ -6,7 +6,7 @@ plugins {
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
-val pklDistribution025: Configuration by configurations.creating
+val pklHistoricalDistributions: Configuration by configurations.creating
 
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
@@ -15,7 +15,7 @@ val pklDistribution025: Configuration by configurations.creating
 dependencies {
   pklDistributionCurrent(project(":pkl-config-java", "fatJar"))
   @Suppress("UnstableApiUsage")
-  pklDistribution025(libs.pklConfigJavaAll025)
+  pklHistoricalDistributions(libs.pklConfigJavaAll025)
 
   implementation(libs.slf4jApi)
 
@@ -53,18 +53,14 @@ sourceSets {
 }
 
 val copyHistoricalDistribution by tasks.registering(Copy::class) {
-  from(pklDistribution025)
-  into(layout.buildDirectory.dir("pklDistributions"))
+  from(pklHistoricalDistributions)
+  into(layout.buildDirectory.dir("pklHistoricalDistributions"))
 }
 
-// this task could be folded into tasks.test by switching to IntelliJ's Gradle test runner
 val prepareTest by tasks.registering {
-  // used by EmbeddedExecutorTest
   dependsOn(pklDistributionCurrent, copyHistoricalDistribution)
 }
 
 tasks.test {
   dependsOn(prepareTest)
-  systemProperty("pklDistributionCurrent", pklDistributionCurrent.singleFile)
-  systemProperty("pklDistribution025", pklDistribution025.singleFile)
 }
