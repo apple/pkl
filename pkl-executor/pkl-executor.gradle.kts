@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -52,13 +54,27 @@ sourceSets {
   }
 }
 
-val copyHistoricalDistribution by tasks.registering(Copy::class) {
-  from(pklHistoricalDistributions)
-  into(layout.buildDirectory.dir("pklHistoricalDistributions"))
+val prepareHistoricalDistributions by tasks.registering {
+  val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
+  inputs.files(pklHistoricalDistributions.files())
+  outputs.dir(outputDir)
+  doLast {
+    val distributionDir = outputDir.get().asFile.toPath()
+      .also(Files::createDirectories)
+    for (file in pklHistoricalDistributions.files) {
+      val link = distributionDir.resolve(file.name)
+      if (!Files.isSymbolicLink(link)) {
+        if (Files.exists(link)) {
+          Files.delete(link)
+        }
+        Files.createSymbolicLink(link, file.toPath())
+      }
+    }
+  }
 }
 
 val prepareTest by tasks.registering {
-  dependsOn(pklDistributionCurrent, copyHistoricalDistribution)
+  dependsOn(pklDistributionCurrent, prepareHistoricalDistributions)
 }
 
 tasks.test {
