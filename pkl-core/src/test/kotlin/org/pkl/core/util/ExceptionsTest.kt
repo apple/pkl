@@ -11,7 +11,7 @@ class ExceptionsTest {
     val e = IOException("io")
     assertThat(Exceptions.getRootCause(e)).isSameAs(e)
   }
-  
+
   @Test
   fun `get root cause of nested exception`() {
     val e = IOException("io")
@@ -29,7 +29,7 @@ class ExceptionsTest {
     e.initCause(e2)
     assertThat(Exceptions.getRootReason(e)).isEqualTo("the root reason")
   }
-  
+
   @Test
   fun `get root reason if null`() {
     val e = IOException("io")

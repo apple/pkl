@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -6,7 +8,7 @@ plugins {
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
-val pklDistribution025: Configuration by configurations.creating
+val pklHistoricalDistributions: Configuration by configurations.creating
 
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
@@ -15,7 +17,7 @@ val pklDistribution025: Configuration by configurations.creating
 dependencies {
   pklDistributionCurrent(project(":pkl-config-java", "fatJar"))
   @Suppress("UnstableApiUsage")
-  pklDistribution025(libs.pklConfigJavaAll025)
+  pklHistoricalDistributions(libs.pklConfigJavaAll025)
 
   implementation(libs.slf4jApi)
 
@@ -52,14 +54,29 @@ sourceSets {
   }
 }
 
-// this task could be folded into tasks.test by switching to IntelliJ's Gradle test runner
+val prepareHistoricalDistributions by tasks.registering {
+  val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
+  inputs.files(pklHistoricalDistributions.files())
+  outputs.dir(outputDir)
+  doLast {
+    val distributionDir = outputDir.get().asFile.toPath()
+      .also(Files::createDirectories)
+    for (file in pklHistoricalDistributions.files) {
+      val link = distributionDir.resolve(file.name)
+      if (!Files.isSymbolicLink(link)) {
+        if (Files.exists(link)) {
+          Files.delete(link)
+        }
+        Files.createSymbolicLink(link, file.toPath())
+      }
+    }
+  }
+}
+
 val prepareTest by tasks.registering {
-  // used by EmbeddedExecutorTest
-  dependsOn(pklDistributionCurrent, pklDistribution025)
+  dependsOn(pklDistributionCurrent, prepareHistoricalDistributions)
 }
 
 tasks.test {
   dependsOn(prepareTest)
-  systemProperty("pklDistributionCurrent", pklDistributionCurrent.singleFile)
-  systemProperty("pklDistribution025", pklDistribution025.singleFile)
 }
