@@ -38,3 +38,13 @@ function mapEnvLiteral(_env: Dynamic) = (it) -> (it) {
     }
   }
 }
+
+function addElements(keys: List<String>): Mixin<Mapping<String, String>> = new {
+  for (key in keys) {
+    [key] = key
+  }
+}
+
+res = new Mapping<String, String> {
+  ["base"] = "alreadyThere"
+} |> addElements(List("newElement"))

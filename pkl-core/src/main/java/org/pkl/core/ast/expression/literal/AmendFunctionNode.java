@@ -61,6 +61,7 @@ public final class AmendFunctionNode extends PklNode {
     } else {
       parameterSlots = new int[0];
     }
+    var hasForGenVars = false;
     for (var i = 0; i < hostFrameDesecriptor.getNumberOfSlots(); i++) {
       var slotInfo = hostFrameDesecriptor.getSlotInfo(i);
       // Copy for-generator variables from the outer frame descriptor into inner lambda.
@@ -74,10 +75,22 @@ public final class AmendFunctionNode extends PklNode {
       // frame (e.g. with `new Mixin { ... }` syntax), so it injects for-generator vars into the
       // wrong frame.
       //
-      // As a remedy, we simply copy outer for-generator variables into this frame.
+      // As a remedy, we simply copy outer variables into this frame if there are any for generator
+      // variables.
+      //
+      // We need to preserve the frame slot index, so we insert dummy identifiers
+      // for other slots that aren't for generator variables.
       if (slotInfo != null && slotInfo.equals(SymbolTable.FOR_GENERATOR_VARIABLE)) {
+        if (!hasForGenVars) {
+          hasForGenVars = true;
+          for (var j = 0; j < i; j++) {
+            builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
+          }
+        }
         builder.addSlot(
             hostFrameDesecriptor.getSlotKind(i), hostFrameDesecriptor.getSlotName(i), null);
+      } else if (hasForGenVars) {
+        builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
       }
     }
     var objectToAmendSlot = builder.addSlot(FrameSlotKind.Object, new Object(), null);
