@@ -5243,7 +5243,7 @@ package {
   name = "birds"
   baseUri = "package://example.com/birds"
   version = "1.8.3"
-  packageZipUrl = "https://example.com/birds@\(version).zip
+  packageZipUrl = "https://example.com/birds@\(version).zip"
 }
 ----
 <1> Specify relative project `../fruit` as a dependency.
@@ -5257,7 +5257,7 @@ package {
   name = "fruit"
   baseUri = "package://example.com/fruit"
   version = "1.5.0"
-  packageZipUrl = "https://example.com/fruit@\(version).zip
+  packageZipUrl = "https://example.com/fruit@\(version).zip"
 }
 ----
 
