@@ -22,7 +22,6 @@ import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.ArrayList;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.PklRootNode;
@@ -63,7 +62,6 @@ public final class AmendFunctionNode extends PklNode {
       parameterSlots = new int[0];
     }
     var hasForGenVars = false;
-    var forGenVars = new ArrayList<Slot>(hostFrameDesecriptor.getNumberOfSlots());
     for (var i = 0; i < hostFrameDesecriptor.getNumberOfSlots(); i++) {
       var slotInfo = hostFrameDesecriptor.getSlotInfo(i);
       // Copy for-generator variables from the outer frame descriptor into inner lambda.
@@ -77,19 +75,19 @@ public final class AmendFunctionNode extends PklNode {
       // frame (e.g. with `new Mixin { ... }` syntax), so it injects for-generator vars into the
       // wrong frame.
       //
-      // As a remedy, we simply copy outer for-generator variables into this frame.
+      // As a remedy, we simply copy outer variables into this frame if there are any for generator
+      // variables.
       if (slotInfo != null && slotInfo.equals(SymbolTable.FOR_GENERATOR_VARIABLE)) {
-        hasForGenVars = true;
-        forGenVars.add(
-            new Slot(hostFrameDesecriptor.getSlotKind(i), hostFrameDesecriptor.getSlotName(i)));
-      } else {
-        forGenVars.add(new Slot(hostFrameDesecriptor.getSlotKind(i), Identifier.DUMMY));
-      }
-    }
-    // only add for generator vars if there's any
-    if (hasForGenVars) {
-      for (var slot : forGenVars) {
-        builder.addSlot(slot.kind, slot.name, null);
+        if (!hasForGenVars) {
+          hasForGenVars = true;
+          for (var j = 0; j < i; j++) {
+            builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
+          }
+        }
+        builder.addSlot(
+            hostFrameDesecriptor.getSlotKind(i), hostFrameDesecriptor.getSlotName(i), null);
+      } else if (hasForGenVars) {
+        builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
       }
     }
     var objectToAmendSlot = builder.addSlot(FrameSlotKind.Object, new Object(), null);
@@ -203,16 +201,6 @@ public final class AmendFunctionNode extends PklNode {
           newFunctionToAmend.getParameterCount(),
           nextFunctionRootNode,
           context.setFunction(newFunctionToAmend));
-    }
-  }
-
-  private static class Slot {
-    final FrameSlotKind kind;
-    final Object name;
-
-    Slot(FrameSlotKind kind, Object name) {
-      this.kind = kind;
-      this.name = name;
     }
   }
 
