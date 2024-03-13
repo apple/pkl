@@ -661,6 +661,10 @@ jobs:
         at: '.'
     - run:
         command: ./gradlew --info --stacktrace publishToSonatype
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - run:
         command: |-
           mkdir ~/test-results/
@@ -680,6 +684,10 @@ jobs:
         at: '.'
     - run:
         command: ./gradlew --info --stacktrace -DreleaseBuild=true publishToSonatype closeAndReleaseSonatypeStagingRepository
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
     - run:
         command: |-
           mkdir ~/test-results/
