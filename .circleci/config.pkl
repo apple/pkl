@@ -206,5 +206,6 @@ jobs {
         """#
       }
     }
+    resource_class = "small"
   }
 }
