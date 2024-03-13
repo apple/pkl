@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
@@ -135,6 +136,13 @@ class BaseOptions : OptionGroup() {
       .path()
       .multiple()
 
+  // hidden option used by native tests
+  private val testPort: Int by
+    option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
+      .single()
+      .int()
+      .default(-1)
+
   fun baseOptions(
     modules: List<URI>,
     projectOptions: ProjectOptions? = null,
@@ -155,6 +163,7 @@ class BaseOptions : OptionGroup() {
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
       noCache = noCache,
       testMode = testMode,
+      testPort = testPort,
       omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates

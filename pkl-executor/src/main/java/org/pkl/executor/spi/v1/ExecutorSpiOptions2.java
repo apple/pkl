@@ -26,6 +26,8 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
 
   private final List<URI> certificateUris;
 
+  private final int testPort;
+
   public ExecutorSpiOptions2(
       List<String> allowedModules,
       List<String> allowedResources,
@@ -38,7 +40,8 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
       Path moduleCacheDir,
       Path projectDir,
       List<Path> certificateFiles,
-      List<URI> certificateUris) {
+      List<URI> certificateUris,
+      int testPort) {
     super(
         allowedModules,
         allowedResources,
@@ -52,6 +55,7 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
         projectDir);
     this.certificateFiles = certificateFiles;
     this.certificateUris = certificateUris;
+    this.testPort = testPort;
   }
 
   public List<Path> getCertificateFiles() {
@@ -60,5 +64,9 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
 
   public List<URI> getCertificateUris() {
     return certificateUris;
+  }
+
+  public int getTestPort() {
+    return testPort;
   }
 }

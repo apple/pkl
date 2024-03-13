@@ -1,7 +1,7 @@
 package org.pkl.core.project
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FileTestUtils
@@ -16,15 +16,20 @@ import java.nio.file.Path
 
 class ProjectDependenciesResolverTest {
   companion object {
+    private val packageServer = PackageServer()
+    
     @JvmStatic
-    @BeforeAll
-    fun beforeAll() {
-      PackageServer.ensureStarted()
+    @AfterAll
+    fun afterAll() {
+      packageServer.close()
     }
     
-    val httpClient: HttpClient = HttpClient.builder()
-      .addCertificates(FileTestUtils.selfSignedCertificate)
-      .build()
+    val httpClient: HttpClient by lazy {
+      HttpClient.builder()
+        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .setTestPort(packageServer.port)
+        .build()
+    }
   }
 
   @Test

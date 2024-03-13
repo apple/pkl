@@ -18,7 +18,7 @@ package org.pkl.cli
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.CliBaseOptions
@@ -28,10 +28,12 @@ import org.pkl.core.packages.PackageUri
 
 class CliPackageDownloaderTest {
   companion object {
-    @BeforeAll
+    val server = PackageServer()
+
+    @AfterAll
     @JvmStatic
-    fun beforeAll() {
-      PackageServer.ensureStarted()
+    fun afterAll() {
+      server.close()
     }
   }
 
@@ -42,7 +44,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris =
           listOf(
@@ -80,7 +83,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             workingDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
         noTransitive = true
@@ -99,7 +103,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris =
           listOf(
@@ -121,7 +126,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris =
           listOf(
@@ -161,7 +167,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/badChecksum@1.0.0")),
         noTransitive = true
@@ -179,7 +186,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris =
           listOf(
@@ -215,7 +223,8 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate)
+            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            testPort = server.port
           ),
         packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
         noTransitive = false

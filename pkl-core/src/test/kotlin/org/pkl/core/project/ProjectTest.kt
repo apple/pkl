@@ -136,19 +136,20 @@ class ProjectTest {
 
   @Test
   fun `evaluate project module -- invalid checksum`() {
-    PackageServer.ensureStarted()
-    val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.path)
-    val project = Project.loadFromPath(projectDir.resolve("PklProject"))
-    val httpClient = HttpClient.builder()
-      .addCertificates(FileTestUtils.selfSignedCertificate)
-      .build()
-    val evaluator = EvaluatorBuilder.preconfigured()
-      .applyFromProject(project)
-      .setModuleCacheDir(null)
-      .setHttpClient(httpClient)
-      .build()
-    assertThatCode { evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl"))) }
-      .hasMessageStartingWith("""
+    PackageServer().use { server ->
+      val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.path)
+      val project = Project.loadFromPath(projectDir.resolve("PklProject"))
+      val httpClient = HttpClient.builder()
+        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .setTestPort(server.port)
+        .build()
+      val evaluator = EvaluatorBuilder.preconfigured()
+        .applyFromProject(project)
+        .setModuleCacheDir(null)
+        .setHttpClient(httpClient)
+        .build()
+      assertThatCode { evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl"))) }
+        .hasMessageStartingWith("""
         –– Pkl Error ––
         Cannot download package `package://localhost:12110/fruit@1.0.5` because the computed checksum for package metadata does not match the expected checksum.
         
@@ -159,5 +160,6 @@ class ProjectTest {
         1 | import "@fruit/Fruit.pkl"
             ^^^^^^^^^^^^^^^^^^^^^^^^^
       """.trimIndent())
+    }
   }
 }
