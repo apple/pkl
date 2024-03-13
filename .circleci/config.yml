@@ -723,6 +723,7 @@ jobs:
     - checkout
     - run:
         command: git apply --reject patches/graalVm23.patch
+    resource_class: small
     docker:
     - image: cimg/base:current
   trigger-docsite-build:
