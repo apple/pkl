@@ -38,9 +38,9 @@ sealed class Expr(open val span: Span) {
 
   data class Trace(val expr: Expr, override val span: Span) : Expr(span)
 
-  data class Import(val ident: Ident, override val span: Span) : Expr(span)
+  data class Import(val uri: Ident, override val span: Span) : Expr(span)
 
-  data class ImportGlob(val ident: Ident, override val span: Span) : Expr(span)
+  data class ImportGlob(val uri: Ident, override val span: Span) : Expr(span)
 
   data class Read(val expr: Expr, override val span: Span) : Expr(span)
 
@@ -48,10 +48,22 @@ sealed class Expr(open val span: Span) {
 
   data class ReadNull(val expr: Expr, override val span: Span) : Expr(span)
 
-  data class UnqualifiedAccess(val ident: Ident, val args: List<Expr>, override val span: Span) :
-    Expr(span)
+  data class UnqualifiedAccess(val ident: Ident, override val span: Span) : Expr(span)
+
+  data class UnqualifiedMethodAccess(
+    val ident: Ident,
+    val args: List<Expr>,
+    override val span: Span
+  ) : Expr(span)
 
   data class QualifiedAccess(
+    val expr: Expr,
+    val ident: Ident,
+    val isNullable: Boolean,
+    override val span: Span
+  ) : Expr(span)
+
+  data class QualifiedMethodAccess(
     val expr: Expr,
     val ident: Ident,
     val isNullable: Boolean,
@@ -59,7 +71,9 @@ sealed class Expr(open val span: Span) {
     override val span: Span
   ) : Expr(span)
 
-  data class SuperAccess(val ident: Ident, val args: List<Expr>, override val span: Span) :
+  data class SuperAccess(val ident: Ident, override val span: Span) : Expr(span)
+
+  data class SuperMethodAccess(val ident: Ident, val args: List<Expr>, override val span: Span) :
     Expr(span)
 
   data class SuperSubscript(val arg: Expr, override val span: Span) : Expr(span)
@@ -89,6 +103,10 @@ sealed class Expr(open val span: Span) {
 
   data class BinaryOp(val left: Expr, val right: Expr, val op: Operation, override val span: Span) :
     Expr(span)
+  
+  data class TypeTest(val expr: Expr, val type: Type, override val span: Span) : Expr(span)
+  
+  data class TypeCast(val expr: Expr, val type: Type, override val span: Span) : Expr(span)
 }
 
 enum class Operation {
