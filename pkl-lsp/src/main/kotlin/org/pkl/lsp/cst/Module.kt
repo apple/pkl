@@ -15,11 +15,10 @@
  */
 package org.pkl.lsp.cst
 
-data class Module(
+data class PklModule(
   val decl: ModuleDecl?,
   val imports: List<Import>,
-  val entries: List<ModuleEntry>,
-  val span: Span
+  val entries: List<ModuleEntry>
 )
 
 data class ModuleDecl(

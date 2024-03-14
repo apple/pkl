@@ -15,4 +15,4 @@
  */
 package org.pkl.lsp.cst
 
-data class Import(val url: Ident, val isGlob: Boolean, val alias: Ident, val span: Span)
+data class Import(val url: Ident, val isGlob: Boolean, val alias: Ident?, val span: Span)
