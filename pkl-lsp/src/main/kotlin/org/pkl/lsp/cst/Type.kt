@@ -15,7 +15,7 @@
  */
 package org.pkl.lsp.cst
 
-sealed class Type(open val span: Span) {
+sealed class Type(override val span: Span) : PklNode(span) {
   data class Unknown(override val span: Span) : Type(span)
 
   data class Nothing(override val span: Span) : Type(span)
@@ -24,20 +24,52 @@ sealed class Type(open val span: Span) {
 
   data class StringConstant(val string: String, override val span: Span) : Type(span)
 
-  data class Declared(val idents: List<Ident>, val args: List<Type>, override val span: Span) : Type(span)
+  data class Declared(val idents: List<Ident>, val args: List<Type>, override val span: Span) :
+    Type(span) {
+    init {
+      for (it in args) it.parent = this
+    }
+  }
 
-  data class Parenthesised(val type: Type, override val span: Span) : Type(span)
+  data class Parenthesised(val type: Type, override val span: Span) : Type(span) {
+    init {
+      type.parent = this
+    }
+  }
 
-  data class Nullable(val type: Type, override val span: Span) : Type(span)
+  data class Nullable(val type: Type, override val span: Span) : Type(span) {
+    init {
+      type.parent = this
+    }
+  }
 
   data class Constrained(val type: Type, val exprs: List<Expr>, override val span: Span) :
-    Type(span)
+    Type(span) {
+    init {
+      type.parent = this
+      for (it in exprs) it.parent = this
+    }
+  }
 
-  data class DefaultUnion(val type: Type, override val span: Span) : Type(span)
+  data class DefaultUnion(val type: Type, override val span: Span) : Type(span) {
+    init {
+      type.parent = this
+    }
+  }
 
-  data class Union(val left: Type, val right: Type, override val span: Span) : Type(span)
+  data class Union(val left: Type, val right: Type, override val span: Span) : Type(span) {
+    init {
+      left.parent = this
+      right.parent = this
+    }
+  }
 
-  data class Function(val args: List<Type>, val ret: Type, override val span: Span) : Type(span)
+  data class Function(val args: List<Type>, val ret: Type, override val span: Span) : Type(span) {
+    init {
+      ret.parent = this
+      for (it in args) it.parent = this
+    }
+  }
 }
 
 enum class Variance {
@@ -45,4 +77,5 @@ enum class Variance {
   OUT
 }
 
-data class TypeParameter(val variance: Variance?, val ident: Ident, val span: Span)
+data class TypeParameter(val variance: Variance?, val ident: Ident, override val span: Span) :
+  PklNode(span)

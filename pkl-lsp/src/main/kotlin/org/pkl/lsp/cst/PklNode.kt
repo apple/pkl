@@ -15,14 +15,6 @@
  */
 package org.pkl.lsp.cst
 
-sealed class Parameter(override val span: Span) : PklNode(span) {
-
-  data class Underscore(override val span: Span) : Parameter(span)
-
-  data class TypedIdent(val ident: Ident, val type: Type?, override val span: Span) :
-    Parameter(span) {
-    init {
-      type?.parent = this
-    }
-  }
+abstract class PklNode(open val span: Span) {
+  var parent: PklNode? = null
 }

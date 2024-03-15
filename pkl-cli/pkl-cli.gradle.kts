@@ -62,6 +62,7 @@ dependencies {
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
   implementation(projects.pklServer)
+  implementation(projects.pklLsp)
   implementation(libs.clikt) {
     // force clikt to use our version of the kotlin stdlib
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")

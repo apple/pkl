@@ -69,6 +69,10 @@ val relocations =
 
     // pkl-codegen-kotlin dependencies
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
+
+    // pkl-lsp dependencies
+    "com.google.gson" to "org.pkl.thirdparty.gson",
+    "org.eclipse.lsp4j" to "org.pkl.thirdparty.lsp4j",
   )
 
 val nonRelocations = listOf("com/oracle/truffle/")
@@ -86,6 +90,9 @@ tasks.shadowJar {
 
   // org.antlr.v4.runtime.misc.RuleDependencyProcessor
   exclude("META-INF/services/javax.annotation.processing.Processor")
+
+  // org.eclipse.lsp4j
+  exclude("about.html")
 
   exclude("module-info.*")
 
