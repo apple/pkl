@@ -19,6 +19,8 @@ import static org.pkl.core.ModuleSource.modulePath;
 
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 @Warmup(iterations = 5, time = 2)
@@ -98,7 +100,23 @@ public class Fibonacci {
 
 // kept similar to pkl code (class, instance method, long argument)
 class FibJavaImpl {
+  private Map<Long, Long> memo = new HashMap<>();
+
+  // Calculates the nth Fibonacci number using memoization to avoid redundant calculations.
   long fib(long n) {
-    return n < 2 ? n : fib(n - 1) + fib(n - 2);
+    // Base cases: 0 and 1
+    if (n < 2) {
+      return n;
+    }
+
+    // If the result for n is already calculated, return it from memo
+    if (memo.containsKey(n)) {
+      return memo.get(n);
+    }
+
+    // Otherwise, calculate Fibonacci recursively and store the result in memo
+    long result = fib(n - 1) + fib(n - 2);
+    memo.put(n, result);
+    return result;
   }
 }
