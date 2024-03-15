@@ -72,6 +72,14 @@ public final class VmModifier {
 
   public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL;
 
+  public static final int TYPEALIAS_OBJECT_MEMBER = TYPE_ALIAS | CONST;
+
+  public static final int LOCAL_TYPEALIAS_OBJECT_MEMBER = LOCAL | TYPEALIAS_OBJECT_MEMBER;
+
+  public static final int CLASS_OBJECT_MEMBER = CLASS | CONST;
+
+  public static final int LOCAL_CLASS_OBJECT_MEMBER = LOCAL | CLASS_OBJECT_MEMBER;
+
   public static boolean isLocal(int modifiers) {
     return (modifiers & LOCAL) != 0;
   }

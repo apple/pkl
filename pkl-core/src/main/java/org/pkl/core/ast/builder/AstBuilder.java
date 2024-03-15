@@ -305,11 +305,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   doVisitClassProperties(propertyCtxs, propertyNames),
                   doVisitMethodDefs(methodCtxs));
 
+          var isLocal = VmModifier.isLocal(modifiers);
+
           var result =
               new ObjectMember(
                   sourceSection,
                   headerSection,
-                  modifiers | VmModifier.CONST,
+                  isLocal ? VmModifier.LOCAL_CLASS_OBJECT_MEMBER : VmModifier.CLASS_OBJECT_MEMBER,
                   scope.getName(),
                   scope.getQualifiedName());
 
@@ -360,7 +362,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               new ObjectMember(
                   sourceSection,
                   headerSection,
-                  modifiers | VmModifier.CONST,
+                  isLocal
+                      ? VmModifier.LOCAL_TYPEALIAS_OBJECT_MEMBER
+                      : VmModifier.TYPEALIAS_OBJECT_MEMBER,
                   scopeName,
                   scope.getQualifiedName());
 
