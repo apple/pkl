@@ -596,17 +596,13 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     if (ctx == null) return null
 
     val header = ctx.moduleHeader() ?: return null
-    val modifiers = header.modifier()?.let {
-      checkModifiers(
-        it,
-        "invalidModifier",
-        ModifierValue.ABSTRACT,
-        ModifierValue.OPEN
-      )
-    } ?: listOf()
-    val name = header.qualifiedIdentifier()?.let {
-      ModuleNameDecl(visitQualifiedIdentifier(it), toSpan(it))
-    }
+    val modifiers =
+      header.modifier()?.let {
+        checkModifiers(it, "invalidModifier", ModifierValue.ABSTRACT, ModifierValue.OPEN)
+      }
+        ?: listOf()
+    val name =
+      header.qualifiedIdentifier()?.let { ModuleNameDecl(visitQualifiedIdentifier(it), toSpan(it)) }
     // cannot be null
     val extendsOrAmends = header.moduleExtendsOrAmendsClause()
     val uri = extendsOrAmends.stringConstant()
@@ -617,7 +613,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     } else {
       extends = ExtendsDecl(visitStringConstant(uri), toSpan(uri))
     }
-    return ModuleDecl(null, listOf(), modifiers, name, extends, amends)
+    return ModuleDecl(null, listOf(), modifiers, name, extends, amends, toSpan(ctx))
   }
 
   override fun visitModule(ctx: PklParser.ModuleContext): PklModule {
@@ -627,9 +623,9 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     val typeAliases = ctx.ts.map(::visitTypeAlias)
     val properties = ctx.ps.map(::visitClassProperty)
     val methods = ctx.ms.map(::visitClassMethod)
-    return PklModule(decl, imports, classes + typeAliases + properties + methods)
+    return PklModule(decl, imports, classes + typeAliases + properties + methods, toSpan(ctx))
   }
-  
+
   override fun visitTypeTestExpr(ctx: PklParser.TypeTestExprContext): Expr {
     val expr = visitExpr(ctx.l)
     val type = visitType(ctx.r)

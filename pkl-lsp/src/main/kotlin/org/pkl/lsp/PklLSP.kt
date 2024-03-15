@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp
 
-sealed class Parameter(override val span: Span) : PklNode(span) {
+import org.eclipse.lsp4j.launch.LSPLauncher
 
-  data class Underscore(override val span: Span) : Parameter(span)
+object PklLSP {
 
-  data class TypedIdent(val ident: Ident, val type: Type?, override val span: Span) :
-    Parameter(span) {
-    init {
-      type?.parent = this
-    }
+  fun run(verbose: Boolean) {
+    val server = PklLSPServer(verbose)
+    val launcher = LSPLauncher.createServerLauncher(server, System.`in`, System.out)
+
+    val client = launcher.remoteProxy
+    server.connect(client)
+
+    val future = launcher.startListening()
+    future.get()
   }
 }

@@ -18,8 +18,15 @@ package org.pkl.lsp.cst
 data class PklModule(
   val decl: ModuleDecl?,
   val imports: List<Import>,
-  val entries: List<ModuleEntry>
-)
+  val entries: List<ModuleEntry>,
+  override val span: Span
+) : PklNode(span) {
+  init {
+    decl?.parent = this
+    for (it in imports) it.parent = this
+    for (it in entries) it.parent = this
+  }
+}
 
 data class ModuleDecl(
   val docComment: DocComment?,
@@ -27,26 +34,39 @@ data class ModuleDecl(
   val modifiers: List<Modifier>,
   val name: ModuleNameDecl?,
   val extendsDecl: ExtendsDecl?,
-  val amendsDecl: AmendsDecl?
-)
+  val amendsDecl: AmendsDecl?,
+  override val span: Span
+) : PklNode(span) {
+  init {
+    extendsDecl?.parent = this
+    amendsDecl?.parent = this
+    name?.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
-data class ExtendsDecl(val url: Ident, val span: Span)
+data class ExtendsDecl(val url: Ident, override val span: Span) : PklNode(span)
 
-data class AmendsDecl(val url: Ident, val span: Span)
+data class AmendsDecl(val url: Ident, override val span: Span) : PklNode(span)
 
-data class ModuleNameDecl(val name: List<Ident>, val span: Span) {
+data class ModuleNameDecl(val name: List<Ident>, override val span: Span) : PklNode(span) {
   val nameString = name.joinToString(".") { it.value }
 }
 
-data class Annotation(val type: Type, val body: ObjectBody?, val span: Span)
+data class Annotation(val type: Type, val body: ObjectBody?, override val span: Span) :
+  PklNode(span) {
+  init {
+    type.parent = this
+  }
+}
 
 sealed class ModuleEntry(
   open val docComment: DocComment?,
   open val annotations: List<Annotation>,
   open val modifiers: List<Modifier>,
   open val name: Ident,
-  open val span: Span
-)
+  override val span: Span
+) : PklNode(span)
 
 data class TypeAlias(
   override val docComment: DocComment?,
@@ -56,7 +76,12 @@ data class TypeAlias(
   val typePars: List<TypeParameter>,
   val type: Type,
   override val span: Span
-) : ModuleEntry(docComment, annotations, modifiers, name, span)
+) : ModuleEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    type.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
 data class Clazz(
   override val docComment: DocComment?,
@@ -67,7 +92,12 @@ data class Clazz(
   val superClass: Type?,
   val body: List<ClassEntry>,
   override val span: Span
-) : ModuleEntry(docComment, annotations, modifiers, name, span)
+) : ModuleEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    superClass?.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
 sealed class ClassEntry(
   override val docComment: DocComment?,
@@ -84,7 +114,12 @@ data class ClassProperty(
   override val name: Ident,
   val type: Type,
   override val span: Span
-) : ClassEntry(docComment, annotations, modifiers, name, span)
+) : ClassEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    type.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
 data class ClassPropertyExpr(
   override val docComment: DocComment?,
@@ -94,7 +129,13 @@ data class ClassPropertyExpr(
   val type: Type?,
   val expr: Expr,
   override val span: Span
-) : ClassEntry(docComment, annotations, modifiers, name, span)
+) : ClassEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    expr.parent = this
+    type?.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
 data class ClassPropertyBody(
   override val docComment: DocComment?,
@@ -104,7 +145,12 @@ data class ClassPropertyBody(
   val type: Type?,
   val bodyList: List<ObjectBody>,
   override val span: Span
-) : ClassEntry(docComment, annotations, modifiers, name, span)
+) : ClassEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    type?.parent = this
+    for (it in annotations) it.parent = this
+  }
+}
 
 data class ClassMethod(
   override val docComment: DocComment?,
@@ -116,4 +162,10 @@ data class ClassMethod(
   val returnType: Type?,
   val expr: Expr?,
   override val span: Span
-) : ClassEntry(docComment, annotations, modifiers, name, span)
+) : ClassEntry(docComment, annotations, modifiers, name, span) {
+  init {
+    expr?.parent = this
+    returnType?.parent = this
+    for (it in annotations) it.parent = this
+  }
+}

@@ -15,8 +15,12 @@
  */
 package org.pkl.lsp.cst
 
-sealed class ObjectMember(open val span: Span) {
-  data class Element(val expr: Expr, override val span: Span) : ObjectMember(span)
+sealed class ObjectMember(override val span: Span) : PklNode(span) {
+  data class Element(val expr: Expr, override val span: Span) : ObjectMember(span) {
+    init {
+      expr.parent = this
+    }
+  }
 
   data class Property(
     val modifiers: List<Modifier>,
@@ -24,14 +28,23 @@ sealed class ObjectMember(open val span: Span) {
     val type: Type?,
     val expr: Expr,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      type?.parent = this
+      expr.parent = this
+    }
+  }
 
   data class PropertyBody(
     val modifiers: List<Modifier>,
     val ident: Ident,
     val bodyList: List<ObjectBody>,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      for (it in bodyList) it.parent = this
+    }
+  }
 
   data class Method(
     val modifiers: List<Modifier>,
@@ -41,31 +54,68 @@ sealed class ObjectMember(open val span: Span) {
     val returnType: Type?,
     val expr: Expr,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      for (it in typePars) it.parent = this
+      for (it in args) it.parent = this
+      expr.parent = this
+      returnType?.parent = this
+    }
+  }
 
   data class MemberPredicate(val pred: Expr, val expr: Expr, override val span: Span) :
-    ObjectMember(span)
+    ObjectMember(span) {
+    init {
+      pred.parent = this
+      expr.parent = this
+    }
+  }
 
   data class MemberPredicateBody(
     val key: Expr,
     val bodyList: List<ObjectBody>,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      key.parent = this
+      for (it in bodyList) it.parent = this
+    }
+  }
 
-  data class Entry(val key: Expr, val value: Expr, override val span: Span) : ObjectMember(span)
+  data class Entry(val key: Expr, val value: Expr, override val span: Span) : ObjectMember(span) {
+    init {
+      key.parent = this
+      value.parent = this
+    }
+  }
 
   data class EntryBody(val key: Expr, val bodyList: List<ObjectBody>, override val span: Span) :
-    ObjectMember(span)
+    ObjectMember(span) {
+    init {
+      key.parent = this
+      for (it in bodyList) it.parent = this
+    }
+  }
 
   data class Spread(val expr: Expr, val isNullable: Boolean, override val span: Span) :
-    ObjectMember(span)
+    ObjectMember(span) {
+    init {
+      expr.parent = this
+    }
+  }
 
   data class WhenGenerator(
     val cond: Expr,
     val body: ObjectBody,
     val elseBody: ObjectBody?,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      cond.parent = this
+      body.parent = this
+      elseBody?.parent = this
+    }
+  }
 
   data class ForGenerator(
     val p1: Parameter,
@@ -73,7 +123,23 @@ sealed class ObjectMember(open val span: Span) {
     val expr: Expr,
     val body: ObjectBody,
     override val span: Span
-  ) : ObjectMember(span)
+  ) : ObjectMember(span) {
+    init {
+      p1.parent = this
+      p2?.parent = this
+      expr.parent = this
+      body.parent = this
+    }
+  }
 }
 
-data class ObjectBody(val pars: List<Parameter>, val members: List<ObjectMember>, val span: Span)
+data class ObjectBody(
+  val pars: List<Parameter>,
+  val members: List<ObjectMember>,
+  override val span: Span
+) : PklNode(span) {
+  init {
+    for (it in pars) it.parent = this
+    for (it in members) it.parent = this
+  }
+}
