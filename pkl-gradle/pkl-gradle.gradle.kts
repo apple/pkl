@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.utils.keysToMap
-
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -32,6 +30,14 @@ dependencies {
   }
 
   testImplementation(projects.pklCommonsTest)
+}
+
+sourceSets {
+  test {
+    // Remove Gradle distribution JARs from test compile classpath.
+    // This prevents a conflict between Gradle's and Pkl's Kotlin versions.
+    compileClasspath = compileClasspath.filter { !(it.path.contains("dists")) }
+  }
 }
 
 publishing {

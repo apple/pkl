@@ -181,7 +181,7 @@ class PackageResolversTest {
           null)
       }
       assertThat(error).hasMessageContaining("""
-        Computed checksum: "0ec8a501e974802d0b71b8d58141e1e6eaa10bc2033e18200be3a978823d98aa"
+        Computed checksum: "a6bf858cdd1c09da475c2abe50525902580910ee5cc1ff624999170591bf8f69"
         Expected checksum: "intentionally bogus checksum"
       """.trimIndent())
     }

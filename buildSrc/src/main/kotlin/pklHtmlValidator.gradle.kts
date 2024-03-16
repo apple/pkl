@@ -33,7 +33,7 @@ dependencies {
 }
 
 val validateHtml by tasks.registering(JavaExec::class) {
-  val resultFile = file("$buildDir/validateHtml/result.txt")
+  val resultFile = file("build/validateHtml/result.txt")
   inputs.files(htmlValidator.sources)
   outputs.file(resultFile)
 

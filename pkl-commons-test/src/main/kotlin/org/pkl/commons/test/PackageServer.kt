@@ -22,6 +22,7 @@ import java.security.KeyStore
 import java.util.concurrent.Executors
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
+import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.deleteRecursively
@@ -66,26 +67,20 @@ class PackageServer : AutoCloseable {
     // Modified by RequestRewritingClient if testPort is set.
     private const val PORT = 12110
 
-    // When tests are run via Gradle (i.e. from ./gradlew check), resources are packaged into a jar.
-    // When run directly in IntelliJ, resources are just directories.
-    private val packagesDir: Path by lazy {
-      val uri = PackageServer::class.java.getResource("packages")!!.toURI()
-      try {
-        Path.of(uri)
-      } catch (e: FileSystemNotFoundException) {
-        FileSystems.newFileSystem(uri, mapOf<String, String>())
-        Path.of(uri)
-      }
-    }
+    private val packagesDir: Path =
+      FileTestUtils.rootProjectDir.resolve("pkl-commons-test/build/test-packages")
 
     private val simpleHttpsConfigurator by lazy {
       val sslContext =
         SSLContext.getInstance("SSL").apply {
           val pass = "password".toCharArray()
-          val keystore = PackageServer::class.java.getResource("/localhost.p12")!!
-          val ks = KeyStore.getInstance("PKCS12").apply { load(keystore.openStream(), pass) }
-          val kmf = KeyManagerFactory.getInstance("SunX509").apply { init(ks, pass) }
-          init(kmf.keyManagers, null, null)
+          val keystore =
+            FileTestUtils.rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.p12")
+          keystore.inputStream().use { stream ->
+            val ks = KeyStore.getInstance("PKCS12").apply { load(stream, pass) }
+            val kmf = KeyManagerFactory.getInstance("SunX509").apply { init(ks, pass) }
+            init(kmf.keyManagers, null, null)
+          }
         }
       val engine = sslContext.createSSLEngine()
       object : HttpsConfigurator(sslContext) {

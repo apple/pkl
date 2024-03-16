@@ -56,11 +56,11 @@ dependencies {
 
   testImplementation(projects.pklCommonsTest)
 
-  stagedMacAmd64Executable(files("$buildDir/executable/pkl-macos-amd64"))
-  stagedMacAarch64Executable(files("$buildDir/executable/pkl-macos-aarch64"))
-  stagedLinuxAmd64Executable(files("$buildDir/executable/pkl-linux-amd64"))
-  stagedLinuxAarch64Executable(files("$buildDir/executable/pkl-linux-aarch64"))
-  stagedAlpineLinuxAmd64Executable(files("$buildDir/executable/pkl-alpine-linux-amd64"))
+  stagedMacAmd64Executable(files("build/executable/pkl-macos-amd64"))
+  stagedMacAarch64Executable(files("build/executable/pkl-macos-aarch64"))
+  stagedLinuxAmd64Executable(files("build/executable/pkl-linux-amd64"))
+  stagedLinuxAarch64Executable(files("build/executable/pkl-linux-aarch64"))
+  stagedAlpineLinuxAmd64Executable(files("build/executable/pkl-alpine-linux-amd64"))
 }
 
 tasks.jar {
@@ -90,7 +90,7 @@ tasks.shadowJar {
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
   inJar.set(tasks.shadowJar.flatMap { it.archiveFile })
-  outJar.set(file("$buildDir/executable/jpkl"))
+  outJar.set(file("build/executable/jpkl"))
 
   // uncomment for debugging
   //jvmArgs.addAll("-ea", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005")
@@ -117,7 +117,7 @@ tasks.check {
 // To catch this and similar problems, test that Java executable starts successfully.
 val testStartJavaExecutable by tasks.registering(Exec::class) {
   dependsOn(javaExecutable)
-val outputFile = file("$buildDir/testStartJavaExecutable") // dummy output to satisfy up-to-date check
+val outputFile = file("build/testStartJavaExecutable") // dummy output to satisfy up-to-date check
   outputs.file(outputFile)
   
   executable = javaExecutable.get().outputs.files.singleFile.toString()
@@ -209,7 +209,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, file("$buildDir/executable/pkl-macos-amd64"))
+  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, file("build/executable/pkl-macos-amd64"))
 }
 
 /**
@@ -221,7 +221,7 @@ val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
-    file("$buildDir/executable/pkl-macos-aarch64"),
+    file("build/executable/pkl-macos-aarch64"),
     listOf(
       "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
       "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
@@ -233,7 +233,7 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", file("$buildDir/executable/pkl-linux-amd64"))
+  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", file("build/executable/pkl-linux-amd64"))
 }
 
 /**
@@ -243,7 +243,7 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", file("$buildDir/executable/pkl-linux-aarch64"))
+  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", file("build/executable/pkl-linux-aarch64"))
 }
 
 /**
@@ -255,7 +255,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
       buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
-      file("$buildDir/executable/pkl-alpine-linux-amd64"),
+      file("build/executable/pkl-alpine-linux-amd64"),
       listOf(
         "--static",
         "--libc=musl",

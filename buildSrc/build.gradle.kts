@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.config.JvmTarget
+
 plugins {
   `kotlin-dsl`
 }
@@ -18,4 +20,14 @@ dependencies {
 java {
   sourceCompatibility = JavaVersion.VERSION_11
   targetCompatibility = JavaVersion.VERSION_11
+}
+
+kotlin {
+  target {
+    compilations.configureEach {
+      kotlinOptions {
+        jvmTarget = "11"
+      }
+    }
+  }
 }
