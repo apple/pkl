@@ -10,14 +10,18 @@ val pklCodegenJava: Configuration by configurations.creating
 val firstPartySourcesJars by configurations.existing
 
 val generateTestConfigClasses by tasks.registering(JavaExec::class) {
-  outputs.dir("build/testConfigClasses")
+  val outputDir = layout.buildDirectory.dir("testConfigClasses")
+  outputs.dir(outputDir)
   inputs.dir("src/test/resources/codegenPkl")
 
   classpath = pklCodegenJava
   mainClass.set("org.pkl.codegen.java.Main")
-  args("--output-dir", "build/testConfigClasses")
-  args("--generate-javadoc")
-  args(fileTree("src/test/resources/codegenPkl"))
+  argumentProviders.add(CommandLineArgumentProvider {
+    listOf(
+      "--output-dir", outputDir.get().asFile.absolutePath,
+      "--generate-javadoc"
+    ) + fileTree("src/test/resources/codegenPkl").map { it.absolutePath }
+  })
 }
 
 tasks.processTestResources {
@@ -56,8 +60,8 @@ val testFromJar by tasks.registering(Test::class) {
 //}
 
 sourceSets.getByName("test") {
-  java.srcDir("build/testConfigClasses/java")
-  resources.srcDir("build/testConfigClasses/resources")
+  java.srcDir(layout.buildDirectory.dir("testConfigClasses/java"))
+  resources.srcDir(layout.buildDirectory.dir("testConfigClasses/resources"))
 }
 
 dependencies {

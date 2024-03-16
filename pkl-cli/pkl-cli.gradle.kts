@@ -56,11 +56,13 @@ dependencies {
 
   testImplementation(projects.pklCommonsTest)
 
-  stagedMacAmd64Executable(files("build/executable/pkl-macos-amd64"))
-  stagedMacAarch64Executable(files("build/executable/pkl-macos-aarch64"))
-  stagedLinuxAmd64Executable(files("build/executable/pkl-linux-amd64"))
-  stagedLinuxAarch64Executable(files("build/executable/pkl-linux-aarch64"))
-  stagedAlpineLinuxAmd64Executable(files("build/executable/pkl-alpine-linux-amd64"))
+  val buildDir = layout.buildDirectory
+  stagedMacAmd64Executable(files(buildDir.dir("executable/pkl-macos-amd64")))
+  stagedMacAmd64Executable(files(buildDir.dir("executable/pkl-macos-amd64")))
+  stagedMacAarch64Executable(files(buildDir.dir("executable/pkl-macos-aarch64")))
+  stagedLinuxAmd64Executable(files(buildDir.dir("executable/pkl-linux-amd64")))
+  stagedLinuxAarch64Executable(files(buildDir.dir("executable/pkl-linux-aarch64")))
+  stagedAlpineLinuxAmd64Executable(files(buildDir.dir("executable/pkl-alpine-linux-amd64")))
 }
 
 tasks.jar {
@@ -90,7 +92,7 @@ tasks.shadowJar {
 
 val javaExecutable by tasks.registering(ExecutableJar::class) {
   inJar.set(tasks.shadowJar.flatMap { it.archiveFile })
-  outJar.set(file("build/executable/jpkl"))
+  outJar.set(layout.buildDirectory.file("executable/jpkl"))
 
   // uncomment for debugging
   //jvmArgs.addAll("-ea", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005")
@@ -117,22 +119,22 @@ tasks.check {
 // To catch this and similar problems, test that Java executable starts successfully.
 val testStartJavaExecutable by tasks.registering(Exec::class) {
   dependsOn(javaExecutable)
-val outputFile = file("build/testStartJavaExecutable") // dummy output to satisfy up-to-date check
+  val outputFile = layout.buildDirectory.file("testStartJavaExecutable") // dummy output to satisfy up-to-date check
   outputs.file(outputFile)
   
   executable = javaExecutable.get().outputs.files.singleFile.toString()
   args("--version")
   
-  doFirst { outputFile.delete() }
+  doFirst { outputFile.get().asFile.delete() }
   
-  doLast { outputFile.writeText("OK") }
+  doLast { outputFile.get().asFile.writeText("OK") }
 }
 
 tasks.check {
   dependsOn(testStartJavaExecutable)
 }
 
-fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: List<String> = listOf()) {
+fun Exec.configureExecutable(isEnabled: Boolean, outputFile: Provider<RegularFile>, extraArgs: List<String> = listOf()) {
   enabled = isEnabled
   dependsOn(":installGraalVm")
 
@@ -140,7 +142,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
   inputs.files(configurations.runtimeClasspath)
   outputs.file(outputFile)
 
-  workingDir = outputFile.parentFile
+  workingDir(outputFile.map { it.asFile.parentFile })
   executable = "${buildInfo.graalVm.baseDir}/bin/native-image"
 
   // JARs to exclude from the class path for the native-image build.
@@ -161,7 +163,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle"
         ,"-H:Class=org.pkl.cli.Main"
-        ,"-H:Name=${outputFile.name}"
+        ,"-H:Name=${outputFile.get().asFile.name}"
         //,"--native-image-info"
         //,"-Dpolyglot.image-build-time.PreinitializeContexts=pkl"
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to compensate for Truffle's own nodes)
@@ -209,7 +211,7 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: File, extraArgs: Li
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, file("build/executable/pkl-macos-amd64"))
+  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, layout.buildDirectory.file("executable/pkl-macos-amd64"))
 }
 
 /**
@@ -221,7 +223,7 @@ val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
     buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
-    file("build/executable/pkl-macos-aarch64"),
+    layout.buildDirectory.file("executable/pkl-macos-aarch64"),
     listOf(
       "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
       "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
@@ -233,7 +235,7 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", file("build/executable/pkl-linux-amd64"))
+  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", layout.buildDirectory.file("executable/pkl-linux-amd64"))
 }
 
 /**
@@ -243,7 +245,7 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", file("build/executable/pkl-linux-aarch64"))
+  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", layout.buildDirectory.file("executable/pkl-linux-aarch64"))
 }
 
 /**
@@ -255,7 +257,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
   configureExecutable(
       buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
-      file("build/executable/pkl-alpine-linux-amd64"),
+      layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
       listOf(
         "--static",
         "--libc=musl",

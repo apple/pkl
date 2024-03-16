@@ -41,7 +41,7 @@ idea {
 }
 
 val clean by tasks.registering(Delete::class) {
-  delete("build")
+  delete(layout.buildDirectory)
 }
 
 val printVersion by tasks.registering {

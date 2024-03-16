@@ -28,18 +28,21 @@ dependencies {
 }
 
 val generateTestConfigClasses by tasks.registering(JavaExec::class) {
-  outputs.dir("build/testConfigClasses")
+  val outputDir = layout.buildDirectory.dir("testConfigClasses")
+  outputs.dir(outputDir)
   inputs.dir("src/test/resources/codegenPkl")
 
   classpath = pklCodegenKotlin
   mainClass.set("org.pkl.codegen.kotlin.Main")
-  args("--output-dir", "build/testConfigClasses")
-  args(fileTree("src/test/resources/codegenPkl"))
+  argumentProviders.add(CommandLineArgumentProvider {
+    listOf("--output-dir", outputDir.get().asFile.absolutePath) +
+      fileTree("src/test/resources/codegenPkl").map { it.absolutePath }
+  })
 }
 
 sourceSets.getByName("test") {
-  java.srcDir("build/testConfigClasses/kotlin")
-  resources.srcDir("build/testConfigClasses/resources")
+  java.srcDir(layout.buildDirectory.dir("testConfigClasses/kotlin"))
+  resources.srcDir(layout.buildDirectory.dir("testConfigClasses/resources"))
 }
 
 tasks.processTestResources {

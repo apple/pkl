@@ -33,7 +33,7 @@ dependencies {
 }
 
 val validateHtml by tasks.registering(JavaExec::class) {
-  val resultFile = file("build/validateHtml/result.txt")
+  val resultFile = layout.buildDirectory.file("validateHtml/result.txt")
   inputs.files(htmlValidator.sources)
   outputs.file(resultFile)
 
@@ -50,7 +50,7 @@ val validateHtml by tasks.registering(JavaExec::class) {
   // write a basic result file s.t. gradle can consider task up-to-date
   // writing a result file in case validation fails is not easily possible with JavaExec, but also not strictly necessary
   doFirst { project.delete(resultFile) }
-  doLast { resultFile.writeText("Success.") }
+  doLast { resultFile.get().asFile.writeText("Success.") }
 }
 
 tasks.check {
