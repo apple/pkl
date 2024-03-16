@@ -24,7 +24,8 @@ dependencies {
  */
 val createTestPackages by tasks.registering
 
-tasks.test {
+// make sure that declaring a dependency on this project suffices to have test fixtures generated
+tasks.processResources {
   dependsOn(createTestPackages)
   dependsOn(exportCerts)
 }
