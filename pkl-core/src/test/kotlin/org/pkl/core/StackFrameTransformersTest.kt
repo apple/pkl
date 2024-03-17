@@ -12,7 +12,7 @@ class StackFrameTransformersTest {
   @Disabled
   fun replacePackageUriWithSourceCodeUrl() {
     PackageServer().use { server ->
-      val httpClient = HttpClient.builder().setTestPort(server.port).build()
+      val httpClient = HttpClient.builder().testPort(server.port).build()
       EvaluatorBuilder.preconfigured()
         .setHttpClient(httpClient)
         .build().use {

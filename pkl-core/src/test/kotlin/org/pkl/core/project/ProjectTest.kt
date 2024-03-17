@@ -141,7 +141,7 @@ class ProjectTest {
       val project = Project.loadFromPath(projectDir.resolve("PklProject"))
       val httpClient = HttpClient.builder()
         .addCertificates(FileTestUtils.selfSignedCertificate)
-        .setTestPort(server.port)
+        .testPort(server.port)
         .build()
       val evaluator = EvaluatorBuilder.preconfigured()
         .applyFromProject(project)

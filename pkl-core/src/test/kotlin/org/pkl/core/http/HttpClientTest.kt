@@ -39,9 +39,9 @@ class HttpClientTest {
   @Test
   fun `can build custom client`() {
     val client = HttpClient.builder()
-      .setUserAgent("Agent 1")
-      .setRequestTimeout(Duration.ofHours(86))
-      .setConnectTimeout(Duration.ofMinutes(42))
+      .userAgent("Agent 1")
+      .requestTimeout(Duration.ofHours(86))
+      .connectTimeout(Duration.ofMinutes(42))
       .build() as RequestRewritingClient
 
     assertThat(client.userAgent).isEqualTo("Agent 1")

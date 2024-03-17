@@ -42,14 +42,14 @@ public interface HttpClient extends AutoCloseable {
      *
      * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
      */
-    Builder setUserAgent(String userAgent);
+    Builder userAgent(String userAgent);
 
     /**
      * Sets the timeout for connecting to a server.
      *
      * <p>Defaults to 60 seconds.
      */
-    Builder setConnectTimeout(java.time.Duration timeout);
+    Builder connectTimeout(java.time.Duration timeout);
 
     /**
      * Sets the timeout for the interval between sending a request and receiving response headers.
@@ -57,7 +57,7 @@ public interface HttpClient extends AutoCloseable {
      * <p>Defaults to 60 seconds. To set a timeout for a specific request, use {@link
      * HttpRequest.Builder#timeout}.
      */
-    Builder setRequestTimeout(java.time.Duration timeout);
+    Builder requestTimeout(java.time.Duration timeout);
 
     /**
      * Adds a CA certificate file to the client's trust store.
@@ -114,7 +114,7 @@ public interface HttpClient extends AutoCloseable {
      * <p>If set, requests that specify port 12110 will be modified to use the given port. This is
      * an internal test option.
      */
-    Builder setTestPort(int port);
+    Builder testPort(int port);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.
@@ -158,10 +158,9 @@ public interface HttpClient extends AutoCloseable {
    * Sends an HTTP request. The response body is processed by the given body handler.
    *
    * <p>If the request does not specify a {@linkplain HttpRequest#timeout timeout}, the client's
-   * {@linkplain Builder#setRequestTimeout request timeout} is used. If the request does not specify
-   * a preferred {@linkplain HttpRequest#version() HTTP version}, HTTP/2 is used. The request's
-   * {@code User-Agent} header is set to the client's {@link Builder#setUserAgent User-Agent}
-   * header.
+   * {@linkplain Builder#requestTimeout request timeout} is used. If the request does not specify a
+   * preferred {@linkplain HttpRequest#version() HTTP version}, HTTP/2 is used. The request's {@code
+   * User-Agent} header is set to the client's {@link Builder#userAgent User-Agent} header.
    *
    * <p>Depending on the given body handler, this method blocks until response headers or the entire
    * response body has been received. If response headers are not received within the request

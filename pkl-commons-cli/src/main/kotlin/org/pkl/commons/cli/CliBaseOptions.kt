@@ -185,7 +185,7 @@ data class CliBaseOptions(
    */
   val httpClient: HttpClient by lazy {
     with(HttpClient.builder()) {
-      setTestPort(testPort)
+      testPort(testPort)
       if (normalizedCaCertificates.isEmpty()) {
         addDefaultCliCertificates()
       } else {

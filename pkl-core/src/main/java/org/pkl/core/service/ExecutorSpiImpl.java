@@ -162,7 +162,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
           for (var uri : key.certificateUris) {
             builder.addCertificates(uri);
           }
-          builder.setTestPort(key.testPort);
+          builder.testPort(key.testPort);
           // If the above didn't add any certificates,
           // builder will use the JVM's default SSL context.
           return builder.buildLazily();

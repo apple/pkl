@@ -49,19 +49,19 @@ final class HttpClientBuilder implements HttpClient.Builder {
         "Pkl/" + release.version() + " (" + release.os() + "; " + release.flavor() + ")";
   }
 
-  public HttpClient.Builder setUserAgent(String userAgent) {
+  public HttpClient.Builder userAgent(String userAgent) {
     this.userAgent = userAgent;
     return this;
   }
 
   @Override
-  public HttpClient.Builder setConnectTimeout(Duration timeout) {
+  public HttpClient.Builder connectTimeout(Duration timeout) {
     this.connectTimeout = timeout;
     return this;
   }
 
   @Override
-  public HttpClient.Builder setRequestTimeout(Duration timeout) {
+  public HttpClient.Builder requestTimeout(Duration timeout) {
     this.requestTimeout = timeout;
     return this;
   }
@@ -104,7 +104,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public HttpClient.Builder setTestPort(int port) {
+  public HttpClient.Builder testPort(int port) {
     testPort = port;
     return this;
   }

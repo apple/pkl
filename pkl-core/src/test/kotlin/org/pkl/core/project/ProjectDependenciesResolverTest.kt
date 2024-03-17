@@ -27,7 +27,7 @@ class ProjectDependenciesResolverTest {
     val httpClient: HttpClient by lazy {
       HttpClient.builder()
         .addCertificates(FileTestUtils.selfSignedCertificate)
-        .setTestPort(packageServer.port)
+        .testPort(packageServer.port)
         .build()
     }
   }
