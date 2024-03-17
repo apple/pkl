@@ -241,7 +241,7 @@ class CliProjectPackagerTest {
               "type": "remote",
               "uri": "projectpackage://localhost:12110/birds@0.5.0",
               "checksums": {
-                "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+                "sha256": "04eec465b217fb9779489525d26e9b587e5e47ff4d584c7673a450109715bc31"
               }
             },
             "package://localhost:12110/fruit@1": {
@@ -332,7 +332,7 @@ class CliProjectPackagerTest {
         "version": "1.0.0",
         "packageZipUrl": "https://foo.com",
         "packageZipChecksums": {
-          "sha256": "7f515fbc4b229ba171fac78c7c3f2c2e68e2afebae8cfba042b12733943a2813"
+          "sha256": "e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0"
         },
         "dependencies": {},
         "authors": []
@@ -344,9 +344,9 @@ class CliProjectPackagerTest {
     assertThat(expectedArchive.zipFilePaths())
       .hasSameElementsAs(listOf("/", "/c", "/c/d", "/c/d/foo.txt", "/a", "/a/b", "/a/b/foo.pkl"))
     assertThat(expectedMetadataChecksum)
-      .hasContent("203ef387f217a3caee7f19819ef2b50926929269241cb7b3a29d95237b2c7f4b")
+      .hasContent("72ab32b27393bde5f316b00f184faae919378e4d7643872c605f681b14b647bf")
     assertThat(expectedArchiveChecksum)
-      .hasContent("7f515fbc4b229ba171fac78c7c3f2c2e68e2afebae8cfba042b12733943a2813")
+      .hasContent("e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0")
     FileSystems.newFileSystem(URI("jar:" + expectedArchive.toUri()), mutableMapOf<String, String>())
       .use { fs ->
         assertThat(fs.getPath("a/b/foo.pkl")).hasSameTextualContentAs(fooPkl)
@@ -364,6 +364,10 @@ class CliProjectPackagerTest {
       writeEmptyFile("main.test.pkl")
       writeEmptyFile("child/main.pkl")
       writeEmptyFile("child/main.test.pkl")
+      writeEmptyFile("examples/Workflow.pkl")
+      writeEmptyFile("examples/Ex1.pkl")
+      writeEmptyFile("tests/Test1.pkl")
+      writeEmptyFile("tests/integration/TestIng1.pkl")
     }
 
     tempDir.writeFile(
@@ -380,6 +384,8 @@ class CliProjectPackagerTest {
             "*.bin"
             "child/main.pkl"
             "*.test.pkl"
+            "examples/Ex1.pkl"
+            "tests/**"
           }
         }
       """
@@ -399,14 +405,12 @@ class CliProjectPackagerTest {
       .hasSameElementsAs(
         listOf(
           "/",
-          "/a",
-          "/a/b",
-          "/a/b/c",
-          "/child",
+          "/examples",
+          "/examples/Workflow.pkl",
           "/input",
           "/input/foo",
           "/input/foo/bar.txt",
-          "/main.pkl",
+          "/main.pkl"
         )
       )
   }
@@ -505,7 +509,7 @@ class CliProjectPackagerTest {
         "version": "1.0.0",
         "packageZipUrl": "https://foo.com",
         "packageZipChecksums": {
-          "sha256": "7d08a65078e0bfc382c16fe1bb94546ab9a11e6f551087f362a4515ca98102fc"
+          "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
         },
         "dependencies": {
           "birds": {
@@ -517,7 +521,7 @@ class CliProjectPackagerTest {
           "project2": {
             "uri": "package://localhost:12110/project2@5.0.0",
             "checksums": {
-              "sha256": "ddebb806e5b218ebb1a2baa14ad206b46e7a0c1585fa9863a486c75592bc8b16"
+              "sha256": "6f469b28f8b62a8a1191e2749bcf9c27dedbbb1e0ea754ac34af57b534e0ddda"
             }
           }
         },
@@ -537,7 +541,7 @@ class CliProjectPackagerTest {
       "version": "5.0.0",
       "packageZipUrl": "https://foo.com/project2.zip",
       "packageZipChecksums": {
-        "sha256": "7d08a65078e0bfc382c16fe1bb94546ab9a11e6f551087f362a4515ca98102fc"
+        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
       },
       "dependencies": {},
       "authors": []
@@ -914,7 +918,7 @@ class CliProjectPackagerTest {
         """
       Package `package://localhost:12110/birds@0.5.0` was already published with different contents.
       
-      Computed checksum: 7324e17214b6dcda63ebfb57d5a29b077af785c13bed0dc22b5138628a3f8d8f
+      Computed checksum: 04eec465b217fb9779489525d26e9b587e5e47ff4d584c7673a450109715bc31
       Published checksum: 0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453
     """
           .trimIndent()
