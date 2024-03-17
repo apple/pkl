@@ -1,0 +1,26 @@
+examples {
+  ["permanent redirect is followed"] {
+    new {
+      name = "Swallow"
+      favoriteFruit {
+        name = "Apple"
+      }
+    }
+  }
+  ["temporary redirect is followed"] {
+    new {
+      name = "Swallow"
+      favoriteFruit {
+        name = "Apple"
+      }
+    }
+  }
+  ["double redirect is followed"] {
+    new {
+      name = "Swallow"
+      favoriteFruit {
+        name = "Apple"
+      }
+    }
+  }
+}

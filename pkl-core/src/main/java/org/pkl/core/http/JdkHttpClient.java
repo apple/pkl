@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
@@ -81,6 +82,7 @@ final class JdkHttpClient implements HttpClient {
         java.net.http.HttpClient.newBuilder()
             .sslContext(createSslContext(certificateFiles, certificateUris))
             .connectTimeout(connectTimeout)
+            .followRedirects(Redirect.NORMAL)
             .build();
   }
 

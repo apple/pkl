@@ -130,11 +130,23 @@ class PackageServer : AutoCloseable {
       return@HttpHandler
     }
     val path = exchange.requestURI.path
+    if (path.startsWith("/HTTP301/")) {
+      exchange.responseHeaders.add("Location", path.removePrefix("/HTTP301"))
+      exchange.sendResponseHeaders(301, -1)
+      exchange.close()
+      return@HttpHandler
+    }
+    if (path.startsWith("/HTTP307/")) {
+      exchange.responseHeaders.add("Location", path.removePrefix("/HTTP307"))
+      exchange.sendResponseHeaders(307, -1)
+      exchange.close()
+      return@HttpHandler
+    }
     val localPath =
       if (path.endsWith(".zip")) packagesDir.resolve(path.drop(1))
       else packagesDir.resolve("${path.drop(1)}${path}.json")
     if (!Files.exists(localPath)) {
-      exchange.sendResponseHeaders(404, 0)
+      exchange.sendResponseHeaders(404, -1)
       exchange.close()
       return@HttpHandler
     }

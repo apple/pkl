@@ -51,6 +51,10 @@ abstract class InputOutputTestEngine :
 
   protected abstract fun generateOutputFor(inputFile: Path): Pair<Boolean, String>
 
+  protected open fun beforeAll() {}
+
+  protected open fun afterAll() {}
+
   class ExecutionContext : EngineExecutionContext
 
   override fun getId(): String = this::class.java.simpleName
@@ -78,7 +82,17 @@ abstract class InputOutputTestEngine :
         (classSelectors.isEmpty() || classSelectors.any { it.className == className })
     ) {
 
-      val rootNode = InputDirNode(uniqueId, inputDir, ClassSource.from(testClass.java))
+      val rootNode =
+        object : InputDirNode(uniqueId, inputDir, ClassSource.from(testClass.java)) {
+          override fun before(context: ExecutionContext): ExecutionContext {
+            beforeAll()
+            return context
+          }
+
+          override fun after(context: ExecutionContext) {
+            afterAll()
+          }
+        }
       return doDiscover(rootNode, uniqueIdSelectors)
     }
 
@@ -124,7 +138,11 @@ abstract class InputOutputTestEngine :
 
   override fun createExecutionContext(request: ExecutionRequest) = ExecutionContext()
 
-  private inner class InputDirNode(uniqueId: UniqueId, val inputDir: Path, source: TestSource) :
+  private open inner class InputDirNode(
+    uniqueId: UniqueId,
+    val inputDir: Path,
+    source: TestSource
+  ) :
     AbstractTestDescriptor(uniqueId, inputDir.fileName.toString(), source), Node<ExecutionContext> {
     override fun getType() = Type.CONTAINER
   }
