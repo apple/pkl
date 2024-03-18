@@ -896,3 +896,18 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+  release-branch:
+    jobs:
+    - gradle-check-jdk11
+    - gradle-check-jdk17
+    - check-patch-file
+    - bench
+    - pkl-cli-macOS-amd64-release
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-macOS-aarch64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-linux-alpine-amd64-release
+    when:
+      matches:
+        value: << pipeline.git.branch >>
+        pattern: ^release/\d+\.\d+$

@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===// 
 // File gets rendered to .circleci/config.yml via git hook.
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.1.0#/PklCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
 import "jobs/GradleCheckJob.pkl"
@@ -71,6 +71,10 @@ release {
       }
     }
   }
+}
+
+releaseBranch {
+  jobs = releaseJobs
 }
 
 triggerDocsBuild = "both"
