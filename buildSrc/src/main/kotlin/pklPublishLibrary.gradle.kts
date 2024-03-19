@@ -103,6 +103,14 @@ tasks.publish {
   dependsOn(validatePom)
 }
 
+// Workaround for maven publish plugin not setting up dependencies correctly.
+// Taken from https://github.com/gradle/gradle/issues/26091#issuecomment-1798137734
+val dependsOnTasks = mutableListOf<String>()
+tasks.withType<AbstractPublishToMaven>().configureEach {
+  dependsOnTasks.add(name.replace("publish", "sign").replaceAfter("Publication", ""))
+  dependsOn(dependsOnTasks)
+}
+
 signing {
   // provided as env vars `ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword`
   // in CI.
