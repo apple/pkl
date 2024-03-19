@@ -278,13 +278,6 @@ public class ProjectPackager {
     }
   }
 
-  private String ensureEndsWithSlash(Path file) {
-    if (file.endsWith("/")) {
-      return file.toString();
-    }
-    return file + "/";
-  }
-
   /**
    * Sets mtime to 0 so package creation is idempotent. Running the packager multiple times produces
    * the same output.
