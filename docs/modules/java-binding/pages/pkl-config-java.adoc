@@ -50,7 +50,6 @@ repositories {
   maven { url "{uri-sonatype}" }
 }
 endif::[]
-}
 ----
 
 Kotlin::
