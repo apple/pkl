@@ -18,9 +18,9 @@ val generateTestConfigClasses by tasks.registering(JavaExec::class) {
   mainClass.set("org.pkl.codegen.java.Main")
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
-      "--output-dir", outputDir.get().asFile.absolutePath,
+      "--output-dir", outputDir.get().asFile.path,
       "--generate-javadoc"
-    ) + fileTree("src/test/resources/codegenPkl").map { it.absolutePath }
+    ) + fileTree("src/test/resources/codegenPkl").map { it.path }
   })
 }
 

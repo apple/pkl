@@ -56,13 +56,13 @@ dependencies {
 
   testImplementation(projects.pklCommonsTest)
 
-  val buildDir = layout.buildDirectory
-  stagedMacAmd64Executable(files(buildDir.dir("executable/pkl-macos-amd64")))
-  stagedMacAmd64Executable(files(buildDir.dir("executable/pkl-macos-amd64")))
-  stagedMacAarch64Executable(files(buildDir.dir("executable/pkl-macos-aarch64")))
-  stagedLinuxAmd64Executable(files(buildDir.dir("executable/pkl-linux-amd64")))
-  stagedLinuxAarch64Executable(files(buildDir.dir("executable/pkl-linux-aarch64")))
-  stagedAlpineLinuxAmd64Executable(files(buildDir.dir("executable/pkl-alpine-linux-amd64")))
+  fun executableDir(name: String) = files(layout.buildDirectory.dir("executable/$name"))
+  stagedMacAmd64Executable(executableDir("pkl-macos-amd64"))
+  stagedMacAmd64Executable(executableDir("pkl-macos-amd64"))
+  stagedMacAarch64Executable(executableDir("pkl-macos-aarch64"))
+  stagedLinuxAmd64Executable(executableDir("pkl-linux-amd64"))
+  stagedLinuxAarch64Executable(executableDir("pkl-linux-aarch64"))
+  stagedAlpineLinuxAmd64Executable(executableDir("pkl-alpine-linux-amd64"))
 }
 
 tasks.jar {
