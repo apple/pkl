@@ -32,11 +32,11 @@ tasks.processResources {
 
 for (packageDir in file("src/main/files/packages").listFiles()!!) {
   if (!packageDir.isDirectory) continue
-  val destinationDir = file("build/test-packages/${packageDir.name}")
+  val destinationDir = layout.buildDirectory.dir("test-packages/${packageDir.name}")
   val metadataJson = file("$packageDir/${packageDir.name}.json")
   val packageContents = packageDir.resolve("package")
   val zipFileName = "${packageDir.name}.zip"
-  val archiveFile = destinationDir.resolve(zipFileName)
+  val archiveFile = destinationDir.map { it.file(zipFileName) }
 
   val zipTask = tasks.register("zip-${packageDir.name}", Zip::class) {
     destinationDirectory.set(destinationDir)
@@ -51,14 +51,14 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
     dependsOn(zipTask)
     from(metadataJson)
     into(destinationDir)
-    val shasumFile = file("$destinationDir/${packageDir.name}.json.sha256")
+    val shasumFile = destinationDir.map { it.file("${packageDir.name}.json.sha256") }
     outputs.file(shasumFile)
     filter { line ->
-      line.replaceFirst("\$computedChecksum", archiveFile.computeChecksum())
+      line.replaceFirst("\$computedChecksum", archiveFile.get().asFile.computeChecksum())
     }
     doLast {
-      val outputFile = destinationDir.resolve("${packageDir.name}.json")
-      shasumFile.writeText(outputFile.computeChecksum())
+      val outputFile = destinationDir.get().asFile.resolve("${packageDir.name}.json")
+      shasumFile.get().asFile.writeText(outputFile.computeChecksum())
     }
   }
 
@@ -67,13 +67,13 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
   }
 }
 
-val keystoreDir = file("build/keystore")
+val keystoreDir = layout.buildDirectory.dir("keystore")
 val keystoreName = "localhost.p12"
+val keystoreFile = keystoreDir.map { it.file(keystoreName) }
 val certsFileName = "localhost.pem"
 
 val generateKeys by tasks.registering(JavaExec::class) {
-  val outputFile = file("$keystoreDir/$keystoreName")
-  outputs.file(outputFile)
+  outputs.file(keystoreFile)
   mainClass.set("sun.security.tools.keytool.Main")
   args = listOf(
     "-genkeypair",
@@ -83,17 +83,17 @@ val generateKeys by tasks.registering(JavaExec::class) {
     "-storepass", "password",
     "-dname", "CN=localhost"
   )
-  workingDir = keystoreDir
+  workingDir(keystoreDir)
   doFirst {
     workingDir.mkdirs()
-    outputFile.delete()
+    keystoreFile.get().asFile.delete()
   }
 }
 
 val exportCerts by tasks.registering(JavaExec::class) {
-  val outputFile = file("$keystoreDir/$certsFileName")
+  val outputFile = keystoreDir.map { it.file(certsFileName) }
   dependsOn(generateKeys)
-  inputs.file("$keystoreDir/$keystoreName")
+  inputs.file(keystoreFile)
   outputs.file(outputFile)
   mainClass.set("sun.security.tools.keytool.Main")
   args = listOf(
@@ -104,10 +104,10 @@ val exportCerts by tasks.registering(JavaExec::class) {
     "-rfc",
     "-file", certsFileName
   )
-  workingDir = keystoreDir
+  workingDir(keystoreDir)
   doFirst {
     workingDir.mkdirs()
-    outputFile.delete()
+    outputFile.get().asFile.delete()
   }
 }
 

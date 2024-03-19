@@ -282,7 +282,7 @@ tasks.testNative {
 
 tasks.clean {
   delete("generated/")
-  delete("build/test-packages")
+  delete(layout.buildDirectory.dir("test-packages"))
 }
 
 spotless {

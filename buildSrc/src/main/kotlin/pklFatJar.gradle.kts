@@ -105,7 +105,7 @@ tasks.check {
 }
 
 val validateFatJar by tasks.registering {
-  val outputFile = file("build/validateFatJar/result.txt")
+  val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
   inputs.files(tasks.shadowJar)
   inputs.property("nonRelocations", nonRelocations)
   outputs.file(outputFile)
@@ -125,9 +125,9 @@ val validateFatJar by tasks.registering {
       }
     }
     if (unshadowedFiles.isEmpty()) {
-      outputFile.writeText("SUCCESS")
+      outputFile.get().asFile.writeText("SUCCESS")
     } else {
-      outputFile.writeText("FAILURE")
+      outputFile.get().asFile.writeText("FAILURE")
       throw GradleException("Found unshadowed files:\n" + unshadowedFiles.joinToString("\n"))
     }
   }
@@ -138,7 +138,7 @@ tasks.check {
 
 val resolveSourcesJars by tasks.registering(ResolveSourcesJars::class) {
   configuration.set(configurations.runtimeClasspath)
-  outputDir.set(project.file("build/resolveSourcesJars"))
+  outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
 }
 
 val fatSourcesJar by tasks.registering(MergeSourcesJars::class) {

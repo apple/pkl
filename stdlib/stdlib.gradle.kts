@@ -10,7 +10,7 @@ plugins {
 // create and publish a self-contained stdlib archive
 // purpose is to provide non-jvm tools/projects with a versioned stdlib
 val stdlibZip by tasks.registering(Zip::class) {
-  destinationDirectory.set(file("build/libs"))
+  destinationDirectory.set(layout.buildDirectory.dir("libs"))
   archiveBaseName.set("pkl-stdlib")
   archiveVersion.set(project.version as String)
   into("org/pkl/stdlib") {

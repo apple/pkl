@@ -55,7 +55,7 @@ val workAroundKotlinGradlePluginBug by tasks.registering {
     // A problem was found with the configuration of task ':pkl-executor:compileJava' (type 'JavaCompile').
     // > Directory '[...]/pkl/pkl-executor/build/classes/kotlin/main'
     // specified for property 'compileKotlinOutputClasses' does not exist.
-    file("build/classes/kotlin/main").mkdirs()
+    layout.buildDirectory.dir("classes/kotlin/main").get().asFile.mkdirs()
   }
 }
 
