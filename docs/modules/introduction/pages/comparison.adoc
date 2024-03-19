@@ -13,14 +13,14 @@ Also, Pkl's strong and weak points in comparison to other configuration language
 [[static-config-formats]]
 == Pkl vs. Static Config Formats
 
-Static configuration formats such as JSON, YAML, and XML work reasonably well for simple configuration needs.
+Static configuration formats such as JSON, YAML, TOML, and XML work reasonably well for simple configuration needs.
 However, they do have some shortcomings, including:
 
 . They are not very human-friendly to read and write. (JSON, XML)
-. They do not provide a way to split a large file into multiple smaller ones. (JSON, YAML)
-. They offer no way or very limited ways to abstract over repetitive configuration. (JSON, YAML, XML)
-. They do not offer standardized or widely available schema validators. (JSON, YAML)
-. They offer little or no schema-aware tooling. (JSON, YAML)
+. They do not provide a way to split a large file into multiple smaller ones. (JSON, YAML, TOML)
+. They offer no way or very limited ways to abstract over repetitive configuration. (JSON, YAML, TOML, XML)
+. They do not offer standardized or widely available schema validators. (JSON, YAML, TOML)
+. They offer little or no schema-aware tooling. (JSON, YAML, TOML)
 
 Pkl addresses these shortcomings as follows:
 
