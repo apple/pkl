@@ -1,6 +1,7 @@
 import org.pkl.config.java.Config;
 import org.pkl.config.java.ConfigEvaluator;
 import org.pkl.config.java.JavaType;
+import org.pkl.core.ModuleSource;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unused")
@@ -11,8 +12,8 @@ public class JavaConfigExample {
     // tag::usage[]
     Config config;
     try (var evaluator = ConfigEvaluator.preconfigured()) { // <1>
-      config = evaluator.evaluateText(
-        "pigeon { age = 5; diet = \"Seeds\" }"); // <2>
+      config = evaluator.evaluate(
+        ModuleSource.text("pigeon { age = 5; diet = \"Seeds\" }")); // <2>
     }
     var pigeon = config.get("pigeon"); // <3>
     var age = pigeon.get("age").as(int.class); // <4>
