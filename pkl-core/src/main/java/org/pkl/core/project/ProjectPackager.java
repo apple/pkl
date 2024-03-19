@@ -278,13 +278,6 @@ public class ProjectPackager {
     }
   }
 
-  private String ensureEndsWithSlash(Path file) {
-    if (file.endsWith("/")) {
-      return file.toString();
-    }
-    return file + "/";
-  }
-
   /**
    * Sets mtime to 0 so package creation is idempotent. Running the packager multiple times produces
    * the same output.
@@ -302,16 +295,10 @@ public class ProjectPackager {
     try (var zos = new ZipOutputStream(digestOutputStream)) {
       for (var file : files) {
         var relativePath = project.getProjectDir().relativize(file);
-        if (Files.isDirectory(file)) {
-          var zipEntry = new ZipEntry(ensureEndsWithSlash(relativePath));
-          zipEntry.setTime(ZIP_ENTRY_MTIME);
-          zos.putNextEntry(zipEntry);
-        } else {
-          var zipEntry = new ZipEntry(relativePath.toString());
-          zipEntry.setTime(ZIP_ENTRY_MTIME);
-          zos.putNextEntry(zipEntry);
-          Files.copy(file, zos);
-        }
+        var zipEntry = new ZipEntry(relativePath.toString());
+        zipEntry.setTime(ZIP_ENTRY_MTIME);
+        zos.putNextEntry(zipEntry);
+        Files.copy(file, zos);
         zos.closeEntry();
       }
     } catch (IOException e) {
@@ -344,6 +331,7 @@ public class ProjectPackager {
     var excludePatterns = getExcludePatterns(pkg);
     try (var stream = Files.walk(project.getProjectDir())) {
       return stream
+          .filter(Files::isRegularFile)
           .filter(
               (it) -> {
                 var fileNameRelativeToProjectRoot =
