@@ -224,7 +224,7 @@ class CliProjectPackagerTest {
 
         dependencies {
           ["birds"] {
-            uri = "package://localhost:12110/birds@0.5.0"
+            uri = "package://localhost:0/birds@0.5.0"
           }
         }
       """
@@ -237,18 +237,18 @@ class CliProjectPackagerTest {
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
-            "package://localhost:12110/birds@0": {
+            "package://localhost:0/birds@0": {
               "type": "remote",
-              "uri": "projectpackage://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:0/birds@0.5.0",
               "checksums": {
                 "sha256": "04eec465b217fb9779489525d26e9b587e5e47ff4d584c7673a450109715bc31"
               }
             },
-            "package://localhost:12110/fruit@1": {
+            "package://localhost:0/fruit@1": {
               "type": "remote",
-              "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+              "uri": "projectpackage://localhost:0/fruit@1.0.5",
               "checksums": {
-                "sha256": "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
+                "sha256": "${PackageServer.FRUIT_SHA}"
               }
             }
           }
@@ -433,7 +433,7 @@ class CliProjectPackagerTest {
         
         dependencies {
           ["birds"] {
-            uri = "package://localhost:12110/birds@0.5.0"
+            uri = "package://localhost:0/birds@0.5.0"
           }
           ["project2"] = import("../project2/PklProject")
         }
@@ -446,16 +446,16 @@ class CliProjectPackagerTest {
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
-            "package://localhost:12110/birds@0": {
+            "package://localhost:0/birds@0": {
               "type": "remote",
-              "uri": "projectpackage://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:0/birds@0.5.0",
               "checksums": {
-                "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+                "sha256": "${PackageServer.BIRDS_SHA}"
               }
             },
-            "package://localhost:12110/project2@5": {
+            "package://localhost:0/project2@5": {
               "type": "local",
-              "uri": "projectpackage://localhost:12110/project2@5.0.0",
+              "uri": "projectpackage://localhost:0/project2@5.0.0",
               "path": "../project2"
             }
           }
@@ -471,7 +471,7 @@ class CliProjectPackagerTest {
         
         package {
           name = "project2"
-          baseUri = "package://localhost:12110/project2"
+          baseUri = "package://localhost:0/project2"
           version = "5.0.0"
           packageZipUrl = "https://foo.com/project2.zip"
         }
@@ -513,15 +513,15 @@ class CliProjectPackagerTest {
         },
         "dependencies": {
           "birds": {
-            "uri": "package://localhost:12110/birds@0.5.0",
+            "uri": "package://localhost:0/birds@0.5.0",
             "checksums": {
-              "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+              "sha256": "${PackageServer.BIRDS_SHA}"
             }
           },
           "project2": {
-            "uri": "package://localhost:12110/project2@5.0.0",
+            "uri": "package://localhost:0/project2@5.0.0",
             "checksums": {
-              "sha256": "6f469b28f8b62a8a1191e2749bcf9c27dedbbb1e0ea754ac34af57b534e0ddda"
+              "sha256": "981787869571330b2f609a94a5912466990ce00e3fa94e7f290c2f99a6d5e5ed"
             }
           }
         },
@@ -537,7 +537,7 @@ class CliProjectPackagerTest {
         """
     {
       "name": "project2",
-      "packageUri": "package://localhost:12110/project2@5.0.0",
+      "packageUri": "package://localhost:0/project2@5.0.0",
       "version": "5.0.0",
       "packageZipUrl": "https://foo.com/project2.zip",
       "packageZipChecksums": {
@@ -571,7 +571,7 @@ class CliProjectPackagerTest {
         
         dependencies {
           ["birds"] {
-            uri = "package://localhost:12110/birds@0.5.0"
+            uri = "package://localhost:0/birds@0.5.0"
           }
           ["project2"] = import("../project2/PklProject")
         }
@@ -584,16 +584,16 @@ class CliProjectPackagerTest {
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
-            "package://localhost:12110/birds@0": {
+            "package://localhost:0/birds@0": {
               "type": "remote",
-              "uri": "projectpackage://localhost:12110/birds@0.5.0",
+              "uri": "projectpackage://localhost:0/birds@0.5.0",
               "checksums": {
                 "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
               }
             },
-            "package://localhost:12110/project2@5": {
+            "package://localhost:0/project2@5": {
               "type": "local",
-              "uri": "projectpackage://localhost:12110/project2@5.0.0",
+              "uri": "projectpackage://localhost:0/project2@5.0.0",
               "path": "../project2"
             }
           }
@@ -609,7 +609,7 @@ class CliProjectPackagerTest {
         
         package {
           name = "project2"
-          baseUri = "package://localhost:12110/project2"
+          baseUri = "package://localhost:0/project2"
           version = "5.0.0"
           packageZipUrl = "https://foo.com/project2.zip"
         }
@@ -884,14 +884,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile("project/main.pkl", "res = 1")
     tempDir.writeFile(
       "project/PklProject",
-      // intentionally conflict with localhost:12110/birds@0.5.0 from our test fixtures
+      // intentionally conflict with localhost:0/birds@0.5.0 from our test fixtures
       """
         amends "pkl:Project"
         
         package {
           name = "birds"
           version = "0.5.0"
-          baseUri = "package://localhost:12110/birds"
+          baseUri = "package://localhost:0/birds"
           packageZipUrl = "https://foo.com"
         }
       """
@@ -916,10 +916,10 @@ class CliProjectPackagerTest {
     assertThat(e)
       .hasMessageStartingWith(
         """
-      Package `package://localhost:12110/birds@0.5.0` was already published with different contents.
+      Package `package://localhost:0/birds@0.5.0` was already published with different contents.
       
-      Computed checksum: 04eec465b217fb9779489525d26e9b587e5e47ff4d584c7673a450109715bc31
-      Published checksum: 0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453
+      Computed checksum: aa8c883841db22e92794f4708b01dc905b5da77645b7dfb5b22a73da8c347db1
+      Published checksum: ${PackageServer.BIRDS_SHA}
     """
           .trimIndent()
       )
@@ -936,7 +936,7 @@ class CliProjectPackagerTest {
         package {
           name = "mangos"
           version = "1.0.0"
-          baseUri = "package://localhost:12110/mangos"
+          baseUri = "package://localhost:0/mangos"
           packageZipUrl = "https://foo.com"
         }
       """

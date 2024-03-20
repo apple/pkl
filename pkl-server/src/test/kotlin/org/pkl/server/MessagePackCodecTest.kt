@@ -98,19 +98,19 @@ class MessagePackCodecTest {
                 "foo" to
                   Project(
                     projectFileUri = URI("file:///foo"),
-                    packageUri = URI("package://localhost:12110/foo@1.0.0"),
+                    packageUri = URI("package://localhost:0/foo@1.0.0"),
                     dependencies =
                       mapOf(
                         "bar" to
                           Project(
                             projectFileUri = URI("file:///bar"),
-                            packageUri = URI("package://localhost:12110/bar@1.1.0"),
+                            packageUri = URI("package://localhost:0/bar@1.1.0"),
                             dependencies = emptyMap()
                           )
                       )
                   ),
                 "baz" to
-                  RemoteDependency(URI("package://localhost:12110/baz@1.1.0"), Checksums("abc123"))
+                  RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
               )
           )
       )

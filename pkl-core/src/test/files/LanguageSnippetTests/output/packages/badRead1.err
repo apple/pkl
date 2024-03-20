@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Resource URI `package://localhost:12110/foo#/bar.pkl` has invalid syntax.
+Resource URI `package://localhost:0/foo#/bar.pkl` has invalid syntax.
 
-x | res = read("package://localhost:12110/foo#/bar.pkl")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | res = read("package://localhost:0/foo#/bar.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at badRead1.error#res (file:///$snippetsDir/input/packages/badRead1.error.pkl)
 
 Invalid path `/foo`.

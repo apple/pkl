@@ -7,7 +7,7 @@ examples {
   }
 
   ["glob-import absolute package uri"] {
-    import*("package://localhost:12110/birds@0.5.0#/catalog/*.pkl")
+    import*("package://localhost:0/birds@0.5.0#/catalog/*.pkl")
   }
 
   ["glob-import local project"] {
@@ -32,6 +32,6 @@ examples {
   }
 
   ["glob-read absolute package uri"] {
-    read*("package://localhost:12110/birds@0.5.0#/catalog/*.pkl")
+    read*("package://localhost:0/birds@0.5.0#/catalog/*.pkl")
   }
 }

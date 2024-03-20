@@ -14,16 +14,16 @@ class ProjectDepsTest {
         {
           "schemaVersion": 1,
           "resolvedDependencies": {
-            "package://localhost:12110/birds@0": {
+            "package://localhost:0/birds@0": {
               "type": "remote",
-              "uri": "package://localhost:12110/birds@0.5.0",
+              "uri": "package://localhost:0/birds@0.5.0",
               "checksums": {
                 "sha256": "abc123"
               }
             },
-            "package://localhost:12110/fruit@1": {
+            "package://localhost:0/fruit@1": {
               "type": "local",
-              "uri": "package://localhost:12110/fruit@1.1.0",
+              "uri": "package://localhost:0/fruit@1.1.0",
               "path": "../fruit"
             }
           }
@@ -32,12 +32,12 @@ class ProjectDepsTest {
 
   private val projectDeps = let {
     val projectDepsMap = EconomicMaps.of<CanonicalPackageUri, Dependency>(
-      CanonicalPackageUri.of("package://localhost:12110/birds@0"), Dependency.RemoteDependency(
-        PackageUri.create("package://localhost:12110/birds@0.5.0"),
+      CanonicalPackageUri.of("package://localhost:0/birds@0"), Dependency.RemoteDependency(
+        PackageUri.create("package://localhost:0/birds@0.5.0"),
         Checksums("abc123")
       ),
-      CanonicalPackageUri.of("package://localhost:12110/fruit@1"), Dependency.LocalDependency(
-        PackageUri.create("package://localhost:12110/fruit@1.1.0"),
+      CanonicalPackageUri.of("package://localhost:0/fruit@1"), Dependency.LocalDependency(
+        PackageUri.create("package://localhost:0/fruit@1.1.0"),
         Path.of("../fruit")
       )
     )

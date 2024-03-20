@@ -65,9 +65,9 @@ class ProjectPackageTest : AbstractTest() {
       
       package {
         name = "proj1"
-        baseUri = "package://localhost:12110/proj1"
+        baseUri = "package://localhost:0/proj1"
         version = "1.0.0"
-        packageZipUrl = "https://localhost:12110/proj1@\(version).zip"
+        packageZipUrl = "https://localhost:0/proj1@\(version).zip"
         apiTests {
           "tests.pkl"
         }

@@ -160,7 +160,7 @@ class ModuleKeysTest {
   @Test
   fun `package - no version`() {
     val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package://localhost:12110/birds#/Bird.pkl"))
+      ModuleKeys.pkg(URI("package://localhost:0/birds#/Bird.pkl"))
     }
     assertThat(e).hasMessageContaining("A package URI must have its path suffixed by its version")
   }
@@ -168,7 +168,7 @@ class ModuleKeysTest {
   @Test
   fun `package - invalid semver`() {
     val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package://localhost:12110/birds@notAVersion#/Bird.pkl"))
+      ModuleKeys.pkg(URI("package://localhost:0/birds@notAVersion#/Bird.pkl"))
     }
     assertThat(e).hasMessageContaining("`notAVersion` could not be parsed")
   }

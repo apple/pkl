@@ -5,7 +5,7 @@ import "pkl:reflect"
 myProject: Project = (Project.newInstance(module)) {
   dependencies {
     ["birds"] {
-      uri = "package://localhost:12110/birds@0.5.0"
+      uri = "package://localhost:0/birds@0.5.0"
     }
   }
 }

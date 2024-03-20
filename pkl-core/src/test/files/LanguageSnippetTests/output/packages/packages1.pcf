@@ -29,7 +29,7 @@ examples {
   }
   ["reads"] {
     new {
-      uri = "package://localhost:12110/birds@0.5.0#/Bird.pkl"
+      uri = "package://localhost:0/birds@0.5.0#/Bird.pkl"
       text = """
         open module birds.Bird
         
@@ -43,7 +43,7 @@ examples {
       base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
     }
     new {
-      uri = "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+      uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
       text = """
         amends "../Bird.pkl"
         
@@ -57,7 +57,7 @@ examples {
       base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
     }
     new {
-      uri = "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+      uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
       text = """
         amends "../Bird.pkl"
         

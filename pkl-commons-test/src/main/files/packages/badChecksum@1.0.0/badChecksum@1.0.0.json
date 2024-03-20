@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "packageUri": "package://localhost:12110/badChecksum@1.0.0",
+  "packageUri": "package://localhost:0/badChecksum@1.0.0",
   "name": "bugs",
-  "packageZipUrl": "https://localhost:12110/badChecksum@1.0.0/badChecksum@1.0.0.zip",
+  "packageZipUrl": "https://localhost:0/badChecksum@1.0.0/badChecksum@1.0.0.zip",
   "dependencies": {},
   "version": "1.0.0",
   "packageZipChecksums": {

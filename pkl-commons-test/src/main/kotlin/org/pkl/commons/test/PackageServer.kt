@@ -41,11 +41,15 @@ import org.pkl.commons.deleteRecursively
  *     * `testPort` Gradle property
  *
  *   If the server isn't already running, it is automatically started.
- * 4. Use port `12110` in your test. `HttpClient` will replace this port with the server port.
+ * 4. Use port `0` in your test. `HttpClient` will replace this port with the server port.
  * 4. [Close][close] the server, for example in [AfterAll][org.junit.jupiter.api.AfterAll].
  */
 class PackageServer : AutoCloseable {
   companion object {
+    const val BIRDS_SHA = "bfaf5281613d170a740505cc87561041f4e0cad1f0e6938bf94f7609f9a4673d"
+    const val FRUIT_SHA = "34a15b02346e6acb85da5bd71d8b0738a79008b38a7fc805e5869d9129ad27d2"
+    const val FRUIT_1_1_SHA = "8d982761d182f2185e4180c82190791d9a60c721cb3393bb2e946fab90131e8c"
+
     fun populateCacheDir(cacheDir: Path) {
       val basePath = cacheDir.resolve("package-1/localhost:$PORT")
       basePath.deleteRecursively()
@@ -65,7 +69,7 @@ class PackageServer : AutoCloseable {
 
     // Port declared in tests.
     // Modified by RequestRewritingClient if testPort is set.
-    private const val PORT = 12110
+    private const val PORT = 0
 
     private val packagesDir: Path =
       FileTestUtils.rootProjectDir.resolve("pkl-commons-test/build/test-packages")

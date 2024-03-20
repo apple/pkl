@@ -395,7 +395,7 @@ class EmbeddedExecutorTest {
       @ModuleInfo { minPklVersion = "0.24.0" }
       module MyModule
 
-      import "package://localhost:12110/birds@0.5.0#/Bird.pkl"
+      import "package://localhost:0/birds@0.5.0#/Bird.pkl"
 
       chirpy = new Bird { name = "Chirpy"; favoriteFruit { name = "Orange" } }
     """.trimIndent()
@@ -433,7 +433,7 @@ class EmbeddedExecutorTest {
       amends "pkl:Project"
       
       dependencies {
-        ["birds"] { uri = "package://localhost:12110/birds@0.5.0" }
+        ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
       }
     """.trimIndent())
     val dollar = '$'
@@ -441,16 +441,16 @@ class EmbeddedExecutorTest {
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
-          "package://localhost:12110/birds@0": {
+          "package://localhost:0/birds@0": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/birds@0.5.0",
+            "uri": "projectpackage://localhost:0/birds@0.5.0",
             "checksums": {
               "sha256": "${dollar}skipChecksumVerification"
             }
           },
-          "package://localhost:12110/fruit@1": {
+          "package://localhost:0/fruit@1": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+            "uri": "projectpackage://localhost:0/fruit@1.0.5",
             "checksums": {
               "sha256": "${dollar}skipChecksumVerification"
             }

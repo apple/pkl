@@ -28,6 +28,6 @@ examples {
   }
 
   ["package:"] {
-    read*("package://localhost:12110/birds@0.5.0#/**.pkl")
+    read*("package://localhost:0/birds@0.5.0#/**.pkl")
   }
 }

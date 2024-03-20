@@ -1,2 +1,2 @@
 // no fragment
-res = import("package://localhost:12110/bar/baz@1.0.0")
+res = import("package://localhost:0/bar/baz@1.0.0")

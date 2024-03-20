@@ -1132,7 +1132,7 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      import "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+      import "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
       
       res = Swallow
     """
@@ -1212,7 +1212,7 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      import "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+      import "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
       
       res = Swallow
     """

@@ -47,7 +47,7 @@ class PackageResolversTest {
     @Test
     fun `get module bytes`() {
       val expectedBirdModule = packageRoot.resolve("birds@0.5.0/package/Bird.pkl").readString(StandardCharsets.UTF_8)
-      val assetUri = PackageAssetUri("package://localhost:12110/birds@0.5.0#/Bird.pkl")
+      val assetUri = PackageAssetUri("package://localhost:0/birds@0.5.0#/Bird.pkl")
       val birdModule = resolver
         .getBytes(assetUri, false, null)
         .toString(StandardCharsets.UTF_8)
@@ -56,7 +56,7 @@ class PackageResolversTest {
 
     @Test
     fun `get directory`() {
-      val assetUri = PackageAssetUri("package://localhost:12110/birds@0.5.0#/")
+      val assetUri = PackageAssetUri("package://localhost:0/birds@0.5.0#/")
       val err = assertThrows<IOException> {
         resolver
           .getBytes(assetUri, false, null)
@@ -67,7 +67,7 @@ class PackageResolversTest {
 
     @Test
     fun `get directory, allowing directory reads`() {
-      val assetUri = PackageAssetUri("package://localhost:12110/birds@0.5.0#/")
+      val assetUri = PackageAssetUri("package://localhost:0/birds@0.5.0#/")
       val bytes = resolver
         .getBytes(assetUri, true, null)
         .toString(StandardCharsets.UTF_8)
@@ -84,7 +84,7 @@ class PackageResolversTest {
     @Test
     fun `get module bytes resolving path`() {
       val expectedBirdModule = packageRoot.resolve("birds@0.5.0/package/Bird.pkl").readString(StandardCharsets.UTF_8)
-      val assetUri = PackageAssetUri("package://localhost:12110/birds@0.5.0#/foo/../Bird.pkl")
+      val assetUri = PackageAssetUri("package://localhost:0/birds@0.5.0#/foo/../Bird.pkl")
       val birdModule = resolver
         .getBytes(assetUri, false, null)
         .toString(StandardCharsets.UTF_8)
@@ -95,7 +95,7 @@ class PackageResolversTest {
     fun `list path elements at root`() {
       // cast to set to avoid sort issues
       val elements = resolver
-        .listElements(PackageAssetUri("package://localhost:12110/birds@0.5.0#/"), null)
+        .listElements(PackageAssetUri("package://localhost:0/birds@0.5.0#/"), null)
         .toSet()
       assertThat(elements).isEqualTo(
         setOf(
@@ -111,12 +111,12 @@ class PackageResolversTest {
     @Test
     fun `get multiple assets`() {
       val bird = resolver.getBytes(
-        PackageAssetUri("package://localhost:12110/birds@0.5.0#/Bird.pkl"),
+        PackageAssetUri("package://localhost:0/birds@0.5.0#/Bird.pkl"),
         false,
         null
       )
       val swallow = resolver.getBytes(
-        PackageAssetUri("package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"),
+        PackageAssetUri("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"),
         false,
         null
       )
@@ -127,7 +127,7 @@ class PackageResolversTest {
     @Test
     fun `list path elements in nested directory`() {
       // cast to set to avoid sort issues
-      val elements = resolver.listElements(PackageAssetUri("package://localhost:12110/birds@0.5.0#/catalog/"), null).toSet()
+      val elements = resolver.listElements(PackageAssetUri("package://localhost:0/birds@0.5.0#/catalog/"), null).toSet()
       assertThat(elements).isEqualTo(
         setOf(
           PathElement("Ostritch.pkl", false),
@@ -141,7 +141,7 @@ class PackageResolversTest {
       assertThrows<FileNotFoundException> {
         resolver
           .getBytes(
-            PackageAssetUri("package://localhost:12110/birds@0.5.0#/Horse.pkl"),
+            PackageAssetUri("package://localhost:0/birds@0.5.0#/Horse.pkl"),
             false,
             null
           )
@@ -154,7 +154,7 @@ class PackageResolversTest {
       assertThrows<PackageLoadError> {
         resolver
           .getBytes(
-            PackageAssetUri("package://localhost:12110/not-a-package@0.5.0#/Horse.pkl"),
+            PackageAssetUri("package://localhost:0/not-a-package@0.5.0#/Horse.pkl"),
             false,
             null)
           .toString(StandardCharsets.UTF_8)
@@ -165,18 +165,18 @@ class PackageResolversTest {
     fun `requires package zip to be an HTTPS URI`() {
       assertThatCode {
         resolver.getBytes(
-          PackageAssetUri("package://localhost:12110/badPackageZipUrl@1.0.0#/Bug.pkl"),
+          PackageAssetUri("package://localhost:0/badPackageZipUrl@1.0.0#/Bug.pkl"),
           false,
           null)
       }
-        .hasMessage("Expected the zip asset for package `package://localhost:12110/badPackageZipUrl@1.0.0` to be an HTTPS URI, but got `ftp://wait/a/minute`.")
+        .hasMessage("Expected the zip asset for package `package://localhost:0/badPackageZipUrl@1.0.0` to be an HTTPS URI, but got `ftp://wait/a/minute`.")
     }
 
     @Test
     fun `throws if package checksum is invalid`() {
       val error = assertThrows<PackageLoadError> { 
         resolver.getBytes(
-          PackageAssetUri("package://localhost:12110/badChecksum@1.0.0#/Bug.pkl"),
+          PackageAssetUri("package://localhost:0/badChecksum@1.0.0#/Bug.pkl"),
           false,
           null)
       }

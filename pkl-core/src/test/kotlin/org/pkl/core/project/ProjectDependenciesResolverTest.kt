@@ -46,23 +46,23 @@ class ProjectDependenciesResolverTest {
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
-          "package://localhost:12110/birds@0": {
+          "package://localhost:0/birds@0": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/birds@0.5.0",
+            "uri": "projectpackage://localhost:0/birds@0.5.0",
             "checksums": {
-              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
+              "sha256": "${PackageServer.BIRDS_SHA}"
             }
           },
-          "package://localhost:12110/fruit@1": {
+          "package://localhost:0/fruit@1": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/fruit@1.1.0",
+            "uri": "projectpackage://localhost:0/fruit@1.1.0",
             "checksums": {
-              "sha256": "a82e92e0c259591111d09d18a14f5ad66e2b6e13d827ee3e6f7ce06f5d0fbe0c"
+              "sha256": "${PackageServer.FRUIT_1_1_SHA}"
             }
           },
-          "package://localhost:12110/project3@1": {
+          "package://localhost:0/project3@1": {
             "type": "local",
-            "uri": "projectpackage://localhost:12110/project3@1.5.0",
+            "uri": "projectpackage://localhost:0/project3@1.5.0",
             "path": "../project3"
           }
         }
@@ -79,9 +79,9 @@ class ProjectDependenciesResolverTest {
       ProjectDependenciesResolver(project, packageResolver, System.err.writer()).resolve()
     }
     assertThat(e).hasMessage("""
-      Computed checksum did not match declared checksum for dependency `package://localhost:12110/birds@0.5.0`.
+      Computed checksum did not match declared checksum for dependency `package://localhost:0/birds@0.5.0`.
 
-      Computed: "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
+      Computed: "${PackageServer.BIRDS_SHA}"
       Declared: "intentionally bogus value"
     """.trimIndent())
   }

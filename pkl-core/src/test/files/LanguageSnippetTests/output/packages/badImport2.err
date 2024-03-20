@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Module URI `package://localhost:12110/foo@notAVersion#/bar.pkl` has invalid syntax.
+Module URI `package://localhost:0/foo@notAVersion#/bar.pkl` has invalid syntax.
 
-x | res = import("package://localhost:12110/foo@notAVersion#/bar.pkl")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | res = import("package://localhost:0/foo@notAVersion#/bar.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at badImport2.error#res (file:///$snippetsDir/input/packages/badImport2.error.pkl)
 
 `notAVersion` could not be parsed as a semantic version number.

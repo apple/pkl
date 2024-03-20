@@ -114,8 +114,8 @@ data class CliBaseOptions(
   val testMode: Boolean = false,
 
   /**
-   * Unless -1, rewrites HTTP requests that specify port 12110 to the given port. This is an
-   * internal test option.
+   * Unless -1, rewrites HTTP requests that specify port 0 to the given port. This is an internal
+   * test option.
    */
   val testPort: Int = -1,
 

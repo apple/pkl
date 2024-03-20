@@ -111,8 +111,8 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Sets a test server's listening port.
      *
-     * <p>If set, requests that specify port 12110 will be modified to use the given port. This is
-     * an internal test option.
+     * <p>If set, requests that specify port 0 will be modified to use the given port. This is an
+     * internal test option.
      */
     Builder setTestPort(int port);
 

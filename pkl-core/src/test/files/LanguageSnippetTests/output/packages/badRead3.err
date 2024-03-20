@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Resource URI `package://localhost:12110/bar/baz@1.0.0` has invalid syntax.
+Resource URI `package://localhost:0/bar/baz@1.0.0` has invalid syntax.
 
-x | res = read("package://localhost:12110/bar/baz@1.0.0")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | res = read("package://localhost:0/bar/baz@1.0.0")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at badRead3.error#res (file:///$snippetsDir/input/packages/badRead3.error.pkl)
 
 Expected URI to contain a fragment.

@@ -1,14 +1,14 @@
 –– Pkl Error ––
-Transitive dependency declared by package `package://localhost:12110/birds@0.5.0` is newer than what is declared in `PklProject.deps.json`.
+Transitive dependency declared by package `package://localhost:0/birds@0.5.0` is newer than what is declared in `PklProject.deps.json`.
 
-Declared: `package://localhost:12110/fruit@1.0.5`
-Resolved: `package://localhost:12110/fruit@1.0.0`
+Declared: `package://localhost:0/fruit@1.0.5`
+Resolved: `package://localhost:0/fruit@1.0.0`
 
 Run `pkl project resolve` to update resolved dependencies.
 
 x | import "@fruities/Fruit.pkl"
            ^^^^^^^^^^^^^^^^^^^^^
-at bug#Bird (projectpackage://localhost:12110/birds@0.5.0#/Bird.pkl)
+at bug#Bird (projectpackage://localhost:0/birds@0.5.0#/Bird.pkl)
 
 x | bird: Bird
           ^^^^

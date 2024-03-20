@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Expected the zip asset for package `package://localhost:12110/badPackageZipUrl@1.0.0` to be an HTTPS URI, but got `ftp://wait/a/minute`.
+Expected the zip asset for package `package://localhost:0/badPackageZipUrl@1.0.0` to be an HTTPS URI, but got `ftp://wait/a/minute`.
 
-x | import "package://localhost:12110/badPackageZipUrl@1.0.0#/Bug.pkl"
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | import "package://localhost:0/badPackageZipUrl@1.0.0#/Bug.pkl"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at badImport6.error#Bug (file:///$snippetsDir/input/packages/badImport6.error.pkl)
 
 x | res: Bug
