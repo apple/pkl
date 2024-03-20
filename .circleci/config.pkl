@@ -27,13 +27,13 @@ local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
-//   "gradle-compatibility"
+  "gradle-compatibility"
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
 }
 
 local releaseJobs = (prbJobs) {
   "bench"
-//   "gradle-compatibility"
+  "gradle-compatibility"
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))
 }
 
