@@ -18,30 +18,42 @@ package org.pkl.lsp
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.ServerCapabilities
+import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
+import kotlin.system.exitProcess
 
 class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClientAware {
-  override fun initialize(p0: InitializeParams?): CompletableFuture<InitializeResult> {
-    TODO("Not yet implemented")
+
+  val workspaceService: PklWorkspaceService = PklWorkspaceService()
+  val textDocumentService: PklTextDocumentService = PklTextDocumentService(this)
+
+  private lateinit var client: LanguageClient
+  private val builder: Builder = Builder()
+
+  override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
+    val res = InitializeResult(ServerCapabilities())
+    res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
+    
+    return CompletableFuture.supplyAsync { res }
   }
 
   override fun shutdown(): CompletableFuture<Any> {
-    TODO("Not yet implemented")
+    return CompletableFuture.supplyAsync(::Object)
   }
 
   override fun exit() {
-    TODO("Not yet implemented")
+    exitProcess(0)
   }
 
-  override fun getTextDocumentService(): TextDocumentService {
-    TODO("Not yet implemented")
-  }
+  override fun getTextDocumentService(): TextDocumentService = textDocumentService
 
-  override fun getWorkspaceService(): WorkspaceService {
-    TODO("Not yet implemented")
-  }
+  override fun getWorkspaceService(): WorkspaceService = workspaceService
+  
+  fun builder() = builder
 
-  override fun connect(p0: LanguageClient?) {
-    TODO("Not yet implemented")
+  override fun connect(client: LanguageClient) {
+    this.client = client
   }
 }
