@@ -392,7 +392,7 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "test.pkl",
       """
-        import "package://localhost:12110/birds@0.5.0#/Bird.pkl"
+        import "package://localhost:0/birds@0.5.0#/Bird.pkl"
         
         res = new Bird { name = "Wally"; favoriteFruit { name = "bananas" } }
       """.trimIndent()
@@ -414,9 +414,9 @@ class EvaluatorsTest : AbstractTest() {
       
       package {
         name = "proj1"
-        baseUri = "package://localhost:12110/\(name)"
+        baseUri = "package://localhost:0/\(name)"
         version = "1.0.0"
-        packageZipUrl = "https://localhost:12110/\(name)@\(version).zip"
+        packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
     """.trimIndent())
     
@@ -425,9 +425,9 @@ class EvaluatorsTest : AbstractTest() {
       
       package {
         name = "proj2"
-        baseUri = "package://localhost:12110/\(name)"
+        baseUri = "package://localhost:0/\(name)"
         version = "1.0.0"
-        packageZipUrl = "https://localhost:12110/\(name)@\(version).zip"
+        packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
     """.trimIndent())
     
@@ -435,9 +435,9 @@ class EvaluatorsTest : AbstractTest() {
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
-          "package://localhost:12110/proj2@1": {
+          "package://localhost:0/proj2@1": {
             "type": "local",
-            "uri": "projectpackage://localhost:12110/proj2@1.0.0",
+            "uri": "projectpackage://localhost:0/proj2@1.0.0",
             "path": "../proj2"
           }
         }

@@ -17,7 +17,7 @@ class StackFrameTransformersTest {
         .setHttpClient(httpClient)
         .build().use {
           val frame = StackFrame(
-            "package://localhost:12110/birds@0.5.0#/Bird.pkl",
+            "package://localhost:0/birds@0.5.0#/Bird.pkl",
             null,
             listOf(),
             1,

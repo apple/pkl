@@ -69,13 +69,13 @@ examples {
   }
   ["package"] {
     new {
-      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
         name = "Ostritch"
         favoriteFruit {
           name = "Orange"
         }
       }
-      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         name = "Swallow"
         favoriteFruit {
           name = "Apple"
@@ -83,31 +83,31 @@ examples {
       }
     }
     new {
-      "package://localhost:12110/birds@0.5.0#/Bird.pkl"
-      "package://localhost:12110/birds@0.5.0#/allFruit.pkl"
-      "package://localhost:12110/birds@0.5.0#/catalog.pkl"
-      "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
-      "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
-      "package://localhost:12110/birds@0.5.0#/some/dir/Bird.pkl"
+      "package://localhost:0/birds@0.5.0#/Bird.pkl"
+      "package://localhost:0/birds@0.5.0#/allFruit.pkl"
+      "package://localhost:0/birds@0.5.0#/catalog.pkl"
+      "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
+      "package://localhost:0/birds@0.5.0#/some/dir/Bird.pkl"
     }
   }
   ["globbing with absolute URIs and percent encoding"] {
     new {
-      ["package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
+      ["package://localhost:0/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
     }
     new {
-      ["package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
+      ["package://localhost:0/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5Bwildcard%5D!%20characters~~.pkl"] {}
     }
   }
   ["package glob and up one level"] {
     new {
-      ["package://localhost:12110/birds@0.5.0#/catalog/../catalog/Ostritch.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/../catalog/Ostritch.pkl"] {
         name = "Ostritch"
         favoriteFruit {
           name = "Orange"
         }
       }
-      ["package://localhost:12110/birds@0.5.0#/catalog/../catalog/Swallow.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/../catalog/Swallow.pkl"] {
         name = "Swallow"
         favoriteFruit {
           name = "Apple"

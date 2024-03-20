@@ -104,10 +104,10 @@ class RequestRewritingClientTest {
   }
   
   @Test
-  fun `rewrites port 12110 if test port is set`() {
+  fun `rewrites port 0 if test port is set`() {
     val captured = RequestCapturingClient()
     val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured)
-    val request = HttpRequest.newBuilder(URI("https://example.com:12110")).build()
+    val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
 
@@ -115,12 +115,12 @@ class RequestRewritingClientTest {
   }
   
   @Test
-  fun `leaves port 12110 intact if no test port is set`() {
-    val request = HttpRequest.newBuilder(URI("https://example.com:12110")).build()
+  fun `leaves port 0 intact if no test port is set`() {
+    val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
     
-    assertThat(captured.request.uri().port).isEqualTo(12110)
+    assertThat(captured.request.uri().port).isEqualTo(0)
   }
 }
 

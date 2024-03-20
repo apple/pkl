@@ -1,5 +1,5 @@
 –– Pkl Error ––
-I/O error loading module `projectpackage://localhost:12110/birds@0.5.0#/`.
+I/O error loading module `projectpackage://localhost:0/birds@0.5.0#/`.
 IOException: Is a directory
 
 x | res = import("@birds")

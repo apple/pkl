@@ -1,9 +1,9 @@
 –– Pkl Error ––
-Cannot find module `package://localhost:12110/badImportsWithinPackage@1.0.0#/not/a/valid/path.pkl`.
+Cannot find module `package://localhost:0/badImportsWithinPackage@1.0.0#/not/a/valid/path.pkl`.
 
 x | res = import("not/a/valid/path.pkl")
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at invalidPath#res (package://localhost:12110/badImportsWithinPackage@1.0.0#/invalidPath.pkl)
+at invalidPath#res (package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPath.pkl)
 
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

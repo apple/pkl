@@ -2,7 +2,7 @@ amends "pkl:Project"
 
 package {
   name = "project3"
-  baseUri = "package://localhost:12110/project3"
+  baseUri = "package://localhost:0/project3"
   version = "1.5.0"
   // not actually used, just need to provide one so tests pass
   packageZipUrl = "https://bogus.value"
@@ -10,6 +10,6 @@ package {
 
 dependencies {
   ["fruit"] {
-    uri = "package://localhost:12110/fruit@1.1.0"
+    uri = "package://localhost:0/fruit@1.1.0"
   }
 }

@@ -49,19 +49,19 @@ class CliPackageDownloaderTest {
           ),
         packageUris =
           listOf(
-            PackageUri("package://localhost:12110/birds@0.5.0"),
-            PackageUri("package://localhost:12110/fruit@1.0.5"),
-            PackageUri("package://localhost:12110/fruit@1.1.0")
+            PackageUri("package://localhost:0/birds@0.5.0"),
+            PackageUri("package://localhost:0/fruit@1.0.5"),
+            PackageUri("package://localhost:0/fruit@1.1.0")
           ),
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.0.5/fruit@1.0.5.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.0.5/fruit@1.0.5.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.1.0/fruit@1.1.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.1.0/fruit@1.1.0.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.1.0/fruit@1.1.0.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.1.0/fruit@1.1.0.json")).exists()
   }
 
   @Test
@@ -86,13 +86,13 @@ class CliPackageDownloaderTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
             testPort = server.port
           ),
-        packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
+        packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve(".my-cache/package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip"))
+    assertThat(tempDir.resolve(".my-cache/package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip"))
       .exists()
-    assertThat(tempDir.resolve(".my-cache/package-1/localhost:12110/birds@0.5.0/birds@0.5.0.json"))
+    assertThat(tempDir.resolve(".my-cache/package-1/localhost:0/birds@0.5.0/birds@0.5.0.json"))
       .exists()
   }
 
@@ -108,15 +108,13 @@ class CliPackageDownloaderTest {
           ),
         packageUris =
           listOf(
-            PackageUri(
-              "package://localhost:12110/birds@0.5.0::sha256:0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
-            ),
+            PackageUri("package://localhost:0/birds@0.5.0::sha256:${PackageServer.BIRDS_SHA}"),
           ),
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
   }
 
   @Test
@@ -131,18 +129,18 @@ class CliPackageDownloaderTest {
           ),
         packageUris =
           listOf(
-            PackageUri("package://localhost:12110/birds@0.5.0::sha256:intentionallyBogusChecksum"),
+            PackageUri("package://localhost:0/birds@0.5.0::sha256:intentionallyBogusChecksum"),
           ),
         noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessage(
         """
-      Cannot download package `package://localhost:12110/birds@0.5.0` because the computed checksum for package metadata does not match the expected checksum.
+      Cannot download package `package://localhost:0/birds@0.5.0` because the computed checksum for package metadata does not match the expected checksum.
 
-      Computed checksum: "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
+      Computed checksum: "${PackageServer.BIRDS_SHA}"
       Expected checksum: "intentionallyBogusChecksum"
-      Asset URL: "https://localhost:12110/birds@0.5.0"
+      Asset URL: "https://localhost:0/birds@0.5.0"
     """
           .trimIndent()
       )
@@ -153,7 +151,7 @@ class CliPackageDownloaderTest {
     val cmd =
       CliPackageDownloader(
         baseOptions = CliBaseOptions(workingDir = tempDir, noCache = true),
-        packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
+        packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
         noTransitive = true
       )
     assertThatCode { cmd.run() }
@@ -170,12 +168,12 @@ class CliPackageDownloaderTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
             testPort = server.port
           ),
-        packageUris = listOf(PackageUri("package://localhost:12110/badChecksum@1.0.0")),
+        packageUris = listOf(PackageUri("package://localhost:0/badChecksum@1.0.0")),
         noTransitive = true
       )
     assertThatCode { cmd.run() }
       .hasMessageStartingWith(
-        "Cannot download package `package://localhost:12110/badChecksum@1.0.0` because the computed checksum does not match the expected checksum."
+        "Cannot download package `package://localhost:0/badChecksum@1.0.0` because the computed checksum does not match the expected checksum."
       )
   }
 
@@ -191,7 +189,7 @@ class CliPackageDownloaderTest {
           ),
         packageUris =
           listOf(
-            PackageUri("package://localhost:12110/badChecksum@1.0.0"),
+            PackageUri("package://localhost:0/badChecksum@1.0.0"),
             PackageUri("package://bogus.domain/notAPackage@1.0.0")
           ),
         noTransitive = true
@@ -201,12 +199,12 @@ class CliPackageDownloaderTest {
         """
         Failed to download some packages.
 
-        Failed to download package://localhost:12110/badChecksum@1.0.0 because:
-        Cannot download package `package://localhost:12110/badChecksum@1.0.0` because the computed checksum does not match the expected checksum.
+        Failed to download package://localhost:0/badChecksum@1.0.0 because:
+        Cannot download package `package://localhost:0/badChecksum@1.0.0` because the computed checksum does not match the expected checksum.
 
         Computed checksum: "a6bf858cdd1c09da475c2abe50525902580910ee5cc1ff624999170591bf8f69"
         Expected checksum: "intentionally bogus checksum"
-        Asset URL: "https://localhost:12110/badChecksum@1.0.0/badChecksum@1.0.0.zip"
+        Asset URL: "https://localhost:0/badChecksum@1.0.0/badChecksum@1.0.0.zip"
 
         Failed to download package://bogus.domain/notAPackage@1.0.0 because:
         Exception when making request `GET https://bogus.domain/notAPackage@1.0.0`:
@@ -226,13 +224,13 @@ class CliPackageDownloaderTest {
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
             testPort = server.port
           ),
-        packageUris = listOf(PackageUri("package://localhost:12110/birds@0.5.0")),
+        packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
         noTransitive = false
       )
       .run()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/birds@0.5.0/birds@0.5.0.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.0.5/fruit@1.0.5.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:12110/fruit@1.0.5/fruit@1.0.5.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
+    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.json")).exists()
   }
 }

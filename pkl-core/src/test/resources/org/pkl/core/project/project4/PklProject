@@ -4,5 +4,5 @@ package {
   name = "project4"
   version = "1.0.0"
   packageZipUrl = "https://bogus.value"
-  baseUri = "package://localhost:12110/project4"
+  baseUri = "package://localhost:0/project4"
 }

@@ -38,7 +38,7 @@ examples {
   }
   ["reading directories"] {
     new {
-      uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog"
+      uri = "projectpackage://localhost:0/birds@0.5.0#/catalog"
       text = """
         Ostritch.pkl
         Swallow.pkl
@@ -47,7 +47,7 @@ examples {
       base64 = "T3N0cml0Y2gucGtsClN3YWxsb3cucGtsCg=="
     }
     new {
-      uri = "projectpackage://localhost:12110/birds@0.5.0#/"
+      uri = "projectpackage://localhost:0/birds@0.5.0#/"
       text = """
         Bird.pkl
         allFruit.pkl

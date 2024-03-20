@@ -1,9 +1,9 @@
 –– Pkl Error ––
-Cannot find dependency named `fruits`, because it was not declared in package `package://localhost:12110/badImportsWithinPackage@1.0.0`.
+Cannot find dependency named `fruits`, because it was not declared in package `package://localhost:0/badImportsWithinPackage@1.0.0`.
 
 x | res = import("@fruits/Foo.pkl")
                  ^^^^^^^^^^^^^^^^^
-at badImport3.error#res (projectpackage://localhost:12110/badImportsWithinPackage@1.0.0#/unknownDependency.pkl)
+at badImport3.error#res (projectpackage://localhost:0/badImportsWithinPackage@1.0.0#/unknownDependency.pkl)
 
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

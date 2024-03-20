@@ -3,6 +3,6 @@ amends "pkl:Project"
 dependencies {
   ["birds"] {
     // out of date because PklProject declares version 0.5.0
-    uri = "package://localhost:12110/birds@0.8.0"
+    uri = "package://localhost:0/birds@0.8.0"
   }
 }

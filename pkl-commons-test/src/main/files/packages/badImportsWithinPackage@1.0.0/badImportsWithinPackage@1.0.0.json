@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "packageUri": "package://localhost:12110/badImportsWithinPackage@1.1.0",
+  "packageUri": "package://localhost:0/badImportsWithinPackage@1.1.0",
   "name": "badImportsWithinPackage",
-  "packageZipUrl": "https://localhost:12110/badImportsWithinPackage@1.0.0/badImportsWithinPackage@1.0.0.zip",
+  "packageZipUrl": "https://localhost:0/badImportsWithinPackage@1.0.0/badImportsWithinPackage@1.0.0.zip",
   "dependencies": {},
   "version": "1.0.0",
   "packageZipChecksums": {

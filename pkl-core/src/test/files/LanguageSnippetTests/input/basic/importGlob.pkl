@@ -52,16 +52,16 @@ examples {
   }
 
   ["package"] {
-    import*("package://localhost:12110/birds@0.5.0#/catalog/*.pkl")
-    import*("package://localhost:12110/birds@0.5.0#/**.pkl").keys.toListing()
+    import*("package://localhost:0/birds@0.5.0#/catalog/*.pkl")
+    import*("package://localhost:0/birds@0.5.0#/**.pkl").keys.toListing()
   }
 
   ["globbing with absolute URIs and percent encoding"] {
-    import*("package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20*")
-    import*("package://localhost:12110/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5C%5Bwildcard%5D!%20characters~~.pkl")
+    import*("package://localhost:0/packageContainingWildcardCharacters@1.0.0#/name%20*")
+    import*("package://localhost:0/packageContainingWildcardCharacters@1.0.0#/name%20with%20%5C%5Bwildcard%5D!%20characters~~.pkl")
   }
 
   ["package glob and up one level"] {
-    import*("package://localhost:12110/birds@0.5.0#/catalog/../catalog/*.pkl")
+    import*("package://localhost:0/birds@0.5.0#/catalog/../catalog/*.pkl")
   }
 }

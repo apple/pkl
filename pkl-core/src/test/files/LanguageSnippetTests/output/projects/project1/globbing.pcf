@@ -17,13 +17,13 @@ examples {
   }
   ["glob-import absolute package uri"] {
     new {
-      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
         name = "Ostritch"
         favoriteFruit {
           name = "Orange"
         }
       }
-      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
+      ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         name = "Swallow"
         favoriteFruit {
           name = "Apple"
@@ -42,7 +42,7 @@ examples {
   ["glob-read using dependency notation"] {
     new {
       ["@birds/catalog/Ostritch.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -56,7 +56,7 @@ examples {
         base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
       }
       ["@birds/catalog/Swallow.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -72,7 +72,7 @@ examples {
     }
     new {
       ["@birds/Bird.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/Bird.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/Bird.pkl"
         text = """
           open module birds.Bird
           
@@ -86,7 +86,7 @@ examples {
         base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
       }
       ["@birds/allFruit.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/allFruit.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
         text = """
           module birds.allFruit
           
@@ -97,7 +97,7 @@ examples {
         base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
       }
       ["@birds/catalog.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
         text = """
           module birds.catalog
           
@@ -110,7 +110,7 @@ examples {
     }
     new {
       ["@birds/Bird.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/Bird.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/Bird.pkl"
         text = """
           open module birds.Bird
           
@@ -124,7 +124,7 @@ examples {
         base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
       }
       ["@birds/allFruit.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/allFruit.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
         text = """
           module birds.allFruit
           
@@ -135,7 +135,7 @@ examples {
         base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
       }
       ["@birds/catalog.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
         text = """
           module birds.catalog
           
@@ -146,7 +146,7 @@ examples {
         base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
       }
       ["@birds/catalog/Ostritch.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -160,7 +160,7 @@ examples {
         base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
       }
       ["@birds/catalog/Swallow.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -174,7 +174,7 @@ examples {
         base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
       }
       ["@birds/some/dir/Bird.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/some/dir/Bird.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/some/dir/Bird.pkl"
         text = """
           amends "..."
           
@@ -192,7 +192,7 @@ examples {
   ["glob-read within package"] {
     new {
       ["catalog/Ostritch.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -206,7 +206,7 @@ examples {
         base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
       }
       ["catalog/Swallow.pkl"] {
-        uri = "projectpackage://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+        uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -223,8 +223,8 @@ examples {
   }
   ["glob-read absolute package uri"] {
     new {
-      ["package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"] {
-        uri = "package://localhost:12110/birds@0.5.0#/catalog/Ostritch.pkl"
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
+        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
         text = """
           amends "../Bird.pkl"
           
@@ -237,8 +237,8 @@ examples {
           """
         base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
       }
-      ["package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"] {
-        uri = "package://localhost:12110/birds@0.5.0#/catalog/Swallow.pkl"
+      ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
+        uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
         text = """
           amends "../Bird.pkl"
           

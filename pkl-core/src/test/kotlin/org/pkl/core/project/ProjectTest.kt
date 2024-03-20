@@ -151,11 +151,11 @@ class ProjectTest {
       assertThatCode { evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl"))) }
         .hasMessageStartingWith("""
         –– Pkl Error ––
-        Cannot download package `package://localhost:12110/fruit@1.0.5` because the computed checksum for package metadata does not match the expected checksum.
+        Cannot download package `package://localhost:0/fruit@1.0.5` because the computed checksum for package metadata does not match the expected checksum.
         
-        Computed checksum: "abd173e8a25f5b930b0e34269a441e32c9d95e0b0a715bc6eff918f0afd0688e"
+        Computed checksum: "${PackageServer.FRUIT_SHA}"
         Expected checksum: "intentionally bogus checksum"
-        Asset URL: "https://localhost:12110/fruit@1.0.5"
+        Asset URL: "https://localhost:0/fruit@1.0.5"
         
         1 | import "@fruit/Fruit.pkl"
             ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,2 +1,2 @@
 // invalid semver
-res = read("package://localhost:12110/foo@notAVersion#/bar.pkl")
+res = read("package://localhost:0/foo@notAVersion#/bar.pkl")

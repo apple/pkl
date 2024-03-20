@@ -849,9 +849,9 @@ class ServerTest {
       
       package {
         name = "lib"
-        baseUri = "package://localhost:12110/lib"
+        baseUri = "package://localhost:0/lib"
         version = "5.0.0"
-        packageZipUrl = "https://localhost:12110/lib.zip"
+        packageZipUrl = "https://localhost:0/lib.zip"
       }
     """
           .trimIndent()
@@ -880,23 +880,23 @@ class ServerTest {
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
-          "package://localhost:12110/birds@0": {
+          "package://localhost:0/birds@0": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/birds@0.5.0",
+            "uri": "projectpackage://localhost:0/birds@0.5.0",
             "checksums": {
               "sha256": "${dollar}skipChecksumVerification"
             }
           },
-          "package://localhost:12110/fruit@1": {
+          "package://localhost:0/fruit@1": {
             "type": "remote",
-            "uri": "projectpackage://localhost:12110/fruit@1.0.5",
+            "uri": "projectpackage://localhost:0/fruit@1.0.5",
             "checksums": {
               "sha256": "${dollar}skipChecksumVerification"
             }
           },
-          "package://localhost:12110/lib@5": {
+          "package://localhost:0/lib@5": {
             "type": "local",
-            "uri": "projectpackage://localhost:12110/lib@5.0.0",
+            "uri": "projectpackage://localhost:0/lib@5.0.0",
             "path": "../lib"
           }
         }
@@ -915,11 +915,11 @@ class ServerTest {
             dependencies =
               mapOf(
                 "birds" to
-                  RemoteDependency(packageUri = URI("package://localhost:12110/birds@0.5.0"), null),
+                  RemoteDependency(packageUri = URI("package://localhost:0/birds@0.5.0"), null),
                 "lib" to
                   Project(
                     projectFileUri = libDir.toUri().resolve("PklProject"),
-                    packageUri = URI("package://localhost:12110/lib@5.0.0"),
+                    packageUri = URI("package://localhost:0/lib@5.0.0"),
                     dependencies = emptyMap()
                   )
               )
