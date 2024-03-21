@@ -26,9 +26,9 @@ import java.nio.file.Path;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,11 +84,12 @@ public class ProjectPackager {
    * Modification time value for all zip entries in a package, to ensure that archives are
    * reproducible.
    *
-   * <p>Date is 1980 February 1st CET (value taken from {@code
-   * org.gradle.api.internal.file.archive.ZipCopyAction}).
+   * <p>Date is 1980 February 1st (value taken from {@code
+   * org.gradle.api.internal.file.archive.ZipCopyAction}). Note that this date does not contain time
+   * zone information.
    */
-  private static final long ZIP_ENTRY_MTIME =
-      new GregorianCalendar(1980, Calendar.FEBRUARY, 1, 0, 0, 0).getTimeInMillis();
+  private static final LocalDateTime ZIP_ENTRY_MTIME =
+      LocalDateTime.of(1980, Month.FEBRUARY, 1, 0, 0);
 
   private final EconomicMap<PackageUri, PackageResult> packageResults = EconomicMap.create();
 
@@ -296,7 +297,7 @@ public class ProjectPackager {
       for (var file : files) {
         var relativePath = project.getProjectDir().relativize(file);
         var zipEntry = new ZipEntry(relativePath.toString());
-        zipEntry.setTime(ZIP_ENTRY_MTIME);
+        zipEntry.setTimeLocal(ZIP_ENTRY_MTIME);
         zos.putNextEntry(zipEntry);
         Files.copy(file, zos);
         zos.closeEntry();
