@@ -21,4 +21,4 @@ org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1=pkldoc
 org.jetbrains:annotations:13.0=pkldoc
 org.organicdesign:Paguro:3.10.3=pkldoc
 org.snakeyaml:snakeyaml-engine:2.5=pkldoc
-empty=archives,default
+empty=archives,default,signatures
