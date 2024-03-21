@@ -4,9 +4,12 @@ import org.junit.platform.engine.EngineDiscoveryRequest
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
+import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.commons.test.PackageServer
+import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
+import org.pkl.core.util.IoUtils
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.file.Files
@@ -33,6 +36,8 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   //language=regexp
   internal val selection: String = ""
 
+  protected val packageServer: PackageServer = PackageServer()
+  
   override val includedTests: List<Regex> = listOf(Regex(".*$selection\\.pkl"))
 
   override val excludedTests: List<Regex> = listOf(Regex(".*/native/.*"))
@@ -40,11 +45,6 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   override val inputDir: Path = snippetsDir.resolve("input")
 
   override val isInputFile: (Path) -> Boolean = { it.isRegularFile() }
-
-  protected val cacheDir: Path by lazy {
-    rootProjectDir.resolve("pkl-core/build/packages-cache")
-      .also { PackageServer.populateCacheDir(it) }
-  }
 
   protected tailrec fun Path.getProjectDir(): Path? =
     if (Files.exists(this.resolve("PklProject"))) this
@@ -58,6 +58,15 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     return expectedOutputDir.resolve(stdoutPath)
   }
 
+  override fun beforeAll() {
+    // disable SHA verification for packages
+    IoUtils.setTestMode()
+  }
+  
+  override fun afterAll() {
+    packageServer.close()
+  }
+  
   protected fun String.stripFilePaths() = replace(snippetsDir.toString(), "/\$snippetsDir")
 
   protected fun String.stripLineNumbers() = replace(lineNumberRegex) { result ->
@@ -92,7 +101,11 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
         "name2" to "value2",
         "/foo/bar" to "foobar"
       ))
-      .setModuleCacheDir(cacheDir)
+      .setModuleCacheDir(null)
+      .setHttpClient(HttpClient.builder()
+        .setTestPort(packageServer.port)
+        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .buildLazily())
   }
 
   override val testClass: KClass<*> = LanguageSnippetTests::class
@@ -158,8 +171,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
     val args = buildList {
       add(pklExecutablePath.toString())
       add("eval")
-      add("--cache-dir")
-      add(cacheDir.toString())
+      add("--no-cache")
       if (inputFile.startsWith(projectsDir)) {
         val projectDir = inputFile.getProjectDir()
         if (projectDir != null) {
@@ -187,7 +199,11 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       }
       add("--settings")
       add("pkl:settings")
+      add("--ca-certificates")
+      add(FileTestUtils.selfSignedCertificate.toString())
       add("--test-mode")
+      add("--test-port")
+      add(packageServer.port.toString())
       add(inputFile.toString())
     }
 

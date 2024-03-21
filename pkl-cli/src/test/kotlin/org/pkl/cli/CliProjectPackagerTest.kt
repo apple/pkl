@@ -588,7 +588,7 @@ class CliProjectPackagerTest {
               "type": "remote",
               "uri": "projectpackage://localhost:0/birds@0.5.0",
               "checksums": {
-                "sha256": "3f19ab9fcee2f44f93a75a09e531db278c6d2cd25206836c8c2c4071cd7d3118"
+                "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
               }
             },
             "package://localhost:0/project2@5": {
