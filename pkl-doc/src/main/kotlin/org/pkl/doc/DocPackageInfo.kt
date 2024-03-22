@@ -161,7 +161,7 @@ data class DocPackageInfo(
       "pkl:/" -> "pkl:${moduleName.substring(4)}".toUri()
       else -> {
         val path = getModulePath(moduleName, moduleNamePrefix).uriEncoded + ".pkl"
-        URI(importUri).resolve(path)
+        URI(importUri + path)
       }
     }
 
