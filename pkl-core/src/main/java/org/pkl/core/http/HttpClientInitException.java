@@ -15,13 +15,11 @@
  */
 package org.pkl.core.http;
 
-import org.pkl.core.PklException;
-
 /**
  * Indicates that an error occurred while initializing an HTTP client. A common example is an error
  * reading or parsing a certificate.
  */
-public class HttpClientInitException extends PklException {
+public class HttpClientInitException extends RuntimeException {
   public HttpClientInitException(String message) {
     super(message);
   }
