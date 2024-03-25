@@ -56,7 +56,8 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
 
   override fun visitDeclaredType(ctx: PklParser.DeclaredTypeContext): Type {
     val ids = visitQualifiedIdentifier(ctx.qualifiedIdentifier())
-    val args = ctx.typeArgumentList().ts.map(::visitType)
+    val argList = ctx.typeArgumentList()
+    val args = argList?.ts?.map(::visitType) ?: listOf()
     return Type.Declared(ids, args, toSpan(ctx))
   }
 
@@ -519,6 +520,11 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
         ModifierValue.ABSTRACT,
         ModifierValue.EXTERNAL
       )
+    val openAbstract =
+      modifiers.filter { it.mod == ModifierValue.OPEN || it.mod == ModifierValue.ABSTRACT }
+    if (openAbstract.size == 2) {
+      errors += ParseError("openAbstractClass", openAbstract[1].span)
+    }
     val name = toIdent(header.Identifier())
     val typePars = visitTypeParameterList(header.typeParameterList())
     val superCLass = header.type()?.let(::visitType)
@@ -603,15 +609,16 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
         ?: listOf()
     val name =
       header.qualifiedIdentifier()?.let { ModuleNameDecl(visitQualifiedIdentifier(it), toSpan(it)) }
-    // cannot be null
-    val extendsOrAmends = header.moduleExtendsOrAmendsClause()
-    val uri = extendsOrAmends.stringConstant()
     var extends: ExtendsDecl? = null
     var amends: AmendsDecl? = null
-    if (extendsOrAmends.t.type == PklLexer.AMENDS) {
-      amends = AmendsDecl(visitStringConstant(uri), toSpan(uri))
-    } else {
-      extends = ExtendsDecl(visitStringConstant(uri), toSpan(uri))
+    val extendsOrAmends = header.moduleExtendsOrAmendsClause()
+    if (extendsOrAmends != null) {
+      val uri = extendsOrAmends.stringConstant()
+      if (extendsOrAmends.t.type == PklLexer.AMENDS) {
+        amends = AmendsDecl(visitStringConstant(uri), toSpan(uri))
+      } else {
+        extends = ExtendsDecl(visitStringConstant(uri), toSpan(uri))
+      }
     }
     return ModuleDecl(null, listOf(), modifiers, name, extends, amends, toSpan(ctx))
   }
@@ -761,6 +768,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
         PklLexer.HIDDEN_ -> ModifierValue.HIDDEN
         PklLexer.FIXED -> ModifierValue.FIXED
         PklLexer.CONST -> ModifierValue.CONST
+        PklLexer.OPEN -> ModifierValue.OPEN
         else -> {
           errors += ParseError("invalidModifier", span)
           ModifierValue.HIDDEN
@@ -962,11 +970,14 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     private fun toSpan(ctx: ParserRuleContext): Span {
       val begin = ctx.start
       val end = ctx.stop
-      return Span(begin.line, begin.line + begin.stopIndex, end.line, end.line + end.stopIndex)
+      val endCol = end.charPositionInLine + 1 + end.text.length
+      return Span(begin.line, begin.charPositionInLine + 1, end.line, endCol)
     }
 
-    private fun toSpan(token: Token): Span =
-      Span(token.line, token.line + token.stopIndex, token.line, token.line + token.stopIndex)
+    private fun toSpan(token: Token): Span {
+      val endCol = token.charPositionInLine + 1 + token.text.length
+      return Span(token.line, token.charPositionInLine + 1, token.line, endCol)
+    }
   }
 }
 

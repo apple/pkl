@@ -16,26 +16,27 @@
 package org.pkl.lsp
 
 import java.util.concurrent.CompletableFuture
+import kotlin.system.exitProcess
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
-import kotlin.system.exitProcess
 
 class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClientAware {
 
   val workspaceService: PklWorkspaceService = PklWorkspaceService()
-  val textDocumentService: PklTextDocumentService = PklTextDocumentService(this)
+  val textService: PklTextDocumentService = PklTextDocumentService(this)
 
   private lateinit var client: LanguageClient
-  private val builder: Builder = Builder()
+  private lateinit var logger: ClientLogger
+  private val builder: Builder = Builder(this)
 
   override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
     val res = InitializeResult(ServerCapabilities())
     res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
-    
+
     return CompletableFuture.supplyAsync { res }
   }
 
@@ -47,13 +48,18 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
     exitProcess(0)
   }
 
-  override fun getTextDocumentService(): TextDocumentService = textDocumentService
+  override fun getTextDocumentService(): TextDocumentService = textService
 
   override fun getWorkspaceService(): WorkspaceService = workspaceService
-  
-  fun builder() = builder
+
+  fun builder(): Builder = builder
+
+  fun client(): LanguageClient = client
+
+  fun logger(): ClientLogger = logger
 
   override fun connect(client: LanguageClient) {
     this.client = client
+    logger = ClientLogger(client, verbose)
   }
 }

@@ -15,4 +15,8 @@
  */
 package org.pkl.lsp.cst
 
-data class Span(val beginLine: Int, val beginCol: Int, val endLine: Int, val endCol: Int)
+data class Span(val beginLine: Int, val beginCol: Int, val endLine: Int, val endCol: Int) {
+  override fun toString(): String {
+    return "($beginLine:$beginCol - $endLine:$endCol)"
+  }
+}
