@@ -15,19 +15,14 @@
  */
 package org.pkl.lsp
 
-import org.eclipse.lsp4j.launch.LSPLauncher
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.Range
+import org.pkl.lsp.cst.Span
 
-object PklLSP {
-
-  fun run(verbose: Boolean) {
-    val server = PklLSPServer(verbose)
-    val launcher = LSPLauncher.createServerLauncher(server, System.`in`, System.out)
-
-    val client = launcher.remoteProxy
-    server.connect(client)
-
-    server.logger().log("Starting Pkl LSP server")
-    val future = launcher.startListening()
-    future.get()
+object LSPUtil {
+  fun spanToRange(s: Span): Range {
+    val start = Position(s.beginLine - 1, s.beginCol - 1)
+    val end = Position(s.endLine - 1, s.endCol - 1)
+    return Range(start, end)
   }
 }
