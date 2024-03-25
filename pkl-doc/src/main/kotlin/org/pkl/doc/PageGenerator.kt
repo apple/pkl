@@ -426,7 +426,7 @@ internal abstract class PageGenerator<out S>(
   // anchors, and requires no JS
   protected fun HtmlBlockTag.renderAnchor(anchorId: String, cssClass: String = "anchor") {
     div {
-      id = anchorId.uriEncoded
+      id = anchorId.uriEncodedComponent
       classes = setOf(cssClass)
       +" " // needs some content to be considered a valid anchor by browsers
     }
@@ -457,7 +457,7 @@ internal abstract class PageGenerator<out S>(
   protected fun HtmlBlockTag.renderSelfLink(memberName: String) {
     a {
       classes = setOf("member-selflink", "material-icons")
-      href = "#${memberName.uriEncoded}"
+      href = "#${memberName.uriEncodedComponent}"
       +"link"
     }
   }

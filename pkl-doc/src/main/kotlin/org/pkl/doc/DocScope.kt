@@ -253,7 +253,7 @@ internal class PackageScope(
   private val moduleScopes: Map<String, ModuleScope> by lazy {
     modules.associate { module ->
       val docUrl =
-        url.resolve(getModulePath(module.moduleName, modulePrefix).uriEncodedPath + "/index.html")
+        url.resolve(getModulePath(module.moduleName, modulePrefix).uriEncoded + "/index.html")
       module.moduleName to ModuleScope(module, docUrl, this)
     }
   }
@@ -326,7 +326,7 @@ internal class ModuleScope(
     get() = module.moduleName
 
   val path: String by lazy {
-    getModulePath(module.moduleName, parent!!.docPackageInfo.moduleNamePrefix).uriEncodedPath
+    getModulePath(module.moduleName, parent!!.docPackageInfo.moduleNamePrefix).uriEncoded
   }
 
   override val dataUrl: URI by lazy { parent!!.dataUrl.resolve("./$path/index.js") }
@@ -386,11 +386,12 @@ internal class ClassScope(
 ) : PageScope() {
   override val url: URI by lazy {
     // `isModuleClass` distinction is relevant when this scope is a link target
-    if (clazz.isModuleClass) parentUrl else parentUrl.resolve("${clazz.simpleName.uriEncoded}.html")
+    if (clazz.isModuleClass) parentUrl
+    else parentUrl.resolve("${clazz.simpleName.uriEncodedComponent}.html")
   }
 
   override val dataUrl: URI by lazy {
-    parent!!.dataUrl.resolve("${clazz.simpleName.uriEncoded}.js")
+    parent!!.dataUrl.resolve("${clazz.simpleName.uriEncodedComponent}.js")
   }
 
   override fun getMethod(name: String): MethodScope? =

@@ -119,7 +119,12 @@ internal fun String.replaceSourceCodePlaceholders(
     .replace("%{endLine}", sourceLocation.endLine.toString())
 }
 
-internal val String.uriEncoded
+/**
+ * Encodes a URI string, encoding characters that are part of URI syntax.
+ *
+ * Follows `encodeURIComponent` from ECMAScript.
+ */
+internal val String.uriEncodedComponent
   get(): String {
     val ret = URLEncoder.encode(this, StandardCharsets.UTF_8)
     // Replace `+` with `%20` to be safe
@@ -128,13 +133,18 @@ internal val String.uriEncoded
     return ret.replace("+", "%20")
   }
 
-internal val String.uriEncodedPath
-  get(): String = split("/").map { it.uriEncoded }.joinToString("/") { it }
+/**
+ * Encodes a URI string, preserving characters that are part of URI syntax.
+ *
+ * Follows `encodeURI` from ECMAScript.
+ */
+internal val String.uriEncoded
+  get(): String = replace(Regex("([^;/?:@&=+\$,#]+)")) { it.value.uriEncodedComponent }
 
 fun getModulePath(moduleName: String, packagePrefix: String): String =
   moduleName.substring(packagePrefix.length).replace('.', '/')
 
-internal fun String.toEncodedUri(): URI = URI(uriEncodedPath)
+internal fun String.toEncodedUri(): URI = URI(uriEncoded)
 
 /**
  * Turns `"foo.bar.baz-biz"` into ``"foo.bar.`baz-biz`"``.
