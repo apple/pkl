@@ -600,7 +600,8 @@ internal abstract class PageGenerator<out S>(
         for (example in examples) {
           if (first) first = false else +", "
           a {
-            href = docModule.parent.docPackageInfo.getModuleSourceCode(example.moduleName)!!
+            href =
+              docModule.parent.docPackageInfo.getModuleSourceCode(example.moduleName)!!.toString()
             +example.shortModuleName
           }
         }

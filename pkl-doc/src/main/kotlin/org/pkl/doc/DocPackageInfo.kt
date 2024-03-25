@@ -165,10 +165,10 @@ data class DocPackageInfo(
       }
     }
 
-  internal fun getModuleSourceCode(moduleName: String): String? {
+  internal fun getModuleSourceCode(moduleName: String): URI? {
     val path = "/" + getModulePath(moduleName, moduleNamePrefix).uriEncoded + ".pkl"
     // assumption: the fragment is only used for line numbers
-    return sourceCodeUrlScheme?.replace("%{path}", path)?.substringBefore('#')
+    return sourceCodeUrlScheme?.replace("%{path}", path)?.substringBefore('#')?.let(URI::create)
   }
 
   /** Information about a depended-on package. */
