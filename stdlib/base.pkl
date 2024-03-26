@@ -22,6 +22,7 @@ module pkl.base
 
 import "pkl:jsonnet"
 import "pkl:xml"
+import "pkl:ini"
 import "pkl:protobuf"
 
 /// The top type of the type hierarchy.
@@ -102,7 +103,8 @@ abstract external class Module {
         else if (format == "textproto") new protobuf.Renderer {}
         else if (format == "xml") new xml.Renderer {}
         else if (format == "yaml") new YamlRenderer {}
-        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`.")
+        else if (format == "ini") new ini.Renderer {}  
+        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`, `ini`.")
     text = renderer.renderDocument(value)
   }
 }

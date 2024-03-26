@@ -10,6 +10,7 @@ pkl:base
 pkl:Benchmark
 pkl:DocPackageInfo
 pkl:DocsiteInfo
+pkl:ini
 pkl:json
 pkl:jsonnet
 pkl:math

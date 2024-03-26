@@ -1,0 +1,35 @@
+import "pkl:ini"
+
+class Person {
+  name: String
+  age: Int
+  address: Address
+}
+
+class Address {
+  street: String
+}
+
+key = "value"
+
+unicodeString = "abc😀abc😎abc"
+
+nullValue = null
+
+typedObject = new Person {
+  name = "Pigeon"
+  age = 19
+  address {
+    street = "Fun Road"
+  }
+}
+
+multiLineString = """
+  have a
+  great
+  day
+  """
+
+output {
+  renderer = new ini.Renderer {}
+}

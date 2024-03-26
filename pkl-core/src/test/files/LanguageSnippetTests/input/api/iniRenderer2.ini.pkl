@@ -1,0 +1,71 @@
+import "pkl:ini"
+
+class Person{
+  name: String
+  address: Address
+  age: Int
+}
+
+class Address{
+  street: String
+}
+
+key = "value"
+unicodeString = "abc😀abc😎abc"
+nullValue = null
+
+
+mapping = new Mapping{
+  ["one"] = "value1"
+  ["two"] = new Person {name = "Pigeon" age = 19 address {
+    street = "fun Street"
+  }}
+  ["three"] = "value3"
+  ["four"] = 1.2
+  ["five"] = new Mapping {
+    ["six"] = 123
+  }
+  ["seven"] = true
+}
+
+map = Map(
+  "one", "value1",
+  "two", new Person {name = "Pigeon" age = 19 address {
+    street = "Fun Street"
+  }},
+  "three", "value3",
+  "four", 1.2,
+  "five", Map("six", 123),
+  "seven", true
+)
+
+typedObject = new Person{
+  name = "Pigeon"
+  address {
+    street = "Fun Street"
+  }
+  age = 19
+}
+
+dynamic = new Dynamic{
+  one = "value1"
+  two = new Person {name = "Pigeon" age = 19 address {
+    street = "fun Street"
+  }}
+  three = "value3"
+  four = 1.2
+  five = new Dynamic {
+    six = 123
+  }
+  seven = true
+}
+
+multiLineString = """
+  have a
+  great
+  day
+  """
+
+output {
+  renderer = new ini.Renderer {}
+}
