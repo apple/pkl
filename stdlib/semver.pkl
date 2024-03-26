@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Parsing, comparison, and manipulation of [semantic version](https://semver.org/spec/v2.0.0.html) numbers.
-@ModuleInfo { minPklVersion = "0.25.2" }
+@ModuleInfo { minPklVersion = "0.25.3" }
 module pkl.semver
 
 /// Tells whether [version] is a valid semantic version number.

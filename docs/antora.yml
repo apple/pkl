@@ -1,6 +1,6 @@
 name: main
 title: Main Project
-version: 0.25.2
+version: 0.25.3
 prerelease: false
 nav:
 - nav.adoc

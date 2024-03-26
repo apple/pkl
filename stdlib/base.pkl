@@ -17,7 +17,7 @@
 /// Fundamental properties, methods, and classes for writing Pkl programs.
 ///
 /// Members of this module are automatically available in every Pkl module.
-@ModuleInfo { minPklVersion = "0.25.2" }
+@ModuleInfo { minPklVersion = "0.25.3" }
 module pkl.base
 
 import "pkl:jsonnet"
