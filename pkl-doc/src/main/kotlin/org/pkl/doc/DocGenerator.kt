@@ -179,7 +179,7 @@ internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<
         mod,
         docPackageInfo.version,
         docPackageInfo.getModuleImportUri(mod.moduleName),
-        docPackageInfo.getModuleSourceCode(mod.moduleName)?.toEncodedUri(),
+        docPackageInfo.getModuleSourceCode(mod.moduleName),
         exampleModulesBySubject[mod.moduleName] ?: listOf()
       )
     }
