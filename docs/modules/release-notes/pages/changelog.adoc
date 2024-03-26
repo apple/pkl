@@ -16,6 +16,10 @@ include::ROOT:partial$component-attributes.adoc[]
 * Documentation improvements (link:https://github.com/apple/pkl/pull/93[#93], link:https://github.com/apple/pkl/pull/106[#106], link:https://github.com/apple/pkl/pull/143[#143], link:https://github.com/apple/pkl/pull/205[#205], link:https://github.com/apple/pkl/pull/214[#214], link:https://github.com/apple/pkl/pull/224[#224], link:https://github.com/apple/pkl/pull/257[#257], link:https://github.com/apple/pkl/pull/270[#270], link:https://github.com/apple/pkl/pull/282[#282], link:https://github.com/apple/pkl/pull/283[#283], link:https://github.com/apple/pkl/pull/299[#299], link:https://github.com/apple/pkl/pull/337[#337], link:https://github.com/apple/pkl/pull/340[#340])
 * Build script improvements (link:https://github.com/apple/pkl/pull/253[#253], link:https://github.com/apple/pkl/pull/314[#314], link:https://github.com/apple/pkl/pull/333[#333], link:https://github.com/apple/pkl/pull/338[#338])
 
+=== Changes
+
+* Add `jpkl` to the set of artifacts released to GitHub (link:https://github.com/apple/pkl/pull/314[#314])
+
 === Contributors ❤️
 
 Thank you to all the contributors for this release!
