@@ -1,6 +1,38 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.25.3]]
+== 0.25.3 (2024-03-26)
+
+=== Fixes
+
+* Fixes some issues with generated pkldoc websites (link:https://github.com/apple/pkl/pull/357[#357], link:https://github.com/apple/pkl/pull/362[#362])
+* Fixes a bug where amending a module that defines an abstract class might cause a Java `AssertionError` (link:https://github.com/apple/pkl/pull/319[#319])
+* Fixes a bug where a for/when generator within a lambda declared with `new {}` syntax might not resolve variables correctly (link:https://github.com/apple/pkl/pull/297[#297])
+* Fixes a bug where `const` and `local` modifiers are not exported when obtaining a class's mirror in `pkl:reflect` (link:https://github.com/apple/pkl/pull/265[#265]).
+
+=== Miscellaneous
+
+* Documentation improvements (link:https://github.com/apple/pkl/pull/93[#93], link:https://github.com/apple/pkl/pull/106[#106], link:https://github.com/apple/pkl/pull/143[#143], link:https://github.com/apple/pkl/pull/205[#205], link:https://github.com/apple/pkl/pull/214[#214], link:https://github.com/apple/pkl/pull/224[#224], link:https://github.com/apple/pkl/pull/257[#257], link:https://github.com/apple/pkl/pull/270[#270], link:https://github.com/apple/pkl/pull/282[#282], link:https://github.com/apple/pkl/pull/283[#283], link:https://github.com/apple/pkl/pull/299[#299], link:https://github.com/apple/pkl/pull/337[#337], link:https://github.com/apple/pkl/pull/340[#340])
+* Build script improvements (link:https://github.com/apple/pkl/pull/253[#253], link:https://github.com/apple/pkl/pull/314[#314], link:https://github.com/apple/pkl/pull/333[#333], link:https://github.com/apple/pkl/pull/338[#338])
+
+=== Changes
+
+* Add `jpkl` to the set of artifacts released to GitHub (link:https://github.com/apple/pkl/pull/314[#314])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/r1ft1[@r1ft1]
+* link:https://github.com/WardsParadox[@WardsParadox]
+* link:https://github.com/grantabbott[@grantabbott]
+* link:https://github.com/mshakhmaykin[@mshakhmaykin]
+* link:https://github.com/d4wae89d498[@d4wae89d498]
+* link:https://github.com/KushalP[@KushalP]
+* link:https://github.com/zihluwang[@zihluwang]
+* link:https://github.com/Malix-off[@Malix-off]
+
 [[release-0.25.2]]
 == 0.25.2 (2024-02-08)
 
