@@ -12,7 +12,7 @@ Currently, Pkl must be embedded as a child process, by shelling out to the CLI u
 When embedded, communication between a host application and Pkl happens via message passing.
 The message passing specification can be found in xref:message-passing-api.adoc[].
 
-For examples of language bindings in practice, review the xref:{uri-pkl-go-github}[pkl-go], or the xref:{uri-pkl-swift-github}[pkl-swift] codebases.
+For examples of language bindings in practice, review the link:{uri-pkl-go-github}[pkl-go], or the link:{uri-pkl-swift-github}[pkl-swift] codebases.
 
 NOTE: Pkl's Java and Kotlin libraries binds to Pkl directly, and do not use message passing.
 
