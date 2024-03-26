@@ -21,8 +21,17 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.CliTestException
 import org.pkl.commons.cli.CliTestOptions
+import org.pkl.core.Loggers
+import org.pkl.core.SecurityManagers
+import org.pkl.core.StackFrameTransformers
+import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.project.Project
 import org.pkl.core.project.ProjectPackager
+import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.runtime.ModuleResolver
+import org.pkl.core.runtime.ResourceManager
+import org.pkl.core.runtime.VmContext
+import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.ErrorMessages
 
 class CliProjectPackager(
@@ -76,16 +85,38 @@ class CliProjectPackager(
         }
       }
     }
-    ProjectPackager(
-        projects,
-        cliOptions.normalizedWorkingDir,
-        outputPath,
-        stackFrameTransformer,
-        securityManager,
-        httpClient,
-        skipPublishCheck,
-        consoleWriter
-      )
-      .createPackages()
+    // A VmContext is needed here because loading PklProject.deps.json uses resource readers
+    VmUtils.createContext {
+        val vmContext = VmContext.get(null)
+        vmContext.initialize(
+          VmContext.Holder(
+            StackFrameTransformers.defaultTransformer,
+            SecurityManagers.defaultManager,
+            httpClient,
+            ModuleResolver(listOf(ModuleKeyFactories.standardLibrary)),
+            ResourceManager(SecurityManagers.defaultManager, listOf(ResourceReaders.file())),
+            Loggers.noop(),
+            mapOf(),
+            mapOf(),
+            null,
+            null,
+            null,
+            null
+          )
+        )
+
+        ProjectPackager(
+            projects,
+            cliOptions.normalizedWorkingDir,
+            outputPath,
+            stackFrameTransformer,
+            securityManager,
+            httpClient,
+            skipPublishCheck,
+            consoleWriter
+          )
+          .createPackages()
+      }
+      .close()
   }
 }

@@ -11,4 +11,5 @@ dependencies {
     uri = "package://localhost:0/badImportsWithinPackage@1.0.0"
   }
   ["project2"] = import("../project2/PklProject")
+  ["project6"] = import("../project6/PklProject")
 }

@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -487,10 +486,9 @@ public final class ResourceReaders {
         throws IOException, URISyntaxException, SecurityManagerException {
       var assetUri = new PackageAssetUri(uri);
       var dependency = getProjectDepsResolver().getResolvedDependency(assetUri.getPackageUri());
-      var path = getLocalPath(dependency, assetUri);
-      if (path != null) {
-        var bytes = Files.readAllBytes(path);
-        return Optional.of(new Resource(uri, bytes));
+      var local = getLocalUri(dependency, assetUri);
+      if (local != null) {
+        return VmContext.get(null).getResourceManager().read(local, null);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       var bytes = getPackageResolver().getBytes(assetUri, true, remoteDep.getChecksums());
@@ -519,9 +517,9 @@ public final class ResourceReaders {
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency, packageAssetUri);
-      if (path != null) {
-        return FileResolver.listElements(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        return VmContext.get(null).getResourceManager().listElements(local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()
@@ -535,9 +533,9 @@ public final class ResourceReaders {
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency, packageAssetUri);
-      if (path != null) {
-        return FileResolver.hasElement(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        return VmContext.get(null).getResourceManager().hasElement(local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()
@@ -556,12 +554,12 @@ public final class ResourceReaders {
       return projectDepsManager;
     }
 
-    private @Nullable Path getLocalPath(Dependency dependency, PackageAssetUri packageAssetUri) {
+    private @Nullable URI getLocalUri(Dependency dependency, PackageAssetUri packageAssetUri) {
       if (!(dependency instanceof LocalDependency)) {
         return null;
       }
       return ((LocalDependency) dependency)
-          .resolveAssetPath(getProjectDepsResolver().getProjectDir(), packageAssetUri);
+          .resolveAssetUri(getProjectDepsResolver().getProjectBaseUri(), packageAssetUri);
     }
   }
 
