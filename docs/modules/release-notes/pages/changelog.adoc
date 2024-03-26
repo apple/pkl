@@ -11,10 +11,6 @@ include::ROOT:partial$component-attributes.adoc[]
 * Fixes a bug where a for/when generator within a lambda declared with `new {}` syntax might not resolve variables correctly (link:https://github.com/apple/pkl/pull/297[#297])
 * Fixes a bug where `const` and `local` modifiers are not exported when obtaining a class's mirror in `pkl:reflect` (link:https://github.com/apple/pkl/pull/265[#265]).
 
-=== Changes
-
-* Add 
-
 === Miscellaneous
 
 * Documentation improvements (link:https://github.com/apple/pkl/pull/93[#93], link:https://github.com/apple/pkl/pull/106[#106], link:https://github.com/apple/pkl/pull/143[#143], link:https://github.com/apple/pkl/pull/205[#205], link:https://github.com/apple/pkl/pull/214[#214], link:https://github.com/apple/pkl/pull/224[#224], link:https://github.com/apple/pkl/pull/257[#257], link:https://github.com/apple/pkl/pull/270[#270], link:https://github.com/apple/pkl/pull/282[#282], link:https://github.com/apple/pkl/pull/283[#283], link:https://github.com/apple/pkl/pull/299[#299], link:https://github.com/apple/pkl/pull/337[#337], link:https://github.com/apple/pkl/pull/340[#340])
