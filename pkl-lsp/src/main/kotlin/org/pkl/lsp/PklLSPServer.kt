@@ -37,6 +37,9 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
     val res = InitializeResult(ServerCapabilities())
     res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
 
+    // Hover capability
+    res.capabilities.setHoverProvider(true)
+
     return CompletableFuture.supplyAsync { res }
   }
 

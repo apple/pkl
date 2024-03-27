@@ -17,13 +17,15 @@ package org.pkl.lsp
 
 import java.net.URI
 import java.nio.file.Paths
-import org.eclipse.lsp4j.DidChangeTextDocumentParams
-import org.eclipse.lsp4j.DidCloseTextDocumentParams
-import org.eclipse.lsp4j.DidOpenTextDocumentParams
-import org.eclipse.lsp4j.DidSaveTextDocumentParams
+import java.util.concurrent.CompletableFuture
+import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.pkl.lsp.features.HoverFeature
 
 class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentService {
+
+  private val hover = HoverFeature(server)
+
   override fun didOpen(params: DidOpenTextDocumentParams) {
     val uri = URI(params.textDocument.uri)
     val file = Paths.get(uri).toFile()
@@ -50,5 +52,9 @@ class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentSer
     if (file.isFile && file.extension == "pkl") {
       server.builder().requestBuild(uri)
     }
+  }
+
+  override fun hover(params: HoverParams): CompletableFuture<Hover> {
+    return hover.onHover(params)
   }
 }
