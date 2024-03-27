@@ -4,7 +4,6 @@ import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.api.artifacts.VersionConstraint
 import org.gradle.kotlin.dsl.getByType
 
 // `buildInfo` in main build scripts
@@ -109,7 +108,7 @@ open class BuildInfo(project: Project) {
     // only run command once per build invocation
     if (project === project.rootProject) {
       Runtime.getRuntime()
-        .exec("git rev-parse --short HEAD", arrayOf(), project.rootDir)
+        .exec(arrayOf("git", "rev-parse", "--short", "HEAD"), arrayOf(), project.rootDir)
         .inputStream.reader().readText().trim()
     } else {
       project.rootProject.extensions.getByType(BuildInfo::class.java).commitId

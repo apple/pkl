@@ -148,6 +148,10 @@ local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
     javaVersion = "17.0"
     isRelease = false
   }
+  ["gradle-check-jdk21"] {
+    javaVersion = "21.0"
+    isRelease = false
+  }
 }
 
 jobs {
