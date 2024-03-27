@@ -35,7 +35,10 @@ data class ModuleDecl(
   val name: ModuleNameDecl?,
   val extendsDecl: ExtendsDecl?,
   val amendsDecl: AmendsDecl?,
-  override val span: Span
+  override val span: Span,
+  val nameSpan: Span? =
+    if (modifiers.isNotEmpty() && name != null) Span.from(modifiers[0].span, name.span)
+    else name?.span
 ) : PklNode(span) {
   init {
     extendsDecl?.parent = this

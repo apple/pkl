@@ -15,8 +15,10 @@
  */
 package org.pkl.lsp.cst
 
+import java.util.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.pkl.core.ast.builder.AstBuilder
 import org.pkl.core.parser.antlr.PklLexer
@@ -40,6 +42,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitStringConstant(ctx: PklParser.StringConstantContext): Ident {
+    checkSingleLineStringDelimiters(ctx.t, ctx.t2)
     val str = doVisitSingleLineConstantStringPart(ctx.ts)
     return Ident(str, toSpan(ctx))
   }
@@ -56,9 +59,14 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
 
   override fun visitDeclaredType(ctx: PklParser.DeclaredTypeContext): Type {
     val ids = visitQualifiedIdentifier(ctx.qualifiedIdentifier())
-    val argList = ctx.typeArgumentList()
-    val args = argList?.ts?.map(::visitType) ?: listOf()
+    val args = visitTypeArgumentList(ctx.typeArgumentList())
     return Type.Declared(ids, args, toSpan(ctx))
+  }
+
+  override fun visitTypeArgumentList(ctx: PklParser.TypeArgumentListContext?): List<Type> {
+    if (ctx == null) return listOf()
+    checkCommaSeparatedElements(ctx, ctx.ts, ctx.errs)
+    return ctx.ts.map(::visitType)
   }
 
   override fun visitNullableType(ctx: PklParser.NullableTypeContext): Type {
@@ -66,23 +74,48 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitConstrainedType(ctx: PklParser.ConstrainedTypeContext): Type {
-    // TODO: check `,` and `)`
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
+    checkCommaSeparatedElements(ctx, ctx.es, ctx.errs)
     val type = ctx.type().accept(this) as Type
     val exprs = ctx.es.map(::visitExpr)
     return Type.Constrained(type, exprs, toSpan(ctx))
   }
 
   override fun visitDefaultUnionType(ctx: PklParser.DefaultUnionTypeContext): Type {
-    // TODO: check if valid
-    return Type.DefaultUnion(visitType(ctx.type()), toSpan(ctx))
+    val span = toSpan(ctx)
+    if (ctx.parent !is PklParser.UnionTypeContext) {
+      errors += ParseError("notAUnion", span)
+    }
+    return Type.DefaultUnion(visitType(ctx.type()), span)
   }
 
-  override fun visitUnionType(ctx: PklParser.UnionTypeContext): Any {
-    // TODO: check if valid
+  override fun visitUnionType(ctx: PklParser.UnionTypeContext): Type {
+    checkUnionType(ctx)
     return Type.Union(visitType(ctx.l), visitType(ctx.r), toSpan(ctx))
   }
 
+  private fun checkUnionType(ctx: PklParser.UnionTypeContext) {
+    var hasDefault = false
+    val list = ArrayDeque<PklParser.TypeContext>()
+    list.addLast(ctx.l)
+    list.addLast(ctx.r)
+
+    while (list.isNotEmpty()) {
+      val current = list.removeFirst()
+      if (current is PklParser.UnionTypeContext) {
+        list.addFirst(current.r)
+        list.addFirst(current.l)
+        continue
+      }
+      if (current is PklParser.DefaultUnionTypeContext) {
+        if (hasDefault) errors += ParseError("multipleUnionDefaults", toSpan(current))
+        hasDefault = true
+      }
+    }
+  }
+
   override fun visitFunctionType(ctx: PklParser.FunctionTypeContext): Any {
+    checkCommaSeparatedElements(ctx, ctx.ps, ctx.errs)
     return Type.Function(ctx.ps.map(::visitType), visitType(ctx.r), toSpan(ctx))
   }
 
@@ -192,7 +225,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitSingleLineStringLiteral(ctx: PklParser.SingleLineStringLiteralContext): Expr {
-    // TODO: check delimiters
+    checkSingleLineStringDelimiters(ctx.t, ctx.t2)
     val singlePart = ctx.singleLineStringPart()
     return when (singlePart.size) {
       0 -> Expr.ConstantString("", toSpan(ctx))
@@ -259,12 +292,12 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitThrowExpr(ctx: PklParser.ThrowExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
     return Expr.Throw(visitExpr(ctx.expr()), toSpan(ctx))
   }
 
   override fun visitTraceExpr(ctx: PklParser.TraceExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
     return Expr.Trace(visitExpr(ctx.expr()), toSpan(ctx))
   }
 
@@ -273,7 +306,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitImportExpr(ctx: PklParser.ImportExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
     val isGlob = ctx.t.type == PklLexer.IMPORT_GLOB
     val uri = visitStringConstant(ctx.stringConstant())
     if (isGlob && uri.value.startsWith("...")) {
@@ -287,8 +320,8 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitReadExpr(ctx: PklParser.ReadExprContext): Expr {
-    // TODO: check closing delimiter
     val exprCtx = ctx.expr()
+    checkClosingDelimiter(ctx.err, ")", exprCtx.stop)
     val span = toSpan(ctx)
 
     val token = ctx.t.type
@@ -310,7 +343,8 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitArgumentList(ctx: PklParser.ArgumentListContext): List<Expr> {
-    // TODO: check closing delimiter and commas
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
+    checkCommaSeparatedElements(ctx, ctx.es, ctx.errs)
     return ctx.es.map(::visitExpr)
   }
 
@@ -343,22 +377,22 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitSuperSubscriptExpr(ctx: PklParser.SuperSubscriptExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, "]", ctx.e.stop)
     return Expr.SuperSubscript(visitExpr(ctx.e), toSpan(ctx))
   }
 
   override fun visitSubscriptExpr(ctx: PklParser.SubscriptExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, "]", ctx.stop)
     return Expr.Subscript(visitExpr(ctx.l), visitExpr(ctx.r), toSpan(ctx))
   }
 
   override fun visitIfExpr(ctx: PklParser.IfExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.c.stop)
     return Expr.If(visitExpr(ctx.c), visitExpr(ctx.l), visitExpr(ctx.r), toSpan(ctx))
   }
 
   override fun visitLetExpr(ctx: PklParser.LetExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.l.stop)
     val param = visitParameter(ctx.parameter())
     val binding = visitExpr(ctx.l)
     val expr = visitExpr(ctx.r)
@@ -375,7 +409,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitParenthesizedExpr(ctx: PklParser.ParenthesizedExprContext): Expr {
-    // TODO: check closing delimiter
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
     return Expr.Parenthesised(visitExpr(ctx.expr()), toSpan(ctx))
   }
 
@@ -477,7 +511,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitTypeAlias(ctx: PklParser.TypeAliasContext): TypeAlias {
-    // TODO: add doc comment and annotations
+    // TODO: add doc comment
     val header = ctx.typeAliasHeader()
     val modifiers =
       checkModifiers(
@@ -489,7 +523,8 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     val name = toIdent(header.Identifier())
     val typePars = visitTypeParameterList(header.typeParameterList())
     val type = visitType(ctx.type())
-    return TypeAlias(null, listOf(), modifiers, name, typePars, type, toSpan(ctx))
+    val annotations = ctx.annotation()?.map(this::visitAnnotation) ?: listOf()
+    return TypeAlias(null, annotations, modifiers, name, typePars, type, toSpan(ctx))
   }
 
   override fun visitAnnotation(ctx: PklParser.AnnotationContext): Annotation {
@@ -509,7 +544,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitClazz(ctx: PklParser.ClazzContext): Clazz {
-    // TODO: add doc comment and annotations
+    // TODO: add doc comment
     val header = ctx.classHeader()
     val modifiers =
       checkModifiers(
@@ -523,24 +558,25 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     val openAbstract =
       modifiers.filter { it.mod == ModifierValue.OPEN || it.mod == ModifierValue.ABSTRACT }
     if (openAbstract.size == 2) {
-      errors += ParseError("openAbstractClass", openAbstract[1].span)
+      errors += ParseError("openAbstractClassOrModule", openAbstract[1].span)
     }
     val name = toIdent(header.Identifier())
     val typePars = visitTypeParameterList(header.typeParameterList())
     val superCLass = header.type()?.let(::visitType)
     val body = visitClassBody(ctx.classBody())
-    return Clazz(null, listOf(), modifiers, name, typePars, superCLass, body, toSpan(ctx))
+    val annotations = ctx.annotation()?.map(::visitAnnotation) ?: listOf()
+    return Clazz(null, annotations, modifiers, name, typePars, superCLass, body, toSpan(ctx))
   }
 
   override fun visitClassBody(ctx: PklParser.ClassBodyContext): List<ClassEntry> {
-    // TODO: check delimiter
+    checkClosingDelimiter(ctx.err, "}", ctx.stop)
     val properties = ctx.classProperty().map(::visitClassProperty)
     val methods = ctx.classMethod().map(::visitClassMethod)
     return properties + methods
   }
 
   override fun visitClassProperty(ctx: PklParser.ClassPropertyContext): ClassEntry {
-    // TODO: add doc comment and annotations
+    // TODO: add doc comment
     val modifiers =
       checkModifiers(
         ctx.modifier(),
@@ -557,18 +593,19 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     val expr = ctx.expr()?.let(::visitExpr)
     val body = ctx.objectBody()?.map(::visitObjectBody)
     val span = toSpan(ctx)
+    val annotations = ctx.annotation()?.map(::visitAnnotation) ?: listOf()
     return when {
       expr != null -> ClassPropertyExpr(null, listOf(), modifiers, name, typeAnnotation, expr, span)
       body != null -> ClassPropertyBody(null, listOf(), modifiers, name, typeAnnotation, body, span)
       else -> {
         assert(typeAnnotation != null) // parser makes sure that holds
-        ClassProperty(null, listOf(), modifiers, name, typeAnnotation!!, span)
+        ClassProperty(null, annotations, modifiers, name, typeAnnotation!!, span)
       }
     }
   }
 
   override fun visitClassMethod(ctx: PklParser.ClassMethodContext): ClassMethod {
-    // TODO: add doc comment and annotations
+    // TODO: add doc comment
     val header = ctx.methodHeader()
     val modifiers =
       checkModifiers(
@@ -584,9 +621,10 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     val params = visitParameterList(header.parameterList())
     val typeAnnotation = header.typeAnnotation()?.let(::visitTypeAnnotation)
     val expr = ctx.expr()?.let(::visitExpr)
+    val annotations = ctx.annotation()?.map(::visitAnnotation) ?: listOf()
     return ClassMethod(
       null,
-      listOf(),
+      annotations,
       modifiers,
       name,
       typeParams,
@@ -598,13 +636,20 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitModuleDecl(ctx: PklParser.ModuleDeclContext?): ModuleDecl? {
-    // TODO: add doc comment and annotations
+    // TODO: add doc comment
     if (ctx == null) return null
 
+    val annotations = ctx.annotation()?.map(this::visitAnnotation) ?: listOf()
     val header = ctx.moduleHeader() ?: return null
     val modifiers =
       header.modifier()?.let {
-        checkModifiers(it, "invalidModifier", ModifierValue.ABSTRACT, ModifierValue.OPEN)
+        val mods = checkModifiers(it, "invalidModifier", ModifierValue.ABSTRACT, ModifierValue.OPEN)
+        val openAbstract =
+          mods.filter { m -> m.mod == ModifierValue.OPEN || m.mod == ModifierValue.ABSTRACT }
+        if (openAbstract.size == 2) {
+          errors += ParseError("openAbstractClassOrModule", openAbstract[1].span)
+        }
+        mods
       }
         ?: listOf()
     val name =
@@ -620,7 +665,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
         extends = ExtendsDecl(visitStringConstant(uri), toSpan(uri))
       }
     }
-    return ModuleDecl(null, listOf(), modifiers, name, extends, amends, toSpan(ctx))
+    return ModuleDecl(null, annotations, modifiers, name, extends, amends, toSpan(ctx))
   }
 
   override fun visitModule(ctx: PklParser.ModuleContext): PklModule {
@@ -645,7 +690,8 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitObjectBody(ctx: PklParser.ObjectBodyContext): ObjectBody {
-    // TODO: check closing delimiter and commas
+    checkClosingDelimiter(ctx.err, "}", ctx.stop)
+    checkCommaSeparatedElements(ctx, ctx.ps, ctx.errs)
     val params = ctx.ps.map(::visitParameter)
     val members = doVisitObjectMemberList(ctx.objectMember())
     return ObjectBody(params, members, toSpan(ctx))
@@ -691,7 +737,14 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitMemberPredicate(ctx: PklParser.MemberPredicateContext): ObjectMember {
-    // TODO: check delimiters
+    if (ctx.err1 == null && ctx.err2 == null) {
+      errors += ParseError("missingDelimiter", toSpan(ctx.k.stop), ")")
+    } else if (
+      ctx.err1 != null && (ctx.err2 == null || ctx.err1.startIndex != ctx.err2.startIndex - 1)
+    ) {
+      // There shouldn't be any whitespace between the first and second ']'.
+      errors += ParseError("wrongDelimiter", toSpan(ctx.err1), "]]", "]")
+    }
     val pred = visitExpr(ctx.k)
     val span = toSpan(ctx)
     return if (ctx.v != null) {
@@ -703,7 +756,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitObjectEntry(ctx: PklParser.ObjectEntryContext): ObjectMember {
-    // TODO: check delimiters
+    checkClosingDelimiter(ctx.err1, "]", ctx.k.stop)
     val pred = visitExpr(ctx.k)
     val span = toSpan(ctx)
     return if (ctx.v != null) {
@@ -724,7 +777,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitWhenGenerator(ctx: PklParser.WhenGeneratorContext): ObjectMember {
-    // TODO: check delimiters
+    checkClosingDelimiter(ctx.err, ")", ctx.e.stop)
     val pred = visitExpr(ctx.e)
     val body = visitObjectBody(ctx.b1)
     val elseBody = ctx.b2?.let(::visitObjectBody)
@@ -732,7 +785,7 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitForGenerator(ctx: PklParser.ForGeneratorContext): ObjectMember {
-    // TODO: check delimiters
+    checkClosingDelimiter(ctx.err, ")", ctx.e.stop)
     val p1 = visitParameter(ctx.t1)
     val p2 = ctx.t2?.let(::visitParameter)
     val expr = visitExpr(ctx.e)
@@ -753,8 +806,9 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   override fun visitTypeParameterList(
     ctx: PklParser.TypeParameterListContext?
   ): List<TypeParameter> {
-    // TODO: check delimiters and commas
     if (ctx == null) return listOf()
+    checkCommaSeparatedElements(ctx, ctx.ts, ctx.errs)
+    checkClosingDelimiter(ctx.err, ">", ctx.stop)
     return ctx.ts.map(::visitTypeParameter)
   }
 
@@ -785,8 +839,9 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 
   override fun visitParameterList(ctx: PklParser.ParameterListContext?): List<Parameter> {
-    // TODO: check closing delimiter and commas
     if (ctx == null) return listOf()
+    checkCommaSeparatedElements(ctx, ctx.ts, ctx.errs)
+    checkClosingDelimiter(ctx.err, ")", ctx.stop)
     return ctx.ts.map(::visitParameter)
   }
 
@@ -962,6 +1017,55 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
     return ""
   }
 
+  private fun checkCommaSeparatedElements(
+    ctx: ParserRuleContext,
+    elements: List<ParserRuleContext>,
+    separators: List<Token>
+  ) {
+    if (elements.isEmpty() || separators.size == elements.size - 1) return
+
+    // determine location of missing separator
+    // O(n^2) but only runs once a syntax error has been detected
+    var prevChild: ParseTree? = null
+    for (child in ctx.children) {
+      val index = elements.indexOf(child)
+      if (index > 0) { // 0 rather than -1 because no separator is expected before first element
+        assert(prevChild != null)
+        if (prevChild !is TerminalNode || !separators.contains(prevChild.symbol)) {
+          val prevToken =
+            if (prevChild is TerminalNode) prevChild.symbol
+            else (prevChild as ParserRuleContext?)!!.getStop()
+          errors += ParseError("missingCommaSeparator", toSpan(prevToken))
+        }
+      }
+      prevChild = child
+    }
+  }
+
+  private fun checkClosingDelimiter(
+    delimiter: Token?,
+    delimiterSymbol: String,
+    tokenBeforeDelimiter: Token
+  ) {
+    if (delimiter == null) {
+      errors += ParseError("missingDelimiter", toSpan(tokenBeforeDelimiter), delimiterSymbol)
+    }
+  }
+
+  private fun checkSingleLineStringDelimiters(openingDelimiter: Token, closingDelimiter: Token) {
+    val closingText = closingDelimiter.text
+    val lastChar = closingText[closingText.length - 1]
+    if (lastChar == '"' || lastChar == '#') return
+
+    val openingText = openingDelimiter.text
+    errors +=
+      ParseError(
+        "missingDelimiter",
+        toSpan(closingDelimiter),
+        "\"" + openingText.substring(0, openingText.length - 1)
+      )
+  }
+
   companion object {
     private fun toIdent(token: Token): Ident = Ident(token.text, toSpan(token))
 
@@ -981,4 +1085,4 @@ class CstBuilder : PklParserBaseVisitor<Any>() {
   }
 }
 
-data class ParseError(val errorType: String, val span: Span)
+class ParseError(val errorType: String, val span: Span, vararg val args: Any)

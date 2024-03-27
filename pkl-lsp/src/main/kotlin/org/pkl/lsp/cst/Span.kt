@@ -19,4 +19,11 @@ data class Span(val beginLine: Int, val beginCol: Int, val endLine: Int, val end
   override fun toString(): String {
     return "($beginLine:$beginCol - $endLine:$endCol)"
   }
+
+  /** True if the given line and column are inside this span. */
+  fun matches(line: Int, col: Int): Boolean = line in beginLine..endLine && col in beginCol..endCol
+
+  companion object {
+    fun from(s1: Span, s2: Span): Span = Span(s1.beginLine, s1.beginCol, s2.endLine, s2.endCol)
+  }
 }

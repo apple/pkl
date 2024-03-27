@@ -16,6 +16,7 @@
 package org.pkl.lsp
 
 import java.net.URI
+import java.text.MessageFormat
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.Diagnostic
@@ -34,6 +35,8 @@ class Builder(private val server: PklLSPServer) {
 
   private val parser = Parser()
 
+  fun runningBuild(): CompletableFuture<PklModule?> = runningBuild
+
   fun requestBuild(file: URI) {
     val change = IoUtils.readString(file.toURL())
     requestBuild(file, change)
@@ -44,16 +47,16 @@ class Builder(private val server: PklLSPServer) {
   }
 
   private fun build(file: URI, change: String): PklModule? {
+    val cstBuilder = CstBuilder()
     try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
-      val cstBuilder = CstBuilder()
       val module = cstBuilder.visitModule(moduleCtx)
       makeDiagnostics(file, cstBuilder.errors())
       return module
     } catch (e: LexParseException) {
       server.logger().error("Error building $file: ${e.message}")
-      makeDiagnostics(file, listOf(toParserError(e)))
+      makeDiagnostics(file, cstBuilder.errors() + listOf(toParserError(e)))
       return null
     } catch (e: Exception) {
       server.logger().error("Error building $file: ${e.message}")
@@ -64,7 +67,7 @@ class Builder(private val server: PklLSPServer) {
   private fun makeDiagnostics(file: URI, errors: List<ParseError>) {
     val diags =
       errors.map { err ->
-        val msg = resolveErrorMessage(err.errorType)
+        val msg = resolveErrorMessage(err.errorType, *err.args)
         val diag = Diagnostic(LSPUtil.spanToRange(err.span), "$msg\n\n")
         diag.severity = DiagnosticSeverity.Error
         diag.source = "Pkl Language Server"
@@ -87,10 +90,16 @@ class Builder(private val server: PklLSPServer) {
       return ParseError(ex.message ?: "Parser error", span)
     }
 
-    private fun resolveErrorMessage(key: String): String {
+    private fun resolveErrorMessage(key: String, vararg args: Any): String {
       val locale = Locale.getDefault()
       val bundle = ResourceBundle.getBundle("org.pkl.lsp.errors", locale)
-      return if (bundle.containsKey(key)) bundle.getString(key) else key
+      return if (bundle.containsKey(key)) {
+        val msg = bundle.getString(key)
+        if (args.isNotEmpty()) {
+          val formatter = MessageFormat(msg, locale)
+          formatter.format(args)
+        } else msg
+      } else key
     }
   }
 }
