@@ -12,7 +12,7 @@ class KotlinConfigExample {
     // tag::usage[]
     val evaluator = ConfigEvaluator.preconfigured().forKotlin() // <1>
     val config = evaluator.use { // <2>
-      it.evaluateText("""pigeon { age = 5; diet = "Seeds" }""")
+      it.evaluateText("""pigeon { age = 5; diet = List("Seeds") }""")
     }
     val pigeon = config["pigeon"] // <3>
     val age = pigeon["age"].to<Int>() // <4>
