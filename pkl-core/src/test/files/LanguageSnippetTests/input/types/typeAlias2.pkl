@@ -35,3 +35,10 @@ typealias Bar = Foo
 class Baz extends Bar {}
 
 res7 = (new Baz {}).value
+
+typealias MappingOrListing = Mapping|Listing
+
+res8 = new {
+  foo = 5
+  bar = if (foo is MappingOrListing) "bar" else foo
+}

@@ -11,3 +11,7 @@ res6 {
   name = "Other"
 }
 res7 = 42
+res8 {
+  foo = 5
+  bar = 5
+}

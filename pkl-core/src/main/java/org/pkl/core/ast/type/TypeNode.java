@@ -1627,9 +1627,12 @@ public abstract class TypeNode extends PklNode {
       VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
-      aliasedTypeNode.execute(frame, value);
-      VmUtils.setOwner(frame, prevOwner);
-      VmUtils.setReceiver(frame, prevReceiver);
+      try {
+        aliasedTypeNode.execute(frame, value);
+      } finally {
+        VmUtils.setOwner(frame, prevOwner);
+        VmUtils.setReceiver(frame, prevReceiver);
+      }
     }
 
     /** See docstring on {@link TypeAliasTypeNode#execute}. */
@@ -1640,10 +1643,12 @@ public abstract class TypeNode extends PklNode {
       VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
-      aliasedTypeNode.executeAndSet(frame, value);
-
-      VmUtils.setOwner(frame, prevOwner);
-      VmUtils.setReceiver(frame, prevReceiver);
+      try {
+        aliasedTypeNode.executeAndSet(frame, value);
+      } finally {
+        VmUtils.setOwner(frame, prevOwner);
+        VmUtils.setReceiver(frame, prevReceiver);
+      }
     }
 
     @Override
