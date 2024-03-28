@@ -13,7 +13,7 @@ public class JavaConfigExample {
     Config config;
     try (var evaluator = ConfigEvaluator.preconfigured()) { // <1>
       config = evaluator.evaluate(
-        ModuleSource.text("pigeon { age = 5; diet = \"Seeds\" }")); // <2>
+        ModuleSource.text("pigeon { age = 5; diet = new Listing { \"Seeds\" } }")); // <2>
     }
     var pigeon = config.get("pigeon"); // <3>
     var age = pigeon.get("age").as(int.class); // <4>
