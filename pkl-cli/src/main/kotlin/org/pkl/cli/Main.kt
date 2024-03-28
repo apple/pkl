@@ -34,7 +34,8 @@ internal fun main(args: Array<String>) {
       ServerCommand(helpLink),
       TestCommand(helpLink),
       ProjectCommand(helpLink),
-      DownloadPackageCommand(helpLink)
+      DownloadPackageCommand(helpLink),
+      LSPCommand(helpLink)
     )
   val cmd = RootCommand("pkl", version, helpLink).subcommands(*commands)
   cliMain {
