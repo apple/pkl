@@ -141,11 +141,11 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
 
 local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
   ["gradle-check-jdk11"] {
-    javaVersion = "11.0"
+    javaVersion = "11"
     isRelease = false
   }
   ["gradle-check-jdk17"] {
-    javaVersion = "17.0"
+    javaVersion = "17"
     isRelease = false
   }
 }

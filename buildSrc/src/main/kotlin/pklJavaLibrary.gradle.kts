@@ -17,6 +17,11 @@ val libs = the<LibrariesForLibs>()
 java {
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
+
+  toolchain {
+    languageVersion.set(jvmToolchainVersion)
+    vendor.set(jvmToolchainVendor)
+  }
 }
 
 artifacts {

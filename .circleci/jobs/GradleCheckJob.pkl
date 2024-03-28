@@ -17,19 +17,19 @@ extends "GradleJob.pkl"
 
 import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.0#/Config.pkl"
 
-javaVersion: "11.0"|"17.0"
+javaVersion: "11"|"17"
 
 steps {
   new Config.RunStep {
     name = "gradle check"
-    command = "./gradlew \(module.gradleArgs) check"
+    command = "./gradlew \(module.gradleArgs) check -DPKL_JVM_VERSION=\(javaVersion)"
   }
 }
 
 job {
   docker {
     new {
-      image = "cimg/openjdk:\(javaVersion)"
+      image = "cimg/openjdk:11.0"
     }
   }
 }

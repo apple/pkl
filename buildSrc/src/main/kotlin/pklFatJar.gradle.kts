@@ -43,7 +43,7 @@ val relocations = mapOf(
   // pkl-doc dependencies
   "org.commonmark." to "org.pkl.thirdparty.commonmark.",
   "org.jetbrains." to "org.pkl.thirdparty.jetbrains.",
-  
+
   // pkl-config-java dependencies
   "io.leangen.geantyref." to "org.pkl.thirdparty.geantyref.",
 
@@ -53,6 +53,13 @@ val relocations = mapOf(
   // pkl-codegen-kotlin dependencies
   "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
 )
+
+java {
+  toolchain {
+    languageVersion.set(jvmToolchainVersion)
+    vendor.set(jvmToolchainVendor)
+  }
+}
 
 val nonRelocations = listOf("com/oracle/truffle/")
 
@@ -117,7 +124,7 @@ val validateFatJar by tasks.registering {
       val path = fileDetails.relativePath.pathString
       if (!(fileDetails.isDirectory ||
           path.startsWith("org/pkl/") ||
-          path.startsWith("META-INF/") || 
+          path.startsWith("META-INF/") ||
           nonRelocations.any { path.startsWith(it) })) {
         // don't throw exception inside `visit` 
         // as this gives a misleading "Could not expand ZIP" error message
