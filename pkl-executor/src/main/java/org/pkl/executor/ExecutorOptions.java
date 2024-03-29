@@ -50,7 +50,7 @@ public final class ExecutorOptions {
 
   private final /* @Nullable */ Path projectDir;
 
-  private final List<Path> certificateFiles;
+  private final List<Path> certificatePaths;
 
   private final List<URI> certificateUris;
 
@@ -83,7 +83,7 @@ public final class ExecutorOptions {
     private /* @Nullable */ String outputFormat;
     private /* @Nullable */ Path moduleCacheDir;
     private /* @Nullable */ Path projectDir;
-    private List<Path> certificateFiles = List.of();
+    private List<Path> certificatePaths = List.of();
     private List<URI> certificateUris = List.of();
     private int testPort = -1; // -1 means disabled
     private int spiOptionsVersion = -1; // -1 means use latest
@@ -177,14 +177,14 @@ public final class ExecutorOptions {
     }
 
     /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificateFiles(List<Path> certificateFiles) {
-      this.certificateFiles = certificateFiles;
+    public Builder certificatePaths(List<Path> certificateFiles) {
+      this.certificatePaths = certificateFiles;
       return this;
     }
 
     /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificateFiles(Path... certificateFiles) {
-      this.certificateFiles = List.of(certificateFiles);
+    public Builder certificatePaths(Path... certificateFiles) {
+      this.certificatePaths = List.of(certificateFiles);
       return this;
     }
 
@@ -224,7 +224,7 @@ public final class ExecutorOptions {
           outputFormat,
           moduleCacheDir,
           projectDir,
-          certificateFiles,
+          certificatePaths,
           certificateUris,
           testPort,
           spiOptionsVersion);
@@ -289,7 +289,7 @@ public final class ExecutorOptions {
       /* @Nullable */ String outputFormat,
       /* @Nullable */ Path moduleCacheDir,
       /* @Nullable */ Path projectDir,
-      List<Path> certificateFiles,
+      List<Path> certificatePaths,
       List<URI> certificateUris,
       int testPort,
       int spiOptionsVersion) {
@@ -304,7 +304,7 @@ public final class ExecutorOptions {
     this.outputFormat = outputFormat;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDir = projectDir;
-    this.certificateFiles = List.copyOf(certificateFiles);
+    this.certificatePaths = List.copyOf(certificatePaths);
     this.certificateUris = List.copyOf(certificateUris);
     this.testPort = testPort;
     this.spiOptionsVersion = spiOptionsVersion;
@@ -369,8 +369,8 @@ public final class ExecutorOptions {
   }
 
   /** API equivalent of the {@code --ca-certificates} CLI option. */
-  public List<Path> getCertificateFiles() {
-    return certificateFiles;
+  public List<Path> getCertificatePaths() {
+    return certificatePaths;
   }
 
   /** API equivalent of the {@code --ca-certificates} CLI option. */
@@ -394,7 +394,7 @@ public final class ExecutorOptions {
         && Objects.equals(outputFormat, other.outputFormat)
         && Objects.equals(moduleCacheDir, other.moduleCacheDir)
         && Objects.equals(projectDir, other.projectDir)
-        && Objects.equals(certificateFiles, other.certificateFiles)
+        && Objects.equals(certificatePaths, other.certificatePaths)
         && Objects.equals(certificateUris, other.certificateUris)
         && testPort == other.testPort
         && spiOptionsVersion == other.spiOptionsVersion;
@@ -413,7 +413,7 @@ public final class ExecutorOptions {
         outputFormat,
         moduleCacheDir,
         projectDir,
-        certificateFiles,
+        certificatePaths,
         certificateUris,
         testPort,
         spiOptionsVersion);
@@ -442,8 +442,8 @@ public final class ExecutorOptions {
         + moduleCacheDir
         + ", projectDir="
         + projectDir
-        + ", certificateFiles="
-        + certificateFiles
+        + ", certificatePaths="
+        + certificatePaths
         + ", certificateUris="
         + certificateUris
         + ", testPort="
@@ -467,7 +467,7 @@ public final class ExecutorOptions {
               outputFormat,
               moduleCacheDir,
               projectDir,
-              certificateFiles,
+              certificatePaths,
               certificateUris,
               testPort);
       case 1 -> // for testing only

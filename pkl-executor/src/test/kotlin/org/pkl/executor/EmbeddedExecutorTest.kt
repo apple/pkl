@@ -410,7 +410,7 @@ class EmbeddedExecutorTest {
         allowedModules("file:", "package:", "https:")
         allowedResources("prop:", "package:", "https:")
         moduleCacheDir(cacheDir)
-        certificateFiles(FileTestUtils.selfSignedCertificate)
+        certificatePaths(FileTestUtils.selfSignedCertificate)
         testPort(server.port)
       }
     }

@@ -14,7 +14,6 @@ dependencies {
 
   implementation(projects.pklCommons)
   testImplementation(projects.pklCommonsTest)
-  runtimeOnly(projects.pklCerts)
 }
 
 publishing {

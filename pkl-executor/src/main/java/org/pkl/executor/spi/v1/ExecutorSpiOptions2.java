@@ -58,7 +58,7 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
     this.testPort = testPort;
   }
 
-  public List<Path> getCertificateFiles() {
+  public List<Path> getCertificatePaths() {
     return certificateFiles;
   }
 

@@ -18,6 +18,7 @@
 package org.pkl.cli
 
 import com.github.ajalt.clikt.core.subcommands
+import java.security.Security
 import org.pkl.cli.commands.*
 import org.pkl.commons.cli.cliMain
 import org.pkl.core.Release

@@ -18,8 +18,6 @@ package org.pkl.core.http;
 import java.io.IOException;
 import java.net.ProxySelector;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -28,26 +26,18 @@ import java.util.function.Supplier;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.IoUtils;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
   private Duration connectTimeout = Duration.ofSeconds(60);
   private Duration requestTimeout = Duration.ofSeconds(60);
-  private final Path caCertsDir;
-  private final List<Path> certificateFiles = new ArrayList<>();
+  private final List<Path> certificatePaths = new ArrayList<>();
   private final List<URI> certificateUris = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
 
   HttpClientBuilder() {
-    this(IoUtils.getPklHomeDir().resolve("cacerts"));
-  }
-
-  // only exists for testing
-  HttpClientBuilder(Path caCertsDir) {
     var release = Release.current();
-    this.caCertsDir = caCertsDir;
     this.userAgent =
         "Pkl/" + release.version() + " (" + release.os() + "; " + release.flavor() + ")";
   }
@@ -70,8 +60,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public HttpClient.Builder addCertificates(Path file) {
-    certificateFiles.add(file);
+  public HttpClient.Builder addCertificates(Path path) {
+    certificatePaths.add(path);
     return this;
   }
 
@@ -82,27 +72,6 @@ final class HttpClientBuilder implements HttpClient.Builder {
       throw new HttpClientInitException(ErrorMessages.create("expectedJarOrFileUrl", url));
     }
     certificateUris.add(url);
-    return this;
-  }
-
-  public HttpClient.Builder addDefaultCliCertificates() {
-    var fileCount = certificateFiles.size();
-    if (Files.isDirectory(caCertsDir)) {
-      try (var files = Files.list(caCertsDir)) {
-        files.filter(Files::isRegularFile).forEach(certificateFiles::add);
-      } catch (IOException e) {
-        throw new HttpClientInitException(e);
-      }
-    }
-    if (certificateFiles.size() == fileCount) {
-      addBuiltInCertificates();
-    }
-    return this;
-  }
-
-  @Override
-  public HttpClient.Builder addBuiltInCertificates() {
-    certificateUris.add(getBuiltInCertificates());
     return this;
   }
 
@@ -135,26 +104,13 @@ final class HttpClientBuilder implements HttpClient.Builder {
 
   private Supplier<HttpClient> doBuild() {
     // make defensive copies because Supplier may get called after builder was mutated
-    var certificateFiles = List.copyOf(this.certificateFiles);
+    var certificatePaths = List.copyOf(this.certificatePaths);
     var certificateUris = List.copyOf(this.certificateUris);
     var proxySelector =
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
-      var jdkClient =
-          new JdkHttpClient(certificateFiles, certificateUris, connectTimeout, proxySelector);
+      var jdkClient = new JdkHttpClient(certificatePaths, certificateUris, connectTimeout, proxySelector);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
     };
-  }
-
-  private static URI getBuiltInCertificates() {
-    var resource = HttpClientBuilder.class.getResource("/org/pkl/certs/PklCARoots.pem");
-    if (resource == null) {
-      throw new HttpClientInitException(ErrorMessages.create("cannotFindBuiltInCertificates"));
-    }
-    try {
-      return resource.toURI();
-    } catch (URISyntaxException e) {
-      throw new AssertionError("unreachable");
-    }
   }
 }

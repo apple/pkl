@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.CertPathTrustManagerParameters;
 import javax.net.ssl.SSLContext;
@@ -78,13 +79,13 @@ final class JdkHttpClient implements HttpClient {
   }
 
   JdkHttpClient(
-      List<Path> certificateFiles,
+      List<Path> certificatePaths,
       List<URI> certificateUris,
       Duration connectTimeout,
       java.net.ProxySelector proxySelector) {
     underlying =
         java.net.http.HttpClient.newBuilder()
-            .sslContext(createSslContext(certificateFiles, certificateUris))
+            .sslContext(createSslContext(certificatePaths, certificateUris))
             .connectTimeout(connectTimeout)
             .proxy(proxySelector)
             .followRedirects(Redirect.NORMAL)
@@ -126,10 +127,10 @@ final class JdkHttpClient implements HttpClient {
 
   // https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#security-algorithm-implementation-requirements
   private static SSLContext createSslContext(
-      List<Path> certificateFiles, List<URI> certificateUris) {
+      List<Path> certificatePaths, List<URI> certificateUris) {
     try {
-      if (certificateFiles.isEmpty() && certificateUris.isEmpty()) {
-        // fall back to JVM defaults (not Pkl built-in certs)
+      if (certificatePaths.isEmpty() && certificateUris.isEmpty()) {
+        // use Pkl native executable's or JVM's built-in CA certificates
         return SSLContext.getDefault();
       }
 
@@ -141,7 +142,7 @@ final class JdkHttpClient implements HttpClient {
 
       var certFactory = CertificateFactory.getInstance("X.509");
       Set<TrustAnchor> trustAnchors =
-          createTrustAnchors(certFactory, certificateFiles, certificateUris);
+          createTrustAnchors(certFactory, certificatePaths, certificateUris);
       var pkixParameters = new PKIXBuilderParameters(trustAnchors, new X509CertSelector());
       // equivalent of "com.sun.net.ssl.checkRevocation=true"
       pkixParameters.setRevocationEnabled(true);
@@ -161,17 +162,25 @@ final class JdkHttpClient implements HttpClient {
   }
 
   private static Set<TrustAnchor> createTrustAnchors(
-      CertificateFactory factory, List<Path> certificateFiles, List<URI> certificateUris) {
+      CertificateFactory factory, List<Path> certificatePaths, List<URI> certificateUris) {
     var anchors = new HashSet<TrustAnchor>();
 
-    for (var file : certificateFiles) {
-      try (var stream = Files.newInputStream(file)) {
-        collectTrustAnchors(anchors, factory, stream, file);
-      } catch (NoSuchFileException e) {
-        throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
+    for (var path : certificatePaths) {
+      try (var files = Files.isDirectory(path) ? Files.list(path) : Stream.of(path)) {
+        files.forEach(
+            file -> {
+              try (var stream = Files.newInputStream(file)) {
+                collectTrustAnchors(anchors, factory, stream, file);
+              } catch (NoSuchFileException e) {
+                throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
+              } catch (IOException e) {
+                throw new HttpClientInitException(
+                    ErrorMessages.create("cannotReadCertFile", file, Exceptions.getRootReason(e)));
+              }
+            });
       } catch (IOException e) {
         throw new HttpClientInitException(
-            ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
+            ErrorMessages.create("cannotScanCertDir", path, Exceptions.getRootReason(e)));
       }
     }
 
@@ -180,7 +189,7 @@ final class JdkHttpClient implements HttpClient {
         collectTrustAnchors(anchors, factory, stream, uri);
       } catch (IOException e) {
         throw new HttpClientInitException(
-            ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
+            ErrorMessages.create("cannotReadCertFile", uri, Exceptions.getRootReason(e)));
       }
     }
 
