@@ -1196,17 +1196,14 @@ result = someLib.x
 
   @Test
   fun `gives decent error message if CLI doesn't have the required CA certificate`() {
-    // provide SOME certs to prevent CliEvaluator from falling back to ~/.pkl/cacerts
-    val builtInCerts = FileTestUtils.writePklBuiltInCertificates(tempDir)
-    val err =
-      assertThrows<CliException> { evalModuleThatImportsPackage(builtInCerts, packageServer.port) }
+    val err = assertThrows<CliException> { evalModuleThatImportsPackage(null, packageServer.port) }
     assertThat(err)
       .hasMessageContaining("Error during SSL handshake with host `localhost`:")
       .hasMessageContaining("unable to find valid certification path to requested target")
       .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
   }
 
-  private fun evalModuleThatImportsPackage(certsFile: Path, testPort: Int = -1) {
+  private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {
     val moduleUri =
       writePklFile(
         "test.pkl",
@@ -1221,7 +1218,7 @@ result = someLib.x
       CliEvaluatorOptions(
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
-          caCertificates = listOf(certsFile),
+          caCertificates = buildList { if (certsFile != null) add(certsFile) },
           workingDir = tempDir,
           noCache = true,
           testPort = testPort

@@ -21,6 +21,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
 import org.pkl.core.http.HttpClient
+import org.pkl.core.http.HttpClientInitException
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
 
@@ -123,12 +124,14 @@ data class CliBaseOptions(
    * The CA certificates to trust.
    *
    * The given files must contain [X.509](https://en.wikipedia.org/wiki/X.509) certificates in PEM
-   * format.
+   * format. Passing a directory has the same effect as passing each of the directory's regular
+   * files.
    *
-   * If [caCertificates] is the empty list, the certificate files in `~/.pkl/cacerts/` are used. If
-   * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
+   * Defaults to `~/.pkl/cacerts/`. If [caCertificates] is the empty list or only contains
+   * non-existing and empty directories, the built-in CA certificates of the Pkl native executable
+   * or JVM are used.
    */
-  val caCertificates: List<Path> = listOf(),
+  val caCertificates: List<Path> = listOf(IoUtils.getPklHomeDir().resolve("cacerts")),
 ) {
 
   companion object {
@@ -184,17 +187,17 @@ data class CliBaseOptions(
    * To release the resources held by the HTTP client in a timely manner, call its `close()` method.
    */
   val httpClient: HttpClient by lazy {
-    with(HttpClient.builder()) {
-      setTestPort(testPort)
-      if (normalizedCaCertificates.isEmpty()) {
-        addDefaultCliCertificates()
-      } else {
-        for (file in normalizedCaCertificates) addCertificates(file)
+    try {
+      with(HttpClient.builder()) {
+        setTestPort(testPort)
+        for (path in normalizedCaCertificates) addCertificates(path)
+        // Lazy building significantly reduces execution time of commands that do minimal work.
+        // However, it means that HTTP client initialization errors won't surface until an HTTP
+        // request is made.
+        buildLazily()
       }
-      // Lazy building significantly reduces execution time of commands that do minimal work.
-      // However, it means that HTTP client initialization errors won't surface until an HTTP
-      // request is made.
-      buildLazily()
+    } catch (e: HttpClientInitException) {
+      throw CliException(e.message!!)
     }
   }
 }

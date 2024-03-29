@@ -38,11 +38,6 @@ object FileTestUtils {
     // drop some lines in the middle
     return dir.resolve("invalidCerts.pem").writeLines(lines.take(5) + lines.takeLast(5))
   }
-
-  fun writePklBuiltInCertificates(dir: Path): Path {
-    val text = javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.readText()
-    return dir.resolve("PklCARoots.pem").apply { writeText(text) }
-  }
 }
 
 fun Path.listFilesRecursively(): List<Path> =

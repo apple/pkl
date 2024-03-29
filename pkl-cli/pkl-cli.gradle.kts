@@ -1,3 +1,6 @@
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+
 plugins {
   pklAllProjects
   pklKotlinLibrary
@@ -134,11 +137,39 @@ tasks.check {
   dependsOn(testStartJavaExecutable)
 }
 
+val pemFile = projectDir.resolve("src/certs/PklCARoots.pem")
+val trustStore = layout.buildDirectory.dir("generateTrustStore/PklCARoots.p12")
+val trustStorePassword = "password" // no sensitive data to protect
+
+// generate a trust store for Pkl's built-in CA certificates
+val generateTrustStore by tasks.registering {
+  inputs.file(pemFile)
+  outputs.file(trustStore)
+  doLast {
+    val certificates = pemFile.inputStream().use { stream ->
+      CertificateFactory.getInstance("X.509").generateCertificates(stream)
+    }
+    KeyStore.getInstance("PKCS12").apply {
+      load(null, trustStorePassword.toCharArray()) // initialize empty trust store
+      for ((index, certificate) in certificates.withIndex()) {
+        setCertificateEntry("cert-$index", certificate)
+      }
+      val trustStoreFile = trustStore.get().asFile
+      trustStoreFile.parentFile.mkdirs()
+      trustStoreFile.outputStream().use { stream ->
+        store(stream, trustStorePassword.toCharArray())
+      }
+    }
+  }
+}
+
 fun Exec.configureExecutable(
   graalVm: BuildInfo.GraalVm,
   outputFile: Provider<RegularFile>,
   extraArgs: List<String> = listOf()
 ) {
+  dependsOn(generateTrustStore)
+
   inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
   inputs.files(file(graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
@@ -160,9 +191,13 @@ fun Exec.configureExecutable(
         ,"--add-opens=java.base/java.nio=ALL-UNNAMED"
         ,"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
         ,"--no-fallback"
+        ,"-Djavax.net.ssl.trustStore=${trustStore.get().asFile}"
+        ,"-Djavax.net.ssl.trustStorePassword=$trustStorePassword"
+        ,"-Djavax.net.ssl.trustStoreType=PKCS12"
+        // security property "ocsp.enable=true" is set in Main.kt
+        ,"-Dcom.sun.net.ssl.checkRevocation=true"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
-        ,"-H:IncludeResources=org/pkl/certs/PklCARoots.pem"
         //,"-H:IncludeResources=org/pkl/core/Release.properties"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle"

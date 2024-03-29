@@ -60,53 +60,31 @@ public interface HttpClient extends AutoCloseable {
     Builder setRequestTimeout(java.time.Duration timeout);
 
     /**
-     * Adds a CA certificate file to the client's trust store.
+     * Adds CA certificates to the client's trust store,
      *
-     * <p>The given file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
-     * certificates in PEM format.
+     * <p>If the given path is a regular file, the certificates contained in that file are added to
+     * the trust store. If the given path is a directory, the certificates contained in each of the
+     * directory's regular files are added to the trust store. Each file must contain <a
+     * href="https://en.wikipedia.org/wiki/X.509">X.509</a> certificates in PEM format.
+     *
+     * <p>If no CA certificates are added via this method or {@link #addCertificates(URI)}, the
+     * built-in CA certificates of the Pkl native executable or JVM are used.
      */
-    Builder addCertificates(Path file);
+    Builder addCertificates(Path path);
 
     /**
-     * Adds a CA certificate file to the client's trust store.
+     * Adds CA certificates to the client's trust store.
      *
      * <p>The given file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
      * certificates in PEM format.
      *
-     * <p>This method is intended to be used for adding certificate files located on the class path.
-     * To add certificate files located on the file system, use {@link #addCertificates(Path)}.
+     * <p>If no CA certificates are added via this method or {@link #addCertificates(Path)}, the
+     * built-in CA certificates of the Pkl native executable or JVM are used.
      *
      * @throws HttpClientInitException if the given URI has a scheme other than {@code jar:} or
      *     {@code file:}
      */
     Builder addCertificates(URI file);
-
-    /**
-     * Adds the CA certificate files in {@code ~/.pkl/cacerts/} to the client's trust store.
-     *
-     * <p>Each file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
-     * certificates in PEM format. If {@code ~/.pkl/cacerts/} does not exist or is empty, Pkl's
-     * {@link #addBuiltInCertificates() built-in certificates} are added instead.
-     *
-     * <p>This method implements the default behavior of Pkl CLIs.
-     *
-     * <p>NOTE: This method requires the optional {@code pkl-certs} JAR to be present on the class
-     * path.
-     *
-     * @throws HttpClientInitException if an I/O error occurs while scanning {@code ~/.pkl/cacerts/}
-     *     or the {@code pkl-certs} JAR is not found on the class path
-     */
-    Builder addDefaultCliCertificates();
-
-    /**
-     * Adds Pkl's built-in CA certificates to the client's trust store.
-     *
-     * <p>NOTE: This method requires the optional {@code pkl-certs} JAR to be present on the class
-     * path.
-     *
-     * @throws HttpClientInitException if the {@code pkl-certs} JAR is not found on the class path
-     */
-    Builder addBuiltInCertificates();
 
     /**
      * Sets a test server's listening port.

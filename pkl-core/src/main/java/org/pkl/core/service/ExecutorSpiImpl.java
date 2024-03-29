@@ -130,33 +130,33 @@ public class ExecutorSpiImpl implements ExecutorSpi {
   }
 
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
-    List<Path> certificateFiles;
+    List<Path> certificatePaths;
     List<URI> certificateUris;
     int testPort;
     try {
       if (options instanceof ExecutorSpiOptions2 options2) {
-        certificateFiles = options2.getCertificateFiles();
+        certificatePaths = options2.getCertificatePaths();
         certificateUris = options2.getCertificateUris();
         testPort = options2.getTestPort();
       } else {
-        certificateFiles = List.of();
+        certificatePaths = List.of();
         certificateUris = List.of();
         testPort = -1;
       }
       // host pkl-executor does not have class ExecutorOptions2 defined.
       // this will happen if the pkl-executor distribution is too old.
     } catch (NoClassDefFoundError e) {
-      certificateFiles = List.of();
+      certificatePaths = List.of();
       certificateUris = List.of();
       testPort = -1;
     }
-    var clientKey = new HttpClientKey(certificateFiles, certificateUris, testPort);
+    var clientKey = new HttpClientKey(certificatePaths, certificateUris, testPort);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
           var builder = HttpClient.builder();
-          for (var file : key.certificateFiles) {
-            builder.addCertificates(file);
+          for (var path : key.certificatePaths) {
+            builder.addCertificates(path);
           }
           for (var uri : key.certificateUris) {
             builder.addCertificates(uri);
@@ -169,13 +169,13 @@ public class ExecutorSpiImpl implements ExecutorSpi {
   }
 
   private static final class HttpClientKey {
-    final Set<Path> certificateFiles;
+    final Set<Path> certificatePaths;
     final Set<URI> certificateUris;
     final int testPort;
 
-    HttpClientKey(List<Path> certificateFiles, List<URI> certificateUris, int testPort) {
+    HttpClientKey(List<Path> certificatePaths, List<URI> certificateUris, int testPort) {
       // also serve as defensive copies
-      this.certificateFiles = Set.copyOf(certificateFiles);
+      this.certificatePaths = Set.copyOf(certificatePaths);
       this.certificateUris = Set.copyOf(certificateUris);
       this.testPort = testPort;
     }
@@ -189,14 +189,14 @@ public class ExecutorSpiImpl implements ExecutorSpi {
         return false;
       }
       HttpClientKey that = (HttpClientKey) obj;
-      return certificateFiles.equals(that.certificateFiles)
+      return certificatePaths.equals(that.certificatePaths)
           && certificateUris.equals(that.certificateUris)
           && testPort == that.testPort;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(certificateFiles, certificateUris, testPort);
+      return Objects.hash(certificatePaths, certificateUris, testPort);
     }
   }
 }

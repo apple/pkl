@@ -4,7 +4,6 @@ include("bench")
 include("docs")
 include("stdlib")
 
-include("pkl-certs")
 include("pkl-cli")
 include("pkl-codegen-java")
 include("pkl-codegen-kotlin")

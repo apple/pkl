@@ -131,7 +131,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--ca-certificates"),
         metavar = "<path>",
-        help = "Only trust CA certificates from the provided file(s)."
+        help = "Only trust CA certificates from the provided path(s)."
       )
       .path()
       .multiple()
