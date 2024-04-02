@@ -655,7 +655,7 @@ Another difference is that in Pkl, object properties are late-bound. Read on to 
 
 [[amends-declaration]]
 [NOTE]
-.Amends expressions vs. amends declarations
+.Amends declaration vs. amends expression
 ====
 
 The <<defining-objects,defining objects>> and <<amending-objects,amending objects>> sections cover two notations that are both a form of amending; called an _amends declaration_ and an _amends expression_, respectively.
@@ -671,16 +671,16 @@ parrot = (pigeon) { // <2>
   name = "Parrot"
 }
 ----
-<1> Amends expression.
-<2> Amends declaration.
+<1> Amends declaration.
+<2> Amends expression.
 
 An amends declaration amends the property of the same name in a module's parent module, if the parent property exists.
 Otherwise, an amends declaration implicitly amends {uri-stdlib-Dynamic}[Dynamic].
 
 Another way to think about an amends declaration is that it is shorthand for assignment.
-In practical terms, `pigeon {}` is the same as `pigeon = super.pigeon {}`.
+In practical terms, `pigeon {}` is the same as `pigeon = (super.pigeon) {}`.
 
-Amending object bodies can be chained for both an amends expression and an amends declaration.
+Amending object bodies can be chained for both an amends declaration and an amends expression.
 
 [source%tested,{pkl}]
 ----
@@ -696,8 +696,8 @@ dodo = (pigeon) {
   extinct = true
 } // <2>
 ----
-<1> Chained amends expression (`pigeon { ... } { ... }` is the amends expression).
-<2> Chained amends declaration.
+<1> Chained amends declaration.
+<2> Chained amends expression (`(pigeon) { ... } { ... }` is the amends expression).
 ====
 
 [[late-binding]]
