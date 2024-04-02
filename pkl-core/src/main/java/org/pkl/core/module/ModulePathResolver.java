@@ -15,7 +15,6 @@
  */
 package org.pkl.core.module;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -171,7 +170,7 @@ public class ModulePathResolver implements AutoCloseable {
     if (path.endsWith(".jar") || path.endsWith(".zip")) return true;
 
     byte[] buffer;
-    try (var fis = new FileInputStream(path.toFile())) {
+    try (var fis = Files.newInputStream(path)) {
       buffer = fis.readNBytes(39);
     } catch (IOException e) {
       return false;

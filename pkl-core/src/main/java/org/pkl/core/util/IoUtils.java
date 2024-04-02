@@ -17,7 +17,6 @@ package org.pkl.core.util;
 
 import com.oracle.truffle.api.TruffleOptions;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -145,7 +144,7 @@ public final class IoUtils {
   }
 
   public static void zipDirectory(Path sourceDir, Path targetFile) throws IOException {
-    try (var zipStream = new ZipOutputStream(new FileOutputStream(targetFile.toFile()))) {
+    try (var zipStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
       Files.walkFileTree(
           sourceDir,
           new SimpleFileVisitor<>() {

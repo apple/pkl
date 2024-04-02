@@ -16,7 +16,6 @@
 package org.pkl.core.packages;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -590,7 +589,7 @@ class PackageResolvers {
       var cacheFile = packageDir.resolve(packageDir.getFileName() + ".json");
       if (Files.exists(cacheFile)) {
         return readDependencyMetadataAndComputeChecksum(
-            packageUri, new FileInputStream(cacheFile.toFile()));
+            packageUri, Files.newInputStream(cacheFile));
       }
       return super.getDependencyMetadataAndComputeChecksum(packageUri);
     }
