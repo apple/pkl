@@ -25,17 +25,23 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.pkl.core.parser.LexParseException
 import org.pkl.core.parser.Parser
 import org.pkl.core.util.IoUtils
-import org.pkl.lsp.cst.CstBuilder
-import org.pkl.lsp.cst.ParseError
-import org.pkl.lsp.cst.PklModule
-import org.pkl.lsp.cst.Span
+import org.pkl.lsp.LSPUtil.toRange
+import org.pkl.lsp.analyzers.Analyzer
+import org.pkl.lsp.analyzers.ModifierAnalyzer
+import org.pkl.lsp.analyzers.PklDiagnostic
+import org.pkl.lsp.ast.Module
+import org.pkl.lsp.ast.ModuleImpl
+import org.pkl.lsp.ast.Node
+import org.pkl.lsp.ast.Span
 
 class Builder(private val server: PklLSPServer) {
-  private var runningBuild: CompletableFuture<PklModule?> = CompletableFuture.supplyAsync(::noop)
+  private var runningBuild: CompletableFuture<Module?> = CompletableFuture.supplyAsync(::noop)
 
   private val parser = Parser()
 
-  fun runningBuild(): CompletableFuture<PklModule?> = runningBuild
+  private val analyzers: List<Analyzer> = listOf(ModifierAnalyzer(server))
+
+  fun runningBuild(): CompletableFuture<Module?> = runningBuild
 
   fun requestBuild(file: URI) {
     val change = IoUtils.readString(file.toURL())
@@ -46,34 +52,47 @@ class Builder(private val server: PklLSPServer) {
     runningBuild = CompletableFuture.supplyAsync { build(file, change) }
   }
 
-  private fun build(file: URI, change: String): PklModule? {
-    val cstBuilder = CstBuilder()
-    try {
+  private fun build(file: URI, change: String): Module? {
+    //    val cstBuilder = CstBuilder()
+    return try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
-      val module = cstBuilder.visitModule(moduleCtx)
-      makeDiagnostics(file, cstBuilder.errors())
+      val module = ModuleImpl(moduleCtx)
+      val diagnostics = annotate(module)
+      makeDiagnostics(file, diagnostics)
       return module
     } catch (e: LexParseException) {
       server.logger().error("Error building $file: ${e.message}")
-      makeDiagnostics(file, cstBuilder.errors() + listOf(toParserError(e)))
-      return null
+      makeParserDiagnostics(file, listOf(toParserError(e)))
+      null
     } catch (e: Exception) {
-      server.logger().error("Error building $file: ${e.message}")
-      return null
+      server.logger().error("Error building $file: ${e.message} ${e.stackTraceToString()}")
+      null
     }
   }
 
-  private fun makeDiagnostics(file: URI, errors: List<ParseError>) {
+  private fun annotate(node: Node): List<Diagnostic> {
+    return buildList<PklDiagnostic> {
+      for (annotator in analyzers) {
+        annotator.annotate(node, this)
+      }
+    }
+  }
+
+  private fun makeParserDiagnostics(file: URI, errors: List<ParseError>) {
     val diags =
       errors.map { err ->
         val msg = resolveErrorMessage(err.errorType, *err.args)
-        val diag = Diagnostic(LSPUtil.spanToRange(err.span), "$msg\n\n")
+        val diag = Diagnostic(err.span.toRange(), "$msg\n\n")
         diag.severity = DiagnosticSeverity.Error
         diag.source = "Pkl Language Server"
         server.logger().log("diagnostic: $msg at ${err.span}")
         diag
       }
+    makeDiagnostics(file, diags)
+  }
+
+  private fun makeDiagnostics(file: URI, diags: List<Diagnostic>) {
     server.logger().log("Found ${diags.size} diagnostic errors for $file")
     val params = PublishDiagnosticsParams(file.toString(), diags)
     // Have to publish diagnostics even if there are no errors, so we clear previous problems
@@ -81,7 +100,7 @@ class Builder(private val server: PklLSPServer) {
   }
 
   companion object {
-    private fun noop(): PklModule? {
+    private fun noop(): Module? {
       return null
     }
 
@@ -103,3 +122,5 @@ class Builder(private val server: PklLSPServer) {
     }
   }
 }
+
+class ParseError(val errorType: String, val span: Span, vararg val args: Any)

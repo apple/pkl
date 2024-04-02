@@ -26,8 +26,8 @@ import org.eclipse.lsp4j.services.*
 
 class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClientAware {
 
-  val workspaceService: PklWorkspaceService = PklWorkspaceService()
-  val textService: PklTextDocumentService = PklTextDocumentService(this)
+  private val workspaceService: PklWorkspaceService = PklWorkspaceService()
+  private val textService: PklTextDocumentService = PklTextDocumentService(this)
 
   private lateinit var client: LanguageClient
   private lateinit var logger: ClientLogger
@@ -38,7 +38,7 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
     res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
 
     // Hover capability
-    res.capabilities.setHoverProvider(true)
+    //    res.capabilities.setHoverProvider(true)
 
     return CompletableFuture.supplyAsync { res }
   }

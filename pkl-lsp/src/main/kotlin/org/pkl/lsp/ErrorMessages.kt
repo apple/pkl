@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp
 
-data class Modifier(val mod: ModifierValue, val span: Span)
+import java.text.MessageFormat
+import java.util.*
 
-enum class ModifierValue {
-  EXTERNAL,
-  ABSTRACT,
-  OPEN,
-  LOCAL,
-  HIDDEN,
-  FIXED,
-  CONST
+object ErrorMessages {
+  fun create(messageName: String, vararg args: Any): String {
+
+    val locale = Locale.getDefault()
+    val errorMessage =
+      ResourceBundle.getBundle("org.pkl.lsp.errorMessages", locale).getString(messageName)
+
+    // only format if `errorMessage` is a format string
+    if (args.isEmpty()) return errorMessage
+
+    val formatter = MessageFormat(errorMessage, locale)
+    return formatter.format(args)
+  }
 }

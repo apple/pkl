@@ -17,12 +17,16 @@ package org.pkl.lsp
 
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import org.pkl.lsp.cst.Span
+import org.pkl.lsp.ast.Span
 
 object LSPUtil {
-  fun spanToRange(s: Span): Range {
-    val start = Position(s.beginLine - 1, s.beginCol - 1)
-    val end = Position(s.endLine - 1, s.endCol - 1)
+  fun Span.toRange(): Range {
+    val start = Position(beginLine - 1, beginCol - 1)
+    val end = Position(endLine - 1, endCol - 1)
     return Range(start, end)
+  }
+
+  inline fun <reified T> List<*>.firstInstanceOf(): T? {
+    return firstOrNull { it is T } as T?
   }
 }

@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp.analyzers
 
-abstract class PklNode(open val span: Span) {
-  var parent: PklNode? = null
+import org.pkl.lsp.ast.Node
+
+class StringLiteralAnalyzer : Analyzer() {
+  override fun doAnnotate(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
+    TODO("Not yet implemented")
+  }
 }
