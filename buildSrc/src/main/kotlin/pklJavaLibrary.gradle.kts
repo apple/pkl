@@ -24,6 +24,10 @@ java {
   }
 }
 
+tasks.withType<JavaExec>().configureEach {
+  javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+}
+
 artifacts {
   // make sources Jar available to other subprojects
   add("sourcesJar", tasks["sourcesJar"])
