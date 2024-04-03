@@ -19,26 +19,32 @@ import java.io.File;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.UntrackedTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 import org.pkl.cli.CliEvaluator;
 import org.pkl.cli.CliEvaluatorOptions;
 
-@UntrackedTask(because = "Output file names are known only after execution")
 public abstract class EvalTask extends ModulesTask {
-  @Internal
+  @OutputFile
+  @Optional
   public abstract RegularFileProperty getOutputFile();
 
-  @Internal
+  @Input
+  @Optional
   public abstract Property<String> getOutputFormat();
 
-  @Internal
+  @Input
+  @Optional
   public abstract Property<String> getModuleOutputSeparator();
 
-  @Internal
+  @OutputDirectory
+  @Optional
   public abstract DirectoryProperty getMultipleFileOutputDir();
 
-  @Internal
+  @Input
+  @Optional
   public abstract Property<String> getExpression();
 
   @Override
