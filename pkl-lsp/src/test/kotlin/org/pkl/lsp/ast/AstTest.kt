@@ -29,6 +29,10 @@ class AstTest {
       /// This is another line of doc comment.
       abstract module Foo
 
+      amends "bar.pkl"
+
+      import "foo.pkl"
+
       hidden foo: String
 
       function bar() = "bar"
@@ -56,6 +60,7 @@ class AstTest {
           .trimIndent()
       )
     assertThat(module.declaration?.modifiers?.map { it.type }).isEqualTo(listOf(TokenType.ABSTRACT))
+    assertThat(module.declaration?.effectiveExtendsOrAmendsCluse)
     assertThat(module.members).hasSize(3)
     assertThat(module.members[0]).isInstanceOf(ClassProperty::class.java)
     val property = module.members[0] as ClassProperty

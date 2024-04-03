@@ -90,6 +90,13 @@ class ModuleExtendsAmendsClauseImpl(
 ) : AbstractNode(parent, ctx), ModuleExtendsAmendsClause {
   override val isAmend: Boolean
     get() = ctx.AMENDS() != null
+
+  override val isExtend: Boolean
+    get() = ctx.EXTENDS() != null
+
+  override val moduleUri: String? by lazy {
+    getChild(StringConstantImpl::class)?.value
+  }
 }
 
 class ClassImpl(override val parent: Node, override val ctx: PklParser.ClazzContext) :

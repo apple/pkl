@@ -31,6 +31,10 @@ interface QualifiedIdentifier : Node {
   val identifiers: List<Terminal>
 }
 
+interface StringConstant : Node {
+  val value: String
+}
+
 interface IdentifierOwner {
   val identifier: Terminal?
 }
@@ -57,13 +61,15 @@ interface ModuleDeclaration : Node, ModifierListOwner, DocCommentOwner {
   val annotations: List<Annotation>
 
   val isAmend: Boolean
-    get() =
-      moduleHeader?.moduleExtendsAmendsClause?.isAmend
-        ?: moduleExtendsAmendsClause?.isAmend ?: false
+    get() = effectiveExtendsOrAmendsCluse?.isAmend ?: false
 
   val moduleHeader: ModuleHeader?
 
   val moduleExtendsAmendsClause: ModuleExtendsAmendsClause?
+
+  val effectiveExtendsOrAmendsCluse: ModuleExtendsAmendsClause? get() =
+    moduleHeader?.moduleExtendsAmendsClause
+      ?: moduleExtendsAmendsClause
 }
 
 interface ModuleHeader : Node, ModifierListOwner {
@@ -73,6 +79,10 @@ interface ModuleHeader : Node, ModifierListOwner {
 
 interface ModuleExtendsAmendsClause : Node {
   val isAmend: Boolean
+
+  val isExtend: Boolean
+
+  val moduleUri: String?
 }
 
 sealed interface ModuleMember : Node, DocCommentOwner
