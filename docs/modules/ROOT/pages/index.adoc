@@ -1,7 +1,10 @@
 = User Manual
 include::../partials/component-attributes.adoc[]
 
-Quick Links: xref:pkl-cli:index.adoc#installation[Installation] | xref:language-reference:index.adoc[Language Reference]
+Quick Links:
+xref:pkl-cli:index.adoc#installation[Installation] 
+| xref:language-reference:index.adoc[Language Reference]
+| https://pkl-lang.org/package-docs/pkl/current/index.html[Standard Library]
 
 Pkl -- pronounced _Pickle_ -- is an embeddable configuration language which provides rich support for data templating and validation.
 It can be used from the command line, integrated in a build pipeline, or embedded in a program.
