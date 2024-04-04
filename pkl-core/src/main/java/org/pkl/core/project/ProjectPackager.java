@@ -16,7 +16,6 @@
 package org.pkl.core.project;
 
 import com.oracle.truffle.api.source.SourceSection;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -198,7 +197,7 @@ public class ProjectPackager {
   private String createDependencyMetadataAndComputeChecksum(
       Project project, Package pkg, Path metadataFile, String zipFileChecksum) throws IOException {
     var dependencyMetadata = createDependencyMetadata(project, pkg, zipFileChecksum);
-    try (var fos = newDigestOutputStream(new FileOutputStream(metadataFile.toFile()))) {
+    try (var fos = newDigestOutputStream(Files.newOutputStream((metadataFile)))) {
       dependencyMetadata.writeTo(fos);
       return ByteArrayUtils.toHex(fos.getMessageDigest().digest());
     }
@@ -287,9 +286,8 @@ public class ProjectPackager {
       Project project, List<Path> files, Path outputZipFile) {
     DigestOutputStream digestOutputStream;
     try {
-      var outputFile = outputZipFile.toFile();
       Files.createDirectories(outputZipFile.getParent());
-      digestOutputStream = newDigestOutputStream(new FileOutputStream(outputFile));
+      digestOutputStream = newDigestOutputStream(Files.newOutputStream(outputZipFile));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
