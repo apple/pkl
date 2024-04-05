@@ -4,6 +4,7 @@ local list1 = List(1, 2, 3)
 local list2 = List(1, 2, 3, 4, 5)
 local list3 = List(1, 2, 3, 2, 1)
 local comparator = (x, y) -> x < y
+local comparator1 = (x, y) -> x <= y
 
 facts {
   ["isEmpty"] {
@@ -243,6 +244,7 @@ examples {
     List().sortWith(comparator)
     List(3, 1, 1, 2, 1).sortWith(comparator)
     List(3, 1, 2, 5, 4).sortWith(comparator)
+    List(0, 0, 1, 2, 3, 3, 4, 5, 4, 1).sortWith(comparator1)
   }
 
   ["replaceRange()"] {

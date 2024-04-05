@@ -197,6 +197,7 @@ examples {
     List()
     List(1, 1, 1, 2, 3)
     List(1, 2, 3, 4, 5)
+    List(0, 0, 1, 1, 2, 3, 3, 4, 4, 5)
   }
   ["replaceRange()"] {
     List(1, 9, 8, 5)
