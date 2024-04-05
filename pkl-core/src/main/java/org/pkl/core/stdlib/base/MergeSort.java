@@ -58,7 +58,7 @@ final class MergeSort {
       SortComparatorNode comparator,
       @Nullable VmFunction function) {
 
-    if (comparator.executeWith(array[mid-1], array[mid], function)) {
+    if (comparator.executeWith(array[mid - 1], array[mid], function)) {
       return; // already sorted
     }
 
