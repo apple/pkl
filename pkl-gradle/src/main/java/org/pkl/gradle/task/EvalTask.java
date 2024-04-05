@@ -33,7 +33,8 @@ public abstract class EvalTask extends ModulesTask {
   @Internal
   public abstract RegularFileProperty getOutputFile();
 
-  @Internal
+  @Input
+  @Optional
   public abstract Property<String> getOutputFormat();
 
   @Input
