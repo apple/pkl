@@ -24,7 +24,9 @@ import org.gradle.api.tasks.UntrackedTask;
 import org.pkl.cli.CliEvaluator;
 import org.pkl.cli.CliEvaluatorOptions;
 
-@UntrackedTask(because = "Output file names are known only after execution")
+@UntrackedTask(
+    because =
+        "Output file names accept placeholder values, and actual file names and directories can't be known ahead of time")
 public abstract class EvalTask extends ModulesTask {
   @Internal
   public abstract RegularFileProperty getOutputFile();
