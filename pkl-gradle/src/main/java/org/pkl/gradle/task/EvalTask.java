@@ -17,10 +17,12 @@ package org.pkl.gradle.task;
 
 import java.io.File;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
@@ -30,8 +32,14 @@ import org.pkl.cli.CliEvaluator;
 import org.pkl.cli.CliEvaluatorOptions;
 
 public abstract class EvalTask extends ModulesTask {
+
+  // not tracked because it might contain placeholders
   @Internal
   public abstract RegularFileProperty getOutputFile();
+
+  // not tracked because it might contain placeholders
+  @Internal
+  public abstract DirectoryProperty getMultipleFileOutputDir();
 
   @Input
   @Optional
@@ -41,16 +49,16 @@ public abstract class EvalTask extends ModulesTask {
   @Optional
   public abstract Property<String> getModuleOutputSeparator();
 
-  @Internal
-  public abstract DirectoryProperty getMultipleFileOutputDir();
-
   @Input
   @Optional
   public abstract Property<String> getExpression();
 
+  @Inject
+  public abstract ProviderFactory getProviderFactory();
+
   @Internal
   public Provider<CliEvaluator> getCliEvaluator() {
-    return getProject()
+    return getProviderFactory()
         .provider(
             () ->
                 new CliEvaluator(
