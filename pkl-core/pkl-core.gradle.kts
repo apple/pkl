@@ -154,9 +154,9 @@ tasks.compileKotlin {
 }
 
 tasks.test {
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
+  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
 
   useJUnitPlatform {
     excludeEngines("MacAmd64LanguageSnippetTestsEngine")
@@ -168,9 +168,9 @@ tasks.test {
 }
 
 val testJavaExecutable by tasks.registering(Test::class) {
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
+  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
 
   testClassesDirs = files(tasks.test.get().testClassesDirs)
   classpath =
@@ -196,9 +196,9 @@ val testMacExecutableAmd64 by tasks.registering(Test::class) {
   enabled = buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22
   dependsOn(":pkl-cli:macExecutableAmd64")
 
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
+  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
 
   testClassesDirs = files(tasks.test.get().testClassesDirs)
   classpath = tasks.test.get().classpath
