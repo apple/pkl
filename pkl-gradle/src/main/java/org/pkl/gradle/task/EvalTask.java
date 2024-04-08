@@ -16,13 +16,12 @@
 package org.pkl.gradle.task;
 
 import java.io.File;
-import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
@@ -54,40 +53,39 @@ public abstract class EvalTask extends ModulesTask {
   public abstract Property<String> getExpression();
 
   @Inject
-  public abstract ProviderFactory getProviderFactory();
+  public abstract ObjectFactory getObjectFactory();
 
-  @Internal
-  public Provider<CliEvaluator> getCliEvaluator() {
-    return getProviderFactory()
-        .provider(
-            () ->
-                new CliEvaluator(
-                    new CliEvaluatorOptions(
-                        getCliBaseOptions(),
-                        getOutputFile().get().getAsFile().getAbsolutePath(),
-                        getOutputFormat().get(),
-                        getModuleOutputSeparator().get(),
-                        mapAndGetOrNull(
-                            getMultipleFileOutputDir(), (it) -> it.getAsFile().getAbsolutePath()),
-                        getExpression().get())));
+  private CliEvaluator getCliEvaluator() {
+    return new CliEvaluator(
+        new CliEvaluatorOptions(
+            getCliBaseOptions(),
+            getOutputFile().get().getAsFile().getAbsolutePath(),
+            getOutputFormat().get(),
+            getModuleOutputSeparator().get(),
+            mapAndGetOrNull(getMultipleFileOutputDir(), (it) -> it.getAsFile().getAbsolutePath()),
+            getExpression().get()));
   }
 
   @OutputFiles
   @Optional
-  public Provider<Set<File>> getOutputPaths() {
-    return getCliEvaluator().map(CliEvaluator::getOutputFiles);
+  public SetProperty<File> getOutputPaths() {
+    var ret = getObjectFactory().setProperty(File.class).value(getCliEvaluator().getOutputFiles());
+    ret.disallowChanges();
+    return ret;
   }
 
   @OutputDirectories
   @Optional
-  public Provider<Set<File>> getMultipleFileOutputPaths() {
-    return getCliEvaluator().map(CliEvaluator::getOutputDirectories);
+  public SetProperty<File> getMultipleFileOutputPaths() {
+    var ret = getObjectFactory().setProperty(File.class);
+    ret.value(getCliEvaluator().getOutputDirectories()).disallowChanges();
+    return ret;
   }
 
   @Override
   protected void doRunTask() {
     //noinspection ResultOfMethodCallIgnored
     getOutputs().getPreviousOutputFiles().forEach(File::delete);
-    getCliEvaluator().get().run();
+    getCliEvaluator().run();
   }
 }
