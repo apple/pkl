@@ -69,8 +69,8 @@ public abstract class EvalTask extends ModulesTask {
   @OutputFiles
   @Optional
   public SetProperty<File> getOutputPaths() {
-    var ret = getObjectFactory().setProperty(File.class).value(getCliEvaluator().getOutputFiles());
-    ret.disallowChanges();
+    var ret = getObjectFactory().setProperty(File.class);
+    ret.value(getCliEvaluator().getOutputFiles()).disallowChanges();
     return ret;
   }
 
