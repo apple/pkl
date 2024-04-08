@@ -549,6 +549,49 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(testProjectDir.resolve("proj1/foo.pcf")).exists()
   }
 
+  @Test
+  fun `implicit dependency tracking`() {
+    writeFile("file1.pkl", "foo = 1")
+    writeFile("file2.pkl", "bar = 1")
+    writeFile("build.gradle.kts", """
+      import org.pkl.gradle.task.EvalTask
+
+      plugins {
+        id("org.pkl-lang")
+      }
+
+      pkl {
+        evaluators {
+          register("doEval") {
+            sourceModules.set(files("file1.pkl", "file2.pkl"))
+            outputFile.set(layout.buildDirectory.file("%{moduleName}.%{outputFormat}"))
+            outputFormat.set("yaml")
+          }
+        }
+      }
+
+      val doEval by tasks.existing(EvalTask::class)
+
+      val printEvalFiles by tasks.registering {
+        inputs.files(doEval.flatMap { it.outputPaths })
+        doLast {
+          inputs.files.forEach {
+            println(it.name)
+            println(it.readText())
+          }
+        }
+      }
+    """.trimIndent())
+    val output = runTask("printEvalFiles")
+    assertThat(output.output).contains("""
+      file1.yaml
+      foo: 1
+
+      file2.yaml
+      bar: 1
+      """.trimIndent())
+  }
+
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core
