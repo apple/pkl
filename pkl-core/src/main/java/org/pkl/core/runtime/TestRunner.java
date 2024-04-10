@@ -263,7 +263,7 @@ public class TestRunner {
                 VmUtils.createSyntheticObjectProperty(Identifier.EXAMPLES, "examples", examples)),
             0);
     var builder = new StringBuilder();
-    new PcfRenderer(builder, "  ", converter, false, false).renderDocument(outputFileContent);
+    new PcfRenderer(builder, "  ", converter, false, true).renderDocument(outputFileContent);
     try {
       Files.writeString(outputFile, builder);
     } catch (IOException e) {
