@@ -34,7 +34,13 @@ res1 {
     other = "other"
   }
   productx {
-    "other"
+    new {
+      skux = "BL394Dx"
+      quantityx = 5
+      descriptionx = "Basketballx"
+      pricex = 451.23
+      other = "other"
+    }
     new {
       skux = "BL4438Hx"
       quantityx = 2
@@ -42,6 +48,7 @@ res1 {
       pricex = 2393.23
       other = "other"
     }
+    "other"
   }
   taxx = 252.64999999999998
   totalx = 4444.75
@@ -86,7 +93,13 @@ res2 = List(new {
   other = "other"
 }, new {
   productx {
-    "other"
+    new {
+      skux = "BL394Dx"
+      quantityx = 5
+      descriptionx = "Basketballx"
+      pricex = 451.23
+      other = "other"
+    }
     new {
       skux = "BL4438Hx"
       quantityx = 2
@@ -94,6 +107,7 @@ res2 = List(new {
       pricex = 2393.23
       other = "other"
     }
+    "other"
   }
   other = "other"
 }, new {
