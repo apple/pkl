@@ -28,15 +28,18 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -142,6 +145,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @LateInit protected CliBaseOptions cachedOptions;
 
+  // Must be called during task execution time only.
   @Internal
   protected CliBaseOptions getCliBaseOptions() {
     if (cachedOptions == null) {
@@ -175,6 +179,12 @@ public abstract class BasePklTask extends DefaultTask {
   protected List<URI> getSourceModulesAsUris() {
     return Collections.emptyList();
   }
+
+  @Inject
+  protected abstract ObjectFactory getObjects();
+
+  @Inject
+  protected abstract ProviderFactory getProviders();
 
   protected List<Path> parseModulePath() {
     return getModulePath().getFiles().stream().map(File::toPath).collect(Collectors.toList());
