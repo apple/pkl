@@ -272,7 +272,7 @@ abstract class ValueRenderer {
   ///   (according to the mapping's definition order) wins.
   ///
   /// A converter's key specifies which values the converter should be applied to.
-  /// A converter with [Class] key is applied to values of that exact class (but not to values of subclasses).
+  /// A converter with [Class] key is applied to values of that class, including values of its subclasses.
   /// A converter with [String] key is applied to values whose path matches the *path spec* described by the string.
   ///
   /// Path specs can have the following components:
