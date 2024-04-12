@@ -4837,14 +4837,14 @@ To customize the link text, insert the desired text, enclosed in square brackets
 
 [source,{pkl}]
 ----
-/// A [common Bird] found in large cities.
+/// A [common Bird][Bird] found in large cities.
 ----
 
 Custom link text can use markup:
 
 [source,{pkl}]
 ----
-/// A [*common* Bird] found in large cities.
+/// A [*common* Bird][Bird] found in large cities.
 ----
 
 The short link `[Bird]` is equivalent to `[{backtick}Bird{backtick}][Bird]`.
