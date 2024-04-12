@@ -20,7 +20,9 @@ javaPoet = "1.+"
 javaxInject = "1"
 jansi = "2.+"
 jimfs = "1.+"
-jline = "3.+"
+# 3.25.1 doesn't work with native image
+# https://github.com/jline/jline3/pull/959
+jline = "3.23.0"
 jmh = "1.+"
 jmhPlugin = "0.6.6"
 jsr305 = "3.+"
