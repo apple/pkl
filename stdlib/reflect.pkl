@@ -92,7 +92,7 @@ const objectType: DeclaredType = DeclaredType(Class(Object))
 const dynamicType: DeclaredType = DeclaredType(Class(Dynamic))
 
 /// A mirror for the [Typed] type.
-const typedType: DeclaredType = DeclaredType(Class(Type))
+const typedType: DeclaredType = DeclaredType(Class(Typed))
 
 /// A mirror for the `Listing<unknown>` type.
 const listingType: DeclaredType = DeclaredType(Class(Listing))
