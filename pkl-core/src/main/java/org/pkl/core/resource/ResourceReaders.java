@@ -304,8 +304,7 @@ public final class ResourceReaders {
       }
 
       try {
-        var url = IoUtils.toUrl(uri);
-        var content = IoUtils.readBytes(url);
+        var content = IoUtils.readBytes(uri);
         return Optional.of(new Resource(uri, content));
       } catch (FileNotFoundException e) {
         return Optional.empty();

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FakeHttpResponse
 import java.io.IOException
 import java.net.URI
-import java.net.URL
 
 class HttpUtilsTest {
   @Test
@@ -17,10 +16,10 @@ class HttpUtilsTest {
     assertThat(HttpUtils.isHttpUrl(URI("HtTpS://example.com"))).isTrue
     assertThat(HttpUtils.isHttpUrl(URI("file://example.com"))).isFalse
 
-    assertThat(HttpUtils.isHttpUrl(URL("http://example.com"))).isTrue
-    assertThat(HttpUtils.isHttpUrl(URL("https://example.com"))).isTrue
-    assertThat(HttpUtils.isHttpUrl(URL("HtTpS://example.com"))).isTrue
-    assertThat(HttpUtils.isHttpUrl(URL("file://example.com"))).isFalse
+    assertThat(HttpUtils.isHttpUrl(URI("http://example.com").toURL())).isTrue
+    assertThat(HttpUtils.isHttpUrl(URI("https://example.com").toURL())).isTrue
+    assertThat(HttpUtils.isHttpUrl(URI("HtTpS://example.com").toURL())).isTrue
+    assertThat(HttpUtils.isHttpUrl(URI("file://example.com").toURL())).isFalse
   }
   
   @Test

@@ -1,6 +1,6 @@
-import java.net.URL
 import org.gradle.util.GradleVersion
 import groovy.json.JsonSlurper
+import java.net.URI
 
 @Suppress("unused")
 class GradleVersionInfo(json: Map<String, Any>) {
@@ -50,18 +50,18 @@ class GradleVersionInfo(json: Map<String, Any>) {
 
     private fun fetchSingle(url: String): GradleVersionInfo {
       @Suppress("UNCHECKED_CAST")
-      return GradleVersionInfo(JsonSlurper().parse(URL(url)) as Map<String, Any>)
+      return GradleVersionInfo(JsonSlurper().parse(URI(url).toURL()) as Map<String, Any>)
     }
 
     private fun fetchSingleOrNull(url: String): GradleVersionInfo? {
       @Suppress("UNCHECKED_CAST")
-      val json = JsonSlurper().parse(URL(url)) as Map<String, Any>
+      val json = JsonSlurper().parse(URI(url).toURL()) as Map<String, Any>
       return if (json.isEmpty()) null else GradleVersionInfo(json)
     }
 
     private fun fetchMultiple(url: String): List<GradleVersionInfo> {
       @Suppress("UNCHECKED_CAST")
-      return (JsonSlurper().parse(URL(url)) as List<Map<String, Any>>)
+      return (JsonSlurper().parse(URI(url).toURL()) as List<Map<String, Any>>)
         .map { GradleVersionInfo(it) }
     }
   }
