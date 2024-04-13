@@ -343,19 +343,39 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
   }
 
   protected void checkTypedProperty(VmClass clazz, ObjectMember member) {
-    if (member.isLocal() || clazz.hasProperty(member.getName())) return;
-    CompilerDirectives.transferToInterpreter();
-    var exception =
-        exceptionBuilder()
-            .cannotFindProperty(clazz.getPrototype(), member.getName(), false, false)
-            .build();
-    if (member.getHeaderSection().isAvailable()) {
-      exception
-          .getInsertedStackFrames()
-          .put(
-              getRootNode().getCallTarget(),
-              VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
+    if (member.isLocal()) return;
+
+    var memberName = member.getName();
+    if (!clazz.hasProperty(memberName)) {
+      CompilerDirectives.transferToInterpreter();
+      var exception =
+          exceptionBuilder()
+              .cannotFindProperty(clazz.getPrototype(), memberName, false, false)
+              .build();
+      if (member.getHeaderSection().isAvailable()) {
+        exception
+            .getInsertedStackFrames()
+            .put(
+                getRootNode().getCallTarget(),
+                VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
+      }
+      throw exception;
     }
-    throw exception;
+
+    var classProperty = clazz.getProperty(memberName);
+    if (classProperty != null && classProperty.isConstOrFixed()) {
+      CompilerDirectives.transferToInterpreter();
+      var errMsg =
+          classProperty.isConst() ? "cannotAssignConstProperty" : "cannotAssignFixedProperty";
+      var exception = exceptionBuilder().evalError(errMsg, memberName).build();
+      if (member.getHeaderSection().isAvailable()) {
+        exception
+            .getInsertedStackFrames()
+            .put(
+                getRootNode().getCallTarget(),
+                VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
+      }
+      throw exception;
+    }
   }
 }

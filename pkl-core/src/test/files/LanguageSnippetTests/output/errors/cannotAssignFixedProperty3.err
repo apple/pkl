@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot assign to fixed property `name`.
+
+x | ...new Dynamic { name = "Osprey" }
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotAssignFixedProperty3#p (file:///$snippetsDir/input/errors/cannotAssignFixedProperty3.pkl)
+
+x | ...new Dynamic { name = "Osprey" }
+                     ^^^^
+at cannotAssignFixedProperty3#p.name (file:///$snippetsDir/input/errors/cannotAssignFixedProperty3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

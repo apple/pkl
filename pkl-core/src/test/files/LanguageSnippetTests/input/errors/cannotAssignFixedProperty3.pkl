@@ -1,0 +1,5 @@
+amends "../basic/fixedProperty2.pkl"
+
+p = new {
+  ...new Dynamic { name = "Osprey" }
+}
