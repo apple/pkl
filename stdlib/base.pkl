@@ -263,20 +263,26 @@ abstract class ValueRenderer {
   /// The converted value is then rendered by the renderer's hardwired rendering logic.
   ///
   /// When a converter returns a value of type [Object], [Collection], [Map], or [Pair],
-  /// converters are recursively applied to the returned value's components (object properties, list elements, etc.).
+  /// converters are recursively applied to the returned value's components (object properties,
+  /// list elements, etc.).
   ///
   /// At most one converter is applied per value.
   /// If multiple converters are applicable, a winner is chosen as follows:
   /// - A converter with [String] key wins over a converter with [Class] key.
-  /// - Between converters with same key type, the converter defined earlier
+  /// - Between multiple [String] key converters, the converter defined earlier
   ///   (according to the mapping's definition order) wins.
+  /// - Between multiple [Class] key converters, the most specific class (according to class
+  ///   hierarchy) wins.
   ///
   /// A converter's key specifies which values the converter should be applied to.
-  /// A converter with [Class] key is applied to values of that exact class (but not to values of subclasses).
-  /// A converter with [String] key is applied to values whose path matches the *path spec* described by the string.
+  /// A converter with [Class] key is applied to values of that class, including values of its
+  /// subclasses.
+  /// A converter with [String] key is applied to values whose path matches the *path spec*
+  /// described by the string.
   ///
   /// Path specs can have the following components:
-  /// - `^` matches the top-level value passed to `renderDocument()` or `renderValue()` (often the module object)
+  /// - `^` matches the top-level value passed to `renderDocument()` or `renderValue()` (often the
+  ///    module object)
   /// - `pigeon` matches property `pigeon` at any hierarchy level
   /// - `[pigeon]` matches map(ping) entry with String key `"pigeon"` at any hierarchy level
   /// - `*` matches any property
