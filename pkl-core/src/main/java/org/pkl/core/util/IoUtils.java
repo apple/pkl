@@ -175,6 +175,7 @@ public final class IoUtils {
   }
 
   // not stored to avoid build-time initialization by native-image
+  @SuppressWarnings("SystemGetProperty")
   public static String getLineSeparator() {
     return System.getProperty("line.separator");
   }
