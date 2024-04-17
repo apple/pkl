@@ -346,7 +346,8 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     if (member.isLocal()) return;
 
     var memberName = member.getName();
-    if (!clazz.hasProperty(memberName)) {
+    var classProperty = clazz.getProperty(memberName);
+    if (classProperty == null) {
       CompilerDirectives.transferToInterpreter();
       var exception =
           exceptionBuilder()
@@ -362,8 +363,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
       throw exception;
     }
 
-    var classProperty = clazz.getProperty(memberName);
-    if (classProperty != null && classProperty.isConstOrFixed()) {
+    if (classProperty.isConstOrFixed()) {
       CompilerDirectives.transferToInterpreter();
       var errMsg =
           classProperty.isConst() ? "cannotAssignConstProperty" : "cannotAssignFixedProperty";
