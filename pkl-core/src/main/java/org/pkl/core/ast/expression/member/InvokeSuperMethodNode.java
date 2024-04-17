@@ -54,10 +54,6 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
       @Cached("findSupermethod(frame)") ClassMethod supermethod,
       @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
-    if (needsConst && !supermethod.isConst()) {
-      CompilerDirectives.transferToInterpreter();
-      throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
-    }
     var args = new Object[2 + argumentNodes.length];
     args[0] = VmUtils.getReceiverOrNull(frame);
     args[1] = supermethod.getOwner();
@@ -77,7 +73,13 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
 
     // note the use of getMethod() rather than getDeclaredMethod()
     var supermethod = superclass.getMethod(methodName);
-    if (supermethod != null) return supermethod;
+    if (supermethod != null) {
+      if (needsConst && !supermethod.isConst()) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
+      }
+      return supermethod;
+    }
 
     CompilerDirectives.transferToInterpreter();
     var parent = owner.getParent();
