@@ -989,8 +989,8 @@ Because a `local` property is added to the lexical scope, but not (observably) t
 ====
 
 An _import clause_ defines a local property in the containing module.
-This means `import "someModule.pkl"` is equivalent to `local someModule = import("someModule.pkl")`.
-Also, `import "someModule.pkl" as otherName` is equivalent to `local otherName = import("someModule.pkl")`.
+This means `import "someModule.pkl"` is effectively `const local someModule = import("someModule.pkl")`.
+Also, `import "someModule.pkl" as otherName` is effectively `const local otherName = import("someModule.pkl")`.
 ====
 
 [[fixed-properties]]
