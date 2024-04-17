@@ -62,7 +62,7 @@ A code comment that starts with a double-slash (`//`) and runs until the end of 
 ----
 
 Block comment::
-A nestable multiline comment is typically used to comment out code.
+A nestable multiline comment, which is typically used to comment out code.
 Starts with `+/*+` and ends with `+*/+`.
 +
 [source%parsed,{pkl}]
