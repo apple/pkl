@@ -43,7 +43,7 @@ public final class AmendFunctionNode extends PklNode {
   public AmendFunctionNode(
       ObjectLiteralNode hostNode,
       TypeNode[] parameterTypeNodes,
-      FrameDescriptor hostFrameDesecriptor) {
+      FrameDescriptor hostFrameDescriptor) {
     super(hostNode.getSourceSection());
 
     isCustomThisScope = hostNode.isCustomThisScope;
@@ -62,8 +62,8 @@ public final class AmendFunctionNode extends PklNode {
       parameterSlots = new int[0];
     }
     var hasForGenVars = false;
-    for (var i = 0; i < hostFrameDesecriptor.getNumberOfSlots(); i++) {
-      var slotInfo = hostFrameDesecriptor.getSlotInfo(i);
+    for (var i = 0; i < hostFrameDescriptor.getNumberOfSlots(); i++) {
+      var slotInfo = hostFrameDescriptor.getSlotInfo(i);
       // Copy for-generator variables from the outer frame descriptor into inner lambda.
       //
       // We need to do this because at parse time within AstBuilder, we inject for-generator
@@ -88,7 +88,7 @@ public final class AmendFunctionNode extends PklNode {
           }
         }
         builder.addSlot(
-            hostFrameDesecriptor.getSlotKind(i), hostFrameDesecriptor.getSlotName(i), null);
+            hostFrameDescriptor.getSlotKind(i), hostFrameDescriptor.getSlotName(i), null);
       } else if (hasForGenVars) {
         builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
       }
