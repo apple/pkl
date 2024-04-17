@@ -202,12 +202,12 @@ negativeInfinity = -Infinity
 The link:{uri-stdlib-NaN}[NaN] and link:{uri-stdlib-Infinity}[Infinity] properties are defined in the standard library.
 
 Floats support the same comparison and arithmetic operators as integers.
-Float literals with zero fractional part can be safely replaced with integer literals.
+Float literals with a fractional part of zero can be safely replaced with integer literals.
 For example, it is safe to write `1.3 * 42` instead of `1.3 * 42.0`.
 
 Floats can also include the same underscore separator as integers. For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
 
-TIP: As integers are more convenient to use than floats with zero fractional part, we recommend to require `x: Number` instead of `x: Float` in type annotations.
+TIP: As integers are more convenient to use than floats with a fractional part of zero, we recommend requiring `x: Number` instead of `x: Float` in type annotations.
 
 To restrict a float to a finite value, use the link:{uri-stdlib-isFinite}[isFinite] <<type-constraints,type constraint>>:
 
@@ -674,7 +674,7 @@ parrot = (pigeon) { // <2>
 <1> Amends declaration.
 <2> Amends expression.
 
-An amends declaration amends the property of the same name in a module's parent module, if the parent property exists.
+An amends declaration amends a property of the same name if the property exists within a parent module.
 Otherwise, an amends declaration implicitly amends {uri-stdlib-Dynamic}[Dynamic].
 
 Another way to think about an amends declaration is that it is shorthand for assignment.
@@ -2647,7 +2647,7 @@ The standard library provides these renderers:
 * link:{uri-stdlib-xmlModule}/Renderer[xml.Renderer]
 * link:{uri-stdlib-baseModule}/YamlRenderer[YamlRenderer]
 
-To render a format that is not yet supported, implement your own renderer by extending class link:{uri-stdlib-baseModule}/ValueRenderer[ValueRenderer].
+To render a format that is not yet supported, you can implement your own renderer by extending the class link:{uri-stdlib-baseModule}/ValueRenderer[ValueRenderer].
 
 The standard library renderers can be configured with _value converters_, which influence how particular values are rendered.
 
@@ -3470,7 +3470,7 @@ emailRegex = Regex(#"([\w\.]+)@([\w\.]+)"#)
 
 // note: first \ on next line is asciidoc escape
 Notice the use of custom string delimiters `\#"` and `"#`, which change the string's escape character from `\` to `\#`.
-As a consequence, the regular expression's own backslash escape character no longer needs to be escaped.
+As a consequence, the regular expression's backslash escape character no longer requires escaping.
 
 To test if a string fully matches a regular expression, use link:{uri-stdlib-matches}[String.matches()]:
 
@@ -3738,7 +3738,7 @@ map: Map<String, Bird>      // <5>
 mapping: Mapping<String, Bird> // <6>
 ----
 
-<1> a pair with first element of type `String` and second element of type `Bird`
+<1> a pair `String` and `Bird` as types for the first and second element, respectively
 <2> a collection of `Bird` elements
 <3> a list of `Bird` elements
 <4> a set of `Bird` elements
@@ -3956,7 +3956,7 @@ pigeon: Bird = new {
 
 Boolean expressions are convenient for ad-hoc type constraints.
 Alternatively, type constraints can be given as lambda expressions accepting a single argument, namely the value to be validated.
-This allows to abstract over and reuse type constraints.
+This allows for the abstraction and reuse of type constraints.
 
 [source%tested,{pkl}]
 ----
@@ -4532,7 +4532,7 @@ In some ways, spread syntax can be thought of as a shorthand for a xref:for-gene
 [NOTE]
 ====
 Look out for duplicate key conflicts when using spreads.
-When spreading entries or properties, it is possible that a spread causes conflict due to an existing definition of a key.
+Spreading entries or properties may cause conflicts due to matched existing key definitions.
 
 In the following code snippet, `"Pigeon"` is declared twice in the `newPets` object, and thus is an error.
 
@@ -5074,7 +5074,7 @@ To use these names in an identifier, <<quoted-identifiers, surround them with ba
 === Blank Identifiers
 
 Blank identifiers can be used in many places to ignore parameters and variables. +
-`_` is not a valid identifier. In order to use it as a parameter or variable name
+`_` is not a valid identifier. To use it as a parameter or variable name,
 it needs to be enclosed in backticks: +`_`+.
 
 ==== Functions and methods
@@ -5210,9 +5210,9 @@ package {
 }
 ----
 <1> The display name of the package. For display purposes only.
-<4> The URL that the package's ZIP file will available for download at.
 <2> The package URI, without the version part.
 <3> The version of the package.
+<4> The URL to download the package's ZIP file.
 
 The package itself is created by the command xref:pkl-cli:index.adoc#command-project-package[`pkl project package`].
 
