@@ -571,7 +571,7 @@ xyKibibytes = (x + y).kib // <2>
 
 An object is an ordered collection of _values_ indexed by _name_.
 
-An object's key–value pairs are called its _properties_.
+An object's key-value pairs are called its _properties_.
 Property values are lazily evaluated on the first read.
 
 Because Pkl's objects differ in important ways from objects in general-purpose programming languages,
@@ -1577,12 +1577,12 @@ A value of type link:{uri-stdlib-Mapping}[Mapping] is an ordered collection of _
 NOTE: Most of what has been said about <<listings,listings>> also applies to mappings.
 Nevertheless, this section is written to stand on its own.
 
-A mapping's key–value pairs are called its _entries_.
+A mapping's key-value pairs are called its _entries_.
 Keys are eagerly evaluated; values are lazily evaluated on the first read.
 
 Mappings combine qualities of maps and objects:
 
-* Like maps, mappings can contain arbitrary key–value pairs.
+* Like maps, mappings can contain arbitrary key-value pairs.
 * Like objects, mappings excel at defining and amending nested literal data structures.
 * Like objects, mappings can only be directly manipulated through amendment,
   but converting them to a map (and, if necessary, back to a mapping) opens the door to arbitrary transformations.
@@ -1591,8 +1591,8 @@ Mappings combine qualities of maps and objects:
 [TIP]
 .When to use Mapping vs. <<maps,Map>>
 ====
-* When key–value style data needs to be specified literally, use a mapping.
-* When key–value style data needs to be transformed in a way that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
+* When key-value style data needs to be specified literally, use a mapping.
+* When key-value style data needs to be transformed in a way that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
 * If in doubt, use a mapping.
 
 Templates and schemas should almost always use mappings instead of maps.
@@ -3388,14 +3388,14 @@ res4 = set.intersect(Set(3, 9, 2)) // <4>
 
 A value of type link:{uri-stdlib-Map}[Map] is an ordered collection of _values_ indexed by _key_.
 
-A map's key–value pairs are called its _entries_.
+A map's key-value pairs are called its _entries_.
 Keys and values are eagerly evaluated.
 
 [TIP]
 .When to use Map vs. <<mappings,Mapping>>
 ====
-* When key–value style data needs to be specified literally, use a mapping.
-* When key–value style data needs to be transformed in ways that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
+* When key-value style data needs to be specified literally, use a mapping.
+* When key-value style data needs to be transformed in ways that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
 * If in doubt, use a mapping.
 
 Templates and schemas should almost always use mappings instead of maps.
