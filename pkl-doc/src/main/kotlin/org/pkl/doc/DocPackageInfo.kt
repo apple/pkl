@@ -67,7 +67,7 @@ data class DocPackageInfo(
   /**
    * The overview documentation for this package.
    *
-   * Supports the same Morkdown syntax as Pkldoc comments. By default, only the first paragraph is
+   * Supports the same Markdown syntax as Pkldoc comments. By default, only the first paragraph is
    * displayed.
    */
   val overview: String?,
@@ -176,7 +176,7 @@ data class DocPackageInfo(
     /** The name of the depended-on package. */
     val name: String,
 
-    /** The URI of the dependend-upon package, if any. */
+    /** The URI of the depended-upon package, if any. */
     val uri: @Contextual URI?,
 
     /** The version of the depended-on package. */

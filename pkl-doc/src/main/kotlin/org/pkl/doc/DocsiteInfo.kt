@@ -27,7 +27,7 @@ data class DocsiteInfo(
   /**
    * The overview documentation on the main page of this website.
    *
-   * Uses the same Morkdown format as Pkldoc comments. Unless expanded, only the first paragraph is
+   * Uses the same Markdown format as Pkldoc comments. Unless expanded, only the first paragraph is
    * shown.
    */
   val overview: String?,
