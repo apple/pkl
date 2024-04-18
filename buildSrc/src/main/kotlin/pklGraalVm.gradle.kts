@@ -9,55 +9,80 @@ plugins {
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val homeDir = buildInfo.graalVm.homeDir
-val baseName = buildInfo.graalVm.baseName
-val installDir = buildInfo.graalVm.installDir
-val downloadUrl = buildInfo.graalVm.downloadUrl
-val downloadFile = file(homeDir).resolve("$baseName.tar.gz")
+val BuildInfo.GraalVm.downloadFile get() = file(homeDir).resolve("${baseName}.tar.gz")
 
 // tries to minimize chance of corruption by download-to-temp-file-and-move
-val downloadGraalVm by tasks.registering(Download::class) {
+val downloadGraalVmAarch64 by tasks.registering(Download::class) {
+  configureDownloadGraalVm(buildInfo.graalVmAarch64)
+}
+
+val downloadGraalVmAmd64 by tasks.registering(Download::class) {
+  configureDownloadGraalVm(buildInfo.graalVmAmd64)
+}
+
+fun Download.configureDownloadGraalVm(graalvm: BuildInfo.GraalVm) {
   onlyIf {
-    !installDir.exists()
+    !graalvm.installDir.exists()
+  }
+  doLast {
+    println("Downloaded GraalVm to ${graalvm.downloadFile}")
   }
 
-  src(downloadUrl)
-  dest(downloadFile)
+  src(graalvm.downloadUrl)
+  dest(graalvm.downloadFile)
   overwrite(false)
   tempAndMove(true)
 }
 
-val verifyGraalVm by tasks.registering(Verify::class) {
+val verifyGraalVmAarch64 by tasks.registering(Verify::class) {
+  configureVerifyGraalVm(buildInfo.graalVmAarch64)
+  dependsOn(downloadGraalVmAarch64)
+}
+
+val verifyGraalVmAmd64 by tasks.registering(Verify::class) {
+  configureVerifyGraalVm(buildInfo.graalVmAmd64)
+  dependsOn(downloadGraalVmAmd64)
+}
+
+fun Verify.configureVerifyGraalVm(graalvm: BuildInfo.GraalVm) {
   onlyIf {
-    !installDir.exists()
+    !graalvm.installDir.exists()
   }
 
-  dependsOn(downloadGraalVm)
-  src(downloadFile)
-  checksum(buildInfo.libs.findVersion("graalVmSha256-${buildInfo.graalVm.osName}-${buildInfo.graalVm.arch}").get().toString())
+  src(graalvm.downloadFile)
+  checksum(buildInfo.libs.findVersion("graalVmSha256-${graalvm.osName}-${graalvm.arch}").get().toString())
   algorithm("SHA-256")
 }
 
 // minimize chance of corruption by extract-to-random-dir-and-flip-symlink
-val installGraalVm by tasks.registering {
-  dependsOn(verifyGraalVm)
+val installGraalVmAarch64 by tasks.registering {
+  dependsOn(verifyGraalVmAarch64)
+  configureInstallGraalVm(buildInfo.graalVmAarch64)
+}
 
+// minimize chance of corruption by extract-to-random-dir-and-flip-symlink
+val installGraalVmAmd64 by tasks.registering {
+  dependsOn(verifyGraalVmAmd64)
+  configureInstallGraalVm(buildInfo.graalVmAmd64)
+}
+
+fun Task.configureInstallGraalVm(graalVm: BuildInfo.GraalVm) {
   onlyIf {
-    !installDir.exists()
+    !graalVm.installDir.exists()
   }
 
   doLast {
-    val distroDir = "$homeDir/${UUID.randomUUID()}"
+    val distroDir = "${graalVm.homeDir}/${UUID.randomUUID()}"
 
     try {
       mkdir(distroDir)
 
-      println("Extracting $downloadFile into $distroDir")
+      println("Extracting ${graalVm.downloadFile} into $distroDir")
       // faster and more reliable than Gradle's `copy { from tarTree() }`
       exec {
         workingDir = file(distroDir)
         executable = "tar"
-        args("--strip-components=1", "-xzf", downloadFile)
+        args("--strip-components=1", "-xzf", graalVm.downloadFile)
       }
 
       val distroBinDir = if (buildInfo.os.isMacOsX) "$distroDir/Contents/Home/bin" else "$distroDir/bin"
@@ -68,11 +93,11 @@ val installGraalVm by tasks.registering {
         args("install", "--no-progress", "native-image")
       }
 
-      println("Creating symlink $installDir for $distroDir")
-      val tempLink = Paths.get("$homeDir/${UUID.randomUUID()}")
+      println("Creating symlink ${graalVm.installDir} for $distroDir")
+      val tempLink = Paths.get("${graalVm.homeDir}/${UUID.randomUUID()}")
       Files.createSymbolicLink(tempLink, Paths.get(distroDir))
       try {
-        Files.move(tempLink, installDir.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        Files.move(tempLink, graalVm.installDir.toPath(), StandardCopyOption.ATOMIC_MOVE)
       } catch (e: Exception) {
         try { delete(tempLink.toFile()) } catch (ignored: Exception) {}
         throw e

@@ -22,7 +22,7 @@ import org.pkl.core.util.DurationUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#Duration} value. */
-public final strictfp class Duration implements Value {
+public final class Duration implements Value {
   private static final long serialVersionUID = 0L;
 
   private final double value;

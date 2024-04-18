@@ -134,29 +134,34 @@ tasks.check {
   dependsOn(testStartJavaExecutable)
 }
 
-fun Exec.configureExecutable(isEnabled: Boolean, outputFile: Provider<RegularFile>, extraArgs: List<String> = listOf()) {
+fun Exec.configureExecutable(
+  isEnabled: Boolean,
+  graalVm: BuildInfo.GraalVm,
+  outputFile: Provider<RegularFile>,
+  extraArgs: List<String> = listOf()
+) {
   enabled = isEnabled
-  dependsOn(":installGraalVm")
 
   inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
-inputs.files(file(buildInfo.graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
+  inputs.files(file(graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
   outputs.file(outputFile)
   outputs.cacheIf { true }
 
   workingDir(outputFile.map { it.asFile.parentFile })
-  executable = "${buildInfo.graalVm.baseDir}/bin/native-image"
+  executable = "${graalVm.baseDir}/bin/native-image"
 
   // JARs to exclude from the class path for the native-image build.
-  val exclusions =
-    if (buildInfo.graalVm.isGraal22) emptyList()
-    else listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
+  val exclusions = listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(CommandLineArgumentProvider {
     listOf(
         // currently gives a deprecation warning, but we've been told 
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         "--initialize-at-build-time="
+        // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
+        ,"--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ,"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
         ,"--no-fallback"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
@@ -213,21 +218,24 @@ inputs.files(file(buildInfo.graalVm.baseDir).resolve("bin/native-image")).withPr
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22, layout.buildDirectory.file("executable/pkl-macos-amd64"))
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.os.isMacOsX,
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-macos-amd64")
+  )
 }
 
 /**
  * Builds the pkl CLI for macOS/aarch64.
- *
- * This requires that GraalVM be set to version 23.0 or greater, because 22.x does not support this
- * os/arch pair.
  */
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  dependsOn(":installGraalVmAarch64")
   configureExecutable(
-    buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22,
+    buildInfo.os.isMacOsX,
+    buildInfo.graalVmAarch64,
     layout.buildDirectory.file("executable/pkl-macos-aarch64"),
     listOf(
-      "--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess",
       "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
     )
   )
@@ -237,7 +245,12 @@ val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "amd64", layout.buildDirectory.file("executable/pkl-linux-amd64"))
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.os.isLinux && buildInfo.arch == "amd64",
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-linux-amd64")
+  )
 }
 
 /**
@@ -247,7 +260,12 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  configureExecutable(buildInfo.os.isLinux && buildInfo.arch == "aarch64", layout.buildDirectory.file("executable/pkl-linux-aarch64"))
+  dependsOn(":installGraalVmAarch64")
+  configureExecutable(
+    buildInfo.os.isLinux && buildInfo.arch == "aarch64",
+    buildInfo.graalVmAarch64,
+    layout.buildDirectory.file("executable/pkl-linux-aarch64")
+  )
 }
 
 /**
@@ -257,15 +275,17 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
  * Details: https://www.graalvm.org/22.0/reference-manual/native-image/ARM64/
  */
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  dependsOn(":installGraalVmAmd64")
   configureExecutable(
-      buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
-      layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
-      listOf(
-        "--static",
-        "--libc=musl",
-        "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
-        "-Dorg.pkl.compat=alpine"
-      )
+    buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
+    listOf(
+      "--static",
+      "--libc=musl",
+      "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
+      "-Dorg.pkl.compat=alpine"
+    )
   )
 }
 

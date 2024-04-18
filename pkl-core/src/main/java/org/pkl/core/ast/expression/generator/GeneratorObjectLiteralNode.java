@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -112,7 +113,8 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   protected Object evalFunction(
       VirtualFrame frame,
       VmFunction parent,
-      @Cached("createAmendFunctionNode(frame)") AmendFunctionNode amendFunctionNode) {
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
   }
@@ -164,6 +166,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     throw exceptionBuilder().unreachableCode().build();
   }
 
+  @Idempotent
   protected boolean checkObjectCannotHaveParameters() {
     if (parametersDescriptor == null) return true;
 
@@ -174,6 +177,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
         .build();
   }
 
+  @Idempotent
   protected boolean checkListingCannotHaveParameters() {
     if (parametersDescriptor == null) return true;
 
@@ -184,6 +188,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
         .build();
   }
 
+  @Idempotent
   protected boolean checkMappingCannotHaveParameters() {
     if (parametersDescriptor == null) return true;
 

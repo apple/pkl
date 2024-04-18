@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -100,7 +101,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       VirtualFrame frame,
       VmFunction receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
-      @Cached("create()") IndirectCallNode callNode) {
+      @Exclusive @Cached(value = "create()") IndirectCallNode callNode) {
 
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
@@ -138,7 +139,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       VirtualFrame frame,
       Object receiver,
       VmClass receiverClass,
-      @Cached("create()") IndirectCallNode callNode) {
+      @Exclusive @Cached(value = "create()") IndirectCallNode callNode) {
 
     var method = resolveMethod(receiverClass);
     var args = new Object[2 + argumentNodes.length];

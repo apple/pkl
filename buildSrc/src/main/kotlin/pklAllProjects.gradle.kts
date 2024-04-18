@@ -24,13 +24,13 @@ configurations {
 
 plugins.withType(JavaPlugin::class).configureEach {
   val java = project.extensions.getByType<JavaPluginExtension>()
-  java.sourceCompatibility = JavaVersion.VERSION_11
-  java.targetCompatibility = JavaVersion.VERSION_11
+  java.sourceCompatibility = JavaVersion.VERSION_17
+  java.targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "17"
     freeCompilerArgs = freeCompilerArgs + listOf("-Xjsr305=strict", "-Xjvm-default=all")
   }
 }

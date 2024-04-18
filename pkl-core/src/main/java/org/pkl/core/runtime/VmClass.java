@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
@@ -343,79 +344,98 @@ public final class VmClass extends VmValue {
     return prototype;
   }
 
+  @Idempotent
   public boolean isAbstract() {
     return VmModifier.isAbstract(modifiers);
   }
 
+  @Idempotent
   public boolean isExternal() {
     return VmModifier.isExternal(modifiers);
   }
 
+  @Idempotent
   public boolean isOpen() {
     return VmModifier.isOpen(modifiers);
   }
 
+  @Idempotent
   public boolean isClosed() {
     return VmModifier.isClosed(modifiers);
   }
 
+  @Idempotent
   public boolean isInstantiable() {
     return VmModifier.isInstantiable(modifiers);
   }
 
+  @Idempotent
   public boolean isNullClass() {
     return isClass(BaseModule.getNullClass(), "pkl.base#Null");
   }
 
+  @Idempotent
   public boolean isCollectionClass() {
     return isClass(BaseModule.getCollectionClass(), "pkl.base#Collection");
   }
 
+  @Idempotent
   public boolean isListClass() {
     return isClass(BaseModule.getListClass(), "pkl.base#List");
   }
 
+  @Idempotent
   public boolean isSetClass() {
     return isClass(BaseModule.getSetClass(), "pkl.base#Set");
   }
 
+  @Idempotent
   public boolean isMapClass() {
     return isClass(BaseModule.getMapClass(), "pkl.base#Map");
   }
 
+  @Idempotent
   public boolean isListingClass() {
     return isClass(BaseModule.getListingClass(), "pkl.base#Listing");
   }
 
+  @Idempotent
   public boolean isMappingClass() {
     return isClass(BaseModule.getMappingClass(), "pkl.base#Mapping");
   }
 
+  @Idempotent
   public boolean isDynamicClass() {
     return isClass(BaseModule.getDynamicClass(), "pkl.base#Dynamic");
   }
 
+  @Idempotent
   public boolean isPairClass() {
     return isClass(BaseModule.getPairClass(), "pkl.base#Pair");
   }
 
+  @Idempotent
   public boolean isFunctionClass() {
     return isClass(BaseModule.getFunctionClass(), "pkl.base#Function");
   }
 
+  @Idempotent
   public boolean isFunctionNClass() {
     return superclass != null
         && superclass.isClass(BaseModule.getFunctionClass(), "pkl.base#Function");
   }
 
+  @Idempotent
   public boolean isModuleClass() {
     return isClass(BaseModule.getModuleClass(), "pkl.base#Module");
   }
 
+  @Idempotent
   public boolean isClassClass() {
     return isClass(BaseModule.getClassClass(), "pkl.base#Class");
   }
 
+  @Idempotent
   public boolean isVarArgsClass() {
     return isClass(BaseModule.getVarArgsClass(), "pkl.base#VarArgs");
   }

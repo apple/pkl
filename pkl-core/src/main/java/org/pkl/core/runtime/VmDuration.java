@@ -22,7 +22,7 @@ import org.pkl.core.util.DurationUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final strictfp class VmDuration extends VmValue implements Comparable<VmDuration> {
+public final class VmDuration extends VmValue implements Comparable<VmDuration> {
   private static final Map<Identifier, DurationUnit> UNITS =
       Map.of(
           Identifier.NS, DurationUnit.NANOS,

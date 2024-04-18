@@ -24,7 +24,6 @@ import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.util.MathUtils;
 
 // implementation notes:
-// make sure to use strictfp for all fp operations
 // according to graal folks, it shouldn't be necessary to put
 // java.lang.Math calls behind a @TruffleBoundary, and doing so
 // could prevent Graal from applying its java.lang.Math intrinsics
@@ -202,7 +201,7 @@ public final class MathNodes {
     }
   }
 
-  public abstract static strictfp class log2 extends ExternalMethod1Node {
+  public abstract static class log2 extends ExternalMethod1Node {
     @Specialization
     protected double eval(VmTyped self, long x) {
       // based on com.google.common.math.DoubleMath.log2, but uses StrictMath
@@ -311,7 +310,7 @@ public final class MathNodes {
     }
   }
 
-  public abstract static strictfp class lcm extends ExternalMethod2Node {
+  public abstract static class lcm extends ExternalMethod2Node {
     @TruffleBoundary
     @Specialization
     protected long eval(VmTyped self, long x, long y) {

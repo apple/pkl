@@ -30,7 +30,7 @@ jobs:
       LANG: en_US.UTF-8
     resource_class: macos.m1.large.gen1
     macos:
-      xcode: 15.2.0
+      xcode: 15.3.0
   pkl-cli-linux-amd64-release:
     steps:
     - checkout
@@ -46,7 +46,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -118,8 +118,6 @@ jobs:
     steps:
     - checkout
     - run:
-        command: git apply patches/graalVm23.patch
-    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
@@ -140,7 +138,7 @@ jobs:
       LANG: en_US.UTF-8
     resource_class: macos.m1.large.gen1
     macos:
-      xcode: 15.2.0
+      xcode: 15.3.0
   pkl-cli-linux-aarch64-release:
     steps:
     - checkout
@@ -156,7 +154,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -223,7 +221,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -318,7 +316,7 @@ jobs:
       LANG: en_US.UTF-8
     resource_class: macos.m1.large.gen1
     macos:
-      xcode: 15.2.0
+      xcode: 15.3.0
   pkl-cli-linux-amd64-snapshot:
     steps:
     - checkout
@@ -334,7 +332,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -406,8 +404,6 @@ jobs:
     steps:
     - checkout
     - run:
-        command: git apply patches/graalVm23.patch
-    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
@@ -428,7 +424,7 @@ jobs:
       LANG: en_US.UTF-8
     resource_class: macos.m1.large.gen1
     macos:
-      xcode: 15.2.0
+      xcode: 15.3.0
   pkl-cli-linux-aarch64-snapshot:
     steps:
     - checkout
@@ -444,7 +440,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -511,7 +507,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.20.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.20.1_1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -579,24 +575,6 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
-  gradle-check-jdk11:
-    steps:
-    - checkout
-    - run:
-        command: ./gradlew --info --stacktrace check
-        name: gradle check
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
-    - store_test_results:
-        path: ~/test-results
-    environment:
-      LANG: en_US.UTF-8
-    docker:
-    - image: cimg/openjdk:11.0
   gradle-check-jdk17:
     steps:
     - checkout
@@ -736,14 +714,6 @@ jobs:
         name: Publish release on GitHub
     docker:
     - image: maniator/gh:v2.40.1
-  check-patch-file:
-    steps:
-    - checkout
-    - run:
-        command: git apply --reject patches/graalVm23.patch
-    resource_class: small
-    docker:
-    - image: cimg/base:current
   trigger-docsite-build:
     steps:
     - run:
@@ -777,16 +747,25 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - gradle-check-jdk11:
-        requires:
-        - hold
     - gradle-check-jdk17:
         requires:
         - hold
     - gradle-check-jdk21:
         requires:
         - hold
-    - check-patch-file:
+    - pkl-cli-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
         requires:
         - hold
     when:
@@ -795,10 +774,8 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - gradle-check-jdk11
     - gradle-check-jdk17
     - gradle-check-jdk21
-    - check-patch-file
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -808,10 +785,8 @@ workflows:
     - pkl-cli-linux-alpine-amd64-snapshot
     - deploy-snapshot:
         requires:
-        - gradle-check-jdk11
         - gradle-check-jdk17
         - gradle-check-jdk21
-        - check-patch-file
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -831,12 +806,6 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-    - gradle-check-jdk11:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk17:
         filters:
           branches:
@@ -844,12 +813,6 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk21:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - check-patch-file:
         filters:
           branches:
             ignore: /.*/
@@ -899,10 +862,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - gradle-check-jdk11
         - gradle-check-jdk17
         - gradle-check-jdk21
-        - check-patch-file
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -941,16 +902,10 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - gradle-check-jdk11:
-        requires:
-        - hold
     - gradle-check-jdk17:
         requires:
         - hold
     - gradle-check-jdk21:
-        requires:
-        - hold
-    - check-patch-file:
         requires:
         - hold
     - bench:

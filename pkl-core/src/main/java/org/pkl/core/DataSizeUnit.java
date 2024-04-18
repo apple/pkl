@@ -21,7 +21,7 @@ import org.pkl.core.util.Nullable;
  * The unit of a {@link DataSize}. In Pkl, data size units are represented as String {@link
  * #getSymbol() symbols}.
  */
-public strictfp enum DataSizeUnit {
+public enum DataSizeUnit {
   BYTES(1, "b"),
   KILOBYTES(1000, "kb"),
   KIBIBYTES(1024, "kib"),

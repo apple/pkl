@@ -9,8 +9,6 @@ plugins {
   alias(libs.plugins.kotlinxSerialization)
 }
 
-val graalVmBaseDir = buildInfo.graalVm.baseDir
-
 dependencies {
   implementation(projects.pklCore)
   implementation(projects.pklCommonsCli)

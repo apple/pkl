@@ -24,7 +24,7 @@ jmh {
   // jvmArgsAppend = "-Dgraal.TruffleCompilationExceptionsAreFatal=true " +
   //  "-Dgraal.Dump=Truffle,TruffleTree -Dgraal.TraceTruffleCompilation=true " +
   //  "-Dgraal.TruffleFunctionInlining=false"
-  jvm.set("${buildInfo.graalVm.baseDir}/bin/java")
+  jvm.set("${buildInfo.graalVmAmd64.baseDir}/bin/java")
   // see: https://docs.oracle.com/en/graalvm/enterprise/20/docs/graalvm-as-a-platform/implement-language/#disable-class-path-separation
   jvmArgs.set(
     listOf(
@@ -38,7 +38,7 @@ jmh {
 }
 
 tasks.named("jmh") {
-  dependsOn(":installGraalVm")
+  dependsOn(":installGraalVmAmd64")
 }
 
 // Prevent this error which occurs when building in IntelliJ:

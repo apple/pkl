@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.literal;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -67,6 +68,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   // only runs once per VmClass (which often means once per PropertiesLiteralNode)
   // unless an XYZUncached specialization is active
   @TruffleBoundary
+  @Idempotent
   protected boolean checkIsValidTypedAmendment(Object parent) {
     var parentClass = parent instanceof VmClass ? (VmClass) parent : VmUtils.getClass(parent);
     VmUtils.checkIsInstantiable(parentClass, getParentNode());
@@ -110,7 +112,9 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     return true;
   }
 
+  @SuppressWarnings("SameReturnValue")
   @TruffleBoundary
+  @Idempotent
   protected final boolean checkIsValidListingAmendment() {
     if (maxListingMemberIndex != Long.MIN_VALUE) return true;
 
@@ -161,7 +165,9 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     return true;
   }
 
+  @SuppressWarnings("SameReturnValue")
   @TruffleBoundary
+  @Idempotent
   protected final boolean checkIsValidMappingAmendment() {
     if (checkedIsValidMappingAmendment) return true;
 
@@ -190,6 +196,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     return true;
   }
 
+  @Idempotent
   protected final boolean checkMaxListingMemberIndex(int parentLength) {
     assert maxListingMemberIndex != Long.MIN_VALUE;
     if (maxListingMemberIndex < parentLength) return true;

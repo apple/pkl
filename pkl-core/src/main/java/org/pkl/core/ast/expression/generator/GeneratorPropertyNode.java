@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.ast.member.ObjectMember;
@@ -94,6 +95,7 @@ public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
         .build();
   }
 
+  @Idempotent
   protected boolean checkIsValidListingProperty() {
     if (member.isLocal() || member.getName() == Identifier.DEFAULT) return true;
 
@@ -104,6 +106,7 @@ public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
         .build();
   }
 
+  @Idempotent
   protected boolean checkIsValidMappingProperty() {
     if (member.isLocal() || member.getName() == Identifier.DEFAULT) return true;
 

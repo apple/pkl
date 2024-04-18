@@ -115,7 +115,8 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
   protected VmFunction evalFunction(
       VirtualFrame frame,
       VmFunction parent,
-      @Cached("createAmendFunctionNode(frame)") AmendFunctionNode amendFunctionNode) {
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
   }

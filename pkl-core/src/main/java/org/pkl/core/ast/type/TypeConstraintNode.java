@@ -59,7 +59,7 @@ public abstract class TypeConstraintNode extends PklNode {
   protected void eval(
       VirtualFrame frame,
       VmFunction function,
-      @Cached("createApplyNode()") ApplyVmFunction1Node applyNode) {
+      @Cached(value = "createApplyNode()", neverDefault = true) ApplyVmFunction1Node applyNode) {
     initConstraintSlot(frame);
 
     var value = frame.getAuxiliarySlot(customThisSlot);

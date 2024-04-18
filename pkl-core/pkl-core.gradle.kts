@@ -193,7 +193,7 @@ tasks.check {
 }
 
 val testMacExecutableAmd64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isMacOsX && buildInfo.graalVm.isGraal22
+  enabled = buildInfo.os.isMacOsX
   dependsOn(":pkl-cli:macExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
@@ -209,7 +209,7 @@ val testMacExecutableAmd64 by tasks.registering(Test::class) {
 }
 
 val testMacExecutableAarch64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isMacOsX && !buildInfo.graalVm.isGraal22
+  enabled = buildInfo.os.isMacOsX
   dependsOn(":pkl-cli:macExecutableAarch64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")

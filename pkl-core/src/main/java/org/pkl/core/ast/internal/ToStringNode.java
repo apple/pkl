@@ -60,7 +60,8 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   protected String evalTyped(
       VirtualFrame frame,
       VmTyped value,
-      @Cached("createInvokeNode()") InvokeMethodVirtualNode invokeNode) {
+      @Cached(value = "createInvokeNode()", neverDefault = true)
+          InvokeMethodVirtualNode invokeNode) {
 
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
   }

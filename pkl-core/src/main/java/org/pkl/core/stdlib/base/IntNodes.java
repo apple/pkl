@@ -215,7 +215,7 @@ public final class IntNodes {
     }
   }
 
-  public abstract static strictfp class toFloat extends ExternalMethod0Node {
+  public abstract static class toFloat extends ExternalMethod0Node {
     @Specialization
     protected double eval(long self) {
       return self;
