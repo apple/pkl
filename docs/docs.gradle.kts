@@ -32,5 +32,5 @@ dependencies {
 tasks.test {
   inputs.files(fileTree("modules").matching {
     include("**/pages/*.adoc")
-  })
+  }).withPropertyName("asciiDocFiles").withPathSensitivity(PathSensitivity.RELATIVE)
 }

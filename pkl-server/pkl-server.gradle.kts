@@ -14,6 +14,6 @@ dependencies {
 }
 
 tasks.test {
-  inputs.dir("src/test/files/SnippetTests/input")
-  inputs.dir("src/test/files/SnippetTests/output")
+  inputs.dir("src/test/files/SnippetTests/input").withPropertyName("snippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/SnippetTests/output").withPropertyName("snippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
 }

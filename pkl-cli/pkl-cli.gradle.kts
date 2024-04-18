@@ -138,9 +138,11 @@ fun Exec.configureExecutable(isEnabled: Boolean, outputFile: Provider<RegularFil
   enabled = isEnabled
   dependsOn(":installGraalVm")
 
-  inputs.files(sourceSets.main.map { it.output })
-  inputs.files(configurations.runtimeClasspath)
+  inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
+inputs.files(file(buildInfo.graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
   outputs.file(outputFile)
+  outputs.cacheIf { true }
 
   workingDir(outputFile.map { it.asFile.parentFile })
   executable = "${buildInfo.graalVm.baseDir}/bin/native-image"
