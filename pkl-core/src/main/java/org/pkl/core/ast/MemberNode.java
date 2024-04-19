@@ -20,35 +20,22 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.function.Function;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
-import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public abstract class MemberNode extends PklRootNode {
-  protected final Member member;
   @Child protected ExpressionNode bodyNode;
 
   protected MemberNode(
-      @Nullable VmLanguage language,
-      FrameDescriptor descriptor,
-      Member member,
-      ExpressionNode bodyNode) {
+      @Nullable VmLanguage language, FrameDescriptor descriptor, ExpressionNode bodyNode) {
 
     super(language, descriptor);
-    this.member = member;
     this.bodyNode = bodyNode;
   }
 
-  @Override
-  public final SourceSection getSourceSection() {
-    return member.getSourceSection();
-  }
-
-  public final SourceSection getHeaderSection() {
-    return member.getHeaderSection();
-  }
+  public abstract SourceSection getHeaderSection();
 
   public final SourceSection getBodySection() {
     return bodyNode.getSourceSection();
@@ -56,11 +43,6 @@ public abstract class MemberNode extends PklRootNode {
 
   public final ExpressionNode getBodyNode() {
     return bodyNode;
-  }
-
-  @Override
-  public final String getName() {
-    return member.getQualifiedName();
   }
 
   public final void replaceBody(Function<ExpressionNode, ExpressionNode> replacer) {
@@ -72,7 +54,7 @@ public abstract class MemberNode extends PklRootNode {
   }
 
   protected final VmExceptionBuilder exceptionBuilder() {
-    return new VmExceptionBuilder().withSourceSection(member.getHeaderSection());
+    return new VmExceptionBuilder().withSourceSection(getHeaderSection());
   }
 
   /**

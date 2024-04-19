@@ -23,13 +23,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.Nullable;
 
 /** A property definition that does not have a type annotation but should be type-checked. */
-public abstract class TypeCheckedPropertyNode extends MemberNode {
+public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
   @Child @Executed protected ExpressionNode ownerNode = new GetOwnerNode();
 
   protected TypeCheckedPropertyNode(

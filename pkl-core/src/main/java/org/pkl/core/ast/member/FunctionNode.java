@@ -27,7 +27,6 @@ import org.pkl.core.PClass;
 import org.pkl.core.PType;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
@@ -36,7 +35,7 @@ import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
-public final class FunctionNode extends MemberNode {
+public final class FunctionNode extends RegularMemberNode {
   // Every function (and property) call passes two implicit arguments at positions
   // frame.getArguments()[0] and [1]:
   // - the receiver (target) of the call, of type Object (see VmUtils.getReceiver())

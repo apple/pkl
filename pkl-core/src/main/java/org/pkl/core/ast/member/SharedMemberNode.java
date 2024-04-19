@@ -17,18 +17,44 @@ package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
-public final class UntypedObjectMemberNode extends RegularMemberNode {
-  public UntypedObjectMemberNode(
+/** A {@code MemberNode} that is shared between multiple {@linkplain Member members}. */
+public class SharedMemberNode extends MemberNode {
+  private final SourceSection sourceSection;
+  private final SourceSection headerSection;
+  private final @Nullable String qualifiedName;
+
+  public SharedMemberNode(
+      SourceSection sourceSection,
+      SourceSection headerSection,
+      @Nullable String qualifiedName,
       @Nullable VmLanguage language,
       FrameDescriptor descriptor,
-      ObjectMember member,
       ExpressionNode bodyNode) {
 
-    super(language, descriptor, member, bodyNode);
+    super(language, descriptor, bodyNode);
+    this.sourceSection = sourceSection;
+    this.headerSection = headerSection;
+    this.qualifiedName = qualifiedName;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
+  }
+
+  public SourceSection getHeaderSection() {
+    return headerSection;
+  }
+
+  @Override
+  public @Nullable String getName() {
+    return qualifiedName;
   }
 
   @Override

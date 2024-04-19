@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
@@ -28,7 +27,7 @@ import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-public final class LocalTypedPropertyNode extends MemberNode {
+public final class LocalTypedPropertyNode extends RegularMemberNode {
   private final VmLanguage language;
   @Child private UnresolvedTypeNode unresolvedTypeNode;
   @Child @LateInit private TypeNode typeNode;
