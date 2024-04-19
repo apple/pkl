@@ -18,8 +18,8 @@ open class BuildInfo(project: Project) {
       libs.findVersion("graalVm").get().toString()
     }
 
-    val graalVmJavaVersion: String by lazy {
-      libs.findVersion("graalVMJdkVersion").get().toString()
+    val graalVmJdkVersion: String by lazy {
+      libs.findVersion("graalVmJdkVersion").get().toString()
     }
 
     val osName: String by lazy {
@@ -31,11 +31,11 @@ open class BuildInfo(project: Project) {
     }
 
     val baseName: String by lazy {
-      "graalvm-jdk-${graalVmJavaVersion}_${osName}-${arch}_bin"
+      "graalvm-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin"
     }
 
     val downloadUrl: String by lazy {
-      val jdkMajor = graalVmJavaVersion.takeWhile { it != '.' }
+      val jdkMajor = graalVmJdkVersion.takeWhile { it != '.' }
       "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.tar.gz"
     }
 

@@ -52,7 +52,7 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
   protected Object eval(
       VirtualFrame frame,
       @Cached(value = "findSupermethod(frame)", neverDefault = true) ClassMethod supermethod,
-      @Cached(value = "create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
+      @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
     var args = new Object[2 + argumentNodes.length];
     args[0] = VmUtils.getReceiverOrNull(frame);

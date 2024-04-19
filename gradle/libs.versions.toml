@@ -9,7 +9,7 @@ geantyref = "1.+"
 googleJavaFormat = "1.21.0"
 # must not use `+` because used in download URL
 graalVm = "23.0.2"
-graalVMJdkVersion = "17.0.10"
+graalVmJdkVersion = "17.0.10"
 # slightly hacky but convenient place so we remember to update the checksum
 graalVmSha256-macos-x64 = "14f4bd6417809905f86e786c779d0fc2feb840d7dac35ae3503eb25af0530da0"
 graalVmSha256-macos-aarch64 = "e944c5ce5da56e683fc8f1a57191b46d9cb702930b1688bda064fcf467d876b8"

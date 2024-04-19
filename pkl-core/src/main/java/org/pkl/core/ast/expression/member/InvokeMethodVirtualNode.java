@@ -101,7 +101,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       VirtualFrame frame,
       VmFunction receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
-      @Exclusive @Cached(value = "create()") IndirectCallNode callNode) {
+      @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
@@ -139,7 +139,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       VirtualFrame frame,
       Object receiver,
       VmClass receiverClass,
-      @Exclusive @Cached(value = "create()") IndirectCallNode callNode) {
+      @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     var method = resolveMethod(receiverClass);
     var args = new Object[2 + argumentNodes.length];
