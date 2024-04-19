@@ -65,9 +65,9 @@ public abstract class MemberNode extends PklRootNode {
    * org.pkl.core.runtime.VmUtils#SKIP_TYPECHECK_MARKER}. IDEA: might be more appropriate to only
    * skip constraints check
    */
-  protected final boolean shouldRunTypecheck(VirtualFrame frame) {
-    return frame.getArguments().length == 4
-        && frame.getArguments()[3] == VmUtils.SKIP_TYPECHECK_MARKER;
+  protected final boolean shouldRunTypeCheck(VirtualFrame frame) {
+    return frame.getArguments().length != 4
+        || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
   }
 
   public boolean isUndefined() {

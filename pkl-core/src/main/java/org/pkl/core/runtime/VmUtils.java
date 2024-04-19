@@ -62,7 +62,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmUtils {
-  /** See {@link MemberNode#shouldRunTypecheck(VirtualFrame)}. */
+  /** See {@link MemberNode#shouldRunTypeCheck(VirtualFrame)}. */
   @SuppressWarnings("JavadocReference")
   public static final Object SKIP_TYPECHECK_MARKER = new Object();
 

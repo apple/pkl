@@ -45,7 +45,7 @@ public final class TypedPropertyNode extends RegularMemberNode {
   @Override
   public Object execute(VirtualFrame frame) {
     var propertyValue = executeBody(frame);
-    if (!shouldRunTypecheck(frame)) {
+    if (shouldRunTypeCheck(frame)) {
       typeCheckCallNode.call(VmUtils.getReceiver(frame), VmUtils.getOwner(frame), propertyValue);
     }
     return propertyValue;
