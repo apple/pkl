@@ -282,6 +282,20 @@ public final class VmSet extends VmCollection {
     return this;
   }
 
+  @TruffleBoundary
+  public VmListing toListing() {
+    var builder = new VmObjectBuilder(elementOrder.size());
+    for (var elem : elementOrder) builder.addElement(elem);
+    return builder.toListing();
+  }
+
+  @TruffleBoundary
+  public VmDynamic toDynamic() {
+    var builder = new VmObjectBuilder(elementOrder.size());
+    for (var elem : elementOrder) builder.addElement(elem);
+    return builder.toDynamic();
+  }
+
   @Override
   @TruffleBoundary
   public void force(boolean allowUndefinedValues) {

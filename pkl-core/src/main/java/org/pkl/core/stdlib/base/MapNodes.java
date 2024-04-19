@@ -287,19 +287,7 @@ public final class MapNodes {
   public abstract static class toMapping extends ExternalMethod0Node {
     @Specialization
     protected VmMapping eval(VmMap self) {
-      var members = EconomicMaps.<Object, ObjectMember>create(self.getLength());
-
-      for (var entry : self) {
-        EconomicMaps.put(
-            members,
-            VmUtils.getKey(entry),
-            VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry)));
-      }
-
-      return new VmMapping(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getMappingClass().getPrototype(),
-          members);
+      return self.toMapping();
     }
   }
 }
