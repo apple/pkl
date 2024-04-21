@@ -16,7 +16,6 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -44,7 +43,6 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
   @Children private final ExpressionNode[] argumentNodes;
   private final MemberLookupMode lookupMode;
   private final boolean needsConst;
-  @CompilationFinal private boolean isConstChecked;
 
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
@@ -101,10 +99,9 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
   protected Object evalFunction(
       VirtualFrame frame,
       VmFunction receiver,
-      VmClass receiverClass,
+      @SuppressWarnings("unused") VmClass receiverClass,
       @Cached("create()") IndirectCallNode callNode) {
 
-    checkConst(receiverClass);
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
     args[1] = receiver;
@@ -125,7 +122,6 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Cached("resolveMethod(receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
-    checkConst(method);
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
@@ -145,8 +141,6 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Cached("create()") IndirectCallNode callNode) {
 
     var method = resolveMethod(receiverClass);
-    checkConst(method);
-
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
@@ -161,7 +155,10 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
 
   protected ClassMethod resolveMethod(VmClass receiverClass) {
     var method = receiverClass.getMethod(methodName);
-    if (method != null) return method;
+    if (method != null) {
+      checkConst(method);
+      return method;
+    }
 
     CompilerDirectives.transferToInterpreter();
 
@@ -174,17 +171,10 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
         .build();
   }
 
-  private void checkConst(VmClass receiverClass) {
-    checkConst(resolveMethod(receiverClass));
-  }
-
   private void checkConst(ClassMethod method) {
-    if (needsConst && !isConstChecked) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      if (!method.isConst()) {
-        throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
-      }
-      isConstChecked = true;
+    if (needsConst && !method.isConst()) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
     }
   }
 }

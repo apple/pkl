@@ -15,7 +15,6 @@
  */
 package org.pkl.core.ast.member;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
@@ -76,42 +75,34 @@ public abstract class Member {
   /** For use in user-facing messages. Non-null iff getName() is non-null. */
   public abstract @Nullable String getCallSignature();
 
-  @TruffleBoundary
   public final boolean isLocal() {
     return VmModifier.isLocal(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isConst() {
     return VmModifier.isConst(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isFixed() {
     return VmModifier.isFixed(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isHidden() {
     return VmModifier.isHidden(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isExternal() {
     return VmModifier.isExternal(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isClass() {
     return VmModifier.isClass(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isTypeAlias() {
     return VmModifier.isTypeAlias(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isImport() {
     return VmModifier.isImport(modifiers);
   }
@@ -120,27 +111,22 @@ public abstract class Member {
     return VmModifier.isGlob(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isAbstract() {
     return VmModifier.isAbstract(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isType() {
     return VmModifier.isType(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isLocalOrExternalOrHidden() {
     return VmModifier.isLocalOrExternalOrHidden(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isConstOrFixed() {
     return VmModifier.isConstOrFixed(modifiers);
   }
 
-  @TruffleBoundary
   public final boolean isLocalOrExternalOrAbstract() {
     return VmModifier.isLocalOrExternalOrAbstract(modifiers);
   }

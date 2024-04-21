@@ -62,7 +62,7 @@ A code comment that starts with a double-slash (`//`) and runs until the end of 
 ----
 
 Block comment::
-A nestable multiline comment which is typically used to comment out code.
+A nestable multiline comment, which is typically used to comment out code.
 Starts with `+/*+` and ends with `+*/+`.
 +
 [source%parsed,{pkl}]
@@ -176,7 +176,7 @@ A value of type link:{uri-stdlib-Float}[Float] is a 64-bit link:{uri-double-prec
 
 Float literals use decimal notation.
 They consist of an integer part, decimal point, fractional part, and exponent part.
-The integer and exponent part are optional.
+The integer and exponent parts are optional.
 
 [source%tested,{pkl}]
 ----
@@ -202,12 +202,12 @@ negativeInfinity = -Infinity
 The link:{uri-stdlib-NaN}[NaN] and link:{uri-stdlib-Infinity}[Infinity] properties are defined in the standard library.
 
 Floats support the same comparison and arithmetic operators as integers.
-Float literals with zero fractional part can be safely replaced with integer literals.
+Float literals with a fractional part of zero can be safely replaced with integer literals.
 For example, it is safe to write `1.3 * 42` instead of `1.3 * 42.0`.
 
 Floats can also include the same underscore separator as integers. For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
 
-TIP: As integers are more convenient to use than floats with zero fractional part, we recommend to require `x: Number` instead of `x: Float` in type annotations.
+TIP: As integers are more convenient to use than floats with a fractional part of zero, we recommend requiring `x: Number` instead of `x: Float` in type annotations.
 
 To restrict a float to a finite value, use the link:{uri-stdlib-isFinite}[isFinite] <<type-constraints,type constraint>>:
 
@@ -317,7 +317,7 @@ String content and closing delimiter must each start on a new line.
 The content of a multiline string starts on the first line after the opening quotes and ends on the last line before the closing quotes.
 Line breaks are included in the string and normalized to `\n`.
 
-The previous multiline string is equivalent to this single line string.
+The previous multiline string is equivalent to this single-line string.
 Notice that there is no leading or trailing whitespace.
 
 [source%tested,{pkl-expr}]
@@ -325,7 +325,7 @@ Notice that there is no leading or trailing whitespace.
 "Although the Dodo is extinct,\nthe species will be remembered."
 ----
 
-String interpolation, character escape sequences, and Unicode escape sequences work the same as for single line strings:
+String interpolation, character escape sequences, and Unicode escape sequences work the same as for single-line strings:
 
 [source%tested,{pkl}]
 ----
@@ -337,7 +337,7 @@ the species will be remembered.
 ----
 
 Each content line must begin with the same whitespace characters as the line containing the closing delimiter,
-which are not included in the string. Any further leading whitespace characters are preserved.
+which is not included in the string. Any further leading whitespace characters are preserved.
 In other words, line indentation is controlled by indenting lines relative to the closing delimiter.
 
 In the following string, lines have no leading whitespace:
@@ -368,7 +368,7 @@ str = """
 === Custom String Delimiters
 
 Some strings contain many verbatim backslash (`\`) or quote (`"`) characters.
-A good example is regular expressions, which make frequent use of backslash characters for their own escaping.
+A good example is regular expressions, which make frequent use of backslash characters for escaping.
 In such cases, using the escape sequences `\\` and `\"` quickly becomes tedious and hampers readability.
 
 Instead, leading/closing string delimiters can be customized to start/end with a pound sign (`\#`).
@@ -389,7 +389,7 @@ bird = "Dodo"
 str = #" \\\\\ \#n \#u{12AF} \#(bird) """"" "#
 ----
 
-More generally, string delimiters and escape character can be customized to contain _n_ pound signs each, for n >= 1.
+More generally, string delimiters and escape characters can be customized to contain _n_ pound signs each, for n >= 1.
 
 In the following string, _n_ is 2. As a result, the string content is interpreted verbatim:
 
@@ -491,7 +491,7 @@ xySeconds = (x + y).s // <2>
 A value of type link:{uri-stdlib-DataSize}[DataSize] has a _value_ component of type `Number` and a _unit_ component of type `String`.
 The unit component is constrained to the units defined in link:{uri-stdlib-DataSizeUnit}[DataSizeUnit].
 
-Data sizes with decimal unit (factor 1000) are constructed with the following `Number` properties:
+Data sizes with decimal units (factor 1000) are constructed with the following `Number` properties:
 
 [source%tested,{pkl}]
 ----
@@ -503,7 +503,7 @@ datasize5 = 5.tb // terabytes
 datasize6 = 5.pb // petabytes (largest unit)
 ----
 
-Data sizes with binary unit (factor 1024) are constructed with the following `Number` properties:
+Data sizes with binary units (factor 1024) are constructed with the following `Number` properties:
 
 [source%tested,{pkl}]
 ----
@@ -571,7 +571,7 @@ xyKibibytes = (x + y).kib // <2>
 
 An object is an ordered collection of _values_ indexed by _name_.
 
-An object's key–value pairs are called its _properties_.
+An object's key-value pairs are called its _properties_.
 Property values are lazily evaluated on the first read.
 
 Because Pkl's objects differ in important ways from objects in general-purpose programming languages,
@@ -626,7 +626,7 @@ So what happens when Dodo moves to a different street? Do we have to construct a
 [[amending-objects]]
 === Amending Objects
 
-Fortunately we don't have to.
+Fortunately, we don't have to.
 An object can be _amended_ to form a new object that only differs in selected properties.
 Here is how this looks:
 
@@ -649,8 +649,8 @@ As you can see, it is easy to construct a new object that overrides selected pro
 even if, as in our example, the overridden property is nested inside another object.
 
 NOTE: If this way of constructing new objects from existing objects reminds you of prototypical inheritance, you are spot-on:
-Pkl objects use protoypical inheritance as known from languages such as JavaScript.
-But unlike in JavaScript, their prototype chain cannot be directly accessed or even be modified.
+Pkl objects use prototypical inheritance as known from languages such as JavaScript.
+But unlike in JavaScript, their prototype chain cannot be directly accessed or even modified.
 Another difference is that in Pkl, object properties are late-bound. Read on to see what this means.
 
 [[amends-declaration]]
@@ -674,7 +674,7 @@ parrot = (pigeon) { // <2>
 <1> Amends declaration.
 <2> Amends expression.
 
-An amends declaration amends the property of the same name in a module's parent module, if the parent property exists.
+An amends declaration amends a property of the same name if the property exists within a parent module.
 Otherwise, an amends declaration implicitly amends {uri-stdlib-Dynamic}[Dynamic].
 
 Another way to think about an amends declaration is that it is shorthand for assignment.
@@ -737,13 +737,13 @@ This is what we mean when we say that object properties are _late-bound_.
 ====
 A good analogy is that object properties behave like spreadsheet cells.
 When they are linked, changes to "downstream" properties automatically propagate to "upstream" properties.
-The main difference is, editing a spreadsheet cell changes the state of the spreadsheet,
+The main difference is that editing a spreadsheet cell changes the state of the spreadsheet,
 whereas "editing" a property results in a new object, leaving the original object untouched.
 It is as if you made a copy of the entire spreadsheet whenever you edited a cell!
 ====
 
 Late binding of properties is an incredibly useful feature for a configuration language.
-It is used extensively in Pkl code (especially in templates), and is the key to understanding how Pkl works.
+It is used extensively in Pkl code (especially in templates) and is the key to understanding how Pkl works.
 
 === Transforming Objects
 
@@ -855,7 +855,7 @@ faultyPigeon = new Bird {
 }
 ----
 
-Evaluating this, gives:
+Evaluating this gives:
 
 [source,shell,subs="quotes"]
 ----
@@ -914,7 +914,7 @@ pigeon = new Dynamic { // <1>
 
 ==== Hidden Properties
 
-A property with modifier `hidden` is omitted from rendered output and from object conversions.
+A property with the modifier `hidden` is omitted from the rendered output and object conversions.
 
 [source,{pkl}]
 ----
@@ -958,7 +958,7 @@ pigeonDynamic {
 ----
 
 ==== Local properties
-A property with modifier `local` can only be referenced in the lexical scope of its definition.
+A property with the modifier `local` can only be referenced in the lexical scope of its definition.
 
 [source,{pkl}]
 ----
@@ -989,8 +989,8 @@ Because a `local` property is added to the lexical scope, but not (observably) t
 ====
 
 An _import clause_ defines a local property in the containing module.
-This means `import "someModule.pkl"` is equivalent to `local someModule = import("someModule.pkl")`.
-Also, `import "someModule.pkl" as otherName` is equivalent to `local otherName = import("someModule.pkl")`.
+This means `import "someModule.pkl"` is effectively `const local someModule = import("someModule.pkl")`.
+Also, `import "someModule.pkl" as otherName` is effectively `const local otherName = import("someModule.pkl")`.
 ====
 
 [[fixed-properties]]
@@ -1027,7 +1027,7 @@ birds { // <2>
 <1> Error: cannot assign to fixed property `laysEggs`
 <2> Error: cannot amend fixed property `birds`
 
-When extending a class and overriding an existing property definition, the fixed-ness of the overridden property must be preserved.
+When extending a class and overriding an existing property definition, the fixedness of the overridden property must be preserved.
 If the property in the parent class is declared `fixed`, the child property must also be declared `fixed`.
 If the property in the parent class is not declared `fixed`, the child property may not add the `fixed` modifier.
 
@@ -1047,7 +1047,7 @@ class Penguin extends Bird {
 <2> Error: modifier `fixed` cannot be applied to property `name`.
 
 The `fixed` modifier is useful for defining properties that are meant to be derived from other properties.
-In the following snippet, property `result` is not meant to be assigned to, because it is derived
+In the following snippet, the property `result` is not meant to be assigned to, because it is derived
 from other properties.
 
 [source%parsed,{pkl}]
@@ -1138,7 +1138,7 @@ const bird: Bird = new {
 ----
 <1> `lifespan` is declared within property `bird`. `speciesName` resolves to `this.speciesName`, where `this` is a value within property `bird`.
 
-NOTE: Because `const` members can only reference its own values, or other `const` members, they are not <<late-binding,late bound>>.
+NOTE: Because `const` members can only reference themselves and other `const` members, they are not <<late-binding,late bound>>.
 
 The `const` modifier implies that it is also <<fixed-properties,fixed>>.
 Therefore, the same rules that apply to `fixed` also apply to `const`:
@@ -1167,7 +1167,7 @@ oldPigeonName: String
 <2> Error: cannot reference non-const property `pigeonName` from an annotation.
 
 This rule exists because classes and annotations are not <<late-binding,late bound>>;
-it is not possible to change the definition of a class nor annotation by amending the module
+it is not possible to change the definition of a class or annotation by amending the module
 where it is defined.
 
 Generally, there are two strategies for referencing a property from a class or annotation:
@@ -1296,7 +1296,7 @@ listing = new Listing {
   "A " + pigeon + " is a bird" // <3>
 }
 ----
-<1> Defines a local property with value `"Pigeon"`.
+<1> Defines a local property with the value `"Pigeon"`.
     Local properties can have a type annotation, as in `pigeon: String = "Pigeon"`.
 <2> Defines a listing element that references the local property.
 <3> Defines another listing element that references the local property.
@@ -1375,7 +1375,7 @@ newBirds = (birds) { // <1>
 
 secondBirdDiet = newBirds[1].diet // <2>
 ----
-<1> Amends listing `birds` and overrides property `diet` of element 0 (whose name is "Pigeon"`) to have value `"Worms"`.
+<1> Amends listing `birds` and overrides property `diet` of element 0 (whose name is "Pigeon"`) to have the value `"Worms"`.
 <2> Because element 1 is defined in terms of element 0, its `diet` property also changes to `"Worms"`.
 
 === Transforming Listings
@@ -1510,7 +1510,7 @@ This declaration has the following effects:
 * If `ElementType` has a <<default-values,default value>>, that value becomes the listing's default element.
 * The first time `x` is read,
   ** its value is checked to have type `Listing`.
-  ** the listing's elements are checked to have type `ElementType`.
+  ** the listing's elements are checked to have the type `ElementType`.
 
 Here is an example:
 
@@ -1577,12 +1577,12 @@ A value of type link:{uri-stdlib-Mapping}[Mapping] is an ordered collection of _
 NOTE: Most of what has been said about <<listings,listings>> also applies to mappings.
 Nevertheless, this section is written to stand on its own.
 
-A mapping's key–value pairs are called its _entries_.
+A mapping's key-value pairs are called its _entries_.
 Keys are eagerly evaluated; values are lazily evaluated on the first read.
 
 Mappings combine qualities of maps and objects:
 
-* Like maps, mappings can contain arbitrary key–value pairs.
+* Like maps, mappings can contain arbitrary key-value pairs.
 * Like objects, mappings excel at defining and amending nested literal data structures.
 * Like objects, mappings can only be directly manipulated through amendment,
   but converting them to a map (and, if necessary, back to a mapping) opens the door to arbitrary transformations.
@@ -1591,8 +1591,8 @@ Mappings combine qualities of maps and objects:
 [TIP]
 .When to use Mapping vs. <<maps,Map>>
 ====
-* When key–value style data needs to be specified literally, use a mapping.
-* When key–value style data needs to be transformed in a way that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
+* When key-value style data needs to be specified literally, use a mapping.
+* When key-value style data needs to be transformed in a way that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
 * If in doubt, use a mapping.
 
 Templates and schemas should almost always use mappings instead of maps.
@@ -1620,8 +1620,8 @@ birds = new Mapping { // <1>
 <1> Defines a module property named `birds` with a value of type `Mapping`.
     A type only needs to be stated when the property does not have or inherit a <<mapping-type-annotations,type annotation>>.
     Otherwise, amend syntax (`birds { ... }`) or shorthand instantiation syntax (`birds = new { ... }`) should be used.
-<2> Defines a mapping entry with key `"Pigeon"` and a value of type `Dynamic`.
-<3> Defines a mapping entry with key `"Parrot"` and a value of type `Dynamic`.
+<2> Defines a mapping entry with the key `"Pigeon"` and a value of type `Dynamic`.
+<3> Defines a mapping entry with the key `"Parrot"` and a value of type `Dynamic`.
 
 To access a value by key, use the `[]` (subscript) operator:
 
@@ -1677,7 +1677,7 @@ mapping = new Mapping {
   }
 }
 ----
-<1> Defines a local property name `parrot` with value `"Parrot"`.
+<1> Defines a local property name `parrot` with the value `"Parrot"`.
     Local properties can have a type annotation, as in `parrot: String = "Parrot"`.
 <2> Defines a mapping entry whose value references `parrot`.
     The local property is visible to values but not keys.
@@ -1720,7 +1720,7 @@ birds2 = (birds) { // <1>
 }
 ----
 <1> Defines a module property named `birds2`. Its value is a mapping that amends `birds`.
-<2> Defines a mapping entry with key `"Barn owl"` and a value of type `Dynamic`.
+<2> Defines a mapping entry with the key `"Barn owl"` and a value of type `Dynamic`.
 <3> Amends mapping entry `"Pigeon"` and overrides property `diet`.
 <4> Overrides mapping entry `"Parrot"` with an entirely new value of type `Dynamic`.
 
@@ -1741,8 +1741,8 @@ birds = new Mapping {
   }
 }
 ----
-<1> Defines a mapping entry with key `"Pigeon"` and a value of type `Dynamic`.
-<2> Defines a mapping entry with key `"Parrot"` and a value that amends `"Pigeon"`.
+<1> Defines a mapping entry with the key `"Pigeon"` and a value of type `Dynamic`.
+<2> Defines a mapping entry with the key `"Parrot"` and a value that amends `"Pigeon"`.
 
 Mapping values are late-bound:
 
@@ -1829,9 +1829,9 @@ birds = new Mapping {
 }
 ----
 <1> Amends the `default` value and sets property `lifespan`.
-<2> Defines a mapping entry with key `"Pigeon"` that implicitly amends the default value.
+<2> Defines a mapping entry with the key `"Pigeon"` that implicitly amends the default value.
 <3> Defines a new property called `diet`. Property `lifespan` is inherited from the default value.
-<4> Defines a mapping entry with key `"Parrot"` that implicitly amends the default value.
+<4> Defines a mapping entry with the key `"Parrot"` that implicitly amends the default value.
 <5> Overrides the default for property `lifespan`.
 
 `default` is a hidden (that is, not rendered) link:{uri-stdlib-Mapping-default}[property] defined in class `Mapping`.
@@ -1964,7 +1964,7 @@ parrot = new Bird {
 
 === Class Inheritance
 
-Pkl supports single inheritance with a Java(Script) like syntax.
+Pkl supports single inheritance with a Java(Script)-like syntax.
 
 [source%tested,{pkl}]
 ----
@@ -2150,7 +2150,7 @@ Example: `+@birds/bird.pkl+`
 Dependency notation URIs represent a path within a <<project-dependencies,project or package dependency>>.
 For example, import `@birds/bird.pkl` represents path `/bird.pkl` in a dependency named "birds".
 
-A dependency is either a remote package, or a local project dependency.
+A dependency is either a remote package or a local project dependency.
 
 ==== Extension points
 
@@ -2329,7 +2329,7 @@ extinct = false
 function say() = "Pkl is great!"
 ----
 
-At most, one extends clause is permitted.
+At most one extends clause is permitted.
 A module cannot have both an amends clause and an extends clause.
 
 Extending a module implicitly defines a new module class that extends the original module's class.
@@ -2431,7 +2431,7 @@ When creating a new module, especially one intended for import into other module
 Less than six characters, not counting the `.pkl` file extension, is a good rule of thumb.
 * valid identifier
 +
-Stick to alphanumeric characters. Use underscore (`_`) instead of hyphen (`-`) as name separator.
+Stick to alphanumeric characters. Use an underscore (`_`) instead of a hyphen (`-`) as a name separator.
 * descriptive
 +
 An import name should make sense on its own and when used in qualified member names.
@@ -2440,7 +2440,7 @@ An import name should make sense on its own and when used in qualified member na
 [[import-expression]]
 ==== Import Expressions (`import()`)
 
-An import expression consists of the keyword `import`, following by a <<Module URIs,module URI>> wrapped in parentheses:
+An import expression consists of the keyword `import`, followed by a <<Module URIs,module URI>> wrapped in parentheses:
 
 [source,{pkl}]
 ----
@@ -2460,7 +2460,7 @@ Multiple modules may be imported at once with `import*`.
 When importing multiple modules, a glob pattern is used to match against existing resources.
 A globbed import evaluates to a `Mapping`, where keys are the expanded form of the glob and values are import expressions on each individual module.
 
-Globbed imports can be expressed as either a clause, or as an expression.
+Globbed imports can be expressed as either a clause or as an expression.
 When expressed as a clause, they follow the same naming rules as a normal <<import-clause,import clause>>: they introduce a local property equal to the last path segment without the `.pkl` extension.
 A globbed import clause cannot be used as a type.
 
@@ -2472,7 +2472,7 @@ import* "reptiles/*.pkl" <2>
 birds = import*("birds/*.pkl") // <3>
 ----
 <1> Globbed import clause
-<2> Globbed import clause without explicit name (will import the name `*`)
+<2> Globbed import clause without an explicit name (will import the name `*`)
 <3> Globbed import expression
 
 Assuming that a file system contains these files:
@@ -2548,7 +2548,7 @@ By default, there are five trust levels, listed from highest to lowest:
 For example, this means that `file:` modules can import `https:` modules, but not the other way around.
 
 If a module URI is resolved in multiple steps, all URIs are subject to the above security checks.
-An example for this is an HTTPS URL that results in a redirect.
+An example of this is an HTTPS URL that results in a redirect.
 
 Pkl embedders can further customize security checks.
 
@@ -2647,7 +2647,7 @@ The standard library provides these renderers:
 * link:{uri-stdlib-xmlModule}/Renderer[xml.Renderer]
 * link:{uri-stdlib-baseModule}/YamlRenderer[YamlRenderer]
 
-To render a format that is not yet supported, implement your own renderer by extending class link:{uri-stdlib-baseModule}/ValueRenderer[ValueRenderer].
+To render a format that is not yet supported, you can implement your own renderer by extending the class link:{uri-stdlib-baseModule}/ValueRenderer[ValueRenderer].
 
 The standard library renderers can be configured with _value converters_, which influence how particular values are rendered.
 
@@ -2693,7 +2693,7 @@ output {
 }
 ----
 
-For more on path based converters, see {uri-stdlib-PcfRenderer-converters}[PcfRenderer.converters].
+For more on path-based converters, see {uri-stdlib-PcfRenderer-converters}[PcfRenderer.converters].
 
 Sometimes it is useful to directly compute the final module output, bypassing `output.value` and `output.converters`.
 To do so, set the link:{uri-stdlib-baseModule}/ModuleOutput#text[output.text] property to a String value:
@@ -2716,7 +2716,7 @@ THIS IS THE FINAL OUTPUT
 [[multiple-file-output]]
 ==== Multiple File Output
 
-Sometimes, it is desirable for a single module to produce multiple output files.
+It is sometimes desirable for a single module to produce multiple output files.
 This is possible by configuring a module's link:{uri-stdlib-outputFiles}[`output.files`] property 
 // suppress inspection "AsciiDocLinkResolve"
 and specifying the xref:pkl-cli:index.adoc#multiple-file-output-path[`--multiple-file-output-path`]
@@ -2883,7 +2883,7 @@ name2OrParrot = name2 ?? "Parrot" // <2>
 [NOTE]
 .Default non-null behavior
 ====
-There are many languages that allow `null` for (almost) every type, but Pkl does not.
+Many languages allow `null` for (almost) every type, but Pkl does not.
 Any type can be extended to include `null` by appending `?` to the type.
 
 For example, `parrot: Bird` will always be non-null, but `pigeon: Bird?` could be `null` - and _is_ by default,
@@ -3112,7 +3112,7 @@ myValue = throw("You won't be able to recover from this one!") // <1>
 ----
 <1> `myValue` never receives a value because the program exits.
 
-The error message is printed to the console, and the program exits.
+The error message is printed to the console and the program exits.
 In embedded mode, a link:{uri-pkl-core-PklException}[PklException] is thrown.
 
 [[debugging]]
@@ -3388,14 +3388,14 @@ res4 = set.intersect(Set(3, 9, 2)) // <4>
 
 A value of type link:{uri-stdlib-Map}[Map] is an ordered collection of _values_ indexed by _key_.
 
-A map's key–value pairs are called its _entries_.
+A map's key-value pairs are called its _entries_.
 Keys and values are eagerly evaluated.
 
 [TIP]
 .When to use Map vs. <<mappings,Mapping>>
 ====
-* When key–value style data needs to be specified literally, use a mapping.
-* When key–value style data needs to be transformed in ways that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
+* When key-value style data needs to be specified literally, use a mapping.
+* When key-value style data needs to be transformed in ways that cannot be achieved by <<amending-mappings,amending>> a mapping, use a map.
 * If in doubt, use a mapping.
 
 Templates and schemas should almost always use mappings instead of maps.
@@ -3414,7 +3414,7 @@ map3 = Map(1, "x", 2, 5.min, 3, Map(1, 2)) // <3>
 <2> result: set of length 3
 <3> result: heterogeneous map whose last value is another map
 
-Any Pkl value can be used as map key:
+Any Pkl value can be used as a map key:
 
 [source%tested,{pkl-expr}]
 ----
@@ -3470,7 +3470,7 @@ emailRegex = Regex(#"([\w\.]+)@([\w\.]+)"#)
 
 // note: first \ on next line is asciidoc escape
 Notice the use of custom string delimiters `\#"` and `"#`, which change the string's escape character from `\` to `\#`.
-As a consequence, the regular expression's own backslash escape character no longer needs to be escaped.
+As a consequence, the regular expression's backslash escape character no longer requires escaping.
 
 To test if a string fully matches a regular expression, use link:{uri-stdlib-matches}[String.matches()]:
 
@@ -3602,7 +3602,7 @@ Property and method definitions may optionally contain type annotations.
 Type annotations serve the following purposes:
 
 * Documentation
-+ Type annotations help documenting data models. They are included in generated documentation.
++ Type annotations help to document data models. They are included in any generated documentation.
 
 * Validation
 + Type annotations are validated at runtime.
@@ -3738,7 +3738,7 @@ map: Map<String, Bird>      // <5>
 mapping: Mapping<String, Bird> // <6>
 ----
 
-<1> a pair with first element of type `String` and second element of type `Bird`
+<1> a pair `String` and `Bird` as types for the first and second element, respectively
 <2> a collection of `Bird` elements
 <3> a list of `Bird` elements
 <4> a set of `Bird` elements
@@ -3851,7 +3851,7 @@ it backs off and trusts the code's author to know what they are doing -- for exa
 ==== Progressive Disclosure
 
 In the spirit of link:{uri-progressive-disclosure}[progressive disclosure], type annotations are optional in Pkl.
-Omitting a type annotation is equivalent to specifying type `unknown`:
+Omitting a type annotation is equivalent to specifying the type `unknown`:
 
 [source%parsed,{pkl}]
 ----
@@ -3956,7 +3956,7 @@ pigeon: Bird = new {
 
 Boolean expressions are convenient for ad-hoc type constraints.
 Alternatively, type constraints can be given as lambda expressions accepting a single argument, namely the value to be validated.
-This allows to abstract over and reuse type constraints.
+This allows for the abstraction and reuse of type constraints.
 
 [source%tested,{pkl}]
 ----
@@ -4226,7 +4226,7 @@ Function amending can also be used to refine <<mixins,mixins>>.
 [[amend-null]]
 === Amending Null Values
 
-It's time to lift a secret: The predefined `null` value is just one of potentially many values of type `Null`.
+It's time to lift a secret: The predefined `null` value is just one of the potentially many values of type `Null`.
 
 First, here are the technical facts:
 
@@ -4459,7 +4459,7 @@ entry value +
 property value
 |===
 
-Indices are zero based.
+Indices are zero-based.
 Note that `for` generators can generate elements and entries but not properties.footnote:[More precisely, they cannot generate properties with a non-constant name.]
 
 [[spread-syntax]]
@@ -4532,7 +4532,7 @@ In some ways, spread syntax can be thought of as a shorthand for a xref:for-gene
 [NOTE]
 ====
 Look out for duplicate key conflicts when using spreads.
-When spreading entries or properties, it is possible that a spread causes conflict due to an existing definition of a key.
+Spreading entries or properties may cause conflicts due to matched existing key definitions.
 
 In the following code snippet, `"Pigeon"` is declared twice in the `newPets` object, and thus is an error.
 
@@ -4660,7 +4660,7 @@ If the `-` character exists at the beginning or the end of a character class, it
 Within a character class, the characters `{`, `}`, `\`, `*`, and `?` do not have any special meaning.
 
 A character class is not allowed to be empty.
-Thus, if the first character within the character class is `]`, it treated literally and not as the closing delimiter of the character class.
+Thus, if the first character within the character class is `]`, it is treated literally and not as the closing delimiter of the character class.
 For example, the glob pattern `[]abc]` matches a single character that is either `]`, `a`, `b`, or `c`.
 
 [[glob-sub-patterns]]
@@ -4974,7 +4974,7 @@ To answer this question, Pkl follows these steps:
   If a match is found, this is the answer.
 . Throw a "method `x` not found" error.
 
-NOTE: Pkl does not support arity or type based method overloading.
+NOTE: Pkl does not support arity or type-based method overloading.
 Hence, the argument list of a method call is irrelevant for method resolution.
 
 [[prototype-chain]]
@@ -5074,7 +5074,7 @@ To use these names in an identifier, <<quoted-identifiers, surround them with ba
 === Blank Identifiers
 
 Blank identifiers can be used in many places to ignore parameters and variables. +
-`_` is not a valid identifier. In order to use it as a parameter or variable name
+`_` is not a valid identifier. To use it as a parameter or variable name,
 it needs to be enclosed in backticks: +`_`+.
 
 ==== Functions and methods
@@ -5123,8 +5123,8 @@ birds = new Dynamic {
 [[projects]]
 === Projects
 
-A _project_ is a directory of Pkl modules, and other resources.
-It is defined by the presence of a `PklProject` file, that amends standard library module
+A _project_ is a directory of Pkl modules and other resources.
+It is defined by the presence of a `PklProject` file that amends the standard library module
 `pkl:Project`.
 
 Defining a project serves the following purposes:
@@ -5177,7 +5177,7 @@ When the project gets published as a _package_, these names and URIs are preserv
 ==== Resolving Dependencies
 
 Dependencies that are declared in a `PklProject` file must be _resolved_ via CLI command xref:pkl-cli:index.adoc#command-project-resolve[`pkl project resolve`].
-This builds a single dependency list, resolving all transitive dependencies and determines appropriate version for each package.
+This builds a single dependency list, resolving all transitive dependencies, and determines the appropriate version for each package.
 It creates or updates a file called `PklProject.deps.json` in the project's root directory with the list of resolved dependencies.
 
 When resolving version conflicts, the CLI will pick the latest link:{uri-semver}[semver] minor version of each package.
@@ -5210,11 +5210,11 @@ package {
 }
 ----
 <1> The display name of the package. For display purposes only.
-<2> The package URI, without the version part
-<3> The version of the package
-<4> The URL that the package's ZIP file will available for download at.
+<2> The package URI, without the version part.
+<3> The version of the package.
+<4> The URL to download the package's ZIP file.
 
-The package itself is created by command xref:pkl-cli:index.adoc#command-project-package[`pkl project package`].
+The package itself is created by the command xref:pkl-cli:index.adoc#command-project-package[`pkl project package`].
 
 This command only prepares artifacts to be published.
 Once the artifacts are prepared, they are expected to be uploaded to an HTTPS server such that the ZIP asset can be downloaded at path `packageZipUrl`, and the metadata can be downloaded at `+https://<package uri>+`. 

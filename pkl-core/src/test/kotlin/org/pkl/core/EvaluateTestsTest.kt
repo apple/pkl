@@ -1,14 +1,17 @@
 package org.pkl.core
 
 import org.pkl.commons.createTempFile
-import org.pkl.core.ModuleSource.path
-import org.pkl.core.ModuleSource.text
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.writeString
+import org.pkl.core.ModuleSource.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createFile
+import kotlin.io.path.name
 
 class EvaluateTestsTest {
 
@@ -200,7 +203,57 @@ class EvaluateTestsTest {
       }
     """.trimIndent())
   }
-  
+
+  @Test
+  fun `written examples use custom string delimiters`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(file, """
+      amends "pkl:test"
+      
+      examples {
+        ["myStr"] {
+          "my \"string\""
+        }
+      }
+    """.trimIndent())
+    evaluator.evaluateTest(path(file), false)
+    val expectedFile = file.parent.resolve(file.fileName.toString() + "-expected.pcf")
+    assertThat(expectedFile).exists()
+    assertThat(expectedFile).hasContent("""
+      examples {
+        ["myStr"] {
+          #"my "string""#
+        }
+      }
+
+    """.trimIndent())
+  }
+
+  // test for backwards compatibility
+  @Test
+  fun `examples that don't use custom string delimiters still pass`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(file, """
+      amends "pkl:test"
+      
+      examples {
+        ["myStr"] {
+          "my \"string\""
+        }
+      }
+    """.trimIndent())
+    createExpected(file).writeString("""
+      examples {
+        ["myStr"] {
+          "my \"string\""
+        }
+      }
+
+    """.trimIndent())
+    val result = evaluator.evaluateTest(path(file), false)
+    assertFalse(result.failed())
+  }
+
   companion object {
     private fun createExpected(path: Path): Path {
       return path
