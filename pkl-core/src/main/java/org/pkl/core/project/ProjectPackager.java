@@ -185,8 +185,14 @@ public class ProjectPackager {
                 receivedChecksum));
       }
     } catch (PackageLoadError e) {
-      if (e.getMessageName().equals("badHttpStatusCode") && (int) e.getArguments()[0] == 404) {
-        return;
+      if (e.getMessageName().equals("badHttpStatusCode")) {
+        if ((int) e.getArguments()[0] == 404) {
+          return;
+        } else {
+          throw new PklException(
+              ErrorMessages.create(
+                  "unableToAccessPublishPackage", pkg.getPackageZipUrl(), e.getArguments()[0]));
+        }
       }
       throw e;
     } catch (SecurityManagerException e) {
