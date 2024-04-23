@@ -1,0 +1,12 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:reflect"
+import* "reflect*.pkl"
+
+local mod = reflect.Module(this)
+
+examples {
+  ["Reflecting globbed import"] {
+    mod.imports.keys == Set("reflect", "reflect*")
+  }
+}

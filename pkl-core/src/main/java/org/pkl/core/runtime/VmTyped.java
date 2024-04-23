@@ -23,7 +23,7 @@ import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
-import org.pkl.core.ast.expression.unary.ImportNode;
+import org.pkl.core.ast.expression.unary.AbstractImportNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
@@ -105,7 +105,7 @@ public final class VmTyped extends VmObject {
         assert memberNode != null; // import is never a constant
         builder.add(
             member.getName().toString(),
-            ((ImportNode) memberNode.getBodyNode()).getImportUri().toString());
+            ((AbstractImportNode) memberNode.getBodyNode()).getImportUri().toString());
       }
     }
     return builder.build();
