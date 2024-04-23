@@ -22,7 +22,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
@@ -45,7 +44,7 @@ public final class ResourceManager {
   // cache resources indefinitely to make resource reads deterministic
   private final Map<URI, Optional<Object>> resources = new HashMap<>();
 
-  private final Map<URI, List<ResolvedGlobElement>> globExpressions = new HashMap<>();
+  private final Map<URI, Map<String, ResolvedGlobElement>> resolvedGlobs = new HashMap<>();
 
   public ResourceManager(SecurityManager securityManager, Collection<ResourceReader> readers) {
     this.securityManager = securityManager;
@@ -67,13 +66,13 @@ public final class ResourceManager {
    * <p>The glob URI must be absolute. For example: {@code "file:///foo/bar/*.pkl"}.
    */
   @TruffleBoundary
-  public List<ResolvedGlobElement> resolveGlob(
+  public Map<String, ResolvedGlobElement> resolveGlob(
       URI globUri,
       URI enclosingUri,
       ModuleKey enclosingModuleKey,
       Node readNode,
-      String globExpression) {
-    return globExpressions.computeIfAbsent(
+      String globPattern) {
+    return resolvedGlobs.computeIfAbsent(
         globUri.normalize(),
         uri -> {
           var scheme = uri.getScheme();
@@ -97,12 +96,11 @@ public final class ResourceManager {
                   .withLocation(readNode)
                   .build();
             }
-            var securityManager = VmContext.get(readNode).getSecurityManager();
             return GlobResolver.resolveGlob(
-                securityManager, reader, enclosingModuleKey, enclosingUri, globExpression);
+                securityManager, reader, enclosingModuleKey, enclosingUri, globPattern);
           } catch (InvalidGlobPatternException e) {
             throw new VmExceptionBuilder()
-                .evalError("invalidGlobPattern", globExpression)
+                .evalError("invalidGlobPattern", globPattern)
                 .withHint(e.getMessage())
                 .withLocation(readNode)
                 .build();
@@ -110,7 +108,7 @@ public final class ResourceManager {
             throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
           } catch (IOException e) {
             throw new VmExceptionBuilder()
-                .evalError("ioErrorResolvingGlob", globExpression)
+                .evalError("ioErrorResolvingGlob", globPattern)
                 .withCause(e)
                 .withLocation(readNode)
                 .build();

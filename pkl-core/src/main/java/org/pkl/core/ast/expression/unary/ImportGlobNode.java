@@ -17,42 +17,32 @@ package org.pkl.core.ast.expression.unary;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.ast.member.SharedMemberNode;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmMapping;
-import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {
-  private final VmLanguage language;
-
   private final ResolvedModuleKey currentModule;
-
   private final String globPattern;
+  private final SharedMemberNode importGlobElementNode;
 
-  @CompilationFinal @LateInit private VmMapping importedMapping;
+  @CompilationFinal @LateInit private VmMapping importsMapping;
 
   public ImportGlobNode(
       VmLanguage language,
@@ -61,36 +51,21 @@ public class ImportGlobNode extends AbstractImportNode {
       URI importUri,
       String globPattern) {
     super(sourceSection, importUri);
-    this.language = language;
     this.currentModule = currentModule;
     this.globPattern = globPattern;
-  }
-
-  @TruffleBoundary
-  private EconomicMap<Object, ObjectMember> buildMembers(
-      FrameDescriptor frameDescriptor, List<ResolvedGlobElement> uris) {
-    var members = EconomicMaps.<Object, ObjectMember>create();
-    for (var entry : uris) {
-      var readNode =
-          new ImportNode(
-              language, VmUtils.unavailableSourceSection(), currentModule, entry.getUri());
-      var member =
-          new ObjectMember(
-              VmUtils.unavailableSourceSection(),
-              VmUtils.unavailableSourceSection(),
-              VmModifier.ENTRY,
-              null,
-              "");
-      var memberNode = new UntypedObjectMemberNode(language, frameDescriptor, member, readNode);
-      member.initMemberNode(memberNode);
-      EconomicMaps.put(members, entry.getPath(), member);
-    }
-    return members;
+    importGlobElementNode =
+        new SharedMemberNode(
+            sourceSection,
+            sourceSection,
+            "",
+            language,
+            new FrameDescriptor(),
+            new ImportGlobElementNode(sourceSection, language, currentModule));
   }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    if (importedMapping == null) {
+    if (importsMapping == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       var context = VmContext.get(this);
       try {
@@ -101,17 +76,18 @@ public class ImportGlobNode extends AbstractImportNode {
               .evalError("cannotGlobUri", importUri, importUri.getScheme())
               .build();
         }
-        var uris =
+        var resolvedElements =
             GlobResolver.resolveGlob(
                 securityManager,
                 moduleKey,
                 currentModule.getOriginal(),
                 currentModule.getUri(),
                 globPattern);
-        var members = buildMembers(frame.getFrameDescriptor(), uris);
-        importedMapping =
-            new VmMapping(
-                frame.materialize(), BaseModule.getMappingClass().getPrototype(), members);
+        var builder = new VmObjectBuilder();
+        for (var entry : resolvedElements.entrySet()) {
+          builder.addEntry(entry.getKey(), importGlobElementNode);
+        }
+        importsMapping = builder.toMapping(resolvedElements);
       } catch (IOException e) {
         throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
       } catch (SecurityManagerException | HttpClientInitException e) {
@@ -125,6 +101,6 @@ public class ImportGlobNode extends AbstractImportNode {
             .build();
       }
     }
-    return importedMapping;
+    return importsMapping;
   }
 }

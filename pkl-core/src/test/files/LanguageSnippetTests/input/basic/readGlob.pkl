@@ -30,4 +30,11 @@ examples {
   ["package:"] {
     read*("package://localhost:0/birds@0.5.0#/**.pkl")
   }
+
+  ["non-constant glob pattern"] {
+    local function readGlob(pattern) = read*(pattern)
+    readGlob("globtest/file*.txt")
+    readGlob("globtest/file1.txt")
+    readGlob("globtest/file2.txt")
+  }
 }

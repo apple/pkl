@@ -176,4 +176,44 @@ examples {
       }
     }
   }
+  ["non-constant glob pattern"] {
+    new {
+      ["globtest/file1.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file1.txt"
+        text = """
+          file1
+          
+          """
+        base64 = "ZmlsZTEK"
+      }
+      ["globtest/file2.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file2.txt"
+        text = """
+          file2
+          
+          """
+        base64 = "ZmlsZTIK"
+      }
+    }
+    new {
+      ["globtest/file1.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file1.txt"
+        text = """
+          file1
+          
+          """
+        base64 = "ZmlsZTEK"
+      }
+    }
+    new {
+      ["globtest/file2.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file2.txt"
+        text = """
+          file2
+          
+          """
+        base64 = "ZmlsZTIK"
+      }
+    }
+  }
 }
