@@ -23,6 +23,7 @@ endif::[]
 :uri-pkl-cli-main-sources: {uri-github-tree}/pkl-cli/src/main/kotlin/org/pkl/cli
 :uri-pkl-cli-CliEvaluatorOptions: {uri-pkl-cli-main-sources}/CliEvaluatorOptions.kt
 :uri-certificates: {uri-github-tree}/pkl-commons-cli/src/main/resources/org/pkl/commons/cli/commands
+:uri-ci-artifacts: https://s01.oss.sonatype.org/content/groups/public/org/pkl-lang/
 
 The `pkl` command-line interface (CLI) evaluates Pkl modules and writes their output to the console or a file.
 For interactive development, the CLI includes a Read-Eval-Print Loop (REPL).
@@ -36,7 +37,7 @@ The CLI comes in multiple flavors:
 * Native Linux executable for amd64
 * Native Linux executable for aarch64
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
-* Java executable (tested with Java 11/17 on macOS and Oracle Linux)
+* Java executable (tested with Java 11/17 on macOS and Oracle Linux, may work on other platforms)
 
 On macOS and Linux, we recommend using the native executables.
 They are self-contained, start up instantly, and run complex Pkl code much faster than the Java executable.
@@ -191,6 +192,28 @@ This should print something similar to:
 ----
 Pkl {pkl-version} (macOS 10.16, Java 11.0.9)
 ----
+
+=== Windows support
+Pkl does not currently support running natively on Windows. Pkl has been reported to work on the https://learn.microsoft.com/en-us/windows/wsl/install[Windows Subsystem for Linux] and on a https://www.oracle.com/java/technologies/downloads/#jdk21-windows[Java Runtime] using https://search.maven.org/remote_content?g=org.pkl-lang&a=pkl-cli-java&v=LATEST[`jpkl` (the Java executable version of Pkl)].
+
+The following is from successful uses of `jpkl` on Windows:
+[source,shell]
+[subs="+attributes"]
+----
+> java -jar pkl-cli-java.jar --version
+Pkl 0.26.0-dev+21e0e14 (Windows 10 10.0, Java 21.0.2)
+----
+
+Note: You must use forward slashes in all paths for Windows with absolute paths prefixed with file:///.  The following examples are valid:
+[source,shell]
+[subs="+attributes"]
+----
+> java -jar pkl-cli-java.jar eval file:///C:/Code/pkl/test.pkl
+> java -jar pkl-cli-java.jar eval ../Code/pkl/test.pkl
+> java -jar pkl-cli-java.jar eval pkl/test.pkl
+----
+https://github.com/apple/pkl/issues/20[GitHub Issue #20] is used to track progress on support for the Windows platform.
+
 
 [[usage]]
 == Usage
