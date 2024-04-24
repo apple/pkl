@@ -18,16 +18,19 @@ package org.pkl.core.ast.expression.unary;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.module.ResolvedModuleKey;
 
 public abstract class AbstractImportNode extends ExpressionNode {
+  protected final ResolvedModuleKey currentModule;
   protected final URI importUri;
 
-  AbstractImportNode(SourceSection sourceSection, URI importUri) {
+  AbstractImportNode(SourceSection sourceSection, ResolvedModuleKey currentModule, URI importUri) {
     super(sourceSection);
+    this.currentModule = currentModule;
     this.importUri = importUri;
   }
 
-  public URI getImportUri() {
+  public final URI getImportUri() {
     return importUri;
   }
 }

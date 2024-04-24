@@ -30,30 +30,33 @@ import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public abstract class AbstractReadNode extends UnaryExpressionNode {
-  private final ModuleKey moduleKey;
+  protected final ModuleKey currentModule;
 
-  protected AbstractReadNode(SourceSection sourceSection, ModuleKey moduleKey) {
+  protected AbstractReadNode(SourceSection sourceSection, ModuleKey currentModule) {
     super(sourceSection);
-    this.moduleKey = moduleKey;
+    this.currentModule = currentModule;
   }
 
   @TruffleBoundary
-  protected @Nullable Object doRead(String resourceUri, VmContext context, Node readNode) {
-    var resolvedUri = resolveResource(moduleKey, resourceUri);
-    return context.getResourceManager().read(resolvedUri, readNode).orElse(null);
-  }
-
-  private URI resolveResource(ModuleKey moduleKey, String resourceUri) {
-    URI parsedUri;
+  protected final URI parseUri(String resourceUri) {
     try {
-      parsedUri = IoUtils.toUri(resourceUri);
+      return IoUtils.toUri(resourceUri);
     } catch (URISyntaxException e) {
       throw exceptionBuilder()
           .evalError("invalidResourceUri", resourceUri)
           .withHint(e.getReason())
           .build();
     }
+  }
 
+  @TruffleBoundary
+  protected final @Nullable Object doRead(String resourceUri, VmContext context, Node readNode) {
+    var resolvedUri = resolveResource(currentModule, resourceUri);
+    return context.getResourceManager().read(resolvedUri, readNode).orElse(null);
+  }
+
+  private URI resolveResource(ModuleKey moduleKey, String resourceUri) {
+    var parsedUri = parseUri(resourceUri);
     var context = VmContext.get(this);
     URI resolvedUri;
     try {

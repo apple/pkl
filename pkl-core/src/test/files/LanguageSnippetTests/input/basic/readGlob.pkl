@@ -31,10 +31,17 @@ examples {
     read*("package://localhost:0/birds@0.5.0#/**.pkl")
   }
 
-  ["non-constant glob pattern"] {
-    local function readGlob(pattern) = read*(pattern)
-    readGlob("globtest/file*.txt")
-    readGlob("globtest/file1.txt")
-    readGlob("globtest/file2.txt")
+  ["use read expression with non-constant glob pattern"] {
+    local function doRead(pattern) = read*(pattern)
+    doRead("globtest/file*.txt")
+    doRead("globtest/file1.txt")
+    doRead("globtest/file2.txt")
+  }
+  
+  ["read different resources with same glob pattern"] {
+    local module1 = import(".../input-helper/basic/read/module1.pkl")
+    local module2 = import(".../input-helper/basic/read/child/module2.pkl")
+    module1.globbedRead
+    module2.globbedRead
   }
 }

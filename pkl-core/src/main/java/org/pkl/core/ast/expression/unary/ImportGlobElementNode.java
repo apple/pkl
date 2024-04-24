@@ -36,7 +36,8 @@ public final class ImportGlobElementNode extends ExpressionNode {
   private final VmLanguage language;
   private final ResolvedModuleKey currentModule;
 
-  public ImportGlobElementNode(SourceSection sourceSection, VmLanguage language, ResolvedModuleKey currentModule) {
+  public ImportGlobElementNode(
+      SourceSection sourceSection, VmLanguage language, ResolvedModuleKey currentModule) {
     super(sourceSection);
     this.language = language;
     this.currentModule = currentModule;
@@ -48,7 +49,7 @@ public final class ImportGlobElementNode extends ExpressionNode {
     var path = (String) VmUtils.getMemberKey(frame);
     return importModule(mapping, path);
   }
-  
+
   @TruffleBoundary
   private VmTyped importModule(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")

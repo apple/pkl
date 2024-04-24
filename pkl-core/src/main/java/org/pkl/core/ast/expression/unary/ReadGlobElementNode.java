@@ -37,7 +37,7 @@ public class ReadGlobElementNode extends ExpressionNode {
     var path = (String) VmUtils.getMemberKey(frame);
     return readResource(mapping, path);
   }
-  
+
   @TruffleBoundary
   private Object readResource(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")

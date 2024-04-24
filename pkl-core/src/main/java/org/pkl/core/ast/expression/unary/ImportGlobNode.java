@@ -38,11 +38,10 @@ import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {
-  private final ResolvedModuleKey currentModule;
   private final String globPattern;
   private final SharedMemberNode importGlobElementNode;
 
-  @CompilationFinal @LateInit private VmMapping importsMapping;
+  @CompilationFinal @LateInit private VmMapping cachedResult;
 
   public ImportGlobNode(
       VmLanguage language,
@@ -50,8 +49,7 @@ public class ImportGlobNode extends AbstractImportNode {
       ResolvedModuleKey currentModule,
       URI importUri,
       String globPattern) {
-    super(sourceSection, importUri);
-    this.currentModule = currentModule;
+    super(sourceSection, currentModule, importUri);
     this.globPattern = globPattern;
     importGlobElementNode =
         new SharedMemberNode(
@@ -65,42 +63,41 @@ public class ImportGlobNode extends AbstractImportNode {
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    if (importsMapping == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      var context = VmContext.get(this);
-      try {
-        var moduleKey = context.getModuleResolver().resolve(importUri);
-        var securityManager = VmContext.get(this).getSecurityManager();
-        if (!moduleKey.isGlobbable()) {
-          throw exceptionBuilder()
-              .evalError("cannotGlobUri", importUri, importUri.getScheme())
-              .build();
-        }
-        var resolvedElements =
-            GlobResolver.resolveGlob(
-                securityManager,
-                moduleKey,
-                currentModule.getOriginal(),
-                currentModule.getUri(),
-                globPattern);
-        var builder = new VmObjectBuilder();
-        for (var entry : resolvedElements.entrySet()) {
-          builder.addEntry(entry.getKey(), importGlobElementNode);
-        }
-        importsMapping = builder.toMapping(resolvedElements);
-      } catch (IOException e) {
-        throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
-      } catch (SecurityManagerException | HttpClientInitException e) {
-        throw exceptionBuilder().withCause(e).build();
-      } catch (PackageLoadError e) {
-        throw exceptionBuilder().adhocEvalError(e.getMessage()).build();
-      } catch (InvalidGlobPatternException e) {
+    if (cachedResult != null) return cachedResult;
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    var context = VmContext.get(this);
+    try {
+      var moduleKey = context.getModuleResolver().resolve(importUri);
+      if (!moduleKey.isGlobbable()) {
         throw exceptionBuilder()
-            .evalError("invalidGlobPattern", globPattern)
-            .withHint(e.getMessage())
+            .evalError("cannotGlobUri", importUri, importUri.getScheme())
             .build();
       }
+      var resolvedElements =
+          GlobResolver.resolveGlob(
+              context.getSecurityManager(),
+              moduleKey,
+              currentModule.getOriginal(),
+              currentModule.getUri(),
+              globPattern);
+      var builder = new VmObjectBuilder();
+      for (var entry : resolvedElements.entrySet()) {
+        builder.addEntry(entry.getKey(), importGlobElementNode);
+      }
+      cachedResult = builder.toMapping(resolvedElements);
+      return cachedResult;
+    } catch (IOException e) {
+      throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
+    } catch (SecurityManagerException | HttpClientInitException e) {
+      throw exceptionBuilder().withCause(e).build();
+    } catch (PackageLoadError e) {
+      throw exceptionBuilder().adhocEvalError(e.getMessage()).build();
+    } catch (InvalidGlobPatternException e) {
+      throw exceptionBuilder()
+          .evalError("invalidGlobPattern", globPattern)
+          .withHint(e.getMessage())
+          .build();
     }
-    return importsMapping;
   }
 }

@@ -20,24 +20,27 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
+import org.graalvm.collections.EconomicMap;
+import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
+import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmObjectBuilder;
-import org.pkl.core.util.IoUtils;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 
 @NodeInfo(shortName = "read*")
-public abstract class ReadGlobNode extends UnaryExpressionNode {
-  private final ModuleKey currentModule;
+public abstract class ReadGlobNode extends AbstractReadNode {
   private final SharedMemberNode readGlobElementNode;
+  private final EconomicMap<String, VmMapping> cachedResults = EconomicMap.create();
 
   protected ReadGlobNode(
       VmLanguage language, SourceSection sourceSection, ModuleKey currentModule) {
-    super(sourceSection);
-    this.currentModule = currentModule;
+    super(sourceSection, currentModule);
     readGlobElementNode =
         new SharedMemberNode(
             sourceSection,
@@ -51,30 +54,43 @@ public abstract class ReadGlobNode extends UnaryExpressionNode {
   @Specialization
   @TruffleBoundary
   public Object read(String globPattern) {
-    var context = VmContext.get(this);
-    var globUri = toUri(globPattern);
-    var resolvedElements =
-        context
-            .getResourceManager()
-            .resolveGlob(globUri, currentModule.getUri(), currentModule, this, globPattern);
-    var builder = new VmObjectBuilder();
-    for (var entry : resolvedElements.entrySet()) {
-      builder.addEntry(entry.getKey(), readGlobElementNode);
-    }
-    return builder.toMapping(resolvedElements);
-  }
+    var cachedResult = cachedResults.get(globPattern);
+    if (cachedResult != null) return cachedResult;
 
-  private URI toUri(String globPattern) {
+    // use same check as for globbed imports (see AstBuilder)
+    if (globPattern.startsWith("...")) {
+      throw exceptionBuilder().evalError("cannotGlobTripleDots").build();
+    }
+    var globUri = parseUri(globPattern);
+    var context = VmContext.get(this);
     try {
-      var globUri = IoUtils.toUri(globPattern);
-      if (IoUtils.parseTripleDotPath(globUri) != null) {
-        throw exceptionBuilder().evalError("cannotGlobTripleDots").build();
+      var resolvedUri = currentModule.resolveUri(globUri);
+      var reader = context.getResourceManager().getReader(resolvedUri, this);
+      if (!reader.isGlobbable()) {
+        throw exceptionBuilder().evalError("cannotGlobUri", globUri, globUri.getScheme()).build();
       }
-      return globUri;
-    } catch (URISyntaxException e) {
+      var resolvedElements =
+          GlobResolver.resolveGlob(
+              context.getSecurityManager(),
+              reader,
+              currentModule,
+              currentModule.getUri(),
+              globPattern);
+      var builder = new VmObjectBuilder();
+      for (var entry : resolvedElements.entrySet()) {
+        builder.addEntry(entry.getKey(), readGlobElementNode);
+      }
+      cachedResult = builder.toMapping(resolvedElements);
+      cachedResults.put(globPattern, cachedResult);
+      return cachedResult;
+    } catch (IOException e) {
+      throw exceptionBuilder().evalError("ioErrorResolvingGlob", globPattern).withCause(e).build();
+    } catch (SecurityManagerException | HttpClientInitException e) {
+      throw exceptionBuilder().withCause(e).build();
+    } catch (InvalidGlobPatternException e) {
       throw exceptionBuilder()
-          .evalError("invalidResourceUri", globPattern)
-          .withHint(e.getReason())
+          .evalError("invalidGlobPattern", globPattern)
+          .withHint(e.getMessage())
           .build();
     }
   }
