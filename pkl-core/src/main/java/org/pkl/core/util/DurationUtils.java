@@ -17,7 +17,7 @@ package org.pkl.core.util;
 
 import org.pkl.core.DurationUnit;
 
-public final strictfp class DurationUtils {
+public final class DurationUtils {
   private DurationUtils() {}
 
   public static String toPklString(double value, DurationUnit unit) {

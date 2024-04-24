@@ -16,6 +16,7 @@
 package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -68,6 +69,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     return new AmendFunctionNode(this, resolvedParameterTypes, frame.getFrameDescriptor());
   }
 
+  @Idempotent
   protected static boolean isTypedObjectClass(VmClass clazz) {
     return !(clazz.isListingClass() || clazz.isMappingClass() || clazz.isDynamicClass());
   }

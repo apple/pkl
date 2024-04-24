@@ -61,4 +61,7 @@ val workAroundKotlinGradlePluginBug by tasks.registering {
 
 tasks.compileJava {
   dependsOn(workAroundKotlinGradlePluginBug)
+  // TODO: determine correct limits for Truffle specializations
+  // (see https://graalvm.slack.com/archives/CNQSB2DHD/p1712380902746829)
+  options.compilerArgs.add("-Atruffle.dsl.SuppressWarnings=truffle-limit")
 }

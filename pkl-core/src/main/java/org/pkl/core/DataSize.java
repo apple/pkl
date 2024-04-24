@@ -22,7 +22,7 @@ import org.pkl.core.util.MathUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#DataSize} value. */
-public final strictfp class DataSize implements Value {
+public final class DataSize implements Value {
   private static final long serialVersionUID = 0L;
 
   private final double value;

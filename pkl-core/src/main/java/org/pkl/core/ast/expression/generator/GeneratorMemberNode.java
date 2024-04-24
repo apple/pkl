@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.generator;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Arrays;
@@ -46,11 +47,13 @@ public abstract class GeneratorMemberNode extends PklNode {
         .build();
   }
 
+  @Idempotent
   protected static boolean isTypedObjectClass(VmClass clazz) {
     assert clazz.isInstantiable();
     return !(clazz.isListingClass() || clazz.isMappingClass() || clazz.isDynamicClass());
   }
 
+  @Idempotent
   protected boolean checkIsValidTypedProperty(VmClass clazz, ObjectMember member) {
     if (member.isLocal() || clazz.hasProperty(member.getName())) return true;
 

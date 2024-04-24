@@ -26,7 +26,7 @@ import org.pkl.core.util.MathUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final strictfp class VmDataSize extends VmValue implements Comparable<VmDataSize> {
+public final class VmDataSize extends VmValue implements Comparable<VmDataSize> {
   private static final Map<Identifier, DataSizeUnit> UNITS =
       Map.ofEntries(
           entry(Identifier.B, DataSizeUnit.BYTES),

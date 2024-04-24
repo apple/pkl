@@ -42,7 +42,7 @@ class MemberRegistryGenerator : AbstractProcessor() {
 
   override fun getSupportedAnnotationTypes(): Set<String> = setOf(GeneratedBy::class.java.name)
 
-  override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.RELEASE_11
+  override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.RELEASE_17
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     if (annotations.isEmpty()) return true

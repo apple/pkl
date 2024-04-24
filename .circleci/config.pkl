@@ -21,9 +21,7 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
-  "check-patch-file"
-}
+local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
@@ -140,10 +138,6 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
 }
 
 local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
-  ["gradle-check-jdk11"] {
-    javaVersion = "11.0"
-    isRelease = false
-  }
   ["gradle-check-jdk17"] {
     javaVersion = "17.0"
     isRelease = false
@@ -196,20 +190,5 @@ jobs {
           """#
       }
     }
-  }
-  ["check-patch-file"] {
-    docker {
-      new { image = "cimg/base:current" }
-    }
-    steps {
-      "checkout"
-      new RunStep {
-        // language=bash
-        command = #"""
-        git apply --reject patches/graalVm23.patch
-        """#
-      }
-    }
-    resource_class = "small"
   }
 }

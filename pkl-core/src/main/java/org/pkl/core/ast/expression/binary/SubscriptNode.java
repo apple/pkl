@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.binary;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
@@ -72,7 +73,7 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VmListing listing, long index, @Cached("create()") IndirectCallNode callNode) {
+      VmListing listing, long index, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     var result = VmUtils.readMemberOrNull(listing, index, callNode);
     if (result != null) return result;
@@ -85,14 +86,14 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VmMapping mapping, Object key, @Cached("create()") IndirectCallNode callNode) {
+      VmMapping mapping, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     return readMember(mapping, key, callNode);
   }
 
   @Specialization
   protected Object eval(
-      VmDynamic dynamic, Object key, @Cached("create()") IndirectCallNode callNode) {
+      VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     return readMember(dynamic, key, callNode);
   }

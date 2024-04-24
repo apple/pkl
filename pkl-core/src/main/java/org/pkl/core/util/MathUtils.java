@@ -18,7 +18,7 @@ package org.pkl.core.util;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.math.RoundingMode;
 
-public final strictfp class MathUtils {
+public final class MathUtils {
   private static final long FLOOR_SQRT_MAX_LONG = 3037000499L;
 
   // The mask for the significand, according to the {@link

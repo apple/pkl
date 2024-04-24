@@ -27,7 +27,7 @@ import org.pkl.core.util.MathUtils;
  * optimization by Graal. To control error messages in a single place (namely here),
  * [ArithmeticException]s thrown by [java.lang.StrictMath] are caught and rethrown.
  */
-public final strictfp class VmSafeMath {
+public final class VmSafeMath {
   private VmSafeMath() {}
 
   public static long negate(long x) {

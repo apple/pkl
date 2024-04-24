@@ -104,7 +104,8 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
   protected VmFunction evalFunction(
       VirtualFrame frame,
       VmFunction parent,
-      @Cached("createAmendFunctionNode(frame)") AmendFunctionNode amendFunctionNode) {
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
   }
@@ -118,7 +119,8 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
   protected VmListing evalListingClass(
       VirtualFrame frame,
       @SuppressWarnings("unused") VmClass parent,
-      @Cached("createMembers(0)") UnmodifiableEconomicMap<Object, ObjectMember> members) {
+      @Cached(value = "createMembers(0)", neverDefault = true)
+          UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
     return new VmListing(
         frame.materialize(), BaseModule.getListingClass().getPrototype(), members, elements.length);
@@ -128,7 +130,8 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame,
       @SuppressWarnings("unused") VmClass parent,
-      @Cached("createMembers(0)") UnmodifiableEconomicMap<Object, ObjectMember> members) {
+      @Cached(value = "createMembers(0)", neverDefault = true)
+          UnmodifiableEconomicMap<Object, ObjectMember> members) {
     return new VmDynamic(
         frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, elements.length);
   }
