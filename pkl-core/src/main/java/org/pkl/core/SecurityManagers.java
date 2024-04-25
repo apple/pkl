@@ -75,21 +75,16 @@ public final class SecurityManagers {
       SecurityManagers::getDefaultTrustLevel;
 
   private static int getDefaultTrustLevel(URI uri) {
-    switch (uri.getScheme()) {
-      case "repl":
-        return 40;
-      case "file":
-        return uri.getHost() == null ? 30 : 10;
-      case "jar":
-        // use trust level of embedded URL
-        return getDefaultTrustLevel(URI.create(uri.toString().substring(4)));
-      case "modulepath":
-        return 20;
-      case "pkl":
-        return 0;
-      default:
-        return 10;
-    }
+    return switch (uri.getScheme()) {
+      case "repl" -> 40;
+      case "file" -> uri.getHost() == null ? 30 : 10;
+      case "jar" ->
+          // use trust level of embedded URL
+          getDefaultTrustLevel(URI.create(uri.toString().substring(4)));
+      case "modulepath" -> 20;
+      case "pkl" -> 0;
+      default -> 10;
+    };
   }
 
   /**

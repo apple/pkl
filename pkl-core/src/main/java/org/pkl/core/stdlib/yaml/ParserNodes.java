@@ -194,22 +194,10 @@ public final class ParserNodes {
       @Override
       public Object construct(Node node) {
         var value = ((ScalarNode) node).getValue();
-        switch (value) {
-          case "true":
-          case "True":
-          case "TRUE":
-          case "on":
-          case "On":
-          case "ON":
-          case "y":
-          case "Y":
-          case "yes":
-          case "Yes":
-          case "YES":
-            return true;
-          default:
-            return false;
-        }
+        return switch (value) {
+          case "true", "True", "TRUE", "on", "On", "ON", "y", "Y", "yes", "Yes", "YES" -> true;
+          default -> false;
+        };
       }
     }
 
@@ -250,23 +238,24 @@ public final class ParserNodes {
 
         if (value.charAt(offset) == '0' && value.length() > offset + 1) {
           switch (value.charAt(offset + 1)) {
-            case 'b':
+            case 'b' -> {
               radix = 2;
               offset += 2;
-              break;
-            case 'o':
+            }
+            case 'o' -> {
               radix = 8;
               offset += 2;
-              break;
-            case 'x':
+            }
+            case 'x' -> {
               radix = 16;
               offset += 2;
-              break;
-            default:
+            }
+            default -> {
               if (enable11Octals) {
                 radix = 8;
                 offset += 1;
               }
+            }
           }
         }
 
@@ -297,25 +286,12 @@ public final class ParserNodes {
 
         if (value.contains(":")) return parseBase60(value);
 
-        switch (value) {
-          case ".nan":
-          case ".NaN":
-          case ".NAN":
-            return Double.NaN;
-          case ".inf":
-          case ".Inf":
-          case ".INF":
-          case "+.inf":
-          case "+.Inf":
-          case "+.INF":
-            return Double.POSITIVE_INFINITY;
-          case "-.inf":
-          case "-.Inf":
-          case "-.INF":
-            return Double.NEGATIVE_INFINITY;
-          default:
-            return Double.valueOf(value);
-        }
+        return switch (value) {
+          case ".nan", ".NaN", ".NAN" -> Double.NaN;
+          case ".inf", ".Inf", ".INF", "+.inf", "+.Inf", "+.INF" -> Double.POSITIVE_INFINITY;
+          case "-.inf", "-.Inf", "-.INF" -> Double.NEGATIVE_INFINITY;
+          default -> Double.valueOf(value);
+        };
       }
 
       private static double parseBase60(String value) {
@@ -491,9 +467,7 @@ public final class ParserNodes {
           currPath = valuePath;
 
           var memberName =
-              convertedKey instanceof String && !useMapping
-                  ? Identifier.get((String) convertedKey)
-                  : null;
+              convertedKey instanceof String string && !useMapping ? Identifier.get(string) : null;
 
           var member =
               new ObjectMember(
@@ -504,8 +478,8 @@ public final class ParserNodes {
                   "generated");
 
           currPath.push(
-              key instanceof String
-                  ? Identifier.get((String) key)
+              key instanceof String string
+                  ? Identifier.get(string)
                   : VmValueConverter.WILDCARD_PROPERTY);
           var value = constructObject(valueNode);
           var convertedValue = converter.convert(value, currPath);

@@ -40,9 +40,9 @@ public final class TraceNode extends ExpressionNode {
 
   @TruffleBoundary
   private void doTrace(Object value, VmContext context) {
-    if (value instanceof VmObjectLike) {
+    if (value instanceof VmObjectLike objectLike) {
       try {
-        ((VmObjectLike) value).force(true, true);
+        objectLike.force(true, true);
       } catch (VmException ignored) {
       }
     }

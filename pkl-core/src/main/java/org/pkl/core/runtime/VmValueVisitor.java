@@ -61,16 +61,16 @@ public interface VmValueVisitor {
   default void visit(Object value) {
     Objects.requireNonNull(value, "Value to be visited must be non-null.");
 
-    if (value instanceof VmValue) {
-      ((VmValue) value).accept(this);
-    } else if (value instanceof String) {
-      visitString((String) value);
-    } else if (value instanceof Boolean) {
-      visitBoolean((Boolean) value);
-    } else if (value instanceof Long) {
-      visitInt((Long) value);
-    } else if (value instanceof Double) {
-      visitFloat((Double) value);
+    if (value instanceof VmValue vmValue) {
+      vmValue.accept(this);
+    } else if (value instanceof String string) {
+      visitString(string);
+    } else if (value instanceof Boolean b) {
+      visitBoolean(b);
+    } else if (value instanceof Long l) {
+      visitInt(l);
+    } else if (value instanceof Double d) {
+      visitFloat(d);
     } else {
       throw new IllegalArgumentException("Unknown VM value type: " + value.getClass().getName());
     }

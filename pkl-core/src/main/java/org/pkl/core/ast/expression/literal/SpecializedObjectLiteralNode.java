@@ -70,7 +70,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   @TruffleBoundary
   @Idempotent
   protected boolean checkIsValidTypedAmendment(Object parent) {
-    var parentClass = parent instanceof VmClass ? (VmClass) parent : VmUtils.getClass(parent);
+    var parentClass = parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent);
     VmUtils.checkIsInstantiable(parentClass, getParentNode());
 
     for (var member : EconomicMaps.getValues(members)) {

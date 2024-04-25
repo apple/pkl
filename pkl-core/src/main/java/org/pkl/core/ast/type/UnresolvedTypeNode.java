@@ -133,9 +133,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
       var type = resolveTypeNode.executeGeneric(frame);
 
-      if (type instanceof VmClass) {
-        VmClass clazz = (VmClass) type;
-
+      if (type instanceof VmClass clazz) {
         // Note: FinalClassTypeNode and NonFinalClassTypeNode assume that
         // String/Boolean/Int/Float and their supertypes are handled separately.
 
@@ -163,9 +161,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
         return TypeNode.forClass(sourceSection, clazz);
       }
 
-      if (type instanceof VmTypeAlias) {
-        var alias = (VmTypeAlias) type;
-
+      if (type instanceof VmTypeAlias alias) {
         if (alias.getModuleName().equals("pkl.base")) {
           switch (alias.getSimpleName()) {
             case "NonNull":
@@ -219,8 +215,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
       var baseType = resolveTypeNode.executeGeneric(frame);
 
-      if (baseType instanceof VmClass) {
-        var clazz = (VmClass) baseType;
+      if (baseType instanceof VmClass clazz) {
         checkNumberOfTypeArguments(clazz);
 
         if (clazz.isCollectionClass()) {
@@ -289,8 +284,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
             .build();
       }
 
-      if (baseType instanceof VmTypeAlias) {
-        var typeAlias = (VmTypeAlias) baseType;
+      if (baseType instanceof VmTypeAlias typeAlias) {
         var argLength = typeArgumentNodes.length;
         var resolvedTypeArgumentNodes = new TypeNode[argLength];
         for (var i = 0; i < argLength; i++) {

@@ -118,10 +118,10 @@ public abstract class ModulesTask extends BasePklTask {
     var uris = new ArrayList<URI>();
     for (var m : modules) {
       var parsed = parseModuleNotation(m);
-      if (parsed instanceof File) {
-        files.add((File) parsed);
-      } else if (parsed instanceof URI) {
-        uris.add((URI) parsed);
+      if (parsed instanceof File file) {
+        files.add(file);
+      } else if (parsed instanceof URI uri) {
+        uris.add(uri);
       }
     }
     return Pair.of(files, uris);
@@ -132,14 +132,13 @@ public abstract class ModulesTask extends BasePklTask {
    * IoUtils#createUri(String)} because other ways of conversion can make relative paths into
    * absolute URIs, which may break module loading.
    */
-  private URI parsedModuleNotationToUri(Object m) {
-    if (m instanceof File) {
-      var f = (File) m;
-      return IoUtils.createUri(f.getPath());
-    } else if (m instanceof URI) {
-      return (URI) m;
+  private URI parsedModuleNotationToUri(Object notation) {
+    if (notation instanceof File file) {
+      return IoUtils.createUri(file.getPath());
+    } else if (notation instanceof URI uri) {
+      return uri;
     }
-    throw new IllegalArgumentException("Invalid parsed module notation: " + m);
+    throw new IllegalArgumentException("Invalid parsed module notation: " + notation);
   }
 
   protected URI parseModuleNotationToUri(Object m) {

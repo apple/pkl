@@ -23,10 +23,10 @@ import org.pkl.core.util.json.Json.JsonParseException;
 public class PackageUtils {
   public static PackageUri parsePackageUriWithoutChecksums(Object obj)
       throws JsonParseException, URISyntaxException {
-    if (!(obj instanceof String)) {
+    if (!(obj instanceof String string)) {
       throw new FormatException("string", obj.getClass());
     }
-    var packageUri = new PackageUri((String) obj);
+    var packageUri = new PackageUri(string);
     checkHasNoChecksumComponent(packageUri);
     return packageUri;
   }

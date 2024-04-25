@@ -43,8 +43,8 @@ public class VmExceptionRenderer {
   }
 
   private void render(VmException exception, StringBuilder builder) {
-    if (exception instanceof VmBugException) {
-      renderBugException((VmBugException) exception, builder);
+    if (exception instanceof VmBugException bugException) {
+      renderBugException(bugException, builder);
     } else {
       renderException(exception, builder);
     }

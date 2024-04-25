@@ -239,11 +239,11 @@ public final class PListRendererNodes {
         key = VmUtils.readTextProperty(key);
       }
 
-      if (key instanceof String) {
+      if (key instanceof String string) {
         builder
             .append(currIndent)
             .append("<key>")
-            .append(charEscaper.escape((String) key))
+            .append(charEscaper.escape(string))
             .append("</key>")
             .append(LINE_BREAK)
             .append(currIndent);

@@ -35,10 +35,7 @@ final class Tuple2<S, T> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Tuple2)) return false;
-
-    var other = (Tuple2<?, ?>) obj;
-
+    if (!(obj instanceof Tuple2<?, ?> other)) return false;
     return first.equals(other.first) && second.equals(other.second);
   }
 

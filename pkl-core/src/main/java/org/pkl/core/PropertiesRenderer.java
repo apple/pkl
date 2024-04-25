@@ -49,12 +49,11 @@ final class PropertiesRenderer implements ValueRenderer {
   private class Visitor implements ValueConverter<String> {
 
     public void renderDocument(Object value) {
-      if (value instanceof Composite) {
-        doVisitMap(null, ((Composite) value).getProperties());
-      } else if (value instanceof Map) {
-        doVisitMap(null, (Map<?, ?>) value);
-      } else if (value instanceof Pair) {
-        Pair<?, ?> pair = (Pair<?, ?>) value;
+      if (value instanceof Composite composite) {
+        doVisitMap(null, composite.getProperties());
+      } else if (value instanceof Map<?, ?> map) {
+        doVisitMap(null, map);
+      } else if (value instanceof Pair<?, ?> pair) {
         doVisitKeyAndValue(null, pair.getFirst(), pair.getSecond());
       } else {
         throw new RendererException(
@@ -181,10 +180,10 @@ final class PropertiesRenderer implements ValueRenderer {
 
       var keyString = keyPrefix == null ? convert(key) : keyPrefix + "." + convert(key);
 
-      if (value instanceof Composite) {
-        doVisitMap(keyString, ((Composite) value).getProperties());
-      } else if (value instanceof Map) {
-        doVisitMap(keyString, (Map<?, ?>) value);
+      if (value instanceof Composite composite) {
+        doVisitMap(keyString, composite.getProperties());
+      } else if (value instanceof Map<?, ?> map) {
+        doVisitMap(keyString, map);
       } else {
         write(keyString, true, restrictCharset);
         writeSeparator();

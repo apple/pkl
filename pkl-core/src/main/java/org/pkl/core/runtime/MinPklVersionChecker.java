@@ -45,9 +45,9 @@ final class MinPklVersionChecker {
   }
 
   static void check(String moduleName, @Nullable ParserRuleContext ctx, @Nullable Node importNode) {
-    if (!(ctx instanceof ModuleContext)) return;
+    if (!(ctx instanceof ModuleContext moduleCtx)) return;
 
-    var moduleDeclCtx = ((ModuleContext) ctx).moduleDecl();
+    var moduleDeclCtx = moduleCtx.moduleDecl();
     if (moduleDeclCtx == null) return;
 
     for (var annCtx : moduleDeclCtx.annotation()) {
@@ -57,9 +57,8 @@ final class MinPklVersionChecker {
       if (objectBodyCtx == null) continue;
 
       for (var memberCtx : objectBodyCtx.objectMember()) {
-        if (!(memberCtx instanceof ObjectPropertyContext)) continue;
+        if (!(memberCtx instanceof ObjectPropertyContext propertyCtx)) continue;
 
-        var propertyCtx = (ObjectPropertyContext) memberCtx;
         if (!Identifier.MIN_PKL_VERSION.toString().equals(getText(propertyCtx.Identifier())))
           continue;
 
@@ -84,8 +83,7 @@ final class MinPklVersionChecker {
   }
 
   private static @Nullable String getLastIdText(@Nullable TypeContext typeCtx) {
-    if (!(typeCtx instanceof DeclaredTypeContext)) return null;
-    var declCtx = (DeclaredTypeContext) typeCtx;
+    if (!(typeCtx instanceof DeclaredTypeContext declCtx)) return null;
     var token = declCtx.qualifiedIdentifier().Identifier;
     return token == null ? null : token.getText();
   }

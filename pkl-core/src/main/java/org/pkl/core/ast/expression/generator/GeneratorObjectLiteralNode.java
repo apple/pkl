@@ -161,7 +161,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @TruffleBoundary
   protected void fallback(Object parent) {
     VmUtils.checkIsInstantiable(
-        parent instanceof VmClass ? (VmClass) parent : VmUtils.getClass(parent), getParentNode());
+        parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent), getParentNode());
 
     throw exceptionBuilder().unreachableCode().build();
   }

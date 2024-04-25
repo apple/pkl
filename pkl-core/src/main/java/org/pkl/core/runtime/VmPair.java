@@ -54,14 +54,11 @@ public final class VmPair extends VmValue implements Iterable<Object> {
 
       @Override
       public Object next() {
-        switch (pos++) {
-          case 0:
-            return first;
-          case 1:
-            return second;
-          default:
-            throw new NoSuchElementException("VmPair only has two elements.");
-        }
+        return switch (pos++) {
+          case 0 -> first;
+          case 1 -> second;
+          default -> throw new NoSuchElementException("VmPair only has two elements.");
+        };
       }
     };
   }
@@ -105,9 +102,7 @@ public final class VmPair extends VmValue implements Iterable<Object> {
   @TruffleBoundary
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmPair)) return false;
-
-    var other = (VmPair) obj;
+    if (!(obj instanceof VmPair other)) return false;
     return first.equals(other.first) && second.equals(other.second);
   }
 

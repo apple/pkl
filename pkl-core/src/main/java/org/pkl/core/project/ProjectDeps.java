@@ -99,10 +99,9 @@ public class ProjectDeps {
 
   private static EconomicMap<CanonicalPackageUri, Dependency> parseResolvedDependencies(
       Object object) throws JsonParseException, URISyntaxException {
-    if (!(object instanceof JsObject)) {
+    if (!(object instanceof JsObject jsObj)) {
       throw new FormatException("resolvedDependencies", "object", object.getClass());
     }
-    var jsObj = (JsObject) object;
     var ret = EconomicMaps.<CanonicalPackageUri, Dependency>create(jsObj.size());
     for (var entry : jsObj.entrySet()) {
       Dependency resolvedDependency = parseResolvedDependency(entry);
@@ -115,10 +114,9 @@ public class ProjectDeps {
   private static Dependency parseResolvedDependency(Entry<String, Object> entry)
       throws JsonParseException {
     var input = entry.getValue();
-    if (!(input instanceof JsObject)) {
+    if (!(input instanceof JsObject obj)) {
       throw new VmExceptionBuilder().evalError("invalid object").build();
     }
-    var obj = (JsObject) input;
     var type = obj.getString("type");
     var uri = obj.get("uri", PackageUtils::parsePackageUriWithoutChecksums);
     if (type.equals("remote")) {
@@ -211,8 +209,8 @@ public class ProjectDeps {
       while (cursor.advance()) {
         jsonWriter.name(cursor.getKey().toString());
         var dependency = cursor.getValue();
-        if (dependency instanceof LocalDependency) {
-          writeLocalDependency((LocalDependency) dependency);
+        if (dependency instanceof LocalDependency localDependency) {
+          writeLocalDependency(localDependency);
         } else {
           writeRemoteDependency((RemoteDependency) dependency);
         }

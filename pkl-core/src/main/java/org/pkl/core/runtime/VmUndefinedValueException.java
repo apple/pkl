@@ -60,11 +60,10 @@ public final class VmUndefinedValueException extends VmEvalException {
     renderPath(builder, path);
     builder.append('`');
     path.pop();
-    if (topLevelValue instanceof VmTyped && ((VmTyped) topLevelValue).isModuleObject()) {
-      var modl = (VmTyped) topLevelValue;
+    if (topLevelValue instanceof VmTyped typed && typed.isModuleObject()) {
       builder
           .append(" of module `")
-          .append(modl.getModuleInfo().getModuleSchema(modl).getModuleUri())
+          .append(typed.getModuleInfo().getModuleSchema(typed).getModuleUri())
           .append('`');
     }
     builder.append('.');

@@ -90,7 +90,7 @@ public abstract class NotEqualNode extends ExpressionNode {
 
   protected static @Nullable Class<? extends VmValue> getVmValueJavaClassOrNull(Object value) {
     // OK to perform slow cast here (not a guard)
-    return value instanceof VmValue ? ((VmValue) value).getClass() : null;
+    return value instanceof VmValue vmValue ? vmValue.getClass() : null;
   }
 
   // covers all remaining cases (else it's a bug)

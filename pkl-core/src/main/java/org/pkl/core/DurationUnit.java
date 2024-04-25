@@ -46,24 +46,16 @@ public enum DurationUnit {
    * exists.
    */
   public static @Nullable DurationUnit parse(String symbol) {
-    switch (symbol) {
-      case "ns":
-        return NANOS;
-      case "us":
-        return MICROS;
-      case "ms":
-        return MILLIS;
-      case "s":
-        return SECONDS;
-      case "min":
-        return MINUTES;
-      case "h":
-        return HOURS;
-      case "d":
-        return DAYS;
-      default:
-        return null;
-    }
+    return switch (symbol) {
+      case "ns" -> NANOS;
+      case "us" -> MICROS;
+      case "ms" -> MILLIS;
+      case "s" -> SECONDS;
+      case "min" -> MINUTES;
+      case "h" -> HOURS;
+      case "d" -> DAYS;
+      default -> null;
+    };
   }
 
   /** Returns the string symbol of this unit. */
@@ -78,24 +70,15 @@ public enum DurationUnit {
 
   /** Converts this unit to a {@link java.time.temporal.ChronoUnit}. */
   public ChronoUnit toChronoUnit() {
-    switch (this) {
-      case NANOS:
-        return ChronoUnit.NANOS;
-      case MICROS:
-        return ChronoUnit.MICROS;
-      case MILLIS:
-        return ChronoUnit.MILLIS;
-      case SECONDS:
-        return ChronoUnit.SECONDS;
-      case MINUTES:
-        return ChronoUnit.MINUTES;
-      case HOURS:
-        return ChronoUnit.HOURS;
-      case DAYS:
-        return ChronoUnit.DAYS;
-      default:
-        throw new AssertionError("Unknown duration unit: " + this);
-    }
+    return switch (this) {
+      case NANOS -> ChronoUnit.NANOS;
+      case MICROS -> ChronoUnit.MICROS;
+      case MILLIS -> ChronoUnit.MILLIS;
+      case SECONDS -> ChronoUnit.SECONDS;
+      case MINUTES -> ChronoUnit.MINUTES;
+      case HOURS -> ChronoUnit.HOURS;
+      case DAYS -> ChronoUnit.DAYS;
+    };
   }
 
   /** Converts this unit to a {@link java.util.concurrent.TimeUnit}. */

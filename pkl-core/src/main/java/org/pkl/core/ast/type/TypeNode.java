@@ -310,7 +310,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmTyped && ((VmTyped) value).getVmClass() == moduleClass) return;
+      if (value instanceof VmTyped typed && typed.getVmClass() == moduleClass) return;
 
       throw typeMismatch(value, moduleClass);
     }
@@ -346,8 +346,8 @@ public abstract class TypeNode extends PklNode {
     public void execute(VirtualFrame frame, Object value) {
       var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
 
-      if (value instanceof VmTyped) {
-        var valueClass = ((VmTyped) value).getVmClass();
+      if (value instanceof VmTyped typed) {
+        var valueClass = typed.getVmClass();
         if (moduleClass.isSuperclassOf(valueClass)) return;
       }
 
@@ -465,7 +465,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmValue && clazz == ((VmValue) value).getVmClass()) return;
+      if (value instanceof VmValue vmValue && clazz == vmValue.getVmClass()) return;
 
       throw typeMismatch(value, clazz);
     }
@@ -1431,9 +1431,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long) {
-        var v = (long) value;
-        if ((v & mask) == v) return;
+      if (value instanceof Long l) {
+        if ((l & mask) == l) return;
 
         throw new VmTypeMismatchException.Constraint(typeAlias.getConstraintSection(), value);
       }
@@ -1465,9 +1464,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long) {
-        var v = (long) value;
-        if (v == (byte) v) return;
+      if (value instanceof Long l) {
+        if (l == l.byteValue()) return;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt8TypeAlias().getConstraintSection(), value);
@@ -1500,9 +1498,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long) {
-        var v = (long) value;
-        if (v == (short) v) return;
+      if (value instanceof Long l) {
+        if (l == l.shortValue()) return;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt16TypeAlias().getConstraintSection(), value);
@@ -1535,9 +1532,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long) {
-        var v = (long) value;
-        if (v == (int) v) return;
+      if (value instanceof Long l) {
+        if (l == l.intValue()) return;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt32TypeAlias().getConstraintSection(), value);
@@ -1836,21 +1832,21 @@ public abstract class TypeNode extends PklNode {
     @Override
     public void executeAndSet(VirtualFrame frame, Object value) {
       var kind = frame.getFrameDescriptor().getSlotKind(slot);
-      if (value instanceof Long) {
+      if (value instanceof Long l) {
         if (kind == FrameSlotKind.Double || kind == FrameSlotKind.Object) {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Object);
-          frame.setObject(slot, value);
+          frame.setObject(slot, l);
         } else {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Long);
-          frame.setLong(slot, (long) value);
+          frame.setLong(slot, l);
         }
-      } else if (value instanceof Double) {
+      } else if (value instanceof Double d) {
         if (kind == FrameSlotKind.Long || kind == FrameSlotKind.Object) {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Object);
-          frame.setObject(slot, value);
+          frame.setObject(slot, d);
         } else {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Double);
-          frame.setDouble(slot, (double) value);
+          frame.setDouble(slot, d);
         }
       } else {
         throw typeMismatch(value, BaseModule.getNumberClass());

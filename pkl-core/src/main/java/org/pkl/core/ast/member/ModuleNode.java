@@ -54,8 +54,8 @@ public final class ModuleNode extends PklRootNode {
   @Override
   public Object execute(VirtualFrame frame) {
     var module = executeBody(frame, moduleNode);
-    if (module instanceof VmClass) {
-      return ((VmClass) module).getPrototype();
+    if (module instanceof VmClass vmClass) {
+      return vmClass.getPrototype();
     }
 
     assert module instanceof VmTyped;

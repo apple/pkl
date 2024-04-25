@@ -101,9 +101,8 @@ public final class VmDynamic extends VmObject {
   @TruffleBoundary
   public boolean equals(Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmDynamic)) return false;
+    if (!(obj instanceof VmDynamic other)) return false;
 
-    var other = (VmDynamic) obj;
     // could use shallow force, but deep force is cached
     force(false);
     other.force(false);

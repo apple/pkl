@@ -245,8 +245,8 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   public boolean equals(@Nullable Object other) {
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
-    if (!(other instanceof VmMap)) return false;
-    return map.equals(((VmMap) other).map);
+    if (!(other instanceof VmMap vmMap)) return false;
+    return map.equals(vmMap.map);
   }
 
   @Override

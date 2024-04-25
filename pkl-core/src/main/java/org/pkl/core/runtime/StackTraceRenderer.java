@@ -41,8 +41,7 @@ public class StackTraceRenderer {
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
-      if (frame instanceof StackFrameLoop) {
-        var loop = (StackFrameLoop) frame;
+      if (frame instanceof StackFrameLoop loop) {
         // ensure a cycle of length 1 doesn't get rendered as a loop
         if (loop.count == 1) {
           doRender(loop.frames, null, builder, leftMargin, isFirstElement);

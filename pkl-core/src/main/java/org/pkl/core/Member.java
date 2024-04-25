@@ -15,6 +15,7 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -23,8 +24,7 @@ import org.pkl.core.util.Nullable;
 
 /** Common base class for TypeAlias, PClass, PClass.Property, and PClass.Method. */
 public abstract class Member implements Serializable {
-
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final @Nullable String docComment;
   private final SourceLocation sourceLocation;
@@ -99,8 +99,7 @@ public abstract class Member implements Serializable {
   }
 
   public static class SourceLocation implements Serializable {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final int startLine;
     private final int endLine;

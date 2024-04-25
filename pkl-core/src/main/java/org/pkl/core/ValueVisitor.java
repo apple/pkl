@@ -90,24 +90,24 @@ public interface ValueVisitor {
   }
 
   default void visit(Object value) {
-    if (value instanceof Value) {
-      ((Value) value).accept(this);
-    } else if (value instanceof String) {
-      visitString((String) value);
-    } else if (value instanceof Boolean) {
-      visitBoolean((Boolean) value);
-    } else if (value instanceof Long) {
-      visitInt((Long) value);
-    } else if (value instanceof Double) {
-      visitFloat((Double) value);
-    } else if (value instanceof List) {
-      visitList((List<?>) value);
-    } else if (value instanceof Set) {
-      visitSet((Set<?>) value);
-    } else if (value instanceof Map) {
-      visitMap((Map<?, ?>) value);
-    } else if (value instanceof Pattern) {
-      visitRegex((Pattern) value);
+    if (value instanceof Value v) {
+      v.accept(this);
+    } else if (value instanceof String string) {
+      visitString(string);
+    } else if (value instanceof Boolean b) {
+      visitBoolean(b);
+    } else if (value instanceof Long l) {
+      visitInt(l);
+    } else if (value instanceof Double d) {
+      visitFloat(d);
+    } else if (value instanceof List<?> list) {
+      visitList(list);
+    } else if (value instanceof Set<?> set) {
+      visitSet(set);
+    } else if (value instanceof Map<?, ?> map) {
+      visitMap(map);
+    } else if (value instanceof Pattern pattern) {
+      visitRegex(pattern);
     } else {
       throw new IllegalArgumentException("Cannot visit value with unexpected type: " + value);
     }

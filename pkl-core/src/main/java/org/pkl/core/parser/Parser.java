@@ -125,48 +125,48 @@ public class Parser {
 
     var curr = ctx.getChild(ctx.getChildCount() - 2); // last child before EOF
     while (curr.getChildCount() > 0) {
-      if (curr instanceof ClassBodyContext) {
-        if (((ClassBodyContext) curr).err == null) throw incompleteInput(curr, "}");
+      if (curr instanceof ClassBodyContext classBody) {
+        if (classBody.err == null) throw incompleteInput(curr, "}");
         else return;
       }
-      if (curr instanceof ParameterListContext) {
-        if (((ParameterListContext) curr).err == null) throw incompleteInput(curr, ")");
+      if (curr instanceof ParameterListContext parameterList) {
+        if (parameterList.err == null) throw incompleteInput(curr, ")");
         else return;
       }
-      if (curr instanceof ArgumentListContext) {
-        if (((ArgumentListContext) curr).err == null) throw incompleteInput(curr, ")");
+      if (curr instanceof ArgumentListContext argumentList) {
+        if (argumentList.err == null) throw incompleteInput(curr, ")");
         else return;
       }
-      if (curr instanceof TypeParameterListContext) {
-        if (((TypeParameterListContext) curr).err == null) throw incompleteInput(curr, ">");
+      if (curr instanceof TypeParameterListContext typeParameterList) {
+        if (typeParameterList.err == null) throw incompleteInput(curr, ">");
         else return;
       }
-      if (curr instanceof TypeArgumentListContext) {
-        if (((TypeArgumentListContext) curr).err == null) throw incompleteInput(curr, ">");
+      if (curr instanceof TypeArgumentListContext typeArgumentList) {
+        if (typeArgumentList.err == null) throw incompleteInput(curr, ">");
         else return;
       }
-      if (curr instanceof ParenthesizedTypeContext) {
-        if (((ParenthesizedTypeContext) curr).err == null) throw incompleteInput(curr, ")");
+      if (curr instanceof ParenthesizedTypeContext parenthesizedType) {
+        if (parenthesizedType.err == null) throw incompleteInput(curr, ")");
         else return;
       }
-      if (curr instanceof ConstrainedTypeContext) {
-        if (((ConstrainedTypeContext) curr).err == null) throw incompleteInput(curr, ")");
+      if (curr instanceof ConstrainedTypeContext constrainedType) {
+        if (constrainedType.err == null) throw incompleteInput(curr, ")");
         else return;
       }
-      if (curr instanceof ParenthesizedExprContext) {
-        if (((ParenthesizedExprContext) curr).err == null) throw incompleteInput(curr, ")");
+      if (curr instanceof ParenthesizedExprContext parenthesizedExpr) {
+        if (parenthesizedExpr.err == null) throw incompleteInput(curr, ")");
         else return;
       }
-      if (curr instanceof SuperSubscriptExprContext) {
-        if (((SuperSubscriptExprContext) curr).err == null) throw incompleteInput(curr, "]");
+      if (curr instanceof SuperSubscriptExprContext superSubscriptExpr) {
+        if (superSubscriptExpr.err == null) throw incompleteInput(curr, "]");
         else return;
       }
-      if (curr instanceof SubscriptExprContext) {
-        if (((SubscriptExprContext) curr).err == null) throw incompleteInput(curr, "]");
+      if (curr instanceof SubscriptExprContext subscriptExpr) {
+        if (subscriptExpr.err == null) throw incompleteInput(curr, "]");
         else return;
       }
-      if (curr instanceof ObjectBodyContext) {
-        if (((ObjectBodyContext) curr).err == null) throw incompleteInput(curr, "}");
+      if (curr instanceof ObjectBodyContext objectBody) {
+        if (objectBody.err == null) throw incompleteInput(curr, "}");
         else return;
       }
       curr = curr.getChild(curr.getChildCount() - 1);

@@ -46,8 +46,7 @@ public final class Reflection {
   }
 
   public static boolean isMissingTypeArguments(Type type) {
-    if (type instanceof WildcardType) {
-      var wildcardType = (WildcardType) type;
+    if (type instanceof WildcardType wildcardType) {
       var baseType =
           wildcardType.getLowerBounds().length > 0
               ? wildcardType.getLowerBounds()[0]
@@ -62,11 +61,10 @@ public final class Reflection {
    * instantiable (not an interface or abstract class).
    */
   public static Type normalize(Type type) {
-    if (type instanceof WildcardType) {
-      var wcType = (WildcardType) type;
-      var bounds = wcType.getLowerBounds();
+    if (type instanceof WildcardType wildcardType) {
+      var bounds = wildcardType.getLowerBounds();
       if (bounds.length > 0) return bounds[0];
-      bounds = wcType.getUpperBounds();
+      bounds = wildcardType.getUpperBounds();
       if (bounds.length > 0) return bounds[0];
     }
     return getExactSupertype(type, toRawType(type));
@@ -154,8 +152,8 @@ public final class Reflection {
    * eliminate them.
    */
   private static Type uncapture(Type type) {
-    if (type instanceof CaptureType) {
-      return ((CaptureType) type).getWildcardType();
+    if (type instanceof CaptureType captureType) {
+      return captureType.getWildcardType();
     }
     return type;
   }

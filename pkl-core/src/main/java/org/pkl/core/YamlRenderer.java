@@ -75,13 +75,12 @@ final class YamlRenderer implements ValueRenderer {
   @Override
   public void renderDocument(Object value) {
     if (isStream) {
-      if (!(value instanceof Iterable)) {
+      if (!(value instanceof Iterable<?> iterable)) {
         throw new RendererException(
             String.format(
                 "The top-level value of a YAML stream must have type `Collection`, but got type `%s`.",
                 value.getClass().getTypeName()));
       }
-      var iterable = (Iterable<?>) value;
       emitter.emit(new StreamStartEvent());
       for (var elem : iterable) {
         emitter.emit(new DocumentStartEvent(false, Optional.empty(), Map.of()));

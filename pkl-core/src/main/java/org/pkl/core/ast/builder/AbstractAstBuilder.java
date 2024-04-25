@@ -43,17 +43,10 @@ public abstract class AbstractAstBuilder<T> extends PklParserBaseVisitor<T> {
     var builder = new StringBuilder();
     for (var token : ts) {
       switch (token.getType()) {
-        case PklLexer.SLCharacters:
-          builder.append(token.getText());
-          break;
-        case PklLexer.SLCharacterEscape:
-          builder.append(parseCharacterEscapeSequence(token));
-          break;
-        case PklLexer.SLUnicodeEscape:
-          builder.appendCodePoint(parseUnicodeEscapeSequence(token));
-          break;
-        default:
-          throw exceptionBuilder().unreachableCode().build();
+        case PklLexer.SLCharacters -> builder.append(token.getText());
+        case PklLexer.SLCharacterEscape -> builder.append(parseCharacterEscapeSequence(token));
+        case PklLexer.SLUnicodeEscape -> builder.appendCodePoint(parseUnicodeEscapeSequence(token));
+        default -> throw exceptionBuilder().unreachableCode().build();
       }
     }
 
@@ -88,23 +81,19 @@ public abstract class AbstractAstBuilder<T> extends PklParserBaseVisitor<T> {
     var text = token.getText();
     var lastChar = text.charAt(text.length() - 1);
 
-    switch (lastChar) {
-      case 'n':
-        return "\n";
-      case 'r':
-        return "\r";
-      case 't':
-        return "\t";
-      case '"':
-        return "\"";
-      case '\\':
-        return "\\";
-      default:
-        throw exceptionBuilder()
-            .evalError("invalidCharacterEscapeSequence", text, text.substring(0, text.length() - 1))
-            .withSourceSection(createSourceSection(token))
-            .build();
-    }
+    return switch (lastChar) {
+      case 'n' -> "\n";
+      case 'r' -> "\r";
+      case 't' -> "\t";
+      case '"' -> "\"";
+      case '\\' -> "\\";
+      default ->
+          throw exceptionBuilder()
+              .evalError(
+                  "invalidCharacterEscapeSequence", text, text.substring(0, text.length() - 1))
+              .withSourceSection(createSourceSection(token))
+              .build();
+    };
   }
 
   protected final SourceSection createSourceSection(ParserRuleContext ctx) {

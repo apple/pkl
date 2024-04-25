@@ -673,11 +673,11 @@ public final class ModuleKeys {
     }
 
     private @Nullable Path getLocalPath(Dependency dependency) {
-      if (!(dependency instanceof LocalDependency)) {
+      if (!(dependency instanceof LocalDependency localDependency)) {
         return null;
       }
-      return ((LocalDependency) dependency)
-          .resolveAssetPath(getProjectDepsResolver().getProjectDir(), packageAssetUri);
+      return localDependency.resolveAssetPath(
+          getProjectDepsResolver().getProjectDir(), packageAssetUri);
     }
 
     @Override

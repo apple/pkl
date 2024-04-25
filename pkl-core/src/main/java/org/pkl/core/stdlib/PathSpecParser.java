@@ -46,99 +46,85 @@ final class PathSpecParser {
     var codePoints = pathSpec.codePoints().toArray();
     for (var idx = 0; idx < codePoints.length; idx++) {
       switch (codePoints[idx]) {
-        case '^':
+        case '^' -> {
           if (idx != 0) throw invalidPattern(pathSpec);
           result.add(VmValueConverter.TOP_LEVEL_VALUE);
           partStartIdx = 1;
-          break;
-        case '.':
+        }
+        case '.' -> {
           switch (state) {
-            case 1:
+            case 1 -> {
               int count = idx - partStartIdx;
               if (count == 0) throw invalidPattern(pathSpec);
               result.add(Identifier.get(new String(codePoints, partStartIdx, count)));
-              break;
-            case 3:
-            case 4:
-              break;
-            default:
-              throw invalidPattern(pathSpec);
+            }
+            case 3, 4 -> {}
+            default -> throw invalidPattern(pathSpec);
           }
           partStartIdx = idx + 1;
           state = 1;
-          break;
-        case '[':
+        }
+        case '[' -> {
           switch (state) {
-            case 1:
+            case 1 -> {
               int count = idx - partStartIdx;
               if (count == 0) throw invalidPattern(pathSpec);
               result.add(Identifier.get(new String(codePoints, partStartIdx, count)));
-              break;
-            case 0:
-            case 3:
-            case 4:
-              break;
-            default:
-              throw invalidPattern(pathSpec);
+            }
+            case 0, 3, 4 -> {}
+            default -> throw invalidPattern(pathSpec);
           }
           partStartIdx = idx + 1;
           state = 2;
-          break;
-        case ']':
+        }
+        case ']' -> {
           switch (state) {
-            case 2:
+            case 2 -> {
               int count = idx - partStartIdx;
               if (count == 0) throw invalidPattern(pathSpec);
               result.add(new String(codePoints, partStartIdx, count));
-              break;
-            case 5:
-              break;
-            default:
-              throw invalidPattern(pathSpec);
+            }
+            case 5 -> {}
+            default -> throw invalidPattern(pathSpec);
           }
           state = 3;
-          break;
-        case '*':
-          switch (state) {
-            case 0:
-            case 1:
-              if (partStartIdx != idx) throw invalidPattern(pathSpec);
-              result.add(VmValueConverter.WILDCARD_PROPERTY);
-              state = 4;
-              break;
-            case 2:
-              if (partStartIdx != idx) throw invalidPattern(pathSpec);
-              result.add(VmValueConverter.WILDCARD_ELEMENT);
-              state = 5;
-              break;
-            default:
-              throw invalidPattern(pathSpec);
-          }
-          break;
-        default:
+        }
+        case '*' ->
+            state =
+                switch (state) {
+                  case 0, 1 -> {
+                    if (partStartIdx != idx) throw invalidPattern(pathSpec);
+                    result.add(VmValueConverter.WILDCARD_PROPERTY);
+                    yield 4;
+                  }
+                  case 2 -> {
+                    if (partStartIdx != idx) throw invalidPattern(pathSpec);
+                    result.add(VmValueConverter.WILDCARD_ELEMENT);
+                    yield 5;
+                  }
+                  default -> throw invalidPattern(pathSpec);
+                };
+        default -> {
           if (state > 2) throw invalidPattern(pathSpec);
           if (state == 0) state = 1;
-          break;
+        }
       }
     }
 
     switch (state) {
-      case 0:
+      case 0 -> {
         if (result.isEmpty()) {
           // "" matches top-level value (deprecated in 0.15, use "^" instead)
           result.add(VmValueConverter.TOP_LEVEL_VALUE);
         }
-        break;
-      case 1:
+      }
+      case 1 -> {
         var count = codePoints.length - partStartIdx;
         if (count == 0) throw invalidPattern(pathSpec);
         result.add(Identifier.get(new String(codePoints, partStartIdx, count)));
-        break;
-      case 3:
-      case 4:
-        break;
-      default:
-        throw invalidPattern(pathSpec);
+      }
+      case 3, 4 -> {}
+      default -> throw invalidPattern(pathSpec);
     }
 
     Collections.reverse(result);

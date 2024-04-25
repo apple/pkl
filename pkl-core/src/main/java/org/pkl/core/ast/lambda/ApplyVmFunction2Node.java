@@ -29,7 +29,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   public final boolean executeBoolean(VmFunction function, Object arg1, Object arg2) {
     var result = execute(function, arg1, arg2);
-    if (result instanceof Boolean) return (Boolean) result;
+    if (result instanceof Boolean b) return b;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getBooleanClass()).build();
@@ -37,7 +37,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   public final VmCollection executeCollection(VmFunction function, Object arg1, Object arg2) {
     var result = execute(function, arg1, arg2);
-    if (result instanceof VmCollection) return (VmCollection) result;
+    if (result instanceof VmCollection collection) return collection;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getCollectionClass()).build();
@@ -45,7 +45,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   public final VmMap executeMap(VmFunction function, Object arg1, Object arg2) {
     var result = execute(function, arg1, arg2);
-    if (result instanceof VmMap) return (VmMap) result;
+    if (result instanceof VmMap map) return map;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getMapClass()).build();
@@ -53,7 +53,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   public final Long executeInt(VmFunction function, Object arg1, Object arg2) {
     var result = execute(function, arg1, arg2);
-    if (result instanceof Long) return (Long) result;
+    if (result instanceof Long l) return l;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getIntClass()).build();
@@ -61,9 +61,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   public final VmPair executePair(VmFunction function, Object arg1, Object arg2) {
     var result = execute(function, arg1, arg2);
-    if (result instanceof VmPair) {
-      return (VmPair) result;
-    }
+    if (result instanceof VmPair pair) return pair;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getPairClass()).build();

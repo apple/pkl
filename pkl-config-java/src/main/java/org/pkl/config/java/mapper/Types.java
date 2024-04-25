@@ -44,8 +44,7 @@ public final class Types {
               typeParamsCount, rawType.getTypeName(), typeArguments.length));
     }
     for (Type arg : typeArguments) {
-      if (arg instanceof Class) {
-        var clazz = (Class<?>) arg;
+      if (arg instanceof Class<?> clazz) {
         if (clazz.isPrimitive()) {
           throw new IllegalArgumentException(
               String.format(

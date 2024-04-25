@@ -81,20 +81,20 @@ public interface VmValueConverter<T> {
   T convertFunction(VmFunction value, Iterable<Object> path);
 
   default T convert(Object value, Iterable<Object> path) {
-    if (value instanceof VmValue) {
-      return ((VmValue) value).accept(this, path);
+    if (value instanceof VmValue vmValue) {
+      return vmValue.accept(this, path);
     }
-    if (value instanceof String) {
-      return convertString((String) value, path);
+    if (value instanceof String string) {
+      return convertString(string, path);
     }
-    if (value instanceof Boolean) {
-      return convertBoolean((Boolean) value, path);
+    if (value instanceof Boolean b) {
+      return convertBoolean(b, path);
     }
-    if (value instanceof Long) {
-      return convertInt((Long) value, path);
+    if (value instanceof Long l) {
+      return convertInt(l, path);
     }
-    if (value instanceof Double) {
-      return convertFloat((Double) value, path);
+    if (value instanceof Double d) {
+      return convertFloat(d, path);
     }
 
     throw new IllegalArgumentException("Cannot convert VM value with unexpected type: " + value);

@@ -280,8 +280,8 @@ public final class RendererNodes {
         builder.append(',');
       }
       builder.append(memberSeparator).append(currIndent);
-      if (key instanceof String) {
-        renderAsFieldName((String) key);
+      if (key instanceof String string) {
+        renderAsFieldName(string);
       } else if (VmUtils.isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(": ");

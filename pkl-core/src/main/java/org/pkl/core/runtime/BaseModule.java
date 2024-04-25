@@ -136,24 +136,19 @@ public final class BaseModule extends StdLibModule {
   }
 
   public static VmClass getFunctionNClass(int paramCount) {
-    switch (paramCount) {
-      case 0:
-        return getFunction0Class();
-      case 1:
-        return getFunction1Class();
-      case 2:
-        return getFunction2Class();
-      case 3:
-        return getFunction3Class();
-      case 4:
-        return getFunction4Class();
-      case 5:
-        return getFunction5Class();
-      default:
+    return switch (paramCount) {
+      case 0 -> getFunction0Class();
+      case 1 -> getFunction1Class();
+      case 2 -> getFunction2Class();
+      case 3 -> getFunction3Class();
+      case 4 -> getFunction4Class();
+      case 5 -> getFunction5Class();
+      default -> {
         CompilerDirectives.transferToInterpreter();
         throw new IllegalArgumentException(
             String.format("Class `Function%d` does not exist.", paramCount));
-    }
+      }
+    };
   }
 
   public static VmClass getFunction0Class() {

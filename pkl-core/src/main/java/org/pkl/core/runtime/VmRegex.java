@@ -67,9 +67,7 @@ public final class VmRegex extends VmValue {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmRegex)) return false;
-
-    var other = (VmRegex) obj;
+    if (!(obj instanceof VmRegex other)) return false;
     return pattern.pattern().equals(other.pattern.pattern());
   }
 

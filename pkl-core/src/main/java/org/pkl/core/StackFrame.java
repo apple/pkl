@@ -105,10 +105,7 @@ public final class StackFrame {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof StackFrame)) return false;
-
-    var other = (StackFrame) obj;
-
+    if (!(obj instanceof StackFrame other)) return false;
     if (startLine != other.startLine) return false;
     if (startColumn != other.startColumn) return false;
     if (endLine != other.endLine) return false;

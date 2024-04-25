@@ -194,9 +194,7 @@ public final class Version implements Comparable<Version> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Version)) return false;
-
-    var other = (Version) obj;
+    if (!(obj instanceof Version other)) return false;
     return major == other.major
         && minor == other.minor
         && patch == other.patch
@@ -210,8 +208,7 @@ public final class Version implements Comparable<Version> {
 
   @Override
   public String toString() {
-    return ""
-        + major
+    return major
         + "."
         + minor
         + "."

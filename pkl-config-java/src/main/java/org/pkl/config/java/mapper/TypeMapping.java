@@ -59,9 +59,7 @@ public final class TypeMapping<S, T extends S> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof TypeMapping)) return false;
-
-    var other = (TypeMapping<?, ?>) obj;
+    if (!(obj instanceof TypeMapping<?, ?> other)) return false;
     return requestedType == other.requestedType && implementationType == other.implementationType;
   }
 

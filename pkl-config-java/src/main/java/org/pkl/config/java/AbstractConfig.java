@@ -38,11 +38,11 @@ abstract class AbstractConfig implements Config {
   public Config get(String propertyName) {
     var childValue = getRawChildValue(propertyName);
     var childName = qualifiedName.isEmpty() ? propertyName : qualifiedName + '.' + propertyName;
-    if (childValue instanceof Composite) {
-      return new CompositeConfig(childName, mapper, (Composite) childValue);
+    if (childValue instanceof Composite composite) {
+      return new CompositeConfig(childName, mapper, composite);
     }
-    if (childValue instanceof Map) {
-      return new MapConfig(childName, mapper, (Map<?, ?>) childValue);
+    if (childValue instanceof Map<?, ?> map) {
+      return new MapConfig(childName, mapper, map);
     }
     return new LeafConfig(childName, mapper, childValue);
   }

@@ -15,13 +15,14 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#Pair} value. */
 public final class Pair<F, S> implements Value, Iterable<Object> {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final F first;
   private final S second;
@@ -54,14 +55,11 @@ public final class Pair<F, S> implements Value, Iterable<Object> {
 
       @Override
       public Object next() {
-        switch (pos++) {
-          case 0:
-            return first;
-          case 1:
-            return second;
-          default:
-            throw new NoSuchElementException("Pair only has two elements.");
-        }
+        return switch (pos++) {
+          case 0 -> first;
+          case 1 -> second;
+          default -> throw new NoSuchElementException("Pair only has two elements.");
+        };
       }
     };
   }
@@ -84,9 +82,7 @@ public final class Pair<F, S> implements Value, Iterable<Object> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Pair)) return false;
-
-    var other = (Pair<?, ?>) obj;
+    if (!(obj instanceof Pair<?, ?> other)) return false;
     return first.equals(other.first) && second.equals(other.second);
   }
 

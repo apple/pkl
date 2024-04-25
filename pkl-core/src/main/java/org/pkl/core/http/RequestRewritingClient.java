@@ -90,14 +90,9 @@ final class RequestRewritingClient implements HttpClient {
             publisher -> builder.method(method, publisher),
             () -> {
               switch (method) {
-                case "GET":
-                  builder.GET();
-                  break;
-                case "DELETE":
-                  builder.DELETE();
-                  break;
-                default:
-                  builder.method(method, HttpRequest.BodyPublishers.noBody());
+                case "GET" -> builder.GET();
+                case "DELETE" -> builder.DELETE();
+                default -> builder.method(method, HttpRequest.BodyPublishers.noBody());
               }
             });
 

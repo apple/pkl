@@ -160,8 +160,8 @@ public final class ResourceManager {
           var res = resource.get();
           if (res instanceof String) return resource;
 
-          if (res instanceof Resource) {
-            return Optional.of(resourceFactory.create((Resource) res));
+          if (res instanceof Resource r) {
+            return Optional.of(resourceFactory.create(r));
           }
 
           throw new VmExceptionBuilder()

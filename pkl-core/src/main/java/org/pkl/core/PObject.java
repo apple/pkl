@@ -15,13 +15,14 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.util.Map;
 import java.util.Objects;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a Pkl object. */
 public class PObject implements Composite {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   protected final PClassInfo<?> classInfo;
   protected final Map<String, Object> properties;

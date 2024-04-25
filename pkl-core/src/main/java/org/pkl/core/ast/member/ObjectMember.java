@@ -106,8 +106,8 @@ public final class ObjectMember extends Member {
 
   public @Nullable Object getLocalPropertyDefaultValue() {
     assert isProp() && isLocal();
-    return getMemberNode() instanceof LocalTypedPropertyNode
-        ? ((LocalTypedPropertyNode) getMemberNode()).getDefaultValue()
+    return getMemberNode() instanceof LocalTypedPropertyNode propertyNode
+        ? propertyNode.getDefaultValue()
         : VmDynamic.empty();
   }
 

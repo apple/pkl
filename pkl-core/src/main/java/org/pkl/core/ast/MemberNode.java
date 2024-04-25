@@ -89,7 +89,6 @@ public abstract class MemberNode extends PklRootNode {
   }
 
   public boolean isUndefined() {
-    return bodyNode instanceof DefaultPropertyBodyNode
-        && ((DefaultPropertyBodyNode) bodyNode).isUndefined();
+    return bodyNode instanceof DefaultPropertyBodyNode propBodyNode && propBodyNode.isUndefined();
   }
 }

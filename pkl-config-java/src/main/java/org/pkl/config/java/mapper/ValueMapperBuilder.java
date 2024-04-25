@@ -64,8 +64,7 @@ public final class ValueMapperBuilder {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public ValueMapperBuilder addConversion(Conversion<?, ?> conversion) {
     conversions.add(conversion);
-    if (conversion.targetType instanceof Class) {
-      var clazz = (Class<?>) conversion.targetType;
+    if (conversion.targetType instanceof Class<?> clazz) {
       if (clazz.isPrimitive()) {
         conversions.add(
             Conversion.of(

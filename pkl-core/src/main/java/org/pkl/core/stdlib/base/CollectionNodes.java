@@ -73,10 +73,10 @@ public final class CollectionNodes {
       assert comparator != null;
       var result = applyLambdaNode.execute(comparator, left, right);
 
-      if (result instanceof Boolean) return (Boolean) result;
+      if (result instanceof Boolean b) return b;
 
       // deprecated
-      if (result instanceof Long) return (long) result < 0;
+      if (result instanceof Long l) return l < 0;
 
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()

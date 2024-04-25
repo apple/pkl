@@ -148,8 +148,7 @@ public class EvaluatorImpl implements Evaluator {
         (module) -> {
           var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
           var value = VmUtils.readMember(output, Identifier.VALUE);
-          if (value instanceof VmValue) {
-            var vmValue = (VmValue) value;
+          if (value instanceof VmValue vmValue) {
             vmValue.force(false);
             return vmValue.export();
           }
@@ -194,8 +193,7 @@ public class EvaluatorImpl implements Evaluator {
         (module) -> {
           var expressionResult =
               VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
-          if (expressionResult instanceof VmValue) {
-            var value = (VmValue) expressionResult;
+          if (expressionResult instanceof VmValue value) {
             value.force(false);
             return value.export();
           }
@@ -248,8 +246,7 @@ public class EvaluatorImpl implements Evaluator {
           var value = VmUtils.readMember(output, Identifier.VALUE);
           var valueClassInfo = VmUtils.getClass(value).getPClassInfo();
           if (valueClassInfo.equals(classInfo)) {
-            if (value instanceof VmValue) {
-              var vmValue = (VmValue) value;
+            if (value instanceof VmValue vmValue) {
               vmValue.force(false);
               //noinspection unchecked
               return (T) vmValue.export();
@@ -317,10 +314,10 @@ public class EvaluatorImpl implements Evaluator {
     } catch (Exception e) {
       throw new PklBugException(e);
     } catch (ExceptionInInitializerError e) {
-      if (!(e.getCause() instanceof VmException)) {
+      if (!(e.getCause() instanceof VmException vmException)) {
         throw new PklBugException(e);
       }
-      var pklException = ((VmException) e.getCause()).toPklException(frameTransformer);
+      var pklException = vmException.toPklException(frameTransformer);
       var error = new ExceptionInInitializerError(pklException);
       error.setStackTrace(e.getStackTrace());
       throw new PklBugException(error);

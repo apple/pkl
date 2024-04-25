@@ -39,7 +39,7 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
   public final boolean executeBoolean(VmFunction function, Object arg1) {
     var result = execute(function, arg1);
-    if (result instanceof Boolean) return (Boolean) result;
+    if (result instanceof Boolean b) return b;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getBooleanClass()).build();
@@ -47,7 +47,7 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
   public final String executeString(VmFunction function, Object arg1) {
     var result = execute(function, arg1);
-    if (result instanceof String) return (String) result;
+    if (result instanceof String string) return string;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getStringClass()).build();
@@ -55,7 +55,7 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
   public final Long executeInt(VmFunction function, Object arg1) {
     var result = execute(function, arg1);
-    if (result instanceof Long) return (Long) result;
+    if (result instanceof Long l) return l;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getIntClass()).build();
@@ -63,7 +63,7 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
   public final VmCollection executeCollection(VmFunction function, Object arg1) {
     var result = execute(function, arg1);
-    if (result instanceof VmCollection) return (VmCollection) result;
+    if (result instanceof VmCollection collection) return collection;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getCollectionClass()).build();

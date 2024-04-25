@@ -51,8 +51,8 @@ public final class DeclaredTypeNodes {
   private static void checkTypeArgumentCount(VmTyped referent, int actualCount, PklNode node) {
     var extraStorage = referent.getExtraStorage();
     var typeParameterCount =
-        extraStorage instanceof VmClass
-            ? ((VmClass) extraStorage).getTypeParameterCount()
+        extraStorage instanceof VmClass vmClass
+            ? vmClass.getTypeParameterCount()
             : ((VmTypeAlias) extraStorage).getTypeParameterCount();
     if (typeParameterCount != actualCount) {
       throw new VmExceptionBuilder()

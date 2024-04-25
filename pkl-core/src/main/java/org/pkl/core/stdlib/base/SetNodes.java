@@ -725,10 +725,10 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var cmpResult = applyLambdaNode.execute(function, elem, result);
-        if (cmpResult instanceof Boolean) {
-          if ((boolean) cmpResult) result = elem;
-        } else if (cmpResult instanceof Long) { // deprecated
-          if ((long) cmpResult < 0) result = elem;
+        if (cmpResult instanceof Boolean b) {
+          if (b) result = elem;
+        } else if (cmpResult instanceof Long l) { // deprecated
+          if (l < 0) result = elem;
         } else {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()
@@ -754,10 +754,10 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var cmpResult = applyLambdaNode.execute(function, elem, result);
-        if (cmpResult instanceof Boolean) {
-          if ((boolean) cmpResult) result = elem;
-        } else if (cmpResult instanceof Long) { // deprecated
-          if ((long) cmpResult < 0) result = elem;
+        if (cmpResult instanceof Boolean b) {
+          if (b) result = elem;
+        } else if (cmpResult instanceof Long l) { // deprecated
+          if (l < 0) result = elem;
         } else {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()
@@ -893,10 +893,10 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var cmpResult = applyLambdaNode.execute(function, elem, result);
-        if (cmpResult instanceof Boolean) {
-          if ((boolean) cmpResult) result = elem;
-        } else if (cmpResult instanceof Long) { // deprecated
-          if ((long) cmpResult < 0) result = elem;
+        if (cmpResult instanceof Boolean b) {
+          if (b) result = elem;
+        } else if (cmpResult instanceof Long l) { // deprecated
+          if (l < 0) result = elem;
         } else {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()
@@ -922,10 +922,10 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var cmpResult = applyLambdaNode.execute(function, result, elem);
-        if (cmpResult instanceof Boolean) {
-          if ((boolean) cmpResult) result = elem;
-        } else if (cmpResult instanceof Long) { // deprecated
-          if ((long) cmpResult < 0) result = elem;
+        if (cmpResult instanceof Boolean b) {
+          if (b) result = elem;
+        } else if (cmpResult instanceof Long l) { // deprecated
+          if (l < 0) result = elem;
         } else {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()

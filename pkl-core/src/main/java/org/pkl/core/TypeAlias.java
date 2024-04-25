@@ -15,6 +15,7 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.util.List;
 import java.util.Set;
 import org.pkl.core.util.LateInit;
@@ -22,7 +23,7 @@ import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#TypeAlias} value. */
 public final class TypeAlias extends Member implements Value {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final String moduleName;
   private final String qualifiedName;

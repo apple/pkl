@@ -290,8 +290,8 @@ public final class RendererNodes {
         assert enclosingValue != null;
         if (VmUtils.isRenderDirective(deferredKey)) {
           writeXmlElement(VmUtils.readTextProperty(deferredKey), null, value, true, false);
-        } else if (deferredKey instanceof String) {
-          writeXmlElement((String) deferredKey, null, value, true, true);
+        } else if (deferredKey instanceof String string) {
+          writeXmlElement(string, null, value, true, true);
         } else {
           cannotRenderNonStringKey(deferredKey);
         }
@@ -321,8 +321,8 @@ public final class RendererNodes {
     }
 
     private static boolean isXmlElement(Object value) {
-      return value instanceof VmDynamic
-          && VmUtils.readMemberOrNull((VmDynamic) value, Identifier.IS_XML_ELEMENT) == Boolean.TRUE;
+      return value instanceof VmDynamic dynamic
+          && VmUtils.readMemberOrNull(dynamic, Identifier.IS_XML_ELEMENT) == Boolean.TRUE;
     }
 
     private void renderXmlElement(VmDynamic value) {
@@ -350,8 +350,7 @@ public final class RendererNodes {
     }
 
     private boolean isXmlInline(Object value) {
-      return value instanceof VmTyped
-          && ((VmTyped) value).getVmClass() == XmlModule.getInlineClass();
+      return value instanceof VmTyped typed && typed.getVmClass() == XmlModule.getInlineClass();
     }
 
     private void renderXmlInline(VmTyped object) {
@@ -362,8 +361,7 @@ public final class RendererNodes {
     }
 
     private static boolean isXmlComment(Object value) {
-      return value instanceof VmTyped
-          && ((VmTyped) value).getVmClass() == XmlModule.getCommentClass();
+      return value instanceof VmTyped typed && typed.getVmClass() == XmlModule.getCommentClass();
     }
 
     private void renderXmlComment(VmTyped object) {
@@ -381,8 +379,7 @@ public final class RendererNodes {
     }
 
     private static boolean isXmlCData(Object value) {
-      return value instanceof VmTyped
-          && ((VmTyped) value).getVmClass() == XmlModule.getCDataClass();
+      return value instanceof VmTyped typed && typed.getVmClass() == XmlModule.getCDataClass();
     }
 
     private void renderXmlCData(VmTyped object) {
@@ -412,13 +409,13 @@ public final class RendererNodes {
             (key, member, value) -> {
               builder.append(' ');
               // this check will be unnecessary once we have an XmlElement Pkl class
-              if (!(key instanceof String)) {
+              if (!(key instanceof String string)) {
                 throw new VmExceptionBuilder()
                     .typeMismatch(name, BaseModule.getStringClass())
                     .build();
               }
-              validateName((String) key, "attribute");
-              builder.append((String) key).append("=\"");
+              validateName(string, "attribute");
+              builder.append(string).append("=\"");
               // this check will be unnecessary once we have an XmlElement Pkl class
               if (!isScalar(value)) {
                 throw new VmExceptionBuilder()

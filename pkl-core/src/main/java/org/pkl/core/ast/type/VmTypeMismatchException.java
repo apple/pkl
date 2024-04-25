@@ -66,9 +66,9 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     public void describe(StringBuilder builder, String indent) {
       String renderedType;
       var valueFormatter = ValueFormatter.basic();
-      if (expectedType instanceof String) {
+      if (expectedType instanceof String string) {
         // string literal type
-        renderedType = valueFormatter.formatStringValue((String) expectedType, "");
+        renderedType = valueFormatter.formatStringValue(string, "");
       } else if (expectedType instanceof Set) {
         // union of string literal types
         @SuppressWarnings("unchecked")
@@ -90,10 +90,9 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       }
 
       // give better error than "expected foo.Bar, but got foo.Bar" in case of naming conflict
-      if (actualValue instanceof VmTyped && expectedType instanceof VmClass) {
-        var actualObj = (VmTyped) actualValue;
+      if (actualValue instanceof VmTyped actualObj
+          && expectedType instanceof VmClass expectedClass) {
         var actualClass = actualObj.getVmClass();
-        var expectedClass = (VmClass) expectedType;
         if (actualClass.getQualifiedName().equals(expectedClass.getQualifiedName())) {
           var actualModuleUri = actualClass.getModule().getModuleInfo().getModuleKey().getUri();
           var expectedModuleUri = expectedClass.getModule().getModuleInfo().getModuleKey().getUri();

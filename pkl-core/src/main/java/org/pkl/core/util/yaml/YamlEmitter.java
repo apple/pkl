@@ -32,16 +32,12 @@ public abstract class YamlEmitter {
   }
 
   public static YamlEmitter create(StringBuilder builder, String mode, String indent) {
-    switch (mode) {
-      case "compat":
-        return new YamlCompatEmitter(builder, indent);
-      case "1.1":
-        return new Yaml11Emitter(builder, indent);
-      case "1.2":
-        return new Yaml12Emitter(builder, indent);
-      default:
-        throw new IllegalArgumentException(mode);
-    }
+    return switch (mode) {
+      case "compat" -> new YamlCompatEmitter(builder, indent);
+      case "1.1" -> new Yaml11Emitter(builder, indent);
+      case "1.2" -> new Yaml12Emitter(builder, indent);
+      default -> throw new IllegalArgumentException(mode);
+    };
   }
 
   public void emit(String str, StringBuilder currIndent, boolean isKey) {
@@ -111,73 +107,69 @@ public abstract class YamlEmitter {
     for (int i = 1; i < length; i++) {
       var ch = str.charAt(i);
       switch (ch) {
-        case '\n':
+        case '\n' -> {
           if (newlineIndex == -1) {
             newlineIndex = i;
           }
-          continue;
-        case '\'':
+        }
+        case '\'' -> {
           hasNonNumberChar = true;
           if (singleQuoteIndex == -1) {
             singleQuoteIndex = i;
           }
-          continue;
-        case ' ':
+        }
+        case ' ' -> {
           needsQuoting = needsQuoting || i == length - 1;
           hasNonNumberChar = true;
-          continue;
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-        case ',':
+        }
+        case '[', ']', '{', '}', ',' -> {
           needsQuoting = needsQuoting || isKey;
           hasNonNumberChar = true;
-          continue;
-        case '#':
+        }
+        case '#' -> {
           needsQuoting = needsQuoting || str.charAt(i - 1) == ' ';
           hasNonNumberChar = true;
-          continue;
-        case ':':
+        }
+        case ':' -> {
           if (colonIndex == -1) {
             colonIndex = i;
           }
           needsQuoting =
               needsQuoting || i == (length - 1) || (i + 1 < length) && str.charAt(i + 1) == ' ';
-          continue;
+        }
           // number chars
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case '+':
-        case '-':
-        case '_':
-        case '.':
-        case 'o':
-        case 'x':
-          continue;
-        default:
+        case '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            'A',
+            'B',
+            'C',
+            'D',
+            'E',
+            'F',
+            'a',
+            'b',
+            'c',
+            'd',
+            'e',
+            'f',
+            '+',
+            '-',
+            '_',
+            '.',
+            'o',
+            'x' -> {}
+        default -> {
           needsEscaping = needsEscaping || ch < 0x20;
           hasNonNumberChar = true;
+        }
       }
     }
 
@@ -234,50 +226,49 @@ public abstract class YamlEmitter {
   protected static boolean isReserved11Word(String str) {
     if (str.length() > 5) return false;
 
-    switch (str) {
-      case "":
-      case "~":
-      case "null":
-      case "Null":
-      case "NULL":
-      case ".nan":
-      case ".NaN":
-      case ".NAN":
-      case ".inf":
-      case ".Inf":
-      case ".INF":
-      case "+.inf":
-      case "+.Inf":
-      case "+.INF":
-      case "-.inf":
-      case "-.Inf":
-      case "-.INF":
-      case "true":
-      case "True":
-      case "TRUE":
-      case "false":
-      case "False":
-      case "FALSE":
-      case "on":
-      case "On":
-      case "ON":
-      case "off":
-      case "Off":
-      case "OFF":
-      case "y":
-      case "Y":
-      case "yes":
-      case "Yes":
-      case "YES":
-      case "n":
-      case "N":
-      case "no":
-      case "No":
-      case "NO":
-        return true;
-      default:
-        return false;
-    }
+    return switch (str) {
+      case "",
+              "~",
+              "null",
+              "Null",
+              "NULL",
+              ".nan",
+              ".NaN",
+              ".NAN",
+              ".inf",
+              ".Inf",
+              ".INF",
+              "+.inf",
+              "+.Inf",
+              "+.INF",
+              "-.inf",
+              "-.Inf",
+              "-.INF",
+              "true",
+              "True",
+              "TRUE",
+              "false",
+              "False",
+              "FALSE",
+              "on",
+              "On",
+              "ON",
+              "off",
+              "Off",
+              "OFF",
+              "y",
+              "Y",
+              "yes",
+              "Yes",
+              "YES",
+              "n",
+              "N",
+              "no",
+              "No",
+              "NO" ->
+          true;
+      default -> false;
+    };
   }
 
   private void emitMultilineString(String str, int newlineIndex, StringBuilder currIndent) {

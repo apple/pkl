@@ -95,24 +95,24 @@ public class GlobResolver {
     sb.append("[[^/]&&[");
     var i = idx;
     switch (getNextChar(globPattern, i)) {
-      case '^':
+      case '^' -> {
         // verbatim; escape
         sb.append("\\^");
         i++;
-        break;
-      case '!':
+      }
+      case '!' -> {
         // negation
         sb.append("^");
         i++;
-        break;
-      case ']':
+      }
+      case ']' -> {
         // the first `]` in a character class is verbatim and not treated as a closing delimiter.
         sb.append(']');
         i++;
-        break;
-      case NULL:
-        throw new InvalidGlobPatternException(
-            ErrorMessages.create("invalidGlobMissingCharacterClassTerminator"));
+      }
+      case NULL ->
+          throw new InvalidGlobPatternException(
+              ErrorMessages.create("invalidGlobMissingCharacterClassTerminator"));
     }
     i++;
     var current = globPattern.charAt(i);
@@ -160,111 +160,81 @@ public class GlobResolver {
     for (var i = 0; i < globPattern.length(); i++) {
       var current = globPattern.charAt(i);
       switch (current) {
-        case '{':
-          {
-            if (inGroup) {
-              throw new InvalidGlobPatternException(
-                  ErrorMessages.create("invalidGlobNestedSubpattern"));
-            }
-            inGroup = true;
-            sb.append("(?:(?:");
-            break;
+        case '{' -> {
+          if (inGroup) {
+            throw new InvalidGlobPatternException(
+                ErrorMessages.create("invalidGlobNestedSubpattern"));
           }
-        case '}':
-          {
-            if (inGroup) {
-              inGroup = false;
-              sb.append("))");
-            } else {
-              sb.append('}');
-            }
-            break;
+          inGroup = true;
+          sb.append("(?:(?:");
+        }
+        case '}' -> {
+          if (inGroup) {
+            inGroup = false;
+            sb.append("))");
+          } else {
+            sb.append('}');
           }
-        case ',':
-          {
-            if (inGroup) {
-              sb.append(")|(?:");
-            } else {
-              sb.append(',');
-            }
-            break;
+        }
+        case ',' -> {
+          if (inGroup) {
+            sb.append(")|(?:");
+          } else {
+            sb.append(',');
           }
-        case '\\':
-          {
-            var next = getNextChar(globPattern, i);
-            if (next == NULL) {
-              throw new InvalidGlobPatternException(
-                  ErrorMessages.create("invalidGlobInvalidTerminatingCharacter"));
-            }
-            if (next != '?' && next != '*' && next != '[' && next != '{' && next != '\\') {
-              throw new InvalidGlobPatternException(
-                  ErrorMessages.create("invalidGlobInvalidEscapeCharacter", next));
-            }
-            sb.append('\\').append(next);
+        }
+        case '\\' -> {
+          var next = getNextChar(globPattern, i);
+          if (next == NULL) {
+            throw new InvalidGlobPatternException(
+                ErrorMessages.create("invalidGlobInvalidTerminatingCharacter"));
+          }
+          if (next != '?' && next != '*' && next != '[' && next != '{' && next != '\\') {
+            throw new InvalidGlobPatternException(
+                ErrorMessages.create("invalidGlobInvalidEscapeCharacter", next));
+          }
+          sb.append('\\').append(next);
+          i++;
+        }
+        case '[' -> i = consumeCharacterClass(globPattern, i, sb);
+        case '?' -> {
+          var next = getNextChar(globPattern, i);
+          if (next == '(') {
+            throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
+          }
+          sb.append(".");
+        }
+        case '*' -> {
+          var next = getNextChar(globPattern, i);
+          if (next == '(') {
+            throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
+          } else if (next == '*') {
+            // globstar, crosses directory boundaries
+            sb.append(".*");
             i++;
-            break;
+          } else {
+            // single wildcard matches everything up until the next directory character
+            sb.append("[^/]*");
           }
-        case '[':
-          {
-            i = consumeCharacterClass(globPattern, i, sb);
-            break;
+        }
+        case '+', '@' -> {
+          var next = getNextChar(globPattern, i);
+          if (next == '(') {
+            throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
           }
-        case '?':
-          {
-            var next = getNextChar(globPattern, i);
-            if (next == '(') {
-              throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
-            }
-            sb.append(".");
-            break;
+          sb.append("\\+");
+        }
+        case '!' -> {
+          var next = getNextChar(globPattern, i);
+          if (next == '(') {
+            throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
           }
-        case '*':
-          {
-            var next = getNextChar(globPattern, i);
-            if (next == '(') {
-              throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
-            } else if (next == '*') {
-              // globstar, crosses directory boundaries
-              sb.append(".*");
-              i++;
-            } else {
-              // single wildcard matches everything up until the next directory character
-              sb.append("[^/]*");
-            }
-            break;
-          }
-        case '+':
-        case '@':
-          {
-            var next = getNextChar(globPattern, i);
-            if (next == '(') {
-              throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
-            }
-            sb.append("\\+");
-            break;
-          }
-        case '!':
-          {
-            var next = getNextChar(globPattern, i);
-            if (next == '(') {
-              throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobExtGlob"));
-            }
-            sb.append("!");
-            break;
-          }
+          sb.append("!");
+        }
+
           // no special meaning in glob patterns but have special meaning in regex.
-        case '.':
-        case '(':
-        case '%':
-        case '^':
-        case '$':
-        case '|':
-          {
-            sb.append("\\").append(current);
-            break;
-          }
-        default:
-          sb.append(current);
+        case '.', '(', '%', '^', '$', '|' -> sb.append("\\").append(current);
+        default -> sb.append(current);
       }
     }
     if (inGroup) {

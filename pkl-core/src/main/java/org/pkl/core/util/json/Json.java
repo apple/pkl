@@ -84,10 +84,10 @@ public class Json {
       throw new MalformedJsonException(e, input);
     }
     var ret = handler.value;
-    if (!(ret instanceof JsObject)) {
+    if (!(ret instanceof JsObject jsObject)) {
       throw new FormatException("object", ret.getClass());
     }
-    return (JsObject) ret;
+    return jsObject;
   }
 
   public abstract static class JsonParseException extends Exception {}
@@ -249,10 +249,10 @@ public class Json {
       if (ret == null) {
         throw new MissingFieldException(this, key);
       }
-      if (!(ret instanceof Boolean)) {
+      if (!(ret instanceof Boolean b)) {
         throw new FormatException(key, "boolean", ret.getClass());
       }
-      return (boolean) ret;
+      return b;
     }
 
     public int getInt(String key) throws JsonParseException {
@@ -260,10 +260,10 @@ public class Json {
       if (ret == null) {
         throw new MissingFieldException(this, key);
       }
-      if (!(ret instanceof Integer)) {
+      if (!(ret instanceof Integer i)) {
         throw new FormatException(key, "integer", ret.getClass());
       }
-      return (int) ret;
+      return i;
     }
 
     public String getString(String key) throws JsonParseException {
@@ -279,10 +279,10 @@ public class Json {
       if (ret == null) {
         return null;
       }
-      if (!(ret instanceof String)) {
+      if (!(ret instanceof String string)) {
         throw new FormatException(key, "string", ret.getClass());
       }
-      return (String) ret;
+      return string;
     }
 
     public JsObject getObject(String key) throws JsonParseException {
@@ -290,10 +290,10 @@ public class Json {
       if (ret == null) {
         throw new MissingFieldException(this, key);
       }
-      if (!(ret instanceof JsObject)) {
+      if (!(ret instanceof JsObject jsObject)) {
         throw new FormatException(key, "object", ret.getClass());
       }
-      return (JsObject) ret;
+      return jsObject;
     }
 
     public JsArray getArray(String key) throws JsonParseException {
@@ -301,10 +301,10 @@ public class Json {
       if (ret == null) {
         throw new MissingFieldException(this, key);
       }
-      if (!(ret instanceof JsArray)) {
+      if (!(ret instanceof JsArray jsArray)) {
         throw new FormatException(key, "array", ret.getClass());
       }
-      return (JsArray) ret;
+      return jsArray;
     }
 
     public Version getVersion(String key) throws JsonParseException {

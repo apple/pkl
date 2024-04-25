@@ -68,8 +68,7 @@ public final class VmMapping extends VmObject {
     synchronized (this) {
       if (__allKeys == null) {
         // building upon parent's `getAllKeys()` should improve at least worst case efficiency
-        var parentKeys =
-            parent instanceof VmMapping ? ((VmMapping) parent).getAllKeys() : VmSet.EMPTY;
+        var parentKeys = parent instanceof VmMapping mapping ? mapping.getAllKeys() : VmSet.EMPTY;
         var builder = VmSet.builder(parentKeys);
         for (var cursor = members.getEntries(); cursor.advance(); ) {
           var member = cursor.getValue();
@@ -127,9 +126,8 @@ public final class VmMapping extends VmObject {
   @TruffleBoundary
   public boolean equals(Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmMapping)) return false;
+    if (!(obj instanceof VmMapping other)) return false;
 
-    var other = (VmMapping) obj;
     // could use shallow force, but deep force is cached
     force(false);
     other.force(false);

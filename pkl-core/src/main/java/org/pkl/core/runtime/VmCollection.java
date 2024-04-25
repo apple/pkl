@@ -129,10 +129,9 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
   public final VmCollection flatten() {
     var builder = builder();
     for (var elem : this) {
-      if (elem instanceof Iterable) {
-        builder.addAll((Iterable<?>) elem);
-      } else if (elem instanceof VmListing) {
-        var listing = (VmListing) elem;
+      if (elem instanceof Iterable<?> iterable) {
+        builder.addAll(iterable);
+      } else if (elem instanceof VmListing listing) {
         listing.forceAndIterateMemberValues(
             (key, member, value) -> {
               builder.add(value);

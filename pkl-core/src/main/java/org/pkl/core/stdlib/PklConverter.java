@@ -175,8 +175,8 @@ public final class PklConverter implements VmValueConverter<Object> {
     converters.iterateMemberValues(
         (key, member, value) -> {
           assert value != null; // forced in ctor
-          if (key instanceof VmClass) {
-            result.put((VmClass) key, (VmFunction) value);
+          if (key instanceof VmClass vmClass) {
+            result.put(vmClass, (VmFunction) value);
           }
           return true;
         });
@@ -190,8 +190,8 @@ public final class PklConverter implements VmValueConverter<Object> {
     converters.iterateMemberValues(
         (key, member, value) -> {
           assert value != null; // forced in ctor
-          if (key instanceof String) {
-            result.add(Pair.of(parser.parse((String) key), (VmFunction) value));
+          if (key instanceof String string) {
+            result.add(Pair.of(parser.parse(string), (VmFunction) value));
           }
           return true;
         });

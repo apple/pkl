@@ -78,10 +78,9 @@ public abstract class BasePklTask extends DefaultTask {
     return getParsedSettingsModule()
         .map(
             it -> {
-              if (it instanceof File) {
-                return (File) it;
+              if (it instanceof File file) {
+                return file;
               }
-              //noinspection DataFlowIssue
               return null;
             });
   }
@@ -92,10 +91,9 @@ public abstract class BasePklTask extends DefaultTask {
     return getParsedSettingsModule()
         .map(
             it -> {
-              if (it instanceof URI) {
-                return (URI) it;
+              if (it instanceof URI uri) {
+                return uri;
               }
-              //noinspection DataFlowIssue
               return null;
             });
   }
@@ -201,29 +199,28 @@ public abstract class BasePklTask extends DefaultTask {
    * @throws InvalidUserDataException In case the input is none of the types described above, or
    *     when the underlying value cannot be parsed correctly.
    */
-  protected Object parseModuleNotation(Object m) {
-    if (m instanceof URI) {
-      var u = (URI) m;
-      if ("file".equals(u.getScheme())) {
-        return new File(u.getPath());
+  protected Object parseModuleNotation(Object notation) {
+    if (notation instanceof URI uri) {
+      if ("file".equals(uri.getScheme())) {
+        return new File(uri.getPath());
       }
-      return u;
-    } else if (m instanceof File) {
-      return m;
-    } else if (m instanceof Path) {
+      return uri;
+    } else if (notation instanceof File) {
+      return notation;
+    } else if (notation instanceof Path path) {
       try {
-        return ((Path) m).toFile();
+        return path.toFile();
       } catch (UnsupportedOperationException e) {
-        throw new InvalidUserDataException("Failed to parse Pkl module file path: " + m, e);
+        throw new InvalidUserDataException("Failed to parse Pkl module file path: " + notation, e);
       }
-    } else if (m instanceof URL) {
+    } else if (notation instanceof URL url) {
       try {
-        return parseModuleNotation(((URL) m).toURI());
+        return parseModuleNotation(url.toURI());
       } catch (URISyntaxException e) {
-        throw new InvalidUserDataException("Failed to parse Pkl module URI: " + m, e);
+        throw new InvalidUserDataException("Failed to parse Pkl module URI: " + notation, e);
       }
-    } else if (m instanceof CharSequence) {
-      var s = m.toString();
+    } else if (notation instanceof CharSequence) {
+      var s = notation.toString();
       if (IoUtils.isUriLike(s)) {
         try {
           return parseModuleNotation(IoUtils.toUri(s));
@@ -237,11 +234,14 @@ public abstract class BasePklTask extends DefaultTask {
           throw new InvalidUserDataException("Failed to parse Pkl module file path: " + s, e);
         }
       }
-    } else if (m instanceof FileSystemLocation) {
-      return ((FileSystemLocation) m).getAsFile();
+    } else if (notation instanceof FileSystemLocation location) {
+      return location.getAsFile();
     } else {
       throw new InvalidUserDataException(
-          "Unsupported value of type " + m.getClass() + " used as a module path: " + m);
+          "Unsupported value of type "
+              + notation.getClass()
+              + " used as a module path: "
+              + notation);
     }
   }
 
@@ -255,14 +255,13 @@ public abstract class BasePklTask extends DefaultTask {
    * IoUtils#createUri(String)} because other ways of conversion can make relative paths into
    * absolute URIs, which may break module loading.
    */
-  private URI parsedModuleNotationToUri(Object m) {
-    if (m instanceof File) {
-      var f = (File) m;
-      return IoUtils.createUri(f.getPath());
-    } else if (m instanceof URI) {
-      return (URI) m;
+  private URI parsedModuleNotationToUri(Object notation) {
+    if (notation instanceof File file) {
+      return IoUtils.createUri(file.getPath());
+    } else if (notation instanceof URI uri) {
+      return uri;
     }
-    throw new IllegalArgumentException("Invalid parsed module notation: " + m);
+    throw new IllegalArgumentException("Invalid parsed module notation: " + notation);
   }
 
   protected List<Pattern> patternsFromStrings(List<String> patterns) {

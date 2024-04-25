@@ -15,12 +15,13 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.util.*;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#Class} value. */
 public final class PClass extends Member implements Value {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final PClassInfo<?> classInfo;
   private final List<TypeParameter> typeParameters;
@@ -138,8 +139,7 @@ public final class PClass extends Member implements Value {
   }
 
   public abstract static class ClassMember extends Member {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final PClass owner;
 
@@ -176,8 +176,7 @@ public final class PClass extends Member implements Value {
   }
 
   public static final class Property extends ClassMember {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final PType type;
 
@@ -213,8 +212,7 @@ public final class PClass extends Member implements Value {
   }
 
   public static final class Method extends ClassMember {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final List<TypeParameter> typeParameters;
     private final Map<String, PType> parameters;

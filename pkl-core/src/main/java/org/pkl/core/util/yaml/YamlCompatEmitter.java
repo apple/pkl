@@ -38,15 +38,11 @@ public final class YamlCompatEmitter extends YamlEmitter {
       return IoUtils.isDecimalDigit(ch) || ch == '.';
     }
 
-    int offset;
-    switch (str.charAt(0)) {
-      case '+':
-      case '-':
-        offset = 1;
-        break;
-      default:
-        offset = 0;
-    }
+    var offset =
+        switch (str.charAt(0)) {
+          case '+', '-' -> 1;
+          default -> 0;
+        };
 
     if (colonIndex != -1) {
       return Yaml11Emitter.isSexagesimalNumber(str, offset, length, colonIndex);

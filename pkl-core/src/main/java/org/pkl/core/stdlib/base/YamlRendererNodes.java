@@ -104,24 +104,23 @@ public final class YamlRendererNodes {
     }
 
     private void visitStream(Object value) {
-      if (value instanceof VmListing) {
+      if (value instanceof VmListing listing) {
         var isFirst = new MutableBoolean(true);
-        ((VmListing) value)
-            .forceAndIterateMemberValues(
-                ((key, member, element) -> {
-                  if (!isFirst.getAndSetFalse()) {
-                    startNewLine();
-                    builder.append("---");
-                  }
-                  visit(element);
-                  return true;
-                }));
+        listing.forceAndIterateMemberValues(
+            ((key, member, element) -> {
+              if (!isFirst.getAndSetFalse()) {
+                startNewLine();
+                builder.append("---");
+              }
+              visit(element);
+              return true;
+            }));
         return;
       }
 
-      if (value instanceof VmCollection) {
+      if (value instanceof VmCollection collection) {
         var first = true;
-        for (var element : (VmCollection) value) {
+        for (var element : collection) {
           if (first) {
             first = false;
           } else {
@@ -146,25 +145,25 @@ public final class YamlRendererNodes {
 
     @Override
     public void visitString(String value) {
-      if (builder.length() > 0) builder.append(' ');
+      if (!builder.isEmpty()) builder.append(' ');
       emitter.emit(value, currIndent, false);
     }
 
     @Override
     public void visitInt(Long value) {
-      if (builder.length() > 0) builder.append(' ');
+      if (!builder.isEmpty()) builder.append(' ');
       emitter.emit(value);
     }
 
     @Override
     public void visitFloat(Double value) {
-      if (builder.length() > 0) builder.append(' ');
+      if (!builder.isEmpty()) builder.append(' ');
       emitter.emit(value);
     }
 
     @Override
     public void visitBoolean(Boolean value) {
-      if (builder.length() > 0) builder.append(' ');
+      if (!builder.isEmpty()) builder.append(' ');
       emitter.emit(value);
     }
 
@@ -201,7 +200,7 @@ public final class YamlRendererNodes {
 
     @Override
     public void visitNull(VmNull value) {
-      if (builder.length() > 0) builder.append(' ');
+      if (!builder.isEmpty()) builder.append(' ');
       emitter.emitNull();
     }
 
@@ -279,8 +278,8 @@ public final class YamlRendererNodes {
         startNewLine();
       }
 
-      if (key instanceof String) {
-        emitter.emit((String) key, currIndent, true);
+      if (key instanceof String string) {
+        emitter.emit(string, currIndent, true);
         builder.append(':');
         return;
       }
