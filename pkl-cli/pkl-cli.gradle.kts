@@ -165,47 +165,24 @@ fun Exec.configureExecutable(
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         "--initialize-at-build-time="
         // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
-        ,"--add-opens=java.base/java.nio=ALL-UNNAMED"
-        ,"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+        ,"--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess"
         ,"--no-fallback"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
         ,"-H:IncludeResources=org/pkl/certs/PklCARoots.pem"
-        //,"-H:IncludeResources=org/pkl/core/Release.properties"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle"
         ,"-H:Class=org.pkl.cli.Main"
         ,"-H:Name=${outputFile.get().asFile.name}"
-        //,"--native-image-info"
-        //,"-Dpolyglot.image-build-time.PreinitializeContexts=pkl"
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to compensate for Truffle's own nodes)
         ,"-H:MaxRuntimeCompileMethods=1800"
         ,"-H:+EnforceMaxRuntimeCompileMethods"
         ,"--enable-url-protocols=http,https"
-        //,"--install-exit-handlers"
         ,"-H:+ReportExceptionStackTraces"
-        ,"-H:-ParseRuntimeOptions" // disable automatic support for JVM CLI options (puts our main class in full control of argument parsing)
-        //,"-H:+PrintAnalysisCallTree"
-        //,"-H:PrintAnalysisCallTreeType=CSV"
-        //,"-H:+PrintImageObjectTree"
-        //,"--features=org.pkl.cli.svm.InitFeature"
-        //,"-H:Dump=:2"
-        //,"-H:MethodFilter=ModuleCache.getOrLoad*,VmLanguage.loadModule"
-        //,"-g"
-        //,"-verbose"
-        //,"--debug-attach"
-        //,"-H:+AllowVMInspection"
-        //,"-H:+PrintHeapHistogram"
-        //,"-H:+ReportDeletedElementsAtRuntime"
-        //,"-H:+PrintMethodHistogram"
-        //,"-H:+PrintRuntimeCompileMethods"
-        //,"-H:NumberOfThreads=1"
-        //,"-J-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime"
-        //,"-J-Dcom.oracle.truffle.aot=true"
-        //,"-J:-ea"
-        //,"-J:-esa"
-        // for use with https://www.graalvm.org/docs/tools/dashboard/
-        //,"-H:DashboardDump=dashboard.dump", "-H:+DashboardAll"
+        // disable automatic support for JVM CLI options (puts our main class in full control of argument parsing)
+        ,"-H:-ParseRuntimeOptions"
+        // quick build mode: 40% faster compilation, 20% smaller (but presumably also slower) executable
+        ,if (!buildInfo.isReleaseBuild) "-Ob" else ""
         // native-image rejects non-existing class path entries -> filter
         ,"--class-path"
         ,((sourceSets.main.get().output + configurations.runtimeClasspath.get())
