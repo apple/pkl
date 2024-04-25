@@ -161,26 +161,19 @@ public final class VmModifier {
   }
 
   public static String toString(int modifier) {
-    switch (modifier) {
-      case ABSTRACT:
-        return "abstract";
-      case OPEN:
-        return "open";
-      case LOCAL:
-        return "local";
-      case HIDDEN:
-        return "hidden";
-      case EXTERNAL:
-        return "external";
-      case FIXED:
-        return "fixed";
-      case CONST:
-        return "const";
-      default:
-        throw new VmExceptionBuilder()
-            .bug("Cannot convert internal modifier `%s` to a string.", toString(modifier))
-            .build();
-    }
+    return switch (modifier) {
+      case ABSTRACT -> "abstract";
+      case OPEN -> "open";
+      case LOCAL -> "local";
+      case HIDDEN -> "hidden";
+      case EXTERNAL -> "external";
+      case FIXED -> "fixed";
+      case CONST -> "const";
+      default ->
+          throw new VmExceptionBuilder()
+              .bug("Cannot convert internal modifier `%s` to a string.", toString(modifier))
+              .build();
+    };
   }
 
   public static VmSet getMirrors(int modifiers, boolean isClass) {

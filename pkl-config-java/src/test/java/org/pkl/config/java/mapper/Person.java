@@ -29,9 +29,7 @@ public class Person {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Person)) return false;
-
-    var other = (Person) obj;
+    if (!(obj instanceof Person other)) return false;
     return name.equals(other.name) && age == other.age;
   }
 

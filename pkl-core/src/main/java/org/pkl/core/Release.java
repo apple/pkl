@@ -148,9 +148,7 @@ public class Release {
   @Override
   public boolean equals(Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Release)) return false;
-
-    var other = (Release) obj;
+    if (!(obj instanceof Release other)) return false;
     return version.equals(other.version)
         && versionInfo.equals(other.versionInfo)
         && commitId.equals(other.commitId)
@@ -200,9 +198,7 @@ public class Release {
     @Override
     public boolean equals(Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof SourceCode)) return false;
-
-      var other = (SourceCode) obj;
+      if (!(obj instanceof SourceCode other)) return false;
       return homepage.equals(other.homepage) && version.equals(other.version);
     }
 
@@ -229,9 +225,7 @@ public class Release {
     @Override
     public boolean equals(Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof Documentation)) return false;
-
-      var other = (Documentation) obj;
+      if (!(obj instanceof Documentation other)) return false;
       return homepage.equals(other.homepage);
     }
 
@@ -262,9 +256,7 @@ public class Release {
     @Override
     public boolean equals(Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof StandardLibrary)) return false;
-
-      var other = (StandardLibrary) obj;
+      if (!(obj instanceof StandardLibrary other)) return false;
       return modules.equals(other.modules);
     }
 

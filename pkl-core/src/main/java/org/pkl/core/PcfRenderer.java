@@ -42,14 +42,14 @@ final class PcfRenderer implements ValueRenderer {
 
   @Override
   public void renderDocument(Object value) {
-    if (!(value instanceof Composite)) {
+    if (!(value instanceof Composite composite)) {
       throw new RendererException(
           String.format(
               "The top-level value of a Pcf document must have type `Composite`, but got type `%s`.",
               value.getClass().getTypeName()));
     }
 
-    new Visitor().doVisitProperties(((Composite) value).getProperties());
+    new Visitor().doVisitProperties(composite.getProperties());
   }
 
   @Override

@@ -454,37 +454,36 @@ public final class ExecutorOptions {
   }
 
   ExecutorSpiOptions toSpiOptions() {
-    switch (spiOptionsVersion) {
-      case -1:
-      case 2:
-        return new ExecutorSpiOptions2(
-            allowedModules,
-            allowedResources,
-            environmentVariables,
-            externalProperties,
-            modulePath,
-            rootDir,
-            timeout,
-            outputFormat,
-            moduleCacheDir,
-            projectDir,
-            certificateFiles,
-            certificateUris,
-            testPort);
-      case 1: // for testing only
-        return new ExecutorSpiOptions(
-            allowedModules,
-            allowedResources,
-            environmentVariables,
-            externalProperties,
-            modulePath,
-            rootDir,
-            timeout,
-            outputFormat,
-            moduleCacheDir,
-            projectDir);
-      default:
-        throw new AssertionError("Unknown ExecutorSpiOptions version: " + spiOptionsVersion);
-    }
+    return switch (spiOptionsVersion) {
+      case -1, 2 ->
+          new ExecutorSpiOptions2(
+              allowedModules,
+              allowedResources,
+              environmentVariables,
+              externalProperties,
+              modulePath,
+              rootDir,
+              timeout,
+              outputFormat,
+              moduleCacheDir,
+              projectDir,
+              certificateFiles,
+              certificateUris,
+              testPort);
+      case 1 -> // for testing only
+          new ExecutorSpiOptions(
+              allowedModules,
+              allowedResources,
+              environmentVariables,
+              externalProperties,
+              modulePath,
+              rootDir,
+              timeout,
+              outputFormat,
+              moduleCacheDir,
+              projectDir);
+      default ->
+          throw new AssertionError("Unknown ExecutorSpiOptions version: " + spiOptionsVersion);
+    };
   }
 }

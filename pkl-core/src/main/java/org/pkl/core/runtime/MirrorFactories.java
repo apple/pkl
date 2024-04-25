@@ -203,16 +203,12 @@ public final class MirrorFactories {
         .addStringProperty("name", TypeParameter::getName)
         .addProperty(
             "variance",
-            typeParameter -> {
-              switch (typeParameter.getVariance()) {
-                case COVARIANT:
-                  return "out";
-                case CONTRAVARIANT:
-                  return "in";
-                default:
-                  return VmNull.withoutDefault();
-              }
-            });
+            typeParameter ->
+                switch (typeParameter.getVariance()) {
+                  case COVARIANT -> "out";
+                  case CONTRAVARIANT -> "in";
+                  default -> VmNull.withoutDefault();
+                });
 
     classTypeFactory
         .addTypedProperty(

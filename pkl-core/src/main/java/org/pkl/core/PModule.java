@@ -15,6 +15,7 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +23,7 @@ import org.pkl.core.util.Nullable;
 
 /** Java representation of a Pkl module. */
 public final class PModule extends PObject {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final URI moduleUri;
   private final String moduleName;
@@ -62,10 +63,7 @@ public final class PModule extends PObject {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof PModule)) return false;
-
-    var other = (PModule) obj;
-
+    if (!(obj instanceof PModule other)) return false;
     return moduleUri.equals(other.moduleUri)
         && moduleName.equals(other.moduleName)
         && classInfo.equals(other.classInfo)

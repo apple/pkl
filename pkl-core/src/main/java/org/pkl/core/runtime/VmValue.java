@@ -63,8 +63,8 @@ public abstract class VmValue {
 
   /** Forces recursive (deep) evaluation of the given value. */
   public static void force(Object value, boolean allowUndefinedValues) {
-    if (value instanceof VmValue) {
-      ((VmValue) value).force(allowUndefinedValues);
+    if (value instanceof VmValue vmValue) {
+      vmValue.force(allowUndefinedValues);
     }
   }
 
@@ -73,16 +73,16 @@ public abstract class VmValue {
    * be `VmNull`).
    */
   public static Object export(Object value) {
-    if (value instanceof VmValue) {
-      return ((VmValue) value).export();
+    if (value instanceof VmValue vmValue) {
+      return vmValue.export();
     }
     return value;
   }
 
   /** Used to export object member values. Such values are `null` if they haven't been forced. */
   public static @Nullable Object exportNullable(@Nullable Object value) {
-    if (value instanceof VmValue) {
-      return ((VmValue) value).export();
+    if (value instanceof VmValue vmValue) {
+      return vmValue.export();
     }
     return value;
   }

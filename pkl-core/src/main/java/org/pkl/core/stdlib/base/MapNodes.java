@@ -243,8 +243,8 @@ public final class MapNodes {
       for (var entry : self) {
         var key = VmUtils.getKey(entry);
 
-        if (key instanceof String) {
-          var name = Identifier.get((String) key);
+        if (key instanceof String string) {
+          var name = Identifier.get(string);
           EconomicMaps.put(
               members,
               name,

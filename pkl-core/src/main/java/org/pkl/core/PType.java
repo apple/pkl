@@ -15,30 +15,30 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
 /** A Pkl type as used in type annotations. */
 public abstract class PType implements Serializable {
-
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   /** The `unknown` type. Omitting a type annotation is equivalent to stating this type. */
   public static final PType UNKNOWN =
       new PType() {
-        private static final long serialVersionUID = 0L;
+        @Serial private static final long serialVersionUID = 0L;
       };
 
   /** The bottom type. */
   public static final PType NOTHING =
       new PType() {
-        private static final long serialVersionUID = 0L;
+        @Serial private static final long serialVersionUID = 0L;
       };
 
   /** The type of the enclosing module. */
   public static final PType MODULE =
       new PType() {
-        private static final long serialVersionUID = 0L;
+        @Serial private static final long serialVersionUID = 0L;
       };
 
   private PType() {}
@@ -48,8 +48,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class StringLiteral extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final String literal;
 
@@ -63,8 +62,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Class extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final PClass pClass;
     private final List<PType> typeArguments;
@@ -97,8 +95,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Nullable extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final PType baseType;
 
@@ -133,8 +130,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Alias extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final TypeAlias typeAlias;
     private final List<PType> typeArguments;
@@ -169,8 +165,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Function extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final List<PType> parameterTypes;
     private final PType returnType;
@@ -190,8 +185,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Union extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final List<PType> elementTypes;
 
@@ -205,8 +199,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class TypeVariable extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final TypeParameter typeParameter;
 

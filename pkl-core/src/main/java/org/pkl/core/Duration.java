@@ -17,13 +17,14 @@ package org.pkl.core;
 
 import static org.pkl.core.DurationUnit.*;
 
+import java.io.Serial;
 import java.util.Objects;
 import org.pkl.core.util.DurationUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#Duration} value. */
 public final class Duration implements Value {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final double value;
   private final DurationUnit unit;
@@ -215,9 +216,7 @@ public final class Duration implements Value {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Duration)) return false;
-
-    var other = (Duration) obj;
+    if (!(obj instanceof Duration other)) return false;
     return convertValueTo(DurationUnit.NANOS) == other.convertValueTo(DurationUnit.NANOS);
   }
 

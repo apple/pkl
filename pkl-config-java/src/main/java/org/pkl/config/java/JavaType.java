@@ -49,10 +49,10 @@ public class JavaType<T> {
 
   protected JavaType() {
     var superclass = getClass().getGenericSuperclass();
-    if (superclass instanceof Class) {
+    if (!(superclass instanceof ParameterizedType parameterizedType)) {
       throw new IllegalStateException("JavaType token must be parameterized.");
     }
-    type = ((ParameterizedType) superclass).getActualTypeArguments()[0];
+    type = parameterizedType.getActualTypeArguments()[0];
   }
 
   private JavaType(Type type) {
@@ -161,9 +161,7 @@ public class JavaType<T> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof JavaType)) return false;
-
-    var other = (JavaType<?>) obj;
+    if (!(obj instanceof JavaType<?> other)) return false;
     return type.equals(other.type);
   }
 

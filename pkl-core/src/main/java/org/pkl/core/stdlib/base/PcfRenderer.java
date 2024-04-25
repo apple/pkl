@@ -130,13 +130,13 @@ public final class PcfRenderer extends AbstractRenderer {
 
   private void visitPcfRenderDirective(VmTyped value) {
     var before = VmUtils.readMember(value, Identifier.BEFORE);
-    if (before instanceof String) { // not VmNull
-      builder.append((String) before);
+    if (before instanceof String string) { // not VmNull
+      builder.append(string);
     }
     visit(VmUtils.readMember(value, Identifier.VALUE));
     var after = VmUtils.readMember(value, Identifier.AFTER);
-    if (after instanceof String) { // not VmNull
-      builder.append((String) after);
+    if (after instanceof String string) { // not VmNull
+      builder.append(string);
     }
   }
 
@@ -151,7 +151,7 @@ public final class PcfRenderer extends AbstractRenderer {
     isDocument = true;
     topLevelValue = value;
     visit(value);
-    if (builder.length() > 0) {
+    if (!builder.isEmpty()) {
       builder.append('\n');
     }
   }
@@ -207,8 +207,8 @@ public final class PcfRenderer extends AbstractRenderer {
     if (enclosingValue instanceof VmObjectLike) {
       builder.append('\n');
       builder.append(currIndent);
-      if (value instanceof String) {
-        renderStringElement((String) value);
+      if (value instanceof String string) {
+        renderStringElement(string);
       } else {
         visitStandaloneValue(value);
       }
@@ -260,7 +260,7 @@ public final class PcfRenderer extends AbstractRenderer {
 
   @Override
   protected void visitProperty(Identifier name, Object value, boolean isFirst) {
-    if (builder.length() > 0) {
+    if (!builder.isEmpty()) {
       builder.append('\n');
       builder.append(currIndent);
     }

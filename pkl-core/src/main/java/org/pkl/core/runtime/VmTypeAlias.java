@@ -98,8 +98,8 @@ public final class VmTypeAlias extends VmValue {
    */
   @TruffleBoundary
   public SourceSection getBaseTypeSection() {
-    if (typeNode instanceof ConstrainedTypeNode) {
-      return ((ConstrainedTypeNode) typeNode).getBaseTypeSection();
+    if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
+      return constrainedTypeNode.getBaseTypeSection();
     }
 
     throw new VmExceptionBuilder()
@@ -176,8 +176,7 @@ public final class VmTypeAlias extends VmValue {
 
     clone.accept(
         node -> {
-          if (node instanceof TypeVariableNode) {
-            var typeVarNode = (TypeVariableNode) node;
+          if (node instanceof TypeVariableNode typeVarNode) {
             int index = typeVarNode.getTypeParameterIndex();
             // should not need to clone type argument node because it is not used by its original
             // root node

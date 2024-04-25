@@ -56,24 +56,24 @@ public interface ValueConverter<T> {
   T convertRegex(Pattern value);
 
   default T convert(Object value) {
-    if (value instanceof Value) {
-      return ((Value) value).accept(this);
-    } else if (value instanceof String) {
-      return convertString((String) value);
-    } else if (value instanceof Boolean) {
-      return convertBoolean((Boolean) value);
-    } else if (value instanceof Long) {
-      return convertInt((Long) value);
-    } else if (value instanceof Double) {
-      return convertFloat((Double) value);
-    } else if (value instanceof List) {
-      return convertList((List<?>) value);
-    } else if (value instanceof Set) {
-      return convertSet((Set<?>) value);
-    } else if (value instanceof Map) {
-      return convertMap((Map<?, ?>) value);
-    } else if (value instanceof Pattern) {
-      return convertRegex((Pattern) value);
+    if (value instanceof Value v) {
+      return (v.accept(this));
+    } else if (value instanceof String string) {
+      return convertString(string);
+    } else if (value instanceof Boolean b) {
+      return convertBoolean(b);
+    } else if (value instanceof Long l) {
+      return convertInt(l);
+    } else if (value instanceof Double d) {
+      return convertFloat(d);
+    } else if (value instanceof List<?> list) {
+      return convertList(list);
+    } else if (value instanceof Set<?> set) {
+      return convertSet(set);
+    } else if (value instanceof Map<?, ?> map) {
+      return convertMap(map);
+    } else if (value instanceof Pattern pattern) {
+      return convertRegex(pattern);
     } else {
       throw new IllegalArgumentException("Cannot convert value with unexpected type: " + value);
     }

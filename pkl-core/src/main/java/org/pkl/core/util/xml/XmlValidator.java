@@ -19,13 +19,10 @@ public abstract class XmlValidator {
   public abstract boolean isValidName(String name);
 
   public static XmlValidator create(String version) {
-    switch (version) {
-      case "1.0":
-        return new Xml10Validator();
-      case "1.1":
-        return new Xml11Validator();
-      default:
-        throw new IllegalArgumentException(version);
-    }
+    return switch (version) {
+      case "1.0" -> new Xml10Validator();
+      case "1.1" -> new Xml11Validator();
+      default -> throw new IllegalArgumentException(version);
+    };
   }
 }

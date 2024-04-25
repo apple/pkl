@@ -60,7 +60,7 @@ public final class VmFunction extends VmObjectLike {
 
   public String applyString(Object arg1) {
     var result = apply(arg1);
-    if (result instanceof String) return (String) result;
+    if (result instanceof String string) return string;
 
     CompilerDirectives.transferToInterpreter();
     throw new VmExceptionBuilder().typeMismatch(result, BaseModule.getStringClass()).build();

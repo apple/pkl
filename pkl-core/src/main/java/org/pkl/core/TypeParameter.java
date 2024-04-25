@@ -15,13 +15,13 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
 import java.io.Serializable;
 import org.pkl.core.util.LateInit;
 
 /** A type parameter of a generic class, type alias, or method. */
 public final class TypeParameter implements Serializable {
-
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final Variance variance;
   private final String name;

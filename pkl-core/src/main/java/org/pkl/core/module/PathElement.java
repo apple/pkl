@@ -64,15 +64,10 @@ public class PathElement {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof PathElement)) {
-      return false;
-    }
-    PathElement that = (PathElement) o;
-    return isDirectory == that.isDirectory && name.equals(that.name);
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof PathElement other)) return false;
+    return isDirectory == other.isDirectory && name.equals(other.name);
   }
 
   @Override

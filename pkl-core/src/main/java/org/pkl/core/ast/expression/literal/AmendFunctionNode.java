@@ -187,7 +187,7 @@ public final class AmendFunctionNode extends PklNode {
       System.arraycopy(frameArguments, 2, arguments, 2, frameArguments.length - 2);
 
       var valueToAmend = callNode.call(functionToAmend.getCallTarget(), arguments);
-      if (!(valueToAmend instanceof VmFunction)) {
+      if (!(valueToAmend instanceof VmFunction newFunctionToAmend)) {
         var materializedFrame = context.frame;
         if (materializedFrame != null) {
           for (var slot : parameterSlots) {
@@ -199,7 +199,6 @@ public final class AmendFunctionNode extends PklNode {
         return amendObjectNode.executeGeneric(frame);
       }
 
-      var newFunctionToAmend = (VmFunction) valueToAmend;
       return currentFunction.copy(
           newFunctionToAmend.getParameterCount(),
           nextFunctionRootNode,

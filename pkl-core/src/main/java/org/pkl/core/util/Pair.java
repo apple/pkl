@@ -43,10 +43,7 @@ public final class Pair<S, T> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof Pair)) return false;
-
-    var other = (Pair<?, ?>) obj;
-
+    if (!(obj instanceof Pair<?, ?> other)) return false;
     return first.equals(other.first) && second.equals(other.second);
   }
 

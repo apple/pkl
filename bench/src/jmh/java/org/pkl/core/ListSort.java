@@ -111,10 +111,10 @@ public class ListSort {
                 // append `.length` to avoid rendering the list
                 new ReplRequest.Eval("sort", "nums.sortWith(cmp).length", false, false))
             .get(0);
-    if (!(response instanceof ReplResponse.EvalSuccess)) {
+    if (!(response instanceof ReplResponse.EvalSuccess success)) {
       throw new AssertionError(response);
     }
-    return ((ReplResponse.EvalSuccess) response).getResult();
+    return success.getResult();
   }
 
   // note that this is an uneven comparison

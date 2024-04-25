@@ -115,9 +115,9 @@ public final class RendererNodes {
   @TruffleBoundary
   private static String renderType(Object value) {
     var clazz =
-        value instanceof VmValue
-            ? ((VmValue) value).getVmClass()
-            : value instanceof TypeNode ? ((TypeNode) value).getVmClass() : value.getClass();
+        value instanceof VmValue vmValue
+            ? vmValue.getVmClass()
+            : value instanceof TypeNode typeNode ? typeNode.getVmClass() : value.getClass();
     if (clazz == null) {
       throw new VmExceptionBuilder()
           .evalError("cannotResolveTypeForProtobuf")
@@ -125,8 +125,8 @@ public final class RendererNodes {
           .build();
     }
     var name =
-        clazz instanceof VmClass
-            ? ((VmClass) clazz).getSimpleName()
+        clazz instanceof VmClass vmClass
+            ? vmClass.getSimpleName()
             : ((Class<?>) clazz).getSimpleName();
 
     return fieldNameEscaper.escape(name);
@@ -321,8 +321,8 @@ public final class RendererNodes {
       builder.append("key: ");
       if (isDirective) {
         builder.append(VmUtils.readTextProperty(key));
-      } else if (key instanceof String) {
-        builder.append('"').append(jsonEscaper.escape((String) key)).append('"');
+      } else if (key instanceof String string) {
+        builder.append('"').append(jsonEscaper.escape(string)).append('"');
       } else {
         builder.append(key);
       }
@@ -337,17 +337,17 @@ public final class RendererNodes {
     }
 
     private @Nullable String computeName(@Nullable TypeNode it, Object value) {
-      if (it instanceof UnionTypeNode) {
-        for (var type : ((UnionTypeNode) it).getElementTypeNodes()) {
+      if (it instanceof UnionTypeNode unionTypeNode) {
+        for (var type : unionTypeNode.getElementTypeNodes()) {
           if (type instanceof UnionTypeNode) {
             var computedName = computeName(type, value);
             if (computedName != null) {
               return computedName;
             }
           } else if (type instanceof NonFinalClassTypeNode) {
-            var clazz = ((NonFinalClassTypeNode) type).getVmClass();
-            if (value instanceof VmValue) {
-              if (clazz == ((VmValue) value).getVmClass()) {
+            var clazz = type.getVmClass();
+            if (value instanceof VmValue vmValue) {
+              if (clazz == vmValue.getVmClass()) {
                 return clazz.getSimpleName();
               }
             }
@@ -371,7 +371,7 @@ public final class RendererNodes {
       Identifier expectedName = null;
       propertyPath.push(name);
       if (enclosingValue instanceof VmTyped) {
-        var clazz = value instanceof VmValue ? ((VmValue) value).getVmClass() : value.getClass();
+        var clazz = value instanceof VmValue vmValue ? vmValue.getVmClass() : value.getClass();
         // Compute the name of the field in the wrapper, based on the type, but only if a wrapper
         // is required.
         var optionalType =
@@ -389,18 +389,18 @@ public final class RendererNodes {
             expectedName = Identifier.get("it_" + computedName);
             propertyPath.push(expectedName);
             startMessage();
-          } else if (type instanceof ListingOrMappingTypeNode) {
+          } else if (type instanceof ListingOrMappingTypeNode listingOrMappingType) {
             hasCollection = true;
-            collectionType = ((ListingOrMappingTypeNode) type).getValueTypeNode();
-          } else if (type instanceof ListTypeNode) {
+            collectionType = listingOrMappingType.getValueTypeNode();
+          } else if (type instanceof ListTypeNode listType) {
             hasCollection = true;
-            collectionType = ((ListTypeNode) type).getElementTypeNode();
-          } else if (type instanceof MapTypeNode) {
+            collectionType = listType.getElementTypeNode();
+          } else if (type instanceof MapTypeNode mapType) {
             hasCollection = true;
-            collectionType = ((MapTypeNode) type).getValueTypeNode();
-          } else if (type instanceof SetTypeNode) {
+            collectionType = mapType.getValueTypeNode();
+          } else if (type instanceof SetTypeNode setType) {
             hasCollection = true;
-            collectionType = ((SetTypeNode) type).getElementTypeNode();
+            collectionType = setType.getElementTypeNode();
           } else if (type instanceof NonFinalClassTypeNode) {
             if (type.getVmClass() != clazz) {
               throw new VmExceptionBuilder()
@@ -423,7 +423,7 @@ public final class RendererNodes {
     }
 
     private void startNewLine() {
-      if (indent.isEmpty() || builder.length() == 0 || builder.charAt(builder.length() - 1) == '\n')
+      if (indent.isEmpty() || builder.isEmpty() || builder.charAt(builder.length() - 1) == '\n')
         return;
 
       builder.append('\n');
@@ -564,19 +564,20 @@ public final class RendererNodes {
       } else if (type instanceof UnionOfStringLiteralsTypeNode
           || type instanceof StringLiteralTypeNode) {
         return STRING_TYPE;
-      } else if (type instanceof NullableTypeNode) {
-        return resolveType(((NullableTypeNode) type).getElementTypeNode());
-      } else if (type instanceof TypeAliasTypeNode) {
-        return resolveType(((TypeAliasTypeNode) type).getVmTypeAlias().getTypeNode());
-      } else if (type instanceof ListingTypeNode) {
-        var valueType = resolveType(((ListingTypeNode) type).getValueTypeNode());
+      } else if (type instanceof NullableTypeNode nullableType) {
+        return resolveType(nullableType.getElementTypeNode());
+      } else if (type instanceof TypeAliasTypeNode typeAliasType) {
+        return resolveType(typeAliasType.getVmTypeAlias().getTypeNode());
+      } else if (type instanceof ListingTypeNode listingType) {
+        var valueType = resolveType(listingType.getValueTypeNode());
         assert valueType != null : "Failed to resolve type node.";
-        var listingType = ListingTypeNodeGen.create(VmUtils.unavailableSourceSection(), valueType);
 
-        type = requiresWrapper() ? null : listingType;
+        type =
+            requiresWrapper()
+                ? null
+                : ListingTypeNodeGen.create(VmUtils.unavailableSourceSection(), valueType);
         return type;
-      } else if (type instanceof MappingTypeNode) {
-        var mappingType = (MappingTypeNode) type;
+      } else if (type instanceof MappingTypeNode mappingType) {
         var keyType = resolveType(mappingType.getKeyTypeNode());
         if (!(keyType instanceof IntTypeNode
             || keyType instanceof StringTypeNode

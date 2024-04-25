@@ -82,14 +82,14 @@ public final class PklSettings {
       throws VmEvalException {
     // can't use object mapping in pkl-core, so map manually
     var editor = module.getPropertyOrNull("editor");
-    if (!(editor instanceof PObject)) {
+    if (!(editor instanceof PObject pObject)) {
       throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
     }
-    var urlScheme = ((PObject) editor).getPropertyOrNull("urlScheme");
-    if (!(urlScheme instanceof String)) {
+    var urlScheme = pObject.getPropertyOrNull("urlScheme");
+    if (!(urlScheme instanceof String string)) {
       throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
     }
-    return new PklSettings(new Editor((String) urlScheme));
+    return new PklSettings(new Editor(string));
   }
 
   /** Returns the editor for viewing and editing Pkl files. */

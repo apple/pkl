@@ -168,15 +168,12 @@ public final class ResolveMethodNode extends ExpressionNode {
       return;
     }
     var memberIsOutsideConstScope = levelsUp > constDepth;
-    var invalid = false;
-    switch (constLevel) {
-      case ALL:
-        invalid = memberIsOutsideConstScope && !method.isConst();
-        break;
-      case MODULE:
-        invalid = currOwner.isModuleObject() && !method.isConst();
-        break;
-    }
+    var invalid =
+        switch (constLevel) {
+          case ALL -> memberIsOutsideConstScope && !method.isConst();
+          case MODULE -> currOwner.isModuleObject() && !method.isConst();
+          default -> false;
+        };
     if (invalid) {
       throw exceptionBuilder().evalError("methodMustBeConst", methodName.toString()).build();
     }

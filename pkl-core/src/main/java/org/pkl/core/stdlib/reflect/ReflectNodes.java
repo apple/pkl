@@ -81,8 +81,8 @@ public final class ReflectNodes {
       assert extraStorage instanceof VmClass || extraStorage instanceof VmTypeAlias;
 
       var typeParameterCount =
-          extraStorage instanceof VmClass
-              ? ((VmClass) extraStorage).getTypeParameterCount()
+          extraStorage instanceof VmClass vmClass
+              ? vmClass.getTypeParameterCount()
               : ((VmTypeAlias) extraStorage).getTypeParameterCount();
 
       var builder = VmList.EMPTY.builder();

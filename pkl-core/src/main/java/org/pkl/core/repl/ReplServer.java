@@ -116,16 +116,16 @@ public class ReplServer implements AutoCloseable {
   public List<ReplResponse> handleRequest(ReplRequest request) {
     polyglotContext.enter();
     try {
-      if (request instanceof Eval) {
-        return handleEval((Eval) request);
+      if (request instanceof Eval eval) {
+        return handleEval(eval);
       }
 
-      if (request instanceof Load) {
-        return handleLoad((Load) request);
+      if (request instanceof Load load) {
+        return handleLoad(load);
       }
 
-      if (request instanceof ReplRequest.Completion) {
-        return handleCompletion((ReplRequest.Completion) request);
+      if (request instanceof ReplRequest.Completion completion) {
+        return handleCompletion(completion);
       }
 
       if (request instanceof Reset) {
@@ -157,8 +157,8 @@ public class ReplServer implements AutoCloseable {
     return results.stream()
         .map(
             result ->
-                result instanceof ReplResponse
-                    ? (ReplResponse) result
+                result instanceof ReplResponse response
+                    ? response
                     : new EvalSuccess(render(result)))
         .collect(Collectors.toList());
   }
@@ -210,20 +210,20 @@ public class ReplServer implements AutoCloseable {
         if (tree instanceof ExprContext) {
           var exprNode = (ExpressionNode) tree.accept(builder);
           evaluateExpr(replState, exprNode, forceResults, results);
-        } else if (tree instanceof ImportClauseContext) {
-          addStaticModuleProperty(builder.visitImportClause((ImportClauseContext) tree));
-        } else if (tree instanceof ClassPropertyContext) {
-          var propertyNode = builder.visitClassProperty((ClassPropertyContext) tree);
+        } else if (tree instanceof ImportClauseContext importClause) {
+          addStaticModuleProperty(builder.visitImportClause(importClause));
+        } else if (tree instanceof ClassPropertyContext classProperty) {
+          var propertyNode = builder.visitClassProperty(classProperty);
           var property = addModuleProperty(propertyNode);
           if (evalDefinitions) {
             evaluateMemberDef(replState, property, forceResults, results);
           }
-        } else if (tree instanceof ClazzContext) {
-          addStaticModuleProperty(builder.visitClazz((ClazzContext) tree));
-        } else if (tree instanceof TypeAliasContext) {
-          addStaticModuleProperty(builder.visitTypeAlias((TypeAliasContext) tree));
-        } else if (tree instanceof ClassMethodContext) {
-          addModuleMethodDef(builder.visitClassMethod((ClassMethodContext) tree));
+        } else if (tree instanceof ClazzContext clazz) {
+          addStaticModuleProperty(builder.visitClazz(clazz));
+        } else if (tree instanceof TypeAliasContext typeAlias) {
+          addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
+        } else if (tree instanceof ClassMethodContext classMethod) {
+          addModuleMethodDef(builder.visitClassMethod(classMethod));
         } else if (tree instanceof ModuleDeclContext) {
           // do nothing for now
         } else if (tree instanceof TerminalNode && tree.toString().equals(",")) {
@@ -360,8 +360,8 @@ public class ReplServer implements AutoCloseable {
     assert !(lastResult instanceof ReplResponse);
 
     VmObjectLike composite;
-    if (lastResult instanceof VmObjectLike) {
-      composite = (VmObjectLike) lastResult;
+    if (lastResult instanceof VmObjectLike objectLike) {
+      composite = objectLike;
     } else {
       composite = VmUtils.getClass(lastResult).getPrototype();
     }

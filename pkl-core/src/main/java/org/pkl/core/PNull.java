@@ -15,9 +15,11 @@
  */
 package org.pkl.core;
 
+import java.io.Serial;
+
 /** Java representation of a {@code pkl.base#Null} value. */
 public final class PNull implements Value {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
   private static final PNull INSTANCE = new PNull();
 
   /** Returns the sole instance of this class. */

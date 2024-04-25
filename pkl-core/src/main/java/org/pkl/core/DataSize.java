@@ -17,13 +17,14 @@ package org.pkl.core;
 
 import static org.pkl.core.DataSizeUnit.*;
 
+import java.io.Serial;
 import java.util.Objects;
 import org.pkl.core.util.MathUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of a {@code pkl.base#DataSize} value. */
 public final class DataSize implements Value {
-  private static final long serialVersionUID = 0L;
+  @Serial private static final long serialVersionUID = 0L;
 
   private final double value;
   private final DataSizeUnit unit;
@@ -240,9 +241,7 @@ public final class DataSize implements Value {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof DataSize)) return false;
-
-    var other = (DataSize) obj;
+    if (!(obj instanceof DataSize other)) return false;
     return convertValueTo(DataSizeUnit.BYTES) == other.convertValueTo(DataSizeUnit.BYTES);
   }
 

@@ -424,8 +424,8 @@ public final class VmList extends VmCollection {
   public boolean equals(@Nullable Object other) {
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
-    if (!(other instanceof VmList)) return false;
-    return rrbt.equals(((VmList) other).rrbt);
+    if (!(other instanceof VmList list)) return false;
+    return rrbt.equals(list.rrbt);
   }
 
   @Override

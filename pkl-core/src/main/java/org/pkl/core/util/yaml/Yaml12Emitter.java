@@ -27,34 +27,33 @@ public class Yaml12Emitter extends YamlEmitter {
   protected boolean isReservedWord(String str) {
     if (str.length() > 5) return false;
 
-    switch (str) {
-      case "":
-      case "~":
-      case "null":
-      case "Null":
-      case "NULL":
-      case ".nan":
-      case ".NaN":
-      case ".NAN":
-      case ".inf":
-      case ".Inf":
-      case ".INF":
-      case "+.inf":
-      case "+.Inf":
-      case "+.INF":
-      case "-.inf":
-      case "-.Inf":
-      case "-.INF":
-      case "true":
-      case "True":
-      case "TRUE":
-      case "false":
-      case "False":
-      case "FALSE":
-        return true;
-      default:
-        return false;
-    }
+    return switch (str) {
+      case "",
+              "~",
+              "null",
+              "Null",
+              "NULL",
+              ".nan",
+              ".NaN",
+              ".NAN",
+              ".inf",
+              ".Inf",
+              ".INF",
+              "+.inf",
+              "+.Inf",
+              "+.INF",
+              "-.inf",
+              "-.Inf",
+              "-.INF",
+              "true",
+              "True",
+              "TRUE",
+              "false",
+              "False",
+              "FALSE" ->
+          true;
+      default -> false;
+    };
   }
 
   @Override

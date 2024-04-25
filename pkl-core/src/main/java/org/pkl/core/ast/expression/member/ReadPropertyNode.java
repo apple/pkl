@@ -92,7 +92,7 @@ public abstract class ReadPropertyNode extends ExpressionNode {
 
   protected static @Nullable Class<? extends VmObjectLike> getVmObjectSubclassOrNull(Object value) {
     // OK to perform slow cast here (not a guard)
-    return value instanceof VmObjectLike ? ((VmObjectLike) value).getClass() : null;
+    return value instanceof VmObjectLike objectLike ? objectLike.getClass() : null;
   }
 
   protected ClassProperty resolveProperty(Object value) {

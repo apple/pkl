@@ -104,9 +104,8 @@ public final class VmListing extends VmObject {
   @TruffleBoundary
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmListing)) return false;
+    if (!(obj instanceof VmListing other)) return false;
 
-    var other = (VmListing) obj;
     if (length != other.length) return false;
     // could use shallow force, but deep force is cached
     force(false);

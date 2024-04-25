@@ -140,9 +140,7 @@ public final class VmDuration extends VmValue implements Comparable<VmDuration> 
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmDuration)) return false;
-
-    var other = (VmDuration) obj;
+    if (!(obj instanceof VmDuration other)) return false;
     // converting to a fixed unit guarantees that equals() is commutative and consistent with
     // hashCode()
     return getValue(DurationUnit.NANOS) == other.getValue(DurationUnit.NANOS);

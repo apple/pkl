@@ -136,9 +136,7 @@ public class PObjectToDataObjectTest {
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof Person)) return false;
-
-      var other = (Person) obj;
+      if (!(obj instanceof Person other)) return false;
       return name.equals(other.name)
           && age == other.age
           && hobbies.equals(other.hobbies)
@@ -168,9 +166,7 @@ public class PObjectToDataObjectTest {
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof PersonConstructoProperties)) return false;
-
-      var other = (PersonConstructoProperties) obj;
+      if (!(obj instanceof PersonConstructoProperties other)) return false;
       return name.equals(other.name)
           && age == other.age
           && hobbies.equals(other.hobbies)
@@ -195,9 +191,7 @@ public class PObjectToDataObjectTest {
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof Address)) return false;
-
-      var other = (Address) obj;
+      if (!(obj instanceof Address other)) return false;
       return street.equals(other.street) && zip == other.zip;
     }
 
@@ -225,9 +219,7 @@ public class PObjectToDataObjectTest {
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof Pair)) return false;
-
-      var other = (Pair<?, ?>) obj;
+      if (!(obj instanceof Pair<?, ?> other)) return false;
       return first.equals(other.first) && second.equals(other.second);
     }
 

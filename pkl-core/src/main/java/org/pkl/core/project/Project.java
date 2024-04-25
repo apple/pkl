@@ -131,8 +131,8 @@ public final class Project {
     PackageUtils.checkHasNoChecksumComponent(packageUri);
     var objChecksum = object.getProperty("checksums");
     Checksums checksums = null;
-    if (objChecksum instanceof PObject) {
-      var sha256 = (String) ((PObject) objChecksum).get("sha256");
+    if (objChecksum instanceof PObject pObject) {
+      var sha256 = (String) pObject.get("sha256");
       assert sha256 != null;
       checksums = new Checksums(sha256);
     }

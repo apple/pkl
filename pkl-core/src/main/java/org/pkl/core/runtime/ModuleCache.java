@@ -135,7 +135,7 @@ public final class ModuleCache {
 
     var module1 = modulesByOriginalUri.get(moduleKey.getUri());
     if (module1 != null) {
-      if (module1 instanceof VmTyped) return (VmTyped) module1;
+      if (module1 instanceof VmTyped typed) return typed;
 
       assert module1 instanceof RuntimeException;
       // would be more accurate/safe to throw a clone with adapted Pkl stack trace
@@ -145,7 +145,7 @@ public final class ModuleCache {
     var resolvedKey = resolve(moduleKey, securityManager, importNode);
     var module2 = modulesByResolvedUri.get(resolvedKey.getUri());
     if (module2 != null) {
-      if (module2 instanceof VmTyped) return (VmTyped) module2;
+      if (module2 instanceof VmTyped typed) return typed;
 
       assert module2 instanceof RuntimeException;
       // would be more accurate/safe to throw a clone with adapted Pkl stack trace

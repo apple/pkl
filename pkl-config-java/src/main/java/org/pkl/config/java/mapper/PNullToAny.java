@@ -23,7 +23,7 @@ final class PNullToAny implements ConverterFactory {
   @Override
   public Optional<Converter<?, ?>> create(PClassInfo<?> sourceType, Type targetType) {
     if (sourceType != PClassInfo.Null
-        || (targetType instanceof Class && ((Class<?>) targetType).isPrimitive())) {
+        || (targetType instanceof Class<?> clazz && clazz.isPrimitive())) {
       return Optional.empty();
     }
 

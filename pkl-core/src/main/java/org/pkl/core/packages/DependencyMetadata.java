@@ -107,20 +107,18 @@ public class DependencyMetadata {
 
   private static Map<String, RemoteDependency> parseDependencies(Object deps)
       throws JsonParseException {
-    if (!(deps instanceof JsObject)) {
+    if (!(deps instanceof JsObject dependencies)) {
       throw new FormatException("object", deps.getClass());
     }
-    var dependencies = (JsObject) deps;
     var ret = new HashMap<String, RemoteDependency>(dependencies.size());
     for (var key : dependencies.keySet()) {
       var remoteDependency =
           dependencies.get(
               key,
               (dep) -> {
-                if (!(dep instanceof JsObject)) {
+                if (!(dep instanceof JsObject obj)) {
                   throw new FormatException("object", dep.getClass());
                 }
-                var obj = (JsObject) dep;
                 var checksums = obj.get("checksums", DependencyMetadata::parseChecksums);
                 var packageUri = obj.get("uri", PackageUtils::parsePackageUriWithoutChecksums);
                 return new RemoteDependency(packageUri, checksums);
@@ -131,25 +129,23 @@ public class DependencyMetadata {
   }
 
   public static Checksums parseChecksums(Object obj) throws JsonParseException {
-    if (!(obj instanceof JsObject)) {
+    if (!(obj instanceof JsObject jsObj)) {
       throw new FormatException("object", obj.getClass());
     }
-    var jsObj = (JsObject) obj;
     var sha256 = jsObj.getString("sha256");
     return new Checksums(sha256);
   }
 
   public static List<String> parseAuthors(Object obj) throws JsonParseException {
-    if (!(obj instanceof JsArray)) {
+    if (!(obj instanceof JsArray arr)) {
       throw new FormatException("array", obj.getClass());
     }
-    var arr = (JsArray) obj;
     var ret = new ArrayList<String>(arr.size());
     for (var elem : arr) {
-      if (!(elem instanceof String)) {
+      if (!(elem instanceof String string)) {
         throw new FormatException("string", elem.getClass());
       }
-      ret.add((String) elem);
+      ret.add(string);
     }
     return ret;
   }

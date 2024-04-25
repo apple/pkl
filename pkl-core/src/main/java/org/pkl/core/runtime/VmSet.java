@@ -324,8 +324,8 @@ public final class VmSet extends VmCollection {
   public boolean equals(@Nullable Object other) {
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
-    if (!(other instanceof VmSet)) return false;
-    return set.equals(((VmSet) other).set);
+    if (!(other instanceof VmSet vmSet)) return false;
+    return set.equals(vmSet.set);
   }
 
   @Override

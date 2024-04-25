@@ -89,31 +89,31 @@ public final class MathUtils {
   public static long checkedPow(long b, int k) {
     checkNonNegative("exponent", k);
     if (b >= -2 & b <= 2) {
-      switch ((int) b) {
-        case 0:
-          return (k == 0) ? 1 : 0;
-        case 1:
-          return 1;
-        case (-1):
-          return ((k & 1) == 0) ? 1 : -1;
-        case 2:
+      return switch ((int) b) {
+        case 0 -> (k == 0) ? 1 : 0;
+        case 1 -> 1;
+        case (-1) -> ((k & 1) == 0) ? 1 : -1;
+        case 2 -> {
           checkNoOverflow(k < Long.SIZE - 1);
-          return 1L << k;
-        case (-2):
+          yield 1L << k;
+        }
+        case (-2) -> {
           checkNoOverflow(k < Long.SIZE);
-          return ((k & 1) == 0) ? (1L << k) : (-1L << k);
-        default:
-          throw new AssertionError();
-      }
+          yield ((k & 1) == 0) ? (1L << k) : (-1L << k);
+        }
+        default -> throw new AssertionError();
+      };
     }
     long accum = 1;
     while (true) {
       switch (k) {
-        case 0:
+        case 0 -> {
           return accum;
-        case 1:
+        }
+        case 1 -> {
           return checkedMultiply(accum, b);
-        default:
+        }
+        default -> {
           if ((k & 1) != 0) {
             accum = checkedMultiply(accum, b);
           }
@@ -122,6 +122,7 @@ public final class MathUtils {
             checkNoOverflow(-FLOOR_SQRT_MAX_LONG <= b && b <= FLOOR_SQRT_MAX_LONG);
             b *= b;
           }
+        }
       }
     }
   }

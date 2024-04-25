@@ -177,9 +177,8 @@ public final class VmTyped extends VmObject {
   @TruffleBoundary
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmTyped)) return false;
+    if (!(obj instanceof VmTyped other)) return false;
 
-    var other = (VmTyped) obj;
     if (clazz != other.clazz) return false;
     // could use shallow force, but deep force is cached
     force(false);

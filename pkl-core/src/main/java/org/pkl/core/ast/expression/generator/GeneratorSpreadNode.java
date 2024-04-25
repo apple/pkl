@@ -167,7 +167,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
             .evalError("cannotIterateOverThisValue", VmUtils.getClass(iterable))
             .withLocation(iterableNode)
             .withProgramValue("Value", iterable);
-    if (iterable instanceof VmObject && ((VmObject) iterable).isTyped()) {
+    if (iterable instanceof VmObject vmObject && vmObject.isTyped()) {
       builder.withHint(
           "`Typed` values are not iterable. If you mean to spread its members, convert it to `Dynamic` using `toDynamic()`.");
     }

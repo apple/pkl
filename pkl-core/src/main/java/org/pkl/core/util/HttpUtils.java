@@ -39,9 +39,9 @@ public final class HttpUtils {
     if (response.statusCode() == 200) return;
 
     var body = response.body();
-    if (body instanceof AutoCloseable) {
+    if (body instanceof AutoCloseable closeable) {
       try {
-        ((AutoCloseable) body).close();
+        closeable.close();
       } catch (Exception ignored) {
       }
     }

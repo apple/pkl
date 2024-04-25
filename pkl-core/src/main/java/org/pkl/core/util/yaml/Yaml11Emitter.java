@@ -37,15 +37,11 @@ public class Yaml11Emitter extends YamlEmitter {
       return IoUtils.isDecimalDigit(ch) || ch == '.';
     }
 
-    int offset;
-    switch (str.charAt(0)) {
-      case '+':
-      case '-':
-        offset = 1;
-        break;
-      default:
-        offset = 0;
-    }
+    int offset =
+        switch (str.charAt(0)) {
+          case '+', '-' -> 1;
+          default -> 0;
+        };
 
     if (colonIndex != -1) {
       return Yaml11Emitter.isSexagesimalNumber(str, offset, length, colonIndex);
@@ -137,64 +133,40 @@ public class Yaml11Emitter extends YamlEmitter {
     // SonarQube: overflow is ok, will just throw IOOBE
     for (var i = colonIndex + 1; i < length; i++) {
       switch (state) {
-        case 0:
+        case 0 -> {
           switch (str.charAt(i)) {
-            case ':':
-              state = 1;
-              continue;
-            case '.':
-              state = 3;
-              continue;
-            default:
+            case ':' -> state = 1;
+            case '.' -> state = 3;
+            default -> {
               return false;
+            }
           }
-        case 1:
+        }
+        case 1 -> {
           switch (str.charAt(i)) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-              state = 2;
-              continue;
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-              state = 0;
-              continue;
-            default:
+            case '0', '1', '2', '3', '4', '5' -> state = 2;
+            case '6', '7', '8', '9' -> state = 0;
+            default -> {
               return false;
+            }
           }
-        case 2:
+        }
+        case 2 -> {
           switch (str.charAt(i)) {
-            case ':':
-              state = 1;
-              continue;
-            case '.':
-              state = 3;
-              continue;
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-              state = 0;
-              continue;
-            default:
+            case ':' -> state = 1;
+            case '.' -> state = 3;
+            case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> state = 0;
+            default -> {
               return false;
+            }
           }
-        case 3:
+        }
+        case 3 -> {
           for (var j = i; j < length; j++) {
             if (!IoUtils.isDecimalDigitOrUnderscore(str.charAt(j))) return false;
           }
           return true;
+        }
       }
     }
 

@@ -97,7 +97,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
     for (var annotation : annotations) {
       if (annotation.getVmClass() == BaseModule.getDeprecatedClass()) {
         var messageObj = VmUtils.readMemberOrNull(annotation, Identifier.MESSAGE);
-        deprecation = messageObj instanceof String ? (String) messageObj : "";
+        deprecation = messageObj instanceof String string ? string : "";
         break;
       }
     }

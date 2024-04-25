@@ -88,40 +88,28 @@ public final class DataSizeNodes {
   public abstract static class toBinaryUnit extends ExternalMethod0Node {
     @Specialization
     protected VmDataSize eval(VmDataSize self) {
-      switch (self.getUnit()) {
-        case KILOBYTES:
-          return self.convertTo(DataSizeUnit.KIBIBYTES);
-        case MEGABYTES:
-          return self.convertTo(DataSizeUnit.MEBIBYTES);
-        case GIGABYTES:
-          return self.convertTo(DataSizeUnit.GIBIBYTES);
-        case TERABYTES:
-          return self.convertTo(DataSizeUnit.TEBIBYTES);
-        case PETABYTES:
-          return self.convertTo(DataSizeUnit.PEBIBYTES);
-        default:
-          return self;
-      }
+      return switch (self.getUnit()) {
+        case KILOBYTES -> self.convertTo(DataSizeUnit.KIBIBYTES);
+        case MEGABYTES -> self.convertTo(DataSizeUnit.MEBIBYTES);
+        case GIGABYTES -> self.convertTo(DataSizeUnit.GIBIBYTES);
+        case TERABYTES -> self.convertTo(DataSizeUnit.TEBIBYTES);
+        case PETABYTES -> self.convertTo(DataSizeUnit.PEBIBYTES);
+        default -> self;
+      };
     }
   }
 
   public abstract static class toDecimalUnit extends ExternalMethod0Node {
     @Specialization
     protected VmDataSize eval(VmDataSize self) {
-      switch (self.getUnit()) {
-        case KIBIBYTES:
-          return self.convertTo(DataSizeUnit.KILOBYTES);
-        case MEBIBYTES:
-          return self.convertTo(DataSizeUnit.MEGABYTES);
-        case GIBIBYTES:
-          return self.convertTo(DataSizeUnit.GIGABYTES);
-        case TEBIBYTES:
-          return self.convertTo(DataSizeUnit.TERABYTES);
-        case PEBIBYTES:
-          return self.convertTo(DataSizeUnit.PETABYTES);
-        default:
-          return self;
-      }
+      return switch (self.getUnit()) {
+        case KIBIBYTES -> self.convertTo(DataSizeUnit.KILOBYTES);
+        case MEBIBYTES -> self.convertTo(DataSizeUnit.MEGABYTES);
+        case GIBIBYTES -> self.convertTo(DataSizeUnit.GIGABYTES);
+        case TEBIBYTES -> self.convertTo(DataSizeUnit.TERABYTES);
+        case PEBIBYTES -> self.convertTo(DataSizeUnit.PETABYTES);
+        default -> self;
+      };
     }
   }
 }

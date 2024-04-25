@@ -461,7 +461,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
     while (parent instanceof IfExprContext
         || parent instanceof TraceExprContext
-        || parent instanceof LetExprContext && ((LetExprContext) parent).r == child) {
+        || parent instanceof LetExprContext letExpr && letExpr.r == child) {
 
       if (parent instanceof LetExprContext) {
         assert scope != null;
@@ -481,7 +481,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               scope.getName(),
               levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp));
     } else if (parent instanceof ObjectElementContext
-        || parent instanceof ObjectEntryContext && ((ObjectEntryContext) parent).v == child) {
+        || parent instanceof ObjectEntryContext objectEntry && objectEntry.v == child) {
       inferredParentNode =
           ApplyVmFunction1NodeGen.create(
               ReadPropertyNodeGen.create(
@@ -506,7 +506,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   language,
                   scopeName,
                   levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp));
-    } else if (parent instanceof LetExprContext && ((LetExprContext) parent).l == child) {
+    } else if (parent instanceof LetExprContext letExpr && letExpr.l == child) {
       // TODO (unclear how to infer type now that let-expression is implemented as lambda
       // invocation)
       throw exceptionBuilder()
@@ -604,8 +604,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             if (VmModifier.isExternal(modifiers)) {
               bodyNode =
                   externalMemberRegistry.getPropertyBody(scope.getQualifiedName(), headerSection);
-              if (bodyNode instanceof LanguageAwareNode) {
-                ((LanguageAwareNode) bodyNode).initLanguage(language);
+              if (bodyNode instanceof LanguageAwareNode languageAwareNode) {
+                languageAwareNode.initLanguage(language);
               }
             } else if (VmModifier.isAbstract(modifiers)) {
               bodyNode =
@@ -1046,15 +1046,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
           checkSpaceSeparatedObjectMembers(ctx);
           for (var memberCtx : objectMemberCtx) {
-            if (memberCtx instanceof ObjectPropertyContext) {
-              var propertyCtx = (ObjectPropertyContext) memberCtx;
+            if (memberCtx instanceof ObjectPropertyContext propertyCtx) {
               addProperty(members, doVisitObjectProperty(propertyCtx));
               continue;
             }
 
-            if (memberCtx instanceof ObjectEntryContext) {
-              var entryCtx = (ObjectEntryContext) memberCtx;
-
+            if (memberCtx instanceof ObjectEntryContext entryCtx) {
               var keyAndValue = doVisitObjectEntry(entryCtx);
               var key = keyAndValue.first;
               keyNodes.add(key);
@@ -1063,15 +1060,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               continue;
             }
 
-            if (memberCtx instanceof ObjectElementContext) {
-              var elementCtx = (ObjectElementContext) memberCtx;
+            if (memberCtx instanceof ObjectElementContext elementCtx) {
               var element = doVisitObjectElement(elementCtx);
               elements.add(element);
               continue;
             }
 
-            if (memberCtx instanceof ObjectMethodContext) {
-              var methodCtx = (ObjectMethodContext) memberCtx;
+            if (memberCtx instanceof ObjectMethodContext methodCtx) {
               addProperty(members, doVisitObjectMethod(methodCtx));
               continue;
             }
@@ -1191,8 +1186,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   null,
                   scope.getQualifiedName());
 
-          if (elementNode instanceof ConstantNode) {
-            member.initConstantValue((ConstantNode) elementNode);
+          if (elementNode instanceof ConstantNode constantNode) {
+            member.initConstantValue(constantNode);
           } else {
             member.initMemberNode(
                 new UntypedObjectMemberNode(
@@ -1248,8 +1243,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
       if (valueCtx != null) { // ["key"] = value
         var valueNode = visitExpr(valueCtx);
-        if (valueNode instanceof ConstantNode) {
-          member.initConstantValue((ConstantNode) valueNode);
+        if (valueNode instanceof ConstantNode constantNode) {
+          member.initConstantValue(constantNode);
         } else {
           member.initMemberNode(
               new UntypedObjectMemberNode(
@@ -1297,24 +1292,16 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public Integer visitModifier(ModifierContext ctx) {
-    switch (ctx.t.getType()) {
-      case PklLexer.EXTERNAL:
-        return VmModifier.EXTERNAL;
-      case PklLexer.ABSTRACT:
-        return VmModifier.ABSTRACT;
-      case PklLexer.OPEN:
-        return VmModifier.OPEN;
-      case PklLexer.LOCAL:
-        return VmModifier.LOCAL;
-      case PklLexer.HIDDEN_:
-        return VmModifier.HIDDEN;
-      case PklLexer.FIXED:
-        return VmModifier.FIXED;
-      case PklLexer.CONST:
-        return VmModifier.CONST;
-      default:
-        throw createUnexpectedTokenError(ctx.t);
-    }
+    return switch (ctx.t.getType()) {
+      case PklLexer.EXTERNAL -> VmModifier.EXTERNAL;
+      case PklLexer.ABSTRACT -> VmModifier.ABSTRACT;
+      case PklLexer.OPEN -> VmModifier.OPEN;
+      case PklLexer.LOCAL -> VmModifier.LOCAL;
+      case PklLexer.HIDDEN_ -> VmModifier.HIDDEN;
+      case PklLexer.FIXED -> VmModifier.FIXED;
+      case PklLexer.CONST -> VmModifier.CONST;
+      default -> throw createUnexpectedTokenError(ctx.t);
+    };
   }
 
   private int doVisitModifiers(
@@ -1410,8 +1397,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               bodyNode =
                   externalMemberRegistry.getFunctionBody(
                       scope.getQualifiedName(), headerSection, paramCount);
-              if (bodyNode instanceof LanguageAwareNode) {
-                ((LanguageAwareNode) bodyNode).initLanguage(language);
+              if (bodyNode instanceof LanguageAwareNode languageAwareNode) {
+                languageAwareNode.initLanguage(language);
               }
             } else if (VmModifier.isAbstract(modifiers)) {
               bodyNode =
@@ -1730,33 +1717,30 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public Object visitComparisonExpr(ComparisonExprContext ctx) {
-    switch (ctx.t.getType()) {
-      case PklLexer.LT:
-        return LessThanNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.GT:
-        return GreaterThanNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.LTE:
-        return LessThanOrEqualNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.GTE:
-        return GreaterThanOrEqualNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      default:
-        throw createUnexpectedTokenError(ctx.t);
-    }
+    return switch (ctx.t.getType()) {
+      case PklLexer.LT ->
+          LessThanNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.GT ->
+          GreaterThanNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.LTE ->
+          LessThanOrEqualNodeGen.create(
+              createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.GTE ->
+          GreaterThanOrEqualNodeGen.create(
+              createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      default -> throw createUnexpectedTokenError(ctx.t);
+    };
   }
 
   @Override
   public Object visitEqualityExpr(EqualityExprContext ctx) {
-    switch (ctx.t.getType()) {
-      case PklLexer.EQUAL:
-        return EqualNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.NOT_EQUAL:
-        return NotEqualNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      default:
-        throw createUnexpectedTokenError(ctx.t);
-    }
+    return switch (ctx.t.getType()) {
+      case PklLexer.EQUAL ->
+          EqualNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.NOT_EQUAL ->
+          NotEqualNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      default -> throw createUnexpectedTokenError(ctx.t);
+    };
   }
 
   @Override
@@ -1879,34 +1863,30 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitAdditiveExpr(AdditiveExprContext ctx) {
-    switch (ctx.t.getType()) {
-      case PklLexer.PLUS:
-        return AdditionNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.MINUS:
-        return SubtractionNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      default:
-        throw createUnexpectedTokenError(ctx.t);
-    }
+    return switch (ctx.t.getType()) {
+      case PklLexer.PLUS ->
+          AdditionNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.MINUS ->
+          SubtractionNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      default -> throw createUnexpectedTokenError(ctx.t);
+    };
   }
 
   @Override
   public ExpressionNode visitMultiplicativeExpr(MultiplicativeExprContext ctx) {
-    switch (ctx.t.getType()) {
-      case PklLexer.STAR:
-        return MultiplicationNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.DIV:
-        return DivisionNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.INT_DIV:
-        return TruncatingDivisionNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      case PklLexer.MOD:
-        return RemainderNodeGen.create(
-            createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
-      default:
-        throw createUnexpectedTokenError(ctx.t);
-    }
+    return switch (ctx.t.getType()) {
+      case PklLexer.STAR ->
+          MultiplicationNodeGen.create(
+              createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.DIV ->
+          DivisionNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.INT_DIV ->
+          TruncatingDivisionNodeGen.create(
+              createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      case PklLexer.MOD ->
+          RemainderNodeGen.create(createSourceSection(ctx), visitExpr(ctx.l), visitExpr(ctx.r));
+      default -> throw createUnexpectedTokenError(ctx.t);
+    };
   }
 
   @Override
@@ -1951,14 +1931,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     if (receiver instanceof OuterNode) {
       var outerScope = getParentLexicalScope();
       if (outerScope != null) {
-        switch (constLevel) {
-          case MODULE:
-            needsConst = outerScope.isModuleScope();
-            break;
-          case ALL:
-            needsConst = outerScope.getConstLevel() != ConstLevel.ALL;
-            break;
-        }
+        needsConst =
+            switch (constLevel) {
+              case MODULE -> outerScope.isModuleScope();
+              case ALL -> outerScope.getConstLevel() != ConstLevel.ALL;
+              case NONE -> false;
+            };
       }
     } else if (receiver instanceof GetModuleNode) {
       needsConst = constLevel != ConstLevel.NONE;
@@ -1998,13 +1976,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var propertyName = toIdentifier(ctx.Identifier());
     var receiver = visitExpr(ctx.expr());
 
-    if (receiver instanceof IntLiteralNode) {
+    if (receiver instanceof IntLiteralNode intLiteralNode) {
       var durationUnit = VmDuration.toUnit(propertyName);
       if (durationUnit != null) {
         //noinspection ConstantConditions
         return new ConstantValueNode(
-            sourceSection,
-            new VmDuration(((IntLiteralNode) receiver).executeInt(null), durationUnit));
+            sourceSection, new VmDuration(intLiteralNode.executeInt(null), durationUnit));
       }
       var dataSizeUnit = VmDataSize.toUnit(propertyName);
       if (dataSizeUnit != null) {
@@ -2015,13 +1992,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
     }
 
-    if (receiver instanceof FloatLiteralNode) {
+    if (receiver instanceof FloatLiteralNode floatLiteralNode) {
       var durationUnit = VmDuration.toUnit(propertyName);
       if (durationUnit != null) {
         //noinspection ConstantConditions
         return new ConstantValueNode(
-            sourceSection,
-            new VmDuration(((FloatLiteralNode) receiver).executeFloat(null), durationUnit));
+            sourceSection, new VmDuration(floatLiteralNode.executeFloat(null), durationUnit));
       }
       var dataSizeUnit = VmDataSize.toUnit(propertyName);
       if (dataSizeUnit != null) {
@@ -2037,14 +2013,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     if (receiver instanceof OuterNode) {
       var outerScope = getParentLexicalScope();
       if (outerScope != null) {
-        switch (constLevel) {
-          case MODULE:
-            needsConst = outerScope.isModuleScope();
-            break;
-          case ALL:
-            needsConst = outerScope.getConstLevel() != ConstLevel.ALL;
-            break;
-        }
+        needsConst =
+            switch (constLevel) {
+              case MODULE -> outerScope.isModuleScope();
+              case ALL -> outerScope.getConstLevel() != ConstLevel.ALL;
+              case NONE -> false;
+            };
       }
     } else if (receiver instanceof GetModuleNode) {
       needsConst = constLevel != ConstLevel.NONE;
@@ -2482,13 +2456,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
     while (!list.isEmpty()) {
       var current = list.removeFirst();
-      if (current instanceof UnionTypeContext) {
-        var union = (UnionTypeContext) current;
-        list.addFirst(union.r);
-        list.addFirst(union.l);
+      if (current instanceof UnionTypeContext unionType) {
+        list.addFirst(unionType.r);
+        list.addFirst(unionType.l);
         continue;
       }
-      if (current instanceof DefaultUnionTypeContext) {
+      if (current instanceof DefaultUnionTypeContext defaultUnionType) {
         if (defaultIndex == -1) {
           defaultIndex = index;
         } else {
@@ -2497,10 +2470,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               .withSourceSection(createSourceSection(ctx))
               .build();
         }
-        var def = (DefaultUnionTypeContext) current;
         isUnionOfStringLiterals =
-            isUnionOfStringLiterals && def.type() instanceof StringLiteralTypeContext;
-        collector.add(def.type());
+            isUnionOfStringLiterals && defaultUnionType.type() instanceof StringLiteralTypeContext;
+        collector.add(defaultUnionType.type());
       } else {
         isUnionOfStringLiterals =
             isUnionOfStringLiterals && current instanceof StringLiteralTypeContext;
@@ -2735,7 +2707,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     var tokens = lastPart.ts;
-    assert tokens.size() >= 1;
+    assert !tokens.isEmpty();
     var lastToken = tokens.get(tokens.size() - 1);
 
     if (lastToken.getType() == PklLexer.MLNewline) {
@@ -2759,13 +2731,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var text = token.getText();
 
     for (var i = 0; i < text.length(); i++) {
-      switch (text.charAt(i)) {
-        case ' ':
-        case '\t':
-          continue;
-        default:
-          return false;
-      }
+      var ch = text.charAt(i);
+      if (ch != ' ' && ch != '\t') return false;
     }
 
     return true;
@@ -2775,12 +2742,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var text = token.getText();
 
     for (var i = 0; i < text.length(); i++) {
-      switch (text.charAt(i)) {
-        case ' ':
-        case '\t':
-          continue;
-        default:
-          return text.substring(0, i);
+      var ch = text.charAt(i);
+      if (ch != ' ' && ch != '\t') {
+        return text.substring(0, i);
       }
     }
 
@@ -2829,11 +2793,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       Token token = tokens.get(i);
 
       switch (token.getType()) {
-        case PklLexer.MLNewline:
+        case PklLexer.MLNewline -> {
           builder.append('\n');
           isLineStart = true;
-          break;
-        case PklLexer.MLCharacters:
+        }
+        case PklLexer.MLCharacters -> {
           var text = token.getText();
           if (isLineStart) {
             if (text.startsWith(commonIndent)) {
@@ -2852,8 +2816,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             builder.append(text);
           }
           isLineStart = false;
-          break;
-        case PklLexer.MLCharacterEscape:
+        }
+        case PklLexer.MLCharacterEscape -> {
           if (isLineStart && !commonIndent.isEmpty()) {
             throw exceptionBuilder()
                 .evalError("stringIndentationMustMatchLastLine")
@@ -2862,8 +2826,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           }
           builder.append(parseCharacterEscapeSequence(token));
           isLineStart = false;
-          break;
-        case PklLexer.MLUnicodeEscape:
+        }
+        case PklLexer.MLUnicodeEscape -> {
           if (isLineStart && !commonIndent.isEmpty()) {
             throw exceptionBuilder()
                 .evalError("stringIndentationMustMatchLastLine")
@@ -2872,9 +2836,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           }
           builder.appendCodePoint(parseUnicodeEscapeSequence(token));
           isLineStart = false;
-          break;
-        default:
-          throw exceptionBuilder().unreachableCode().build();
+        }
+        default -> throw exceptionBuilder().unreachableCode().build();
       }
     }
 
@@ -2883,26 +2846,28 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   private ResolveDeclaredTypeNode doVisitTypeName(QualifiedIdentifierContext ctx) {
     var tokens = ctx.ts;
-    switch (tokens.size()) {
-      case 1:
+    return switch (tokens.size()) {
+      case 1 -> {
         var token = tokens.get(0);
-        return new ResolveSimpleDeclaredTypeNode(
+        yield new ResolveSimpleDeclaredTypeNode(
             createSourceSection(token), Identifier.get(token.getText()), isBaseModule);
-      case 2:
+      }
+      case 2 -> {
         var token1 = tokens.get(0);
         var token2 = tokens.get(1);
-        return new ResolveQualifiedDeclaredTypeNode(
+        yield new ResolveQualifiedDeclaredTypeNode(
             createSourceSection(ctx),
             createSourceSection(token1),
             createSourceSection(token2),
             Identifier.localProperty(token1.getText()),
             Identifier.get(token2.getText()));
-      default:
-        throw exceptionBuilder()
-            .evalError("invalidTypeName", ctx.getText())
-            .withSourceSection(createSourceSection(ctx))
-            .build();
-    }
+      }
+      default ->
+          throw exceptionBuilder()
+              .evalError("invalidTypeName", ctx.getText())
+              .withSourceSection(createSourceSection(ctx))
+              .build();
+    };
   }
 
   private void checkCommaSeparatedElements(
@@ -2918,11 +2883,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       var index = elements.indexOf(child);
       if (index > 0) { // 0 rather than -1 because no separator is expected before first element
         assert prevChild != null;
-        if (!(prevChild instanceof TerminalNode)
-            || !separators.contains(((TerminalNode) prevChild).getSymbol())) {
+        if (!(prevChild instanceof TerminalNode terminalNode)
+            || !separators.contains(terminalNode.getSymbol())) {
           var prevToken =
-              prevChild instanceof TerminalNode
-                  ? ((TerminalNode) prevChild).getSymbol()
+              prevChild instanceof TerminalNode terminalNode
+                  ? terminalNode.getSymbol()
                   : ((ParserRuleContext) prevChild).getStop();
           throw exceptionBuilder()
               .evalError("missingCommaSeparator")

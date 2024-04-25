@@ -201,8 +201,8 @@ public final class JsonRendererNodes {
       if (!isFirst) builder.append(',');
       startNewLine();
 
-      if (key instanceof String) {
-        visitString((String) key);
+      if (key instanceof String string) {
+        visitString(string);
         builder.append(separator);
         return;
       }

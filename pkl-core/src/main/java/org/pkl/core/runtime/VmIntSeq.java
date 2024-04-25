@@ -107,9 +107,7 @@ public final class VmIntSeq extends VmValue implements Iterable<Long> {
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (!(obj instanceof VmIntSeq)) return false;
-
-    var other = (VmIntSeq) obj;
+    if (!(obj instanceof VmIntSeq other)) return false;
     return isEmpty()
         ? other.isEmpty()
         : start == other.start && last == other.last && step == other.step;

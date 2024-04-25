@@ -448,91 +448,81 @@ public final class IoUtils {
 
   public static String toUnicodeEscape(int ch) {
     var hex = Integer.toHexString(ch);
-    switch (hex.length()) {
-      case 1:
-        return "\\u000" + hex;
-      case 2:
-        return "\\u00" + hex;
-      case 3:
-        return "\\u0" + hex;
-      case 4:
-        return "\\u" + hex;
-      default:
-        throw new IllegalArgumentException(String.valueOf(ch));
-    }
+    return switch (hex.length()) {
+      case 1 -> "\\u000" + hex;
+      case 2 -> "\\u00" + hex;
+      case 3 -> "\\u0" + hex;
+      case 4 -> "\\u" + hex;
+      default -> throw new IllegalArgumentException(String.valueOf(ch));
+    };
   }
 
   public static String toHexEscape(int ch) {
     var hex = Integer.toHexString(ch);
-    switch (hex.length()) {
-      case 1:
-        return "\\x0" + hex;
-      case 2:
-        return "\\x" + hex;
-      default:
-        throw new IllegalArgumentException(String.valueOf(ch));
-    }
+    return switch (hex.length()) {
+      case 1 -> "\\x0" + hex;
+      case 2 -> "\\x" + hex;
+      default -> throw new IllegalArgumentException(String.valueOf(ch));
+    };
   }
 
   public static boolean isHexDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case 'A':
-      case 'B':
-      case 'C':
-      case 'D':
-      case 'E':
-      case 'F':
-      case 'a':
-      case 'b':
-      case 'c':
-      case 'd':
-      case 'e':
-      case 'f':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0',
+              '1',
+              '2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              'A',
+              'B',
+              'C',
+              'D',
+              'E',
+              'F',
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f' ->
+          true;
+      default -> false;
+    };
   }
 
   public static boolean isHexDigitOrUnderscore(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case 'A':
-      case 'B':
-      case 'C':
-      case 'D':
-      case 'E':
-      case 'F':
-      case 'a':
-      case 'b':
-      case 'c':
-      case 'd':
-      case 'e':
-      case 'f':
-      case '_':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0',
+              '1',
+              '2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              'A',
+              'B',
+              'C',
+              'D',
+              'E',
+              'F',
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+              '_' ->
+          true;
+      default -> false;
+    };
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -592,47 +582,24 @@ public final class IoUtils {
   }
 
   public static boolean isOctalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7' -> true;
+      default -> false;
+    };
   }
 
   public static boolean isOctalDigitOrUnderscore(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '_':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7', '_' -> true;
+      default -> false;
+    };
   }
 
   public static boolean isBinaryDigitOrUnderscore(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '_':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '_' -> true;
+      default -> false;
+    };
   }
 
   /**

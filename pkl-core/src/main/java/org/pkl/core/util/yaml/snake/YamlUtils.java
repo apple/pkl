@@ -64,15 +64,11 @@ public final class YamlUtils {
 
   private static ScalarResolver getScalarResolver(
       String mode, ScalarResolver yamlCompatEmitterResolver) {
-    switch (mode) {
-      case "compat":
-        return yamlCompatEmitterResolver;
-      case "1.1":
-        return YAML_11_RESOLVER;
-      case "1.2":
-        return YAML_12_RESOLVER;
-      default:
-        throw new IllegalArgumentException(mode);
-    }
+    return switch (mode) {
+      case "compat" -> yamlCompatEmitterResolver;
+      case "1.1" -> YAML_11_RESOLVER;
+      case "1.2" -> YAML_12_RESOLVER;
+      default -> throw new IllegalArgumentException(mode);
+    };
   }
 }

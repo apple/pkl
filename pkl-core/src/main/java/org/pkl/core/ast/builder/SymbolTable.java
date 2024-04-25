@@ -284,8 +284,8 @@ public final class SymbolTable {
     }
 
     private String getNextEntryName(@Nullable ExpressionNode keyNode) {
-      if (keyNode instanceof ConstantNode) {
-        var value = ((ConstantNode) keyNode).getValue();
+      if (keyNode instanceof ConstantNode constantNode) {
+        var value = constantNode.getValue();
         if (value instanceof String) {
           return "[\"" + value + "\"]";
         }

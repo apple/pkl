@@ -26,17 +26,17 @@ public final class CodeGeneratorUtils {
   private CodeGeneratorUtils() {}
 
   public static boolean isRepresentableAsEnum(PType type, @Nullable Set<String> collector) {
-    if (type instanceof PType.StringLiteral) {
+    if (type instanceof PType.StringLiteral stringLiteralType) {
       if (collector != null) {
-        collector.add(((PType.StringLiteral) type).getLiteral());
+        collector.add(stringLiteralType.getLiteral());
       }
       return true;
     }
-    if (type instanceof PType.Alias) {
-      return isRepresentableAsEnum(((PType.Alias) type).getAliasedType(), collector);
+    if (type instanceof PType.Alias aliasType) {
+      return isRepresentableAsEnum(aliasType.getAliasedType(), collector);
     }
-    if (type instanceof PType.Union) {
-      for (var elementType : ((PType.Union) type).getElementTypes()) {
+    if (type instanceof PType.Union unionType) {
+      for (var elementType : unionType.getElementTypes()) {
         if (!isRepresentableAsEnum(elementType, collector)) return false;
       }
       return true;
@@ -48,14 +48,14 @@ public final class CodeGeneratorUtils {
     if (type instanceof PType.StringLiteral) {
       return true;
     }
-    if (type instanceof PType.Class) {
-      return ((PType.Class) type).getPClass().getInfo() == PClassInfo.String;
+    if (type instanceof PType.Class classType) {
+      return classType.getPClass().getInfo() == PClassInfo.String;
     }
-    if (type instanceof PType.Alias) {
-      return isRepresentableAsString(((PType.Alias) type).getAliasedType());
+    if (type instanceof PType.Alias aliasType) {
+      return isRepresentableAsString(aliasType.getAliasedType());
     }
-    if (type instanceof PType.Union) {
-      for (var elementType : ((PType.Union) type).getElementTypes()) {
+    if (type instanceof PType.Union unionType) {
+      for (var elementType : unionType.getElementTypes()) {
         if (!isRepresentableAsString(elementType)) return false;
       }
       return true;
@@ -117,38 +117,36 @@ public final class CodeGeneratorUtils {
    * generated code.
    */
   private static boolean isValidIdentifierPart(int codePoint, int category) {
-    switch (category) {
+    return switch (category) {
         // NOT Character.CURRENCY_SYMBOL, which is valid in Java, but invalid in Kotlin
-      case Character.LOWERCASE_LETTER:
-      case Character.UPPERCASE_LETTER:
-      case Character.MODIFIER_LETTER:
-      case Character.OTHER_LETTER:
-      case Character.TITLECASE_LETTER:
-      case Character.LETTER_NUMBER:
-      case Character.DECIMAL_DIGIT_NUMBER:
-        return true;
-      default:
-        return codePoint == UNDERSCORE;
-    }
+      case Character.LOWERCASE_LETTER,
+              Character.UPPERCASE_LETTER,
+              Character.MODIFIER_LETTER,
+              Character.OTHER_LETTER,
+              Character.TITLECASE_LETTER,
+              Character.LETTER_NUMBER,
+              Character.DECIMAL_DIGIT_NUMBER ->
+          true;
+      default -> codePoint == UNDERSCORE;
+    };
   }
 
   private static boolean isPunctuationOrSpacing(int category) {
-    switch (category) {
+    return switch (category) {
         // Punctuation
-      case Character.CONNECTOR_PUNCTUATION: // Pc
-      case Character.DASH_PUNCTUATION: // Pd
-      case Character.START_PUNCTUATION: // Ps
-      case Character.END_PUNCTUATION: // Pe
-      case Character.INITIAL_QUOTE_PUNCTUATION: // Pi
-      case Character.FINAL_QUOTE_PUNCTUATION: // Pf
-      case Character.OTHER_PUNCTUATION: // Po
-        // Spacing
-      case Character.SPACE_SEPARATOR: // Zs
-      case Character.LINE_SEPARATOR: // Zl
-      case Character.PARAGRAPH_SEPARATOR: // Zp
-        return true;
-      default:
-        return false;
-    }
+      case Character.CONNECTOR_PUNCTUATION, // Pc
+              Character.DASH_PUNCTUATION, // Pd
+              Character.START_PUNCTUATION, // Ps
+              Character.END_PUNCTUATION, // Pe
+              Character.INITIAL_QUOTE_PUNCTUATION, // Pi
+              Character.FINAL_QUOTE_PUNCTUATION, // Pf
+              Character.OTHER_PUNCTUATION, // Po
+              // Spacing
+              Character.SPACE_SEPARATOR, // Zs
+              Character.LINE_SEPARATOR, // Zl
+              Character.PARAGRAPH_SEPARATOR -> // Zp
+          true;
+      default -> false;
+    };
   }
 }

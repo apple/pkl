@@ -134,8 +134,7 @@ public class ExecutorSpiImpl implements ExecutorSpi {
     List<URI> certificateUris;
     int testPort;
     try {
-      if (options instanceof ExecutorSpiOptions2) {
-        var options2 = (ExecutorSpiOptions2) options;
+      if (options instanceof ExecutorSpiOptions2 options2) {
         certificateFiles = options2.getCertificateFiles();
         certificateUris = options2.getCertificateUris();
         testPort = options2.getTestPort();

@@ -46,23 +46,17 @@ public abstract class ExternalMemberRegistry {
   public final ExpressionNode getFunctionBody(
       String qualifiedName, SourceSection headerSection, int paramCount) {
 
-    switch (paramCount) {
-      case 0:
-        return getFunction0Body(qualifiedName, headerSection);
-      case 1:
-        return getFunction1Body(qualifiedName, headerSection);
-      case 2:
-        return getFunction2Body(qualifiedName, headerSection);
-      case 3:
-        return getFunction3Body(qualifiedName, headerSection);
-      case 4:
-        return getFunction4Body(qualifiedName, headerSection);
-      case 5:
-        return getFunction5Body(qualifiedName, headerSection);
-      default:
-        throw new IllegalStateException(
-            "External methods with more than 5 parameters are not currently supported.");
-    }
+    return switch (paramCount) {
+      case 0 -> getFunction0Body(qualifiedName, headerSection);
+      case 1 -> getFunction1Body(qualifiedName, headerSection);
+      case 2 -> getFunction2Body(qualifiedName, headerSection);
+      case 3 -> getFunction3Body(qualifiedName, headerSection);
+      case 4 -> getFunction4Body(qualifiedName, headerSection);
+      case 5 -> getFunction5Body(qualifiedName, headerSection);
+      default ->
+          throw new IllegalStateException(
+              "External methods with more than 5 parameters are not currently supported.");
+    };
   }
 
   protected void register(String memberName, ExternalPropertyNode.Factory factory) {

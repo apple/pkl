@@ -33,8 +33,7 @@ public class KeyLookupSuggestions {
 
     map.forEach(
         entry -> {
-          if (!(entry.getKey() instanceof String)) return;
-          var entryKey = (String) entry.getKey();
+          if (!(entry.getKey() instanceof String entryKey)) return;
           var similarity = STRING_SIMILARITY.similarity(entryKey, key);
           if (similarity >= SIMILARITY_THRESHOLD) {
             candidates.add(new Candidate(entryKey, similarity));
@@ -50,8 +49,7 @@ public class KeyLookupSuggestions {
 
     object.iterateMemberValues(
         (memberKey, member, value) -> {
-          if (!(memberKey instanceof String)) return true;
-          var stringKey = (String) memberKey;
+          if (!(memberKey instanceof String stringKey)) return true;
           var similarity = STRING_SIMILARITY.similarity(stringKey, key);
           if (similarity >= SIMILARITY_THRESHOLD) {
             candidates.add(new Candidate(stringKey, similarity));
@@ -80,7 +78,7 @@ public class KeyLookupSuggestions {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-      return (obj instanceof Candidate && ((Candidate) obj).key.equals(key));
+      return (obj instanceof Candidate candidate && candidate.key.equals(key));
     }
 
     @Override

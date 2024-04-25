@@ -127,11 +127,11 @@ public class VmExceptionBuilder {
   }
 
   public VmExceptionBuilder cannotFindMember(VmObjectLike receiver, Object memberKey) {
-    if (memberKey instanceof Identifier) {
-      return cannotFindProperty(receiver, (Identifier) memberKey, true, false);
+    if (memberKey instanceof Identifier identifier) {
+      return cannotFindProperty(receiver, identifier, true, false);
     }
-    if (memberKey instanceof String) {
-      var candidates = KeyLookupSuggestions.forObject(receiver, (String) memberKey);
+    if (memberKey instanceof String string) {
+      var candidates = KeyLookupSuggestions.forObject(receiver, string);
       if (!candidates.isEmpty()) {
         return evalError(
             "cannotFindKeyListCandidates",
@@ -245,8 +245,8 @@ public class VmExceptionBuilder {
   }
 
   public VmExceptionBuilder cannotFindKey(VmMap map, Object key) {
-    if (key instanceof String) {
-      var candidates = KeyLookupSuggestions.forMap(map, (String) key);
+    if (key instanceof String string) {
+      var candidates = KeyLookupSuggestions.forMap(map, string);
       if (!candidates.isEmpty()) {
         return evalError(
             "cannotFindKeyListCandidates",
@@ -334,44 +334,42 @@ public class VmExceptionBuilder {
       throw new IllegalStateException("No message set.");
     }
 
-    switch (kind) {
-      case EVAL_ERROR:
-        return new VmEvalException(
-            message,
-            cause,
-            isExternalMessage,
-            messageArguments,
-            programValues,
-            location,
-            sourceSection,
-            memberName,
-            hint);
-      case UNDEFINED_VALUE:
-        return new VmUndefinedValueException(
-            message,
-            cause,
-            isExternalMessage,
-            messageArguments,
-            programValues,
-            location,
-            sourceSection,
-            memberName,
-            hint,
-            receiver);
-      case BUG:
-        return new VmBugException(
-            message,
-            cause,
-            isExternalMessage,
-            messageArguments,
-            programValues,
-            location,
-            sourceSection,
-            memberName,
-            hint);
-      default:
-        throw unreachableCode().build();
-    }
+    return switch (kind) {
+      case EVAL_ERROR ->
+          new VmEvalException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hint);
+      case UNDEFINED_VALUE ->
+          new VmUndefinedValueException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hint,
+              receiver);
+      case BUG ->
+          new VmBugException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hint);
+    };
   }
 
   private List<Identifier> collectPropertyNames(VmObjectLike object, boolean isRead) {

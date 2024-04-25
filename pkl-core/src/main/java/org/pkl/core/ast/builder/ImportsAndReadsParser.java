@@ -93,11 +93,10 @@ public class ImportsAndReadsParser
   @Override
   public List<Pair<String, SourceSection>> visitReadExpr(ReadExprContext ctx) {
     var expr = ctx.expr();
-    if (!(expr instanceof SingleLineStringLiteralContext)) {
+    if (!(expr instanceof SingleLineStringLiteralContext slCtx)) {
       return Collections.emptyList();
     }
     // best-effort approach; only collect read expressions that are string constants.
-    var slCtx = (SingleLineStringLiteralContext) expr;
     var singleParts = slCtx.singleLineStringPart();
     String importString;
     if (singleParts.isEmpty()) {

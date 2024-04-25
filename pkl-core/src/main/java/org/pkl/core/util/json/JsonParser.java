@@ -129,39 +129,14 @@ public final class JsonParser {
 
   private void readValue() throws IOException {
     switch (current) {
-      case 'n':
-        readNull();
-        break;
-      case 't':
-        readTrue();
-        break;
-      case 'f':
-        readFalse();
-        break;
-      case '"':
-        readString();
-        break;
-      case '[':
-        readArray();
-        break;
-      case '{':
-        readObject();
-        break;
-      case '-':
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        readNumber();
-        break;
-      default:
-        throw expected("value");
+      case 'n' -> readNull();
+      case 't' -> readTrue();
+      case 'f' -> readFalse();
+      case '"' -> readString();
+      case '[' -> readArray();
+      case '{' -> readObject();
+      case '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> readNumber();
+      default -> throw expected("value");
     }
   }
 
@@ -293,27 +268,13 @@ public final class JsonParser {
   private void readEscape() throws IOException {
     read();
     switch (current) {
-      case '"':
-      case '/':
-      case '\\':
-        captureBuffer.append((char) current);
-        break;
-      case 'b':
-        captureBuffer.append('\b');
-        break;
-      case 'f':
-        captureBuffer.append('\f');
-        break;
-      case 'n':
-        captureBuffer.append('\n');
-        break;
-      case 'r':
-        captureBuffer.append('\r');
-        break;
-      case 't':
-        captureBuffer.append('\t');
-        break;
-      case 'u':
+      case '"', '/', '\\' -> captureBuffer.append((char) current);
+      case 'b' -> captureBuffer.append('\b');
+      case 'f' -> captureBuffer.append('\f');
+      case 'n' -> captureBuffer.append('\n');
+      case 'r' -> captureBuffer.append('\r');
+      case 't' -> captureBuffer.append('\t');
+      case 'u' -> {
         var hexChars = new char[4];
         for (var i = 0; i < 4; i++) {
           read();
@@ -323,9 +284,8 @@ public final class JsonParser {
           hexChars[i] = (char) current;
         }
         captureBuffer.append((char) Integer.parseInt(new String(hexChars), 16));
-        break;
-      default:
-        throw expected("valid escape sequence");
+      }
+      default -> throw expected("valid escape sequence");
     }
     read();
   }
