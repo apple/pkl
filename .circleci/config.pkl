@@ -21,16 +21,17 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
-  "bench"
-  "gradle-compatibility"
-}
+local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
 
 local buildAndTestJobs = (prbJobs) {
+  "bench"
+  "gradle-compatibility"
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
 }
 
 local releaseJobs = (prbJobs) {
+  "bench"
+  "gradle-compatibility"
   ...buildNativeJobs.keys.filter((it) -> it.endsWith("release"))
 }
 

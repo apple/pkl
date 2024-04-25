@@ -753,12 +753,6 @@ workflows:
     - gradle-check-jdk21:
         requires:
         - hold
-    - bench:
-        requires:
-        - hold
-    - gradle-compatibility:
-        requires:
-        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
