@@ -628,7 +628,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
     docker:
-    - image: cimg/openjdk:11.0
+    - image: cimg/openjdk:17.0
   gradle-compatibility:
     steps:
     - checkout
@@ -649,7 +649,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
     docker:
-    - image: cimg/openjdk:11.0
+    - image: cimg/openjdk:17.0
   deploy-snapshot:
     steps:
     - checkout
@@ -751,6 +751,12 @@ workflows:
         requires:
         - hold
     - gradle-check-jdk21:
+        requires:
+        - hold
+    - bench:
+        requires:
+        - hold
+    - gradle-compatibility:
         requires:
         - hold
     when:
