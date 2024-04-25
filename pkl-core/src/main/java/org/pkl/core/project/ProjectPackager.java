@@ -191,7 +191,7 @@ public class ProjectPackager {
         } else {
           throw new PklException(
               ErrorMessages.create(
-                  "unableToAccessPublishPackage", pkg.getPackageZipUrl(), e.getArguments()[0]));
+                  "unableToAccessPublishedPackage", pkg.getName() , pkg.getPackageZipUrl(), e.getArguments()[0]));
         }
       }
       throw e;
