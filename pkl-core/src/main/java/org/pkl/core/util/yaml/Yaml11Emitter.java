@@ -37,7 +37,7 @@ public class Yaml11Emitter extends YamlEmitter {
       return IoUtils.isDecimalDigit(ch) || ch == '.';
     }
 
-    int offset =
+    var offset =
         switch (str.charAt(0)) {
           case '+', '-' -> 1;
           default -> 0;
