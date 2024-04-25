@@ -23,7 +23,7 @@ It offers a higher-level API specifically designed for consuming application run
 == Installation
 
 The _pkl-config-java_ library is available {uri-pkl-config-java-maven-module}[from Maven Central].
-It requires Java 11 or higher.
+It requires Java 17 or higher.
 
 === Gradle
 

@@ -321,7 +321,7 @@ publishing {
         description.set("""
           Pkl CLI executable for Java.
           Can be executed directly on *nix (if the `java` command is found on the PATH) and with `java -jar` otherwise.
-          Requires Java 11 or higher.
+          Requires Java 17 or higher.
         """.trimIndent())
       }
     }

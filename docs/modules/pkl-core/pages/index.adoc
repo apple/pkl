@@ -22,7 +22,7 @@ The library can also be used to embed Pkl in Java libraries and applications.
 == Installation
 
 The _pkl-core_ library is available {uri-pkl-core-maven-module}[from Maven Central].
-It requires Java 11 or higher.
+It requires Java 17 or higher.
 
 === Gradle
 
