@@ -78,32 +78,6 @@ class HttpClientTest {
   }
 
   @Test
-  fun `can load certificates from URI`(@TempDir tempDir: Path) {
-    val file = FileTestUtils.selfSignedCertificate.copyTo(tempDir.resolve("certs.pem"))
-    assertDoesNotThrow {
-      HttpClient.builder().addCertificates(file.toUri()).build()
-    }
-  }
-
-  @Test
-  fun `only allows loading jar and file certificate URIs`() {
-    assertThrows<HttpClientInitException> {
-      HttpClient.builder().addCertificates(URI("https://example.com"))
-    }
-  }
-
-  @Test
-  fun `certificate file located on class path cannot be empty`() {
-    val uri = javaClass.getResource("emptyCerts.pem")!!.toURI()
-
-    val e = assertThrows<HttpClientInitException> {
-      HttpClient.builder().addCertificates(uri).build()
-    }
-
-    assertThat(e).hasMessageContaining("empty")
-  }
-
-  @Test
   fun `can load built-in certificates`() {
     assertDoesNotThrow {
       HttpClient.builder().build()

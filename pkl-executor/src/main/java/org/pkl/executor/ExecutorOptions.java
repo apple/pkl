@@ -15,7 +15,6 @@
  */
 package org.pkl.executor;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -52,8 +51,6 @@ public final class ExecutorOptions {
 
   private final List<Path> certificatePaths;
 
-  private final List<URI> certificateUris;
-
   private final int testPort; // -1 means disabled
 
   private final int spiOptionsVersion; // -1 means use latest
@@ -84,7 +81,6 @@ public final class ExecutorOptions {
     private /* @Nullable */ Path moduleCacheDir;
     private /* @Nullable */ Path projectDir;
     private List<Path> certificatePaths = List.of();
-    private List<URI> certificateUris = List.of();
     private int testPort = -1; // -1 means disabled
     private int spiOptionsVersion = -1; // -1 means use latest
 
@@ -188,18 +184,6 @@ public final class ExecutorOptions {
       return this;
     }
 
-    /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificateUris(List<URI> certificateUris) {
-      this.certificateUris = certificateUris;
-      return this;
-    }
-
-    /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificateUris(URI... certificateUris) {
-      this.certificateUris = List.of(certificateUris);
-      return this;
-    }
-
     /** Internal test option. -1 means disabled. */
     Builder testPort(int testPort) {
       this.testPort = testPort;
@@ -225,7 +209,6 @@ public final class ExecutorOptions {
           moduleCacheDir,
           projectDir,
           certificatePaths,
-          certificateUris,
           testPort,
           spiOptionsVersion);
     }
@@ -273,7 +256,6 @@ public final class ExecutorOptions {
         moduleCacheDir,
         projectDir,
         List.of(),
-        List.of(),
         -1,
         -1);
   }
@@ -290,7 +272,6 @@ public final class ExecutorOptions {
       /* @Nullable */ Path moduleCacheDir,
       /* @Nullable */ Path projectDir,
       List<Path> certificatePaths,
-      List<URI> certificateUris,
       int testPort,
       int spiOptionsVersion) {
 
@@ -305,7 +286,6 @@ public final class ExecutorOptions {
     this.moduleCacheDir = moduleCacheDir;
     this.projectDir = projectDir;
     this.certificatePaths = List.copyOf(certificatePaths);
-    this.certificateUris = List.copyOf(certificateUris);
     this.testPort = testPort;
     this.spiOptionsVersion = spiOptionsVersion;
   }
@@ -373,11 +353,6 @@ public final class ExecutorOptions {
     return certificatePaths;
   }
 
-  /** API equivalent of the {@code --ca-certificates} CLI option. */
-  public List<URI> getCertificateUris() {
-    return certificateUris;
-  }
-
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
@@ -395,7 +370,6 @@ public final class ExecutorOptions {
         && Objects.equals(moduleCacheDir, other.moduleCacheDir)
         && Objects.equals(projectDir, other.projectDir)
         && Objects.equals(certificatePaths, other.certificatePaths)
-        && Objects.equals(certificateUris, other.certificateUris)
         && testPort == other.testPort
         && spiOptionsVersion == other.spiOptionsVersion;
   }
@@ -414,7 +388,6 @@ public final class ExecutorOptions {
         moduleCacheDir,
         projectDir,
         certificatePaths,
-        certificateUris,
         testPort,
         spiOptionsVersion);
   }
@@ -444,8 +417,6 @@ public final class ExecutorOptions {
         + projectDir
         + ", certificatePaths="
         + certificatePaths
-        + ", certificateUris="
-        + certificateUris
         + ", testPort="
         + testPort
         + ", spiOptionsVersion="
@@ -468,7 +439,6 @@ public final class ExecutorOptions {
               moduleCacheDir,
               projectDir,
               certificatePaths,
-              certificateUris,
               testPort);
       case 1 -> // for testing only
           new ExecutorSpiOptions(

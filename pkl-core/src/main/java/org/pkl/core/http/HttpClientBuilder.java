@@ -15,21 +15,18 @@
  */
 package org.pkl.core.http;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
-import org.pkl.core.util.ErrorMessages;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
   private Duration connectTimeout = Duration.ofSeconds(60);
   private Duration requestTimeout = Duration.ofSeconds(60);
   private final List<Path> certificatePaths = new ArrayList<>();
-  private final List<URI> certificateUris = new ArrayList<>();
   private int testPort = -1;
 
   HttpClientBuilder() {
@@ -62,16 +59,6 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public HttpClient.Builder addCertificates(URI url) {
-    var scheme = url.getScheme();
-    if (!"jar".equalsIgnoreCase(scheme) && !"file".equalsIgnoreCase(scheme)) {
-      throw new HttpClientInitException(ErrorMessages.create("expectedJarOrFileUrl", url));
-    }
-    certificateUris.add(url);
-    return this;
-  }
-
-  @Override
   public HttpClient.Builder setTestPort(int port) {
     testPort = port;
     return this;
@@ -88,11 +75,10 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   private Supplier<HttpClient> doBuild() {
-    // make defensive copies because Supplier may get called after builder was mutated
+    // make defensive copy because Supplier may get called after builder was mutated
     var certificatePaths = List.copyOf(this.certificatePaths);
-    var certificateUris = List.copyOf(this.certificateUris);
     return () -> {
-      var jdkClient = new JdkHttpClient(certificatePaths, certificateUris, connectTimeout);
+      var jdkClient = new JdkHttpClient(certificatePaths, connectTimeout);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
     };
   }
