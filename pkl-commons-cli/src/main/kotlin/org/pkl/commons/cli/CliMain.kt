@@ -16,6 +16,7 @@
 package org.pkl.commons.cli
 
 import java.io.PrintStream
+import java.security.Security
 import kotlin.system.exitProcess
 
 /** Building block for CLIs. Intended to be called from a `main` method. */
@@ -26,6 +27,9 @@ fun cliMain(block: () -> Unit) {
     // ensure CLI output always ends with newline
     if (!message.endsWith('\n')) stream.println()
   }
+
+  // enable OCSP for default SSL context
+  Security.setProperty("ocsp.enable", "true")
 
   try {
     block()
