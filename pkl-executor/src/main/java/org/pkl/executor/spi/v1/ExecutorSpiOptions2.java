@@ -15,7 +15,6 @@
  */
 package org.pkl.executor.spi.v1;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -23,8 +22,6 @@ import java.util.Map;
 
 public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
   private final List<Path> certificateFiles;
-
-  private final List<URI> certificateUris;
 
   private final int testPort;
 
@@ -40,7 +37,6 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
       Path moduleCacheDir,
       Path projectDir,
       List<Path> certificateFiles,
-      List<URI> certificateUris,
       int testPort) {
     super(
         allowedModules,
@@ -54,16 +50,11 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
         moduleCacheDir,
         projectDir);
     this.certificateFiles = certificateFiles;
-    this.certificateUris = certificateUris;
     this.testPort = testPort;
   }
 
   public List<Path> getCertificatePaths() {
     return certificateFiles;
-  }
-
-  public List<URI> getCertificateUris() {
-    return certificateUris;
   }
 
   public int getTestPort() {

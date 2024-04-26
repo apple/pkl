@@ -16,7 +16,6 @@
 package org.pkl.core.http;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -70,24 +69,10 @@ public interface HttpClient extends AutoCloseable {
      * directory's regular files are added to the trust store. Each file must contain <a
      * href="https://en.wikipedia.org/wiki/X.509">X.509</a> certificates in PEM format.
      *
-     * <p>If no CA certificates are added via this method or {@link #addCertificates(URI)}, the
-     * built-in CA certificates of the Pkl native executable or JVM are used.
+     * <p>If no CA certificates are added via this method, the built-in CA certificates of the Pkl
+     * native executable or JVM are used.
      */
     Builder addCertificates(Path path);
-
-    /**
-     * Adds CA certificates to the client's trust store.
-     *
-     * <p>The given file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
-     * certificates in PEM format.
-     *
-     * <p>If no CA certificates are added via this method or {@link #addCertificates(Path)}, the
-     * built-in CA certificates of the Pkl native executable or JVM are used.
-     *
-     * @throws HttpClientInitException if the given URI has a scheme other than {@code jar:} or
-     *     {@code file:}
-     */
-    Builder addCertificates(URI file);
 
     /**
      * Sets a test server's listening port.
