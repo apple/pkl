@@ -15,30 +15,26 @@
  */
 package org.pkl.lsp.features
 
-import java.net.URI
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.HoverParams
-import org.eclipse.lsp4j.MarkupContent
 import org.pkl.lsp.PklLSPServer
-import org.pkl.lsp.cst.ClassEntry
-import org.pkl.lsp.cst.Clazz
-import org.pkl.lsp.cst.PklModule
 
 class HoverFeature(private val server: PklLSPServer) {
 
   fun onHover(params: HoverParams): CompletableFuture<Hover> {
-    fun run(mod: PklModule?): Hover? {
-      if (mod == null) return null
-      val uri = URI(params.textDocument.uri)
-      val line = params.position.line + 1
-      val col = params.position.character + 1
-      server.logger().log("received hover request at ($line - $col)")
-      val hoverText = findContext(mod, line, col)?.resolve() ?: return null
-      server.logger().log("hover text: $hoverText")
-      return Hover(MarkupContent("markdown", hoverText))
-    }
-    return server.builder().runningBuild().thenApply(::run)
+    return server.builder().runningBuild().thenApply { Hover() }
+    //    fun run(mod: Module?): Hover? {
+    //      if (mod == null) return null
+    //      val uri = URI(params.textDocument.uri)
+    //      val line = params.position.line + 1
+    //      val col = params.position.character + 1
+    //      server.logger().log("received hover request at ($line - $col)")
+    ////      val hoverText = findContext(mod, line, col)?.resolve() ?: return null
+    ////      server.logger().log("hover text: $hoverText")
+    ////      return Hover(MarkupContent("markdown", hoverText))
+    //    }
+    //    return server.builder().runningBuild().thenApply(::run)
   }
 
   sealed class HoverCtx {
@@ -55,25 +51,25 @@ class HoverFeature(private val server: PklLSPServer) {
         is Prop -> "**$name**"
       }
   }
-
-  private fun findContext(mod: PklModule, line: Int, col: Int): HoverCtx? {
-    // search module declaration
-    val decl = mod.decl
-    if (decl != null && decl.span.matches(line, col)) {
-      if (decl.nameSpan != null && decl.nameSpan.matches(line, col)) {
-        return HoverCtx.Module(decl.name!!.nameString)
-      }
-    }
-
-    for (entry in mod.entries) {
-      if (entry.name.span.matches(line, col)) {
-        return when (entry) {
-          is Clazz -> HoverCtx.Clazz(entry.name.value, null)
-          is ClassEntry -> HoverCtx.Prop(entry.name.value, null)
-          else -> null
-        }
-      }
-    }
-    return null
-  }
+  //
+  //  private fun findContext(mod: PklModule, line: Int, col: Int): HoverCtx? {
+  //    // search module declaration
+  //    val decl = mod.decl
+  //    if (decl != null && decl.span.matches(line, col)) {
+  //      if (decl.nameSpan != null && decl.nameSpan.matches(line, col)) {
+  //        return HoverCtx.Module(decl.name!!.nameString)
+  //      }
+  //    }
+  //
+  //    for (entry in mod.entries) {
+  //      if (entry.name.span.matches(line, col)) {
+  //        return when (entry) {
+  //          is Clazz -> HoverCtx.Clazz(entry.name.value, null)
+  //          is ClassEntry -> HoverCtx.Prop(entry.name.value, null)
+  //          else -> null
+  //        }
+  //      }
+  //    }
+  //    return null
+  //  }
 }

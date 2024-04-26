@@ -13,6 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp.ast
 
-data class DocComment(val contents: String)
+import org.pkl.core.parser.antlr.PklParser.QualifiedIdentifierContext
+import org.pkl.core.parser.antlr.PklParser.StringConstantContext
+
+class QualifiedIdentifierImpl(
+  override val parent: Node,
+  override val ctx: QualifiedIdentifierContext
+) : AbstractNode(parent, ctx), QualifiedIdentifier {
+  override val identifiers: List<Terminal> by lazy { getChildren(Terminal::class)!! }
+}
+
+class StringConstantImpl(
+  override val parent: Node,
+  override val ctx: StringConstantContext
+) : AbstractNode(parent, ctx), StringConstant {
+  override val value: String
+    get() = TODO("Not yet implemented")
+}

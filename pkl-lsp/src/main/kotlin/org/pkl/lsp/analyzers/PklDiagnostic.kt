@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp.analyzers
 
-sealed class Parameter(override val span: Span) : PklNode(span) {
+import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DiagnosticSeverity
+import org.pkl.lsp.LSPUtil.toRange
+import org.pkl.lsp.ast.Node
+import org.pkl.lsp.ast.Span
 
-  data class Underscore(override val span: Span) : Parameter(span)
-
-  data class TypedIdent(val ident: Ident, val type: Type?, override val span: Span) :
-    Parameter(span) {
-    init {
-      type?.parent = this
-    }
-  }
+class PklDiagnostic(span: Span, message: String, severity: DiagnosticSeverity) :
+  Diagnostic(span.toRange(), message, severity, "pkl") {
+  constructor(
+    node: Node,
+    message: String,
+    severity: DiagnosticSeverity
+  ) : this(node.span, message, severity)
 }

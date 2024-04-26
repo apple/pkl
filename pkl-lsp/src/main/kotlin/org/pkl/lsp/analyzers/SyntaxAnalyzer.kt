@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.cst
+package org.pkl.lsp.analyzers
 
-data class Import(val url: Ident, val isGlob: Boolean, val alias: Ident?, override val span: Span) :
-  PklNode(span)
+import org.pkl.lsp.PklLSPServer
+import org.pkl.lsp.ast.Node
+
+class SyntaxAnalyzer(private val server: PklLSPServer) : Analyzer() {
+  override fun doAnnotate(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
+    TODO("Not yet implemented")
+  }
+}
