@@ -1164,7 +1164,7 @@ result = someLib.x
     """
           .trimIndent()
       )
-    assertThat(tempDir.resolve("package-1")).doesNotExist()
+    assertThat(tempDir.resolve("package-2")).doesNotExist()
   }
 
   @Test

@@ -82,60 +82,71 @@ internal class RuntimeDataGenerator(
   }
 
   private fun writePackageFile(ref: PackageRef) {
-    outputDir.resolve("data/${ref.pkg}/${ref.version}/index.js").jsonWriter().use { writer ->
-      writer.isLenient = true
-      writer.writeLinks(
-        HtmlConstants.KNOWN_VERSIONS,
-        packageVersions.getOrDefault(ref.pkg, setOf()).sortedWith(descendingVersionComparator),
-        { it },
-        { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-        { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
-      )
-      writer.writeLinks(
-        HtmlConstants.KNOWN_USAGES,
-        packageUsages.getOrDefault(ref, setOf()).packagesWithHighestVersions().sortedBy { it.pkg },
-        PackageRef::pkg,
-        { it.pageUrlRelativeTo(ref) },
-        { null }
-      )
-    }
+    outputDir
+      .resolve("data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/index.js")
+      .jsonWriter()
+      .use { writer ->
+        writer.isLenient = true
+        writer.writeLinks(
+          HtmlConstants.KNOWN_VERSIONS,
+          packageVersions.getOrDefault(ref.pkg, setOf()).sortedWith(descendingVersionComparator),
+          { it },
+          { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
+          { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+        )
+        writer.writeLinks(
+          HtmlConstants.KNOWN_USAGES,
+          packageUsages.getOrDefault(ref, setOf()).packagesWithHighestVersions().sortedBy {
+            it.pkg
+          },
+          PackageRef::pkg,
+          { it.pageUrlRelativeTo(ref) },
+          { null }
+        )
+      }
   }
 
   private fun writeModuleFile(ref: ModuleRef) {
-    outputDir.resolve("data/${ref.pkg}/${ref.version}/${ref.module}/index.js").jsonWriter().use {
-      writer ->
-      writer.isLenient = true
-      writer.writeLinks(
-        HtmlConstants.KNOWN_VERSIONS,
-        moduleVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
-        { it },
-        { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-        { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+    outputDir
+      .resolve(
+        "data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/${ref.module.pathEncoded}/index.js"
       )
-      writer.writeLinks(
-        HtmlConstants.KNOWN_USAGES,
-        typeUsages.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
-          it.displayName
-        },
-        TypeRef::displayName,
-        { it.pageUrlRelativeTo(ref) },
-        { null }
-      )
-      writer.writeLinks(
-        HtmlConstants.KNOWN_SUBTYPES,
-        subtypes.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
-          it.displayName
-        },
-        TypeRef::displayName,
-        { it.pageUrlRelativeTo(ref) },
-        { null }
-      )
-    }
+      .jsonWriter()
+      .use { writer ->
+        writer.isLenient = true
+        writer.writeLinks(
+          HtmlConstants.KNOWN_VERSIONS,
+          moduleVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
+          { it },
+          { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
+          { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+        )
+        writer.writeLinks(
+          HtmlConstants.KNOWN_USAGES,
+          typeUsages.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
+            it.displayName
+          },
+          TypeRef::displayName,
+          { it.pageUrlRelativeTo(ref) },
+          { null }
+        )
+        writer.writeLinks(
+          HtmlConstants.KNOWN_SUBTYPES,
+          subtypes.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
+            it.displayName
+          },
+          TypeRef::displayName,
+          { it.pageUrlRelativeTo(ref) },
+          { null }
+        )
+      }
   }
 
   private fun writeClassFile(ref: TypeRef) {
     outputDir
-      .resolve("data/${ref.pkg}/${ref.version}/${ref.module}/${ref.type}.js")
+      .resolve(
+        "data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/${ref.module.pathEncoded}/${ref.type.pathEncoded}.js"
+      )
       .jsonWriter()
       .use { writer ->
         writer.isLenient = true

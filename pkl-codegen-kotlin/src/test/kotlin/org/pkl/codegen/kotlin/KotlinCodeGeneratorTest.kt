@@ -1501,6 +1501,24 @@ class KotlinCodeGeneratorTest {
     confirmSerDe(bigStruct)
   }
 
+  @Test
+  fun `encoded file paths`(@TempDir path: Path) {
+    val kotlinCode =
+      generateKotlinFiles(
+        path,
+        PklModule(
+          "FooBar.pkl",
+          """
+      module `Foo*Bar`
+      
+      someProp: String
+    """
+            .trimIndent()
+        )
+      )
+    assertThat(kotlinCode).containsKey("kotlin/Foo(2a)Bar.kt")
+  }
+
   private fun generateFiles(tempDir: Path, vararg pklModules: PklModule): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()

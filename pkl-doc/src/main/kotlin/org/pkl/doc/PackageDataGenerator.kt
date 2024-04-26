@@ -37,9 +37,11 @@ import org.pkl.core.util.IoUtils
 internal class PackageDataGenerator(private val outputDir: Path) {
   fun generate(pkg: DocPackage) {
     val path =
-      outputDir.resolve(pkg.name).resolve(pkg.version).resolve("package-data.json").apply {
-        createParentDirectories()
-      }
+      outputDir
+        .resolve(pkg.name.pathEncoded)
+        .resolve(pkg.version)
+        .resolve("package-data.json")
+        .apply { createParentDirectories() }
     PackageData(pkg).write(path)
   }
 

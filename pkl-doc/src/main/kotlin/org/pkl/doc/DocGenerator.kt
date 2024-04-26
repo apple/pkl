@@ -121,7 +121,7 @@ class DocGenerator(
 
   private fun createSymlinks(currentPackagesData: List<PackageData>) {
     for (packageData in currentPackagesData) {
-      val basePath = outputDir.resolve(packageData.ref.pkg)
+      val basePath = outputDir.resolve(packageData.ref.pkg.pathEncoded)
       val src = basePath.resolve(packageData.ref.version)
       val dest = basePath.resolve("current")
       if (dest.exists() && dest.isSameFileAs(src)) continue

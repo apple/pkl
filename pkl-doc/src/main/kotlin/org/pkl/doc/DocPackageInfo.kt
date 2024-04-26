@@ -203,9 +203,9 @@ data class DocPackageInfo(
       when {
         !moduleName.startsWith(prefix) -> null
         else -> {
-          val modulePath = moduleName.substring(prefix.length).replace('.', '/')
+          val modulePath = moduleName.substring(prefix.length).replace('.', '/').pathEncoded
           if (documentation == null) {
-            "$name/$version/$modulePath/index.html".toUri()
+            "${name.pathEncoded}/$version/$modulePath/index.html".toUri()
           } else {
             documentation.resolve("$modulePath/index.html")
           }

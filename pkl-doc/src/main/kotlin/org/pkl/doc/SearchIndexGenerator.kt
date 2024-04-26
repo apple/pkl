@@ -64,7 +64,7 @@ internal class SearchIndexGenerator(private val outputDir: Path) {
   fun generate(docPackage: DocPackage) {
     val path =
       outputDir
-        .resolve("${docPackage.name}/${docPackage.version}/search-index.js")
+        .resolve("${docPackage.name.pathEncoded}/${docPackage.version}/search-index.js")
         .createParentDirectories()
     JsonWriter(path.bufferedWriter()).use { writer ->
       writer.apply {
