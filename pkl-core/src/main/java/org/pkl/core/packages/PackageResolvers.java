@@ -413,7 +413,7 @@ final class PackageResolvers {
 
     private final Path tmpDir;
 
-    private static final String CACHE_DIR_PREFIX = "package-1";
+    private static final String CACHE_DIR_PREFIX = "package-2";
 
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, FileSystem> fileSystems = EconomicMaps.create();
@@ -438,12 +438,14 @@ final class PackageResolvers {
         return path;
       }
       var checksumIdx = path.lastIndexOf("::");
-      return path.substring(0, checksumIdx);
+      return IoUtils.encodePath(path.substring(0, checksumIdx));
     }
 
     private Path getRelativePath(PackageUri uri) {
       return Path.of(
-          CACHE_DIR_PREFIX, uri.getUri().getAuthority(), getEffectivePackageUriPath(uri));
+          CACHE_DIR_PREFIX,
+          IoUtils.encodePath(uri.getUri().getAuthority()),
+          getEffectivePackageUriPath(uri));
     }
 
     private String getLastSegmentName(PackageUri packageUri) {

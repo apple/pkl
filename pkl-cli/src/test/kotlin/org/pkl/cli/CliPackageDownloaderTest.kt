@@ -56,12 +56,12 @@ class CliPackageDownloaderTest {
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.1.0/fruit@1.1.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.1.0/fruit@1.1.0.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.0.5/fruit@1.0.5.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.1.0/fruit@1.1.0.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.1.0/fruit@1.1.0.json")).exists()
   }
 
   @Test
@@ -90,9 +90,9 @@ class CliPackageDownloaderTest {
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve(".my-cache/package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip"))
+    assertThat(tempDir.resolve(".my-cache/package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip"))
       .exists()
-    assertThat(tempDir.resolve(".my-cache/package-1/localhost:0/birds@0.5.0/birds@0.5.0.json"))
+    assertThat(tempDir.resolve(".my-cache/package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.json"))
       .exists()
   }
 
@@ -113,8 +113,8 @@ class CliPackageDownloaderTest {
         noTransitive = true
       )
     cmd.run()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.json")).exists()
   }
 
   @Test
@@ -228,9 +228,9 @@ class CliPackageDownloaderTest {
         noTransitive = false
       )
       .run()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/birds@0.5.0/birds@0.5.0.json")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
-    assertThat(tempDir.resolve("package-1/localhost:0/fruit@1.0.5/fruit@1.0.5.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.json")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.0.5/fruit@1.0.5.zip")).exists()
+    assertThat(tempDir.resolve("package-2/localhost(3a)0/fruit@1.0.5/fruit@1.0.5.json")).exists()
   }
 }

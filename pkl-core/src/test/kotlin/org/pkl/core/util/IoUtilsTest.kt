@@ -431,4 +431,14 @@ class IoUtilsTest {
       IoUtils.readString(URI("http://example.com").toURL())
     }
   }
+
+  @Test
+  fun `encodePath encodes characters reserved on windows`() {
+    assertThat(IoUtils.encodePath("foo:bar")).isEqualTo("foo(3a)bar")
+    assertThat(IoUtils.encodePath("<>:\"\\|?*")).isEqualTo("(3c)(3e)(3a)(22)(5c)(7c)(3f)(2a)")
+    assertThat(IoUtils.encodePath("foo(3a)bar")).isEqualTo("foo((3a)bar")
+    assertThat(IoUtils.encodePath("(")).isEqualTo("((")
+    assertThat(IoUtils.encodePath("3a)")).isEqualTo("3a)")
+    assertThat(IoUtils.encodePath("foo/bar/baz")).isEqualTo("foo/bar/baz")
+  }
 }

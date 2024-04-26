@@ -2,8 +2,11 @@ package org.pkl.executor
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -424,9 +427,11 @@ class EmbeddedExecutorTest {
 
   @ParameterizedTest
   @MethodSource("getAllTestExecutors")
+  @DisabledOnOs(OS.WINDOWS, disabledReason = "Can't populate legacy cache dir on Windows")
   fun `evaluate a project dependency`(executor: TestExecutor, @TempDir tempDir: Path) {
     val cacheDir = tempDir.resolve("packages")
     PackageServer.populateCacheDir(cacheDir)
+    PackageServer.populateLegacyCacheDir(cacheDir)
     val projectDir = tempDir.resolve("project/")
     projectDir.createDirectories()
     projectDir.resolve("PklProject").toFile().writeText("""

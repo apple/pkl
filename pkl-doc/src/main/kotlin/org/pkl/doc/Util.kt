@@ -17,14 +17,13 @@ package org.pkl.doc
 
 import java.io.InputStream
 import java.net.URI
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.outputStream
 import org.pkl.commons.createParentDirectories
 import org.pkl.core.*
 import org.pkl.core.parser.Lexer
+import org.pkl.core.util.IoUtils
 import org.pkl.core.util.json.JsonWriter
 
 // overwrites any existing file
@@ -148,3 +147,6 @@ internal val String.asModuleName: String
 
 internal val String.asIdentifier: String
   get() = Lexer.maybeQuoteIdentifier(this)
+
+internal val String.pathEncoded
+  get(): String = IoUtils.encodePath(this)

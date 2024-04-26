@@ -22,6 +22,7 @@ import java.net.URI
 import java.util.*
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
+import org.pkl.core.util.IoUtils
 
 data class KotlinCodegenOptions(
   /** The characters to use for indenting generated Kotlin code. */
@@ -89,7 +90,7 @@ class KotlinCodeGenerator(
 
   private val propertyFileName: String
     get() =
-      "resources/META-INF/org/pkl/config/java/mapper/classes/${moduleSchema.moduleName}.properties"
+      "resources/META-INF/org/pkl/config/java/mapper/classes/${IoUtils.encodePath(moduleSchema.moduleName)}.properties"
 
   private val propertiesFile: String
     get() {
@@ -195,7 +196,7 @@ class KotlinCodeGenerator(
     }
 
   private fun relativeOutputPathFor(moduleName: String): String {
-    val nameParts = moduleName.split(".")
+    val nameParts = moduleName.split(".").map(IoUtils::encodePath)
     val dirPath = nameParts.dropLast(1).joinToString("/")
     val fileName = nameParts.last().replaceFirstChar { it.titlecaseChar() }
     return if (dirPath.isEmpty()) {

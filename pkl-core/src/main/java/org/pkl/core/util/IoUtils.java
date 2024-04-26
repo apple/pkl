@@ -597,6 +597,30 @@ public final class IoUtils {
     return newUri;
   }
 
+  /**
+   * Windows reserves characters {@code <>:"\|?*} in filenames.
+   *
+   * <p>For any such characters, enclose their decimal character code with parentheses. Verbatim
+   * {@code (} is encoded as {@code ((}.
+   */
+  public static String encodePath(String path) {
+    if (path.isEmpty()) return path;
+    var sb = new StringBuilder();
+    for (var i = 0; i < path.length(); i++) {
+      var character = path.charAt(i);
+      switch (character) {
+        case '<', '>', ':', '"', '\\', '|', '?', '*' -> {
+          sb.append('(');
+          sb.append(ByteArrayUtils.toHex(new byte[] {(byte) character}));
+          sb.append(")");
+        }
+        case '(' -> sb.append("((");
+        default -> sb.append(path.charAt(i));
+      }
+    }
+    return sb.toString();
+  }
+
   private static int getExclamationMarkIndex(String jarUri) {
     var index = jarUri.indexOf('!');
     if (index == -1) {

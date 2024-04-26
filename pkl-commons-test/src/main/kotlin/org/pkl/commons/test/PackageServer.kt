@@ -51,7 +51,14 @@ class PackageServer : AutoCloseable {
     const val FRUIT_1_1_SHA = "8d982761d182f2185e4180c82190791d9a60c721cb3393bb2e946fab90131e8c"
 
     fun populateCacheDir(cacheDir: Path) {
-      val basePath = cacheDir.resolve("package-1/localhost:$PORT")
+      doPopulateCacheDir(cacheDir.resolve("package-2/localhost(3a)$PORT"))
+    }
+
+    fun populateLegacyCacheDir(cacheDir: Path) {
+      doPopulateCacheDir(cacheDir.resolve("package-1/localhost:$PORT"))
+    }
+
+    private fun doPopulateCacheDir(basePath: Path) {
       basePath.deleteRecursively()
       Files.walk(packagesDir).use { stream ->
         stream.forEach { source ->

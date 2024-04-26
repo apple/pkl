@@ -22,6 +22,7 @@ import java.util.Properties;
 import java.util.Set;
 import org.pkl.config.java.InvalidMappingException;
 import org.pkl.core.PClassInfo;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -77,7 +78,7 @@ public class ClassRegistry {
       loadedModules.add(pklModuleName);
       var url =
           ClassRegistry.class.getResourceAsStream(
-              CLASSES_DIRECTORY + "/" + pklModuleName + ".properties");
+              CLASSES_DIRECTORY + "/" + IoUtils.encodePath(pklModuleName) + ".properties");
       if (url == null) {
         return;
       }
