@@ -62,7 +62,7 @@ import org.pkl.gradle.task.TestTask;
 @SuppressWarnings("unused")
 public class PklPlugin implements Plugin<Project> {
 
-  private static final String MIN_GRADLE_VERSION = "7.2";
+  private static final String MIN_GRADLE_VERSION = "8.1";
 
   @LateInit private Project project;
 

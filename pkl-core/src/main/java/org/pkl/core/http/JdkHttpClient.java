@@ -101,9 +101,6 @@ final class JdkHttpClient implements HttpClient {
               "errorSslHandshake", request.uri().getHost(), Exceptions.getRootReason(e)));
     } catch (SSLException e) {
       throw new SSLException(Exceptions.getRootReason(e));
-    } catch (IOException e) {
-      // JDK 11 throws IOException instead of SSLHandshakeException
-      throw new IOException(Exceptions.getRootReason(e));
     } catch (InterruptedException e) {
       // next best thing after letting (checked) InterruptedException bubble up
       Thread.currentThread().interrupt();

@@ -24,7 +24,7 @@ See xref:pkl-gradle:index.adoc#installation[Installation] in the Gradle plugin c
 === Java Library
 
 The `pkl-codegen-java` library is available {uri-pkl-codgen-java-maven-module}[from Maven Central].
-It requires Java 11 or higher.
+It requires Java 17 or higher.
 
 ifndef::is-release-version[]
 NOTE: Snapshots are published to repository `{uri-sonatype}`.

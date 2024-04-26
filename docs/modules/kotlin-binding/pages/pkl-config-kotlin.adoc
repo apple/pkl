@@ -12,7 +12,7 @@ We recommend that Kotlin projects depend on this library instead of _pkl-config-
 == Installation
 
 The _pkl-config-kotlin_ library is available {uri-pkl-config-kotlin-maven-module}[from Maven Central].
-It requires Java 11 or higher and Kotlin 1.5 or higher.
+It requires Java 17 or higher and Kotlin 1.5 or higher.
 
 === Gradle
 
