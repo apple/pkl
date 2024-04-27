@@ -25,11 +25,13 @@ public final class StringUtils {
   // whose key property is that it maps 25 characters into the 32-slot table without collision.
   // Basically this is an opportunistic fast implementation as opposed to "good code". For most
   // other use-cases, the reduction in readability isn't worth it.
+  @SuppressWarnings("UnnecessaryUnicodeEscape")
   private static final String TABLE =
       "\u2002\u3000\r\u0085\u200A\u2005\u2000\u3000"
           + "\u2029\u000B\u3000\u2008\u2003\u205F\u3000\u1680"
           + "\u0009\u0020\u2006\u2001\u202F\u00A0\u000C\u2009"
           + "\u3000\u2004\u3000\u3000\u2028\n\u2007\u3000";
+
   private static final int MULTIPLIER = 1682554634;
   private static final int SHIFT = Integer.numberOfLeadingZeros(TABLE.length() - 1);
 

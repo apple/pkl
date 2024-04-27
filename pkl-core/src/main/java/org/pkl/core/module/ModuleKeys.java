@@ -151,13 +151,12 @@ public final class ModuleKeys {
     }
 
     @Override
-    public String loadSource() throws IOException {
+    public String loadSource() {
       return text;
     }
 
     @Override
-    public ResolvedModuleKey resolve(SecurityManager securityManager)
-        throws IOException, SecurityManagerException {
+    public ResolvedModuleKey resolve(SecurityManager securityManager) {
       return this;
     }
 
@@ -270,11 +269,6 @@ public final class ModuleKeys {
         throws SecurityManagerException {
       securityManager.checkResolveModule(uri);
       return this;
-    }
-
-    @Override
-    public boolean isCached() {
-      return true;
     }
 
     @Override
@@ -467,11 +461,6 @@ public final class ModuleKeys {
     @Override
     public boolean hasHierarchicalUris() {
       return true;
-    }
-
-    @Override
-    public boolean isLocal() {
-      return false;
     }
 
     @Override

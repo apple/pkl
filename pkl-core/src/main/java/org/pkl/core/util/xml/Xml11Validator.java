@@ -17,10 +17,8 @@ package org.pkl.core.util.xml;
 
 import java.util.Arrays;
 
-/**
- * Originally taken from:
- * https://github.com/apache/xerces2-j/blob/8ce366ce9a20e7ffcb1dd37d0c4b5663d65b1f7d/src/org/apache/xerces/util/XML11Char.java
- */
+// Originally taken from:
+// https://github.com/apache/xerces2-j/blob/8ce366ce9a20e7ffcb1dd37d0c4b5663d65b1f7d/src/org/apache/xerces/util/XML11Char.java
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 final class Xml11Validator extends XmlValidator {
   private static final byte[] CHARS = new byte[1 << 16];

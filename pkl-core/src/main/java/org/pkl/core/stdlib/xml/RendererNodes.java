@@ -293,6 +293,7 @@ public final class RendererNodes {
         } else if (deferredKey instanceof String string) {
           writeXmlElement(string, null, value, true, true);
         } else {
+          assert deferredKey != null;
           cannotRenderNonStringKey(deferredKey);
         }
       }
@@ -458,7 +459,7 @@ public final class RendererNodes {
     }
 
     private void startNewLine() {
-      if (builder.length() == 0) return;
+      if (builder.isEmpty()) return;
 
       lineNumber += 1;
       builder.append(LINE_BREAK).append(currIndent);

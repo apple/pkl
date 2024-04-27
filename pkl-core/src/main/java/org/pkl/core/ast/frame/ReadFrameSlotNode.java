@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 
 public abstract class ReadFrameSlotNode extends ExpressionNode {
-
   private final int slot;
 
   protected ReadFrameSlotNode(SourceSection sourceSection, int slot) {

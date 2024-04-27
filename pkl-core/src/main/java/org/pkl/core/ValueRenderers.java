@@ -60,8 +60,9 @@ public final class ValueRenderers {
    * Creates a renderer for {@link java.util.Properties} file format. If {@code omitNullProperties}
    * is {@code true}, object properties and map entries whose value is {@code null} will not be
    * rendered. If {@code restrictCharset} is {@code true} characters outside the printable US-ASCII
-   * charset range will be rendered as Unicode escapes (see
-   * https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.3).
+   * charset range will be rendered as <a
+   * href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.3">Unicode
+   * escapes</a>.
    */
   public static ValueRenderer properties(
       Writer writer, boolean omitNullProperties, boolean restrictCharset) {

@@ -56,6 +56,7 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
     }
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public abstract boolean isLengthOne();
 
   public final void checkLengthOne() {

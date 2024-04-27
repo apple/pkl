@@ -78,7 +78,7 @@ public abstract class GeneratorMemberNode extends PklNode {
    * `ObjectData.forBindings`. - 3 `FrameSlot`s for `i`, `key`, and `value`
    */
   @ValueType
-  static final class ObjectData {
+  public static final class ObjectData {
     // member count is exact iff every for/when body has exactly one member
     ObjectData(int minMemberCount, int length) {
       this.members = EconomicMaps.create(minMemberCount);

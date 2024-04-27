@@ -21,7 +21,7 @@ import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
 /**
- * A semantic version (https://semver.org/spec/v2.0.0.html).
+ * A <a href="https://semver.org/spec/v2.0.0.html">semantic version</a>.
  *
  * <p>This class guarantees that valid semantic version numbers are handled correctly, but does
  * <em>not</em> guarantee that invalid semantic version numbers are rejected.

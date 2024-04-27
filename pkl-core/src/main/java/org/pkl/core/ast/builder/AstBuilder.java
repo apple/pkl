@@ -1924,26 +1924,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var functionName = toIdentifier(ctx.Identifier());
     var argCtx = ctx.argumentList();
     var receiver = visitExpr(ctx.expr());
-
-    var currentScope = symbolTable.getCurrentScope();
-    var constLevel = currentScope.getConstLevel();
-    var needsConst = false;
-    if (receiver instanceof OuterNode) {
-      var outerScope = getParentLexicalScope();
-      if (outerScope != null) {
-        needsConst =
-            switch (constLevel) {
-              case MODULE -> outerScope.isModuleScope();
-              case ALL -> outerScope.getConstLevel() != ConstLevel.ALL;
-              case NONE -> false;
-            };
-      }
-    } else if (receiver instanceof GetModuleNode) {
-      needsConst = constLevel != ConstLevel.NONE;
-    } else if (receiver instanceof ThisNode) {
-      var constDepth = currentScope.getConstDepth();
-      needsConst = constLevel == ConstLevel.ALL && constDepth == -1;
-    }
+    var needsConst = needsConst(receiver);
 
     if (ctx.t.getType() == PklLexer.QDOT) {
       //noinspection ConstantConditions
@@ -2008,24 +1989,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
     }
 
-    var constLevel = symbolTable.getCurrentScope().getConstLevel();
-    var needsConst = false;
-    if (receiver instanceof OuterNode) {
-      var outerScope = getParentLexicalScope();
-      if (outerScope != null) {
-        needsConst =
-            switch (constLevel) {
-              case MODULE -> outerScope.isModuleScope();
-              case ALL -> outerScope.getConstLevel() != ConstLevel.ALL;
-              case NONE -> false;
-            };
-      }
-    } else if (receiver instanceof GetModuleNode) {
-      needsConst = constLevel != ConstLevel.NONE;
-    } else if (receiver instanceof ThisNode) {
-      var constDepth = symbolTable.getCurrentScope().getConstDepth();
-      needsConst = constLevel == ConstLevel.ALL && constDepth == -1;
-    }
+    var needsConst = needsConst(receiver);
     if (ctx.t.getType() == PklLexer.QDOT) {
       return new NullPropagatingOperationNode(
           sourceSection,
@@ -2125,6 +2089,29 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     checkClosingDelimiter(ctx.err, ")", ctx.stop);
 
     return ctx.es.stream().map(this::visitExpr).toArray(ExpressionNode[]::new);
+  }
+
+  private boolean needsConst(ExpressionNode receiver) {
+    var scope = symbolTable.getCurrentScope();
+    var constLevel = scope.getConstLevel();
+    var needsConst = false;
+    if (receiver instanceof OuterNode) {
+      var outerScope = getParentLexicalScope();
+      if (outerScope != null) {
+        needsConst =
+            switch (constLevel) {
+              case MODULE -> outerScope.isModuleScope();
+              case ALL -> outerScope.getConstLevel() != ConstLevel.ALL;
+              case NONE -> false;
+            };
+      }
+    } else if (receiver instanceof GetModuleNode) {
+      needsConst = constLevel != ConstLevel.NONE;
+    } else if (receiver instanceof ThisNode) {
+      var constDepth = scope.getConstDepth();
+      needsConst = constLevel == ConstLevel.ALL && constDepth == -1;
+    }
+    return needsConst;
   }
 
   private Identifier toIdentifier(TerminalNode node) {

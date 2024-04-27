@@ -72,7 +72,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   @LateInit private Object topLevelValue;
 
   /** The current indent. Modified by {@link #increaseIndent()} and {@link #decreaseIndent()}. */
-  protected StringBuilder currIndent = new StringBuilder();
+  protected final StringBuilder currIndent = new StringBuilder();
 
   /** The (closest) {@link SourceSection} of the value being visited, for better error messages. */
   protected @Nullable SourceSection currSourceSection = null;

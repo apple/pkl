@@ -398,7 +398,7 @@ public class PklPlugin implements Plugin<Project> {
               var outputDir = spec.getOutputDir().get().getAsFile();
               module.getGeneratedSourceDirs().add(outputDir);
               if (spec.getSourceSet().get().getName().toLowerCase().contains("test")) {
-                module.setTestSourceDirs(append(module.getTestSourceDirs(), outputDir));
+                module.getTestSources().from(append(module.getTestSources().getFiles(), outputDir));
               } else {
                 module.setSourceDirs(append(module.getSourceDirs(), outputDir));
               }
@@ -476,7 +476,9 @@ public class PklPlugin implements Plugin<Project> {
     try {
       var getConventionMethod = sourceSet.getClass().getMethod("getConvention");
       var convention = getConventionMethod.invoke(sourceSet);
+      //noinspection deprecation
       if (convention instanceof Convention c) {
+        //noinspection deprecation
         var kotlinSourceSet = c.getPlugins().get("kotlin");
         if (kotlinSourceSet == null) {
           project

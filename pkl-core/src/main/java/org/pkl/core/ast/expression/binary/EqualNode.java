@@ -65,9 +65,9 @@ public abstract class EqualNode extends ExpressionNode {
   }
 
   /**
-   * This method effectively covers `VmValue left, VmValue right` but is implemented in a more
-   * efficient way. See:
-   * https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces
+   * This method effectively covers `VmValue left, VmValue right` but is implemented in a <a
+   * href="https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces">more
+   * efficient way</a>.
    */
   @Specialization(
       guards = {"left.getClass() == leftJavaClass", "right.getClass() == leftJavaClass"},

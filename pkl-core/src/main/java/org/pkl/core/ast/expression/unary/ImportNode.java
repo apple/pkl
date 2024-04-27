@@ -49,10 +49,6 @@ public final class ImportNode extends AbstractImportNode {
     assert importUri.isAbsolute();
   }
 
-  public URI getImportUri() {
-    return importUri;
-  }
-
   public Object executeGeneric(VirtualFrame frame) {
     if (importedModule == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();

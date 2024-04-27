@@ -21,8 +21,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Associates a stdlib node class with an Pkl member name or a stdlib package with a Pkl module
- * name. Only required if the Java class/package can't have the same name as its corresponding Pkl
+ * Associates a stdlib node class with a Pkl member name or a stdlib package with a Pkl module name.
+ * Only required if the Java class/package can't have the same name as its corresponding Pkl
  * member/module.
  */
 @Target({ElementType.PACKAGE, ElementType.TYPE})

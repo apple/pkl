@@ -339,7 +339,7 @@ class PackageResolvers {
     }
 
     @Override
-    public List<PathElement> doListElements(PackageAssetUri uri, Checksums checksums)
+    public List<PathElement> doListElements(PackageAssetUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
@@ -351,7 +351,7 @@ class PackageResolvers {
     }
 
     @Override
-    public boolean doHasElement(PackageAssetUri uri, Checksums checksums)
+    public boolean doHasElement(PackageAssetUri uri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);

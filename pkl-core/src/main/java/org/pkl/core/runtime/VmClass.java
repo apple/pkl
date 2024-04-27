@@ -88,7 +88,7 @@ public final class VmClass extends VmValue {
 
   private final Object allHiddenPropertyNamesLock = new Object();
 
-  // Helps to to overcome recursive initialization issues
+  // Helps to overcome recursive initialization issues
   // between classes and annotations in pkl.base.
   @CompilationFinal private volatile boolean isInitialized;
 
@@ -497,7 +497,6 @@ public final class VmClass extends VmValue {
   public EconomicMap<Object, ObjectMember> getDynamicToTypedMembers() {
     synchronized (dynamicToTypedMembersLock) {
       if (__dynamicToTypedMembers == null) {
-        //noinspection ConstantConditions
         __dynamicToTypedMembers =
             createDelegatingMembers(
                 (member) ->
@@ -515,7 +514,6 @@ public final class VmClass extends VmValue {
   public EconomicMap<Object, ObjectMember> getMapToTypedMembers() {
     synchronized (mapToTypedMembersLock) {
       if (__mapToTypedMembers == null) {
-        //noinspection ConstantConditions
         __mapToTypedMembers =
             createDelegatingMembers(
                 (member) ->

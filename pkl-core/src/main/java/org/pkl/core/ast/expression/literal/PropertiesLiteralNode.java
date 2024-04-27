@@ -107,7 +107,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
   // Ultimately, this lambda or a lambda returned from it will call one of the other
   // specializations,
   // which will perform the "isValidXYZ" guard check.
-  // That said, to flag non-sensical amendments early, this specialization could have a guard to
+  // That said, to flag nonsensical amendments early, this specialization could have a guard to
   // check
   // that this amendment is at least one of a valid listing, mapping, or object amendment (modulo
   // parameters).

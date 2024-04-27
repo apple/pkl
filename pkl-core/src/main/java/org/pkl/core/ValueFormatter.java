@@ -16,18 +16,8 @@
 package org.pkl.core;
 
 import java.io.IOException;
-import org.pkl.core.util.ArrayCharEscaper;
 
 public final class ValueFormatter {
-  private static final ArrayCharEscaper charEscaper =
-      ArrayCharEscaper.builder()
-          .withEscape('\n', "\\n")
-          .withEscape('\r', "\\r")
-          .withEscape('\t', "\\t")
-          .withEscape('"', "\\\"")
-          .withEscape('\\', "\\\\")
-          .build();
-
   private static final ValueFormatter BASIC = new ValueFormatter(false, false);
 
   private static final ValueFormatter WITH_CUSTOM_DELIMITERS = new ValueFormatter(false, true);

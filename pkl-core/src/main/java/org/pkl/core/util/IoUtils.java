@@ -527,58 +527,25 @@ public final class IoUtils {
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public static boolean isDecimalDigit(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> true;
+      default -> false;
+    };
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public static boolean isDecimalDigitOrUnderscore(char ch) {
-    switch (ch) {
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-      case '_':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_' -> true;
+      default -> false;
+    };
   }
 
   public static boolean isNonZeroDecimalDigit(char ch) {
-    switch (ch) {
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        return true;
-      default:
-        return false;
-    }
+    return switch (ch) {
+      case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> true;
+      default -> false;
+    };
   }
 
   public static boolean isOctalDigit(char ch) {

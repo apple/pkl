@@ -223,10 +223,6 @@ public final class SymbolTable {
       return scope;
     }
 
-    private boolean isConst() {
-      return constLevel.isConst();
-    }
-
     /**
      * Returns the lexical depth from the current scope to the top-most scope that is const. Depth
      * is 0-indexed, and -1 means that the scope is not a const scope.
