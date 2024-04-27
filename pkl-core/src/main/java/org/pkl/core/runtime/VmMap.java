@@ -98,7 +98,9 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
       @TruffleBoundary
       public Map.Entry<Object, Object> next() {
         var key = keyIterator.next();
-        return Map.entry(key, map.get(key));
+        var value = map.get(key);
+        assert value != null;
+        return Map.entry(key, value);
       }
 
       @Override
@@ -187,7 +189,9 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   public VmList values() {
     var builder = VmList.EMPTY.builder();
     for (var key : keyOrder) {
-      builder.add(map.get(key));
+      var value = map.get(key);
+      assert value != null;
+      builder.add(value);
     }
     return builder.build();
   }
@@ -196,7 +200,9 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   public VmList entries() {
     var builder = VmList.EMPTY.builder();
     for (var key : keyOrder) {
-      builder.add(new VmPair(key, map.get(key)));
+      var value = map.get(key);
+      assert value != null;
+      builder.add(new VmPair(key, value));
     }
     return builder.build();
   }
@@ -225,6 +231,7 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
     var result = CollectionUtils.newLinkedHashMap(keyOrder.size());
     for (var key : keyOrder) {
       var value = map.get(key);
+      assert value != null;
       result.put(VmValue.export(key), VmValue.export(value));
     }
     return result;

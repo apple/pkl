@@ -109,8 +109,7 @@ public abstract class PType implements Serializable {
   }
 
   public static final class Constrained extends PType {
-
-    private static final long serialVersionUID = 0L;
+    @Serial private static final long serialVersionUID = 0L;
 
     private final PType baseType;
     private final List<String> constraints;

@@ -43,6 +43,7 @@ public final class YamlEscaper extends AbstractCharEscaper {
 
   @Override
   protected @Nullable String findReplacement(char ch) {
+    //noinspection UnnecessaryUnicodeEscape
     return ch <= '\u0022'
         ? REPLACEMENTS[ch]
         : ch == '\u2028' ? "\\L" : ch == '\u2029' ? "\\P" : null;

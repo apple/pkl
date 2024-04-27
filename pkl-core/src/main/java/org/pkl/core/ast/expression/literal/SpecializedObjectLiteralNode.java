@@ -67,6 +67,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
 
   // only runs once per VmClass (which often means once per PropertiesLiteralNode)
   // unless an XYZUncached specialization is active
+  @SuppressWarnings("ExtractMethodRecommender")
   @TruffleBoundary
   @Idempotent
   protected boolean checkIsValidTypedAmendment(Object parent) {

@@ -397,7 +397,7 @@ public final class JsonParser {
     var start = captureStart;
     var end = index - 1;
     captureStart = -1;
-    if (captureBuffer.length() > 0) {
+    if (!captureBuffer.isEmpty()) {
       captureBuffer.append(buffer, start, end - start);
       var captured = captureBuffer.toString();
       captureBuffer.setLength(0);

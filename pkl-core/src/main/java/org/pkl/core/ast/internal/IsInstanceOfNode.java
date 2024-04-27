@@ -50,8 +50,9 @@ public abstract class IsInstanceOfNode extends PklNode {
   }
 
   /**
-   * This method effectively covers `VmValue value` but is implemented in a more efficient way. See:
-   * https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces
+   * This method effectively covers `VmValue value` but is implemented in a <a
+   * href="https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces">more
+   * efficient way</a>.
    */
   @Specialization(guards = "value.getClass() == valueJavaClass", limit = "99")
   protected boolean evalVmValue(

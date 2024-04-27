@@ -30,30 +30,31 @@ public class ParserBenchmark {
   public void run() {
     new Parser()
         .parseModule(
-            "a1 {\n"
-                + "  a2 {\n"
-                + "    a3 {\n"
-                + "      a4 {\n"
-                + "        a5 {\n"
-                + "          a6 {\n"
-                + "            a7 {\n"
-                + "              a8 {\n"
-                + "                a9 {\n"
-                + "                  a10 {\n"
-                + "                    a11 {\n"
-                + "                      a12 {\n"
-                + "                        a13 = map(map(map((x) -> 1)))\n"
-                + "                      }\n"
-                + "                    }\n"
-                + "                  }\n"
-                + "                }\n"
-                + "              }\n"
-                + "            }\n"
-                + "          }\n"
-                + "        }\n"
-                + "      }\n"
-                + "    }\n"
-                + "  }\n"
-                + "}");
+            """
+            a1 {
+              a2 {
+                a3 {
+                  a4 {
+                    a5 {
+                      a6 {
+                        a7 {
+                          a8 {
+                            a9 {
+                              a10 {
+                                a11 {
+                                  a12 {
+                                    a13 = map(map(map((x) -> 1)))
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }""");
   }
 }

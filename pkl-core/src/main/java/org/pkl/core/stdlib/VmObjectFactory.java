@@ -89,7 +89,6 @@ public final class VmObjectFactory<E> {
     var section = VmUtils.unavailableSourceSection();
     var identifier = Identifier.get(name);
     var member = new ObjectMember(section, section, VmModifier.NONE, identifier, name);
-    //noinspection ConstantConditions
     var node =
         isPropertyTypeChecked
             ? TypeCheckedPropertyNodeGen.create(null, new FrameDescriptor(), member, bodyNode)

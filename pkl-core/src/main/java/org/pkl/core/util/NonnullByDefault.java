@@ -24,13 +24,14 @@ import javax.annotation.meta.TypeQualifierDefault;
 
 /**
  * Indicates that method return types and method parameters in the annotated package are {@link
- * org.pkl.core.util.Nonnull} unless explicitly annotated with {@link org.pkl.core.util.Nullable}.
+ * Nonnull} unless explicitly annotated with {@link Nullable}.
  *
  * <p>This annotation is a generalization of {@link javax.annotation.ParametersAreNonnullByDefault}.
  * All Pkl packages containing Java code should carry this annotation.
  *
  * <p>Ideally, this default would apply to every {@link ElementType#TYPE_USE}, but I haven't been
- * able to make this work reasonably in IntelliJ (https://youtrack.jetbrains.com/issue/IDEA-278618).
+ * able to make this work reasonably in <a
+ * href="https://youtrack.jetbrains.com/issue/IDEA-278618">IntelliJ</a>.
  */
 @Documented
 @TypeQualifierDefault({ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE_PARAMETER})

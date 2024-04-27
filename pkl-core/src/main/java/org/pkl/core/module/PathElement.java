@@ -25,7 +25,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public class PathElement {
-  public static Comparator<PathElement> comparator =
+  public static final Comparator<PathElement> comparator =
       (o1, o2) -> {
         if (o1.isDirectory && !o2.isDirectory) {
           return 1;

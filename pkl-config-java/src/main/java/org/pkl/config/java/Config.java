@@ -55,7 +55,7 @@ public interface Config {
   /**
    * Converts this node's value to the given {@link Type}.
    *
-   * <p>Note that usages of this methods are not type safe.
+   * <p>Note that usages of this method are not type safe.
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */

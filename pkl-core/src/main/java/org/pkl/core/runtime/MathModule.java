@@ -15,7 +15,6 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import java.net.URI;
 
 public final class MathModule extends StdLibModule {
@@ -29,11 +28,5 @@ public final class MathModule extends StdLibModule {
 
   public static VmTyped getModule() {
     return instance;
-  }
-
-  @CompilerDirectives.TruffleBoundary
-  private static VmClass loadClass(String className) {
-    var theModule = getModule();
-    return (VmClass) VmUtils.readMember(theModule, Identifier.get(className));
   }
 }

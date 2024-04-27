@@ -44,6 +44,7 @@ import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
+import org.pkl.core.util.Nonnull;
 import org.pkl.core.util.Nullable;
 
 public abstract class TypeNode extends PklNode {
@@ -1683,7 +1684,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public VmTypeAlias getVmTypeAlias() {
+    public @Nonnull VmTypeAlias getVmTypeAlias() {
       return typeAlias;
     }
 

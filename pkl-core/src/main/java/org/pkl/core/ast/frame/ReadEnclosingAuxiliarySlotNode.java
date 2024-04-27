@@ -23,7 +23,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmUtils;
 
 public class ReadEnclosingAuxiliarySlotNode extends ExpressionNode {
-
   private final int slot;
   private final int levelsUp;
 

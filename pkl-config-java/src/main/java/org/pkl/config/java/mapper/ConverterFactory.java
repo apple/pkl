@@ -22,12 +22,12 @@ import org.pkl.core.PClassInfo;
 
 /**
  * A factory for {@link Converter}s. Used to implement conversions to generic Java classes. In such
- * a case a single {@link Converter} does not suffice. Instead the factory creates a new converter
+ * a case a single {@link Converter} does not suffice. Instead, the factory creates a new converter
  * for every parameterization of the target type. Once created, the converter is cached for later
  * use, and the factory is never again invoked for the same parameterized target type.
  *
  * <p>For best performance, all introspection of target types (for example using {@link Reflection})
- * should happen in the factory rather then the returned converters.
+ * should happen in the factory rather than the returned converters.
  */
 @FunctionalInterface
 public interface ConverterFactory {

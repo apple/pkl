@@ -86,7 +86,7 @@ public class ProjectDeps {
     return parse(input);
   }
 
-  public static ProjectDeps parse(String input) throws JsonParseException, URISyntaxException {
+  public static ProjectDeps parse(String input) throws JsonParseException {
     var parsed = Json.parseObject(input);
     var schemaVersion = parsed.getInt("schemaVersion");
     if (!supportedSchemaVersions.contains(schemaVersion)) {

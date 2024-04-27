@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * A semantic version (https://semver.org/spec/v2.0.0.html).
+ * A <a href="https://semver.org/spec/v2.0.0.html">semantic version</a>.
  *
  * <p>This class guarantees that valid semantic version numbers are handled correctly, but does
  * <em>not</em> guarantee that invalid semantic version numbers are rejected.
@@ -212,8 +212,7 @@ final class Version implements Comparable<Version> {
 
   @Override
   public String toString() {
-    return ""
-        + major
+    return major
         + "."
         + minor
         + "."

@@ -45,7 +45,7 @@ public final class StackFrameTransformers {
         return frame;
       };
 
-  public static StackFrameTransformer replacePackageUriWithSourceCodeUrl =
+  public static final StackFrameTransformer replacePackageUriWithSourceCodeUrl =
       frame -> {
         var uri = URI.create(frame.getModuleUri());
         if (!uri.getScheme().equalsIgnoreCase("package")) {

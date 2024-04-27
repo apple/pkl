@@ -201,7 +201,7 @@ public class JsonWriter implements Closeable, Flushable {
    * @param indent a string containing only whitespace.
    */
   public final void setIndent(String indent) {
-    if (indent.length() == 0) {
+    if (indent.isEmpty()) {
       this.indent = null;
       this.separator = ":";
     } else {

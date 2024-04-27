@@ -64,13 +64,8 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier CONVERTERS = get("converters");
   public static final Identifier USE_MAPPING = get("useMapping");
 
-  // members of pkl.base#IntSeq, pkl.base#RegexMatch
-  public static final Identifier START = get("start");
-  public static final Identifier END = get("end");
-
   // members of pkl.base#RegexMatch
   public static final Identifier VALUE = get("value");
-  public static final Identifier GROUPS = get("groups");
 
   // members of pkl.base#Module
   public static final Identifier OUTPUT = get("output");
@@ -111,10 +106,6 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier PB = get("pb");
   public static final Identifier PIB = get("pib");
 
-  // members of pkl.base#Pair
-  public static final Identifier FIRST = get("first");
-  public static final Identifier SECOND = get("second");
-
   // members of pkl.base#Function(1-5)
   public static final Identifier APPLY = get("apply");
 
@@ -146,8 +137,6 @@ public final class Identifier implements Comparable<Identifier> {
 
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
-
-  public static final Identifier DEPENDENCIES = get("dependencies");
 
   // common in lambdas etc
   public static final Identifier IT = get("it");
