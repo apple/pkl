@@ -173,14 +173,14 @@ public final class ExecutorOptions {
     }
 
     /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificatePaths(List<Path> certificateFiles) {
-      this.certificatePaths = certificateFiles;
+    public Builder certificatePaths(List<Path> certificatePaths) {
+      this.certificatePaths = certificatePaths;
       return this;
     }
 
     /** API equivalent of the {@code --ca-certificates} CLI option. */
-    public Builder certificatePaths(Path... certificateFiles) {
-      this.certificatePaths = List.of(certificateFiles);
+    public Builder certificatePaths(Path... certificatePaths) {
+      this.certificatePaths = List.of(certificatePaths);
       return this;
     }
 
