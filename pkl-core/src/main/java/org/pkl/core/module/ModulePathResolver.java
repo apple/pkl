@@ -38,7 +38,7 @@ import org.pkl.core.util.LateInit;
  * <p>NOTE: Do not initialize two resolvers for the same jar or zip file. Instead, share the same
  * resolver for that jar or zip file.
  */
-public class ModulePathResolver implements AutoCloseable {
+public final class ModulePathResolver implements AutoCloseable {
   private final Iterable<Path> modulePath;
 
   private final Object lock = new Object();

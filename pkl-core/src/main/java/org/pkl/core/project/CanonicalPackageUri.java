@@ -29,7 +29,7 @@ import org.pkl.core.util.ErrorMessages;
  * package://example.com/foo/bar@0}. Does not include a URI's userinfo, query params or fragment
  * segments.
  */
-public class CanonicalPackageUri {
+public final class CanonicalPackageUri {
   private final URI baseUri;
   private final int majorVersion;
 

@@ -19,7 +19,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 
-public class ByteArrayUtils {
+public final class ByteArrayUtils {
+  private ByteArrayUtils() {}
+
   public static String md5(byte[] input) {
     return hash(input, "MD5");
   }
@@ -38,7 +40,7 @@ public class ByteArrayUtils {
 
   /**
    * Implemented directly instead of using JRE's `new BigInteger.toString(16)` so we can AOT-compile
-   * this and not need a truffle boundary.
+   * this and do not need a Truffle boundary.
    */
   public static String toHex(byte[] hash) {
     //    return new BigInteger(hash).toString(16);

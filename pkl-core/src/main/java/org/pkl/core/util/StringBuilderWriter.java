@@ -17,7 +17,7 @@ package org.pkl.core.util;
 
 import java.io.Writer;
 
-public class StringBuilderWriter extends Writer {
+public final class StringBuilderWriter extends Writer {
   private final StringBuilder builder;
 
   public StringBuilderWriter(StringBuilder builder) {

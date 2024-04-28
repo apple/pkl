@@ -32,7 +32,7 @@ import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
 
 /** Runs test results examples and facts. */
-public class TestRunner {
+public final class TestRunner {
   private static final PklConverter converter = new PklConverter(VmMapping.empty());
   private final boolean overwrite;
   private final StackFrameTransformer stackFrameTransformer;

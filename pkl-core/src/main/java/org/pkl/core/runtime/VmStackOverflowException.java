@@ -17,7 +17,7 @@ package org.pkl.core.runtime;
 
 import java.util.List;
 
-public class VmStackOverflowException extends VmException {
+public final class VmStackOverflowException extends VmException {
 
   public VmStackOverflowException(StackOverflowError e) {
     super("stackOverflow", e, true, new Object[0], List.of(), null, null, null, null);

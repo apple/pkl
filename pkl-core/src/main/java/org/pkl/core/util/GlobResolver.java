@@ -33,14 +33,16 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.runtime.ReaderBase;
 
-public class GlobResolver {
-  public static class InvalidGlobPatternException extends Exception {
+public final class GlobResolver {
+  private GlobResolver() {}
+
+  public static final class InvalidGlobPatternException extends Exception {
     public InvalidGlobPatternException(String message) {
       super(message);
     }
   }
 
-  public static class ResolvedGlobElement {
+  public static final class ResolvedGlobElement {
     private final String path;
 
     private final URI uri;

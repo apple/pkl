@@ -21,7 +21,7 @@ import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.util.Nullable;
 
-public class DeclaredDependencies {
+public final class DeclaredDependencies {
   private final Map<String, RemoteDependency> remoteDependencies;
   private final Map<String, DeclaredDependencies> localDependencies;
   private final URI projectFileUri;

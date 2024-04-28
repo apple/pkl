@@ -19,7 +19,7 @@ package org.pkl.core.http;
  * Indicates that an error occurred while initializing an HTTP client. A common example is an error
  * reading or parsing a certificate.
  */
-public class HttpClientInitException extends RuntimeException {
+public final class HttpClientInitException extends RuntimeException {
   public HttpClientInitException(String message) {
     super(message);
   }

@@ -29,7 +29,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * send.
  */
 @ThreadSafe
-class LazyHttpClient implements HttpClient {
+final class LazyHttpClient implements HttpClient {
   private final Supplier<HttpClient> supplier;
   private final Object lock = new Object();
 

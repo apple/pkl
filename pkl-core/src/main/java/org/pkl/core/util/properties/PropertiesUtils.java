@@ -17,7 +17,7 @@ package org.pkl.core.util.properties;
 
 import java.io.BufferedWriter;
 
-public class PropertiesUtils {
+public final class PropertiesUtils {
 
   // Bitmap of characters that need escaping ('\t', '\n', '\f', '\r', ' ', '!', '#', ':', '=', '\\')
   // in four 32-bit segments.

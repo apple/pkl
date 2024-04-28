@@ -15,7 +15,7 @@
  */
 package org.pkl.core;
 
-public class RendererException extends RuntimeException {
+public final class RendererException extends RuntimeException {
   public RendererException(String message) {
     super(message);
   }

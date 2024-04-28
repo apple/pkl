@@ -127,11 +127,11 @@ import org.pkl.core.util.Nullable;
  * @since 1.6
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class JsonWriter implements Closeable, Flushable {
+public final class JsonWriter implements Closeable, Flushable {
   /** An array with no elements requires no separators or newlines before it is closed. */
   static final int EMPTY_ARRAY = 1;
 
-  /** A array with at least one value requires a comma and newline before the next element. */
+  /** An array with at least one value requires a comma and newline before the next element. */
   static final int NONEMPTY_ARRAY = 2;
 
   /** An object with no name/value pairs requires no separators or newlines before it is closed. */
@@ -200,7 +200,7 @@ public class JsonWriter implements Closeable, Flushable {
    *
    * @param indent a string containing only whitespace.
    */
-  public final void setIndent(String indent) {
+  public void setIndent(String indent) {
     if (indent.isEmpty()) {
       this.indent = null;
       this.separator = ":";
@@ -221,7 +221,7 @@ public class JsonWriter implements Closeable, Flushable {
    *   <li>Numbers may be {@link Double#isNaN() NaNs} or {@link Double#isInfinite() infinities}.
    * </ul>
    */
-  public final void setLenient(boolean lenient) {
+  public void setLenient(boolean lenient) {
     this.lenient = lenient;
   }
 
@@ -236,7 +236,7 @@ public class JsonWriter implements Closeable, Flushable {
    * them to the stream. Without this setting, your XML/HTML encoder should replace these characters
    * with the corresponding escape sequences.
    */
-  public final void setHtmlSafe(boolean htmlSafe) {
+  public void setHtmlSafe(boolean htmlSafe) {
     this.htmlSafe = htmlSafe;
     this.escaper = new JsonEscaper(htmlSafe);
   }
@@ -244,7 +244,7 @@ public class JsonWriter implements Closeable, Flushable {
   /**
    * Returns true if this writer writes JSON that's safe for inclusion in HTML and XML documents.
    */
-  public final boolean isHtmlSafe() {
+  public boolean isHtmlSafe() {
     return htmlSafe;
   }
 
@@ -252,7 +252,7 @@ public class JsonWriter implements Closeable, Flushable {
    * Sets whether object members are serialized when their value is null. This has no impact on
    * array elements. The default is true.
    */
-  public final void setSerializeNulls(boolean serializeNulls) {
+  public void setSerializeNulls(boolean serializeNulls) {
     this.serializeNulls = serializeNulls;
   }
 
@@ -260,7 +260,7 @@ public class JsonWriter implements Closeable, Flushable {
    * Returns true if object members are serialized when their value is null. This has no impact on
    * array elements. The default is true.
    */
-  public final boolean getSerializeNulls() {
+  public boolean getSerializeNulls() {
     return serializeNulls;
   }
 

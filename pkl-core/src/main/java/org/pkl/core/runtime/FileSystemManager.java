@@ -40,7 +40,9 @@ import org.pkl.core.util.EconomicMaps;
  *
  * <p>File systems are only closed when the last usage of it closes.
  */
-public class FileSystemManager {
+public final class FileSystemManager {
+  private FileSystemManager() {}
+
   private static final EconomicMap<URI, FileSystem> fileSystems = EconomicMaps.create();
 
   private static final Map<FileSystem, Integer> counts = new IdentityHashMap<>();
@@ -98,7 +100,7 @@ public class FileSystemManager {
     }
   }
 
-  private static class Handle extends FileSystem {
+  private static final class Handle extends FileSystem {
 
     final FileSystem delegate;
 

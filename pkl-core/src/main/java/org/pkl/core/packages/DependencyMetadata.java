@@ -70,7 +70,7 @@ import org.pkl.core.util.json.JsonWriter;
  */
 @SuppressWarnings({"JavadocLinkAsPlainText", "unused"})
 // incorrectly thinks link within sample metadata is a JavaDoc link
-public class DependencyMetadata {
+public final class DependencyMetadata {
 
   public static DependencyMetadata parse(String input) throws JsonParseException {
     var parsed = Json.parseObject(input);

@@ -75,7 +75,7 @@ import org.pkl.core.util.json.JsonWriter;
  * </pre>
  * </code>
  */
-public class ProjectDeps {
+public final class ProjectDeps {
   private static final Set<Integer> supportedSchemaVersions = Set.of(1);
 
   private final EconomicMap<CanonicalPackageUri, Dependency> resolvedDependencies;

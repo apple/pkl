@@ -28,7 +28,7 @@ import org.pkl.core.util.MutableBoolean;
  * <p>Currently prints fully qualified class name for outermost object (if rendered value is an
  * object) and omits class names otherwise.
  */
-public class VmValueRenderer {
+public final class VmValueRenderer {
   private final int lengthLimit;
   private final String leadingOrTrailingNewline;
   private final String interiorNewline;

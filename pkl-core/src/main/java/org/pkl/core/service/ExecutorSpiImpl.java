@@ -39,7 +39,7 @@ import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 
-public class ExecutorSpiImpl implements ExecutorSpi {
+public final class ExecutorSpiImpl implements ExecutorSpi {
   private static final int MAX_HTTP_CLIENTS = 3;
 
   // Don't create a new HTTP client for every executor request.

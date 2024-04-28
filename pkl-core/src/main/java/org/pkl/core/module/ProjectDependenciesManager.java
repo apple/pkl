@@ -35,7 +35,7 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.json.Json.JsonParseException;
 
-public class ProjectDependenciesManager {
+public final class ProjectDependenciesManager {
   public static final String PKL_PROJECT_FILENAME = "PklProject";
 
   public static final String PKL_PROJECT_DEPS_FILENAME = "PklProject.deps.json";

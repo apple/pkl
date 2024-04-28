@@ -25,7 +25,7 @@ import org.pkl.core.util.ErrorMessages;
  * The canonical URI of an asset within a package, i.e., a package URI with a fragment path. For
  * example, {@code package://example.com/my/package@1.0.0#/my/module.pkl}
  */
-public class PackageAssetUri {
+public final class PackageAssetUri {
   private final URI uri;
   private final PackageUri packageUri;
   private final Path assetPath;

@@ -60,7 +60,9 @@ import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.json.Json.JsonParseException;
 
-class PackageResolvers {
+final class PackageResolvers {
+  private PackageResolvers() {}
+
   abstract static class AbstractPackageResolver implements PackageResolver {
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, DependencyMetadata> cachedDependencyMetadata;
@@ -245,7 +247,7 @@ class PackageResolvers {
    *
    * <p>This gets used when the cache dir is not set.
    */
-  static class InMemoryPackageResolver extends AbstractPackageResolver {
+  static final class InMemoryPackageResolver extends AbstractPackageResolver {
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, EconomicMap<String, ByteBuffer>> cachedEntries =
         EconomicMaps.create();
@@ -406,7 +408,7 @@ class PackageResolvers {
    * <p>Uses the built-in zip file system in {@link jdk.nio.zipfs} for reading files from the zip
    * archive.
    */
-  static class DiskCachedPackageResolver extends AbstractPackageResolver {
+  static final class DiskCachedPackageResolver extends AbstractPackageResolver {
     private final Path cacheDir;
 
     private final Path tmpDir;

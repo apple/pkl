@@ -23,7 +23,7 @@ import org.pkl.core.runtime.TestResults.Failure;
 import org.pkl.core.runtime.TestResults.TestResult;
 import org.pkl.core.util.StringUtils;
 
-public class SimpleReport implements TestReport {
+public final class SimpleReport implements TestReport {
 
   @Override
   public void report(TestResults results, Writer writer) throws IOException {

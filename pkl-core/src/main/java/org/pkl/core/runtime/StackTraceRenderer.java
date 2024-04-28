@@ -21,7 +21,7 @@ import java.util.function.Function;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.Nullable;
 
-public class StackTraceRenderer {
+public final class StackTraceRenderer {
   private final Function<StackFrame, StackFrame> frameTransformer;
 
   public StackTraceRenderer(Function<StackFrame, StackFrame> frameTransformer) {
