@@ -21,6 +21,8 @@ import java.io.PrintWriter;
 /** Predefined {@link Logger}s. */
 @SuppressWarnings("unused")
 public final class Loggers {
+  private Loggers() {}
+
   /** Returns a logger that discards log messages. */
   public static Logger noop() {
     return new Logger() {

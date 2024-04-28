@@ -22,6 +22,8 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmSet;
 
 public final class VmModifier {
+  private VmModifier() {}
+
   // user-facing modifiers
 
   public static final int ABSTRACT = 0x1;

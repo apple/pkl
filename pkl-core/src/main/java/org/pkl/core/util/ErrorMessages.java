@@ -20,7 +20,9 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.stream.*;
 
-public class ErrorMessages {
+public final class ErrorMessages {
+  private ErrorMessages() {}
+
   public static String create(String messageName, Object... args) {
     var locale = Locale.getDefault();
     String errorMessage =

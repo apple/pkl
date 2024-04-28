@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FileResolver {
+public final class FileResolver {
   private FileResolver() {}
 
   public static List<PathElement> listElements(URI baseUri) throws IOException {

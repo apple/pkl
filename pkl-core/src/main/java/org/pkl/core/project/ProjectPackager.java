@@ -78,7 +78,7 @@ import org.pkl.core.util.Pair;
  *   <li><em>thepackage@1.0.0.zip.sha256</em> - the SHA-256 checksum of the zip archive
  * </ul>
  */
-public class ProjectPackager {
+public final class ProjectPackager {
   /**
    * Modification time value for all zip entries in a package, to ensure that archives are
    * reproducible.

@@ -24,7 +24,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.StringSimilarity;
 
-public class MemberLookupSuggestions {
+public final class MemberLookupSuggestions {
   private static final StringSimilarity STRING_SIMILARITY = new StringSimilarity();
   // 0.77 is just about low enough to consider two three-character
   // names that differ in their first character similar

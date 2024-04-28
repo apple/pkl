@@ -27,7 +27,7 @@ import java.util.Set;
  * Information about the Pkl release that the current program runs on. This class is the Java
  * equivalent of standard library module {@code pkl.release}.
  */
-public class Release {
+public final class Release {
   private static final String SOURCE_CODE_HOMEPAGE = "https://github.com/apple/pkl/";
   private static final String DOCUMENTATION_HOMEPAGE = "https://pkl-lang.org/main/";
 

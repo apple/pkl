@@ -27,7 +27,7 @@ import org.pkl.core.util.Nullable;
  * <p>Create a new module source via {@link #create(URI, String)}, or one of the various helper
  * factory methods.
  */
-public class ModuleSource {
+public final class ModuleSource {
   public static ModuleSource create(URI uri, @Nullable String text) {
     return new ModuleSource(uri, text);
   }

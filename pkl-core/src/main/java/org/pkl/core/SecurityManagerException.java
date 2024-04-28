@@ -20,7 +20,7 @@ package org.pkl.core;
  *
  * <p>{@link SecurityManagerException#getMessage()} is passed to users when errors arise.
  */
-public class SecurityManagerException extends Exception {
+public final class SecurityManagerException extends Exception {
   public SecurityManagerException(String message) {
     super(message);
   }

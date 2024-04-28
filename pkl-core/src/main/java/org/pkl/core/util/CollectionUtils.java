@@ -19,7 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CollectionUtils {
+public final class CollectionUtils {
   private static final float LOAD_FACTOR = 0.75f;
 
   private CollectionUtils() {}

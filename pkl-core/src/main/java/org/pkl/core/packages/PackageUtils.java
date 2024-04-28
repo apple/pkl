@@ -20,7 +20,9 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsonParseException;
 
-public class PackageUtils {
+public final class PackageUtils {
+  private PackageUtils() {}
+
   public static PackageUri parsePackageUriWithoutChecksums(Object obj)
       throws JsonParseException, URISyntaxException {
     if (!(obj instanceof String string)) {

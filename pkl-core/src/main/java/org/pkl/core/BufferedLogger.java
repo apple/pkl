@@ -16,7 +16,7 @@
 package org.pkl.core;
 
 /** A logger that keeps messages locally and can return them. */
-public class BufferedLogger implements Logger {
+public final class BufferedLogger implements Logger {
 
   private final StringBuilder builder = new StringBuilder();
   private final Logger logger;

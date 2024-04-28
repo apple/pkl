@@ -29,7 +29,7 @@ import javax.annotation.concurrent.Immutable;
  * @author Thibault Debatty
  */
 @Immutable
-public class StringSimilarity {
+public final class StringSimilarity {
   private static final double DEFAULT_THRESHOLD = 0.7;
   private static final int THREE = 3;
   private static final double JW_COEF = 0.1;

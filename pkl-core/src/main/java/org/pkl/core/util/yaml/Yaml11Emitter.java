@@ -18,7 +18,7 @@ package org.pkl.core.util.yaml;
 import org.pkl.core.util.IoUtils;
 
 @SuppressWarnings("DuplicatedCode")
-public class Yaml11Emitter extends YamlEmitter {
+public final class Yaml11Emitter extends YamlEmitter {
   public Yaml11Emitter(StringBuilder builder, String indent) {
     super(builder, indent);
   }

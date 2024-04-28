@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.spi.FileTypeDetector;
 import org.pkl.core.util.Nullable;
 
-public class VmFileDetector extends FileTypeDetector {
+public final class VmFileDetector extends FileTypeDetector {
   @Override
   public @Nullable String probeContentType(Path path) {
     var fileName = path.getFileName();

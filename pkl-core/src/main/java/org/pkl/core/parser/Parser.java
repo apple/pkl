@@ -29,7 +29,7 @@ import org.pkl.core.parser.antlr.PklParser;
 import org.pkl.core.parser.antlr.PklParser.*;
 import org.pkl.core.util.Nullable;
 
-public class Parser {
+public final class Parser {
   @TruffleBoundary
   public PklParser createParser(
       TokenStream stream, @Nullable List<LexParseException> errorCollector) {

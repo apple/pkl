@@ -20,7 +20,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.misc.IntervalSet;
 import org.pkl.core.parser.antlr.PklParser;
 
-class ErrorStrategy extends DefaultErrorStrategy {
+final class ErrorStrategy extends DefaultErrorStrategy {
   @Override
   protected void reportNoViableAlternative(Parser parser, NoViableAltException e) {
     var builder = new StringBuilder();

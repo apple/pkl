@@ -80,7 +80,7 @@ public class PathElement {
     return "PathElement{" + "name='" + name + '\'' + ", isDirectory=" + isDirectory + '}';
   }
 
-  public static class TreePathElement extends PathElement {
+  public static final class TreePathElement extends PathElement {
     private final EconomicMap<String, TreePathElement> children = EconomicMaps.create();
 
     public TreePathElement(String name, boolean isDirectory) {

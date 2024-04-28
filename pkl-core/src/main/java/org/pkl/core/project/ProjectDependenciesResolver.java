@@ -43,7 +43,7 @@ import org.pkl.core.util.Nullable;
  *
  * <p>Resolved dependencies have URI `projectpackage` to indicate that they should be project-local.
  */
-public class ProjectDependenciesResolver {
+public final class ProjectDependenciesResolver {
   private final Project project;
   private final PackageResolver packageResolver;
   private final Writer logWriter;

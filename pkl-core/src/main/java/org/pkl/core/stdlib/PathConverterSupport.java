@@ -17,7 +17,8 @@ package org.pkl.core.stdlib;
 
 import org.pkl.core.runtime.Identifier;
 
-public class PathConverterSupport {
+final class PathConverterSupport {
+  private PathConverterSupport() {}
 
   public static boolean pathMatches(Iterable<Object> pathSpec, Iterable<Object> path) {
     var pathIterator = path.iterator();

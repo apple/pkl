@@ -68,7 +68,7 @@ import org.pkl.core.util.Nullable;
  * </table>
  */
 @SuppressWarnings("unused")
-public class Json {
+public final class Json {
   @FunctionalInterface
   public interface Mapper<R> {
     R apply(Object arg) throws Exception;

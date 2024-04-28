@@ -17,7 +17,7 @@ package org.pkl.core.runtime;
 
 import static org.pkl.core.PClassInfo.pklProjectUri;
 
-public class ProjectModule extends StdLibModule {
+public final class ProjectModule extends StdLibModule {
   private static final VmTyped instance = VmUtils.createEmptyModule();
 
   static {

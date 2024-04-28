@@ -47,7 +47,7 @@ import org.pkl.core.util.Nullable;
  *       preferable but isn't currently used. One problem with special formatting is that error
  *       output doesn't always go to a terminal and hence may be rendered verbatim.)
  */
-public class VmExceptionBuilder {
+public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
 

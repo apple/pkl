@@ -34,7 +34,7 @@ import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
 import org.pkl.core.util.EconomicMaps;
 
-public class JUnitReport implements TestReport {
+public final class JUnitReport implements TestReport {
 
   @Override
   public void report(TestResults results, Writer writer) throws IOException {

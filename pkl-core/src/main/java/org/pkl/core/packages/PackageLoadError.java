@@ -17,7 +17,7 @@ package org.pkl.core.packages;
 
 import org.pkl.core.util.ErrorMessages;
 
-public class PackageLoadError extends RuntimeException {
+public final class PackageLoadError extends RuntimeException {
 
   private final String messageName;
   private final Object[] arguments;

@@ -23,7 +23,7 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
-public class PackageUri {
+public final class PackageUri {
   private final URI uri;
   private final Version version;
   private final String pathWithoutVersion;

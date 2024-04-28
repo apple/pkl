@@ -32,7 +32,7 @@ import org.pkl.core.util.json.JsonHandler;
 import org.pkl.core.util.json.JsonParser;
 import org.pkl.core.util.json.ParseException;
 
-public class ParserNodes {
+public final class ParserNodes {
   private ParserNodes() {}
 
   public abstract static class parse extends ExternalMethod1Node {

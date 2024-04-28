@@ -67,7 +67,7 @@ public abstract class LexParseException extends RuntimeException {
     return this;
   }
 
-  public static class LexError extends LexParseException {
+  public static final class LexError extends LexParseException {
     public LexError(String message, int line, int column, int length) {
       super(message, line, column, length, Integer.MAX_VALUE);
     }
@@ -79,7 +79,7 @@ public abstract class LexParseException extends RuntimeException {
     }
   }
 
-  public static class IncompleteInput extends ParseError {
+  public static final class IncompleteInput extends ParseError {
     public IncompleteInput(String message, int line, int column, int length) {
       super(message, line, column, length, Integer.MAX_VALUE - 1);
     }

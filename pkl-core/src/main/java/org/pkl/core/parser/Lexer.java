@@ -23,7 +23,7 @@ import org.antlr.v4.runtime.*;
 import org.pkl.core.parser.antlr.PklLexer;
 import org.pkl.core.util.Nullable;
 
-public class Lexer {
+public final class Lexer {
   public static final Set<Integer> KEYWORD_TYPES;
   public static final Set<String> KEYWORD_NAMES;
 

@@ -24,7 +24,7 @@ import org.pkl.core.StackFrame;
 import org.pkl.core.ast.MemberNode;
 import org.pkl.core.util.Nullable;
 
-class StackTraceGenerator {
+final class StackTraceGenerator {
   private final VmException exception;
 
   private final List<StackFrame> frames = new ArrayList<>();
