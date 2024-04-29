@@ -753,6 +753,9 @@ workflows:
     - gradle-check-jdk21:
         requires:
         - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -761,6 +764,7 @@ workflows:
     jobs:
     - gradle-check-jdk17
     - gradle-check-jdk21
+    - pkl-cli-linux-alpine-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -772,6 +776,7 @@ workflows:
         requires:
         - gradle-check-jdk17
         - gradle-check-jdk21
+        - pkl-cli-linux-alpine-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -798,6 +803,12 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk21:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -849,6 +860,7 @@ workflows:
         requires:
         - gradle-check-jdk17
         - gradle-check-jdk21
+        - pkl-cli-linux-alpine-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -891,6 +903,9 @@ workflows:
         requires:
         - hold
     - gradle-check-jdk21:
+        requires:
+        - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
         requires:
         - hold
     - bench:
