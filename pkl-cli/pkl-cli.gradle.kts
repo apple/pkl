@@ -135,13 +135,10 @@ tasks.check {
 }
 
 fun Exec.configureExecutable(
-  isEnabled: Boolean,
   graalVm: BuildInfo.GraalVm,
   outputFile: Provider<RegularFile>,
   extraArgs: List<String> = listOf()
 ) {
-  enabled = isEnabled
-
   inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
   inputs.files(file(graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
@@ -218,39 +215,48 @@ fun Exec.configureExecutable(
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  dependsOn(":installGraalVmAmd64")
-  configureExecutable(
-    buildInfo.os.isMacOsX,
-    buildInfo.graalVmAmd64,
-    layout.buildDirectory.file("executable/pkl-macos-amd64")
-  )
+  if (buildInfo.os.isMacOsX) {
+    dependsOn(":installGraalVmAmd64")
+    configureExecutable(
+      buildInfo.graalVmAmd64,
+      layout.buildDirectory.file("executable/pkl-macos-amd64")
+    )
+  } else {
+    enabled = false
+  }
 }
 
 /**
  * Builds the pkl CLI for macOS/aarch64.
  */
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  dependsOn(":installGraalVmAarch64")
-  configureExecutable(
-    buildInfo.os.isMacOsX,
-    buildInfo.graalVmAarch64,
-    layout.buildDirectory.file("executable/pkl-macos-aarch64"),
-    listOf(
-      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
+  if (buildInfo.os.isMacOsX) {
+    dependsOn(":installGraalVmAarch64")
+    configureExecutable(
+      buildInfo.graalVmAarch64,
+      layout.buildDirectory.file("executable/pkl-macos-aarch64"),
+      listOf(
+        "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
+      )
     )
-  )
+  } else {
+    enabled = false
+  }
 }
 
 /**
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  dependsOn(":installGraalVmAmd64")
-  configureExecutable(
-    buildInfo.os.isLinux && buildInfo.arch == "amd64",
-    buildInfo.graalVmAmd64,
-    layout.buildDirectory.file("executable/pkl-linux-amd64")
-  )
+  if (buildInfo.os.isLinux && buildInfo.arch == "amd64") {
+    dependsOn(":installGraalVmAmd64")
+    configureExecutable(
+      buildInfo.graalVmAmd64,
+      layout.buildDirectory.file("executable/pkl-linux-amd64")
+    )
+  } else {
+    enabled = false
+  }
 }
 
 /**
@@ -260,12 +266,15 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  dependsOn(":installGraalVmAarch64")
-  configureExecutable(
-    buildInfo.os.isLinux && buildInfo.arch == "aarch64",
-    buildInfo.graalVmAarch64,
-    layout.buildDirectory.file("executable/pkl-linux-aarch64")
-  )
+  if (buildInfo.os.isLinux && buildInfo.arch == "aarch64") {
+    dependsOn(":installGraalVmAarch64")
+    configureExecutable(
+      buildInfo.graalVmAarch64,
+      layout.buildDirectory.file("executable/pkl-linux-aarch64")
+    )
+  } else {
+    enabled = false
+  }
 }
 
 /**
@@ -275,18 +284,21 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
  * Details: https://www.graalvm.org/22.0/reference-manual/native-image/ARM64/
  */
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  dependsOn(":installGraalVmAmd64")
-  configureExecutable(
-    buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain,
-    buildInfo.graalVmAmd64,
-    layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
-    listOf(
-      "--static",
-      "--libc=musl",
-      "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
-      "-Dorg.pkl.compat=alpine"
+  if (buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain) {
+    dependsOn(":installGraalVmAmd64")
+    configureExecutable(
+      buildInfo.graalVmAmd64,
+      layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
+      listOf(
+        "--static",
+        "--libc=musl",
+        "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
+        "-Dorg.pkl.compat=alpine"
+      )
     )
-  )
+  } else {
+    enabled = false
+  }
 }
 
 tasks.assembleNative {
