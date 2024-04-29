@@ -23,20 +23,20 @@ import org.pkl.lsp.ast.Node
  * Diagnostics then get reported back to the user.
  */
 abstract class Analyzer {
-  fun annotate(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>) {
-    if (doAnnotate(node, diagnosticsHolder)) {
+  fun analyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>) {
+    if (doAnalyze(node, diagnosticsHolder)) {
       return
     }
-    node.children.forEach { annotate(it, diagnosticsHolder) }
+    node.children.forEach { analyze(it, diagnosticsHolder) }
   }
 
   /**
    * Collect diagnostics, pushing them into [diagnosticsHolder] as they are captured.
    *
    * Return `false` if the annotator does not need to analyze any further. This skips calling
-   * [doAnnotate] on its children.
+   * [doAnalyze] on its children.
    */
-  protected abstract fun doAnnotate(
+  protected abstract fun doAnalyze(
     node: Node,
     diagnosticsHolder: MutableList<PklDiagnostic>
   ): Boolean

@@ -33,7 +33,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
     private val OBJECT_PROPERTY_MODIFIERS = setOf(LOCAL)
   }
 
-  override fun doAnnotate(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
+  override fun doAnalyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
     if (node !is ModifierListOwner || node.modifiers == null) {
       return false
     }

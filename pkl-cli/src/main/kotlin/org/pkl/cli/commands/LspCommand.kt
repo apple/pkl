@@ -21,7 +21,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import org.pkl.commons.cli.commands.single
 import org.pkl.lsp.PklLSP
 
-class LSPCommand(helpLink: String) :
+class LspCommand(helpLink: String) :
   CliktCommand(
     name = "lsp",
     help = "Run a Language Server Protocol server that communicates over standard input/output",

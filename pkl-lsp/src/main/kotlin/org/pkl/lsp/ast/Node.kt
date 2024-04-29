@@ -67,9 +67,8 @@ interface ModuleDeclaration : Node, ModifierListOwner, DocCommentOwner {
 
   val moduleExtendsAmendsClause: ModuleExtendsAmendsClause?
 
-  val effectiveExtendsOrAmendsCluse: ModuleExtendsAmendsClause? get() =
-    moduleHeader?.moduleExtendsAmendsClause
-      ?: moduleExtendsAmendsClause
+  val effectiveExtendsOrAmendsCluse: ModuleExtendsAmendsClause?
+    get() = moduleHeader?.moduleExtendsAmendsClause ?: moduleExtendsAmendsClause
 }
 
 interface ModuleHeader : Node, ModifierListOwner {

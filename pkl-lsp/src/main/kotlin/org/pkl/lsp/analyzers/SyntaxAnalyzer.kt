@@ -19,7 +19,7 @@ import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.Node
 
 class SyntaxAnalyzer(private val server: PklLSPServer) : Analyzer() {
-  override fun doAnnotate(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
+  override fun doAnalyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
     TODO("Not yet implemented")
   }
 }

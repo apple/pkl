@@ -53,16 +53,15 @@ class Builder(private val server: PklLSPServer) {
   }
 
   private fun build(file: URI, change: String): Module? {
-    //    val cstBuilder = CstBuilder()
     return try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
       val module = ModuleImpl(moduleCtx)
-      val diagnostics = annotate(module)
+      val diagnostics = analyze(module)
       makeDiagnostics(file, diagnostics)
       return module
     } catch (e: LexParseException) {
-      server.logger().error("Error building $file: ${e.message}")
+      server.logger().error("Parser Error building $file: ${e.message}")
       makeParserDiagnostics(file, listOf(toParserError(e)))
       null
     } catch (e: Exception) {
@@ -71,10 +70,10 @@ class Builder(private val server: PklLSPServer) {
     }
   }
 
-  private fun annotate(node: Node): List<Diagnostic> {
+  private fun analyze(node: Node): List<Diagnostic> {
     return buildList<PklDiagnostic> {
-      for (annotator in analyzers) {
-        annotator.annotate(node, this)
+      for (analyzer in analyzers) {
+        analyzer.analyze(node, this)
       }
     }
   }
@@ -111,7 +110,7 @@ class Builder(private val server: PklLSPServer) {
 
     private fun resolveErrorMessage(key: String, vararg args: Any): String {
       val locale = Locale.getDefault()
-      val bundle = ResourceBundle.getBundle("org.pkl.lsp.errors", locale)
+      val bundle = ResourceBundle.getBundle("org.pkl.lsp.errorMessages", locale)
       return if (bundle.containsKey(key)) {
         val msg = bundle.getString(key)
         if (args.isNotEmpty()) {

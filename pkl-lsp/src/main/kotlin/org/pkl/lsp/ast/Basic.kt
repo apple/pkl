@@ -25,10 +25,8 @@ class QualifiedIdentifierImpl(
   override val identifiers: List<Terminal> by lazy { getChildren(Terminal::class)!! }
 }
 
-class StringConstantImpl(
-  override val parent: Node,
-  override val ctx: StringConstantContext
-) : AbstractNode(parent, ctx), StringConstant {
+class StringConstantImpl(override val parent: Node, override val ctx: StringConstantContext) :
+  AbstractNode(parent, ctx), StringConstant {
   override val value: String
     get() = TODO("Not yet implemented")
 }
