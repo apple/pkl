@@ -40,7 +40,3 @@ fun cliMain(block: () -> Unit) {
     exitProcess(1)
   }
 }
-
-object CliMain {
-  val compat: String? = System.getProperty("org.pkl.compat")
-}

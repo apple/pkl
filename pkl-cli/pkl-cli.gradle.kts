@@ -289,12 +289,7 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
     configureExecutable(
       buildInfo.graalVmAmd64,
       layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
-      listOf(
-        "--static",
-        "--libc=musl",
-        "-H:CCompilerOption=-Wl,-z,stack-size=10485760",
-        "-Dorg.pkl.compat=alpine"
-      )
+      listOf("--static", "--libc=musl")
     )
   } else {
     enabled = false
