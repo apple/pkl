@@ -193,7 +193,6 @@ tasks.check {
 }
 
 val testMacExecutableAmd64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isMacOsX
   dependsOn(":pkl-cli:macExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
@@ -209,7 +208,6 @@ val testMacExecutableAmd64 by tasks.registering(Test::class) {
 }
 
 val testMacExecutableAarch64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isMacOsX
   dependsOn(":pkl-cli:macExecutableAarch64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
@@ -225,7 +223,6 @@ val testMacExecutableAarch64 by tasks.registering(Test::class) {
 }
 
 val testLinuxExecutableAmd64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64"
   dependsOn(":pkl-cli:linuxExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
@@ -241,7 +238,6 @@ val testLinuxExecutableAmd64 by tasks.registering(Test::class) {
 }
 
 val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isLinux && buildInfo.arch == "aarch64"
   dependsOn(":pkl-cli:linuxExecutableAarch64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
@@ -257,7 +253,6 @@ val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
 }
 
 val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
-  enabled = buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain
   dependsOn(":pkl-cli:alpineExecutableAmd64")
 
   inputs.dir("src/test/files/LanguageSnippetTests/input")
@@ -273,11 +268,23 @@ val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
 }
 
 tasks.testNative {
-  dependsOn(testLinuxExecutableAmd64)
-  dependsOn(testLinuxExecutableAarch64)
-  dependsOn(testMacExecutableAmd64)
-  dependsOn(testMacExecutableAarch64)
-  dependsOn(testAlpineExecutableAmd64)
+  when {
+    buildInfo.os.isMacOsX -> {
+      dependsOn(testMacExecutableAmd64)
+      if (buildInfo.arch == "aarch64") {
+        dependsOn(testMacExecutableAarch64)
+      }
+    }
+    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
+      dependsOn(testLinuxExecutableAarch64)
+    }
+    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
+      dependsOn(testLinuxExecutableAmd64)
+      if (buildInfo.hasMuslToolchain) {
+        dependsOn(testAlpineExecutableAmd64)
+      }
+    }
+  }
 }
 
 tasks.clean {
