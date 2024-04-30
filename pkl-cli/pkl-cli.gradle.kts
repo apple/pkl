@@ -215,48 +215,36 @@ fun Exec.configureExecutable(
  * Builds the pkl CLI for macOS/amd64.
  */
 val macExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  if (buildInfo.os.isMacOsX) {
-    dependsOn(":installGraalVmAmd64")
-    configureExecutable(
-      buildInfo.graalVmAmd64,
-      layout.buildDirectory.file("executable/pkl-macos-amd64")
-    )
-  } else {
-    enabled = false
-  }
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-macos-amd64")
+  )
 }
 
 /**
  * Builds the pkl CLI for macOS/aarch64.
  */
 val macExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  if (buildInfo.os.isMacOsX) {
-    dependsOn(":installGraalVmAarch64")
-    configureExecutable(
-      buildInfo.graalVmAarch64,
-      layout.buildDirectory.file("executable/pkl-macos-aarch64"),
-      listOf(
-        "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
-      )
+  dependsOn(":installGraalVmAarch64")
+  configureExecutable(
+    buildInfo.graalVmAarch64,
+    layout.buildDirectory.file("executable/pkl-macos-aarch64"),
+    listOf(
+      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath"
     )
-  } else {
-    enabled = false
-  }
+  )
 }
 
 /**
  * Builds the pkl CLI for linux/amd64.
  */
 val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  if (buildInfo.os.isLinux && buildInfo.arch == "amd64") {
-    dependsOn(":installGraalVmAmd64")
-    configureExecutable(
-      buildInfo.graalVmAmd64,
-      layout.buildDirectory.file("executable/pkl-linux-amd64")
-    )
-  } else {
-    enabled = false
-  }
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-linux-amd64")
+  )
 }
 
 /**
@@ -266,15 +254,11 @@ val linuxExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
  * ARM instances.
  */
 val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  if (buildInfo.os.isLinux && buildInfo.arch == "aarch64") {
-    dependsOn(":installGraalVmAarch64")
-    configureExecutable(
-      buildInfo.graalVmAarch64,
-      layout.buildDirectory.file("executable/pkl-linux-aarch64")
-    )
-  } else {
-    enabled = false
-  }
+  dependsOn(":installGraalVmAarch64")
+  configureExecutable(
+    buildInfo.graalVmAarch64,
+    layout.buildDirectory.file("executable/pkl-linux-aarch64")
+  )
 }
 
 /**
@@ -284,20 +268,32 @@ val linuxExecutableAarch64: TaskProvider<Exec> by tasks.registering(Exec::class)
  * Details: https://www.graalvm.org/22.0/reference-manual/native-image/ARM64/
  */
 val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
-  if (buildInfo.os.isLinux && buildInfo.arch == "amd64" && buildInfo.hasMuslToolchain) {
-    dependsOn(":installGraalVmAmd64")
-    configureExecutable(
-      buildInfo.graalVmAmd64,
-      layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
-      listOf("--static", "--libc=musl")
-    )
-  } else {
-    enabled = false
-  }
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
+    listOf("--static", "--libc=musl")
+  )
 }
 
 tasks.assembleNative {
-  dependsOn(macExecutableAmd64, macExecutableAarch64, linuxExecutableAmd64, linuxExecutableAarch64, alpineExecutableAmd64)
+  when {
+    buildInfo.os.isMacOsX -> {
+      dependsOn(macExecutableAmd64)
+      if (buildInfo.arch == "aarch64") {
+        dependsOn(macExecutableAarch64)
+      }
+    }
+    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
+      dependsOn(linuxExecutableAarch64)
+    }
+    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
+      dependsOn(linuxExecutableAmd64)
+      if (buildInfo.hasMuslToolchain) {
+        dependsOn(alpineExecutableAmd64)
+      }
+    }
+  }
 }
 
 // make Java executable available to other subprojects
