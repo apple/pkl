@@ -146,10 +146,17 @@ fun Exec.configureExecutable(
   outputFile: Provider<RegularFile>,
   extraArgs: List<String> = listOf()
 ) {
-  inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
+  inputs.files(sourceSets.main.map { it.output })
+    .withPropertyName("mainSourceSets")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.files(configurations.runtimeClasspath)
+    .withPropertyName("runtimeClasspath")
+    .withNormalizer(ClasspathNormalizer::class)
   val nativeImageCommandName = if (buildInfo.os.isWindows) "native-image.cmd" else "native-image"
-  inputs.files(file(graalVm.baseDir).resolve("bin/$nativeImageCommandName")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
+  inputs.files(file(graalVm.baseDir)
+    .resolve("bin/$nativeImageCommandName"))
+    .withPropertyName("graalVmNativeImage")
+    .withPathSensitivity(PathSensitivity.ABSOLUTE)
   outputs.file(outputFile)
   outputs.cacheIf { true }
 
