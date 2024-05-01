@@ -672,7 +672,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
     docker:
-    - image: cimg/openjdk:17.0
+    - image: cimg/openjdk:11.0
   deploy-release:
     steps:
     - checkout
