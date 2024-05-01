@@ -1,6 +1,7 @@
+#file: noinspection YAMLIncompatibleTypes
 - 1
-- datasize
-- file:///$snippetsDir/input/datasize.pkl
+- datasize.yml
+- file:///$snippetsDir/input/datasize.yml.pkl
 - 
   - 
     - 16

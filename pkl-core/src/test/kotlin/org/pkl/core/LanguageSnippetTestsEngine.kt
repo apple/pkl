@@ -4,77 +4,30 @@ import org.junit.platform.engine.EngineDiscoveryRequest
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
+import org.pkl.commons.test.AbstractSnippetTestsEngine
 import org.pkl.commons.test.FileTestUtils
-import org.pkl.commons.test.InputOutputTestEngine
-import org.pkl.commons.test.PackageServer
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
 import org.pkl.core.util.IoUtils
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
-import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
-abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
-  private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
-  private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
-
-  private val snippetsDir: Path =
+abstract class AbstractLanguageSnippetTestsEngine : AbstractSnippetTestsEngine() {
+  final override val snippetsDir: Path =
     rootProjectDir.resolve("pkl-core/src/test/files/LanguageSnippetTests")
 
   protected val projectsDir: Path = snippetsDir.resolve("input/projects")
-
-  private val expectedOutputDir: Path = snippetsDir.resolve("output")
-
-  /**
-   * Convenience for development; this selects which snippet test(s) to run.
-   * There is a (non-language-snippet) test to make sure this is `""` before commit.
-   */
-  //language=regexp
-  internal val selection: String = ""
-
-  protected val packageServer: PackageServer = PackageServer()
   
-  override val includedTests: List<Regex> = listOf(Regex(".*$selection\\.pkl"))
-
-  override val excludedTests: List<Regex> = listOf(Regex(".*/native/.*"))
-
-  override val inputDir: Path = snippetsDir.resolve("input")
-
-  override val isInputFile: (Path) -> Boolean = { it.isRegularFile() }
-
-  protected tailrec fun Path.getProjectDir(): Path? =
-    if (Files.exists(this.resolve("PklProject"))) this
-    else parent?.getProjectDir()
-
-  override fun expectedOutputFileFor(inputFile: Path): Path {
-    val relativePath = IoUtils.relativize(inputFile, inputDir).toString()
-    val stdoutPath =
-      if (relativePath.matches(hiddenExtensionRegex)) relativePath.dropLast(4)
-      else relativePath.dropLast(3) + "pcf"
-    return expectedOutputDir.resolve(stdoutPath)
-  }
-
   override fun beforeAll() {
     // disable SHA verification for packages
     IoUtils.setTestMode()
   }
-
-  override fun afterAll() {
-    packageServer.close()
-  }
-
-  protected fun String.stripFilePaths() = replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
-
-  protected fun String.stripLineNumbers() = replace(lineNumberRegex) { result ->
-    // replace line number with equivalent number of 'x' characters to keep formatting intact
-    (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
-  }
-
-  protected fun String.stripWebsite() = replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
+  
+  protected fun String.stripWebsite() = 
+    replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
 
   // can't think of a better solution right now
   protected fun String.stripVersionCheckErrorMessage() =

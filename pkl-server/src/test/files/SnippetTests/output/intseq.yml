@@ -1,6 +1,7 @@
+#file: noinspection YAMLIncompatibleTypes
 - 1
-- intseq
-- file:///$snippetsDir/input/intseq.pkl
+- intseq.yml
+- file:///$snippetsDir/input/intseq.yml.pkl
 - 
   - 
     - 16

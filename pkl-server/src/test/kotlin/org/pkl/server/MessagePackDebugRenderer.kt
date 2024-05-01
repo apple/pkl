@@ -102,7 +102,7 @@ class MessagePackDebugRenderer(bytes: ByteArray) {
 
   val output by lazy {
     renderValue()
-    sb.toString().removePrefix("\n")
+    sb.removePrefix("\n").toString()
   }
 }
 
