@@ -5,6 +5,7 @@ import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
 import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.PklExecutablePaths
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.http.HttpClient
@@ -261,6 +262,6 @@ class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngin
 }
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-windows-amd64.exe")
+  override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
   override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
 }
