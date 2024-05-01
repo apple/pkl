@@ -30,25 +30,6 @@ To use the library in a Gradle project, declare the following dependency:
 
 [tabs]
 ====
-Groovy::
-+
-.build.gradle
-[source,groovy,subs="+attributes"]
-----
-dependencies {
-  implementation "org.pkl-lang:pkl-core:{pkl-artifact-version}"
-}
-
-repositories {
-ifdef::is-release-version[]
-  mavenCentral()
-endif::[]
-ifndef::is-release-version[]
-  maven { url "{uri-sonatype}" }
-endif::[]
-}
-----
-
 Kotlin::
 +
 .build.gradle.kts
@@ -64,6 +45,25 @@ ifdef::is-release-version[]
 endif::[]
 ifndef::is-release-version[]
   maven { url = uri("{uri-sonatype}") }
+endif::[]
+}
+----
+
+Groovy::
++
+.build.gradle
+[source,groovy,subs="+attributes"]
+----
+dependencies {
+  implementation "org.pkl-lang:pkl-core:{pkl-artifact-version}"
+}
+
+repositories {
+ifdef::is-release-version[]
+  mavenCentral()
+endif::[]
+ifndef::is-release-version[]
+  maven { url "{uri-sonatype}" }
 endif::[]
 }
 ----
