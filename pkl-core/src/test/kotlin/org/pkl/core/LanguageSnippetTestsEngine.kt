@@ -6,6 +6,7 @@ import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
 import org.pkl.commons.test.AbstractSnippetTestsEngine
 import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.PklExecutablePaths
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
 import org.pkl.core.util.IoUtils
@@ -189,27 +190,27 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
 }
 
 class MacAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-macos-amd64")
+  override val pklExecutablePath: Path = PklExecutablePaths.macAmd64
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
 class MacAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-macos-aarch64")
+  override val pklExecutablePath: Path = PklExecutablePaths.macAarch64
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
 class LinuxAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-linux-amd64")
+  override val pklExecutablePath: Path = PklExecutablePaths.linuxAmd64
   override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
 }
 
 class LinuxAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-linux-aarch64")
+  override val pklExecutablePath: Path = PklExecutablePaths.linuxAarch64
   override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
 }
 
 class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-alpine-linux-amd64")
+  override val pklExecutablePath: Path = PklExecutablePaths.alpineAmd64
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
 }
 

@@ -19,8 +19,8 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import org.assertj.core.api.Assertions.assertThat
 
-internal class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
-  private val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)
+class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
+  val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)
 
   fun start() {
     delegate.start({ incomingMessages.put(it) }, { incomingMessages.put(it) })
