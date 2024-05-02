@@ -159,7 +159,7 @@ external const function TypeVariable(referent: TypeParameter): TypeVariable
 /// A program declaration.
 abstract external class Declaration {
   /// The source location of this declaration.
-  hidden location: SourceLocation
+  location: SourceLocation
 
   /// The documentation comment for this declaration, if any.
   docComment: String?
@@ -226,7 +226,7 @@ abstract external class TypeDeclaration extends Declaration {
 /// A class declaration.
 external class Class extends TypeDeclaration {
   /// The class reflected upon.
-  hidden reflectee: base.Class
+  reflectee: base.Class
 
   /// The type parameters of this class.
   ///
@@ -236,12 +236,12 @@ external class Class extends TypeDeclaration {
   /// The superclass of this class.
   ///
   /// All classes except [Any] have a superclass.
-  hidden superclass: Class?
+  superclass: Class?
 
   /// The supertype of this class.
   ///
   /// All classes except [Any] have a supertype.
-  hidden supertype: Type?
+  supertype: Type?
 
   /// The properties declared in this class.
   ///

@@ -1,4 +1,9 @@
 alias {
+  location {
+    line = 3
+    column = 1
+    displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+  }
   docComment = null
   annotations = List()
   modifiers = Set()
@@ -7,6 +12,11 @@ alias {
   referent {
     members = List(new {
       referent {
+        location {
+          line = 1040
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1040"
+        }
         docComment = """
           A boolean value, either [true] or [false].
           
@@ -21,8 +31,176 @@ alias {
         modifiers = Set("external")
         name = "Boolean"
         typeParameters = List()
+        superclass {
+          location {
+            line = 41
+            column = 1
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+          }
+          docComment = """
+            The top type of the type hierarchy.
+            
+            Every type is a subtype of [Any].
+            
+            The following operators are supported for all values:
+            ```
+            value1 == value2 // equality
+            value1 != value2 // inequality
+            value.member     // member access
+            value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+            value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+            value is String  // type test
+            value as String  // type cast; throws an error unless `value is String`
+            ```
+            """
+          annotations = List()
+          modifiers = Set("abstract", "external")
+          name = "Any"
+          typeParameters = List()
+          superclass = null
+          supertype = null
+          properties = Map()
+          methods = Map("getClass", new {
+            location {
+              line = 43
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+            }
+            docComment = "Returns the class of [this]."
+            annotations = List()
+            modifiers = Set()
+            name = "getClass"
+            typeParameters = List()
+            parameters = Map()
+          }, "toString", new {
+            location {
+              line = 48
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+            }
+            docComment = """
+              Returns a string representation of [this].
+              
+              This method is used to convert the values of string interpolation expressions to strings.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "toString"
+            typeParameters = List()
+            parameters = Map()
+          }, "ifNonNull", new {
+            location {
+              line = 53
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+            }
+            docComment = """
+              Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+              
+              This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "ifNonNull"
+            typeParameters = List(new {
+              name = "Result"
+              variance = null
+            })
+            parameters = Map("transform", new {
+              name = "transform"
+            })
+          })
+        }
+        supertype {
+          referent {
+            location {
+              line = 41
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            }
+            docComment = """
+              The top type of the type hierarchy.
+              
+              Every type is a subtype of [Any].
+              
+              The following operators are supported for all values:
+              ```
+              value1 == value2 // equality
+              value1 != value2 // inequality
+              value.member     // member access
+              value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+              value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+              value is String  // type test
+              value as String  // type cast; throws an error unless `value is String`
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Any"
+            typeParameters = List()
+            superclass = null
+            supertype = null
+            properties = Map()
+            methods = Map("getClass", new {
+              location {
+                line = 43
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              }
+              docComment = "Returns the class of [this]."
+              annotations = List()
+              modifiers = Set()
+              name = "getClass"
+              typeParameters = List()
+              parameters = Map()
+            }, "toString", new {
+              location {
+                line = 48
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              }
+              docComment = """
+                Returns a string representation of [this].
+                
+                This method is used to convert the values of string interpolation expressions to strings.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "toString"
+              typeParameters = List()
+              parameters = Map()
+            }, "ifNonNull", new {
+              location {
+                line = 53
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              }
+              docComment = """
+                Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                
+                This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "ifNonNull"
+              typeParameters = List(new {
+                name = "Result"
+                variance = null
+              })
+              parameters = Map("transform", new {
+                name = "transform"
+              })
+            })
+          }
+          typeArguments = List()
+        }
         properties = Map()
         methods = Map("xor", new {
+          location {
+            line = 1050
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1050"
+          }
           docComment = """
             Tells if exactly one of [this] and [other] is [true] (exclusive or).
             
@@ -42,6 +220,11 @@ alias {
             name = "other"
           })
         }, "implies", new {
+          location {
+            line = 1063
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1063"
+          }
           docComment = """
             Tells if [this] implies [other] (logical consequence).
             
@@ -67,6 +250,11 @@ alias {
       typeArguments = List()
     }, new {
       referent {
+        location {
+          line = 1076
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1076"
+        }
         docComment = """
           A sequence of Unicode characters (code points).
           
@@ -80,7 +268,175 @@ alias {
         modifiers = Set("external")
         name = "String"
         typeParameters = List()
+        superclass {
+          location {
+            line = 41
+            column = 1
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+          }
+          docComment = """
+            The top type of the type hierarchy.
+            
+            Every type is a subtype of [Any].
+            
+            The following operators are supported for all values:
+            ```
+            value1 == value2 // equality
+            value1 != value2 // inequality
+            value.member     // member access
+            value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+            value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+            value is String  // type test
+            value as String  // type cast; throws an error unless `value is String`
+            ```
+            """
+          annotations = List()
+          modifiers = Set("abstract", "external")
+          name = "Any"
+          typeParameters = List()
+          superclass = null
+          supertype = null
+          properties = Map()
+          methods = Map("getClass", new {
+            location {
+              line = 43
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+            }
+            docComment = "Returns the class of [this]."
+            annotations = List()
+            modifiers = Set()
+            name = "getClass"
+            typeParameters = List()
+            parameters = Map()
+          }, "toString", new {
+            location {
+              line = 48
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+            }
+            docComment = """
+              Returns a string representation of [this].
+              
+              This method is used to convert the values of string interpolation expressions to strings.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "toString"
+            typeParameters = List()
+            parameters = Map()
+          }, "ifNonNull", new {
+            location {
+              line = 53
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+            }
+            docComment = """
+              Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+              
+              This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "ifNonNull"
+            typeParameters = List(new {
+              name = "Result"
+              variance = null
+            })
+            parameters = Map("transform", new {
+              name = "transform"
+            })
+          })
+        }
+        supertype {
+          referent {
+            location {
+              line = 41
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            }
+            docComment = """
+              The top type of the type hierarchy.
+              
+              Every type is a subtype of [Any].
+              
+              The following operators are supported for all values:
+              ```
+              value1 == value2 // equality
+              value1 != value2 // inequality
+              value.member     // member access
+              value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+              value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+              value is String  // type test
+              value as String  // type cast; throws an error unless `value is String`
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Any"
+            typeParameters = List()
+            superclass = null
+            supertype = null
+            properties = Map()
+            methods = Map("getClass", new {
+              location {
+                line = 43
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              }
+              docComment = "Returns the class of [this]."
+              annotations = List()
+              modifiers = Set()
+              name = "getClass"
+              typeParameters = List()
+              parameters = Map()
+            }, "toString", new {
+              location {
+                line = 48
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              }
+              docComment = """
+                Returns a string representation of [this].
+                
+                This method is used to convert the values of string interpolation expressions to strings.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "toString"
+              typeParameters = List()
+              parameters = Map()
+            }, "ifNonNull", new {
+              location {
+                line = 53
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              }
+              docComment = """
+                Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                
+                This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "ifNonNull"
+              typeParameters = List(new {
+                name = "Result"
+                variance = null
+              })
+              parameters = Map("transform", new {
+                name = "transform"
+              })
+            })
+          }
+          typeArguments = List()
+        }
         properties = Map("length", new {
+          location {
+            line = 1087
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1087"
+          }
           docComment = """
             The number of characters in this string.
             
@@ -101,6 +457,11 @@ alias {
           modifiers = Set()
           name = "length"
         }, "lastIndex", new {
+          location {
+            line = 1100
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1100"
+          }
           docComment = """
             The index of the last character in this string (same as `length - 1`).
             
@@ -118,6 +479,11 @@ alias {
           modifiers = Set()
           name = "lastIndex"
         }, "isEmpty", new {
+          location {
+            line = 1110
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1110"
+          }
           docComment = """
             Tells whether this string is empty.
             
@@ -132,6 +498,11 @@ alias {
           modifiers = Set()
           name = "isEmpty"
         }, "isBlank", new {
+          location {
+            line = 1121
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1121"
+          }
           docComment = """
             Tells if all characters in this string have Unicode property "White_Space".
             
@@ -147,11 +518,21 @@ alias {
           modifiers = Set()
           name = "isBlank"
         }, "isRegex", new {
+          location {
+            line = 1124
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1124"
+          }
           docComment = "Tells if this string is a valid regular expression according to [Regex]."
           annotations = List()
           modifiers = Set()
           name = "isRegex"
         }, "md5", new {
+          location {
+            line = 1131
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1131"
+          }
           docComment = """
             The [MD5](https://en.wikipedia.org/wiki/MD5)
             hash of this string's UTF-8 byte sequence
@@ -163,6 +544,11 @@ alias {
           modifiers = Set()
           name = "md5"
         }, "sha1", new {
+          location {
+            line = 1137
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1137"
+          }
           docComment = """
             The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
             hash of this string's UTF-8 byte sequence.
@@ -173,6 +559,11 @@ alias {
           modifiers = Set()
           name = "sha1"
         }, "sha256", new {
+          location {
+            line = 1142
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1142"
+          }
           docComment = """
             The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
             cryptographic hash of this string's UTF-8 byte sequence
@@ -182,6 +573,11 @@ alias {
           modifiers = Set()
           name = "sha256"
         }, "sha256Int", new {
+          location {
+            line = 1146
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1146"
+          }
           docComment = """
             The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
             cryptographic hash of this string's UTF-8 byte sequence.
@@ -190,11 +586,21 @@ alias {
           modifiers = Set()
           name = "sha256Int"
         }, "base64", new {
+          location {
+            line = 1149
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1149"
+          }
           docComment = "The Base64 encoding of this string's UTF-8 byte sequence."
           annotations = List()
           modifiers = Set()
           name = "base64"
         }, "base64Decoded", new {
+          location {
+            line = 1157
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1157"
+          }
           docComment = """
             The inverse of [base64].
             
@@ -207,6 +613,11 @@ alias {
           modifiers = Set()
           name = "base64Decoded"
         }, "chars", new {
+          location {
+            line = 1165
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1165"
+          }
           docComment = """
             The Unicode characters in this string.
             
@@ -219,6 +630,11 @@ alias {
           modifiers = Set()
           name = "chars"
         }, "codePoints", new {
+          location {
+            line = 1173
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1173"
+          }
           docComment = """
             The Unicode code points in this string.
             
@@ -232,6 +648,11 @@ alias {
           name = "codePoints"
         })
         methods = Map("getOrNull", new {
+          location {
+            line = 1185
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1185"
+          }
           docComment = """
             Returns the character at [index], or [null] if [index] is out of range.
             
@@ -252,6 +673,11 @@ alias {
             name = "index"
           })
         }, "substring", new {
+          location {
+            line = 1199
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1199"
+          }
           docComment = """
             Returns the substring from [start] until [exclusiveEnd].
             
@@ -276,6 +702,11 @@ alias {
             name = "exclusiveEnd"
           })
         }, "substringOrNull", new {
+          location {
+            line = 1217
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1217"
+          }
           docComment = """
             Returns the substring from [start] until [exclusiveEnd].
             
@@ -304,6 +735,11 @@ alias {
             name = "exclusiveEnd"
           })
         }, "repeat", new {
+          location {
+            line = 1227
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1227"
+          }
           docComment = """
             Concatenates [count] copies of this string.
             
@@ -322,6 +758,11 @@ alias {
             name = "count"
           })
         }, "contains", new {
+          location {
+            line = 1230
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1230"
+          }
           docComment = "Tells whether this string contains [pattern]."
           annotations = List()
           modifiers = Set()
@@ -331,6 +772,11 @@ alias {
             name = "pattern"
           })
         }, "matches", new {
+          location {
+            line = 1234
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1234"
+          }
           docComment = "Tells whether this string matches [regex] in its entirety."
           annotations = List(new {
             names {
@@ -344,6 +790,11 @@ alias {
             name = "regex"
           })
         }, "startsWith", new {
+          location {
+            line = 1237
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1237"
+          }
           docComment = "Tells whether this string starts with [pattern]."
           annotations = List()
           modifiers = Set()
@@ -353,6 +804,11 @@ alias {
             name = "pattern"
           })
         }, "endsWith", new {
+          location {
+            line = 1240
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1240"
+          }
           docComment = "Tells whether this string ends with [pattern]."
           annotations = List()
           modifiers = Set()
@@ -362,6 +818,11 @@ alias {
             name = "pattern"
           })
         }, "indexOf", new {
+          location {
+            line = 1246
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1246"
+          }
           docComment = """
             Returns the zero-based index of the first occurrence of [pattern]
             in this string.
@@ -376,6 +837,11 @@ alias {
             name = "pattern"
           })
         }, "indexOfOrNull", new {
+          location {
+            line = 1250
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1250"
+          }
           docComment = """
             Returns the zero-based index of the first occurrence of [pattern]
             in this string, or [null] if [pattern] does not occur in this string.
@@ -388,6 +854,11 @@ alias {
             name = "pattern"
           })
         }, "lastIndexOf", new {
+          location {
+            line = 1256
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1256"
+          }
           docComment = """
             Returns the zero-based index of the last occurrence of [pattern]
             in this string.
@@ -402,6 +873,11 @@ alias {
             name = "pattern"
           })
         }, "lastIndexOfOrNull", new {
+          location {
+            line = 1260
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1260"
+          }
           docComment = """
             Returns the zero-based index of the last occurrence of [pattern]
             in this string, or [null] if [pattern] does not occur in this string.
@@ -414,6 +890,11 @@ alias {
             name = "pattern"
           })
         }, "take", new {
+          location {
+            line = 1266
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1266"
+          }
           docComment = """
             Returns the first [n] characters of this string.
             
@@ -431,6 +912,11 @@ alias {
             name = "n"
           })
         }, "takeWhile", new {
+          location {
+            line = 1269
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1269"
+          }
           docComment = "Returns the longest prefix of this string that satisfies [predicate]."
           annotations = List()
           modifiers = Set()
@@ -440,6 +926,11 @@ alias {
             name = "predicate"
           })
         }, "takeLast", new {
+          location {
+            line = 1274
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1274"
+          }
           docComment = """
             Returns the last [n] characters of this string.
             
@@ -453,6 +944,11 @@ alias {
             name = "n"
           })
         }, "takeLastWhile", new {
+          location {
+            line = 1277
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1277"
+          }
           docComment = "Returns the longest suffix of this string that satisfies [predicate]."
           annotations = List()
           modifiers = Set()
@@ -462,6 +958,11 @@ alias {
             name = "predicate"
           })
         }, "drop", new {
+          location {
+            line = 1283
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1283"
+          }
           docComment = """
             Removes the first [n] characters of this string.
             
@@ -479,6 +980,11 @@ alias {
             name = "n"
           })
         }, "dropWhile", new {
+          location {
+            line = 1287
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1287"
+          }
           docComment = "Removes the longest prefix of this string that satisfies [predicate]."
           annotations = List(new {
             names {
@@ -492,6 +998,11 @@ alias {
             name = "predicate"
           })
         }, "dropLast", new {
+          location {
+            line = 1293
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1293"
+          }
           docComment = """
             Removes the last [n] characters of this string.
             
@@ -509,6 +1020,11 @@ alias {
             name = "n"
           })
         }, "dropLastWhile", new {
+          location {
+            line = 1297
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1297"
+          }
           docComment = "Removes the longest suffix of this string that satisfies [predicate]."
           annotations = List(new {
             names {
@@ -522,6 +1038,11 @@ alias {
             name = "predicate"
           })
         }, "replaceFirst", new {
+          location {
+            line = 1302
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1302"
+          }
           docComment = """
             Replaces the first occurrence of [pattern] in this string with [replacement].
             
@@ -537,6 +1058,11 @@ alias {
             name = "replacement"
           })
         }, "replaceLast", new {
+          location {
+            line = 1307
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1307"
+          }
           docComment = """
             Replaces the last occurrence of [pattern] in this string with [replacement].
             
@@ -552,6 +1078,11 @@ alias {
             name = "replacement"
           })
         }, "replaceAll", new {
+          location {
+            line = 1312
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1312"
+          }
           docComment = """
             Replaces all occurrences of [pattern] in this string with [replacement].
             
@@ -567,6 +1098,11 @@ alias {
             name = "replacement"
           })
         }, "replaceFirstMapped", new {
+          location {
+            line = 1317
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1317"
+          }
           docComment = """
             Replaces the first occurrence of [pattern] in this string with the return value of [mapper].
             
@@ -582,6 +1118,11 @@ alias {
             name = "mapper"
           })
         }, "replaceLastMapped", new {
+          location {
+            line = 1322
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1322"
+          }
           docComment = """
             Replaces the last occurrence of [pattern] in this string with the return value of [mapper].
             
@@ -597,6 +1138,11 @@ alias {
             name = "mapper"
           })
         }, "replaceAllMapped", new {
+          location {
+            line = 1327
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1327"
+          }
           docComment = """
             Replaces all occurrences of [pattern] in this string with the return value of [mapper].
             
@@ -612,6 +1158,11 @@ alias {
             name = "mapper"
           })
         }, "replaceRange", new {
+          location {
+            line = 1332
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1332"
+          }
           docComment = """
             Replaces the characters between [start] and [exclusiveEnd] with [replacement].
             
@@ -629,6 +1180,11 @@ alias {
             name = "replacement"
           })
         }, "toUpperCase", new {
+          location {
+            line = 1335
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1335"
+          }
           docComment = "Performs a locale-independent character-by-character conversion of this string to uppercase."
           annotations = List()
           modifiers = Set()
@@ -636,6 +1192,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toLowerCase", new {
+          location {
+            line = 1338
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1338"
+          }
           docComment = "Performs a locale-independent character-by-character conversion of this string to lowercase."
           annotations = List()
           modifiers = Set()
@@ -643,6 +1204,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "reverse", new {
+          location {
+            line = 1341
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1341"
+          }
           docComment = "Reverses the order of characters in this string."
           annotations = List()
           modifiers = Set()
@@ -650,6 +1216,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "trim", new {
+          location {
+            line = 1345
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1345"
+          }
           docComment = "Removes any leading and trailing characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
             names {
@@ -661,6 +1232,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "trimStart", new {
+          location {
+            line = 1349
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1349"
+          }
           docComment = "Removes any leading characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
             names {
@@ -676,6 +1252,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "trimEnd", new {
+          location {
+            line = 1353
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1353"
+          }
           docComment = "Removes any trailing characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
             names {
@@ -691,6 +1272,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "padStart", new {
+          location {
+            line = 1359
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1359"
+          }
           docComment = """
             Increases the length of this string to [width] by adding leading [char]s.
             
@@ -710,6 +1296,11 @@ alias {
             name = "char"
           })
         }, "padEnd", new {
+          location {
+            line = 1365
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1365"
+          }
           docComment = """
             Increases the length of this string to [width] by adding trailing [char]s.
             
@@ -729,6 +1320,11 @@ alias {
             name = "char"
           })
         }, "split", new {
+          location {
+            line = 1368
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1368"
+          }
           docComment = "Splits this string around matches of [pattern]."
           annotations = List()
           modifiers = Set()
@@ -738,6 +1334,11 @@ alias {
             name = "pattern"
           })
         }, "capitalize", new {
+          location {
+            line = 1378
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1378"
+          }
           docComment = """
             Converts the first character of this string to title case.
             
@@ -754,6 +1355,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "decapitalize", new {
+          location {
+            line = 1388
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1388"
+          }
           docComment = """
             Converts the first character of this string to lower case.
             
@@ -770,6 +1376,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toInt", new {
+          location {
+            line = 1394
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1394"
+          }
           docComment = """
             Parses this string as a signed decimal (base 10) integer.
             
@@ -782,6 +1393,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toIntOrNull", new {
+          location {
+            line = 1400
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1400"
+          }
           docComment = """
             Parses this string as a signed decimal (base 10) integer.
             
@@ -794,6 +1410,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toFloat", new {
+          location {
+            line = 1405
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1405"
+          }
           docComment = """
             Parses this string as a floating point number.
             
@@ -805,6 +1426,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toFloatOrNull", new {
+          location {
+            line = 1410
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1410"
+          }
           docComment = """
             Parses this string as a floating point number.
             
@@ -816,6 +1442,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toBoolean", new {
+          location {
+            line = 1415
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1415"
+          }
           docComment = """
             Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
             
@@ -827,6 +1458,11 @@ alias {
           typeParameters = List()
           parameters = Map()
         }, "toBooleanOrNull", new {
+          location {
+            line = 1420
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1420"
+          }
           docComment = """
             Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
             
@@ -845,12 +1481,1115 @@ alias {
 }
 rec {
   referent {
+    location {
+      line = 5
+      column = 1
+      displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+    }
     docComment = null
     annotations = List()
     modifiers = Set()
     name = "Rec"
     typeParameters = List()
+    superclass {
+      location {
+        line = 1706
+        column = 1
+        displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1706"
+      }
+      docComment = """
+        Base class for objects whose members are described by a class definition.
+        
+        User-defined classes (that is, classes without `external` modifier) implicitly extend this class.
+        """
+      annotations = List()
+      modifiers = Set("abstract")
+      name = "Typed"
+      typeParameters = List()
+      superclass {
+        location {
+          line = 1701
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+        }
+        docComment = """
+          A composite value containing members (properties, elements, entries).
+          
+          ```
+          obj = new {
+            name = "Pigeon" // property
+            "Hello"       // element
+            ["two"] = 2   // entry
+          }
+          
+          obj.name   // "Pigeon"
+          obj[0]     // "Hello"
+          obj["two"] // 2
+          ```
+          
+          An object can be *amended* to create variants of itself.
+          This is similar to inheritance in prototype-oriented programming.
+          
+          ```
+          pigeon = new { name = "Pigeon"; age = 42 }
+          barnOwl = (pigeon) { name = "Barn Owl" } // override property `name`
+          oldPigeon = (pigeon) { age = 84 } // override property `age`
+          ```
+          
+          Object members may reference other members:
+          
+          ```
+          thresholds = new { lower = 10; upper = lower + 5 }
+          ```
+          
+          Object members are dynamically bound.
+          This is similar to how computed cells in a spreadsheet work.
+          
+          ```
+          thresholds = new { lower = 10; upper = lower + 5 }
+          thresholds2 = new { lower = 7 } // thresholds2.upper == 12
+          ```
+          
+          Objects have memberwise equality and hash code.
+          
+          To arbitrarily manipulate an object, convert it to a [Collection].
+          If necessary, the manipulated [Collection] can be converted back to an [Object].
+          
+          ```
+          pigeon = new { name = "Pigeon"; age = 42 }
+          manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
+          manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
+          ```
+          """
+        annotations = List()
+        modifiers = Set("abstract", "external")
+        name = "Object"
+        typeParameters = List()
+        superclass {
+          location {
+            line = 41
+            column = 1
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+          }
+          docComment = """
+            The top type of the type hierarchy.
+            
+            Every type is a subtype of [Any].
+            
+            The following operators are supported for all values:
+            ```
+            value1 == value2 // equality
+            value1 != value2 // inequality
+            value.member     // member access
+            value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+            value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+            value is String  // type test
+            value as String  // type cast; throws an error unless `value is String`
+            ```
+            """
+          annotations = List()
+          modifiers = Set("abstract", "external")
+          name = "Any"
+          typeParameters = List()
+          superclass = null
+          supertype = null
+          properties = Map()
+          methods = Map("getClass", new {
+            location {
+              line = 43
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+            }
+            docComment = "Returns the class of [this]."
+            annotations = List()
+            modifiers = Set()
+            name = "getClass"
+            typeParameters = List()
+            parameters = Map()
+          }, "toString", new {
+            location {
+              line = 48
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+            }
+            docComment = """
+              Returns a string representation of [this].
+              
+              This method is used to convert the values of string interpolation expressions to strings.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "toString"
+            typeParameters = List()
+            parameters = Map()
+          }, "ifNonNull", new {
+            location {
+              line = 53
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+            }
+            docComment = """
+              Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+              
+              This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+              """
+            annotations = List()
+            modifiers = Set()
+            name = "ifNonNull"
+            typeParameters = List(new {
+              name = "Result"
+              variance = null
+            })
+            parameters = Map("transform", new {
+              name = "transform"
+            })
+          })
+        }
+        supertype {
+          referent {
+            location {
+              line = 41
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            }
+            docComment = """
+              The top type of the type hierarchy.
+              
+              Every type is a subtype of [Any].
+              
+              The following operators are supported for all values:
+              ```
+              value1 == value2 // equality
+              value1 != value2 // inequality
+              value.member     // member access
+              value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+              value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+              value is String  // type test
+              value as String  // type cast; throws an error unless `value is String`
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Any"
+            typeParameters = List()
+            superclass = null
+            supertype = null
+            properties = Map()
+            methods = Map("getClass", new {
+              location {
+                line = 43
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              }
+              docComment = "Returns the class of [this]."
+              annotations = List()
+              modifiers = Set()
+              name = "getClass"
+              typeParameters = List()
+              parameters = Map()
+            }, "toString", new {
+              location {
+                line = 48
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              }
+              docComment = """
+                Returns a string representation of [this].
+                
+                This method is used to convert the values of string interpolation expressions to strings.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "toString"
+              typeParameters = List()
+              parameters = Map()
+            }, "ifNonNull", new {
+              location {
+                line = 53
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              }
+              docComment = """
+                Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                
+                This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "ifNonNull"
+              typeParameters = List(new {
+                name = "Result"
+                variance = null
+              })
+              parameters = Map("transform", new {
+                name = "transform"
+              })
+            })
+          }
+          typeArguments = List()
+        }
+        properties = Map()
+        methods = Map()
+      }
+      supertype {
+        referent {
+          location {
+            line = 1701
+            column = 1
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+          }
+          docComment = """
+            A composite value containing members (properties, elements, entries).
+            
+            ```
+            obj = new {
+              name = "Pigeon" // property
+              "Hello"       // element
+              ["two"] = 2   // entry
+            }
+            
+            obj.name   // "Pigeon"
+            obj[0]     // "Hello"
+            obj["two"] // 2
+            ```
+            
+            An object can be *amended* to create variants of itself.
+            This is similar to inheritance in prototype-oriented programming.
+            
+            ```
+            pigeon = new { name = "Pigeon"; age = 42 }
+            barnOwl = (pigeon) { name = "Barn Owl" } // override property `name`
+            oldPigeon = (pigeon) { age = 84 } // override property `age`
+            ```
+            
+            Object members may reference other members:
+            
+            ```
+            thresholds = new { lower = 10; upper = lower + 5 }
+            ```
+            
+            Object members are dynamically bound.
+            This is similar to how computed cells in a spreadsheet work.
+            
+            ```
+            thresholds = new { lower = 10; upper = lower + 5 }
+            thresholds2 = new { lower = 7 } // thresholds2.upper == 12
+            ```
+            
+            Objects have memberwise equality and hash code.
+            
+            To arbitrarily manipulate an object, convert it to a [Collection].
+            If necessary, the manipulated [Collection] can be converted back to an [Object].
+            
+            ```
+            pigeon = new { name = "Pigeon"; age = 42 }
+            manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
+            manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
+            ```
+            """
+          annotations = List()
+          modifiers = Set("abstract", "external")
+          name = "Object"
+          typeParameters = List()
+          superclass {
+            location {
+              line = 41
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            }
+            docComment = """
+              The top type of the type hierarchy.
+              
+              Every type is a subtype of [Any].
+              
+              The following operators are supported for all values:
+              ```
+              value1 == value2 // equality
+              value1 != value2 // inequality
+              value.member     // member access
+              value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+              value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+              value is String  // type test
+              value as String  // type cast; throws an error unless `value is String`
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Any"
+            typeParameters = List()
+            superclass = null
+            supertype = null
+            properties = Map()
+            methods = Map("getClass", new {
+              location {
+                line = 43
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              }
+              docComment = "Returns the class of [this]."
+              annotations = List()
+              modifiers = Set()
+              name = "getClass"
+              typeParameters = List()
+              parameters = Map()
+            }, "toString", new {
+              location {
+                line = 48
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              }
+              docComment = """
+                Returns a string representation of [this].
+                
+                This method is used to convert the values of string interpolation expressions to strings.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "toString"
+              typeParameters = List()
+              parameters = Map()
+            }, "ifNonNull", new {
+              location {
+                line = 53
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              }
+              docComment = """
+                Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                
+                This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "ifNonNull"
+              typeParameters = List(new {
+                name = "Result"
+                variance = null
+              })
+              parameters = Map("transform", new {
+                name = "transform"
+              })
+            })
+          }
+          supertype {
+            referent {
+              location {
+                line = 41
+                column = 1
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              }
+              docComment = """
+                The top type of the type hierarchy.
+                
+                Every type is a subtype of [Any].
+                
+                The following operators are supported for all values:
+                ```
+                value1 == value2 // equality
+                value1 != value2 // inequality
+                value.member     // member access
+                value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+                value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+                value is String  // type test
+                value as String  // type cast; throws an error unless `value is String`
+                ```
+                """
+              annotations = List()
+              modifiers = Set("abstract", "external")
+              name = "Any"
+              typeParameters = List()
+              superclass = null
+              supertype = null
+              properties = Map()
+              methods = Map("getClass", new {
+                location {
+                  line = 43
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                }
+                docComment = "Returns the class of [this]."
+                annotations = List()
+                modifiers = Set()
+                name = "getClass"
+                typeParameters = List()
+                parameters = Map()
+              }, "toString", new {
+                location {
+                  line = 48
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                }
+                docComment = """
+                  Returns a string representation of [this].
+                  
+                  This method is used to convert the values of string interpolation expressions to strings.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "toString"
+                typeParameters = List()
+                parameters = Map()
+              }, "ifNonNull", new {
+                location {
+                  line = 53
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                }
+                docComment = """
+                  Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                  
+                  This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "ifNonNull"
+                typeParameters = List(new {
+                  name = "Result"
+                  variance = null
+                })
+                parameters = Map("transform", new {
+                  name = "transform"
+                })
+              })
+            }
+            typeArguments = List()
+          }
+          properties = Map()
+          methods = Map()
+        }
+        typeArguments = List()
+      }
+      properties = Map()
+      methods = Map("hasProperty", new {
+        location {
+          line = 1708
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1708"
+        }
+        docComment = "Tells if this object has a property with the given [name]."
+        annotations = List()
+        modifiers = Set()
+        name = "hasProperty"
+        typeParameters = List()
+        parameters = Map("name", new {
+          name = "name"
+        })
+      }, "getProperty", new {
+        location {
+          line = 1713
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1713"
+        }
+        docComment = """
+          Returns the value of the property with the given [name].
+          
+          Throws if a property with this name does not exist.
+          """
+        annotations = List()
+        modifiers = Set()
+        name = "getProperty"
+        typeParameters = List()
+        parameters = Map("name", new {
+          name = "name"
+        })
+      }, "getPropertyOrNull", new {
+        location {
+          line = 1718
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1718"
+        }
+        docComment = """
+          Returns the value of the property with the given [name].
+          
+          Returns [null] if a property with this name does not exist.
+          """
+        annotations = List()
+        modifiers = Set()
+        name = "getPropertyOrNull"
+        typeParameters = List()
+        parameters = Map("name", new {
+          name = "name"
+        })
+      }, "toDynamic", new {
+        location {
+          line = 1721
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1721"
+        }
+        docComment = "Converts this object to a [Dynamic] object."
+        annotations = List()
+        modifiers = Set()
+        name = "toDynamic"
+        typeParameters = List()
+        parameters = Map()
+      }, "toMap", new {
+        location {
+          line = 1724
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1724"
+        }
+        docComment = "Converts this object to a [Map]."
+        annotations = List()
+        modifiers = Set()
+        name = "toMap"
+        typeParameters = List()
+        parameters = Map()
+      })
+    }
+    supertype {
+      referent {
+        location {
+          line = 1706
+          column = 1
+          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1706"
+        }
+        docComment = """
+          Base class for objects whose members are described by a class definition.
+          
+          User-defined classes (that is, classes without `external` modifier) implicitly extend this class.
+          """
+        annotations = List()
+        modifiers = Set("abstract")
+        name = "Typed"
+        typeParameters = List()
+        superclass {
+          location {
+            line = 1701
+            column = 1
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+          }
+          docComment = """
+            A composite value containing members (properties, elements, entries).
+            
+            ```
+            obj = new {
+              name = "Pigeon" // property
+              "Hello"       // element
+              ["two"] = 2   // entry
+            }
+            
+            obj.name   // "Pigeon"
+            obj[0]     // "Hello"
+            obj["two"] // 2
+            ```
+            
+            An object can be *amended* to create variants of itself.
+            This is similar to inheritance in prototype-oriented programming.
+            
+            ```
+            pigeon = new { name = "Pigeon"; age = 42 }
+            barnOwl = (pigeon) { name = "Barn Owl" } // override property `name`
+            oldPigeon = (pigeon) { age = 84 } // override property `age`
+            ```
+            
+            Object members may reference other members:
+            
+            ```
+            thresholds = new { lower = 10; upper = lower + 5 }
+            ```
+            
+            Object members are dynamically bound.
+            This is similar to how computed cells in a spreadsheet work.
+            
+            ```
+            thresholds = new { lower = 10; upper = lower + 5 }
+            thresholds2 = new { lower = 7 } // thresholds2.upper == 12
+            ```
+            
+            Objects have memberwise equality and hash code.
+            
+            To arbitrarily manipulate an object, convert it to a [Collection].
+            If necessary, the manipulated [Collection] can be converted back to an [Object].
+            
+            ```
+            pigeon = new { name = "Pigeon"; age = 42 }
+            manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
+            manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
+            ```
+            """
+          annotations = List()
+          modifiers = Set("abstract", "external")
+          name = "Object"
+          typeParameters = List()
+          superclass {
+            location {
+              line = 41
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            }
+            docComment = """
+              The top type of the type hierarchy.
+              
+              Every type is a subtype of [Any].
+              
+              The following operators are supported for all values:
+              ```
+              value1 == value2 // equality
+              value1 != value2 // inequality
+              value.member     // member access
+              value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+              value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+              value is String  // type test
+              value as String  // type cast; throws an error unless `value is String`
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Any"
+            typeParameters = List()
+            superclass = null
+            supertype = null
+            properties = Map()
+            methods = Map("getClass", new {
+              location {
+                line = 43
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              }
+              docComment = "Returns the class of [this]."
+              annotations = List()
+              modifiers = Set()
+              name = "getClass"
+              typeParameters = List()
+              parameters = Map()
+            }, "toString", new {
+              location {
+                line = 48
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              }
+              docComment = """
+                Returns a string representation of [this].
+                
+                This method is used to convert the values of string interpolation expressions to strings.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "toString"
+              typeParameters = List()
+              parameters = Map()
+            }, "ifNonNull", new {
+              location {
+                line = 53
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              }
+              docComment = """
+                Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                
+                This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                """
+              annotations = List()
+              modifiers = Set()
+              name = "ifNonNull"
+              typeParameters = List(new {
+                name = "Result"
+                variance = null
+              })
+              parameters = Map("transform", new {
+                name = "transform"
+              })
+            })
+          }
+          supertype {
+            referent {
+              location {
+                line = 41
+                column = 1
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              }
+              docComment = """
+                The top type of the type hierarchy.
+                
+                Every type is a subtype of [Any].
+                
+                The following operators are supported for all values:
+                ```
+                value1 == value2 // equality
+                value1 != value2 // inequality
+                value.member     // member access
+                value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+                value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+                value is String  // type test
+                value as String  // type cast; throws an error unless `value is String`
+                ```
+                """
+              annotations = List()
+              modifiers = Set("abstract", "external")
+              name = "Any"
+              typeParameters = List()
+              superclass = null
+              supertype = null
+              properties = Map()
+              methods = Map("getClass", new {
+                location {
+                  line = 43
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                }
+                docComment = "Returns the class of [this]."
+                annotations = List()
+                modifiers = Set()
+                name = "getClass"
+                typeParameters = List()
+                parameters = Map()
+              }, "toString", new {
+                location {
+                  line = 48
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                }
+                docComment = """
+                  Returns a string representation of [this].
+                  
+                  This method is used to convert the values of string interpolation expressions to strings.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "toString"
+                typeParameters = List()
+                parameters = Map()
+              }, "ifNonNull", new {
+                location {
+                  line = 53
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                }
+                docComment = """
+                  Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                  
+                  This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "ifNonNull"
+                typeParameters = List(new {
+                  name = "Result"
+                  variance = null
+                })
+                parameters = Map("transform", new {
+                  name = "transform"
+                })
+              })
+            }
+            typeArguments = List()
+          }
+          properties = Map()
+          methods = Map()
+        }
+        supertype {
+          referent {
+            location {
+              line = 1701
+              column = 1
+              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+            }
+            docComment = """
+              A composite value containing members (properties, elements, entries).
+              
+              ```
+              obj = new {
+                name = "Pigeon" // property
+                "Hello"       // element
+                ["two"] = 2   // entry
+              }
+              
+              obj.name   // "Pigeon"
+              obj[0]     // "Hello"
+              obj["two"] // 2
+              ```
+              
+              An object can be *amended* to create variants of itself.
+              This is similar to inheritance in prototype-oriented programming.
+              
+              ```
+              pigeon = new { name = "Pigeon"; age = 42 }
+              barnOwl = (pigeon) { name = "Barn Owl" } // override property `name`
+              oldPigeon = (pigeon) { age = 84 } // override property `age`
+              ```
+              
+              Object members may reference other members:
+              
+              ```
+              thresholds = new { lower = 10; upper = lower + 5 }
+              ```
+              
+              Object members are dynamically bound.
+              This is similar to how computed cells in a spreadsheet work.
+              
+              ```
+              thresholds = new { lower = 10; upper = lower + 5 }
+              thresholds2 = new { lower = 7 } // thresholds2.upper == 12
+              ```
+              
+              Objects have memberwise equality and hash code.
+              
+              To arbitrarily manipulate an object, convert it to a [Collection].
+              If necessary, the manipulated [Collection] can be converted back to an [Object].
+              
+              ```
+              pigeon = new { name = "Pigeon"; age = 42 }
+              manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
+              manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
+              ```
+              """
+            annotations = List()
+            modifiers = Set("abstract", "external")
+            name = "Object"
+            typeParameters = List()
+            superclass {
+              location {
+                line = 41
+                column = 1
+                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              }
+              docComment = """
+                The top type of the type hierarchy.
+                
+                Every type is a subtype of [Any].
+                
+                The following operators are supported for all values:
+                ```
+                value1 == value2 // equality
+                value1 != value2 // inequality
+                value.member     // member access
+                value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+                value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+                value is String  // type test
+                value as String  // type cast; throws an error unless `value is String`
+                ```
+                """
+              annotations = List()
+              modifiers = Set("abstract", "external")
+              name = "Any"
+              typeParameters = List()
+              superclass = null
+              supertype = null
+              properties = Map()
+              methods = Map("getClass", new {
+                location {
+                  line = 43
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                }
+                docComment = "Returns the class of [this]."
+                annotations = List()
+                modifiers = Set()
+                name = "getClass"
+                typeParameters = List()
+                parameters = Map()
+              }, "toString", new {
+                location {
+                  line = 48
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                }
+                docComment = """
+                  Returns a string representation of [this].
+                  
+                  This method is used to convert the values of string interpolation expressions to strings.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "toString"
+                typeParameters = List()
+                parameters = Map()
+              }, "ifNonNull", new {
+                location {
+                  line = 53
+                  column = 3
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                }
+                docComment = """
+                  Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                  
+                  This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                  """
+                annotations = List()
+                modifiers = Set()
+                name = "ifNonNull"
+                typeParameters = List(new {
+                  name = "Result"
+                  variance = null
+                })
+                parameters = Map("transform", new {
+                  name = "transform"
+                })
+              })
+            }
+            supertype {
+              referent {
+                location {
+                  line = 41
+                  column = 1
+                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+                }
+                docComment = """
+                  The top type of the type hierarchy.
+                  
+                  Every type is a subtype of [Any].
+                  
+                  The following operators are supported for all values:
+                  ```
+                  value1 == value2 // equality
+                  value1 != value2 // inequality
+                  value.member     // member access
+                  value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
+                  value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+                  value is String  // type test
+                  value as String  // type cast; throws an error unless `value is String`
+                  ```
+                  """
+                annotations = List()
+                modifiers = Set("abstract", "external")
+                name = "Any"
+                typeParameters = List()
+                superclass = null
+                supertype = null
+                properties = Map()
+                methods = Map("getClass", new {
+                  location {
+                    line = 43
+                    column = 3
+                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                  }
+                  docComment = "Returns the class of [this]."
+                  annotations = List()
+                  modifiers = Set()
+                  name = "getClass"
+                  typeParameters = List()
+                  parameters = Map()
+                }, "toString", new {
+                  location {
+                    line = 48
+                    column = 3
+                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                  }
+                  docComment = """
+                    Returns a string representation of [this].
+                    
+                    This method is used to convert the values of string interpolation expressions to strings.
+                    """
+                  annotations = List()
+                  modifiers = Set()
+                  name = "toString"
+                  typeParameters = List()
+                  parameters = Map()
+                }, "ifNonNull", new {
+                  location {
+                    line = 53
+                    column = 3
+                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                  }
+                  docComment = """
+                    Returns `this |> transform` if [this] is non-null, and [null] otherwise.
+                    
+                    This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+                    """
+                  annotations = List()
+                  modifiers = Set()
+                  name = "ifNonNull"
+                  typeParameters = List(new {
+                    name = "Result"
+                    variance = null
+                  })
+                  parameters = Map("transform", new {
+                    name = "transform"
+                  })
+                })
+              }
+              typeArguments = List()
+            }
+            properties = Map()
+            methods = Map()
+          }
+          typeArguments = List()
+        }
+        properties = Map()
+        methods = Map("hasProperty", new {
+          location {
+            line = 1708
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1708"
+          }
+          docComment = "Tells if this object has a property with the given [name]."
+          annotations = List()
+          modifiers = Set()
+          name = "hasProperty"
+          typeParameters = List()
+          parameters = Map("name", new {
+            name = "name"
+          })
+        }, "getProperty", new {
+          location {
+            line = 1713
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1713"
+          }
+          docComment = """
+            Returns the value of the property with the given [name].
+            
+            Throws if a property with this name does not exist.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "getProperty"
+          typeParameters = List()
+          parameters = Map("name", new {
+            name = "name"
+          })
+        }, "getPropertyOrNull", new {
+          location {
+            line = 1718
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1718"
+          }
+          docComment = """
+            Returns the value of the property with the given [name].
+            
+            Returns [null] if a property with this name does not exist.
+            """
+          annotations = List()
+          modifiers = Set()
+          name = "getPropertyOrNull"
+          typeParameters = List()
+          parameters = Map("name", new {
+            name = "name"
+          })
+        }, "toDynamic", new {
+          location {
+            line = 1721
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1721"
+          }
+          docComment = "Converts this object to a [Dynamic] object."
+          annotations = List()
+          modifiers = Set()
+          name = "toDynamic"
+          typeParameters = List()
+          parameters = Map()
+        }, "toMap", new {
+          location {
+            line = 1724
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1724"
+          }
+          docComment = "Converts this object to a [Map]."
+          annotations = List()
+          modifiers = Set()
+          name = "toMap"
+          typeParameters = List()
+          parameters = Map()
+        })
+      }
+      typeArguments = List()
+    }
     properties = Map("rec", new {
+      location {
+        line = 6
+        column = 3
+        displayUri = "file:///$snippetsDir/input/api/reflectedDeclaration.pkl"
+      }
       docComment = null
       annotations = List()
       modifiers = Set()
