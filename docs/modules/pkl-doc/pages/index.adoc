@@ -100,7 +100,7 @@ ifdef::is-release-version[]
   mavenCentral()
 endif::[]
 ifndef::is-release-version[]
-  maven { url = uri("{uri-sonatype}") }
+  maven(url = "{uri-sonatype}")
 endif::[]
 }
 ----
