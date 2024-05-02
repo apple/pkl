@@ -32,6 +32,31 @@ The plugin is applied as follows:
 
 [tabs]
 ====
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+plugins {
+  id("org.pkl-lang") version "{pkl-artifact-version}"
+}
+----
++
+.settings.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+pluginManagement {
+    repositories {
+ifdef::is-release-version[]
+        mavenCentral()
+endif::[]
+ifndef::is-release-version[]
+        maven(url = "{uri-sonatype}")
+endif::[]
+    }
+}
+----
+
 Groovy::
 +
 .build.gradle
@@ -52,31 +77,6 @@ ifdef::is-release-version[]
 endif::[]
 ifndef::is-release-version[]
         maven { url "{uri-sonatype}" }
-endif::[]
-    }
-}
-----
-
-Kotlin::
-+
-.build.gradle.kts
-[source,kotlin,subs="+attributes"]
-----
-plugins {
-  id("org.pkl-lang") version "{pkl-artifact-version}"
-}
-----
-+
-.settings.gradle.kts
-[source,kotlin,subs="+attributes"]
-----
-pluginManagement {
-    repositories {
-ifdef::is-release-version[]
-        mavenCentral()
-endif::[]
-ifndef::is-release-version[]
-        maven { url = uri("{uri-sonatype}") }
 endif::[]
     }
 }

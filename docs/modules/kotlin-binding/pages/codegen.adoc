@@ -27,6 +27,25 @@ To use the library in a Gradle project, declare the following dependency:
 
 [tabs]
 ====
+Kotlin::
++
+.build.gradle.kts
+[source,kotlin,subs="+attributes"]
+----
+dependencies {
+  implementation("org.pkl-lang:pkl-codegen-kotlin:{pkl-artifact-version}")
+}
+
+repositories {
+ifdef::is-release-version[]
+  mavenCentral()
+endif::[]
+ifndef::is-release-version[]
+  maven(url = "{uri-sonatype}")
+endif::[]
+}
+----
+
 Groovy::
 +
 .build.gradle
@@ -42,25 +61,6 @@ ifdef::is-release-version[]
 endif::[]
 ifndef::is-release-version[]
   maven { url "{uri-sonatype}" }
-endif::[]
-}
-----
-
-Kotlin::
-+
-.build.gradle.kts
-[source,kotlin,subs="+attributes"]
-----
-dependencies {
-  implementation("org.pkl-lang:pkl-codegen-kotlin:{pkl-artifact-version}")
-}
-
-repositories {
-ifdef::is-release-version[]
-  mavenCentral()
-endif::[]
-ifndef::is-release-version[]
-  maven { url = uri("{uri-sonatype}") }
 endif::[]
 }
 ----
