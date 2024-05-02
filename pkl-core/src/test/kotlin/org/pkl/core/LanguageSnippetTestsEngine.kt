@@ -81,7 +81,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
   
   protected fun String.stripStdlibLocationSha(): String =
-    replace(Regex("https://github.com/apple/pkl/blob/[0-9a-fA-F]+/stdlib/"), "https://github.com/apple/pkl/blob/stdlib/")
+    replace(Regex("https://github.com/apple/pkl/blob/[0-9a-fA-F]+/stdlib/"), "https://github.com/apple/pkl/blob/_hash_/stdlib/")
 }
 
 class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {

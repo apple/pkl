@@ -15,7 +15,7 @@ alias {
         location {
           line = 1040
           column = 1
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1040"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1040"
         }
         docComment = """
           A boolean value, either [true] or [false].
@@ -35,7 +35,7 @@ alias {
           location {
             line = 41
             column = 1
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
           }
           docComment = """
             The top type of the type hierarchy.
@@ -64,7 +64,7 @@ alias {
             location {
               line = 43
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
             }
             docComment = "Returns the class of [this]."
             annotations = List()
@@ -76,7 +76,7 @@ alias {
             location {
               line = 48
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
             }
             docComment = """
               Returns a string representation of [this].
@@ -92,7 +92,7 @@ alias {
             location {
               line = 53
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
             }
             docComment = """
               Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -116,7 +116,7 @@ alias {
             location {
               line = 41
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
             }
             docComment = """
               The top type of the type hierarchy.
@@ -145,7 +145,7 @@ alias {
               location {
                 line = 43
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
               }
               docComment = "Returns the class of [this]."
               annotations = List()
@@ -157,7 +157,7 @@ alias {
               location {
                 line = 48
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
               }
               docComment = """
                 Returns a string representation of [this].
@@ -173,7 +173,7 @@ alias {
               location {
                 line = 53
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
               }
               docComment = """
                 Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -199,7 +199,7 @@ alias {
           location {
             line = 1050
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1050"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1050"
           }
           docComment = """
             Tells if exactly one of [this] and [other] is [true] (exclusive or).
@@ -223,7 +223,7 @@ alias {
           location {
             line = 1063
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1063"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1063"
           }
           docComment = """
             Tells if [this] implies [other] (logical consequence).
@@ -253,7 +253,7 @@ alias {
         location {
           line = 1076
           column = 1
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1076"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1076"
         }
         docComment = """
           A sequence of Unicode characters (code points).
@@ -272,7 +272,7 @@ alias {
           location {
             line = 41
             column = 1
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
           }
           docComment = """
             The top type of the type hierarchy.
@@ -301,7 +301,7 @@ alias {
             location {
               line = 43
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
             }
             docComment = "Returns the class of [this]."
             annotations = List()
@@ -313,7 +313,7 @@ alias {
             location {
               line = 48
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
             }
             docComment = """
               Returns a string representation of [this].
@@ -329,7 +329,7 @@ alias {
             location {
               line = 53
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
             }
             docComment = """
               Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -353,7 +353,7 @@ alias {
             location {
               line = 41
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
             }
             docComment = """
               The top type of the type hierarchy.
@@ -382,7 +382,7 @@ alias {
               location {
                 line = 43
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
               }
               docComment = "Returns the class of [this]."
               annotations = List()
@@ -394,7 +394,7 @@ alias {
               location {
                 line = 48
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
               }
               docComment = """
                 Returns a string representation of [this].
@@ -410,7 +410,7 @@ alias {
               location {
                 line = 53
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
               }
               docComment = """
                 Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -435,7 +435,7 @@ alias {
           location {
             line = 1087
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1087"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1087"
           }
           docComment = """
             The number of characters in this string.
@@ -460,7 +460,7 @@ alias {
           location {
             line = 1100
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1100"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1100"
           }
           docComment = """
             The index of the last character in this string (same as `length - 1`).
@@ -482,7 +482,7 @@ alias {
           location {
             line = 1110
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1110"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1110"
           }
           docComment = """
             Tells whether this string is empty.
@@ -501,7 +501,7 @@ alias {
           location {
             line = 1121
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1121"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1121"
           }
           docComment = """
             Tells if all characters in this string have Unicode property "White_Space".
@@ -521,7 +521,7 @@ alias {
           location {
             line = 1124
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1124"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1124"
           }
           docComment = "Tells if this string is a valid regular expression according to [Regex]."
           annotations = List()
@@ -531,7 +531,7 @@ alias {
           location {
             line = 1131
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1131"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1131"
           }
           docComment = """
             The [MD5](https://en.wikipedia.org/wiki/MD5)
@@ -547,7 +547,7 @@ alias {
           location {
             line = 1137
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1137"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1137"
           }
           docComment = """
             The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
@@ -562,7 +562,7 @@ alias {
           location {
             line = 1142
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1142"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1142"
           }
           docComment = """
             The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
@@ -576,7 +576,7 @@ alias {
           location {
             line = 1146
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1146"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1146"
           }
           docComment = """
             The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
@@ -589,7 +589,7 @@ alias {
           location {
             line = 1149
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1149"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1149"
           }
           docComment = "The Base64 encoding of this string's UTF-8 byte sequence."
           annotations = List()
@@ -599,7 +599,7 @@ alias {
           location {
             line = 1157
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1157"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1157"
           }
           docComment = """
             The inverse of [base64].
@@ -616,7 +616,7 @@ alias {
           location {
             line = 1165
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1165"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1165"
           }
           docComment = """
             The Unicode characters in this string.
@@ -633,7 +633,7 @@ alias {
           location {
             line = 1173
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1173"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1173"
           }
           docComment = """
             The Unicode code points in this string.
@@ -651,7 +651,7 @@ alias {
           location {
             line = 1185
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1185"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1185"
           }
           docComment = """
             Returns the character at [index], or [null] if [index] is out of range.
@@ -676,7 +676,7 @@ alias {
           location {
             line = 1199
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1199"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1199"
           }
           docComment = """
             Returns the substring from [start] until [exclusiveEnd].
@@ -705,7 +705,7 @@ alias {
           location {
             line = 1217
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1217"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1217"
           }
           docComment = """
             Returns the substring from [start] until [exclusiveEnd].
@@ -738,7 +738,7 @@ alias {
           location {
             line = 1227
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1227"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1227"
           }
           docComment = """
             Concatenates [count] copies of this string.
@@ -761,7 +761,7 @@ alias {
           location {
             line = 1230
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1230"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1230"
           }
           docComment = "Tells whether this string contains [pattern]."
           annotations = List()
@@ -775,7 +775,7 @@ alias {
           location {
             line = 1234
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1234"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1234"
           }
           docComment = "Tells whether this string matches [regex] in its entirety."
           annotations = List(new {
@@ -793,7 +793,7 @@ alias {
           location {
             line = 1237
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1237"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1237"
           }
           docComment = "Tells whether this string starts with [pattern]."
           annotations = List()
@@ -807,7 +807,7 @@ alias {
           location {
             line = 1240
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1240"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1240"
           }
           docComment = "Tells whether this string ends with [pattern]."
           annotations = List()
@@ -821,7 +821,7 @@ alias {
           location {
             line = 1246
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1246"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1246"
           }
           docComment = """
             Returns the zero-based index of the first occurrence of [pattern]
@@ -840,7 +840,7 @@ alias {
           location {
             line = 1250
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1250"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1250"
           }
           docComment = """
             Returns the zero-based index of the first occurrence of [pattern]
@@ -857,7 +857,7 @@ alias {
           location {
             line = 1256
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1256"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1256"
           }
           docComment = """
             Returns the zero-based index of the last occurrence of [pattern]
@@ -876,7 +876,7 @@ alias {
           location {
             line = 1260
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1260"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1260"
           }
           docComment = """
             Returns the zero-based index of the last occurrence of [pattern]
@@ -893,7 +893,7 @@ alias {
           location {
             line = 1266
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1266"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1266"
           }
           docComment = """
             Returns the first [n] characters of this string.
@@ -915,7 +915,7 @@ alias {
           location {
             line = 1269
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1269"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1269"
           }
           docComment = "Returns the longest prefix of this string that satisfies [predicate]."
           annotations = List()
@@ -929,7 +929,7 @@ alias {
           location {
             line = 1274
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1274"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1274"
           }
           docComment = """
             Returns the last [n] characters of this string.
@@ -947,7 +947,7 @@ alias {
           location {
             line = 1277
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1277"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1277"
           }
           docComment = "Returns the longest suffix of this string that satisfies [predicate]."
           annotations = List()
@@ -961,7 +961,7 @@ alias {
           location {
             line = 1283
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1283"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1283"
           }
           docComment = """
             Removes the first [n] characters of this string.
@@ -983,7 +983,7 @@ alias {
           location {
             line = 1287
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1287"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1287"
           }
           docComment = "Removes the longest prefix of this string that satisfies [predicate]."
           annotations = List(new {
@@ -1001,7 +1001,7 @@ alias {
           location {
             line = 1293
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1293"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1293"
           }
           docComment = """
             Removes the last [n] characters of this string.
@@ -1023,7 +1023,7 @@ alias {
           location {
             line = 1297
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1297"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1297"
           }
           docComment = "Removes the longest suffix of this string that satisfies [predicate]."
           annotations = List(new {
@@ -1041,7 +1041,7 @@ alias {
           location {
             line = 1302
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1302"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1302"
           }
           docComment = """
             Replaces the first occurrence of [pattern] in this string with [replacement].
@@ -1061,7 +1061,7 @@ alias {
           location {
             line = 1307
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1307"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1307"
           }
           docComment = """
             Replaces the last occurrence of [pattern] in this string with [replacement].
@@ -1081,7 +1081,7 @@ alias {
           location {
             line = 1312
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1312"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1312"
           }
           docComment = """
             Replaces all occurrences of [pattern] in this string with [replacement].
@@ -1101,7 +1101,7 @@ alias {
           location {
             line = 1317
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1317"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1317"
           }
           docComment = """
             Replaces the first occurrence of [pattern] in this string with the return value of [mapper].
@@ -1121,7 +1121,7 @@ alias {
           location {
             line = 1322
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1322"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1322"
           }
           docComment = """
             Replaces the last occurrence of [pattern] in this string with the return value of [mapper].
@@ -1141,7 +1141,7 @@ alias {
           location {
             line = 1327
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1327"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1327"
           }
           docComment = """
             Replaces all occurrences of [pattern] in this string with the return value of [mapper].
@@ -1161,7 +1161,7 @@ alias {
           location {
             line = 1332
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1332"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1332"
           }
           docComment = """
             Replaces the characters between [start] and [exclusiveEnd] with [replacement].
@@ -1183,7 +1183,7 @@ alias {
           location {
             line = 1335
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1335"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1335"
           }
           docComment = "Performs a locale-independent character-by-character conversion of this string to uppercase."
           annotations = List()
@@ -1195,7 +1195,7 @@ alias {
           location {
             line = 1338
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1338"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1338"
           }
           docComment = "Performs a locale-independent character-by-character conversion of this string to lowercase."
           annotations = List()
@@ -1207,7 +1207,7 @@ alias {
           location {
             line = 1341
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1341"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1341"
           }
           docComment = "Reverses the order of characters in this string."
           annotations = List()
@@ -1219,7 +1219,7 @@ alias {
           location {
             line = 1345
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1345"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1345"
           }
           docComment = "Removes any leading and trailing characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
@@ -1235,7 +1235,7 @@ alias {
           location {
             line = 1349
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1349"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1349"
           }
           docComment = "Removes any leading characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
@@ -1255,7 +1255,7 @@ alias {
           location {
             line = 1353
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1353"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1353"
           }
           docComment = "Removes any trailing characters with Unicode property \"White_Space\" from this string."
           annotations = List(new {
@@ -1275,7 +1275,7 @@ alias {
           location {
             line = 1359
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1359"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1359"
           }
           docComment = """
             Increases the length of this string to [width] by adding leading [char]s.
@@ -1299,7 +1299,7 @@ alias {
           location {
             line = 1365
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1365"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1365"
           }
           docComment = """
             Increases the length of this string to [width] by adding trailing [char]s.
@@ -1323,7 +1323,7 @@ alias {
           location {
             line = 1368
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1368"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1368"
           }
           docComment = "Splits this string around matches of [pattern]."
           annotations = List()
@@ -1337,7 +1337,7 @@ alias {
           location {
             line = 1378
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1378"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1378"
           }
           docComment = """
             Converts the first character of this string to title case.
@@ -1358,7 +1358,7 @@ alias {
           location {
             line = 1388
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1388"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1388"
           }
           docComment = """
             Converts the first character of this string to lower case.
@@ -1379,7 +1379,7 @@ alias {
           location {
             line = 1394
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1394"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1394"
           }
           docComment = """
             Parses this string as a signed decimal (base 10) integer.
@@ -1396,7 +1396,7 @@ alias {
           location {
             line = 1400
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1400"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1400"
           }
           docComment = """
             Parses this string as a signed decimal (base 10) integer.
@@ -1413,7 +1413,7 @@ alias {
           location {
             line = 1405
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1405"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1405"
           }
           docComment = """
             Parses this string as a floating point number.
@@ -1429,7 +1429,7 @@ alias {
           location {
             line = 1410
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1410"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1410"
           }
           docComment = """
             Parses this string as a floating point number.
@@ -1445,7 +1445,7 @@ alias {
           location {
             line = 1415
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1415"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1415"
           }
           docComment = """
             Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
@@ -1461,7 +1461,7 @@ alias {
           location {
             line = 1420
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1420"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1420"
           }
           docComment = """
             Parses `"true"` to [true] and `"false"` to [false] (case-insensitive).
@@ -1495,7 +1495,7 @@ rec {
       location {
         line = 1706
         column = 1
-        displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1706"
+        displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1706"
       }
       docComment = """
         Base class for objects whose members are described by a class definition.
@@ -1510,7 +1510,7 @@ rec {
         location {
           line = 1701
           column = 1
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1701"
         }
         docComment = """
           A composite value containing members (properties, elements, entries).
@@ -1569,7 +1569,7 @@ rec {
           location {
             line = 41
             column = 1
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
           }
           docComment = """
             The top type of the type hierarchy.
@@ -1598,7 +1598,7 @@ rec {
             location {
               line = 43
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
             }
             docComment = "Returns the class of [this]."
             annotations = List()
@@ -1610,7 +1610,7 @@ rec {
             location {
               line = 48
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
             }
             docComment = """
               Returns a string representation of [this].
@@ -1626,7 +1626,7 @@ rec {
             location {
               line = 53
               column = 3
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
             }
             docComment = """
               Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -1650,7 +1650,7 @@ rec {
             location {
               line = 41
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
             }
             docComment = """
               The top type of the type hierarchy.
@@ -1679,7 +1679,7 @@ rec {
               location {
                 line = 43
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
               }
               docComment = "Returns the class of [this]."
               annotations = List()
@@ -1691,7 +1691,7 @@ rec {
               location {
                 line = 48
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
               }
               docComment = """
                 Returns a string representation of [this].
@@ -1707,7 +1707,7 @@ rec {
               location {
                 line = 53
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
               }
               docComment = """
                 Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -1736,7 +1736,7 @@ rec {
           location {
             line = 1701
             column = 1
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1701"
           }
           docComment = """
             A composite value containing members (properties, elements, entries).
@@ -1795,7 +1795,7 @@ rec {
             location {
               line = 41
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
             }
             docComment = """
               The top type of the type hierarchy.
@@ -1824,7 +1824,7 @@ rec {
               location {
                 line = 43
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
               }
               docComment = "Returns the class of [this]."
               annotations = List()
@@ -1836,7 +1836,7 @@ rec {
               location {
                 line = 48
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
               }
               docComment = """
                 Returns a string representation of [this].
@@ -1852,7 +1852,7 @@ rec {
               location {
                 line = 53
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
               }
               docComment = """
                 Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -1876,7 +1876,7 @@ rec {
               location {
                 line = 41
                 column = 1
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
               }
               docComment = """
                 The top type of the type hierarchy.
@@ -1905,7 +1905,7 @@ rec {
                 location {
                   line = 43
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
                 }
                 docComment = "Returns the class of [this]."
                 annotations = List()
@@ -1917,7 +1917,7 @@ rec {
                 location {
                   line = 48
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
                 }
                 docComment = """
                   Returns a string representation of [this].
@@ -1933,7 +1933,7 @@ rec {
                 location {
                   line = 53
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
                 }
                 docComment = """
                   Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -1964,7 +1964,7 @@ rec {
         location {
           line = 1708
           column = 3
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1708"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1708"
         }
         docComment = "Tells if this object has a property with the given [name]."
         annotations = List()
@@ -1978,7 +1978,7 @@ rec {
         location {
           line = 1713
           column = 3
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1713"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1713"
         }
         docComment = """
           Returns the value of the property with the given [name].
@@ -1996,7 +1996,7 @@ rec {
         location {
           line = 1718
           column = 3
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1718"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1718"
         }
         docComment = """
           Returns the value of the property with the given [name].
@@ -2014,7 +2014,7 @@ rec {
         location {
           line = 1721
           column = 3
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1721"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1721"
         }
         docComment = "Converts this object to a [Dynamic] object."
         annotations = List()
@@ -2026,7 +2026,7 @@ rec {
         location {
           line = 1724
           column = 3
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1724"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1724"
         }
         docComment = "Converts this object to a [Map]."
         annotations = List()
@@ -2041,7 +2041,7 @@ rec {
         location {
           line = 1706
           column = 1
-          displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1706"
+          displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1706"
         }
         docComment = """
           Base class for objects whose members are described by a class definition.
@@ -2056,7 +2056,7 @@ rec {
           location {
             line = 1701
             column = 1
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1701"
           }
           docComment = """
             A composite value containing members (properties, elements, entries).
@@ -2115,7 +2115,7 @@ rec {
             location {
               line = 41
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
             }
             docComment = """
               The top type of the type hierarchy.
@@ -2144,7 +2144,7 @@ rec {
               location {
                 line = 43
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
               }
               docComment = "Returns the class of [this]."
               annotations = List()
@@ -2156,7 +2156,7 @@ rec {
               location {
                 line = 48
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
               }
               docComment = """
                 Returns a string representation of [this].
@@ -2172,7 +2172,7 @@ rec {
               location {
                 line = 53
                 column = 3
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
               }
               docComment = """
                 Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -2196,7 +2196,7 @@ rec {
               location {
                 line = 41
                 column = 1
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
               }
               docComment = """
                 The top type of the type hierarchy.
@@ -2225,7 +2225,7 @@ rec {
                 location {
                   line = 43
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
                 }
                 docComment = "Returns the class of [this]."
                 annotations = List()
@@ -2237,7 +2237,7 @@ rec {
                 location {
                   line = 48
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
                 }
                 docComment = """
                   Returns a string representation of [this].
@@ -2253,7 +2253,7 @@ rec {
                 location {
                   line = 53
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
                 }
                 docComment = """
                   Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -2282,7 +2282,7 @@ rec {
             location {
               line = 1701
               column = 1
-              displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1701"
+              displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1701"
             }
             docComment = """
               A composite value containing members (properties, elements, entries).
@@ -2341,7 +2341,7 @@ rec {
               location {
                 line = 41
                 column = 1
-                displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+                displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
               }
               docComment = """
                 The top type of the type hierarchy.
@@ -2370,7 +2370,7 @@ rec {
                 location {
                   line = 43
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
                 }
                 docComment = "Returns the class of [this]."
                 annotations = List()
@@ -2382,7 +2382,7 @@ rec {
                 location {
                   line = 48
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
                 }
                 docComment = """
                   Returns a string representation of [this].
@@ -2398,7 +2398,7 @@ rec {
                 location {
                   line = 53
                   column = 3
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
                 }
                 docComment = """
                   Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -2422,7 +2422,7 @@ rec {
                 location {
                   line = 41
                   column = 1
-                  displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L41"
+                  displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L41"
                 }
                 docComment = """
                   The top type of the type hierarchy.
@@ -2451,7 +2451,7 @@ rec {
                   location {
                     line = 43
                     column = 3
-                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L43"
+                    displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L43"
                   }
                   docComment = "Returns the class of [this]."
                   annotations = List()
@@ -2463,7 +2463,7 @@ rec {
                   location {
                     line = 48
                     column = 3
-                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L48"
+                    displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L48"
                   }
                   docComment = """
                     Returns a string representation of [this].
@@ -2479,7 +2479,7 @@ rec {
                   location {
                     line = 53
                     column = 3
-                    displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L53"
+                    displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L53"
                   }
                   docComment = """
                     Returns `this |> transform` if [this] is non-null, and [null] otherwise.
@@ -2510,7 +2510,7 @@ rec {
           location {
             line = 1708
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1708"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1708"
           }
           docComment = "Tells if this object has a property with the given [name]."
           annotations = List()
@@ -2524,7 +2524,7 @@ rec {
           location {
             line = 1713
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1713"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1713"
           }
           docComment = """
             Returns the value of the property with the given [name].
@@ -2542,7 +2542,7 @@ rec {
           location {
             line = 1718
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1718"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1718"
           }
           docComment = """
             Returns the value of the property with the given [name].
@@ -2560,7 +2560,7 @@ rec {
           location {
             line = 1721
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1721"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1721"
           }
           docComment = "Converts this object to a [Dynamic] object."
           annotations = List()
@@ -2572,7 +2572,7 @@ rec {
           location {
             line = 1724
             column = 3
-            displayUri = "https://github.com/apple/pkl/blob/stdlib/base.pkl#L1724"
+            displayUri = "https://github.com/apple/pkl/blob/_hash_/stdlib/base.pkl#L1724"
           }
           docComment = "Converts this object to a [Map]."
           annotations = List()
