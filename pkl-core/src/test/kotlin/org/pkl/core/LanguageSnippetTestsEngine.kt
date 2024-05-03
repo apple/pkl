@@ -81,7 +81,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
   
   protected fun String.stripStdlibLocationSha(): String =
-    replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/_hash_/stdlib/")
+    replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/\$commitId/stdlib/")
 }
 
 class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
