@@ -16,7 +16,6 @@
 package org.pkl.cli
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import com.github.tomakehurst.wiremock.junit.WireMockRule
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.StringReader
@@ -1253,28 +1252,16 @@ result = someLib.x
 
   @Test
   fun `eval package from proxy`(wwRuntimeInfo: WireMockRuntimeInfo) {
-    for (pkg in listOf("birds@0.5.0", "fruit@1.0.5")) {
-      val packageDir = PackageServer.packagesDir.resolve(pkg)
-      stubFor(
-        get(urlEqualTo("/$pkg"))
-          .willReturn(aResponse().withStatus(200).withBody(packageDir.resolve("$pkg.json").readBytes()))
-      )
-      stubFor(
-        get(urlEqualTo("/$pkg.zip"))
-          .willReturn(
-            aResponse().withStatus(200).withBody(packageDir.resolve("$pkg.zip").readBytes())
-          )
-      )
-    }
-
+    stubFor(
+      any(anyUrl()).willReturn(aResponse().proxiedFrom("https://localhost:${packageServer.port}"))
+    )
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(
-          sourceModules =
-            listOf(URI("package://not.a.valid.host/birds@0.5.0#/catalog/Ostritch.pkl")),
+          sourceModules = listOf(URI("package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl")),
           noCache = true,
           proxyAddress = URI(wwRuntimeInfo.httpsBaseUrl),
-          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:")
         )
       )
     val output = evalToConsole(options)
@@ -1290,6 +1277,8 @@ result = someLib.x
     """
           .trimIndent()
       )
+    verify(getRequestedFor(urlEqualTo("birds@0.5.0")))
+    verify(getRequestedFor(urlEqualTo("fruit@1.0.5")))
   }
 
   @Test
