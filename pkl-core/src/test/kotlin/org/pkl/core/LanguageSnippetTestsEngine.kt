@@ -79,6 +79,9 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   // can't think of a better solution right now
   protected fun String.stripVersionCheckErrorMessage() =
     replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
+  
+  protected fun String.stripStdlibLocationSha(): String =
+    replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/\$commitId/stdlib/")
 }
 
 class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
@@ -142,7 +145,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
 
     val stderr = logWriter.toString()
 
-    return (success && stderr.isBlank()) to (output + stderr).stripFilePaths().stripWebsite()
+    return (success && stderr.isBlank()) to (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
   }
 }
 
@@ -220,6 +223,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
         .stripLineNumbers()
         .stripWebsite()
         .stripVersionCheckErrorMessage()
+        .stripStdlibLocationSha()
     } finally {
       process.destroy()
     }
