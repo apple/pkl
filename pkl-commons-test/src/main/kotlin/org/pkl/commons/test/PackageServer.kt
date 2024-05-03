@@ -71,7 +71,7 @@ class PackageServer : AutoCloseable {
     // Modified by RequestRewritingClient if testPort is set.
     private const val PORT = 0
 
-    private val packagesDir: Path =
+    val packagesDir: Path =
       FileTestUtils.rootProjectDir.resolve("pkl-commons-test/build/test-packages")
 
     private val simpleHttpsConfigurator by lazy {

@@ -21,6 +21,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
+import java.util.List;
 import javax.net.ssl.SSLContext;
 
 /**
@@ -36,6 +37,7 @@ import javax.net.ssl.SSLContext;
 public interface HttpClient extends AutoCloseable {
 
   /** A builder of {@linkplain HttpClient HTTP clients}. */
+  @SuppressWarnings("unused")
   interface Builder {
     /**
      * Sets the {@code User-Agent} header.
@@ -115,6 +117,23 @@ public interface HttpClient extends AutoCloseable {
      * internal test option.
      */
     Builder setTestPort(int port);
+
+    /**
+     * Sets the proxy selector to use when establishing connections.
+     *
+     * <p>Defaults to: {@link java.net.ProxySelector#getDefault()}.
+     */
+    Builder setProxySelector(java.net.ProxySelector proxySelector);
+
+    /**
+     * Configures HTTP connections to connect to the provided proxy address.
+     *
+     * <p>The provided {@code proxyAddress} must have scheme http, not contain userInfo, and not
+     * have a path segment.
+     *
+     * @throws IllegalArgumentException if `proxyAddress` is invalid.
+     */
+    Builder setProxy(URI proxyAddress, List<String> noProxy);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

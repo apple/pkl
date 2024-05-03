@@ -38,6 +38,7 @@ import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Version;
+import org.pkl.core.httpsettings.PklHttpSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -204,6 +205,8 @@ public final class Project {
     var timeout = (Duration) getNullableProperty(pSettings, "timeout");
     var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectDir);
     var rootDir = getNullablePath(pSettings, "rootDir", projectDir);
+    var httpSettings =
+        getProperty(pSettings, "http", (it) -> PklHttpSettings.parse((PObject) it, null));
     return new EvaluatorSettings(
         externalProperties,
         env,
@@ -213,7 +216,8 @@ public final class Project {
         moduleCacheDir,
         modulePath,
         timeout,
-        rootDir);
+        rootDir,
+        httpSettings);
   }
 
   @SuppressWarnings("unchecked")
@@ -380,6 +384,7 @@ public final class Project {
     private final @Nullable List<Path> modulePath;
     private final @Nullable Duration timeout;
     private final @Nullable Path rootDir;
+    private final PklHttpSettings http;
 
     public EvaluatorSettings(
         @Nullable Map<String, String> externalProperties,
@@ -390,7 +395,8 @@ public final class Project {
         @Nullable Path moduleCacheDir,
         @Nullable List<Path> modulePath,
         @Nullable Duration timeout,
-        @Nullable Path rootDir) {
+        @Nullable Path rootDir,
+        PklHttpSettings http) {
       this.externalProperties = externalProperties;
       this.env = env;
       this.allowedModules = allowedModules;
@@ -400,6 +406,7 @@ public final class Project {
       this.modulePath = modulePath;
       this.timeout = timeout;
       this.rootDir = rootDir;
+      this.http = http;
     }
 
     public @Nullable Map<String, String> getExternalProperties() {
@@ -520,6 +527,10 @@ public final class Project {
           + ", rootDir="
           + rootDir
           + '}';
+    }
+
+    public PklHttpSettings getHttp() {
+      return http;
     }
   }
 }

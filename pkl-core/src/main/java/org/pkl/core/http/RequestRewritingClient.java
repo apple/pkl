@@ -42,16 +42,22 @@ final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;
   final Duration requestTimeout;
+  final java.net.ProxySelector proxySelector;
   final int testPort;
   final HttpClient delegate;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
   RequestRewritingClient(
-      String userAgent, Duration requestTimeout, int testPort, HttpClient delegate) {
+      String userAgent,
+      Duration requestTimeout,
+      int testPort,
+      java.net.ProxySelector proxySelector,
+      HttpClient delegate) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
     this.testPort = testPort;
+    this.proxySelector = proxySelector;
     this.delegate = delegate;
   }
 
@@ -71,8 +77,9 @@ final class RequestRewritingClient implements HttpClient {
   private HttpRequest rewriteRequest(HttpRequest original) {
     HttpRequest.Builder builder = HttpRequest.newBuilder();
 
+    var targetUri = rewriteUri(original.uri());
     builder
-        .uri(rewriteUri(original.uri()))
+        .uri(targetUri)
         .expectContinue(original.expectContinue())
         .timeout(original.timeout().orElse(requestTimeout))
         .version(original.version().orElse(java.net.http.HttpClient.Version.HTTP_2));

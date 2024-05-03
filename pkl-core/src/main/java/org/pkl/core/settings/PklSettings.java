@@ -20,12 +20,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.pkl.core.*;
+import org.pkl.core.httpsettings.PklHttpSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Java representation of a Pkl settings file. A Pkl settings file is a Pkl module amending the
@@ -33,18 +33,12 @@ import org.pkl.core.util.Nullable;
  * {@code load} methods.
  */
 // keep in sync with stdlib/settings.pkl
-public final class PklSettings {
+public record PklSettings(Editor editor, PklHttpSettings httpSettings) {
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 
   private static final List<Pattern> ALLOWED_RESOURCES =
       List.of(Pattern.compile("env:"), Pattern.compile("file:"));
-
-  private final Editor editor;
-
-  public PklSettings(Editor editor) {
-    this.editor = editor;
-  }
 
   /**
    * Loads the user settings file ({@literal ~/.pkl/settings.pkl}). If this file does not exist,
@@ -57,7 +51,9 @@ public final class PklSettings {
   /** For testing only. */
   static PklSettings loadFromPklHomeDir(Path pklHomeDir) throws VmEvalException {
     var path = pklHomeDir.resolve("settings.pkl");
-    return Files.exists(path) ? load(ModuleSource.path(path)) : new PklSettings(Editor.SYSTEM);
+    return Files.exists(path)
+        ? load(ModuleSource.path(path))
+        : new PklSettings(Editor.SYSTEM, PklHttpSettings.DEFAULT);
   }
 
   /** Loads a settings file from the given path. */
@@ -78,38 +74,32 @@ public final class PklSettings {
     }
   }
 
+  private static Editor parseEditor(PModule module, ModuleSource location) {
+    // can't use object mapping in pkl-core, so map manually
+    if (module.getPropertyOrNull("editor") instanceof PObject pObject
+        && pObject.getPropertyOrNull("urlScheme") instanceof String str) {
+      return new Editor(str);
+    }
+    throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
+  }
+
   private static PklSettings parseSettings(PModule module, ModuleSource location)
       throws VmEvalException {
-    // can't use object mapping in pkl-core, so map manually
-    var editor = module.getPropertyOrNull("editor");
-    if (!(editor instanceof PObject pObject)) {
-      throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
+    var httpSettings = module.getPropertyOrNull("http");
+    if (httpSettings instanceof PObject http) {
+      return new PklSettings(parseEditor(module, location), PklHttpSettings.parse(http, location));
     }
-    var urlScheme = pObject.getPropertyOrNull("urlScheme");
-    if (!(urlScheme instanceof String string)) {
-      throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
-    }
-    return new PklSettings(new Editor(string));
+    throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
   }
 
-  /** Returns the editor for viewing and editing Pkl files. */
+  /**
+   * Returns the editor for viewing and editing Pkl files.
+   *
+   * <p>This method is deprecated, use {@link #editor()} instead.
+   */
+  @Deprecated(forRemoval = true)
   public Editor getEditor() {
     return editor;
-  }
-
-  @Override
-  public boolean equals(@Nullable Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    var that = (PklSettings) o;
-
-    return editor.equals(that.editor);
-  }
-
-  @Override
-  public int hashCode() {
-    return editor.hashCode();
   }
 
   @Override
@@ -118,9 +108,7 @@ public final class PklSettings {
   }
 
   /** An editor for viewing and editing Pkl files. */
-  public static final class Editor {
-    private final String urlScheme;
-
+  public record Editor(String urlScheme) {
     /** The editor associated with {@code file:} URLs ending in {@code .pkl}. */
     public static final Editor SYSTEM = new Editor("%{url}, line %{line}");
 
@@ -142,32 +130,14 @@ public final class PklSettings {
     /** The <a href="https://code.visualstudio.com">Visual Studio Code</a> editor. */
     public static final Editor VS_CODE = new Editor("vscode://file/%{path}:%{line}:%{column}");
 
-    /** Constructs an editor. */
-    public Editor(String urlScheme) {
-      this.urlScheme = urlScheme;
-    }
-
     /**
      * Returns the URL scheme for opening files in this editor. The following placeholders are
      * supported: {@code %{url}}, {@code %{path}}, {@code %{line}}, {@code %{column}}.
+     *
+     * <p>This method is deprecated; use {@link #urlScheme()} instead.
      */
     public String getUrlScheme() {
       return urlScheme;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      var editor = (Editor) o;
-
-      return urlScheme.equals(editor.urlScheme);
-    }
-
-    @Override
-    public int hashCode() {
-      return urlScheme.hashCode();
     }
 
     @Override

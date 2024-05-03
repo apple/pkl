@@ -16,6 +16,7 @@
 package org.pkl.core.http;
 
 import java.io.IOException;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -25,8 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
+import org.pkl.core.http.HttpClient.Builder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
+import org.pkl.core.util.Nullable;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
@@ -36,6 +39,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<Path> certificateFiles = new ArrayList<>();
   private final List<URI> certificateUris = new ArrayList<>();
   private int testPort = -1;
+  private @Nullable String proxyAuthorization = null;
+  private ProxySelector proxySelector;
 
   HttpClientBuilder() {
     this(IoUtils.getPklHomeDir().resolve("cacerts"));
@@ -109,6 +114,17 @@ final class HttpClientBuilder implements HttpClient.Builder {
     return this;
   }
 
+  public HttpClient.Builder setProxySelector(ProxySelector proxySelector) {
+    this.proxySelector = proxySelector;
+    return this;
+  }
+
+  @Override
+  public Builder setProxy(URI proxyAddress, List<String> noProxy) {
+    this.proxySelector = new org.pkl.core.http.ProxySelector(proxyAddress, noProxy);
+    return this;
+  }
+
   @Override
   public HttpClient build() {
     return doBuild().get();
@@ -123,9 +139,17 @@ final class HttpClientBuilder implements HttpClient.Builder {
     // make defensive copies because Supplier may get called after builder was mutated
     var certificateFiles = List.copyOf(this.certificateFiles);
     var certificateUris = List.copyOf(this.certificateUris);
+    java.net.ProxySelector proxySelector;
+    if (this.proxySelector == null) {
+      proxySelector = java.net.ProxySelector.getDefault();
+    } else {
+      proxySelector = this.proxySelector;
+    }
     return () -> {
-      var jdkClient = new JdkHttpClient(certificateFiles, certificateUris, connectTimeout);
-      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
+      var jdkClient =
+          new JdkHttpClient(certificateFiles, certificateUris, connectTimeout, proxySelector);
+      return new RequestRewritingClient(
+          userAgent, requestTimeout, testPort, proxySelector, jdkClient);
     };
   }
 

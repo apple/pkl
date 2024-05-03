@@ -22,8 +22,14 @@
 @ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.settings
 
+import "pkl:HttpSettings"
+
 /// The editor for viewing and editing Pkl files.
 editor: Editor = System
+
+/// HTTP settings.
+@Since { version = "0.26.0" }
+http: HttpSettings
 
 /// The editor associated with `file:` URLs ending in `.pkl`.
 hidden System: Editor = new {

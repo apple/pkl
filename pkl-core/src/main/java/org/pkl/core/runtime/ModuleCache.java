@@ -90,6 +90,9 @@ public final class ModuleCache {
           return BaseModule.getModule();
         case "Benchmark":
           return BenchmarkModule.getModule();
+        case "HttpSettings":
+          // always needed if ~/.pkl/settings.pkl is present
+          return HttpSettingsModule.getModule();
         case "jsonnet":
           return JsonnetModule.getModule();
         case "math":

@@ -70,6 +70,7 @@ module pkl.Project
 import "pkl:Project"
 import "pkl:reflect"
 import "pkl:semver"
+import "pkl:HttpSettings"
 
 /// The details for the package represented by this project.
 ///
@@ -467,6 +468,9 @@ class EvaluatorSettings {
   ///
   /// Relative paths are resolved against PklProject's enclosing directory.
   rootDir: String?
+
+  /// HTTP settings.
+  http: HttpSettings?
 }
 
 /// Common software licenses in the [SPDX License List](https://spdx.org/licenses/).

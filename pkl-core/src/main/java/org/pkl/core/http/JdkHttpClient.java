@@ -77,13 +77,18 @@ final class JdkHttpClient implements HttpClient {
     closeMethod = result;
   }
 
-  JdkHttpClient(List<Path> certificateFiles, List<URI> certificateUris, Duration connectTimeout) {
-    underlying =
+  JdkHttpClient(
+      List<Path> certificateFiles,
+      List<URI> certificateUris,
+      Duration connectTimeout,
+      java.net.ProxySelector proxySelector) {
+    var jdkHttpClientBuilder =
         java.net.http.HttpClient.newBuilder()
             .sslContext(createSslContext(certificateFiles, certificateUris))
             .connectTimeout(connectTimeout)
-            .followRedirects(Redirect.NORMAL)
-            .build();
+            .proxy(proxySelector)
+            .followRedirects(Redirect.NORMAL);
+    underlying = jdkHttpClientBuilder.build();
   }
 
   @Override

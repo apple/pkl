@@ -152,9 +152,31 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  // share HTTP client with other commands with the same cliOptions
-  protected val httpClient: HttpClient
-    get() = cliOptions.httpClient
+  /**
+   * The HTTP client used for this command.
+   *
+   * To release resources held by the HTTP client in a timely manner, call [HttpClient.close].
+   */
+  val httpClient: HttpClient by lazy {
+    with(HttpClient.builder()) {
+      setTestPort(cliOptions.testPort)
+      if (cliOptions.normalizedCaCertificates.isEmpty()) {
+        addDefaultCliCertificates()
+      } else {
+        for (file in cliOptions.normalizedCaCertificates) addCertificates(file)
+      }
+      if (cliOptions.proxyAddress != null) {
+        setProxy(cliOptions.proxyAddress, cliOptions.noProxy)
+      } else {
+        project?.settings?.http?.proxy?.let { setProxy(it.address, it.noProxy) }
+          ?: settings.httpSettings.proxy?.let { setProxy(it.address, it.noProxy) }
+      }
+      // Lazy building significantly reduces execution time of commands that do minimal work.
+      // However, it means that HTTP client initialization errors won't surface until an HTTP
+      // request is made.
+      buildLazily()
+    }
+  }
 
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {

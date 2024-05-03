@@ -3,6 +3,7 @@ package org.pkl.core.http
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
+import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
@@ -12,7 +13,13 @@ import java.net.http.HttpClient as JdkHttpClient
 
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
-  private val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured)
+  private val client = RequestRewritingClient(
+      "Pkl",
+      Duration.ofSeconds(42),
+      -1,
+      ProxySelector.getDefault(),
+      captured
+  )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
 
@@ -106,7 +113,13 @@ class RequestRewritingClientTest {
   @Test
   fun `rewrites port 0 if test port is set`() {
     val captured = RequestCapturingClient()
-    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured)
+    val client = RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        5000,
+        ProxySelector.getDefault(),
+        captured
+    )
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
