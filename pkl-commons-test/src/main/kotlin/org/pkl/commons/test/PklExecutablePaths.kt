@@ -35,7 +35,12 @@ object PklExecutablePaths {
     get() = all.filter(Files::exists)
 
   val firstExisting: Path
-    get() = existing.first()
+    get() =
+      existing.firstOrNull()
+        ?: throw AssertionError(
+          "Native executable not found on system. " +
+            "To fix this problem, run `./gradlew assembleNative`."
+        )
 
   private fun executablePath(name: String): Path =
     rootProjectDir.resolve("pkl-cli/build/executable").resolve(name)
