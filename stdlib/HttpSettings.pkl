@@ -27,13 +27,14 @@ class Proxy {
   /// The proxy to use for HTTP(s) connections.
   ///
   /// At the moment, only HTTP proxies are supported.
+  /// 
+  /// If the port is not specified, it defaults to `80`.
   ///
   /// Example:
   /// ```
-  /// local proxyPassword = read("my-proxy-password.txt").text
-  /// address = "http://myuser@\(proxyPassword):my.proxy.example.com:5080"
+  /// address = "http://my.proxy.example.com:5080"
   /// ```
-  address: Uri(startsWith("http://"))
+  address: Uri(startsWith("http:"))
 
   /// Hosts to disable connecting to via a proxy.
   ///

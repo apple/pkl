@@ -3,7 +3,6 @@ package org.pkl.core.http
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
-import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
@@ -17,8 +16,7 @@ class RequestRewritingClientTest {
       "Pkl",
       Duration.ofSeconds(42),
       -1,
-      ProxySelector.getDefault(),
-      captured
+    captured
   )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
@@ -117,8 +115,7 @@ class RequestRewritingClientTest {
         "Pkl",
         Duration.ofSeconds(42),
         5000,
-        ProxySelector.getDefault(),
-        captured
+      captured
     )
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 

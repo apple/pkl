@@ -148,8 +148,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
     return () -> {
       var jdkClient =
           new JdkHttpClient(certificateFiles, certificateUris, connectTimeout, proxySelector);
-      return new RequestRewritingClient(
-          userAgent, requestTimeout, testPort, proxySelector, jdkClient);
+      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
     };
   }
 

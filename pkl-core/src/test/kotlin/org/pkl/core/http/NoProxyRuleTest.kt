@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.net.URI
 
+@Suppress("HttpUrlsUsage")
 class NoProxyRuleTest {
   @Test
   fun wildcard() {
@@ -26,6 +27,7 @@ class NoProxyRuleTest {
     assertFalse(noProxyRule.matches(URI("https://bar.foocom")))
     assertFalse(noProxyRule.matches(URI("https://fooo.com")))
     assertFalse(noProxyRule.matches(URI("https://ooofoo.com")))
+    assertFalse(noProxyRule.matches(URI("pkl:foo.com")))
   }
 
   @Test
@@ -40,6 +42,7 @@ class NoProxyRuleTest {
     assertFalse(noProxyRule.matches(URI("https://bar.foocom")))
     assertFalse(noProxyRule.matches(URI("https://fooo.com")))
     assertFalse(noProxyRule.matches(URI("https://ooofoo.com")))
+    assertFalse(noProxyRule.matches(URI("pkl:foo.com")))
   }
 
   @Test

@@ -87,7 +87,7 @@ public record PklSettings(Editor editor, PklHttpSettings httpSettings) {
       throws VmEvalException {
     var httpSettings = module.getPropertyOrNull("http");
     if (httpSettings instanceof PObject http) {
-      return new PklSettings(parseEditor(module, location), PklHttpSettings.parse(http, location));
+      return new PklSettings(parseEditor(module, location), PklHttpSettings.parse(http));
     }
     throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
   }

@@ -39,7 +39,6 @@ final class NoProxyRule {
       Pattern.compile("^(" + ipv4AddressString + ")(?:/([1-9][0-9]?))?$");
   private static final String ipv6AddressString =
       "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(?:ffff(:0{1,4})?:)?(?:(?:25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])";
-  private static final Pattern ipv6Address = Pattern.compile("^" + ipv6AddressString + "$");
   private static final Pattern ipv6AddressOrCidr =
       Pattern.compile("^(" + ipv6AddressString + ")(?:/([1-9][0-9]{0,2}))?$");
 
@@ -61,6 +60,10 @@ final class NoProxyRule {
       ipv4 = parseIpv4(ipAddress);
       if (ipv4Matcher.groupCount() == 2) {
         var prefixLength = Integer.parseInt(ipv4Matcher.group(2));
+        if (prefixLength > 32) {
+          // best-effort (don't fail on invalid cidrs).
+          hostname = repr;
+        }
         ipv4Mask = 0xffffffff << (32 - prefixLength);
       }
       return;
@@ -72,6 +75,11 @@ final class NoProxyRule {
       if (ipv6Matcher.groupCount() == 4) {
         var maskBuffer = ByteBuffer.allocate(16).putLong(-1L).putLong(-1L);
         var prefixLength = Integer.parseInt(ipv6Matcher.group(4));
+        if (prefixLength > 128) {
+          // best-effort (don't fail on invalid cidrs).
+          hostname = repr;
+          return;
+        }
         ipv6Mask = new BigInteger(1, maskBuffer.array()).not().shiftRight(prefixLength);
       }
       return;
@@ -89,6 +97,9 @@ final class NoProxyRule {
       return true;
     }
     var host = uri.getHost();
+    if (host == null) {
+      return false;
+    }
     if (host.equalsIgnoreCase(hostname)) {
       return true;
     }

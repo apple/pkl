@@ -1260,7 +1260,8 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(URI("package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl")),
           noCache = true,
-          proxyAddress = URI(wwRuntimeInfo.httpsBaseUrl),
+          proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:")
         )
       )

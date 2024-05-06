@@ -37,7 +37,7 @@ class EmbeddedExecutorTest {
     }
     override fun toString(): String = name
   }
-  
+
   companion object {
     @JvmStatic
     private val allTestExecutors: List<TestExecutor> by lazy {

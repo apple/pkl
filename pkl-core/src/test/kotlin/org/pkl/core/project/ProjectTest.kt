@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.core.http.HttpClient
+import org.pkl.core.httpsettings.PklHttpSettings
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
@@ -52,7 +53,8 @@ class ProjectTest {
         path.resolve("modulepath2/")
       ),
       Duration.ofMinutes(5.0),
-      path
+      path,
+      PklHttpSettings.DEFAULT
     )
     projectPath.writeString("""
       amends "pkl:Project"

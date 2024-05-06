@@ -16,11 +16,12 @@
 package org.pkl.core.httpsettings;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
-import org.pkl.core.ModuleSource;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
-import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.PklException;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
 /** Java version of {@code pkl.HttpSettings}. */
@@ -28,23 +29,27 @@ public record PklHttpSettings(@Nullable Proxy proxy) {
   public static PklHttpSettings DEFAULT = new PklHttpSettings(null);
 
   /** Initializes a {@link PklHttpSettings} from a raw object representation. */
-  public static PklHttpSettings parse(PObject object, ModuleSource location) {
-    var proxy = parseProxy(object, location);
+  public static PklHttpSettings parse(PObject object) {
+    var proxy = parseProxy(object);
     return new PklHttpSettings(proxy);
   }
 
-  private static @Nullable Proxy parseProxy(PObject object, ModuleSource location) {
-    var proxy = object.getPropertyOrNull("proxy");
+  @SuppressWarnings("unchecked")
+  private static @Nullable Proxy parseProxy(PObject object) {
+    var proxy = object.getProperty("proxy");
     if (proxy instanceof PNull) {
       return null;
     }
-    if (proxy instanceof PObject pObject
-        && pObject.getPropertyOrNull("address") instanceof String address
-        && pObject.getPropertyOrNull("noProxy") instanceof List<?> noProxy) {
-      //noinspection unchecked
-      return new Proxy(URI.create(address), (List<String>) noProxy);
+    var obj = (PObject) proxy;
+    var address = (String) obj.getProperty("address");
+    var noProxy = (List<String>) obj.getProperty("noProxy");
+    URI addressUri;
+    try {
+      addressUri = new URI(address);
+    } catch (URISyntaxException e) {
+      throw new PklException(ErrorMessages.create("invalidUri", address));
     }
-    throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
+    return new Proxy(addressUri, noProxy);
   }
 
   public record Proxy(URI address, List<String> noProxy) {}
