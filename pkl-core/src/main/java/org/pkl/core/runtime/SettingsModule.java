@@ -15,13 +15,13 @@
  */
 package org.pkl.core.runtime;
 
-import java.net.URI;
+import static org.pkl.core.PClassInfo.pklSettingsUri;
 
 public final class SettingsModule extends StdLibModule {
   private static final VmTyped instance = VmUtils.createEmptyModule();
 
   static {
-    loadModule(URI.create("pkl:settings"), instance);
+    loadModule(pklSettingsUri, instance);
   }
 
   private SettingsModule() {}

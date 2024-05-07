@@ -37,6 +37,7 @@ public final class PClassInfo<T> implements Serializable {
 
   public static final URI pklBaseUri = URI.create("pkl:base");
   public static final URI pklSemverUri = URI.create("pkl:semver");
+  public static final URI pklSettingsUri = URI.create("pkl:settings");
   public static final URI pklProjectUri = URI.create("pkl:Project");
 
   public static final PClassInfo<Void> Any = pklBaseClassInfo("Any", Void.class);
@@ -79,6 +80,8 @@ public final class PClassInfo<T> implements Serializable {
       new PClassInfo<>("pkl.semver", "Version", PObject.class, pklSemverUri);
   public static final PClassInfo<PObject> Project =
       new PClassInfo<>("pkl.Project", "ModuleClass", PObject.class, pklProjectUri);
+  public static final PClassInfo<PObject> Settings =
+      new PClassInfo<>("pkl.settings", "ModuleClass", PObject.class, pklSettingsUri);
 
   public static final PClassInfo<Object> Unavailable =
       new PClassInfo<>("unavailable", "unavailable", Object.class, URI.create("pkl:unavailable"));
