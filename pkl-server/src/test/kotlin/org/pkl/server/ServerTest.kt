@@ -295,6 +295,43 @@ class ServerTest {
   }
 
   @Test
+  fun `glob resources -- null pathElements and null error`() {
+    val reader = ResourceReaderSpec(scheme = "bird", hasHierarchicalUris = true, isGlobbable = true)
+    val evaluatorId = client.sendCreateEvaluatorRequest(resourceReaders = listOf(reader))
+    client.send(
+      EvaluateRequest(
+        requestId = 1,
+        evaluatorId = evaluatorId,
+        moduleUri = URI("repl:text"),
+        moduleText =
+          """
+        res = read*("bird:/**.txt").keys
+      """
+            .trimIndent(),
+        expr = "res"
+      )
+    )
+    val listResourcesRequest = client.receive<ListResourcesRequest>()
+    client.send(
+      ListResourcesResponse(
+        requestId = listResourcesRequest.requestId,
+        evaluatorId = listResourcesRequest.evaluatorId,
+        pathElements = null,
+        error = null
+      )
+    )
+    val evaluateResponse = client.receive<EvaluateResponse>()
+    assertThat(evaluateResponse.result!!.debugYaml)
+      .isEqualTo(
+        """
+        - 6
+        - []
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `glob resource error`() {
     val reader = ResourceReaderSpec(scheme = "bird", hasHierarchicalUris = true, isGlobbable = true)
     val evaluatorId = client.sendCreateEvaluatorRequest(resourceReaders = listOf(reader))
@@ -500,6 +537,47 @@ class ServerTest {
         - bird:/birds/pigeon.pkl
         - bird:/majesticBirds/barnOwl.pkl
         - bird:/majesticBirds/elfOwl.pkl
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `glob module -- null pathElements and null error`() {
+    val reader =
+      ModuleReaderSpec(
+        scheme = "bird",
+        hasHierarchicalUris = true,
+        isLocal = true,
+        isGlobbable = true
+      )
+    val evaluatorId = client.sendCreateEvaluatorRequest(moduleReaders = listOf(reader))
+
+    client.send(
+      EvaluateRequest(
+        requestId = 1,
+        evaluatorId = evaluatorId,
+        moduleUri = URI("repl:text"),
+        moduleText = """res = import*("bird:/**.pkl").keys""",
+        expr = "res"
+      )
+    )
+    val listModulesMsg = client.receive<ListModulesRequest>()
+    client.send(
+      ListModulesResponse(
+        requestId = listModulesMsg.requestId,
+        evaluatorId = evaluatorId,
+        pathElements = null,
+        error = null
+      )
+    )
+
+    val evaluateResponse = client.receive<EvaluateResponse>()
+    assertThat(evaluateResponse.result!!.debugRendering)
+      .isEqualTo(
+        """
+      - 6
+      - []
     """
           .trimIndent()
       )

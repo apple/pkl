@@ -451,6 +451,8 @@ The response to <<list-resources-request>>.
 If successful, `pathElements` is set.
 Otherwise, `error` is set.
 
+If neither are set, `pathElements` default to an empty list.
+
 [source,pkl]
 ----
 /// A number identifying this request.
@@ -506,6 +508,8 @@ Type: <<client-message,Client>> <<response-message,Response>>
 The response to <<list-modules-request>>.
 If successful, `pathElements` is set.
 Otherwise, `error` is set.
+
+If neither are set, `pathElements` default to an empty list.
 
 [source,pkl]
 ----
