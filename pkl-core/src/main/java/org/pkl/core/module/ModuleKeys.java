@@ -41,7 +41,6 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.Pair;
 
 /** Utilities for creating and using {@link ModuleKey}s. */
 public final class ModuleKeys {
@@ -290,12 +289,17 @@ public final class ModuleKeys {
     }
   }
 
-  private static class File extends DependencyAwareModuleKey {
+  private static class File implements ModuleKey {
     final URI uri;
 
     File(URI uri) {
       super(uri);
       this.uri = uri;
+    }
+
+    @Override
+    public URI getUri() {
+      return uri;
     }
 
     @Override
@@ -329,17 +333,18 @@ public final class ModuleKeys {
     }
 
     @Override
-    protected Map<String, ? extends Dependency> getDependencies() {
-      var projectDepsManager = VmContext.get(null).getProjectDependenciesManager();
-      if (projectDepsManager == null || !projectDepsManager.hasUri(uri)) {
-        throw new PackageLoadError("cannotResolveDependencyNoProject");
-      }
-      return projectDepsManager.getDependencies();
+    public boolean isGlobbable() {
+      return true;
     }
 
     @Override
-    protected PackageLoadError cannotFindDependency(String name) {
-      return new PackageLoadError("cannotFindDependencyInProject", name);
+    public boolean isLocal() {
+      return true;
+    }
+
+    @Override
+    public boolean hasHierarchicalUris() {
+      return true;
     }
   }
 
@@ -547,40 +552,29 @@ public final class ModuleKeys {
     }
   }
 
-  /** Base implementation; knows how to resolve dependencies prefixed with <code>@</code>. */
-  public abstract static class DependencyAwareModuleKey implements ModuleKey {
+  private abstract static class AbstractPackage implements ModuleKey {
 
-    protected final URI uri;
+    protected final PackageAssetUri packageAssetUri;
 
-    protected DependencyAwareModuleKey(URI uri) {
-      this.uri = uri;
-    }
-
-    @Override
-    public URI getUri() {
-      return uri;
-    }
-
-    protected Pair<String, String> parseDependencyNotation(String importPath) {
-      var idx = importPath.indexOf('/');
-      if (idx == -1) {
-        // treat named dependency without a subpath as the root path.
-        // i.e. resolve to `@foo` to `package://example.com/foo@1.0.0#/`
-        return Pair.of(importPath.substring(1), "/");
-      }
-      return Pair.of(importPath.substring(1, idx), importPath.substring(idx));
+    AbstractPackage(PackageAssetUri packageAssetUri) {
+      this.packageAssetUri = packageAssetUri;
     }
 
     protected abstract Map<String, ? extends Dependency> getDependencies()
         throws IOException, SecurityManagerException;
 
     @Override
-    public boolean isLocal() {
+    public boolean hasHierarchicalUris() {
       return true;
     }
 
     @Override
-    public boolean hasHierarchicalUris() {
+    public boolean hasFragmentPaths() {
+      return true;
+    }
+
+    @Override
+    public boolean isLocal() {
       return true;
     }
 
@@ -589,37 +583,36 @@ public final class ModuleKeys {
       return true;
     }
 
-    private URI resolveDependencyNotation(String notation)
-        throws IOException, SecurityManagerException {
-      var parsed = parseDependencyNotation(notation);
-      var name = parsed.getFirst();
-      var path = parsed.getSecond();
-      var dependency = getDependencies().get(name);
-      if (dependency == null) {
-        throw cannotFindDependency(name);
-      }
-      return dependency.getPackageUri().toPackageAssetUri(path).getUri();
+    @Override
+    public URI getUri() {
+      return packageAssetUri.getUri();
     }
 
     @Override
     public URI resolveUri(URI baseUri, URI importUri) throws IOException, SecurityManagerException {
-      if (importUri.isAbsolute() || !importUri.getPath().startsWith("@")) {
+      var ssp = importUri.getSchemeSpecificPart();
+      if (importUri.isAbsolute() || !ssp.startsWith("@")) {
         return ModuleKey.super.resolveUri(baseUri, importUri);
       }
-      return resolveDependencyNotation(importUri.getPath());
+      var parsed = IoUtils.parseDependencyNotation(ssp);
+      var name = parsed.getFirst();
+      var path = parsed.getSecond();
+      var dependency = getDependencies().get(name);
+      if (dependency == null) {
+        throw new PackageLoadError(
+            "cannotFindDependencyInPackage",
+            name,
+            packageAssetUri.getPackageUri().getDisplayName());
+      }
+      return dependency.getPackageUri().toPackageAssetUri(path).getUri();
     }
-
-    protected abstract PackageLoadError cannotFindDependency(String name);
   }
 
   /** Represents a module imported via the {@code package} scheme. */
-  private static class Package extends DependencyAwareModuleKey {
-
-    private final PackageAssetUri packageAssetUri;
+  private static class Package extends AbstractPackage {
 
     Package(PackageAssetUri packageAssetUri) {
-      super(packageAssetUri.getUri());
-      this.packageAssetUri = packageAssetUri;
+      super(packageAssetUri);
     }
 
     private PackageResolver getPackageResolver() {
@@ -631,6 +624,7 @@ public final class ModuleKeys {
     @Override
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
+      var uri = packageAssetUri.getUri();
       securityManager.checkResolveModule(uri);
       var bytes =
           getPackageResolver()
@@ -655,23 +649,12 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean hasFragmentPaths() {
-      return true;
-    }
-
-    @Override
     protected Map<String, ? extends Dependency> getDependencies()
         throws IOException, SecurityManagerException {
       return getPackageResolver()
           .getDependencyMetadata(
               packageAssetUri.getPackageUri(), packageAssetUri.getPackageUri().getChecksums())
           .getDependencies();
-    }
-
-    @Override
-    protected PackageLoadError cannotFindDependency(String name) {
-      return new PackageLoadError(
-          "cannotFindDependencyInPackage", name, packageAssetUri.getPackageUri().getDisplayName());
     }
   }
 
@@ -680,15 +663,11 @@ public final class ModuleKeys {
    *
    * <p>The {@code projectpackage} scheme is what project-local dependencies resolve to when
    * imported using dependency notation (for example, {@code import "@foo/bar.pkl"}). This scheme is
-   * an internal implementation detail, and we do not expect a project to declare this.
+   * an internal implementation detail, and we do not expect a module to declare this.
    */
-  private static class ProjectPackage extends DependencyAwareModuleKey {
-
-    private final PackageAssetUri packageAssetUri;
-
+  public static class ProjectPackage extends AbstractPackage {
     ProjectPackage(PackageAssetUri packageAssetUri) {
-      super(packageAssetUri.getUri());
-      this.packageAssetUri = packageAssetUri;
+      super(packageAssetUri);
     }
 
     private PackageResolver getPackageResolver() {
@@ -697,10 +676,14 @@ public final class ModuleKeys {
       return packageResolver;
     }
 
-    private ProjectDependenciesManager getProjectDepsResolver() {
+    private ProjectDependenciesManager getProjectDependenciesManager() {
       var projectDepsManager = VmContext.get(null).getProjectDependenciesManager();
       assert projectDepsManager != null;
       return projectDepsManager;
+    }
+
+    private @Nullable URI getLocalUri(Dependency dependency) {
+      return getLocalUri(dependency, packageAssetUri);
     }
 
     private @Nullable URI getLocalUri(Dependency dependency, PackageAssetUri assetUri) {
@@ -708,25 +691,21 @@ public final class ModuleKeys {
         return null;
       }
       return localDependency.resolveAssetUri(
-          getProjectDepsResolver().getProjectBaseUri(), assetUri);
-    }
-
-    private @Nullable Path getLocalPath(Dependency dependency) {
-      if (!(dependency instanceof LocalDependency)) {
-        return null;
-      }
-      return getLocalPath(dependency, packageAssetUri);
+          getProjectDependenciesManager().getProjectBaseUri(), assetUri);
     }
 
     @Override
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
-      securityManager.checkResolveModule(packageAssetUri.getUri());
+      var uri = packageAssetUri.getUri();
+      securityManager.checkResolveModule(uri);
       var dependency =
-          getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var local = getLocalUri(dependency, packageAssetUri);
+          getProjectDependenciesManager().getResolvedDependency(packageAssetUri.getPackageUri());
+      var local = getLocalUri(dependency);
       if (local != null) {
-        return VmContext.get(null).getModuleResolver().resolve(local).resolve(securityManager);
+        var resolved =
+            VmContext.get(null).getModuleResolver().resolve(local).resolve(securityManager);
+        return ResolvedModuleKeys.delegated(resolved, this);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
@@ -740,13 +719,15 @@ public final class ModuleKeys {
       securityManager.checkResolveModule(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
-          getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
+          getProjectDependenciesManager().getResolvedDependency(packageAssetUri.getPackageUri());
       var local = getLocalUri(dependency, packageAssetUri);
       if (local != null) {
-        return VmContext.get(null)
-            .getModuleResolver()
-            .resolve(local)
-            .listElements(securityManager, local);
+        var moduleKey = VmContext.get(null).getModuleResolver().resolve(local);
+        if (!moduleKey.isGlobbable()) {
+          throw new PackageLoadError(
+              "cannotResolveInLocalDependencyNotGlobbable", local.getScheme());
+        }
+        return moduleKey.listElements(securityManager, local);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
@@ -759,13 +740,15 @@ public final class ModuleKeys {
       securityManager.checkResolveModule(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
-          getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
+          getProjectDependenciesManager().getResolvedDependency(packageAssetUri.getPackageUri());
       var local = getLocalUri(dependency, packageAssetUri);
       if (local != null) {
-        return VmContext.get(null)
-            .getModuleResolver()
-            .resolve(local)
-            .hasElement(securityManager, local);
+        var moduleKey = VmContext.get(null).getModuleResolver().resolve(local);
+        if (!moduleKey.isGlobbable() && !moduleKey.isLocal()) {
+          throw new PackageLoadError(
+              "cannotResolveInLocalDependencyNotGlobbableNorLocal", local.getScheme());
+        }
+        return moduleKey.hasElement(securityManager, local);
       }
       var dep = (Dependency.RemoteDependency) dependency;
       assert dep.getChecksums() != null;
@@ -773,30 +756,20 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean hasFragmentPaths() {
-      return true;
-    }
-
-    @Override
     protected Map<String, ? extends Dependency> getDependencies()
         throws IOException, SecurityManagerException {
       var packageUri = packageAssetUri.getPackageUri();
-      var projectResolver = getProjectDepsResolver();
+      var projectResolver = getProjectDependenciesManager();
       if (projectResolver.isLocalPackage(packageUri)) {
         return projectResolver.getLocalPackageDependencies(packageUri);
       }
       var dep =
-          (Dependency.RemoteDependency) getProjectDepsResolver().getResolvedDependency(packageUri);
+          (Dependency.RemoteDependency)
+              getProjectDependenciesManager().getResolvedDependency(packageUri);
       assert dep.getChecksums() != null;
       var dependencyMetadata =
           getPackageResolver().getDependencyMetadata(packageUri, dep.getChecksums());
       return projectResolver.getResolvedDependenciesForPackage(packageUri, dependencyMetadata);
-    }
-
-    @Override
-    protected PackageLoadError cannotFindDependency(String name) {
-      return new PackageLoadError(
-          "cannotFindDependencyInPackage", name, packageAssetUri.getPackageUri().getDisplayName());
     }
   }
 }

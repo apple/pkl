@@ -89,7 +89,9 @@ public class ReplServer implements AutoCloseable {
     var languageRef = new MutableReference<VmLanguage>(null);
     packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
     projectDependenciesManager =
-        projectDependencies == null ? null : new ProjectDependenciesManager(projectDependencies);
+        projectDependencies == null
+            ? null
+            : new ProjectDependenciesManager(projectDependencies, moduleResolver, securityManager);
     polyglotContext =
         VmUtils.createContext(
             () -> {

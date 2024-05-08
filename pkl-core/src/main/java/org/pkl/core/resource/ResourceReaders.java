@@ -38,6 +38,7 @@ import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.runtime.VmContext;
+import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
@@ -518,7 +519,13 @@ public final class ResourceReaders {
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
       var local = getLocalUri(dependency, packageAssetUri);
       if (local != null) {
-        return VmContext.get(null).getResourceManager().listElements(local);
+        var reader = VmContext.get(null).getResourceManager().getResourceReader(local);
+        if (reader == null) {
+          throw new VmExceptionBuilder()
+              .evalError("noResourceReaderRegistered", local.getScheme())
+              .build();
+        }
+        return reader.listElements(securityManager, local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()
@@ -534,7 +541,13 @@ public final class ResourceReaders {
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
       var local = getLocalUri(dependency, packageAssetUri);
       if (local != null) {
-        return VmContext.get(null).getResourceManager().hasElement(local);
+        var reader = VmContext.get(null).getResourceManager().getResourceReader(local);
+        if (reader == null) {
+          throw new VmExceptionBuilder()
+              .evalError("noResourceReaderRegistered", local.getScheme())
+              .build();
+        }
+        return reader.hasElement(securityManager, local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()

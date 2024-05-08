@@ -6,6 +6,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -15,7 +16,16 @@ import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource.*
 import org.pkl.core.util.IoUtils
 import org.junit.jupiter.api.AfterAll
+import org.pkl.commons.test.PackageServer
+import org.pkl.core.module.ModuleKey
+import org.pkl.core.module.ModuleKeyFactories
+import org.pkl.core.module.ModuleKeyFactory
+import org.pkl.core.module.ResolvedModuleKey
+import org.pkl.core.project.Project
+import java.nio.charset.StandardCharsets
 import java.nio.file.FileSystems
+import java.util.*
+import java.util.regex.Pattern
 import kotlin.io.path.writeText
 
 class EvaluatorTest {
@@ -23,6 +33,28 @@ class EvaluatorTest {
     private val evaluator = Evaluator.preconfigured()
 
     private const val sourceText = "name = \"pigeon\"; age = 10 + 20"
+
+    private object CustomModuleKeyFactory : ModuleKeyFactory {
+      override fun create(uri: URI): Optional<ModuleKey> {
+        return if (uri.scheme == "custom") Optional.of(CustomModuleKey(uri))
+        else Optional.empty<ModuleKey>()
+      }
+    }
+
+    private class CustomModuleKey(private val uri: URI) : ModuleKey, ResolvedModuleKey {
+      override fun hasHierarchicalUris(): Boolean = true
+
+      override fun isGlobbable(): Boolean = false
+
+      override fun getOriginal(): ModuleKey = this
+
+      override fun getUri(): URI = uri
+
+      override fun loadSource(): String = javaClass.classLoader.getResourceAsStream(uri.path.drop(1))!!.use { it.readAllBytes().toString(
+        StandardCharsets.UTF_8) }
+
+      override fun resolve(securityManager: SecurityManager): ResolvedModuleKey = this
+    }
 
     @AfterAll
     @JvmStatic
@@ -289,6 +321,132 @@ class EvaluatorTest {
     assertThat(output["bar.yml"]?.text).isEqualTo("bar: bar text")
     assertThat(output["bar/biz.yml"]?.text).isEqualTo("biz: bar biz")
     assertThat(output["bar/../bark.yml"]?.text).isEqualTo("bark: bark bark")
+  }
+
+  @Test
+  fun `project set from modulepath`(@TempDir cacheDir: Path) {
+    PackageServer.populateCacheDir(cacheDir)
+    val evaluatorBuilder = EvaluatorBuilder.preconfigured().setModuleCacheDir(cacheDir)
+    val project = Project.load(modulePath("/org/pkl/core/project/project5/PklProject"))
+    val result = evaluatorBuilder.setProjectDependencies(project.dependencies).build().use { evaluator ->
+      evaluator.evaluateOutputText(modulePath("/org/pkl/core/project/project5/main.pkl"))
+    }
+    assertThat(result).isEqualTo("""
+      prop1 {
+        name = "Apple"
+      }
+      prop2 {
+        res = 1
+      }
+
+    """.trimIndent())
+  }
+
+  @Test
+  fun `project set from custom ModuleKeyFactory`(@TempDir cacheDir: Path) {
+    PackageServer.populateCacheDir(cacheDir)
+    val evaluatorBuilder = with(EvaluatorBuilder.preconfigured()) {
+      setAllowedModules(SecurityManagers.defaultAllowedModules + Pattern.compile("custom:"))
+      setAllowedResources(SecurityManagers.defaultAllowedResources + Pattern.compile("custom:"))
+      setModuleCacheDir(cacheDir)
+      setModuleKeyFactories(
+        listOf(
+          CustomModuleKeyFactory,
+          ModuleKeyFactories.standardLibrary,
+          ModuleKeyFactories.pkg,
+          ModuleKeyFactories.projectpackage,
+          ModuleKeyFactories.file
+        )
+      )
+    }
+    val project = evaluatorBuilder.build().use { Project.load(it, uri("custom:/org/pkl/core/project/project5/PklProject")) }
+
+    val evaluator = evaluatorBuilder.setProjectDependencies(project.dependencies).build()
+    val output = evaluator.use { it.evaluateOutputText(uri("custom:/org/pkl/core/project/project5/main.pkl")) }
+    assertThat(output)
+      .isEqualTo(
+        """
+        prop1 {
+          name = "Apple"
+        }
+        prop2 {
+          res = 1
+        }
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `project base path set to non-hierarchical scheme`() {
+    class FooBarModuleKey(val moduleUri: URI) : ModuleKey, ResolvedModuleKey {
+      override fun hasHierarchicalUris(): Boolean = false
+      override fun isGlobbable(): Boolean = false
+      override fun getOriginal(): ModuleKey = this
+      override fun getUri(): URI = moduleUri
+      override fun loadSource(): String =
+        if (uri.schemeSpecificPart.endsWith("PklProject")) {
+          """
+          amends "pkl:Project"
+          """.trimIndent()
+        } else """
+          birds = import("@birds/catalog/Ostritch.pkl")
+        """.trimIndent()
+      override fun resolve(securityManager: SecurityManager): ResolvedModuleKey {
+        return this
+      }
+    }
+
+    val fooBayModuleKeyFactory = ModuleKeyFactory { uri ->
+      if (uri.scheme == "foobar") Optional.of(FooBarModuleKey(uri))
+      else Optional.empty()
+    }
+
+    val evaluatorBuilder = with(EvaluatorBuilder.preconfigured()) {
+      setAllowedModules(SecurityManagers.defaultAllowedModules + Pattern.compile("foobar:"))
+      setAllowedResources(SecurityManagers.defaultAllowedResources + Pattern.compile("foobar:"))
+      setModuleKeyFactories(
+        listOf(
+          fooBayModuleKeyFactory,
+          ModuleKeyFactories.standardLibrary,
+          ModuleKeyFactories.pkg,
+          ModuleKeyFactories.projectpackage,
+          ModuleKeyFactories.file
+        )
+      )
+    }
+
+    val project = evaluatorBuilder.build().use { Project.load(it, uri("foobar:foo/PklProject")) }
+    val evaluator = evaluatorBuilder.setProjectDependencies(project.dependencies).build()
+    assertThatCode { evaluator.use { it.evaluateOutputText(uri("foobar:baz")) } }
+      .hasMessageContaining("Cannot import dependency because project URI `foobar:foo/PklProject` does not have a hierarchical path.")
+  }
+
+  @Test
+  fun `cannot glob import in local dependency from modulepath`(@TempDir cacheDir: Path) {
+    PackageServer.populateCacheDir(cacheDir)
+    val evaluatorBuilder = EvaluatorBuilder.preconfigured().setModuleCacheDir(cacheDir)
+    val project = Project.load(modulePath("/org/pkl/core/project/project6/PklProject"))
+    evaluatorBuilder.setProjectDependencies(project.dependencies).build().use { evaluator ->
+      assertThatCode { 
+        evaluator.evaluateOutputText(modulePath("/org/pkl/core/project/project6/globWithinDependency.pkl"))
+      }.hasMessageContaining("""
+        Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
+        
+        1 | res = import*("*.pkl")
+                  ^^^^^^^^^^^^^^^^
+      """.trimIndent())
+      assertThatCode {
+        evaluator.evaluateOutputText(modulePath("/org/pkl/core/project/project6/globIntoDependency.pkl"))
+      }.hasMessageContaining("""
+        –– Pkl Error ––
+        Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
+        
+        1 | import* "@project7/*.pkl" as proj7Files
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      """.trimIndent())
+    }
   }
 
   private fun checkModule(module: PModule) {

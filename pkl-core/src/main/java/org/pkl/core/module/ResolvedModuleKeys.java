@@ -54,6 +54,14 @@ public final class ResolvedModuleKeys {
     return new Virtual(original, uri, sourceText, cached);
   }
 
+  /**
+   * Creates a resolved module key that behaves like {@code delegate}, except with {@code original}
+   * as its original module key.
+   */
+  public static ResolvedModuleKey delegated(ResolvedModuleKey delegate, ModuleKey original) {
+    return new Delegated(delegate, original);
+  }
+
   private static class File implements ResolvedModuleKey {
     final ModuleKey original;
     final URI uri;
@@ -143,6 +151,32 @@ public final class ResolvedModuleKeys {
     @Override
     public String loadSource() {
       return sourceText;
+    }
+  }
+
+  private static class Delegated implements ResolvedModuleKey {
+
+    private final ResolvedModuleKey delegate;
+    private final ModuleKey original;
+
+    Delegated(ResolvedModuleKey delegate, ModuleKey original) {
+      this.delegate = delegate;
+      this.original = original;
+    }
+
+    @Override
+    public ModuleKey getOriginal() {
+      return original;
+    }
+
+    @Override
+    public URI getUri() {
+      return delegate.getUri();
+    }
+
+    @Override
+    public String loadSource() throws IOException {
+      return delegate.loadSource();
     }
   }
 }

@@ -1,0 +1,3 @@
+import* "@project7/*.pkl" as proj7Files
+
+res = proj7Files

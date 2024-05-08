@@ -39,7 +39,9 @@ import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.ModuleKey;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
+import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmExceptionBuilder;
 
 public final class IoUtils {
@@ -299,29 +301,15 @@ public final class IoUtils {
     return resolve(baseUri, importUri);
   }
 
-  /**
-   * Resolves {@code importUri} against the module key.
-   *
-   * <p>When {@code importUri} contains a triple-dot, it is resolved if the module key returns true
-   * for both {@link ModuleKey#isLocal()} and {@link ModuleKey#hasHierarchicalUris()}. Otherwise, an
-   * error is thrown.
-   */
-  public static URI resolve(SecurityManager securityManager, ModuleKey moduleKey, URI importUri)
-      throws URISyntaxException, IOException, SecurityManagerException {
-    if (importUri.isAbsolute()) {
-      return moduleKey.resolveUri(importUri);
-    }
+  private static URI resolveTripleDotImport(
+      SecurityManager securityManager, ModuleKey moduleKey, String tripleDotPath)
+      throws IOException, SecurityManagerException {
     var moduleKeyUri = moduleKey.getUri();
-    var tripleDotPath = parseTripleDotPath(importUri);
-    if (tripleDotPath == null) {
-      return moduleKey.resolveUri(importUri);
-    }
     if (!moduleKey.isLocal() || !moduleKey.hasHierarchicalUris()) {
       throw new VmExceptionBuilder()
           .evalError("cannotResolveTripleDotImports", moduleKeyUri)
           .build();
     }
-
     var currentPath =
         moduleKey.hasFragmentPaths() ? moduleKeyUri.getFragment() : moduleKeyUri.getPath();
     var effectiveImportPath =
@@ -349,6 +337,69 @@ public final class IoUtils {
       return fixTripleSlashUri(moduleKeyUri, candidateUri);
     }
     throw new FileNotFoundException();
+  }
+
+  public static Pair<String, String> parseDependencyNotation(String importPath) {
+    var idx = importPath.indexOf('/');
+    if (idx == -1) {
+      // treat named dependency without a subpath as the root path.
+      // i.e. resolve to `@foo` to `package://example.com/foo@1.0.0#/`
+      return Pair.of(importPath.substring(1), "/");
+    }
+    return Pair.of(importPath.substring(1, idx), importPath.substring(idx));
+  }
+
+  private static URI resolveProjectDependency(ModuleKey moduleKey, String notation) {
+    var parsed = parseDependencyNotation(notation);
+    var name = parsed.getFirst();
+    var path = parsed.getSecond();
+    var projectDependenciesManager = VmContext.get(null).getProjectDependenciesManager();
+    if (!moduleKey.hasHierarchicalUris() && projectDependenciesManager != null) {
+      throw new PackageLoadError(
+          "cannotResolveDependencyWithoutHierarchicalUris",
+          projectDependenciesManager.getProjectFileUri());
+    }
+    if (projectDependenciesManager == null
+        || !projectDependenciesManager.hasUri(moduleKey.getUri())) {
+      throw new PackageLoadError("cannotResolveDependencyNoProject");
+    }
+    var dependency = projectDependenciesManager.getDependencies().get(name);
+    if (dependency != null) {
+      return dependency.getPackageUri().toPackageAssetUri(path).getUri();
+    }
+    throw new PackageLoadError("cannotFindDependencyInProject", name);
+  }
+
+  /**
+   * Resolves {@code importUri} against the module key.
+   *
+   * <p>When {@code importUri} contains a triple-dot, it is resolved if the module key returns true
+   * for both {@link ModuleKey#isLocal()} and {@link ModuleKey#hasHierarchicalUris()}. Otherwise, an
+   * error is thrown.
+   *
+   * <p>When {@code importUri} starts with a {@code @}, it is resolved if the module key supports
+   * dependency notation ()
+   */
+  public static URI resolve(SecurityManager securityManager, ModuleKey moduleKey, URI importUri)
+      throws URISyntaxException, IOException, SecurityManagerException {
+    if (importUri.isAbsolute()) {
+      return moduleKey.resolveUri(importUri);
+    }
+    var tripleDotPath = parseTripleDotPath(importUri);
+    if (tripleDotPath != null) {
+      return resolveTripleDotImport(securityManager, moduleKey, tripleDotPath);
+    }
+    var moduleScheme = moduleKey.getUri().getScheme();
+    var isPackage =
+        moduleScheme.equalsIgnoreCase("package") || moduleScheme.equalsIgnoreCase("projectpackage");
+    var relativePart = importUri.getSchemeSpecificPart();
+    // Special-case handling of project dependencies.
+    // We'll allow the Package and ProjectPackage module keys to resolve dependency notation on
+    // their own.
+    if (relativePart.startsWith("@") && !isPackage) {
+      return resolveProjectDependency(moduleKey, relativePart);
+    }
+    return moduleKey.resolveUri(importUri);
   }
 
   public static URI resolve(URI baseUri, URI newUri) {

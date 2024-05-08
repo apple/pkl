@@ -15,14 +15,16 @@
  */
 package org.pkl.core.module;
 
+import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.PklBugException;
+import org.pkl.core.SecurityManager;
+import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
@@ -30,10 +32,8 @@ import org.pkl.core.packages.PackageUri;
 import org.pkl.core.project.CanonicalPackageUri;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.ProjectDeps;
-import org.pkl.core.resource.Resource;
-import org.pkl.core.runtime.VmContext;
+import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmExceptionBuilder;
-import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.json.Json.JsonParseException;
 
@@ -44,6 +44,8 @@ public final class ProjectDependenciesManager {
 
   private final DeclaredDependencies declaredDependencies;
   private final URI projectBaseUri;
+  private final ModuleResolver moduleResolver;
+  private final SecurityManager securityManager;
 
   @GuardedBy("lock")
   private ProjectDeps projectDeps;
@@ -61,10 +63,15 @@ public final class ProjectDependenciesManager {
 
   private final Object lock = new Object();
 
-  public ProjectDependenciesManager(DeclaredDependencies declaredDependencies) {
+  public ProjectDependenciesManager(
+      DeclaredDependencies declaredDependencies,
+      ModuleResolver moduleResolver,
+      SecurityManager securityManager) {
     this.declaredDependencies = declaredDependencies;
     // new URI("scheme://host/a/b/c.txt").resolve(".") == new URI("scheme://host/a/b/")
     this.projectBaseUri = declaredDependencies.getProjectFileUri().resolve(".");
+    this.moduleResolver = moduleResolver;
+    this.securityManager = securityManager;
   }
 
   public boolean hasUri(URI uri) {
@@ -207,39 +214,34 @@ public final class ProjectDependenciesManager {
     return projectBaseUri.resolve(PKL_PROJECT_DEPS_FILENAME);
   }
 
+  public URI getProjectFileUri() {
+    return declaredDependencies.getProjectFileUri();
+  }
+
   private ProjectDeps getProjectDeps() {
     synchronized (lock) {
       if (projectDeps == null) {
         var depsUri = getProjectDepsFileUri();
-
+        var moduleKey = moduleResolver.resolve(depsUri);
         try {
-          var resource = VmContext.get(null).getResourceManager().read(depsUri, null);
-          if (resource.isEmpty()) {
-            throw new VmExceptionBuilder()
-                .evalError("missingProjectDepsJson", projectBaseUri)
-                .build();
-          }
-
-          var res = resource.get();
-          if (res instanceof String) {
-            projectDeps = ProjectDeps.parse((String) res);
-          } else if (res instanceof VmTyped) {
-            var resInner = ((VmTyped) res).getExtraStorage();
-            if (resInner instanceof Resource) {
-              projectDeps = ProjectDeps.parse(((Resource) resInner).getText());
-            } else {
-              // ResourceManager.read() already catches this condition
-              throw PklBugException.unreachableCode();
-            }
+          // treat PklProject.deps.json as a module read, rather than introduce a new API.
+          var depsJson = moduleKey.resolve(securityManager).loadSource();
+          projectDeps = ProjectDeps.parse(depsJson);
+        } catch (IOException e) {
+          var exceptionBuilder =
+              new VmExceptionBuilder().evalError("cannotLoadProjectDepsJson", depsUri).withCause(e);
+          if (e.getMessage() != null) {
+            exceptionBuilder.withHint(e.getMessage());
           } else {
-            // ResourceManager.read() already catches this condition
-            throw PklBugException.unreachableCode();
+            exceptionBuilder.withHint("Encountered error: " + e);
           }
-        } catch (URISyntaxException | JsonParseException e) {
+          throw exceptionBuilder.build();
+        } catch (JsonParseException e) {
           throw new VmExceptionBuilder()
               .evalError("invalidProjectDepsJson", depsUri, e.getMessage())
-              .withCause(e)
               .build();
+        } catch (SecurityManagerException e) {
+          throw PklBugException.unreachableCode();
         }
       }
       return projectDeps;

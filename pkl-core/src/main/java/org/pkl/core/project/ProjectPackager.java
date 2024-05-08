@@ -45,6 +45,7 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.http.HttpClient;
+import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.module.ResolvedModuleKeys;
@@ -55,6 +56,7 @@ import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.packages.PackageUri;
+import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.ErrorMessages;
@@ -98,6 +100,7 @@ public final class ProjectPackager {
   private final Path workingDir;
   private final String outputPathPattern;
   private final StackFrameTransformer stackFrameTransformer;
+  private final SecurityManager securityManager;
   private final PackageResolver packageResolver;
   private final boolean skipPublishCheck;
   private final Writer outputWriter;
@@ -115,6 +118,7 @@ public final class ProjectPackager {
     this.workingDir = workingDir;
     this.outputPathPattern = outputPathPattern;
     this.stackFrameTransformer = stackFrameTransformer;
+    this.securityManager = securityManager;
     // intentionally use InMemoryPackageResolver
     this.packageResolver = PackageResolver.getInstance(securityManager, httpClient, null);
     this.skipPublishCheck = skipPublishCheck;
@@ -226,7 +230,12 @@ public final class ProjectPackager {
           new HashMap<String, RemoteDependency>(
               project.getDependencies().getLocalDependencies().size()
                   + project.getDependencies().getRemoteDependencies().size());
-      var projectDependenciesManager = new ProjectDependenciesManager(project.getDependencies());
+      // module resolver is only used for reading PklProject.deps.json, so provide one that reads
+      // files.
+      var moduleResolver = new ModuleResolver(List.of(ModuleKeyFactories.file));
+      var projectDependenciesManager =
+          new ProjectDependenciesManager(
+              project.getDependencies(), moduleResolver, this.securityManager);
       for (var entry : project.getDependencies().getRemoteDependencies().entrySet()) {
         var resolved =
             (RemoteDependency)

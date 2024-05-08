@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
+import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PClassInfo;
@@ -83,10 +84,7 @@ public final class Project {
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .build()) {
-      var output = evaluator.evaluateOutputValueAs(ModuleSource.path(path), PClassInfo.Project);
-      return Project.parseProject(output);
-    } catch (URISyntaxException e) {
-      throw new PklException(e.getMessage(), e);
+      return load(evaluator, ModuleSource.path(path));
     }
   }
 
@@ -103,6 +101,31 @@ public final class Project {
    */
   public static Project loadFromPath(Path path) {
     return loadFromPath(path, SecurityManagers.defaultManager, null);
+  }
+
+  /** Loads a project from the given source. */
+  public static Project load(ModuleSource moduleSource) {
+    try (var evaluator =
+        EvaluatorBuilder.unconfigured()
+            .setSecurityManager(SecurityManagers.defaultManager)
+            .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+            .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
+            .addModuleKeyFactory(ModuleKeyFactories.file)
+            .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
+            .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReader(ResourceReaders.file())
+            .build()) {
+      return load(evaluator, moduleSource);
+    }
+  }
+
+  public static Project load(Evaluator evaluator, ModuleSource moduleSource) {
+    try {
+      var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
+      return Project.parseProject(output);
+    } catch (URISyntaxException e) {
+      throw new PklException(e.getMessage(), e);
+    }
   }
 
   private static DeclaredDependencies parseDependencies(
@@ -266,8 +289,9 @@ public final class Project {
   }
 
   /**
-   * Resolve a path string against projectBaseUri Throws an exception if projectBaseUri is not a
-   * file: URI
+   * Resolve a path string against projectBaseUri.
+   *
+   * @throws PackageLoadError if projectBaseUri is not a {@code file:} URI.
    */
   private static @Nullable Path resolveNullablePath(
       @Nullable String path, URI projectBaseUri, String propertyName) {
@@ -401,11 +425,8 @@ public final class Project {
   }
 
   public Path getProjectDir() {
-    try {
-      return Path.of(projectBaseUri);
-    } catch (FileSystemNotFoundException e) {
-      throw new PackageLoadError("invalidUsageOfProjectFromNonFileUri", projectBaseUri);
-    }
+    assert projectBaseUri.getScheme().equalsIgnoreCase("file");
+    return Path.of(projectBaseUri);
   }
 
   public static class EvaluatorSettings {

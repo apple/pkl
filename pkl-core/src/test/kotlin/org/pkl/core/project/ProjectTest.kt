@@ -1,16 +1,16 @@
 package org.pkl.core.project
 
-import org.pkl.commons.test.PackageServer
-import org.pkl.commons.writeString
-import org.pkl.core.*
-import org.pkl.core.packages.PackageUri
-import org.pkl.core.project.Project.EvaluatorSettings
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.PackageServer
+import org.pkl.commons.writeString
+import org.pkl.core.*
 import org.pkl.core.http.HttpClient
+import org.pkl.core.packages.PackageUri
+import org.pkl.core.project.Project.EvaluatorSettings
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern

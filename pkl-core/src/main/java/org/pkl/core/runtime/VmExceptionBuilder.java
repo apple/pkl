@@ -324,7 +324,7 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  public VmExceptionBuilder withHint(String hint) {
+  public VmExceptionBuilder withHint(@Nullable String hint) {
     this.hint = hint;
     return this;
   }

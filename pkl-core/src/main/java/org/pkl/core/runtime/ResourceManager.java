@@ -28,7 +28,6 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
-import org.pkl.core.module.PathElement;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
@@ -36,6 +35,7 @@ import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public final class ResourceManager {
@@ -126,32 +126,10 @@ public final class ResourceManager {
   }
 
   /**
-   * Used by ResourceReaders.ProjectPackageResource to resolve resources from projects that may not
-   * be on the local filesystem
+   * Returns a {@link ResourceReader} registered to read the resource at {@code baseUri}, or {@code
+   * null} if there is none.
    */
-  public List<PathElement> listElements(URI baseUri) throws IOException, SecurityManagerException {
-    var reader = resourceReaders.get(baseUri.getScheme());
-    if (reader == null) {
-      throw new VmExceptionBuilder()
-          .evalError("noResourceReaderRegistered", baseUri.getScheme())
-          .build();
-    }
-
-    return reader.listElements(securityManager, baseUri);
-  }
-
-  /**
-   * Used by ResourceReaders.ProjectPackageResource to resolve resources from projects that may not
-   * be on the local filesystem
-   */
-  public boolean hasElement(URI elementUri) throws IOException, SecurityManagerException {
-    var reader = resourceReaders.get(elementUri.getScheme());
-    if (reader == null) {
-      throw new VmExceptionBuilder()
-          .evalError("noResourceReaderRegistered", elementUri.getScheme())
-          .build();
-    }
-
-    return reader.hasElement(securityManager, elementUri);
+  public @Nullable ResourceReader getResourceReader(URI baseUri) {
+    return resourceReaders.get(baseUri.getScheme());
   }
 }

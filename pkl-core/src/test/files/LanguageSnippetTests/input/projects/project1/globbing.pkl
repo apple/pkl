@@ -36,7 +36,7 @@ examples {
   }
   
 //   https://github.com/apple/pkl/issues/166
-//   ["glob-import behind local project import"] {
-//     import("@project6/children.pkl")
-//   }
+  ["glob-import behind local project import"] {
+    import("@project6/children.pkl")
+  }
 }

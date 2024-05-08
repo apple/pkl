@@ -1,9 +1,9 @@
 –– Pkl Error ––
-Expected value of type `* RemoteDependency|Project(isValidLoadDependency)`, but got a different `pkl.Project`.
+Expected value of type `*RemoteDependency|Project(isValidLoadDependency)`, but got a different `pkl.Project`.
 Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetting...
 
-xxx | dependencies: Mapping<String(!contains("/")), * RemoteDependency|Project(isValidLoadDependency)>
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | dependencies: Mapping<String(!contains("/")), *RemoteDependency|Project(isValidLoadDependency)>
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.Project#dependencies (pkl:Project)
 
 * Value is not of type `Project(isValidLoadDependency)` because:

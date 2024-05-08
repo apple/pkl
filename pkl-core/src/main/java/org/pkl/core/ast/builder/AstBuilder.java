@@ -1825,6 +1825,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     } catch (VmException e) {
       throw exceptionBuilder()
           .evalError(e.getMessage(), e.getMessageArguments())
+          .withCause(e.getCause())
+          .withHint(e.getHint())
           .withSourceSection(createSourceSection(importUriCtx))
           .build();
     }

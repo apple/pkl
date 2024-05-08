@@ -17,16 +17,17 @@ package org.pkl.server
 
 import java.io.IOException
 import java.net.URI
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 import kotlin.random.Random
 import org.pkl.core.SecurityManager
-import org.pkl.core.module.*
-import org.pkl.core.packages.Dependency
-import org.pkl.core.packages.PackageLoadError
-import org.pkl.core.runtime.VmContext
+import org.pkl.core.module.ModuleKey
+import org.pkl.core.module.ModuleKeyFactory
+import org.pkl.core.module.PathElement
+import org.pkl.core.module.ResolvedModuleKey
+import org.pkl.core.module.ResolvedModuleKeys
 
 internal class ClientModuleKeyFactory(
   private val readerSpecs: Collection<ModuleReaderSpec>,
@@ -95,8 +96,6 @@ internal class ClientModuleKeyFactory(
                   is ListModulesResponse -> {
                     if (response.error != null) {
                       completeExceptionally(IOException(response.error))
-                    } else if (response.pathElements != null) {
-                      complete(response.pathElements)
                     } else {
                       complete(response.pathElements ?: emptyList())
                     }
@@ -114,7 +113,7 @@ internal class ClientModuleKeyFactory(
       private val uri: URI,
       private val spec: ModuleReaderSpec,
       private val resolver: ClientModuleKeyResolver,
-    ) : ModuleKeys.DependencyAwareModuleKey(uri) {
+    ) : ModuleKey {
       override fun isLocal(): Boolean = spec.isLocal
 
       override fun hasHierarchicalUris(): Boolean = spec.hasHierarchicalUris
@@ -133,22 +132,6 @@ internal class ClientModuleKeyFactory(
 
       override fun hasElement(securityManager: SecurityManager, uri: URI): Boolean {
         return resolver.hasElement(securityManager, uri)
-      }
-
-      override fun getDependencies(): Map<String, Dependency?> {
-        if (!hasHierarchicalUris()) {
-          throw PackageLoadError("cannotResolveDependencyFromReaderWithOpaqueUris", spec.scheme)
-        }
-
-        val projectDepsManager = VmContext.get(null).projectDependenciesManager
-        if (projectDepsManager == null || !projectDepsManager.hasUri(uri)) {
-          throw PackageLoadError("cannotResolveDependencyNoProject")
-        }
-        return projectDepsManager.dependencies
-      }
-
-      override fun cannotFindDependency(name: String): PackageLoadError {
-        return PackageLoadError("cannotFindDependencyInProject", name)
       }
     }
   }
