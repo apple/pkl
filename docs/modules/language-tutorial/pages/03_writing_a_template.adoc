@@ -3,7 +3,7 @@ include::ROOT:partial$component-attributes.adoc[]
 
 In parts xref:01_basic_config.adoc[one] and xref:02_filling_out_a_template.adoc[two], you saw that Pkl provides _validation_ of our configurations.
 It checks syntax, types and constraints.
-As you saw in the `acmecicd` example xref:02_filling_out_a_template.adoc#amending-templates[here], the template can provide informative error messages when an amending module violates a type constraint.
+As you saw in the `AcmeCICD` example xref:02_filling_out_a_template.adoc#amending-templates[here], the template can provide informative error messages when an amending module violates a type constraint.
 
 In this final part, you will see some of Pkl's techniques that are particularly relevant for writing a template.
 
@@ -256,7 +256,7 @@ By "precisely" we mean, that amending an object also can't "turn it into" an ins
 == A new template
 
 Now that you know about types, you can start writing your first template.
-So far, you've written configurations with Pkl, either without a template, or using the `acmecicd` template from xref:02_filling_out_a_template.adoc#amending-templates[Amending templates].
+So far, you've written configurations with Pkl, either without a template, or using the `AcmeCICD` template from xref:02_filling_out_a_template.adoc#amending-templates[Amending templates].
 It is often easiest to first write a (typical) configuration for which you want to create a template.
 Suppose you want to define what a live workshop for this tutorial looks like.
 Consider this example:
