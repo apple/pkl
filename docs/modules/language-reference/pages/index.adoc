@@ -1194,7 +1194,7 @@ One solution is to add the `const` modifier to the property being referenced.
  }
 ----
 
-This solution makes sense if `pigeonName` does get assigned/amended when amending module `Birds.pkl` (modules are regular objects that can be amended).
+This solution makes sense if `pigeonName` *does not* get assigned/amended when amending module `Birds.pkl` (modules are regular objects that can be amended).
 
 *Self-import the module*
 
