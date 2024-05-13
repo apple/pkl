@@ -335,8 +335,7 @@ final class PackageResolvers {
       var entries = cachedEntries.get(packageUri);
       // need to normalize here but not in `doListElments` nor `doHasElement` because
       // `TreePathElement.getElement` does normalization already.
-      var path = uri.getAssetPath().normalize().toString();
-      assert path.startsWith("/");
+      var path = IoUtils.toNormalizedPathString(Path.of(uri.getAssetPath()).normalize());
       return entries.get(path).array();
     }
 
@@ -496,7 +495,9 @@ final class PackageResolvers {
         downloadMetadata(packageUri, requestUri, tmpPath, checksums);
         Files.createDirectories(cachePath.getParent());
         Files.move(tmpPath, cachePath, StandardCopyOption.ATOMIC_MOVE);
-        Files.setPosixFilePermissions(cachePath, FILE_PERMISSIONS);
+        if (!IoUtils.isWindows()) {
+          Files.setPosixFilePermissions(cachePath, FILE_PERMISSIONS);
+        }
         return cachePath;
       } finally {
         Files.deleteIfExists(tmpPath);
@@ -545,7 +546,9 @@ final class PackageResolvers {
         verifyPackageZipBytes(packageUri, dependencyMetadata, checksumBytes);
         Files.createDirectories(cachePath.getParent());
         Files.move(tmpPath, cachePath, StandardCopyOption.ATOMIC_MOVE);
-        Files.setPosixFilePermissions(cachePath, FILE_PERMISSIONS);
+        if (!IoUtils.isWindows()) {
+          Files.setPosixFilePermissions(cachePath, FILE_PERMISSIONS);
+        }
         return cachePath;
       } finally {
         Files.deleteIfExists(tmpPath);

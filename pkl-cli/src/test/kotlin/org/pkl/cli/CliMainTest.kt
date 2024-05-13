@@ -24,6 +24,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.AssertionsForClassTypes.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.cli.commands.EvalCommand
 import org.pkl.cli.commands.RootCommand
@@ -54,7 +56,10 @@ class CliMainTest {
     assertThatCode { cmd.parse(arrayOf("eval")) }.hasMessage("""Missing argument "<modules>"""")
   }
 
+  // Can't reliably create symlinks on Windows.
+  // Might get errors like "A required privilege is not held by the client".
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   fun `output to symlinked directory works`(@TempDir tempDir: Path) {
     val code =
       """

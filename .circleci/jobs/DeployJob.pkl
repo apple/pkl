@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 extends "GradleJob.pkl"
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
 local self = this
 
@@ -26,6 +26,8 @@ job {
     new { image = "cimg/openjdk:17.0" }
   }
 }
+
+os = "linux"
 
 steps {
   new Config.AttachWorkspaceStep { at = "." }

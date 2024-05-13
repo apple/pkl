@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.module.PathElement.TreePathElement;
 import org.pkl.core.runtime.FileSystemManager;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 
 /**
@@ -152,8 +153,8 @@ public final class ModulePathResolver implements AutoCloseable {
       // in case of duplicate path, first entry wins (cf. class loader)
       stream.forEach(
           (path) -> {
-            var relativized = basePath.relativize(path);
-            fileCache.putIfAbsent(relativized.toString(), path);
+            var relativized = IoUtils.relativize(path, basePath);
+            fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
             var element = cachedPathElementRoot;
             for (var i = 0; i < relativized.getNameCount(); i++) {
               var name = relativized.getName(i).toString();

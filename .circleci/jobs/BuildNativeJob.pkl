@@ -16,11 +16,8 @@
 /// Builds the native `pkl` CLI
 extends "GradleJob.pkl"
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0#/URI.pkl"
-
-/// The OS to run on
-os: "macOS"|"linux"
 
 /// The architecture to use
 arch: "amd64"|"aarch64"
@@ -119,10 +116,14 @@ steps {
   new Config.RunStep {
     name = "gradle buildNative"
     local _os =
-      if (os == "macOS") "mac"
+      if (module.os == "macOS") "mac"
       else if (musl) "alpine"
+      else if (module.os == "windows") "windows"
       else "linux"
     local jobName = "\(_os)Executable\(arch.capitalize())"
+    when (module.os == "windows") {
+      shell = "bash.exe"
+    }
     command = #"""
       export PATH=~/staticdeps/bin:$PATH
       ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize())
@@ -142,7 +143,8 @@ job {
       xcode = "15.3.0"
     }
     resource_class = "macos.m1.large.gen1"
-  } else {
+  }
+  when (os == "linux") {
     docker {
       new {
         image = if (arch == "aarch64") "arm64v8/oraclelinux:8-slim" else "oraclelinux:8-slim"
@@ -152,5 +154,11 @@ job {
       ["JAVA_HOME"] = "/jdk"
     }
     resource_class = if (arch == "aarch64") "arm.xlarge" else "xlarge"
+  }
+  when (os == "windows") {
+    machine {
+      image = "windows-server-2022-gui:current"
+    }
+    resource_class = "windows.large"
   }
 }

@@ -13,3 +13,6 @@ class LinuxLanguageSnippetTests
 
 @Testable
 class AlpineLanguageSnippetTests
+
+@Testable
+class WindowsLanguageSnippetTests

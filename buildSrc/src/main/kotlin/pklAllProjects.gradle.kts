@@ -93,3 +93,16 @@ val updateDependencyLocks by tasks.registering {
 }
 
 val allDependencies by tasks.registering(DependencyReportTask::class)
+
+tasks.withType(Test::class).configureEach {
+  System.getProperty("testReportsDir")?.let { reportsDir ->
+    reports.junitXml.outputLocation.set(file(reportsDir).resolve(project.name).resolve(name))
+  }
+  debugOptions {
+    enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
+    host = "*"
+    port = 5005
+    suspend = true
+    server = true
+  }
+}

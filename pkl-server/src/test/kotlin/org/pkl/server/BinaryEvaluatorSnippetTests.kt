@@ -58,7 +58,8 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
       null
     )
 
-  private fun String.stripFilePaths() = replace(snippetsDir.toString(), "/\$snippetsDir")
+  private fun String.stripFilePaths() =
+    replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
 
   override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
     val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)

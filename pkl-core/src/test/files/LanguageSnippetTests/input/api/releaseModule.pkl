@@ -12,7 +12,7 @@ facts {
   }
 
   ["versionInfo"] {
-    current.versionInfo.contains("macOS") || current.versionInfo.contains("Linux")
+    current.versionInfo.contains("macOS") || current.versionInfo.contains("Linux") || current.versionInfo.contains("Windows")
   }
 
   ["commitId"] {

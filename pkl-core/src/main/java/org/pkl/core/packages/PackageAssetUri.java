@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import org.pkl.core.Version;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 
 /**
  * The canonical URI of an asset within a package, i.e., a package URI with a fragment path. For
@@ -28,7 +29,7 @@ import org.pkl.core.util.ErrorMessages;
 public final class PackageAssetUri {
   private final URI uri;
   private final PackageUri packageUri;
-  private final Path assetPath;
+  private final String assetPath;
 
   public static PackageAssetUri create(URI uri) {
     try {
@@ -41,7 +42,7 @@ public final class PackageAssetUri {
   public PackageAssetUri(PackageUri packageUri, String assetPath) {
     this.uri = packageUri.getUri().resolve("#" + assetPath);
     this.packageUri = packageUri;
-    this.assetPath = Path.of(assetPath);
+    this.assetPath = assetPath;
   }
 
   public PackageAssetUri(String uri) throws URISyntaxException {
@@ -60,7 +61,7 @@ public final class PackageAssetUri {
       throw new URISyntaxException(
           uri.toString(), ErrorMessages.create("cannotHaveRelativeFragment", fragment, uri));
     }
-    this.assetPath = Path.of(fragment);
+    this.assetPath = fragment;
   }
 
   public URI getUri() {
@@ -71,7 +72,7 @@ public final class PackageAssetUri {
     return packageUri;
   }
 
-  public Path getAssetPath() {
+  public String getAssetPath() {
     return assetPath;
   }
 
@@ -102,6 +103,7 @@ public final class PackageAssetUri {
   }
 
   public PackageAssetUri resolve(String path) {
-    return new PackageAssetUri(packageUri, assetPath.resolve(path).toString());
+    var resolvedPath = IoUtils.toNormalizedPathString(Path.of(assetPath).resolve(path));
+    return new PackageAssetUri(packageUri, resolvedPath);
   }
 }

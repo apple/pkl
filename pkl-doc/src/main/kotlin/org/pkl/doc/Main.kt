@@ -28,6 +28,7 @@ import java.net.URI
 import java.nio.file.Path
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.commons.cli.commands.BaseOptions.Companion.parseModuleName
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.core.Release
 

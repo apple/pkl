@@ -2,7 +2,9 @@ package org.pkl.gradle
 
 import org.assertj.core.api.Assertions
 import org.pkl.commons.readString
+import org.pkl.commons.readString
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.toNormalizedPathString
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -199,8 +201,8 @@ class EvaluatorsTest : AbstractTest() {
 
   @Test
   fun `source module URIs`() {
-    val pklFile = writeFile(
-      "test.pkl", """
+    writeFile(
+      "testDir/test.pkl", """
       person {
         name = "Pigeon"
         age = 20 + 10
@@ -218,7 +220,7 @@ class EvaluatorsTest : AbstractTest() {
         evaluators {
           evalTest {
             sourceModules = [uri("modulepath:/test.pkl")]
-            modulePath.from "${pklFile.parent}"
+            modulePath.from layout.projectDirectory.dir("testDir")
             outputFile = layout.projectDirectory.file("test.pcf")
             settingsModule = "pkl:settings"
           }
@@ -387,7 +389,7 @@ class EvaluatorsTest : AbstractTest() {
   @Test
   fun `explicitly set cache dir`(@TempDir tempDir: Path) {
     writeBuildFile("pcf", """
-      moduleCacheDir = file("$tempDir")
+      moduleCacheDir = file("${tempDir.toUri()}")
     """.trimIndent())
     writeFile(
       "test.pkl",

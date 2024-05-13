@@ -33,6 +33,7 @@ import org.pkl.core.packages.PackageUri;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -78,7 +79,7 @@ public final class ProjectDependenciesResolver {
 
   private void log(String message) {
     try {
-      logWriter.write(message + "\n");
+      logWriter.write(message + IoUtils.getLineSeparator());
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -130,7 +131,7 @@ public final class ProjectDependenciesResolver {
     var packageUri = declaredDependencies.getMyPackageUri();
     assert packageUri != null;
     var projectDir = Path.of(declaredDependencies.getProjectFileUri()).getParent();
-    var relativePath = this.project.getProjectDir().relativize(projectDir);
+    var relativePath = IoUtils.relativize(projectDir, this.project.getProjectDir());
     var localDependency = new LocalDependency(packageUri.toProjectPackageUri(), relativePath);
     updateDependency(localDependency);
     buildResolvedDependencies(declaredDependencies);

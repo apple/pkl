@@ -2140,9 +2140,18 @@ For example, a module with URI `modulepath:/animals/birds/pigeon.pkl`
 can import `modulepath:/animals/birds/parrot.pkl`
 with `import "parrot.pkl"` or `import "/animals/birds/parrot.pkl"`.
 
-NOTE: When importing a relative folder or file that starts with `@`, the import string must be prefixed with `./`.
-Otherwise, this syntax will be interpreted as dependency notation.
+[NOTE]
+.Paths on Windows
+====
+Relative paths use the `/` character as the directory separator on all platforms, including Windows.
 
+Paths that contain drive letters (e.g. `C:`) must be declared as an absolute file URI, for example: `import "file:///C:/path/to/my/module.pkl"`. Otherwise, they would be interpreted as a URI scheme.
+====
+
+NOTE: When importing a relative directory or file that starts with `@`, the import string must be prefixed with `./`.
+Otherwise, this syntax will be interpreted as xref:dependency-notation[dependency notation].
+
+[#dependency-notation]
 ==== Dependency notation URIs
 
 Example: `+@birds/bird.pkl+`

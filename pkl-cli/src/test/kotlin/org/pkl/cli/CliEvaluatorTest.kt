@@ -28,6 +28,9 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -424,7 +427,10 @@ result = someLib.x
     checkOutputFile(outputFiles[0], "result.pcf", contents)
   }
 
+  // Can't reliably create symlinks on Windows.
+  // Might get errors like "A required privilege is not held by the client".
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   fun `moduleDir is relative to workingDir even through symlinks`() {
     val contents = "foo = 42"
     val realWorkingDir = tempDir.resolve("workingDir").createDirectories()
@@ -976,6 +982,56 @@ result = someLib.x
     assertThatCode { evalToConsole(options) }
       .hasMessageContaining("Output file conflict:")
       .hasMessageContaining("resolve to the same file path")
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  fun `multiple-file output throws when using invalid Windows characters`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      output {
+        files {
+          ["foo:bar"] { text = "bar" }
+        }
+      }
+    """
+          .trimIndent()
+      )
+
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
+        multipleFileOutputPath = ".output"
+      )
+    assertThatCode { evalToConsole(options) }
+      .hasMessageContaining("Path spec `foo:bar` contains illegal character `:`.")
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  fun `multiple-file output - cannot use backslash as dir separator on Windows`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      output {
+        files {
+          ["foo\\bar"] { text = "bar" }
+        }
+      }
+    """
+          .trimIndent()
+      )
+
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
+        multipleFileOutputPath = ".output"
+      )
+    assertThatCode { evalToConsole(options) }
+      .hasMessageContaining("Path spec `foo\\bar` contains illegal character `\\`.")
   }
 
   @Test

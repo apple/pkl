@@ -37,6 +37,7 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
 import org.pkl.commons.toPath
 import org.pkl.core.Version
+import org.pkl.core.util.IoUtils
 import org.pkl.doc.DocGenerator.Companion.current
 
 class CliDocGeneratorTest {
@@ -92,11 +93,17 @@ class CliDocGeneratorTest {
     private val actualOutputFiles: List<Path> by lazy { actualOutputDir.listFilesRecursively() }
 
     private val expectedRelativeOutputFiles: List<String> by lazy {
-      expectedOutputFiles.map { expectedOutputDir.relativize(it).toString() }
+      expectedOutputFiles.map { path ->
+        IoUtils.toNormalizedPathString(expectedOutputDir.relativize(path)).let { str ->
+          // Git will by default clone symlinks as shortcuts on Windows, and shortcuts have a
+          // `.lnk` extension.
+          if (IoUtils.isWindows() && str.endsWith(".lnk")) str.dropLast(4) else str
+        }
+      }
     }
 
     private val actualRelativeOutputFiles: List<String> by lazy {
-      actualOutputFiles.map { actualOutputDir.relativize(it).toString() }
+      actualOutputFiles.map { IoUtils.toNormalizedPathString(actualOutputDir.relativize(it)) }
     }
 
     private val binaryFileExtensions =
@@ -219,6 +226,11 @@ class CliDocGeneratorTest {
       .withFailMessage("Test bug: $actualFile should exist but does not.")
       .exists()
 
+    // symlinks on Git and Windows is rather finnicky; they create shortcuts by default unless
+    // a core Git option is set. Also, by default, symlinks require administrator privileges to run.
+    // We'll just test that the symlink got created but skip verifying that it points to the right
+    // place.
+    if (actualFile.isSymbolicLink() && IoUtils.isWindows()) return
     val expectedFile = expectedOutputDir.resolve(relativeFilePath)
     if (expectedFile.exists()) {
       when {

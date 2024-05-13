@@ -157,7 +157,15 @@ final class EmbeddedExecutor implements Executor {
 
   private static Path toDisplayPath(Path modulePath, ExecutorOptions options) {
     var rootDir = options.getRootDir();
-    return rootDir == null ? modulePath : rootDir.relativize(modulePath);
+    return rootDir == null ? modulePath : relativize(modulePath, rootDir);
+  }
+
+  // Windows relativize will fail if the two paths have different roots.
+  private static Path relativize(Path path, Path base) {
+    if (path.isAbsolute() && base.isAbsolute() && !path.getRoot().equals(base.getRoot())) {
+      return path;
+    }
+    return base.relativize(path);
   }
 
   @Override

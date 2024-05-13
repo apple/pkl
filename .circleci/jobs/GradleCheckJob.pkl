@@ -15,9 +15,11 @@
 //===----------------------------------------------------------------------===//
 extends "GradleJob.pkl"
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
-javaVersion: "11.0"|"17.0"|"21.0"
+javaVersion: "17.0"|"21.0"
+
+os = "linux"
 
 steps {
   new Config.RunStep {
@@ -27,9 +29,17 @@ steps {
 }
 
 job {
-  docker {
-    new {
-      image = "cimg/openjdk:\(javaVersion)"
+  when (os == "linux") {
+    docker {
+      new {
+        image = "cimg/openjdk:\(javaVersion)"
+      }
     }
+  }
+  when (os == "windows") {
+    machine {
+      image = "windows-server-2022-gui:current"
+    }
+    resource_class = "windows.large"
   }
 }

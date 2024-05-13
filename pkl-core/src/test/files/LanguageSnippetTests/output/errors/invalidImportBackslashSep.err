@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Cannot find module `file:///$snippetsDir/input/errors/..%5Cbasic%5CbaseModule.pkl`.
+
+x | res = import("..\\basic\\baseModule.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidImportBackslashSep#res (file:///$snippetsDir/input/errors/invalidImportBackslashSep.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

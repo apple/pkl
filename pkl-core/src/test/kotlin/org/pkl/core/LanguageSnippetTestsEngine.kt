@@ -51,7 +51,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     else parent?.getProjectDir()
 
   override fun expectedOutputFileFor(inputFile: Path): Path {
-    val relativePath = inputDir.relativize(inputFile).toString()
+    val relativePath = IoUtils.relativize(inputFile, inputDir).toString()
     val stdoutPath =
       if (relativePath.matches(hiddenExtensionRegex)) relativePath.dropLast(4)
       else relativePath.dropLast(3) + "pcf"
@@ -62,12 +62,12 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     // disable SHA verification for packages
     IoUtils.setTestMode()
   }
-  
+
   override fun afterAll() {
     packageServer.close()
   }
-  
-  protected fun String.stripFilePaths() = replace(snippetsDir.toString(), "/\$snippetsDir")
+
+  protected fun String.stripFilePaths() = replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
 
   protected fun String.stripLineNumbers() = replace(lineNumberRegex) { result ->
     // replace line number with equivalent number of 'x' characters to keep formatting intact
@@ -82,6 +82,11 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   
   protected fun String.stripStdlibLocationSha(): String =
     replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/\$commitId/stdlib/")
+
+  protected fun String.withUnixLineEndings(): String {
+    return if (System.lineSeparator() == "\r\n") replace("\r\n", "\n")
+      else this
+  }
 }
 
 class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
@@ -143,7 +148,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
         .stripVersionCheckErrorMessage()
     }
 
-    val stderr = logWriter.toString()
+    val stderr = logWriter.toString().withUnixLineEndings()
 
     return (success && stderr.isBlank()) to (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
   }
@@ -253,4 +258,9 @@ class LinuxAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTest
 class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-alpine-linux-amd64")
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
+}
+
+class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
+  override val pklExecutablePath: Path = rootProjectDir.resolve("pkl-cli/build/executable/pkl-windows-amd64.exe")
+  override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
 }

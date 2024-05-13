@@ -33,6 +33,7 @@ val stagedMacAarch64Executable: Configuration by configurations.creating
 val stagedLinuxAmd64Executable: Configuration by configurations.creating
 val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
+val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
 dependencies {
   compileOnly(libs.svm)
@@ -63,6 +64,7 @@ dependencies {
   stagedLinuxAmd64Executable(executableDir("pkl-linux-amd64"))
   stagedLinuxAarch64Executable(executableDir("pkl-linux-aarch64"))
   stagedAlpineLinuxAmd64Executable(executableDir("pkl-alpine-linux-amd64"))
+  stagedWindowsAmd64Executable(executableDir("pkl-windows-amd64.exe"))
 }
 
 tasks.jar {
@@ -121,12 +123,17 @@ val testStartJavaExecutable by tasks.registering(Exec::class) {
   dependsOn(javaExecutable)
   val outputFile = layout.buildDirectory.file("testStartJavaExecutable") // dummy output to satisfy up-to-date check
   outputs.file(outputFile)
-  
-  executable = javaExecutable.get().outputs.files.singleFile.toString()
-  args("--version")
-  
+
+  if (buildInfo.os.isWindows) {
+    executable = "java"
+    args("-jar", javaExecutable.get().outputs.files.singleFile.toString(), "--version")
+  } else {
+    executable = javaExecutable.get().outputs.files.singleFile.toString()
+    args("--version")
+  }
+
   doFirst { outputFile.get().asFile.delete() }
-  
+
   doLast { outputFile.get().asFile.writeText("OK") }
 }
 
@@ -141,12 +148,13 @@ fun Exec.configureExecutable(
 ) {
   inputs.files(sourceSets.main.map { it.output }).withPropertyName("mainSourceSets").withPathSensitivity(PathSensitivity.RELATIVE)
   inputs.files(configurations.runtimeClasspath).withPropertyName("runtimeClasspath").withNormalizer(ClasspathNormalizer::class)
-  inputs.files(file(graalVm.baseDir).resolve("bin/native-image")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
+  val nativeImageCommandName = if (buildInfo.os.isWindows) "native-image.cmd" else "native-image"
+  inputs.files(file(graalVm.baseDir).resolve("bin/$nativeImageCommandName")).withPropertyName("graalVmNativeImage").withPathSensitivity(PathSensitivity.ABSOLUTE)
   outputs.file(outputFile)
   outputs.cacheIf { true }
 
   workingDir(outputFile.map { it.asFile.parentFile })
-  executable = "${graalVm.baseDir}/bin/native-image"
+  executable = "${graalVm.baseDir}/bin/$nativeImageCommandName"
 
   // JARs to exclude from the class path for the native-image build.
   val exclusions = listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
@@ -276,6 +284,14 @@ val alpineExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) 
   )
 }
 
+val windowsExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class) {
+  dependsOn(":installGraalVmAmd64")
+  configureExecutable(
+    buildInfo.graalVmAmd64,
+    layout.buildDirectory.file("executable/pkl-windows-amd64"),
+  )
+}
+
 tasks.assembleNative {
   when {
     buildInfo.os.isMacOsX -> {
@@ -283,6 +299,9 @@ tasks.assembleNative {
       if (buildInfo.arch == "aarch64") {
         dependsOn(macExecutableAarch64)
       }
+    }
+    buildInfo.os.isWindows -> {
+      dependsOn(windowsExecutableAmd64)
     }
     buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
       dependsOn(linuxExecutableAarch64)
@@ -393,6 +412,20 @@ publishing {
         description.set("Native Pkl CLI executable for linux/amd64 and statically linked to musl.")
       }
     }
+
+    create<MavenPublication>("windowsExecutableAmd64") {
+      artifactId = "pkl-cli-windows-amd64"
+      artifact(stagedWindowsAmd64Executable.singleFile) {
+        classifier = null
+        extension = "exe"
+        builtBy(stagedWindowsAmd64Executable)
+      }
+      pom {
+        name.set("pkl-cli-windows-amd64")
+        url.set("https://github.com/apple/pkl/tree/main/pkl-cli")
+        description.set("Native Pkl CLI executable for windows/amd64.")
+      }
+    }
   }
 }
 
@@ -403,5 +436,6 @@ signing {
   sign(publishing.publications["macExecutableAarch64"])
   sign(publishing.publications["macExecutableAmd64"])
   sign(publishing.publications["alpineLinuxExecutableAmd64"])
+  sign(publishing.publications["windowsExecutableAmd64"])
 }
 //endregion

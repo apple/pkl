@@ -15,14 +15,18 @@
 //===----------------------------------------------------------------------===//
 abstract module GradleJob
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
 
+/// The OS to run on
+os: "macOS"|"linux"|"windows"
+
 fixed gradleArgs = new Listing {
   "--info"
   "--stacktrace"
+  "-DtestReportsDir=${HOME}/test-results"
   when (isRelease) {
     "-DreleaseBuild=true"
   }
@@ -37,15 +41,6 @@ job: Config.Job = new {
   steps {
     "checkout"
     ...module.steps
-    new Config.RunStep {
-      // find all test results and write them to the home dir
-      name = "Gather test results"
-      command = """
-        mkdir ~/test-results/
-        find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \\;
-        """
-      `when` = "always"
-    }
     new Config.StoreTestResults {
       path = "~/test-results"
     }

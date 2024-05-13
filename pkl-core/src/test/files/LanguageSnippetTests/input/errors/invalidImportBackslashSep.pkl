@@ -1,0 +1,2 @@
+// In all OSes, the directory separator is forward slash. 
+res = import("..\\basic\\baseModule.pkl")

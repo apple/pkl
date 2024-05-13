@@ -50,7 +50,7 @@ public abstract class Dependency {
 
     public Path resolveAssetPath(Path projectDir, PackageAssetUri packageAssetUri) {
       // drop 1 to remove leading `/`
-      var assetPath = packageAssetUri.getAssetPath().toString().substring(1);
+      var assetPath = packageAssetUri.getAssetPath().substring(1);
       return projectDir.resolve(path).resolve(assetPath);
     }
 

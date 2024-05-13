@@ -57,7 +57,7 @@ class ModuleKeysTest {
     file.writeString("age = 40")
 
     val uri = file.toUri()
-    val key = ModuleKeys.file(uri, file.toAbsolutePath())
+    val key = ModuleKeys.file(uri)
 
     assertThat(key.uri).isEqualTo(uri)
     assertThat(key.isCached).isTrue
