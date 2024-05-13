@@ -119,18 +119,11 @@ internal fun String.replaceSourceCodePlaceholders(
     .replace("%{endLine}", sourceLocation.endLine.toString())
 }
 
-/**
- * Encodes a URI string, encoding characters that are part of URI syntax.
- *
- * Follows `encodeURIComponent` from ECMAScript.
- */
+/** Encodes a URI string, encoding characters that are part of URI syntax. */
 internal val String.uriEncodedComponent
   get(): String {
-    val ret = URLEncoder.encode(this, StandardCharsets.UTF_8)
-    // Replace `+` with `%20` to be safe
-    // (see
-    // https://stackoverflow.com/questions/2678551/when-should-space-be-encoded-to-plus-or-20#:~:text=%20%20is%20a%20valid%20way,encodeURIComponent()%20does%20in%20JavaScript.)
-    return ret.replace("+", "%20")
+    val ret = URI(null, null, this, null)
+    return ret.toString().replace("/", "%2F")
   }
 
 /**
@@ -143,8 +136,6 @@ internal val String.uriEncoded
 
 fun getModulePath(moduleName: String, packagePrefix: String): String =
   moduleName.substring(packagePrefix.length).replace('.', '/')
-
-internal fun String.toEncodedUri(): URI = URI(uriEncoded)
 
 /**
  * Turns `"foo.bar.baz-biz"` into ``"foo.bar.`baz-biz`"``.
