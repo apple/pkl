@@ -6,6 +6,7 @@ x | import "pkl:nonExisting"
 at cannotFindStdLibModule#nonExisting (file:///$snippetsDir/input/errors/cannotFindStdLibModule.pkl)
 
 Available standard library modules:
+pkl:AbstractSettings
 pkl:base
 pkl:Benchmark
 pkl:DocPackageInfo

@@ -1,0 +1,58 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Definitions for configuration of Pkl itself.
+/// 
+/// This module is intended to be extended by different types/scopes of settings modules (machine,
+/// user, project, etc).
+@ModuleInfo { minPklVersion = "0.26.0" }
+abstract module pkl.AbstractSettings
+
+/// Settings that control how Pkl talks to HTTP proxies.
+class Proxy {
+  /// The proxy to use for HTTP(S) connections.
+  ///
+  /// At the moment, only HTTP proxies are supported.
+  ///
+  /// Example:
+  /// ```
+  /// local proxyPassword = read("my-proxy-password.txt").text
+  /// address = "http://myuser@\(proxyPassword):my.proxy.example.com:5080"
+  /// ```
+  address: Uri(startsWith("http://"))
+
+  /// Hosts to which all connections should bypass a proxy.
+  ///
+  /// Values can be either hostnames, or CIDR blocks.
+  ///
+  /// Follows the same rules as cURL's [--noproxy](https://curl.se/docs/manpage.html#--noproxy)
+  /// flag.
+  noProxy: Listing<String>(isDistinct)
+}
+
+/// Common settings for Pkl's own evaluator.
+/// 
+/// This limited class is `open` to allow different extensions 
+open class Evaluator {
+  /// Configuration of the HTTP proxy to use, `null` for none.
+  proxy: Proxy?
+}
+
+/// Configuration of Pkl's own evaluator.
+///
+/// These settings influence the behavior of the evaluator when running the `pkl eval`, `pkl test`,
+/// and `pkl repl` CLI commands.
+evaluatorSettings: Evaluator

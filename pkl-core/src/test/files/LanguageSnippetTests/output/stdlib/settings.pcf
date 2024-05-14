@@ -1,0 +1,6 @@
+facts {
+  ["`evaluatorSettings` in children of `pkl:AbstractSettings` have subtypes of `AbstractSettings.Evaluator`"] {
+    true
+    true
+  }
+}

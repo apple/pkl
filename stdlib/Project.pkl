@@ -67,6 +67,8 @@
 @ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.Project
 
+extends "pkl:AbstractSettings"
+
 import "pkl:Project"
 import "pkl:reflect"
 import "pkl:semver"
@@ -392,7 +394,7 @@ class Package {
   fixed uri: PackageUri = "\(baseUri)@\(version)"
 }
 
-class EvaluatorSettings {
+class EvaluatorSettings extends Evaluator {
   /// The external properties available to Pkl, read using the `prop:` scheme.
   externalProperties: Mapping<String, String>?
 

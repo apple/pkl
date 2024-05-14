@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Expected value of type `*RemoteDependency|LocalDependency`, but got a different `pkl.Project`.
-Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetting...
+Value: new ModuleClass { evaluatorSettings { proxy = null; externalProperties = null...
 
 xxx | dependencies: Mapping<String(!contains("/")), *RemoteDependency|LocalDependency>
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,7 +8,7 @@ at pkl.Project#dependencies (pkl:Project)
 
 * Value is not of type `LocalDependency` because:
   Type constraint `this.package != null` violated.
-  Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetti...
+  Value: new ModuleClass { evaluatorSettings { proxy = null; externalProperties = nu...
 
 x | dependencies {
     ^^^^^^^^^^^^^^

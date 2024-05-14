@@ -1,0 +1,25 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:AbstractSettings"
+import "pkl:Project"
+import "pkl:settings"
+import "pkl:reflect"
+
+local evaluatorSettingsClass = reflect.Class(AbstractSettings.Evaluator)
+
+local function allProperties(clazz: reflect.Class?): Map<String,reflect.Property> =
+  if (clazz == null) Map() else
+    allProperties(clazz.superclass) + clazz.properties
+
+facts {
+  ["`evaluatorSettings` in children of `pkl:AbstractSettings` have subtypes of `AbstractSettings.Evaluator`"] {
+    for (cls in List(settings.getClass(), Project.getClass())) {
+      ...new Listing {
+        local properties = allProperties(reflect.Class(cls))
+        local evaluatorSettingsType = properties["evaluatorSettings"].type as reflect.DeclaredType
+        local clazz = evaluatorSettingsType.referent as reflect.Class
+        clazz == evaluatorSettingsClass || clazz.isSubclassOf(evaluatorSettingsClass)
+      }
+    }
+  }
+}

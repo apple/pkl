@@ -22,41 +22,43 @@
 @ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.settings
 
+extends "pkl:AbstractSettings"
+
 /// The editor for viewing and editing Pkl files.
 editor: Editor = System
 
 /// The editor associated with `file:` URLs ending in `.pkl`.
-hidden System: Editor = new {
+hidden const System: Editor = new {
   urlScheme = "%{url}, line %{line}"
 }
 
 /// The [IntelliJ IDEA](https://www.jetbrains.com/idea) editor.
-hidden Idea: Editor = new {
+hidden const Idea: Editor = new {
   urlScheme = "idea://open?file=%{path}&line=%{line}"
 }
 
 /// The [GoLand](https://www.jetbrains.com/go/) editor.
-hidden GoLand: Editor = new {
+hidden const GoLand: Editor = new {
   urlScheme = "goland://open?file=%{path}&line=%{line}"
 }
 
 /// The [TextMate](https://macromates.com) editor.
-hidden TextMate: Editor = new {
+hidden const TextMate: Editor = new {
   urlScheme = "txmt://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Sublime Text](https://www.sublimetext.com) editor.
-hidden Sublime: Editor = new {
+hidden const Sublime: Editor = new {
   urlScheme = "subl://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Atom](https://atom.io) editor.
-hidden Atom: Editor = new {
+hidden const Atom: Editor = new {
   urlScheme = "atom://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Visual Studio Code](https://code.visualstudio.com) editor.
-hidden VsCode: Editor = new {
+hidden const VsCode: Editor = new {
   urlScheme = "vscode://file/%{path}:%{line}:%{column}"
 }
 
