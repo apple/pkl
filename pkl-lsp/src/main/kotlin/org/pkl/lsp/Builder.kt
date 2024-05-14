@@ -29,19 +29,19 @@ import org.pkl.lsp.LSPUtil.toRange
 import org.pkl.lsp.analyzers.Analyzer
 import org.pkl.lsp.analyzers.ModifierAnalyzer
 import org.pkl.lsp.analyzers.PklDiagnostic
-import org.pkl.lsp.ast.Module
-import org.pkl.lsp.ast.ModuleImpl
 import org.pkl.lsp.ast.Node
+import org.pkl.lsp.ast.PklModule
+import org.pkl.lsp.ast.PklModuleImpl
 import org.pkl.lsp.ast.Span
 
 class Builder(private val server: PklLSPServer) {
-  private var runningBuild: CompletableFuture<Module?> = CompletableFuture.supplyAsync(::noop)
+  private var runningBuild: CompletableFuture<PklModule?> = CompletableFuture.supplyAsync(::noop)
 
   private val parser = Parser()
 
   private val analyzers: List<Analyzer> = listOf(ModifierAnalyzer(server))
 
-  fun runningBuild(): CompletableFuture<Module?> = runningBuild
+  fun runningBuild(): CompletableFuture<PklModule?> = runningBuild
 
   fun requestBuild(file: URI) {
     val change = IoUtils.readString(file.toURL())
@@ -52,11 +52,11 @@ class Builder(private val server: PklLSPServer) {
     runningBuild = CompletableFuture.supplyAsync { build(file, change) }
   }
 
-  private fun build(file: URI, change: String): Module? {
+  private fun build(file: URI, change: String): PklModule? {
     return try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
-      val module = ModuleImpl(moduleCtx)
+      val module = PklModuleImpl(moduleCtx)
       val diagnostics = analyze(module)
       makeDiagnostics(file, diagnostics)
       return module
@@ -99,7 +99,7 @@ class Builder(private val server: PklLSPServer) {
   }
 
   companion object {
-    private fun noop(): Module? {
+    private fun noop(): PklModule? {
       return null
     }
 

@@ -39,11 +39,17 @@ class ClassPropertyImpl(override val parent: Node, override val ctx: ClassProper
   override val expr: Expr? by lazy { children.firstInstanceOf<Expr>() }
 
   override val objectBody: ObjectBody? by lazy { getChild(ObjectBodyImpl::class) }
+
+  override val name: String by lazy { ctx.Identifier().text }
 }
 
 class ClassMethodImpl(override val parent: Node, override val ctx: ClassMethodContext) :
   AbstractNode(parent, ctx), ClassMethod {
   override val methodHeader: MethodHeader by lazy { getChild(MethodHeaderImpl::class)!! }
+
+  override val name: String by lazy { ctx.methodHeader().Identifier().text }
+
+  override val modifiers: List<Terminal>? by lazy { methodHeader.modifiers }
 }
 
 class MethodHeaderImpl(override val parent: Node, override val ctx: MethodHeaderContext) :

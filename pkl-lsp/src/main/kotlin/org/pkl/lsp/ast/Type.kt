@@ -15,40 +15,62 @@
  */
 package org.pkl.lsp.ast
 
+import org.antlr.v4.runtime.tree.ParseTree
 import org.pkl.core.parser.antlr.PklParser.*
 import org.pkl.lsp.LSPUtil.firstInstanceOf
 
 class TypeAnnotationImpl(override val parent: Node, ctx: TypeAnnotationContext) :
   AbstractNode(parent, ctx), TypeAnnotation {
-  override val type: Type? by lazy { children.firstInstanceOf<Type>() }
+  override val pklType: PklType? by lazy { children.firstInstanceOf<PklType>() }
 }
 
-class UnknownTypeImpl(override val parent: Node, ctx: UnknownTypeContext) :
-  AbstractNode(parent, ctx), UnknownType
+class UnknownPklTypeImpl(override val parent: Node, ctx: UnknownTypeContext) :
+  AbstractNode(parent, ctx), UnknownPklType
 
-class NothingTypeImpl(override val parent: Node, ctx: NothingTypeContext) :
-  AbstractNode(parent, ctx), NothingType
+class NothingPklTypeImpl(override val parent: Node, ctx: NothingTypeContext) :
+  AbstractNode(parent, ctx), NothingPklType
 
-class ModuleTypeImpl(override val parent: Node, ctx: ModuleTypeContext) :
-  AbstractNode(parent, ctx), ModuleType
+class ModulePklTypeImpl(override val parent: Node, ctx: ModuleTypeContext) :
+  AbstractNode(parent, ctx), ModulePklType
 
-class StringLiteralTypeImpl(override val parent: Node, ctx: StringLiteralTypeContext) :
-  AbstractNode(parent, ctx), StringLiteralType
+class StringLiteralPklTypeImpl(override val parent: Node, ctx: StringLiteralTypeContext) :
+  AbstractNode(parent, ctx), StringLiteralPklType
 
-class DeclaredTypeImpl(override val parent: Node, ctx: DeclaredTypeContext) :
-  AbstractNode(parent, ctx), DeclaredType
+class DeclaredPklTypeImpl(override val parent: Node, override val ctx: DeclaredTypeContext) :
+  AbstractNode(parent, ctx), DeclaredPklType {
+  override val name: TypeName by lazy {
+    toTypeName(children.firstInstanceOf<QualifiedIdentifier>()!!)
+  }
 
-class ParenthesizedTypeImpl(override val parent: Node, ctx: ParenthesizedTypeContext) :
-  AbstractNode(parent, ctx), ParenthesizedType
+  private fun toTypeName(ident: QualifiedIdentifier): TypeName {
+    return TypeNameImpl(ident, ctx.qualifiedIdentifier())
+  }
+}
 
-class NullableTypeImpl(override val parent: Node, ctx: NullableTypeContext) :
-  AbstractNode(parent, ctx), NullableType
+class ParenthesizedPklTypeImpl(override val parent: Node, ctx: ParenthesizedTypeContext) :
+  AbstractNode(parent, ctx), ParenthesizedPklType
 
-class ConstrainedTypeImpl(override val parent: Node, ctx: ConstrainedTypeContext) :
-  AbstractNode(parent, ctx), ConstrainedType
+class NullablePklTypeImpl(override val parent: Node, ctx: NullableTypeContext) :
+  AbstractNode(parent, ctx), NullablePklType
 
-class UnionTypeImpl(override val parent: Node, ctx: UnionTypeContext) :
-  AbstractNode(parent, ctx), UnionType
+class ConstrainedPklTypeImpl(override val parent: Node, ctx: ConstrainedTypeContext) :
+  AbstractNode(parent, ctx), ConstrainedPklType
 
-class FunctionTypeImpl(override val parent: Node, ctx: FunctionTypeContext) :
-  AbstractNode(parent, ctx), FunctionType
+class UnionPklTypeImpl(override val parent: Node, ctx: UnionTypeContext) :
+  AbstractNode(parent, ctx), UnionPklType
+
+class FunctionPklTypeImpl(override val parent: Node, ctx: FunctionTypeContext) :
+  AbstractNode(parent, ctx), FunctionPklType
+
+class TypeNameImpl(ident: QualifiedIdentifier, override val ctx: QualifiedIdentifierContext) :
+  AbstractNode(ident.parent, ctx), TypeName {
+  override val module: Terminal? by lazy { ident.identifiers[0] }
+  override val simpleTypeName: SimpleTypeName by lazy {
+    SimpleTypeNameImpl(ident.identifiers.last(), ctx.Identifier().last())
+  }
+}
+
+class SimpleTypeNameImpl(terminal: Terminal, override val ctx: ParseTree) :
+  AbstractNode(terminal.parent, ctx), SimpleTypeName {
+  override val identifier: Terminal? by lazy { terminal }
+}

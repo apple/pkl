@@ -58,8 +58,8 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
       when (node) {
         is ClassProperty -> {
           if (
-            node.parent is Module &&
-              (node.parent as Module).isAmend &&
+            node.parent is PklModule &&
+              (node.parent as PklModule).isAmend &&
               (hiddenModifier != null || node.typeAnnotation != null)
           ) {
             if (node.identifier != null) {
@@ -99,7 +99,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
         is ModuleDeclaration ->
           if (node.isAmend) "amending modules" to AMENDING_MODULE_MODIFIERS
           else "modules" to MODULE_MODIFIERS
-        is Class -> "classes" to CLASS_MODIFIERS
+        is Clazz -> "classes" to CLASS_MODIFIERS
         is TypeAlias -> "typealiases" to TYPE_ALIAS_MODIFIERS
         is ClassMethod -> "class methods" to CLASS_METHOD_MODIFIERS
         is ClassProperty -> "class properties" to CLASS_PROPERTY_MODIFIERS

@@ -47,7 +47,7 @@ class AstTest {
     """
         .trimIndent()
     val parser = Parser()
-    val module = ModuleImpl(parser.parseModule(mod))
+    val module = PklModuleImpl(parser.parseModule(mod))
     assertThat(module.declaration).isNotNull
     assertThat(module.declaration!!.docComment!!.text)
       .isEqualTo(
@@ -65,12 +65,12 @@ class AstTest {
     assertThat(module.members[0]).isInstanceOf(ClassProperty::class.java)
     val property = module.members[0] as ClassProperty
     assertThat(property.identifier?.text).isEqualTo("foo")
-    assertThat(property.typeAnnotation?.type).isInstanceOf(DeclaredType::class.java)
+    assertThat(property.typeAnnotation?.pklType).isInstanceOf(DeclaredPklType::class.java)
     assertThat(module.members[1]).isInstanceOf(ClassMethod::class.java)
     val method = module.members[1] as ClassMethod
     assertThat(method.methodHeader.identifier?.text).isEqualTo("bar")
-    assertThat(module.members[2]).isInstanceOf(Class::class.java)
-    val clazz = module.members[2] as Class
+    assertThat(module.members[2]).isInstanceOf(Clazz::class.java)
+    val clazz = module.members[2] as Clazz
     val classMembers = clazz.classBody?.members
     assertThat(classMembers).hasSize(2)
     val classProperty = classMembers?.get(0)
