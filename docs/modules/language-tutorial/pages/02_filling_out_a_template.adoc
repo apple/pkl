@@ -86,7 +86,7 @@ stockPigeon {
   }
 }
 
-woodPigeon {
+woodPigeon = (stockPigeon) {
   name = "Common wood pigeon"
   taxonomy { // <1>
     species = "Columba palumbus"
