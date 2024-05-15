@@ -8,8 +8,6 @@ if [[ $files =~ .circleci/config.pkl ]]; then
 fi
 
 if [[ $files =~ \.github/ISSUE_TEMPLATE/.*\.pkl ]]; then
-  for file in .github/ISSUE_TEMPLATE/*.pkl; do
-    pkl eval $file -f yaml -o ${file%.pkl}.yml
-    git add ${file%.pkl}.yml
-  done
+  pkl eval -m .github/ISSUE_TEMPLATE{,/*.pkl}
+  git add .github/ISSUE_TEMPLATE/*.yml
 fi
