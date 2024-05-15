@@ -661,12 +661,19 @@ public final class ModuleKeys {
       return projectDepsManager;
     }
 
-    private @Nullable Path getLocalPath(Dependency dependency) {
+    private @Nullable Path getLocalPath(Dependency dependency, PackageAssetUri packageAssetUri) {
       if (!(dependency instanceof LocalDependency localDependency)) {
         return null;
       }
       return localDependency.resolveAssetPath(
           getProjectDepsResolver().getProjectDir(), packageAssetUri);
+    }
+
+    private @Nullable Path getLocalPath(Dependency dependency) {
+      if (!(dependency instanceof LocalDependency)) {
+        return null;
+      }
+      return getLocalPath(dependency, packageAssetUri);
     }
 
     @Override
@@ -693,7 +700,7 @@ public final class ModuleKeys {
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency);
+      var path = getLocalPath(dependency, packageAssetUri);
       if (path != null) {
         securityManager.checkResolveModule(path.toUri());
         return FileResolver.listElements(path);
@@ -710,7 +717,7 @@ public final class ModuleKeys {
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency);
+      var path = getLocalPath(dependency, packageAssetUri);
       if (path != null) {
         securityManager.checkResolveModule(path.toUri());
         return FileResolver.hasElement(path);
