@@ -120,6 +120,7 @@ public final class EvaluatorBuilder {
     builder
         .addModuleKeyFactories(ModuleKeyFactories.fromServiceProviders())
         .addModuleKeyFactory(ModuleKeyFactories.file)
+        .addModuleKeyFactory(ModuleKeyFactories.http)
         .addModuleKeyFactory(ModuleKeyFactories.pkg)
         .addModuleKeyFactory(ModuleKeyFactories.projectpackage)
         .addModuleKeyFactory(ModuleKeyFactories.genericUrl)

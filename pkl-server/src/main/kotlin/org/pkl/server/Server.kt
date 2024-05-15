@@ -223,6 +223,7 @@ class Server(private val transport: MessageTransport, private val httpClient: Ht
     add(ModuleKeyFactories.modulePath(modulePathResolver))
     add(ModuleKeyFactories.pkg)
     add(ModuleKeyFactories.projectpackage)
+    add(ModuleKeyFactories.http)
     add(ModuleKeyFactories.genericUrl)
   }
 }
