@@ -164,6 +164,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ModuleKeyFactories.projectpackage)
       addAll(ModuleKeyFactories.fromServiceProviders())
       add(ModuleKeyFactories.file)
+      add(ModuleKeyFactories.http)
       add(ModuleKeyFactories.genericUrl)
     }
   }

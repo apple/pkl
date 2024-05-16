@@ -37,6 +37,9 @@ public final class ModuleKeyFactories {
   /** A factory for file based module keys. */
   public static final ModuleKeyFactory file = new File();
 
+  /** A factory for {@code http:} and {@code https:} module keys. */
+  public static final ModuleKeyFactory http = new Http();
+
   /** A factory for URL based module keys. */
   public static final ModuleKeyFactory genericUrl = new GenericUrl();
 
@@ -147,6 +150,19 @@ public final class ModuleKeyFactories {
       }
 
       return Optional.of(ModuleKeys.file(uri, path));
+    }
+  }
+
+  private static class Http implements ModuleKeyFactory {
+    private Http() {}
+
+    @Override
+    public Optional<ModuleKey> create(URI uri) {
+      var scheme = uri.getScheme();
+      if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+        return Optional.of(ModuleKeys.http(uri));
+      }
+      return Optional.empty();
     }
   }
 

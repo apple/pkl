@@ -112,6 +112,11 @@ public final class ModuleKeys {
     return new GenericUrl(url);
   }
 
+  /** Creates a module key for {@code http:} and {@code https:} uris. */
+  public static ModuleKey http(URI url) {
+    return new Http(url);
+  }
+
   /** Creates a module key for the given package. */
   public static ModuleKey pkg(URI uri) throws URISyntaxException {
     var assetUri = new PackageAssetUri(uri);
@@ -446,6 +451,45 @@ public final class ModuleKeys {
     }
   }
 
+  private static class Http implements ModuleKey {
+
+    private final URI uri;
+
+    Http(URI uri) {
+      this.uri = uri;
+    }
+
+    @Override
+    public URI getUri() {
+      return uri;
+    }
+
+    @Override
+    public boolean hasHierarchicalUris() {
+      return true;
+    }
+
+    @Override
+    public boolean isGlobbable() {
+      return false;
+    }
+
+    @Override
+    public ResolvedModuleKey resolve(SecurityManager securityManager)
+        throws IOException, SecurityManagerException {
+      var httpClient = VmContext.get(null).getHttpClient();
+      var request = HttpRequest.newBuilder(uri).build();
+      var response = httpClient.send(request, BodyHandlers.ofInputStream());
+      try (var body = response.body()) {
+        HttpUtils.checkHasStatusCode200(response);
+        securityManager.checkResolveModule(response.uri());
+        String text = IoUtils.readString(body);
+        // intentionally use uri instead of response.uri()
+        return ResolvedModuleKeys.virtual(this, uri, text, true);
+      }
+    }
+  }
+
   private static class GenericUrl implements ModuleKey {
     final URI uri;
 
@@ -472,20 +516,6 @@ public final class ModuleKeys {
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
-
-      if (HttpUtils.isHttpUrl(uri)) {
-        var httpClient = VmContext.get(null).getHttpClient();
-        var request = HttpRequest.newBuilder(uri).build();
-        var response = httpClient.send(request, BodyHandlers.ofInputStream());
-        try (var body = response.body()) {
-          HttpUtils.checkHasStatusCode200(response);
-          securityManager.checkResolveModule(response.uri());
-          String text = IoUtils.readString(body);
-          // intentionally use uri instead of response.uri()
-          return ResolvedModuleKeys.virtual(this, uri, text, true);
-        }
-      }
-
       var url = IoUtils.toUrl(uri);
       var conn = url.openConnection();
       conn.connect();

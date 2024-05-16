@@ -109,6 +109,7 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
             .addModuleKeyFactory(ModuleKeyFactories.pkg)
             .addModuleKeyFactory(ModuleKeyFactories.projectpackage)
             .addModuleKeyFactory(ModuleKeyFactories.file)
+            .addModuleKeyFactory(ModuleKeyFactories.http)
             .addModuleKeyFactory(ModuleKeyFactories.genericUrl)
             .setEnvironmentVariables(options.getEnvironmentVariables())
             .setExternalProperties(options.getExternalProperties())

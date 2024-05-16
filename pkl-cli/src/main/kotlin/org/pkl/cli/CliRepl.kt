@@ -45,6 +45,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
             ModuleKeyFactories.fromServiceProviders() +
             listOf(
               ModuleKeyFactories.file,
+              ModuleKeyFactories.http,
               ModuleKeyFactories.pkg,
               ModuleKeyFactories.projectpackage,
               ModuleKeyFactories.genericUrl
