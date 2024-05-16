@@ -48,19 +48,19 @@ class TestsTest : AbstractTest() {
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
     assertThat(output).contains("""
-      module test (file:///file, line x)
-        test ❌
+      module test ❌ 0.0% pass [0 passed, 1 failed] (file:///file, line x)
+        facts ❌
           Error:
-              –– Pkl Error ––
-              exception
-              
-              9 | throw("exception")
-                  ^^^^^^^^^^^^^^^^^^
-              at test#facts["error"][#1] (file:///file, line x)
-              
-              3 | facts {
-                  ^^^^^^^
-              at test#facts (file:///file, line x)
+          –– Pkl Error ––
+          exception
+          
+          9 | throw("exception")
+              ^^^^^^^^^^^^^^^^^^
+          at test#facts["error"][#1] (file:///file, line x)
+          
+          3 | facts {
+              ^^^^^^^
+          at test#facts (file:///file, line x)
     """.trimIndent())
   }
 
@@ -73,61 +73,48 @@ class TestsTest : AbstractTest() {
 
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
-    assertThat(output.trimStart()).contains("""
-      module test (file:///file, line x)
-        sum numbers ✅
-        divide numbers ✅
-        fail ❌
-          4 == 9 ❌ (file:///file, line x)
-          "foo" == "bar" ❌ (file:///file, line x)
-        user 0 ✅
-        user 1 ❌
-          (file:///file, line x)
-          Expected: (file:///file, line x)
-          new {
-            name = "Pigeon"
-            age = 40
-          }
-          Actual: (file:///file, line x)
-          new {
-            name = "Pigeon"
-            age = 41
-          }
-        user 1 ❌
-          (file:///file, line x)
-          Expected: (file:///file, line x)
-          new {
-            name = "Parrot"
-            age = 35
-          }
-          Actual: (file:///file, line x)
-          new {
-            name = "Welma"
-            age = 35
-          }
+    assertThat(output.trimStart()).startsWith("""
+      > Task :evalTest FAILED
+      pkl: TRACE: 8 = 8 (file:///file, line x)
+      module test ❌ 50.0% pass [3 passed, 3 failed] (file:///file, line x)
+        facts ❌ 66.7% pass [2 passed, 1 failed]
+          sum numbers ✅ 100.0% pass [2 passed]
+          divide numbers ✅ 100.0% pass [2 passed]
+          fail ❌ 0.0% pass [0 passed, 2 failed]
+            4 == 9 ❌ (file:///file, line x)
+            "foo" == "bar" ❌ (file:///file, line x)
+        examples ❌ 33.3% pass [1 passed, 2 failed]
+          user 0 ✅
+          user 1 #0 ❌
+            (file:///file, line x)
+            Expected: (file:///file, line x)
+            new {
+              name = "Pigeon"
+              age = 40
+            }
+            Actual: (file:///file, line x)
+            new {
+              name = "Pigeon"
+              age = 41
+            }
+          user 1 #1 ❌
+            (file:///file, line x)
+            Expected: (file:///file, line x)
+            new {
+              name = "Parrot"
+              age = 35
+            }
+            Actual: (file:///file, line x)
+            new {
+              name = "Welma"
+              age = 35
+            }
     """.trimIndent())
   }
 
   @Test
   fun `overwrite expected examples`() {
-    writePklFile(additionalExamples = """
-      ["user 0"] {
-        new {
-          name = "Cool"
-          age = 11
-        }
-      }
-      ["user 1"] {
-        new {
-          name = "Pigeon"
-          age = 41
-        }
-        new {
-          name = "Welma"
-          age = 35
-        }
-      }
-    """.trimIndent())
+    writePklFile(additionalExamples = examples)
     writeFile("test.pkl-expected.pcf", bigTestExpected)
 
     writeBuildFile("overwrite = true")
@@ -136,6 +123,66 @@ class TestsTest : AbstractTest() {
 
     assertThat(output).contains("user 0 ✍️")
     assertThat(output).contains("user 1 ✍️")
+  }
+
+  @Test
+  fun `full example with error`() {
+    writeBuildFile()
+
+    writePklFile(
+      additionalFacts = """
+      ["error"] {
+        throw("exception")
+      }
+    """.trimIndent(),
+      additionalExamples = examples
+    )
+    writeFile("test.pkl-expected.pcf", bigTestExpected)
+
+    val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
+
+    assertThat(output.trimStart()).startsWith("""
+      > Task :evalTest FAILED
+      module test ❌ 25.0% pass [1 passed, 3 failed] (file:///file, line x)
+        facts ❌
+          Error:
+          –– Pkl Error ––
+          exception
+          
+          9 | throw("exception")
+              ^^^^^^^^^^^^^^^^^^
+          at test#facts["error"][#1] (file:///file, line x)
+          
+          3 | facts {
+              ^^^^^^^
+          at test#facts (file:///file, line x)
+        examples ❌ 33.3% pass [1 passed, 2 failed]
+          user 0 ✅
+          user 1 #0 ❌
+            (file:///file, line x)
+            Expected: (file:///file, line x)
+            new {
+              name = "Pigeon"
+              age = 40
+            }
+            Actual: (file:///file, line x)
+            new {
+              name = "Pigeon"
+              age = 41
+            }
+          user 1 #1 ❌
+            (file:///file, line x)
+            Expected: (file:///file, line x)
+            new {
+              name = "Parrot"
+              age = 35
+            }
+            Actual: (file:///file, line x)
+            new {
+              name = "Welma"
+              age = 35
+            }
+    """.trimIndent())
   }
 
   @Test
@@ -152,15 +199,15 @@ class TestsTest : AbstractTest() {
 
     assertThat(report).isEqualTo("""
       <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="6" failures="4">
-          <testcase classname="test" name="sum numbers"></testcase>
-          <testcase classname="test" name="divide numbers"></testcase>
-          <testcase classname="test" name="fail">
+      <testsuite name="test" tests="6" failures="3">
+          <testcase classname="test.facts" name="sum numbers"></testcase>
+          <testcase classname="test.facts" name="divide numbers"></testcase>
+          <testcase classname="test.facts" name="fail">
               <failure message="Fact Failure">4 == 9 ❌ (file:///file, line x)</failure>
               <failure message="Fact Failure">&quot;foo&quot; == &quot;bar&quot; ❌ (file:///file, line x)</failure>
           </testcase>
-          <testcase classname="test" name="user 0"></testcase>
-          <testcase classname="test" name="user 1">
+          <testcase classname="test.examples" name="user 0"></testcase>
+          <testcase classname="test.examples" name="user 1 #0">
               <failure message="Example Failure">(file:///file, line x)
       Expected: (file:///file, line x)
       new {
@@ -173,7 +220,7 @@ class TestsTest : AbstractTest() {
         age = 41
       }</failure>
           </testcase>
-          <testcase classname="test" name="user 1">
+          <testcase classname="test.examples" name="user 1 #1">
               <failure message="Example Failure">(file:///file, line x)
       Expected: (file:///file, line x)
       new {
@@ -193,6 +240,93 @@ class TestsTest : AbstractTest() {
     """.trimIndent())
   }
 
+  @Test
+  fun `JUnit reports with error`() {
+    val pklFile = writePklFile(
+      additionalFacts = """
+      ["error"] {
+        throw("exception")
+      }
+    """.trimIndent(),
+      additionalExamples = examples
+    )
+    writeFile("test.pkl-expected.pcf", bigTestExpected)
+
+    writeBuildFile("junitReportsDir = file('${pklFile.parent}/build')")
+
+    runTask("evalTest", expectFailure = true)
+
+    val outputFile = testProjectDir.resolve("build/test.xml")
+    val report = outputFile.readText().stripFilesAndLines()
+
+    assertThat(report).isEqualTo("""
+      <?xml version="1.0" encoding="UTF-8"?>
+      <testsuite name="test" tests="4" failures="3">
+          <testcase classname="test.facts" name="error">
+              <error message="exception">
+      –– Pkl Error ––
+      exception
+      
+      9 | throw(&quot;exception&quot;)
+          ^^^^^^^^^^^^^^^^^^
+      at test#facts[&quot;error&quot;][#1] (file:///file, line x)
+      
+      3 | facts {
+          ^^^^^^^
+      at test#facts (file:///file, line x)
+      </error>
+          </testcase>
+          <testcase classname="test.examples" name="user 0"></testcase>
+          <testcase classname="test.examples" name="user 1 #0">
+              <failure message="Example Failure">(file:///file, line x)
+      Expected: (file:///file, line x)
+      new {
+        name = &quot;Pigeon&quot;
+        age = 40
+      }
+      Actual: (file:///file, line x)
+      new {
+        name = &quot;Pigeon&quot;
+        age = 41
+      }</failure>
+          </testcase>
+          <testcase classname="test.examples" name="user 1 #1">
+              <failure message="Example Failure">(file:///file, line x)
+      Expected: (file:///file, line x)
+      new {
+        name = &quot;Parrot&quot;
+        age = 35
+      }
+      Actual: (file:///file, line x)
+      new {
+        name = &quot;Welma&quot;
+        age = 35
+      }</failure>
+          </testcase>
+      </testsuite>
+      
+    """.trimIndent())
+  }
+
+  private val examples = """
+      ["user 0"] {
+        new {
+          name = "Cool"
+          age = 11
+        }
+      }
+      ["user 1"] {
+        new {
+          name = "Pigeon"
+          age = 41
+        }
+        new {
+          name = "Welma"
+          age = 35
+        }
+      }
+  """.trimIndent()
+  
   private val bigTest = """
     amends "pkl:test"
 
@@ -214,22 +348,7 @@ class TestsTest : AbstractTest() {
     }
     
     examples {
-      ["user 0"] {
-        new {
-          name = "Cool"
-          age = 11
-        }
-      }
-      ["user 1"] {
-        new {
-          name = "Pigeon"
-          age = 41
-        }
-        new {
-          name = "Welma"
-          age = 35
-        }
-      }
+      $examples
     }
   """.trimIndent()
 

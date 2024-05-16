@@ -62,8 +62,9 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      module test
-        succeed ✅
+      module test ✅ 100.0% pass [1 passed]
+        facts ✅ 100.0% pass [1 passed]
+          succeed ✅ 100.0% pass [2 passed]
       
     """
           .trimIndent()
@@ -80,7 +81,7 @@ class CliTestRunnerTest {
       facts {
         ["fail"] {
           4 == 9
-          "foo" == "bar"
+          "foo" != "bar"
         }
       }
     """
@@ -96,10 +97,10 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      module test
-        fail ❌
-          4 == 9 ❌
-          "foo" == "bar" ❌
+      module test ❌ 0.0% pass [0 passed, 1 failed]
+        facts ❌ 0.0% pass [0 passed, 1 failed]
+          fail ❌ 50.0% pass [1 passed, 1 failed]
+            4 == 9 ❌
       
     """
           .trimIndent()
@@ -118,7 +119,8 @@ class CliTestRunnerTest {
           9 == trace(9)
           "foo" == "foo"
         }
-        ["fail"] {
+        ["bar"] {
+          "foo" == "foo"
           5 == 9
         }
       }
@@ -136,8 +138,8 @@ class CliTestRunnerTest {
         """
       <?xml version="1.0" encoding="UTF-8"?>
       <testsuite name="test" tests="2" failures="1">
-          <testcase classname="test" name="foo"></testcase>
-          <testcase classname="test" name="fail">
+          <testcase classname="test.facts" name="foo"></testcase>
+          <testcase classname="test.facts" name="bar">
               <failure message="Fact Failure">5 == 9 ❌</failure>
           </testcase>
           <system-err><![CDATA[9 = 9
