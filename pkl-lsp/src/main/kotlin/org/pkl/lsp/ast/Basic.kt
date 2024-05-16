@@ -23,6 +23,7 @@ class QualifiedIdentifierImpl(
   override val ctx: QualifiedIdentifierContext
 ) : AbstractNode(parent, ctx), QualifiedIdentifier {
   override val identifiers: List<Terminal> by lazy { getChildren(Terminal::class)!! }
+  override val fullName: String by lazy { identifiers.joinToString(".") { it.text } }
 }
 
 class StringConstantImpl(override val parent: Node, override val ctx: StringConstantContext) :

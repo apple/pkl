@@ -15,6 +15,9 @@
  */
 package org.pkl.lsp.ast
 
+import org.pkl.lsp.PklBaseModule
+import org.pkl.lsp.type.Type
+
 val Clazz.supertype: PklType?
   get() = classHeader.extends
 
@@ -49,3 +52,95 @@ val Clazz.supermodule: PklModule?
 
 // TODO
 fun TypeName.resolve(): Node? = TODO("not implemented")
+
+fun SimpleTypeName.resolve(): Node? = TODO("not implemented")
+
+fun Clazz.isSubclassOf(other: Clazz): Boolean {
+  // optimization
+  if (this === other) return true
+
+  // optimization
+  // TODO: check if this works
+  if (!other.isAbstractOrOpen) return this == other
+
+  var clazz: Clazz? = this
+  while (clazz != null) {
+    // TODO: check if this works
+    if (clazz == other) return true
+    if (clazz.supermodule != null) {
+      return PklBaseModule.instance.moduleType.ctx.isSubclassOf(other)
+    }
+    clazz = clazz.superclass
+  }
+  return false
+}
+
+fun Clazz.isSubclassOf(other: PklModule): Boolean {
+  // optimization
+  if (!other.isAbstractOrOpen) return false
+
+  var clazz = this
+  var superclass = clazz.superclass
+  while (superclass != null) {
+    clazz = superclass
+    superclass = superclass.superclass
+  }
+  var module = clazz.supermodule
+  while (module != null) {
+    // TODO: check if this works
+    if (module == other) return true
+    module = module.supermodule
+  }
+  return false
+}
+
+// TODO: actually escape the text
+fun StringConstant.escapedText(): String? = this.value
+
+fun TypeAlias.isRecursive(seen: MutableSet<TypeAlias>): Boolean =
+  !seen.add(this) || type.isRecursive(seen)
+
+private fun PklType?.isRecursive(seen: MutableSet<TypeAlias>): Boolean =
+  when (this) {
+    is DeclaredPklType -> {
+      val resolved = name.resolve()
+      resolved is TypeAlias && resolved.isRecursive(seen)
+    }
+    is NullablePklType -> type.isRecursive(seen)
+    is DefaultUnionPklType -> type.isRecursive(seen)
+    is UnionPklType -> leftType.isRecursive(seen) || rightType.isRecursive(seen)
+    is ConstrainedPklType -> type.isRecursive(seen)
+    is ParenthesizedPklType -> type.isRecursive(seen)
+    else -> false
+  }
+
+val Node.isInPklBaseModule: Boolean
+  get() = enclosingModule?.declaration?.moduleHeader?.qualifiedIdentifier?.fullName == "pkl.base"
+
+interface TypeNameRenderer {
+  fun render(name: TypeName, appendable: Appendable)
+
+  fun render(type: Type.Class, appendable: Appendable)
+
+  fun render(type: Type.Alias, appendable: Appendable)
+
+  fun render(type: Type.Module, appendable: Appendable)
+}
+
+object DefaultTypeNameRenderer : TypeNameRenderer {
+  override fun render(name: TypeName, appendable: Appendable) {
+    appendable.append(name.simpleTypeName.identifier?.text)
+  }
+
+  override fun render(type: Type.Class, appendable: Appendable) {
+    appendable.append(type.ctx.name)
+  }
+
+  override fun render(type: Type.Alias, appendable: Appendable) {
+    appendable.append(type.ctx.name)
+  }
+
+  override fun render(type: Type.Module, appendable: Appendable) {
+    appendable.append(type.referenceName)
+  }
+}

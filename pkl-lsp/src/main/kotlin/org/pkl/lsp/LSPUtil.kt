@@ -30,3 +30,9 @@ object LSPUtil {
     return firstOrNull { it is T } as T?
   }
 }
+
+class UnexpectedTypeError(message: String) : AssertionError(message)
+
+fun unexpectedType(obj: Any?): Nothing {
+  throw UnexpectedTypeError(obj?.javaClass?.typeName ?: "null")
+}

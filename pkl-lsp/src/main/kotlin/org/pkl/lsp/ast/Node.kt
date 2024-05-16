@@ -30,6 +30,7 @@ interface Node {
 
 interface QualifiedIdentifier : Node {
   val identifiers: List<Terminal>
+  val fullName: String
 }
 
 interface StringConstant : Node {
@@ -86,7 +87,7 @@ interface DocCommentOwner : Node {
     get() = (children.firstOrNull() as? Terminal)?.also { assert(it.type == TokenType.DocComment) }
 }
 
-interface PklModule : Node {
+interface PklModule : Node, ModifierListOwner {
   val isAmend: Boolean
   val declaration: ModuleDeclaration?
   val imports: List<ImportClause>?
@@ -222,7 +223,15 @@ interface TypeParameter : Node {
 
 interface ParameterList : Node
 
-interface TypeAlias : IdentifierOwner, ModifierListOwner, TypeDef
+interface TypeAlias : TypeDef {
+  val typeAliasHeader: TypeAliasHeader
+  val type: PklType
+  val isRecursive: Boolean
+}
+
+interface TypeAliasHeader : IdentifierOwner, ModifierListOwner {
+  val typeParameterList: TypeParameterList?
+}
 
 interface Terminal : Node {
   val type: TokenType
@@ -329,21 +338,46 @@ interface NothingPklType : PklType
 
 interface ModulePklType : PklType
 
-interface StringLiteralPklType : PklType
+interface StringLiteralPklType : PklType {
+  val stringConstant: StringConstant
+}
 
 interface DeclaredPklType : PklType {
   val name: TypeName
+  val typeArgumentList: TypeArgumentList?
 }
 
-interface ParenthesizedPklType : PklType
+interface TypeArgumentList : Node {
+  val types: List<PklType>
+}
 
-interface NullablePklType : PklType
+interface ParenthesizedPklType : PklType {
+  val type: PklType
+}
 
-interface ConstrainedPklType : PklType
+interface NullablePklType : PklType {
+  val type: PklType
+}
 
-interface UnionPklType : PklType
+interface ConstrainedPklType : PklType {
+  val type: PklType?
+  val exprs: List<Expr>
+}
 
-interface FunctionPklType : PklType
+interface UnionPklType : PklType {
+  val typeList: List<PklType>
+  val leftType: PklType
+  val rightType: PklType
+}
+
+interface FunctionPklType : PklType {
+  val parameterList: List<PklType>
+  val returnType: PklType
+}
+
+interface DefaultUnionPklType : PklType {
+  val type: PklType
+}
 
 abstract class AbstractNode(override val parent: Node?, protected open val ctx: ParseTree) : Node {
   private val childrenByType: Map<KClass<out Node>, List<Node>> by lazy {
@@ -430,6 +464,7 @@ fun List<ParseTree>.toNode(parent: Node?, idx: Int): Node? {
     is NullableTypeContext -> NullablePklTypeImpl(parent!!, parseTree)
     is ConstrainedTypeContext -> ConstrainedPklTypeImpl(parent!!, parseTree)
     is UnionTypeContext -> UnionPklTypeImpl(parent!!, parseTree)
+    is DefaultUnionTypeContext -> DefaultUnionPklTypeImpl(parent!!, parseTree)
     is FunctionTypeContext -> FunctionPklTypeImpl(parent!!, parseTree)
     is ThisExprContext -> ThisExprImpl(parent!!, parseTree)
     is OuterExprContext -> OuterExprImpl(parent!!, parseTree)
@@ -481,6 +516,8 @@ fun List<ParseTree>.toNode(parent: Node?, idx: Int): Node? {
     is ObjectSpreadContext -> ObjectSpreadImpl(parent!!, parseTree)
     is TypeParameterContext -> TypeParameterImpl(parent!!, parseTree)
     is TypeParameterListContext -> TypeParameterListImpl(parent!!, parseTree)
+    is TypeAliasHeaderContext -> TypeAliasHeaderImpl(parent!!, parseTree)
+    is TypeAliasContext -> TypeAliasImpl(parent!!, parseTree)
     // treat modifiers as terminals; matches how we do it in pkl-intellij
     is ModifierContext -> {
       val terminalNode =

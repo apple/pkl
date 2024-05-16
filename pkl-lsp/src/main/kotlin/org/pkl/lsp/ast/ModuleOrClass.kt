@@ -40,6 +40,8 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
   override val supermodule: PklModule? by lazy { null }
 
   override val cache: ModuleMemberCache by lazy { ModuleMemberCache.create(this) }
+
+  override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
 }
 
 class AnnotationImpl(override val parent: Node, override val ctx: PklParser.AnnotationContext) :
