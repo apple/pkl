@@ -29,8 +29,9 @@ object InMemoryJavaCompiler {
     val diagnosticsCollector = DiagnosticCollector<JavaFileObject>()
     val fileManager =
       InMemoryFileManager(compiler.getStandardFileManager(diagnosticsCollector, null, null))
-    val sourceObjects =
-      sourceFiles.map { (filename, contents) -> ReadableSourceFileObject(filename, contents) }
+    val sourceObjects = sourceFiles
+      .filter { (filename, _) -> filename.endsWith(".java") }
+      .map { (filename, contents) -> ReadableSourceFileObject(filename, contents) }
     val task = compiler.getTask(null, fileManager, diagnosticsCollector, null, null, sourceObjects)
     val result = task.call()
     if (!result) {

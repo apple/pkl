@@ -68,7 +68,15 @@ data class JavaCodegenOptions(
   val nonNullAnnotation: String? = null,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+  
+  /**
+   * A mapping from Pkl module-derived package names and custom package names.
+   * 
+   * Can be used when the package name in the generated source code should be different from the
+   * package name derived from the Pkl module declaration .
+   * */
+  val packageMapping: Map<String, String> = emptyMap()
 )
 
 /** Entrypoint for the Java code generator API. */
@@ -151,7 +159,15 @@ class JavaCodeGenerator(
     }
 
   val javaFileName: String
-    get() = relativeOutputPathFor(schema.moduleName)
+    get() {
+      val (packageName, className) = mapModuleName(schema.moduleName)
+      val dirPath = packageName.replace('.', '/')
+      return if (dirPath.isEmpty()) {
+        "java/$className.java"
+      } else {
+        "java/$dirPath/$className.java"
+      }
+    }
 
   val javaFile: String
     get() {
@@ -183,9 +199,7 @@ class JavaCodeGenerator(
         moduleClass.addMethod(appendPropertyMethod().addModifiers(modifier).build())
       }
 
-      val moduleName = schema.moduleName
-      val index = moduleName.lastIndexOf(".")
-      val packageName = if (index == -1) "" else moduleName.substring(0, index)
+      val (packageName, _) = mapModuleName(schema.moduleName)
 
       return JavaFile.builder(packageName, moduleClass.build())
         .indent(codegenOptions.indent)
@@ -193,20 +207,7 @@ class JavaCodeGenerator(
         .toString()
     }
 
-  private fun relativeOutputPathFor(moduleName: String): String {
-    val moduleNameParts = moduleName.split(".")
-    val dirPath = moduleNameParts.dropLast(1).joinToString("/")
-    val fileName = moduleNameParts.last().replaceFirstChar { it.titlecaseChar() }
-    return if (dirPath.isEmpty()) {
-      "java/$fileName.java"
-    } else {
-      "java/$dirPath/$fileName.java"
-    }
-  }
-
-  @Suppress("NAME_SHADOWING")
   private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): TypeSpec.Builder {
-
     val isModuleClass = pClass == schema.moduleClass
     val javaPoetClassName = pClass.toJavaPoetName()
     val superclass =
@@ -687,9 +688,7 @@ class JavaCodeGenerator(
       .endControlFlow()
 
   private fun PClass.toJavaPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
-    val moduleClassName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val (packageName, moduleClassName) = mapModuleName(moduleName)
     return if (isModuleClass) {
       ClassName.get(packageName, moduleClassName)
     } else {
@@ -699,9 +698,7 @@ class JavaCodeGenerator(
 
   // generated type is a nested enum class
   private fun TypeAlias.toJavaPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
-    val moduleClassName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val (packageName, moduleClassName) = mapModuleName(moduleName)
     return ClassName.get(packageName, moduleClassName, simpleName)
   }
 
@@ -871,6 +868,15 @@ class JavaCodeGenerator(
         generateSequence("_$key") { "_$it" }.first { it !in map.keys }
       } else key
     }
+  }
+
+  private fun mapPackageName(name: String): String =
+    codegenOptions.packageMapping[name] ?: name
+  
+  private fun mapModuleName(name: String): kotlin.Pair<String, String> {
+    val packageName = mapPackageName(name.substringBeforeLast('.', ""))
+    val className = name.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
+    return packageName to className
   }
 }
 
