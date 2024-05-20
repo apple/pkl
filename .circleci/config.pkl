@@ -51,44 +51,6 @@ main {
   }
 }
 
-// TODO: remove me once policy allows these jobs without approval
-circleCi {
-  workflows {
-    ["release-branch"] {
-      jobs = new Listing<*Mapping<String, WorkflowJob>|String> {
-        new {
-          ["hold"] {
-            type = "approval"
-          }
-        }
-        new {
-          ["pr-approval/authenticate"] {
-            context = "pkl-pr-approval"
-          }
-        }
-        for (job in super.jobs) {
-          job |> requireApproval
-        }
-      }
-    }
-  }
-}
-
-// TODO: remove me once policy allows these jobs without approval
-local requireApproval = (it: String|Mapping<String, WorkflowJob>) ->
-  if (it is String)
-    new Mapping<String, WorkflowJob> {
-      [it] {
-        requires { "hold" }
-      }
-    }
-  else
-    (it) {
-      [it.keys.first] {
-        requires { "hold" }
-      }
-    }
-
 release {
   jobs {
     ...releaseJobs
