@@ -31,6 +31,7 @@ import org.junit.platform.engine.support.hierarchical.EngineExecutionContext
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine
 import org.junit.platform.engine.support.hierarchical.Node
 import org.junit.platform.engine.support.hierarchical.Node.DynamicTestExecutor
+import org.pkl.commons.toNormalizedPathString
 
 abstract class InputOutputTestEngine :
   HierarchicalTestEngine<InputOutputTestEngine.ExecutionContext>() {
@@ -106,7 +107,7 @@ abstract class InputOutputTestEngine :
   ): TestDescriptor {
     dirNode.inputDir.useDirectoryEntries { children ->
       for (child in children) {
-        val testPath = child.toString()
+        val testPath = child.toNormalizedPathString()
         val testName = child.fileName.toString()
         if (child.isRegularFile()) {
           if (

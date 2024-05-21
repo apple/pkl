@@ -221,7 +221,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
     val process = builder.start()
     return try {
       val (out, err) = listOf(process.inputStream, process.errorStream)
-        .map { it.reader().readText() }
+        .map { it.reader().readText().withUnixLineEndings() }
       val success = process.waitFor() == 0 && err.isBlank()
       success to (out + err)
         .stripFilePaths()
