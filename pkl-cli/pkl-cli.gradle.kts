@@ -289,6 +289,7 @@ val windowsExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class)
   configureExecutable(
     buildInfo.graalVmAmd64,
     layout.buildDirectory.file("executable/pkl-windows-amd64"),
+    listOf("-Dfile.encoding=UTF-8")
   )
 }
 

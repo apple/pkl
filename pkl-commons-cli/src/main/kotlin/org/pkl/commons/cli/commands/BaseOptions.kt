@@ -43,12 +43,12 @@ class BaseOptions : OptionGroup() {
       when (moduleName) {
         "-" -> VmUtils.REPL_TEXT_URI
         else ->
+          // Don't use `IoUtils.toUri` here becaus we need to normalize `\` paths to `/` on Windows.
           try {
+            if (IoUtils.isUriLike(moduleName)) URI(moduleName)
             // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
             // into `URI("C", null, "/foo/bar", null)`.
-            // Don't use `IoUtils.toUri` here because it doesn't normalize `\` paths to `/`.
-            if (IoUtils.isUriLike(moduleName)) URI(moduleName)
-            else if (IoUtils.isWindowsAbsolutePath(moduleName)) File(moduleName).toURI()
+            else if (IoUtils.isWindowsAbsolutePath(moduleName)) Path.of(moduleName).toUri()
             else URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null)
           } catch (e: URISyntaxException) {
             val message = buildString {
