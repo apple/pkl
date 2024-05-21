@@ -62,7 +62,7 @@ Except where noted otherwise, the rest of this page discusses the native executa
 [[homebrew]]
 === Homebrew
 
-Release versions can be installed with {uri-homebrew}[Homebrew].
+On macOS and Linux, release versions can be installed with {uri-homebrew}[Homebrew].
 
 ifdef::is-release-version[]
 To install Pkl, run:
@@ -114,7 +114,7 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (macOS, native)
@@ -148,7 +148,7 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (Linux, native)
@@ -170,7 +170,7 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (Linux, native)
@@ -180,15 +180,14 @@ NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
 
 === Windows Executable
 
-[source,shell]
+[source,PowerShell]
 [subs="+attributes"]
 ----
 Invoke-WebRequest '{uri-pkl-windows-download}' -OutFile pkl.exe
-chmod +x pkl.exe
 .\pkl.exe --version
 ----
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (Windows 11 10.0, native)

@@ -31,6 +31,7 @@ public final class Platform {
     var pklVersion = Release.current().version().toString();
     var osName = System.getProperty("os.name");
     if (osName.equals("Mac OS X")) osName = "macOS";
+    if (osName.contains("Windows")) osName = "Windows";
     var osVersion = System.getProperty("os.version");
     var architecture = System.getProperty("os.arch");
 

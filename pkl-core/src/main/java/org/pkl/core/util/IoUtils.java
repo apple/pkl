@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.pkl.core.PklBugException;
+import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.ModuleKey;
@@ -70,7 +71,7 @@ public final class IoUtils {
   }
 
   public static boolean isWindowsAbsolutePath(String str) {
-    if (!IoUtils.isWindows()) return false;
+    if (!isWindows()) return false;
     return windowsPathLike.matcher(str).matches();
   }
 
@@ -193,7 +194,7 @@ public final class IoUtils {
   }
 
   public static Boolean isWindows() {
-    return System.getProperty("os.name").contains("Windows");
+    return Platform.current().operatingSystem().name().equals("Windows");
   }
 
   public static String getName(String path) {
@@ -434,7 +435,7 @@ public final class IoUtils {
 
   // Windows relativize will fail if the two paths have different roots.
   public static Path relativize(Path path, Path base) {
-    if (IoUtils.isWindows()) {
+    if (isWindows()) {
       if (path.isAbsolute() && base.isAbsolute() && !path.getRoot().equals(base.getRoot())) {
         return path;
       }
@@ -657,7 +658,7 @@ public final class IoUtils {
   }
 
   public static boolean isReservedFilenameChar(char character) {
-    if (IoUtils.isWindows()) {
+    if (isWindows()) {
       return isReservedWindowsFilenameChar(character);
     }
     // posix; only NULL and `/` are reserved.
