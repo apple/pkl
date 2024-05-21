@@ -17,7 +17,7 @@ ifdef::is-release-version[]
 :uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
 :uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
 :uri-pkl-alpine-download: {github-releases}/pkl-alpine-linux-amd64
-:uri-pkl-windows-download: {github-releases}/pkl-windows-amd64
+:uri-pkl-windows-download: {github-releases}/pkl-windows-amd64.exe
 :uri-pkl-java-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-java/{pkl-artifact-version}/pkl-cli-java-{pkl-artifact-version}.jar
 endif::[]
 
@@ -191,7 +191,7 @@ chmod +x pkl.exe
 [source,shell]
 [subs="+attributes"]
 ----
-Pkl {pkl-version} (Linux, native)
+Pkl {pkl-version} (Windows 11 10.0, native)
 ----
 
 NOTE: We currently do not support the aarch64 architecture for Windows.
