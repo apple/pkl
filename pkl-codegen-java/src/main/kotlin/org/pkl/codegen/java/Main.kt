@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.java
 
+import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -108,6 +109,18 @@ class PklJavaCodegenCommand :
       )
       .flag()
 
+  private val packageMapping: Map<String, String> by
+    option(
+      names = arrayOf("-m", "--package-mapping"),
+      metavar = "<module_name=package_name>",
+      help = """
+        Replace the default package name of the generated Java classes (repeatable).
+        By default, the package name of generated classes is derived from the Pkl module name.
+        With this option, you can override the name for the given modules with custom names.
+      """.trimIndent()
+    )
+    .associate()
+
   override fun run() {
     val options =
       CliJavaCodeGeneratorOptions(
@@ -119,7 +132,8 @@ class PklJavaCodegenCommand :
         generateSpringBootConfig = generateSpringboot,
         paramsAnnotation = paramsAnnotation,
         nonNullAnnotation = nonNullAnnotation,
-        implementSerializable = implementSerializable
+        implementSerializable = implementSerializable,
+        packageMapping = packageMapping
       )
     CliJavaCodeGenerator(options).run()
   }

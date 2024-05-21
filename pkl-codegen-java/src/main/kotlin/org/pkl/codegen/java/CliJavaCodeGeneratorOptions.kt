@@ -57,34 +57,14 @@ data class CliJavaCodeGeneratorOptions(
   val implementSerializable: Boolean = false,
   
   /**
-   * A string defining a mapping of packages.
+   * A mapping of packages.
    * 
-   * When the user wants to have different Java package names, compared to default package names
-   * derived from Pkl module names, a package mapping can be defined. This is expected to be
-   * a string in the following format:
-   * ```none
-   * pkl.package.name1:java.package.name1; pkl.package.name2:java.package.name2; ...
-   * ```
-   * Whitespace around `:` and `;` characters is optional.
-   * 
-   * When this option is set, the mapping will be used to translate package names derived from
-   * module names to the specified package names.
+   * When you need to have Java package names different from the default package
+   * names derived from Pkl module names, you can define a package mapping, where the key
+   * is the original Pkl module name, and the value is its replacement.
    */
-  val packageMapping: String? = null
+  val packageMapping: Map<String, String> = emptyMap()
 ) {
-  private val parsedPackageMapping: Map<String, String> by lazy {
-    packageMapping?.let { m ->
-      val entries = m.split(";")
-      entries.associate { entry ->
-        val parts = entry.trim().split(":", limit = 2)
-        require(parts.size == 2) {
-          "Invalid package mapping: $packageMapping"
-        }
-        parts.first().trim() to parts.last().trim()
-      }
-    } ?: emptyMap()
-  }
-  
   fun toJavaCodegenOptions() =
     JavaCodegenOptions(
       indent,
@@ -94,6 +74,6 @@ data class CliJavaCodeGeneratorOptions(
       paramsAnnotation,
       nonNullAnnotation,
       implementSerializable,
-      parsedPackageMapping
+      packageMapping
     )
 }
