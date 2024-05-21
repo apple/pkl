@@ -71,10 +71,10 @@ based on version information from https://search.maven.org, https://plugins.grad
 
 == Remote JVM Debugging
 
-To enable remote JVM debugging when running Gradle tests, add the flag `-Djvmdebug=true`.
+To enable remote JVM debugging when running Gradle tasks (e.g. test), add the flag `-Djvmdebug=true`.
 This will listen on port 5005.
 
-Example: `./gradlew test --tests "*some pattern*" -Djvmdebug=true`
+Example: `./gradlew test -Djvmdebug=true`
 
 == Resources
 For automated build setup examples see our https://github.com/apple/pkl/blob/main/.circleci/[CircleCI] jobs like our https://github.com/apple/pkl/blob/main/.circleci/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.
