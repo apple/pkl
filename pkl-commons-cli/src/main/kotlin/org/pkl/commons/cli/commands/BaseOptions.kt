@@ -44,8 +44,12 @@ class BaseOptions : OptionGroup() {
         "-" -> VmUtils.REPL_TEXT_URI
         else ->
           try {
+            // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
+            // into `URI("C", null, "/foo/bar", null)`.
+            // Don't use `IoUtils.toUri` here because it doesn't normalize `\` paths to `/`.
             if (IoUtils.isUriLike(moduleName)) URI(moduleName)
-            else URI(null, null, Path.of(moduleName).toString(), null)
+            else if (IoUtils.isWindowsAbsolutePath(moduleName)) File(moduleName).toURI()
+            else URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null)
           } catch (e: URISyntaxException) {
             val message = buildString {
               append("Module URI `$moduleName` has invalid syntax (${e.reason}).")

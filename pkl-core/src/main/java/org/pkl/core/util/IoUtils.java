@@ -69,6 +69,11 @@ public final class IoUtils {
     return uriLike.matcher(str).matches();
   }
 
+  public static boolean isWindowsAbsolutePath(String str) {
+    if (!IoUtils.isWindows()) return false;
+    return windowsPathLike.matcher(str).matches();
+  }
+
   /**
    * Converts the given string to a {@link URI}. This method MUST be used for constructing module
    * and resource URIs. Unlike {@code new URI(str)}, it correctly escapes paths of relative URIs.
@@ -76,9 +81,6 @@ public final class IoUtils {
   public static URI toUri(String str) throws URISyntaxException {
     if (isUriLike(str)) {
       return new URI(str);
-    }
-    if (IoUtils.isWindows()) {
-      str = toNormalizedPathString(Path.of(str));
     }
     return new URI(null, null, str, null);
   }

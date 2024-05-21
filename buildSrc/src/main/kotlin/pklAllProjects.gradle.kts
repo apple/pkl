@@ -100,6 +100,18 @@ tasks.withType(Test::class).configureEach {
   }
   debugOptions {
     enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
+    @Suppress("UnstableApiUsage")
+    host = "*"
+    port = 5005
+    suspend = true
+    server = true
+  }
+}
+
+tasks.withType(JavaExec::class).configureEach {
+  debugOptions {
+    enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
+    @Suppress("UnstableApiUsage")
     host = "*"
     port = 5005
     suspend = true
