@@ -122,6 +122,8 @@ outputFormat: String?
 project: Project?
 
 /// Configuration of outgoing HTTP(s) requests.
+///
+/// Added in Pkl 0.26.0.
 http: Http?
 
 class ClientResourceReader {
