@@ -21,15 +21,15 @@ import org.pkl.lsp.type.TypeParameterBindings
 
 /** Caches non-local, i.e., externally accessible, members of a class. */
 class ClassMemberCache(
-  val methods: Map<String, ClassMethod>,
+  val methods: Map<String, PklClassMethod>,
   /** Property definitions */
-  val properties: Map<String, ClassProperty>,
+  val properties: Map<String, PklClassProperty>,
   /**
    * The leaf-most properties, may or may not have a type annotation.
    *
    * A child that overrides a parent without a type annotation is a "leaf property".
    */
-  val leafProperties: Map<String, ClassProperty>,
+  val leafProperties: Map<String, PklClassProperty>,
 
   // cache invalidation is hard (and I don't know how exactly it works in intellij).
   // let's play it safe and make a class cache depend on the class' enclosing module and its
@@ -66,10 +66,10 @@ class ClassMemberCache(
   }
 
   companion object {
-    fun create(clazz: Clazz): ClassMemberCache {
-      val properties = mutableMapOf<String, ClassProperty>()
-      val leafProperties = mutableMapOf<String, ClassProperty>()
-      val methods = mutableMapOf<String, ClassMethod>()
+    fun create(clazz: PklClass): ClassMemberCache {
+      val properties = mutableMapOf<String, PklClassProperty>()
+      val leafProperties = mutableMapOf<String, PklClassProperty>()
+      val methods = mutableMapOf<String, PklClassMethod>()
       val dependencies = mutableListOf<Any>(clazz)
 
       clazz.superclass?.let { superclass ->
@@ -94,12 +94,12 @@ class ClassMemberCache(
       if (body != null) {
         for (member in body.members) {
           when (member) {
-            is ClassMethod -> {
+            is PklClassMethod -> {
               if (!member.isLocal) {
                 member.name.let { methods[it] = member }
               }
             }
-            is ClassProperty -> {
+            is PklClassProperty -> {
               if (!member.isLocal) {
                 val name = member.name
                 // record [member] if it (re)defines a property;

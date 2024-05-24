@@ -17,6 +17,7 @@ package org.pkl.lsp.ast
 
 import org.pkl.core.parser.antlr.PklParser.QualifiedIdentifierContext
 import org.pkl.core.parser.antlr.PklParser.StringConstantContext
+import org.pkl.lsp.PklVisitor
 
 class QualifiedIdentifierImpl(
   override val parent: Node,
@@ -24,10 +25,18 @@ class QualifiedIdentifierImpl(
 ) : AbstractNode(parent, ctx), QualifiedIdentifier {
   override val identifiers: List<Terminal> by lazy { getChildren(Terminal::class)!! }
   override val fullName: String by lazy { identifiers.joinToString(".") { it.text } }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitQualifiedIdentifier(this)
+  }
 }
 
-class StringConstantImpl(override val parent: Node, override val ctx: StringConstantContext) :
-  AbstractNode(parent, ctx), StringConstant {
+class PklStringConstantImpl(override val parent: Node, override val ctx: StringConstantContext) :
+  AbstractNode(parent, ctx), PklStringConstant {
   override val value: String
     get() = TODO("Not yet implemented")
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitStringConstant(this)
+  }
 }

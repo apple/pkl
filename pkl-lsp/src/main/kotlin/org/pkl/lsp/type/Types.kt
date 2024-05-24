@@ -24,7 +24,7 @@ import org.pkl.lsp.unexpectedType
 sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
   companion object {
     fun alias(
-      ctx: TypeAlias,
+      ctx: PklTypeAlias,
       specifiedTypeArguments: List<Type> = listOf(),
       constraints: List<ConstraintExpr> = listOf()
     ): Type =
@@ -96,7 +96,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
     visitor: ResolveVisitor<*>
   ): Boolean
 
-  abstract fun resolveToDefinitions(base: PklBaseModule): List<Node>
+  abstract fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement>
 
   /** Tells whether this type is a (non-strict) subtype of [classType]. */
   abstract fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean
@@ -223,7 +223,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
 
     override fun isSubtypeOf(type: Type, base: PklBaseModule): Boolean = true
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf()
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf()
 
     // `unknown` is not considered a valid answer
     override fun hasCommonSubtypeWith(type: Type, base: PklBaseModule): Boolean = false
@@ -244,7 +244,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
     // constraints for bottom type aren't meaningful -> don't track them
     override fun withConstraints(constraints: List<ConstraintExpr>): Type = this
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf()
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf()
 
     override fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean = true
 
@@ -262,7 +262,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
     }
   }
 
-  class Variable(val ctx: TypeParameter, constraints: List<ConstraintExpr> = listOf()) :
+  class Variable(val ctx: PklTypeParameter, constraints: List<ConstraintExpr> = listOf()) :
     Type(constraints) {
 
     override fun withConstraints(constraints: List<ConstraintExpr>): Type =
@@ -275,7 +275,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       visitor: ResolveVisitor<*>
     ): Boolean = true
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf(ctx)
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf(ctx)
 
     override fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean =
       classType.classEquals(base.anyType)
@@ -342,7 +342,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       }
     }
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf(ctx)
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf(ctx)
 
     override fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean =
       base.moduleType.isSubtypeOf(classType, base)
@@ -362,6 +362,8 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       }
       return false
     }
+
+    fun supermodule(): Module? = ctx.supermodule?.let { module(it, it.shortDisplayName) }
 
     // assumes `!this.isSubtypeOf(type)`
     override fun hasCommonSubtypeWith(type: Type, base: PklBaseModule): Boolean =
@@ -385,12 +387,12 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
   }
 
   class Class(
-    val ctx: Clazz,
+    val ctx: PklClass,
     specifiedTypeArguments: List<Type> = listOf(),
     constraints: List<ConstraintExpr> = listOf(),
     // enables the illusion that pkl.base#Class and pkl.base#TypeAlias
     // have a type parameter even though they currently don't
-    private val typeParameters: List<TypeParameter> =
+    private val typeParameters: List<PklTypeParameter> =
       ctx.classHeader.typeParameterList?.typeParameters ?: listOf()
   ) : Type(constraints) {
     val typeArguments: List<Type> =
@@ -407,6 +409,15 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
     override fun withConstraints(constraints: List<ConstraintExpr>): Type =
       Class(ctx, typeArguments, constraints, typeParameters)
 
+    fun withTypeArguments(argument1: Type) =
+      Class(ctx, listOf(argument1), constraints, typeParameters)
+
+    fun withTypeArguments(argument1: Type, argument2: Type) =
+      Class(ctx, listOf(argument1, argument2), constraints, typeParameters)
+
+    fun withTypeArguments(arguments: List<Type>) =
+      Class(ctx, arguments, constraints, typeParameters)
+
     override fun visitMembers(
       isProperty: Boolean,
       allowClasses: Boolean,
@@ -417,13 +428,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       return true
     }
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf(ctx)
-
-    fun withTypeArguments(argument1: Type, argument2: Type) =
-      Class(ctx, listOf(argument1, argument2), constraints, typeParameters)
-
-    fun withTypeArguments(arguments: List<Type>) =
-      Class(ctx, arguments, constraints, typeParameters)
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf(ctx)
 
     override fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean {
       // optimization
@@ -473,7 +478,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       }
 
     val isNullType: Boolean by lazy { ctx.name == "Null" && ctx.isInPklBaseModule }
-    
+
     val isFunctionType: Boolean by lazy {
       val name = ctx.name
       (name.length == 8 || name.length == 9 && name.last() in '0'..'5') &&
@@ -577,20 +582,20 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
   // forms of equality.
   class Alias
   private constructor(
-    val ctx: TypeAlias,
+    val ctx: PklTypeAlias,
     specifiedTypeArguments: List<Type>,
     constraints: List<ConstraintExpr>
   ) : Type(constraints) {
     companion object {
       /** Use [Type.alias] instead except in [PklBaseModule]. */
       internal fun unchecked(
-        ctx: TypeAlias,
+        ctx: PklTypeAlias,
         specifiedTypeArguments: List<Type>,
         constraints: List<ConstraintExpr>
       ): Alias = Alias(ctx, specifiedTypeArguments, constraints)
     }
 
-    private val typeParameters: List<TypeParameter>
+    private val typeParameters: List<PklTypeParameter>
       get() = ctx.typeAliasHeader.typeParameterList?.typeParameters ?: listOf()
 
     val typeArguments: List<Type> =
@@ -620,7 +625,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       return true
     }
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf(ctx)
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> = listOf(ctx)
 
     fun aliasedType(base: PklBaseModule): Type = ctx.type.toType(base, bindings)
 
@@ -646,7 +651,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
     override fun unaliased(base: PklBaseModule): Type {
       var type: Type = this
       // guard against (invalid) cyclic type alias definition
-      val seen = IdentityHashMap<TypeAlias, TypeAlias>()
+      val seen = IdentityHashMap<PklTypeAlias, PklTypeAlias>()
       while (type is Alias) {
         val typeCtx = type.ctx
         // returning `type` here could cause infinite recursion in caller
@@ -722,17 +727,15 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
 
     override fun isUnresolvedMemberFatal(base: PklBaseModule): Boolean = true
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> = listOf(base.stringType.ctx)
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> =
+      listOf(base.stringType.ctx)
 
     override fun hasDefaultImpl(base: PklBaseModule): Boolean = true
 
     override fun render(builder: Appendable, nameRenderer: TypeNameRenderer) = render(builder, "\"")
 
     fun render(builder: Appendable, startDelimiter: String) {
-      builder
-        .append(startDelimiter)
-        .append(value)
-        .append(startDelimiter.reversed())
+      builder.append(startDelimiter).append(value).append(startDelimiter.reversed())
     }
 
     fun render(startDelimiter: String) = buildString { render(this, startDelimiter) }
@@ -816,7 +819,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
         }
       } else null
 
-    override fun resolveToDefinitions(base: PklBaseModule): List<Node> =
+    override fun resolveToDefinitions(base: PklBaseModule): List<PklNavigableElement> =
       when {
         isUnionOfStringLiterals -> listOf(base.stringType.ctx)
         else -> leftType.resolveToDefinitions(base) + rightType.resolveToDefinitions(base)
@@ -871,40 +874,40 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
   }
 }
 
-typealias TypeParameterBindings = Map<TypeParameter, Type>
+typealias TypeParameterBindings = Map<PklTypeParameter, Type>
 
 fun PklType?.toType(
   base: PklBaseModule,
-  bindings: Map<TypeParameter, Type>,
+  bindings: Map<PklTypeParameter, Type>,
   preserveUnboundTypeVars: Boolean = false
 ): Type =
   when (this) {
     null -> Type.Unknown
-    is DeclaredPklType -> {
+    is PklDeclaredType -> {
       val simpleName = name.simpleTypeName
       when (val resolved = simpleName.resolve()) {
         null -> Type.Unknown
         is PklModule -> Type.module(resolved, simpleName.identifier!!.text)
-        is Clazz -> {
+        is PklClass -> {
           val typeArguments = typeArgumentList?.types ?: listOf()
           Type.Class(resolved, typeArguments.toTypes(base, bindings, preserveUnboundTypeVars))
         }
-        is TypeAlias -> {
+        is PklTypeAlias -> {
           val typeArguments = typeArgumentList?.types ?: listOf()
           Type.alias(resolved, typeArguments.toTypes(base, bindings, preserveUnboundTypeVars))
         }
-        is TypeParameter -> bindings[resolved]
+        is PklTypeParameter -> bindings[resolved]
             ?: if (preserveUnboundTypeVars) Type.Variable(resolved) else Type.Unknown
         else -> unexpectedType(resolved)
       }
     }
-    is UnionPklType ->
+    is PklUnionType ->
       Type.union(
         leftType.toType(base, bindings, preserveUnboundTypeVars),
         rightType.toType(base, bindings, preserveUnboundTypeVars),
         base
       )
-    is FunctionPklType -> {
+    is PklFunctionType -> {
       val parameterTypes = parameterList.toTypes(base, bindings, preserveUnboundTypeVars)
       val returnType = returnType.toType(base, bindings, preserveUnboundTypeVars)
       when (parameterTypes.size) {
@@ -920,9 +923,9 @@ fun PklType?.toType(
           ) // approximation (invalid Pkl code)
       }
     }
-    is ParenthesizedPklType -> type.toType(base, bindings, preserveUnboundTypeVars)
-    is DefaultUnionPklType -> type.toType(base, bindings, preserveUnboundTypeVars)
-    is ConstrainedPklType -> {
+    is PklParenthesizedType -> type.toType(base, bindings, preserveUnboundTypeVars)
+    is PklDefaultUnionType -> type.toType(base, bindings, preserveUnboundTypeVars)
+    is PklConstrainedType -> {
       //      val project = base.project
       //      val cacheManager = CachedValuesManager.getManager(project)
       //      val psiManager = PsiManager.getInstance(project)
@@ -936,22 +939,22 @@ fun PklType?.toType(
       //      type.toType(base, bindings, preserveUnboundTypeVars).withConstraints(constraintExprs)
       TODO("not implemented")
     }
-    is NullablePklType -> type.toType(base, bindings, preserveUnboundTypeVars).nullable(base)
-    is UnknownPklType -> Type.Unknown
-    is NothingPklType -> Type.Nothing
-    is ModulePklType -> {
+    is PklNullableType -> type.toType(base, bindings, preserveUnboundTypeVars).nullable(base)
+    is PklUnknownType -> Type.Unknown
+    is PklNothingType -> Type.Nothing
+    is PklModuleType -> {
       // TODO: for `open` modules, `module` is a self-type
       enclosingModule?.let { Type.module(it, "module") } ?: base.moduleType
     }
-    is StringLiteralPklType -> stringConstant.escapedText()?.let { Type.StringLiteral(it) }
+    is PklStringLiteralType -> stringConstant.escapedText()?.let { Type.StringLiteral(it) }
         ?: Type.Unknown
-    is TypeParameter -> bindings[this]
+    is PklTypeParameter -> bindings[this]
         ?: if (preserveUnboundTypeVars) Type.Variable(this) else Type.Unknown
     else -> unexpectedType(this)
   }
 
 fun List<PklType>.toTypes(
   base: PklBaseModule,
-  bindings: Map<TypeParameter, Type>,
+  bindings: Map<PklTypeParameter, Type>,
   preserveTypeVariables: Boolean = false
 ): List<Type> = map { it.toType(base, bindings, preserveTypeVariables) }

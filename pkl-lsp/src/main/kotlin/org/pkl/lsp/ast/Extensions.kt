@@ -17,11 +17,14 @@ package org.pkl.lsp.ast
 
 import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.type.Type
+import org.pkl.lsp.type.TypeParameterBindings
+import org.pkl.lsp.type.computeResolvedImportType
+import org.pkl.lsp.unexpectedType
 
-val Clazz.supertype: PklType?
+val PklClass.supertype: PklType?
   get() = classHeader.extends
 
-val Clazz.superclass: Clazz?
+val PklClass.superclass: PklClass?
   get() {
     // TODO
     //    return when (val st = supertype) {
@@ -41,11 +44,11 @@ val Clazz.superclass: Clazz?
 // Ideally, [Clazz.superclass] would cover this case,
 // but we don't have a common abstraction for Clazz and PklModule(Class),
 // and it seems challenging to introduce one.
-val Clazz.supermodule: PklModule?
+val PklClass.supermodule: PklModule?
   get() {
     return when (val st = supertype) {
-      is DeclaredPklType -> st.name.resolve() as? PklModule?
-      is ModulePklType -> enclosingModule
+      is PklDeclaredType -> st.name.resolve() as? PklModule?
+      is PklModuleType -> enclosingModule
       else -> null
     }
   }
@@ -55,7 +58,7 @@ fun TypeName.resolve(): Node? = TODO("not implemented")
 
 fun SimpleTypeName.resolve(): Node? = TODO("not implemented")
 
-fun Clazz.isSubclassOf(other: Clazz): Boolean {
+fun PklClass.isSubclassOf(other: PklClass): Boolean {
   // optimization
   if (this === other) return true
 
@@ -63,7 +66,7 @@ fun Clazz.isSubclassOf(other: Clazz): Boolean {
   // TODO: check if this works
   if (!other.isAbstractOrOpen) return this == other
 
-  var clazz: Clazz? = this
+  var clazz: PklClass? = this
   while (clazz != null) {
     // TODO: check if this works
     if (clazz == other) return true
@@ -75,7 +78,7 @@ fun Clazz.isSubclassOf(other: Clazz): Boolean {
   return false
 }
 
-fun Clazz.isSubclassOf(other: PklModule): Boolean {
+fun PklClass.isSubclassOf(other: PklModule): Boolean {
   // optimization
   if (!other.isAbstractOrOpen) return false
 
@@ -94,23 +97,64 @@ fun Clazz.isSubclassOf(other: PklModule): Boolean {
   return false
 }
 
-// TODO: actually escape the text
-fun StringConstant.escapedText(): String? = this.value
+fun PklStringConstant.escapedText(): String? = getEscapedText()
 
-fun TypeAlias.isRecursive(seen: MutableSet<TypeAlias>): Boolean =
+fun PklSingleLineStringLiteral.escapedText(): String? =
+  parts.mapNotNull { it.getEscapedText() }.joinToString("")
+
+fun PklMultiLineStringLiteral.escapedText(): String? =
+  parts.mapNotNull { it.getEscapedText() }.joinToString("")
+
+private fun Node.getEscapedText(): String? = buildString {
+  for (terminal in terminals) {
+    when (terminal.type) {
+      TokenType.SLCharacters,
+      TokenType.MLCharacters -> append(terminal.text)
+      TokenType.SLCharacterEscape,
+      TokenType.MLCharacterEscape -> {
+        val text = terminal.text
+        when (text[text.lastIndex]) {
+          'n' -> append('\n')
+          'r' -> append('\r')
+          't' -> append('\t')
+          '\\' -> append('\\')
+          '"' -> append('"')
+          else -> throw AssertionError("Unknown char escape: $text")
+        }
+      }
+      TokenType.SLUnicodeEscape,
+      TokenType.MLUnicodeEscape -> {
+        val text = terminal.text
+        val index = text.indexOf('{') + 1
+        if (index != -1) {
+          val hexString = text.substring(index, text.length - 1)
+          try {
+            append(Character.toChars(Integer.parseInt(hexString, 16)))
+          } catch (ignored: NumberFormatException) {} catch (ignored: IllegalArgumentException) {}
+        }
+      }
+      TokenType.MLNewline -> append('\n')
+      else ->
+        // interpolated or invalid string -> bail out
+        return null
+    }
+  }
+}
+
+fun PklTypeAlias.isRecursive(seen: MutableSet<PklTypeAlias>): Boolean =
   !seen.add(this) || type.isRecursive(seen)
 
-private fun PklType?.isRecursive(seen: MutableSet<TypeAlias>): Boolean =
+private fun PklType?.isRecursive(seen: MutableSet<PklTypeAlias>): Boolean =
   when (this) {
-    is DeclaredPklType -> {
+    is PklDeclaredType -> {
       val resolved = name.resolve()
-      resolved is TypeAlias && resolved.isRecursive(seen)
+      resolved is PklTypeAlias && resolved.isRecursive(seen)
     }
-    is NullablePklType -> type.isRecursive(seen)
-    is DefaultUnionPklType -> type.isRecursive(seen)
-    is UnionPklType -> leftType.isRecursive(seen) || rightType.isRecursive(seen)
-    is ConstrainedPklType -> type.isRecursive(seen)
-    is ParenthesizedPklType -> type.isRecursive(seen)
+    is PklNullableType -> type.isRecursive(seen)
+    is PklDefaultUnionType -> type.isRecursive(seen)
+    is PklUnionType -> leftType.isRecursive(seen) || rightType.isRecursive(seen)
+    is PklConstrainedType -> type.isRecursive(seen)
+    is PklParenthesizedType -> type.isRecursive(seen)
     else -> false
   }
 
@@ -142,5 +186,82 @@ object DefaultTypeNameRenderer : TypeNameRenderer {
 
   override fun render(type: Type.Module, appendable: Appendable) {
     appendable.append(type.referenceName)
+  }
+}
+
+val PklModuleMember.owner: PklTypeDefOrModule?
+  get() = parentOfTypes(PklClass::class, PklModule::class)
+
+val PklMethod.isOverridable: Boolean
+  get() =
+    when {
+      isLocal -> false
+      isAbstract -> true
+      this is PklObjectMethod -> false
+      this is PklClassMethod -> owner?.isAbstractOrOpen ?: false
+      else -> unexpectedType(this)
+    }
+
+inline fun <reified T : Node> Node.parentOfType(): T? {
+  return parentOfTypes(T::class)
+}
+
+fun PklImportBase.resolve(): ModuleResolutionResult =
+  if (isGlob) GlobModuleResolutionResult(moduleUri?.resolveGlob() ?: emptyList())
+  else SimpleModuleResolutionResult(moduleUri?.resolve())
+
+fun PklModuleUri.resolveGlob(): List<PklModule> = TODO("implement") // resolveModuleUriGlob(this)
+
+fun PklModuleUri.resolve(): PklModule? = TODO("implement")
+
+sealed class ModuleResolutionResult {
+  abstract fun computeResolvedImportType(
+    base: PklBaseModule,
+    bindings: TypeParameterBindings,
+    preserveUnboundedVars: Boolean
+  ): Type
+}
+
+class SimpleModuleResolutionResult(val resolved: PklModule?) : ModuleResolutionResult() {
+  override fun computeResolvedImportType(
+    base: PklBaseModule,
+    bindings: TypeParameterBindings,
+    preserveUnboundedVars: Boolean
+  ): Type {
+    return resolved.computeResolvedImportType(base, bindings, preserveUnboundedVars)
+  }
+}
+
+class GlobModuleResolutionResult(val resolved: List<PklModule>) : ModuleResolutionResult() {
+  override fun computeResolvedImportType(
+    base: PklBaseModule,
+    bindings: TypeParameterBindings,
+    preserveUnboundedVars: Boolean
+  ): Type {
+    if (resolved.isEmpty())
+      return base.mappingType.withTypeArguments(base.stringType, base.moduleType)
+    val allTypes =
+      resolved.map {
+        it.computeResolvedImportType(base, bindings, preserveUnboundedVars) as Type.Module
+      }
+    val firstType = allTypes.first()
+    val unifiedType =
+      allTypes.drop(1).fold<Type.Module, Type>(firstType) { acc, type ->
+        val currentModule = acc as? Type.Module ?: return@fold acc
+        inferCommonType(base, currentModule, type)
+      }
+    return base.mappingType.withTypeArguments(base.stringType, unifiedType)
+  }
+
+  private fun inferCommonType(base: PklBaseModule, modA: Type.Module, modB: Type.Module): Type {
+    return when {
+      modA.isSubtypeOf(modB, base) -> modB
+      modB.isSubtypeOf(modA, base) -> modA
+      else -> {
+        val superModA = modA.supermodule() ?: return base.moduleType
+        val superModB = modB.supermodule() ?: return base.moduleType
+        inferCommonType(base, superModA, superModB)
+      }
+    }
   }
 }

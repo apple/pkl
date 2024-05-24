@@ -23,18 +23,19 @@ import org.pkl.lsp.type.Type
 class PklBaseModule private constructor() {
 
   private val baseModule: PklModule = Stdlib.baseModule()
+  val ctx: PklModule = baseModule
 
   val types: Map<String, Type>
-  val methods: Map<String, ClassMethod>
+  val methods: Map<String, PklClassMethod>
 
   init {
 
     val types = mutableMapOf<String, Type>()
-    val methods = mutableMapOf<String, ClassMethod>()
+    val methods = mutableMapOf<String, PklClassMethod>()
 
     for (member in baseModule.members) {
       when (member) {
-        is Clazz ->
+        is PklClass ->
           when (val className = member.name) {
             // treat pkl.base#Class and pkl.base#TypeAlias as generic types even if not defined as
             // such in stdlib
@@ -48,7 +49,7 @@ class PklBaseModule private constructor() {
           // else -> types[className] = Type.Class(member)
           }
         // is TypeAlias -> types[member.name] = Type.Alias.unchecked(member, listOf(), listOf())
-        is ClassMethod -> methods[member.name] = member
+        is PklClassMethod -> methods[member.name] = member
         else -> {}
       }
     }
@@ -60,11 +61,11 @@ class PklBaseModule private constructor() {
   val pklVersion: Version
     get() = Release.current().version()
 
-  val listConstructor: ClassMethod = method("List")
-  val setConstructor: ClassMethod = method("Set")
-  val mapConstructor: ClassMethod = method("Map")
+  val listConstructor: PklClassMethod = method("List")
+  val setConstructor: PklClassMethod = method("Set")
+  val mapConstructor: PklClassMethod = method("Map")
 
-  val regexConstructor: ClassMethod = method("Regex")
+  val regexConstructor: PklClassMethod = method("Regex")
 
   val anyType: Type.Class = classType("Any")
   val nullType: Type.Class = classType("Null")
@@ -108,7 +109,217 @@ class PklBaseModule private constructor() {
 
   val comparableType: Type = aliasType("Comparable")
 
-  private fun method(name: String): ClassMethod =
+  val iterableType: Type by lazy {
+    Type.union(collectionType, mapType, dynamicType, listingType, mappingType, intSeqType, this)
+  }
+
+  fun spreadType(enclosingObjectClassType: Type.Class): Type {
+    return when {
+      enclosingObjectClassType.classEquals(listingType) -> {
+        val elemType = enclosingObjectClassType.typeArguments[0]
+        if (elemType.isSubtypeOf(intType, this))
+          Type.union(
+            collectionType.withTypeArguments(elemType),
+            listingType.withTypeArguments(elemType),
+            dynamicType,
+            intSeqType,
+            this
+          )
+        else
+          Type.union(
+            collectionType.withTypeArguments(elemType),
+            listingType.withTypeArguments(elemType),
+            dynamicType,
+            this
+          )
+      }
+      enclosingObjectClassType.classEquals(mappingType) -> {
+        val keyType = enclosingObjectClassType.typeArguments[0]
+        val elemType = enclosingObjectClassType.typeArguments[1]
+        Type.union(
+          mapType.withTypeArguments(keyType, elemType),
+          mappingType.withTypeArguments(keyType, elemType),
+          dynamicType,
+          this
+        )
+      }
+      enclosingObjectClassType.classEquals(dynamicType) -> iterableType
+      // any other resolvable `Type.Class` is a Typed, which can only receive spreads from dynamics.
+      else -> dynamicType
+    }
+  }
+
+  val additiveOperandType: Type by lazy {
+    Type.union(stringType, numberType, durationType, dataSizeType, collectionType, mapType, this)
+  }
+
+  val multiplicativeOperandType: Type by lazy {
+    Type.union(numberType, durationType, dataSizeType, this)
+  }
+
+  val subscriptableType: Type by lazy {
+    Type.union(stringType, collectionType, mapType, listingType, mappingType, dynamicType, this)
+  }
+
+  private val intPsiCache by lazy { intType.ctx.cache }
+
+  private val floatPsiCache by lazy { floatType.ctx.cache }
+
+  val booleanXorMethod: PklClassMethod by lazy { booleanType.ctx.cache.methods.getValue("xor") }
+  val booleanImpliesMethod: PklClassMethod by lazy {
+    booleanType.ctx.cache.methods.getValue("implies")
+  }
+
+  val intIsPositiveProperty: PklClassProperty by lazy {
+    intPsiCache.properties.getValue("isPositive")
+  }
+  val intIsNonZeroProperty: PklClassProperty by lazy {
+    intPsiCache.properties.getValue("isNonZero")
+  }
+  val intIsOddProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("isOdd") }
+  val intIsEvenProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("isEven") }
+  val intNsProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("ns") }
+  val intUsProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("us") }
+  val intMsProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("ms") }
+  val intSProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("s") }
+  val intMinProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("min") }
+  val intHProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("h") }
+  val intDProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("d") }
+  val intBProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("b") }
+  val intKbProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("kb") }
+  val intMbProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("mb") }
+  val intGbProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("gb") }
+  val intTbProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("tb") }
+  val intPbProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("pb") }
+  val intKibProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("kib") }
+  val intMibProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("mib") }
+  val intGibProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("gib") }
+  val intTibProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("tib") }
+  val intPibProperty: PklClassProperty by lazy { intPsiCache.properties.getValue("pib") }
+  val intIsBetweenMethod: PklClassMethod by lazy { intPsiCache.methods.getValue("isBetween") }
+
+  val floatIsPositiveProperty: PklClassProperty by lazy {
+    floatPsiCache.properties.getValue("isPositive")
+  }
+  val floatIsNonZeroProperty: PklClassProperty by lazy {
+    floatPsiCache.properties.getValue("isNonZero")
+  }
+  val floatIsFiniteProperty: PklClassProperty by lazy {
+    floatPsiCache.properties.getValue("isFinite")
+  }
+  val floatIsInfiniteProperty: PklClassProperty by lazy {
+    floatPsiCache.properties.getValue("isInfinite")
+  }
+  val floatIsNaNProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("isNaN") }
+  val floatNsProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("ns") }
+  val floatUsProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("us") }
+  val floatMsProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("ms") }
+  val floatSProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("s") }
+  val floatMinProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("min") }
+  val floatHProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("h") }
+  val floatDProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("d") }
+  val floatBProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("b") }
+  val floatKbProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("kb") }
+  val floatMbProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("mb") }
+  val floatGbProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("gb") }
+  val floatTbProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("tb") }
+  val floatPbProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("pb") }
+  val floatKibProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("kib") }
+  val floatMibProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("mib") }
+  val floatGibProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("gib") }
+  val floatTibProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("tib") }
+  val floatPibProperty: PklClassProperty by lazy { floatPsiCache.properties.getValue("pib") }
+  val floatIsBetweenMethod: PklClassMethod by lazy { floatPsiCache.methods.getValue("isBetween") }
+
+  val durationIsBetweenMethod: PklClassMethod by lazy {
+    durationType.ctx.cache.methods.getValue("isBetween")
+  }
+  val durationIsPositiveProperty: PklClassProperty by lazy {
+    durationType.ctx.cache.properties.getValue("isPositive")
+  }
+
+  val dataSizeIsPositiveProperty: PklClassProperty by lazy {
+    dataSizeType.ctx.cache.properties.getValue("isPositive")
+  }
+  val dataSizeIsBinaryUnitProperty: PklClassProperty by lazy {
+    dataSizeType.ctx.cache.properties.getValue("isBinaryUnit")
+  }
+  val dataSizeIsDecimalUnitProperty: PklClassProperty by lazy {
+    dataSizeType.ctx.cache.properties.getValue("isDecimalUnit")
+  }
+  val dataSizeIsBetweenMethod: PklClassMethod by lazy {
+    dataSizeType.ctx.cache.methods.getValue("isBetween")
+  }
+
+  val stringIsEmptyProperty: PklClassProperty by lazy {
+    stringType.ctx.cache.properties.getValue("isEmpty")
+  }
+  val stringIsRegexProperty: PklClassProperty by lazy {
+    stringType.ctx.cache.properties.getValue("isRegex")
+  }
+  val stringLengthProperty: PklClassProperty by lazy {
+    stringType.ctx.cache.properties.getValue("length")
+  }
+  val stringMatchesMethod: PklClassMethod by lazy {
+    stringType.ctx.cache.methods.getValue("matches")
+  }
+  val stringContainsMethod: PklClassMethod by lazy {
+    stringType.ctx.cache.methods.getValue("contains")
+  }
+  val stringStartsWithMethod: PklClassMethod by lazy {
+    stringType.ctx.cache.methods.getValue("startsWith")
+  }
+  val stringEndsWithMethod: PklClassMethod by lazy {
+    stringType.ctx.cache.methods.getValue("endsWith")
+  }
+
+  val listIsDistinctProperty: PklClassProperty? by lazy {
+    listType.ctx.cache.properties["isDistinct"]
+  }
+  val listIsDistinctByMethod: PklClassMethod? by lazy { listType.ctx.cache.methods["isDistinctBy"] }
+  val listIsEmptyProperty: PklClassProperty by lazy {
+    listType.ctx.cache.properties.getValue("isEmpty")
+  }
+  val listFoldMethod: PklClassMethod? by lazy { listType.ctx.cache.methods["fold"] }
+  val listFoldIndexedMethod: PklClassMethod? by lazy { listType.ctx.cache.methods["foldIndexed"] }
+  val listJoinMethod: PklClassMethod by lazy { listType.ctx.cache.methods.getValue("join") }
+  val listLengthProperty: PklClassProperty by lazy {
+    listType.ctx.cache.properties.getValue("length")
+  }
+
+  val listingDefaultProperty: PklClassProperty by lazy {
+    listingType.ctx.cache.properties.getValue("default")
+  }
+  val listingToListMethod: PklClassMethod by lazy {
+    listingType.ctx.cache.methods.getValue("toList")
+  }
+
+  val setIsEmptyProperty: PklClassProperty by lazy {
+    setType.ctx.cache.properties.getValue("isEmpty")
+  }
+  val setLengthProperty: PklClassProperty by lazy {
+    setType.ctx.cache.properties.getValue("length")
+  }
+
+  val mapContainsKeyMethod: PklClassMethod by lazy {
+    mapType.ctx.cache.methods.getValue("containsKey")
+  }
+  val mapFoldMethod: PklClassMethod? by lazy { mapType.ctx.cache.methods["fold"] }
+  val mapGetOrNullMethod: PklClassMethod by lazy { mapType.ctx.cache.methods.getValue("getOrNull") }
+  val mapIsEmptyProperty: PklClassProperty by lazy {
+    mapType.ctx.cache.properties.getValue("isEmpty")
+  }
+  val mapKeysProperty: PklClassProperty by lazy { mapType.ctx.cache.properties.getValue("keys") }
+  val mapLengthProperty: PklClassProperty by lazy {
+    mapType.ctx.cache.properties.getValue("length")
+  }
+
+  val mappingDefaultProperty: PklClassProperty by lazy {
+    mappingType.ctx.cache.properties.getValue("default")
+  }
+  val mappingToMapMethod: PklClassMethod by lazy { mappingType.ctx.cache.methods.getValue("toMap") }
+
+  private fun method(name: String): PklClassMethod =
     methods[name]
     // The only known case where a non-optional pkl.base method or class can legitimately be missing
     // is when editing pkl.base in the Pkl project (e.g., pkl.base may not fully parse while being
@@ -117,22 +328,15 @@ class PklBaseModule private constructor() {
     // pkl.base.
     // Since resolution and (to some extent) cause are unknown, throw an error (with some extra
     // info) for now.
-      ?: throw AssertionError(
-        "Cannot find stdlib method `base.$name`."
-      )
+    ?: throw AssertionError("Cannot find stdlib method `base.$name`.")
 
   private fun classType(name: String): Type.Class =
     types[name] as Type.Class?
     // see comment for `method()`
-      ?: throw AssertionError(
-        "Cannot find stdlib class `base.$name`."
-      )
+    ?: throw AssertionError("Cannot find stdlib class `base.$name`.")
 
   private fun aliasType(name: String): Type.Alias =
-    types[name] as Type.Alias?
-      ?: throw AssertionError(
-        "Cannot find stdlib alias `base.$name`."
-      )
+    types[name] as Type.Alias? ?: throw AssertionError("Cannot find stdlib alias `base.$name`.")
 
   companion object {
     val instance: PklBaseModule by lazy { PklBaseModule() }

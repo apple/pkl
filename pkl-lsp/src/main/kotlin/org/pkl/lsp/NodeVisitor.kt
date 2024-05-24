@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.lsp.ast
+package org.pkl.lsp
 
-import org.pkl.core.parser.Parser
+import org.pkl.lsp.ast.Node
 
-object PklNodeFactory {
-
-  @Suppress("MemberVisibilityCanBePrivate")
-  fun createModule(text: String): PklModule {
-    return PklModuleImpl(parser.parseModule(text))
+abstract class NodeVisitor {
+  companion object {
+    val EMPTY_VISITOR: NodeVisitor = object : NodeVisitor() {}
   }
 
-  fun createTypeParameter(name: String): PklTypeParameter {
-    val module = createModule("class X<$name>")
-    return module.classes[0].classHeader.typeParameterList!!.typeParameters[0]
-  }
-
-  private val parser: Parser = Parser()
+  fun visitInnerElement(element: Node) {}
 }

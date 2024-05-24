@@ -17,13 +17,17 @@ package org.pkl.lsp.ast
 
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.pkl.core.parser.antlr.PklParser
+import org.pkl.lsp.PklVisitor
 
 class TerminalImpl(
   override val parent: Node,
   override val ctx: TerminalNode,
   override val type: TokenType
 ) : AbstractNode(parent, ctx), Terminal {
-  override val text: String = ctx.text
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitTerminal(this)
+  }
 }
 
 val Terminal.isModifier: Boolean

@@ -24,15 +24,15 @@ class ModuleMemberCache
 private constructor(
   val module: PklModule,
   val types: Map<String, TypeDef>,
-  val methods: Map<String, ClassMethod>,
+  val methods: Map<String, PklClassMethod>,
   /** Property definitions */
-  val properties: Map<String, ClassProperty>,
+  val properties: Map<String, PklClassProperty>,
   /**
    * The leaf-most module property.
    *
    * A child that overrides a parent without a type annotation is a "leaf property".
    */
-  val leafProperties: Map<String, ClassProperty>,
+  val leafProperties: Map<String, PklClassProperty>,
   val typeDefsAndProperties: Map<String, TypeDefOrProperty>,
   val dependencies: List<Any>
 ) {
@@ -120,9 +120,9 @@ private constructor(
       }
 
       val types = mutableMapOf<String, TypeDef>()
-      val methods = mutableMapOf<String, ClassMethod>()
-      val properties = mutableMapOf<String, ClassProperty>()
-      val leafProperties = mutableMapOf<String, ClassProperty>()
+      val methods = mutableMapOf<String, PklClassMethod>()
+      val properties = mutableMapOf<String, PklClassProperty>()
+      val leafProperties = mutableMapOf<String, PklClassProperty>()
       val typesAndProperties = mutableMapOf<String, TypeDefOrProperty>()
       val dependencies = mutableListOf<Any>(module)
 
@@ -149,21 +149,21 @@ private constructor(
         if (member.isLocal) continue
 
         when (member) {
-          is Clazz -> {
+          is PklClass -> {
             val name = member.name
             types[name] = member
             typesAndProperties[name] = member
           }
-          is TypeAlias -> {
+          is PklTypeAlias -> {
             val name = member.name
             types[name] = member
             typesAndProperties[name] = member
           }
-          is ClassMethod -> {
+          is PklClassMethod -> {
             val name = member.name
             methods[name] = member
           }
-          is ClassProperty -> {
+          is PklClassProperty -> {
             val name = member.name
             // record [member] if it (re)defines a property;
             // don't record [member] if it amends/overrides a property defined in a supermodule.

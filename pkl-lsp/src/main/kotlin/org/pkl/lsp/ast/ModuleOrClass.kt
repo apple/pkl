@@ -15,9 +15,11 @@
  */
 package org.pkl.lsp.ast
 
+import org.antlr.v4.runtime.tree.ParseTree
 import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.parser.antlr.PklParser.ModuleHeaderContext
 import org.pkl.lsp.LSPUtil.firstInstanceOf
+import org.pkl.lsp.PklVisitor
 
 class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
   AbstractNode(null, ctx), PklModule {
@@ -28,13 +30,15 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
 
   override val declaration: ModuleDeclaration? by lazy { getChild(ModuleDeclarationImpl::class) }
 
-  override val members: List<ModuleMember> by lazy { children.filterIsInstance<ModuleMember>() }
+  override val members: List<PklModuleMember> by lazy {
+    children.filterIsInstance<PklModuleMember>()
+  }
 
-  override val imports: List<ImportClause>? by lazy { getChildren(ImportClauseImpl::class) }
+  override val imports: List<PklImport>? by lazy { getChildren(PklImportImpl::class) }
 
-  override val typeAliases: List<TypeAlias> by lazy { children.filterIsInstance<TypeAlias>() }
+  override val typeAliases: List<PklTypeAlias> by lazy { children.filterIsInstance<PklTypeAlias>() }
 
-  override val classes: List<Clazz> by lazy { children.filterIsInstance<Clazz>() }
+  override val classes: List<PklClass> by lazy { children.filterIsInstance<PklClass>() }
 
   // TODO: resolve the super module
   override val supermodule: PklModule? by lazy { null }
@@ -42,15 +46,29 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
   override val cache: ModuleMemberCache by lazy { ModuleMemberCache.create(this) }
 
   override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
+
+  // TODO: fetch the name of the module from uri
+  override val shortDisplayName: String by lazy {
+    declaration?.moduleHeader?.shortDisplayName
+      ?: throw RuntimeException("could not fetch uri name")
+  }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModule(this)
+  }
 }
 
-class AnnotationImpl(override val parent: Node, override val ctx: PklParser.AnnotationContext) :
-  AbstractNode(parent, ctx), Annotation {
+class PklAnnotationImpl(override val parent: Node, override val ctx: PklParser.AnnotationContext) :
+  AbstractNode(parent, ctx), PklAnnotation {
   override val typeName: TypeName
     get() = TODO("Not yet implemented")
 
-  override val objectBody: ObjectBody
+  override val objectBody: PklObjectBody
     get() = TODO("Not yet implemented")
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitAnnotation(this)
+  }
 }
 
 class ModuleHeaderImpl(override val parent: Node, override val ctx: ModuleHeaderContext) :
@@ -64,6 +82,14 @@ class ModuleHeaderImpl(override val parent: Node, override val ctx: ModuleHeader
   }
 
   override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
+
+  override val shortDisplayName: String? by lazy {
+    qualifiedIdentifier?.fullName?.substringAfterLast('.')
+  }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModuleHeader(this)
+  }
 }
 
 class ModuleDeclarationImpl(
@@ -71,8 +97,8 @@ class ModuleDeclarationImpl(
   override val ctx: PklParser.ModuleDeclContext
 ) : AbstractNode(parent, ctx), ModuleDeclaration {
 
-  override val annotations: List<Annotation> by lazy {
-    ctx.annotation().map { AnnotationImpl(this, it) }
+  override val annotations: List<PklAnnotation> by lazy {
+    ctx.annotation().map { PklAnnotationImpl(this, it) }
   }
 
   override val moduleHeader: ModuleHeader? by lazy {
@@ -84,16 +110,23 @@ class ModuleDeclarationImpl(
   }
 
   override val modifiers: List<Terminal> by lazy { moduleHeader?.modifiers ?: emptyList() }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModuleDeclaration(this)
+  }
 }
 
-class ImportClauseImpl(override val parent: Node, override val ctx: PklParser.ImportClauseContext) :
-  AbstractNode(parent, ctx), ImportClause {
+class PklImportImpl(override val parent: Node, override val ctx: PklParser.ImportClauseContext) :
+  AbstractNode(parent, ctx), PklImport {
   override val identifier: Terminal? by lazy { ctx.Identifier()?.toTerminal(this) }
 
   override val isGlob: Boolean by lazy { ctx.IMPORT_GLOB() != null }
 
-  override val moduleUri: String
-    get() = TODO("Not yet implemented")
+  override val moduleUri: PklModuleUri? by lazy { PklModuleUriImpl(this, ctx) }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitImport(this)
+  }
 }
 
 class ModuleExtendsAmendsClauseImpl(
@@ -106,14 +139,18 @@ class ModuleExtendsAmendsClauseImpl(
   override val isExtend: Boolean
     get() = ctx.EXTENDS() != null
 
-  override val moduleUri: String? by lazy { getChild(StringConstantImpl::class)?.value }
+  override val moduleUri: PklModuleUri? by lazy { PklModuleUriImpl(this, ctx) }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModuleExtendsAmendsClause(this)
+  }
 }
 
-class ClazzImpl(override val parent: Node, override val ctx: PklParser.ClazzContext) :
-  AbstractNode(parent, ctx), Clazz {
+class PklClassImpl(override val parent: Node, override val ctx: PklParser.ClazzContext) :
+  AbstractNode(parent, ctx), PklClass {
   override val classHeader: ClassHeader by lazy { getChild(ClassHeaderImpl::class)!! }
 
-  override val annotations: List<Annotation>? by lazy { getChildren(AnnotationImpl::class) }
+  override val annotations: List<PklAnnotation>? by lazy { getChildren(PklAnnotationImpl::class) }
 
   override val classBody: ClassBody? by lazy { getChild(ClassBodyImpl::class) }
 
@@ -122,6 +159,10 @@ class ClazzImpl(override val parent: Node, override val ctx: PklParser.ClazzCont
   override val modifiers: List<Terminal>? by lazy { classHeader.modifiers }
 
   override val cache: ClassMemberCache by lazy { ClassMemberCache.create(this) }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitClass(this)
+  }
 }
 
 class ClassHeaderImpl(override val parent: Node, override val ctx: PklParser.ClassHeaderContext) :
@@ -135,29 +176,56 @@ class ClassHeaderImpl(override val parent: Node, override val ctx: PklParser.Cla
   }
 
   override val extends: PklType? by lazy { children.last() as? PklType }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitClassHeader(this)
+  }
 }
 
 class ClassBodyImpl(override val parent: Node, override val ctx: PklParser.ClassBodyContext) :
   AbstractNode(parent, ctx), ClassBody {
   override val members: List<ClassMember> by lazy { children.filterIsInstance<ClassMember>() }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitClassBody(this)
+  }
 }
 
 class TypeParameterListImpl(
   override val parent: Node,
   override val ctx: PklParser.TypeParameterListContext
 ) : AbstractNode(parent, ctx), TypeParameterList {
-  override val typeParameters: List<TypeParameter> by lazy {
-    getChildren(TypeParameterImpl::class) ?: listOf()
+  override val typeParameters: List<PklTypeParameter> by lazy {
+    getChildren(PklTypeParameterImpl::class) ?: listOf()
+  }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitTypeParameterList(this)
   }
 }
 
-class TypeParameterImpl(
+class PklTypeParameterImpl(
   override val parent: Node,
   override val ctx: PklParser.TypeParameterContext
-) : AbstractNode(parent, ctx), TypeParameter {
+) : AbstractNode(parent, ctx), PklTypeParameter {
   override val variance: Variance? by lazy {
     if (ctx.IN() != null) Variance.IN else if (ctx.OUT() != null) Variance.OUT else null
   }
 
   override val name: String by lazy { ctx.Identifier().text }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitTypeParameter(this)
+  }
+}
+
+class PklModuleUriImpl(override val parent: Node, override val ctx: ParseTree) :
+  AbstractNode(parent, ctx), PklModuleUri {
+  override val stringConstant: PklStringConstant by lazy {
+    children.firstInstanceOf<PklStringConstant>()!!
+  }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModuleUri(this)
+  }
 }

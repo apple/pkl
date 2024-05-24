@@ -62,25 +62,25 @@ class AstTest {
     assertThat(module.declaration?.modifiers?.map { it.type }).isEqualTo(listOf(TokenType.ABSTRACT))
     assertThat(module.declaration?.effectiveExtendsOrAmendsCluse)
     assertThat(module.members).hasSize(3)
-    assertThat(module.members[0]).isInstanceOf(ClassProperty::class.java)
-    val property = module.members[0] as ClassProperty
+    assertThat(module.members[0]).isInstanceOf(PklClassProperty::class.java)
+    val property = module.members[0] as PklClassProperty
     assertThat(property.identifier?.text).isEqualTo("foo")
-    assertThat(property.typeAnnotation?.pklType).isInstanceOf(DeclaredPklType::class.java)
-    assertThat(module.members[1]).isInstanceOf(ClassMethod::class.java)
-    val method = module.members[1] as ClassMethod
+    assertThat(property.typeAnnotation?.pklType).isInstanceOf(PklDeclaredType::class.java)
+    assertThat(module.members[1]).isInstanceOf(PklClassMethod::class.java)
+    val method = module.members[1] as PklClassMethod
     assertThat(method.methodHeader.identifier?.text).isEqualTo("bar")
-    assertThat(module.members[2]).isInstanceOf(Clazz::class.java)
-    val clazz = module.members[2] as Clazz
+    assertThat(module.members[2]).isInstanceOf(PklClass::class.java)
+    val clazz = module.members[2] as PklClass
     val classMembers = clazz.classBody?.members
     assertThat(classMembers).hasSize(2)
     val classProperty = classMembers?.get(0)
-    assertThat(classProperty).isInstanceOf(ClassProperty::class.java)
-    classProperty as ClassProperty
+    assertThat(classProperty).isInstanceOf(PklClassProperty::class.java)
+    classProperty as PklClassProperty
     assertThat(classProperty.identifier?.text).isEqualTo("name")
     assertThat(classProperty.docComment?.text).isEqualTo("  /// Some comment\n")
     val classMethod = classMembers[1]
-    assertThat(classMethod).isInstanceOf(ClassMethod::class.java)
-    classMethod as ClassMethod
+    assertThat(classMethod).isInstanceOf(PklClassMethod::class.java)
+    classMethod as PklClassMethod
     assertThat(classMethod.methodHeader.identifier?.text).isEqualTo("toUpperCase")
     assertThat(classMethod.methodHeader.modifiers?.map { it.type })
       .isEqualTo(listOf(TokenType.LOCAL))

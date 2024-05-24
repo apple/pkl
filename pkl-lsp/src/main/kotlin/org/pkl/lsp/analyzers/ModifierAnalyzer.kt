@@ -56,7 +56,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
     }
     if (localModifier == null) {
       when (node) {
-        is ClassProperty -> {
+        is PklClassProperty -> {
           if (
             node.parent is PklModule &&
               (node.parent as PklModule).isAmend &&
@@ -99,10 +99,10 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
         is ModuleDeclaration ->
           if (node.isAmend) "amending modules" to AMENDING_MODULE_MODIFIERS
           else "modules" to MODULE_MODIFIERS
-        is Clazz -> "classes" to CLASS_MODIFIERS
-        is TypeAlias -> "typealiases" to TYPE_ALIAS_MODIFIERS
-        is ClassMethod -> "class methods" to CLASS_METHOD_MODIFIERS
-        is ClassProperty -> "class properties" to CLASS_PROPERTY_MODIFIERS
+        is PklClass -> "classes" to CLASS_MODIFIERS
+        is PklTypeAlias -> "typealiases" to TYPE_ALIAS_MODIFIERS
+        is PklClassMethod -> "class methods" to CLASS_METHOD_MODIFIERS
+        is PklClassProperty -> "class properties" to CLASS_PROPERTY_MODIFIERS
         else -> return false
       }
     for (modifier in node.modifiers!!) {

@@ -15,9 +15,11 @@
  */
 package org.pkl.lsp.resolvers
 
-import org.pkl.lsp.ast.Node
-import org.pkl.lsp.ast.PklType
-import org.pkl.lsp.type.TypeParameterBindings
+import kotlin.math.min
+import org.pkl.lsp.PklBaseModule
+import org.pkl.lsp.ast.*
+import org.pkl.lsp.type.*
+import org.pkl.lsp.unexpectedType
 
 interface ResolveVisitor<R> {
 
@@ -58,4 +60,266 @@ interface FlowTypingResolveVisitor<R> : ResolveVisitor<R> {
 }
 
 /** Collect and post-process resolve results produced by [Resolvers]. */
-object ResolveVisitors {}
+object ResolveVisitors {
+  fun paramTypesOfFirstMethodNamed(
+    expectedName: String,
+    base: PklBaseModule,
+    resolveTypeParamsInParamTypes: Boolean = true
+  ): ResolveVisitor<List<Type>?> =
+    object : ResolveVisitor<List<Type>?> {
+      override fun visit(name: String, element: Node, bindings: TypeParameterBindings): Boolean {
+        if (name != expectedName) return true
+
+        when (element) {
+          is PklMethod -> {
+            val parameters = element.methodHeader.parameterList?.elements ?: return false
+            val effectiveBindings = if (resolveTypeParamsInParamTypes) bindings else mapOf()
+            result =
+              parameters.map {
+                it.typedIdentifier
+                  ?.typeAnnotation
+                  ?.pklType
+                  .toType(base, effectiveBindings, !resolveTypeParamsInParamTypes)
+              }
+          }
+        }
+
+        return false
+      }
+
+      // null -> method not found
+      override var result: List<Type>? = null
+
+      override val exactName: String
+        get() = expectedName
+    }
+
+  fun typeOfFirstElementNamed(
+    elementName: String,
+    argumentList: PklArgumentList?,
+    base: PklBaseModule,
+    isNullSafeAccess: Boolean,
+    preserveUnboundTypeVars: Boolean
+  ): FlowTypingResolveVisitor<Type> =
+    object : FlowTypingResolveVisitor<Type> {
+      var isNonNull = false
+      val excludedTypes = mutableListOf<Type>()
+
+      override fun visitEqualsConstant(name: String, constant: Any?, isNegated: Boolean): Boolean {
+        if (name != elementName) return true
+
+        if (constant == null && isNegated) isNonNull = true
+        return true
+      }
+
+      override fun visitHasType(
+        name: String,
+        pklType: PklType,
+        bindings: TypeParameterBindings,
+        isNegated: Boolean
+      ): Boolean {
+        if (name != elementName) return true
+
+        val type = pklType.toType(base, bindings, preserveUnboundTypeVars)
+
+        if (isNegated) {
+          excludedTypes.add(type)
+          return true
+        }
+
+        result = computeResultType(type)
+        return false
+      }
+
+      override fun visit(name: String, element: Node, bindings: TypeParameterBindings): Boolean {
+        if (name != elementName) return true
+
+        val type =
+          when (element) {
+            is PklImport ->
+              element.resolve().computeResolvedImportType(base, bindings, preserveUnboundTypeVars)
+            is PklTypeParameter -> bindings[element] ?: Type.Unknown
+            is PklMethod -> computeMethodReturnType(element, bindings)
+            is PklClass -> base.classType.withTypeArguments(Type.Class(element))
+            is PklTypeAlias -> base.typeAliasType.withTypeArguments(Type.alias(element))
+            is PklNavigableElement ->
+              element.computeResolvedImportType(base, bindings, preserveUnboundTypeVars)
+            else -> unexpectedType(element)
+          }
+
+        result = computeResultType(type)
+        return false
+      }
+
+      /** Adjusts [type] based on additional known facts. */
+      private fun computeResultType(type: Type): Type {
+        val subtractedType = subtractExcludedTypes(type)
+        return when {
+          isNullSafeAccess -> subtractedType.nullable(base)
+          isNonNull -> subtractedType.nonNull(base)
+          else -> subtractedType
+        }
+      }
+
+      // note: doesn't consider or carry over constraints
+      private fun subtractExcludedTypes(type: Type): Type {
+        if (excludedTypes.isEmpty()) return type
+
+        return when (type) {
+          is Type.Union -> {
+            val excludeLeft = excludedTypes.any { type.leftType.isSubtypeOf(it, base) }
+            val excludeRight = excludedTypes.any { type.rightType.isSubtypeOf(it, base) }
+            when {
+              excludeLeft && excludeRight -> Type.Nothing
+              excludeLeft -> subtractExcludedTypes(type.rightType)
+              excludeRight -> subtractExcludedTypes(type.leftType)
+              else ->
+                Type.Union.create(
+                  subtractExcludedTypes(type.leftType),
+                  subtractExcludedTypes(type.rightType),
+                  base
+                )
+            }
+          }
+          else -> type
+        }
+      }
+
+      private fun computeMethodReturnType(
+        method: PklMethod,
+        bindings: TypeParameterBindings
+      ): Type {
+        return when (method) {
+          // infer return type of `base#Map()` from arguments (type signature is too weak)
+          base.mapConstructor -> {
+            val arguments = argumentList?.elements
+            if (arguments == null || arguments.size < 2) {
+              Type.Class(base.mapType.ctx)
+            } else {
+              var keyType = arguments[0].computeExprType(base, bindings)
+              var valueType = arguments[1].computeExprType(base, bindings)
+              for (i in 2 until arguments.size) {
+                if (i % 2 == 0) {
+                  keyType = Type.union(keyType, arguments[i].computeExprType(base, bindings), base)
+                } else {
+                  valueType =
+                    Type.union(valueType, arguments[i].computeExprType(base, bindings), base)
+                }
+              }
+              Type.Class(base.mapType.ctx, listOf(keyType, valueType))
+            }
+          }
+          else -> {
+            val typeParameterList = method.methodHeader.typeParameterList
+            val allBindings =
+              if (typeParameterList == null || typeParameterList.typeParameters.isEmpty()) {
+                bindings
+              } else {
+                // try to infer method type parameters from method arguments
+                val parameters = method.methodHeader.parameterList?.elements
+                val arguments = argumentList?.elements
+                if (parameters == null || arguments == null) bindings
+                else {
+                  val enhancedBindings = bindings.toMutableMap()
+                  val parameterTypes =
+                    parameters.map { it.type?.toType(base, bindings, true) ?: Type.Unknown }
+                  val argumentTypes = arguments.map { it.computeExprType(base, bindings) }
+                  for (i in 0 until min(parameterTypes.size, argumentTypes.size)) {
+                    inferBindings(parameterTypes[i], argumentTypes, i, enhancedBindings)
+                  }
+                  enhancedBindings
+                }
+              }
+            method.computeResolvedImportType(base, allBindings, preserveUnboundTypeVars)
+          }
+        }
+      }
+
+      override var result: Type = Type.Unknown
+
+      override val exactName: String
+        get() = elementName
+
+      private fun inferBindings(
+        declaredType: Type,
+        computedTypes: List<Type>,
+        index: Int,
+        collector: MutableMap<PklTypeParameter, Type>
+      ) {
+
+        val computedType = computedTypes[index]
+
+        when (declaredType) {
+          is Type.Variable -> collector[declaredType.ctx] = computedType
+          is Type.Class -> {
+            when {
+              declaredType.classEquals(base.varArgsType) -> {
+                val unionType = Type.union(computedTypes.drop(index), base)
+                inferBindings(declaredType.typeArguments[0], listOf(unionType), 0, collector)
+              }
+              else -> {
+                val declaredTypeArgs = declaredType.typeArguments
+                val computedTypeArgs = computedType.toClassType(base)?.typeArguments ?: return
+                for (i in 0..min(declaredTypeArgs.lastIndex, computedTypeArgs.lastIndex)) {
+                  inferBindings(declaredTypeArgs[i], computedTypeArgs, i, collector)
+                }
+              }
+            }
+          }
+          is Type.Alias ->
+            inferBindings(declaredType.aliasedType(base), computedTypes, index, collector)
+          else -> {}
+        }
+      }
+    }
+
+  fun firstElementNamed(
+    expectedName: String,
+    base: PklBaseModule,
+    resolveImports: Boolean = true
+  ): ResolveVisitor<Node?> =
+    object : ResolveVisitor<Node?> {
+      override fun visit(name: String, element: Node, bindings: TypeParameterBindings): Boolean {
+        if (name != expectedName) return true
+
+        when {
+          element is PklImport -> {
+            result =
+              if (resolveImports && !element.isGlob) {
+                val resolved = element.resolve() as SimpleModuleResolutionResult
+                resolved.resolved
+              } else {
+                element
+              }
+          }
+          element is PklTypeParameter && bindings.contains(element) ->
+            visit(name, toFirstDefinition(element, base, bindings), mapOf())
+          element is PklNavigableElement -> result = element
+          element is PklExpr -> return true
+          else -> unexpectedType(element)
+        }
+
+        return false
+      }
+
+      override var result: Node? = null
+
+      override val exactName: String
+        get() = expectedName
+    }
+
+  private fun toDefinitions(
+    typeParameter: PklTypeParameter,
+    base: PklBaseModule,
+    bindings: TypeParameterBindings
+  ): List<PklNavigableElement> {
+    val type = bindings[typeParameter] ?: Type.Unknown
+    return type.resolveToDefinitions(base)
+  }
+
+  fun toFirstDefinition(
+    typeParameter: PklTypeParameter,
+    base: PklBaseModule,
+    bindings: TypeParameterBindings
+  ): PklNavigableElement = toDefinitions(typeParameter, base, bindings)[0]
+}
