@@ -15,17 +15,23 @@
  */
 package org.pkl.cli
 
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
+import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.StringReader
 import java.io.StringWriter
+import java.net.ServerSocket
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import java.util.regex.Pattern
 import kotlin.io.path.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.DisabledOnOs
@@ -40,8 +46,10 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.OutputFormat
+import org.pkl.core.SecurityManagers
 import org.pkl.core.util.IoUtils
 
+@WireMockTest(httpsEnabled = true, proxyMode = true)
 class CliEvaluatorTest {
   companion object {
     private val defaultContents =
@@ -1260,6 +1268,196 @@ result = someLib.x
       .hasMessageContaining("Error during SSL handshake with host `localhost`:")
       .hasMessageContaining("unable to find valid certification path to requested target")
       .hasMessageNotContainingAny("java.", "sun.") // class names have been filtered out
+  }
+
+  @Test
+  fun `eval http module from proxy`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(
+      get(urlEqualTo("/bar.pkl")).withHost(equalTo("not.a.valid.host")).willReturn(ok("foo = 1"))
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
+          proxyAddress = URI("http://localhost:${wwRuntimeInfo.httpPort}"),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+        ),
+      )
+    val output = evalToConsole(options)
+    assertThat(output).isEqualTo("foo = 1\n")
+  }
+
+  @Test
+  fun `eval https -- no proxy`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    // pick an address on the local machine so we can be sure this test is not making any outbound
+    // connections.
+    val openPort = ServerSocket(0).use { it.localPort }
+    val targetAddress = "https://127.0.0.1:$openPort"
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          // use loopback address to prevent test from making outbound http connection.
+          sourceModules = listOf(URI("$targetAddress/foo.pkl")),
+          proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
+          noProxy = listOf("*"),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+        )
+      )
+    assertThatCode { evalToConsole(options) }
+      .hasMessageContaining("I/O error loading module `$targetAddress/foo.pkl`")
+  }
+
+  @Test
+  @Disabled // TODO: Re-enable after certification logic is fixed.
+  fun `eval package from proxy`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(
+      any(anyUrl()).willReturn(aResponse().proxiedFrom("https://localhost:${packageServer.port}"))
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostritch.pkl")),
+          noCache = true,
+          proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:")
+        )
+      )
+    val output = evalToConsole(options)
+    assertThat(output)
+      .isEqualTo(
+        """
+      name = "Ostritch"
+
+      favoriteFruit {
+        name = "Orange"
+      }
+
+    """
+          .trimIndent()
+      )
+    verify(getRequestedFor(urlEqualTo("birds@0.5.0")))
+    verify(getRequestedFor(urlEqualTo("fruit@1.0.5")))
+  }
+
+  @Test
+  fun `eval http module from proxy -- configured in settings`(
+    @TempDir tempDir: Path,
+    wwRuntimeInfo: WireMockRuntimeInfo
+  ) {
+    val settingsModule =
+      tempDir.writeFile(
+        "settings.pkl",
+        """
+      amends "pkl:settings"
+
+      http {
+        proxy {
+          address = "${wwRuntimeInfo.httpBaseUrl}"
+        }
+      }
+      """
+          .trimIndent()
+      )
+
+    stubFor(
+      get(urlEqualTo("/bar.pkl")).withHost(equalTo("not.a.valid.host")).willReturn(ok("foo = 1"))
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
+          settings = settingsModule.toUri(),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+        ),
+      )
+    val output = evalToConsole(options)
+    assertThat(output).isEqualTo("foo = 1\n")
+  }
+
+  @Test
+  fun `eval http module from proxy -- configured in PklProject`(
+    @TempDir tempDir: Path,
+    wwRuntimeInfo: WireMockRuntimeInfo
+  ) {
+    tempDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        http {
+          proxy {
+            address = "${wwRuntimeInfo.httpBaseUrl}"
+          }
+        }
+      }
+      """
+        .trimIndent()
+    )
+
+    stubFor(
+      get(urlEqualTo("/bar.pkl")).withHost(equalTo("not.a.valid.host")).willReturn(ok("foo = 1"))
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+          projectDir = tempDir
+        ),
+      )
+    val output = evalToConsole(options)
+    assertThat(output).isEqualTo("foo = 1\n")
+  }
+
+  @Test
+  fun `eval http module from proxy -- PklProject beats user settings`(
+    @TempDir tempDir: Path,
+    wwRuntimeInfo: WireMockRuntimeInfo
+  ) {
+    val projectDir = tempDir.resolve("my-project")
+    projectDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        http {
+          proxy {
+            address = "${wwRuntimeInfo.httpBaseUrl}"
+          }
+        }
+      }
+      """
+        .trimIndent()
+    )
+    val homeDir = tempDir.resolve("my-home")
+    homeDir.writeFile(
+      "settings.pkl",
+      """
+        amends "pkl:settings"
+
+        http {
+          proxy {
+            address = "http://invalid.proxy.address"
+          }
+        }
+      """
+        .trimIndent()
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
+          projectDir = projectDir,
+          settings = homeDir.resolve("settings.pkl").toUri()
+        ),
+      )
+    stubFor(get(anyUrl()).willReturn(ok("result = 1")))
+    val output = evalToConsole(options)
+    assertThat(output).isEqualTo("result = 1\n")
   }
 
   private fun evalModuleThatImportsPackage(certsFile: Path, testPort: Int = -1) {
