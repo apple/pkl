@@ -47,6 +47,7 @@ slf4j = "1.+"
 # Breaking change in snakeYaml 2.6 (removing DumpSettingsBuilder::setScalarResolver), so pin to 2.5
 snakeYaml = "2.5"
 spotlessPlugin = "6.11.0"
+wiremock = "3.+"
 
 [libraries] # ordered alphabetically
 antlr = { group = "com.tunnelvisionlabs", name = "antlr4", version.ref = "antlr" }
@@ -94,6 +95,7 @@ spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-grad
 svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
+wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
 [plugins] # ordered alphabetically
 checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
