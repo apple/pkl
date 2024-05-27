@@ -97,7 +97,7 @@ internal class ClientModuleKeyFactory(
                     if (response.error != null) {
                       completeExceptionally(IOException(response.error))
                     } else {
-                      complete(response.pathElements ?: emptyList())
+                      complete(response.pathElements!!)
                     }
                   }
                   else -> completeExceptionally(ProtocolException("unexpected response"))
