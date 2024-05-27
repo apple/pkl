@@ -445,34 +445,34 @@ public final class EvaluatorBuilder {
       throw new IllegalStateException(
           "Cannot call both `setSecurityManager` and `setProject`, because both define security manager settings. Call `setProjectOnly` if the security manager is desired.");
     }
-    if (settings.getAllowedModules() != null) {
-      setAllowedModules(settings.getAllowedModules());
+    if (settings.allowedModules() != null) {
+      setAllowedModules(settings.allowedModules());
     }
-    if (settings.getAllowedResources() != null) {
-      setAllowedResources(settings.getAllowedResources());
+    if (settings.allowedResources() != null) {
+      setAllowedResources(settings.allowedResources());
     }
-    if (settings.getExternalProperties() != null) {
-      setExternalProperties(settings.getExternalProperties());
+    if (settings.externalProperties() != null) {
+      setExternalProperties(settings.externalProperties());
     }
-    if (settings.getEnv() != null) {
-      setEnvironmentVariables(settings.getEnv());
+    if (settings.env() != null) {
+      setEnvironmentVariables(settings.env());
     }
-    if (settings.getTimeout() != null) {
-      setTimeout(settings.getTimeout().toJavaDuration());
+    if (settings.timeout() != null) {
+      setTimeout(settings.timeout().toJavaDuration());
     }
-    if (settings.getModulePath() != null) {
+    if (settings.modulePath() != null) {
       // indirectly closed by `ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)`
-      var modulePathResolver = new ModulePathResolver(settings.getModulePath());
+      var modulePathResolver = new ModulePathResolver(settings.modulePath());
       addResourceReader(ResourceReaders.modulePath(modulePathResolver));
       addModuleKeyFactory(ModuleKeyFactories.modulePath(modulePathResolver));
     }
-    if (settings.getRootDir() != null) {
-      setRootDir(settings.getRootDir());
+    if (settings.rootDir() != null) {
+      setRootDir(settings.rootDir());
     }
-    if (Boolean.TRUE.equals(settings.isNoCache())) {
+    if (Boolean.TRUE.equals(settings.noCache())) {
       setModuleCacheDir(null);
-    } else if (settings.getModuleCacheDir() != null) {
-      setModuleCacheDir(settings.getModuleCacheDir());
+    } else if (settings.moduleCacheDir() != null) {
+      setModuleCacheDir(settings.moduleCacheDir());
     }
     return this;
   }

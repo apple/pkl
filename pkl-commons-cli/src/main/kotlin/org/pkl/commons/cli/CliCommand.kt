@@ -18,6 +18,7 @@ package org.pkl.commons.cli
 import java.nio.file.Path
 import java.util.regex.Pattern
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -97,42 +98,44 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  private val projectSettings: Project.EvaluatorSettings? by lazy {
+  private val evaluatorSettings: PklEvaluatorSettings? by lazy {
     if (cliOptions.omitProjectSettings) null else project?.settings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
     cliOptions.allowedModules
-      ?: projectSettings?.allowedModules ?: SecurityManagers.defaultAllowedModules
+      ?: evaluatorSettings?.allowedModules ?: SecurityManagers.defaultAllowedModules
   }
 
   protected val allowedResources: List<Pattern> by lazy {
     cliOptions.allowedResources
-      ?: projectSettings?.allowedResources ?: SecurityManagers.defaultAllowedResources
+      ?: evaluatorSettings?.allowedResources ?: SecurityManagers.defaultAllowedResources
   }
 
-  protected val rootDir: Path? by lazy { cliOptions.normalizedRootDir ?: projectSettings?.rootDir }
+  protected val rootDir: Path? by lazy {
+    cliOptions.normalizedRootDir ?: evaluatorSettings?.rootDir
+  }
 
   protected val environmentVariables: Map<String, String> by lazy {
-    cliOptions.environmentVariables ?: projectSettings?.env ?: System.getenv()
+    cliOptions.environmentVariables ?: evaluatorSettings?.env ?: System.getenv()
   }
 
   protected val externalProperties: Map<String, String> by lazy {
-    cliOptions.externalProperties ?: projectSettings?.externalProperties ?: emptyMap()
+    cliOptions.externalProperties ?: evaluatorSettings?.externalProperties ?: emptyMap()
   }
 
   protected val moduleCacheDir: Path? by lazy {
     if (cliOptions.noCache) null
     else
       cliOptions.normalizedModuleCacheDir
-        ?: projectSettings?.let { settings ->
-          if (settings.isNoCache == true) null else settings.moduleCacheDir
+        ?: evaluatorSettings?.let { settings ->
+          if (settings.noCache == true) null else settings.moduleCacheDir
         }
           ?: IoUtils.getDefaultModuleCacheDir()
   }
 
   protected val modulePath: List<Path> by lazy {
-    cliOptions.normalizedModulePath ?: projectSettings?.modulePath ?: emptyList()
+    cliOptions.normalizedModulePath ?: evaluatorSettings?.modulePath ?: emptyList()
   }
 
   protected val stackFrameTransformer: StackFrameTransformer by lazy {

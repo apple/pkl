@@ -67,6 +67,7 @@
 @ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.Project
 
+import "pkl:EvaluatorSettings"
 import "pkl:Project"
 import "pkl:reflect"
 import "pkl:semver"
@@ -401,83 +402,6 @@ class Package {
 
   /// The effective package URI for the package represented by this project.
   fixed uri: PackageUri = "\(baseUri)@\(version)"
-}
-
-class EvaluatorSettings {
-  /// The external properties available to Pkl, read using the `prop:` scheme.
-  externalProperties: Mapping<String, String>?
-
-  /// The environment variables available to Pkl, read using the `env:` scheme.
-  ///
-  /// Example:
-  /// ```
-  /// env {
-  ///   ["IS_PROD"] = "true"
-  /// }
-  /// ```
-  env: Mapping<String, String>?
-
-  /// The set of module URI patterns that can be imported.
-  ///
-  /// Each element is a regular expression pattern that is tested against a module import.
-  ///
-  /// Modules are imported either through an amends or extends clause, an import clause, or an
-  /// import expression.
-  ///
-  /// Example:
-  /// ```
-  /// allowedModules {
-  ///   "https:"
-  ///   "file:"
-  ///   "package:"
-  ///   "projectpackage:"
-  /// }
-  /// ```
-  allowedModules: Listing<String(isRegex)>?
-
-  /// The set of resource URI patterns that can be imported.
-  ///
-  /// Each element is a regular expression pattern that is tested against a resource read.
-  ///
-  /// Example:
-  /// ```
-  /// allowedResources {
-  ///   "https:"
-  ///   "file:"
-  ///   "package:"
-  ///   "projectpackage:"
-  ///   "env:"
-  ///   "prop:"
-  /// }
-  /// ```
-  allowedResources: Listing<String(isRegex)>?
-
-  /// Disables the file system cache for `package:` modules.
-  ///
-  /// When caching is disabled, packages are loaded over the network and stored in memory.
-  noCache: Boolean?
-
-  /// A collection of jars, zips, or directories to be placed into the module path.
-  ///
-  /// Module path modules and resources may be read and imported using the `modulepath:` scheme.
-  ///
-  /// Relative paths are resolved against PklProject's enclosing directory.
-  modulePath: Listing<String>?
-
-  /// The duration after which evaluation of a source module will be timed out.
-  ///
-  /// Note that a timeout is treated the same as a program error in that any subsequent source modules will not be evaluated.
-  timeout: Duration?
-
-  /// The directory where `package:` modules are cached.
-  ///
-  /// Relative paths are resolved against PklProject's enclosing directory.
-  moduleCacheDir: String?
-
-  /// Restricts access to file-based modules and resources to those located under this directory.
-  ///
-  /// Relative paths are resolved against PklProject's enclosing directory.
-  rootDir: String?
 }
 
 /// Common software licenses in the [SPDX License List](https://spdx.org/licenses/).

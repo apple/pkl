@@ -25,7 +25,7 @@ class PklSettingsTest {
     )
 
     val settings = PklSettings.loadFromPklHomeDir(tempDir)
-    assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME))
+    assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, null))
   }
 
   @Test
@@ -39,7 +39,7 @@ class PklSettingsTest {
     )
 
     val settings = PklSettings.load(ModuleSource.path(settingsPath))
-    assertThat(settings).isEqualTo(PklSettings(Editor.IDEA))
+    assertThat(settings).isEqualTo(PklSettings(Editor.IDEA, null))
   }
 
   @Test
@@ -66,13 +66,6 @@ class PklSettingsTest {
     checkEquals(Editor.SUBLIME, module.getProperty("sublime") as PObject)
     checkEquals(Editor.ATOM, module.getProperty("atom") as PObject)
     checkEquals(Editor.VS_CODE, module.getProperty("vsCode") as PObject)
-  }
-
-  @Test
-  fun `invalid settings file`(@TempDir tempDir: Path) {
-    val settingsFile = tempDir.resolve("settings.pkl").apply { writeString("foo = 1") }
-    assertThatCode { PklSettings.loadFromPklHomeDir(tempDir) }
-      .hasMessageContaining("Expected `output.value` of module `${settingsFile.toUri()}` to be of type `pkl.settings`, but got type `settings`.")
   }
 
   private fun checkEquals(expected: Editor, actual: PObject) {
