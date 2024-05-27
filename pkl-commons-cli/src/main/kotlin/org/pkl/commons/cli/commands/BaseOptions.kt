@@ -172,6 +172,24 @@ class BaseOptions : OptionGroup() {
       .path()
       .multiple()
 
+  val proxy: URI? by
+    option(
+        names = arrayOf("--proxy"),
+        metavar = "<address>",
+        help = "Proxy to use for HTTP(s) connctions."
+      )
+      .single()
+      .convert { URI(it) }
+
+  val noProxy: List<String>? by
+    option(
+        names = arrayOf("--no-proxy"),
+        metavar = "<pattern1,pattern2>",
+        help = "Hostnames that should not be connected to via a proxy."
+      )
+      .single()
+      .split(",")
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -202,7 +220,9 @@ class BaseOptions : OptionGroup() {
       testPort = testPort,
       omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
       noProject = projectOptions?.noProject ?: false,
-      caCertificates = caCertificates
+      caCertificates = caCertificates,
+      proxyAddress = proxy,
+      noProxy = noProxy ?: emptyList()
     )
   }
 }

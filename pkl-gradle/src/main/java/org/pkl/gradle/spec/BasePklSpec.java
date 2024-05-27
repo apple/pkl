@@ -15,6 +15,7 @@
  */
 package org.pkl.gradle.spec;
 
+import java.net.URI;
 import java.time.Duration;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
@@ -50,4 +51,8 @@ public interface BasePklSpec {
   Property<Duration> getEvalTimeout();
 
   Property<Integer> getTestPort();
+
+  Property<URI> getProxyAddress();
+
+  ListProperty<String> getNoProxy();
 }

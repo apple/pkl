@@ -2,7 +2,6 @@ package org.pkl.core.settings
 
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.createParentDirectories
@@ -10,7 +9,9 @@ import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
 import org.pkl.core.PObject
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
+import java.net.URI
 
 class PklSettingsTest {
   @Test
@@ -26,6 +27,35 @@ class PklSettingsTest {
 
     val settings = PklSettings.loadFromPklHomeDir(tempDir)
     assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, null))
+  }
+  
+  @Test
+  fun `load user settings with http`(@TempDir tempDir: Path) {
+    val settingsPath = tempDir.resolve("settings.pkl")
+    settingsPath.createParentDirectories()
+    settingsPath.writeString(
+      """
+      amends "pkl:settings"
+      http {
+        proxy {
+          address = "http://localhost:8080"
+          noProxy {
+            "example.com"
+            "pkg.pkl-lang.org"
+          }
+        }
+      }
+      """.trimIndent()
+    )
+
+    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val expectedHttp = PklEvaluatorSettings.Http(
+      PklEvaluatorSettings.Proxy(
+        URI("http://localhost:8080"),
+        listOf("example.com", "pkg.pkl-lang.org")
+      )
+    )
+    assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
 
   @Test

@@ -178,7 +178,9 @@ public abstract class ModulesTask extends BasePklTask {
               getNoProject().getOrElse(false),
               false,
               getTestPort().getOrElse(-1),
-              Collections.emptyList());
+              Collections.emptyList(),
+              null,
+              List.of());
     }
     return cachedOptions;
   }
