@@ -518,10 +518,12 @@ internal abstract class PageGenerator<out S>(
       }
     }
 
-    if (docPackage.docPackageInfo.dependencies.isNotEmpty()) {
+    // Every package implicitly depends on `pkl`; omit to reduce noise.
+    val dependencies = docPackage.docPackageInfo.dependencies.filter { it.name != "pkl" }
+    if (dependencies.isNotEmpty()) {
       result[MemberInfoKey("Dependencies")] = {
         var first = true
-        for (dep in docPackage.docPackageInfo.dependencies) {
+        for (dep in dependencies) {
           if (first) first = false else +", "
           a {
             href =

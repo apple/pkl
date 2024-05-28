@@ -45,6 +45,9 @@ internal class RuntimeDataGenerator(
     for (pkg in packages) {
       packageVersions.add(pkg.ref.pkg, pkg.ref.version)
       for (dependency in pkg.dependencies) {
+        if (dependency.isStdlib()) continue
+        // Every package implicitly depends on the stdlib. Showing this dependency adds unwanted
+        // noise.
         packageUsages.add(dependency.ref, pkg.ref)
       }
       for (module in pkg.modules) {
@@ -240,3 +243,5 @@ internal class RuntimeDataGenerator(
     put(key, newValue)
   }
 }
+
+private fun DependencyData.isStdlib(): Boolean = ref.pkg == "pkl"
