@@ -433,7 +433,7 @@ public final class IoUtils {
     }
   }
 
-  // Windows relativize will fail if the two paths have different roots.
+  // On Windows, `Path.relativize` will fail if the two paths have different roots.
   public static Path relativize(Path path, Path base) {
     if (isWindows()) {
       if (path.isAbsolute() && base.isAbsolute() && !path.getRoot().equals(base.getRoot())) {

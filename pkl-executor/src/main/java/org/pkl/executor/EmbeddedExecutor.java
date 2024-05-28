@@ -160,7 +160,7 @@ final class EmbeddedExecutor implements Executor {
     return rootDir == null ? modulePath : relativize(modulePath, rootDir);
   }
 
-  // Windows relativize will fail if the two paths have different roots.
+  // On Windows, `Path.relativize` will fail if the two paths have different roots.
   private static Path relativize(Path path, Path base) {
     if (path.isAbsolute() && base.isAbsolute() && !path.getRoot().equals(base.getRoot())) {
       return path;

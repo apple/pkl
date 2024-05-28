@@ -72,9 +72,11 @@ fun Path.deleteRecursively() {
   }
 }
 
+private val isWindows by lazy { System.getProperty("os.name").contains("Windows") }
+
 /** Copy implementation from IoUtils.toNormalizedPathString */
 fun Path.toNormalizedPathString(): String {
-  if (System.getProperty("os.name").contains("Windows")) {
+  if (isWindows) {
     return toString().replace("\\", "/")
   }
   return toString()

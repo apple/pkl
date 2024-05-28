@@ -1794,10 +1794,17 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     try {
       resolvedUri = IoUtils.resolve(context.getSecurityManager(), moduleKey, parsedUri);
     } catch (FileNotFoundException e) {
-      throw exceptionBuilder()
-          .evalError("cannotFindModule", importUri)
-          .withSourceSection(createSourceSection(importUriCtx))
-          .build();
+
+      var exceptionBuilder =
+          exceptionBuilder()
+              .evalError("cannotFindModule", importUri)
+              .withSourceSection(createSourceSection(importUriCtx));
+      var path = parsedUri.getPath();
+      if (path != null && path.contains("\\")) {
+        exceptionBuilder.withHint(
+            "To resolve modules in nested directories, use `/` as the directory separator.");
+      }
+      throw exceptionBuilder.build();
     } catch (URISyntaxException e) {
       throw exceptionBuilder()
           .evalError("invalidModuleUri", importUri)

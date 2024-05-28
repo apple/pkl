@@ -195,10 +195,16 @@ public final class ModuleCache {
     } catch (SecurityManagerException | PackageLoadError e) {
       throw new VmExceptionBuilder().withOptionalLocation(importNode).withCause(e).build();
     } catch (FileNotFoundException | NoSuchFileException e) {
-      throw new VmExceptionBuilder()
-          .withOptionalLocation(importNode)
-          .evalError("cannotFindModule", module.getUri())
-          .build();
+      var exceptionBuilder =
+          new VmExceptionBuilder()
+              .withOptionalLocation(importNode)
+              .evalError("cannotFindModule", module.getUri());
+      var path = module.getUri().getPath();
+      if (path != null && path.contains("\\")) {
+        exceptionBuilder.withHint(
+            "To resolve modules in nested directories, use `/` as the directory separator.");
+      }
+      throw exceptionBuilder.build();
     } catch (IOException e) {
       throw new VmExceptionBuilder()
           .withOptionalLocation(importNode)

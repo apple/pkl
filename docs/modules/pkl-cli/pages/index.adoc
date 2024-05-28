@@ -184,13 +184,13 @@ NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
 [subs="+attributes"]
 ----
 Invoke-WebRequest '{uri-pkl-windows-download}' -OutFile pkl.exe
-.\pkl.exe --version
+.\pkl --version
 ----
 
 [source]
 [subs="+attributes"]
 ----
-Pkl {pkl-version} (Windows 11 10.0, native)
+Pkl {pkl-version} (Windows 10.0, native)
 ----
 
 NOTE: We currently do not support the aarch64 architecture for Windows.

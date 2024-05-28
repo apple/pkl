@@ -49,6 +49,7 @@ public final class Release {
     var commitId = properties.getProperty("commitId");
     var osName = System.getProperty("os.name");
     if (osName.equals("Mac OS X")) osName = "macOS";
+    if (osName.contains("Windows")) osName = "Windows";
     var osVersion = System.getProperty("os.version");
     var os = osName + " " + osVersion;
     var flavor = TruffleOptions.AOT ? "native" : "Java " + System.getProperty("java.version");
