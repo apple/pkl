@@ -225,23 +225,19 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
     }
   }
 
-  @TruffleBoundary
   public VmMapping toMapping() {
-    var builder = new VmObjectBuilder(keyOrder.size());
-    for (var key : keyOrder) {
-      var value = map.get(key);
-      assert value != null;
-      builder.addEntry(key, value);
+    var builder = new VmObjectBuilder(getLength());
+    for (var entry : this) {
+      builder.addEntry(VmUtils.getKey(entry), VmUtils.getValue(entry));
     }
     return builder.toMapping();
   }
 
-  @TruffleBoundary
   public VmDynamic toDynamic() {
-    var builder = new VmObjectBuilder(keyOrder.size());
-    for (var key : keyOrder) {
-      var value = map.get(key);
-      assert value != null;
+    var builder = new VmObjectBuilder(getLength());
+    for (var entry : this) {
+      var key = VmUtils.getKey(entry);
+      var value = VmUtils.getValue(entry);
       if (key instanceof String) {
         builder.addProperty(Identifier.get((String) key), value);
       } else {

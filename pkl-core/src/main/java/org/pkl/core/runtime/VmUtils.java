@@ -844,4 +844,9 @@ public final class VmUtils {
   public static int findAuxiliarySlot(VirtualFrame frame, Object identifier) {
     return frame.getFrameDescriptor().getAuxiliarySlots().getOrDefault(identifier, -1);
   }
+
+  @TruffleBoundary
+  public static <K, V> V getMapValue(Map<K, V> map, K key) {
+    return map.get(key);
+  }
 }

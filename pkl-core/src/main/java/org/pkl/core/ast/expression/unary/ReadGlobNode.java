@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.unary;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -32,23 +33,31 @@ import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "read*")
 public abstract class ReadGlobNode extends AbstractReadNode {
-  private final SharedMemberNode readGlobElementNode;
   private final EconomicMap<String, VmMapping> cachedResults = EconomicMap.create();
+  @Child @LateInit private SharedMemberNode memberNode;
 
-  protected ReadGlobNode(
-      VmLanguage language, SourceSection sourceSection, ModuleKey currentModule) {
+  protected ReadGlobNode(SourceSection sourceSection, ModuleKey currentModule) {
     super(sourceSection, currentModule);
-    readGlobElementNode =
-        new SharedMemberNode(
-            sourceSection,
-            sourceSection,
-            "",
-            language,
-            new FrameDescriptor(),
-            new ReadGlobElementNode(sourceSection));
+  }
+
+  private SharedMemberNode getMemberNode() {
+    if (memberNode == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      var language = VmLanguage.get(this);
+      memberNode =
+          new SharedMemberNode(
+              sourceSection,
+              sourceSection,
+              "",
+              language,
+              new FrameDescriptor(),
+              new ReadGlobMemberBodyNode(sourceSection));
+    }
+    return memberNode;
   }
 
   @Specialization
@@ -76,9 +85,9 @@ public abstract class ReadGlobNode extends AbstractReadNode {
               currentModule,
               currentModule.getUri(),
               globPattern);
-      var builder = new VmObjectBuilder();
+      var builder = new VmObjectBuilder(resolvedElements.size());
       for (var entry : resolvedElements.entrySet()) {
-        builder.addEntry(entry.getKey(), readGlobElementNode);
+        builder.addEntry(entry.getKey(), getMemberNode());
       }
       cachedResult = builder.toMapping(resolvedElements);
       cachedResults.put(globPattern, cachedResult);

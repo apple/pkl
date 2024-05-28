@@ -1,5 +1,0 @@
-examples {
-  ["Reflecting globbed import"] {
-    true
-  }
-}

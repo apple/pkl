@@ -19,34 +19,49 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Map;
+import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 
 /** Used by {@link ReadGlobNode}. */
-public class ReadGlobElementNode extends ExpressionNode {
-  public ReadGlobElementNode(SourceSection sourceSection) {
+public final class ImportGlobMemberBodyNode extends ExpressionNode {
+  private final VmLanguage language;
+  private final ResolvedModuleKey currentModule;
+
+  public ImportGlobMemberBodyNode(
+      SourceSection sourceSection, VmLanguage language, ResolvedModuleKey currentModule) {
     super(sourceSection);
+    this.language = language;
+    this.currentModule = currentModule;
   }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     var mapping = VmUtils.getObjectReceiver(frame);
     var path = (String) VmUtils.getMemberKey(frame);
-    return readResource(mapping, path);
+    return importModule(mapping, path);
   }
 
   @TruffleBoundary
-  private Object readResource(VmObjectLike mapping, String path) {
+  private VmTyped importModule(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")
     var globElements = (Map<String, ResolvedGlobElement>) mapping.getExtraStorage();
-    var resourceUri = globElements.get(path).getUri();
-    var resource = VmContext.get(this).getResourceManager().read(resourceUri, this).orElse(null);
-    if (resource == null) {
-      throw exceptionBuilder().evalError("cannotFindResource", resourceUri).build();
+    var importUri = globElements.get(path).getUri();
+    var context = VmContext.get(this);
+    try {
+      context.getSecurityManager().checkImportModule(currentModule.getUri(), importUri);
+      var moduleToImport = context.getModuleResolver().resolve(importUri, this);
+      return language.loadModule(moduleToImport, this);
+    } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
+      throw exceptionBuilder().withCause(e).build();
     }
-    return resource;
   }
 }

@@ -39,26 +39,32 @@ import org.pkl.core.util.LateInit;
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {
   private final String globPattern;
-  private final SharedMemberNode importGlobElementNode;
-
+  @Child @LateInit private SharedMemberNode memberNode;
   @CompilationFinal @LateInit private VmMapping cachedResult;
 
   public ImportGlobNode(
-      VmLanguage language,
       SourceSection sourceSection,
       ResolvedModuleKey currentModule,
       URI importUri,
       String globPattern) {
     super(sourceSection, currentModule, importUri);
     this.globPattern = globPattern;
-    importGlobElementNode =
-        new SharedMemberNode(
-            sourceSection,
-            sourceSection,
-            "",
-            language,
-            new FrameDescriptor(),
-            new ImportGlobElementNode(sourceSection, language, currentModule));
+  }
+
+  private SharedMemberNode getMemberNode() {
+    if (memberNode == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      var language = VmLanguage.get(this);
+      memberNode =
+          new SharedMemberNode(
+              sourceSection,
+              sourceSection,
+              "",
+              language,
+              new FrameDescriptor(),
+              new ImportGlobMemberBodyNode(sourceSection, language, currentModule));
+    }
+    return memberNode;
   }
 
   @Override
@@ -81,9 +87,9 @@ public class ImportGlobNode extends AbstractImportNode {
               currentModule.getOriginal(),
               currentModule.getUri(),
               globPattern);
-      var builder = new VmObjectBuilder();
+      var builder = new VmObjectBuilder(resolvedElements.size());
       for (var entry : resolvedElements.entrySet()) {
-        builder.addEntry(entry.getKey(), importGlobElementNode);
+        builder.addEntry(entry.getKey(), getMemberNode());
       }
       cachedResult = builder.toMapping(resolvedElements);
       return cachedResult;
