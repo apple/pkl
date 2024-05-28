@@ -2145,7 +2145,7 @@ with `import "parrot.pkl"` or `import "/animals/birds/parrot.pkl"`.
 ====
 Relative paths use the `/` character as the directory separator on all platforms, including Windows.
 
-Paths that contain drive letters (e.g. `C:`) must be declared as an absolute file URI, for example: `import "file:///C:/path/to/my/module.pkl"`. Otherwise, they would be interpreted as a URI scheme.
+Paths that contain drive letters (e.g. `C:`) must be declared as an absolute file URI, for example: `import "file:///C:/path/to/my/module.pkl"`. Otherwise, they are interpreted as a URI scheme.
 ====
 
 NOTE: When importing a relative directory or file that starts with `@`, the import string must be prefixed with `./`.

@@ -395,8 +395,8 @@ public final class IoUtils {
       if (basePath.isEmpty()) {
         return uri;
       }
-      var uriParts = Arrays.stream(uriPath.split("/")).toList();
-      var baseParts = Arrays.stream(basePath.split("/")).toList();
+      var uriParts = Arrays.asList(uriPath.split("/"));
+      var baseParts = Arrays.asList(basePath.split("/"));
       if (!basePath.endsWith("/")) {
         // strip the last path segment of the base uri, unless it ends in a slash. `/foo/bar.pkl` ->
         // `/foo`
