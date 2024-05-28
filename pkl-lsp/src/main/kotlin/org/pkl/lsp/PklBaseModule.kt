@@ -44,11 +44,11 @@ class PklBaseModule private constructor() {
               val typeParameters =
                 member.classHeader.typeParameterList?.typeParameters
                   ?: listOf(PklNodeFactory.createTypeParameter("Type"))
-              // types[className] = Type.Class(member, listOf(), listOf(), typeParameters)
+              types[className] = Type.Class(member, listOf(), listOf(), typeParameters)
             }
-          // else -> types[className] = Type.Class(member)
+            else -> types[className] = Type.Class(member)
           }
-        // is TypeAlias -> types[member.name] = Type.Alias.unchecked(member, listOf(), listOf())
+        is PklTypeAlias -> types[member.name] = Type.Alias.unchecked(member, listOf(), listOf())
         is PklClassMethod -> methods[member.name] = member
         else -> {}
       }

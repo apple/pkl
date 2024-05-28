@@ -35,7 +35,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
 
   override fun doAnalyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
     if (node !is ModifierListOwner || node.modifiers == null) {
-      return false
+      return node is PklModule || node is PklClass || node is PklClassBody
     }
 
     var localModifier: Node? = null
@@ -116,6 +116,6 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
         )
       }
     }
-    return false
+    return node is PklModule || node is PklClass || node is PklClassBody
   }
 }

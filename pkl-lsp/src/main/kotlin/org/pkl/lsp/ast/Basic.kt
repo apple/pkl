@@ -23,7 +23,7 @@ class QualifiedIdentifierImpl(
   override val parent: Node,
   override val ctx: QualifiedIdentifierContext
 ) : AbstractNode(parent, ctx), QualifiedIdentifier {
-  override val identifiers: List<Terminal> by lazy { getChildren(Terminal::class)!! }
+  override val identifiers: List<Terminal> by lazy { terminals }
   override val fullName: String by lazy { identifiers.joinToString(".") { it.text } }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {

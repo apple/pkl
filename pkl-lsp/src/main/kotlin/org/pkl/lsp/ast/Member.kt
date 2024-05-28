@@ -71,7 +71,9 @@ class MethodHeaderImpl(override val parent: Node, override val ctx: MethodHeader
   AbstractNode(parent, ctx), MethodHeader {
   override val parameterList: PklParameterList? by lazy { getChild(PklParameterListImpl::class) }
 
-  override val typeParameterList: TypeParameterList? by lazy { getChild(TypeParameterList::class) }
+  override val typeParameterList: PklTypeParameterList? by lazy {
+    getChild(PklTypeParameterList::class)
+  }
 
   override val modifiers: List<Terminal> by lazy { terminals.takeWhile { it.isModifier } }
 
@@ -95,11 +97,21 @@ class PklParameterListImpl(override val parent: Node, override val ctx: Paramete
 
 class PklObjectBodyImpl(override val parent: Node, override val ctx: ObjectBodyContext) :
   AbstractNode(parent, ctx), PklObjectBody {
-  override val parameterList: PklParameterList?
-    get() = TODO("Not yet implemented")
+  override val parameterList: List<PklParameter> by lazy {
+    children.filterIsInstance<PklParameter>()
+  }
 
-  override val members: List<PklObjectMember>?
-    get() = TODO("Not yet implemented")
+  override val members: List<PklObjectMember> by lazy {
+    children.filterIsInstance<PklObjectMember>()
+  }
+
+  override val properties: List<PklObjectProperty> by lazy {
+    members.filterIsInstance<PklObjectProperty>()
+  }
+
+  override val methods: List<PklObjectMethod> by lazy {
+    members.filterIsInstance<PklObjectMethod>()
+  }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitObjectBody(this)
@@ -125,6 +137,7 @@ class PklObjectMethodImpl(override val parent: Node, override val ctx: ObjectMet
   override val methodHeader: MethodHeader by lazy { getChild(MethodHeaderImpl::class)!! }
   override val modifiers: List<Terminal>? by lazy { methodHeader.modifiers }
   override val body: PklExpr by lazy { children.firstInstanceOf<PklExpr>()!! }
+  override val name: String by lazy { methodHeader.identifier!!.text }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitObjectMethod(this)

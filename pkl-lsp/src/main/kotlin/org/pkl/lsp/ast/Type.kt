@@ -158,6 +158,9 @@ class PklTypeAliasImpl(override val parent: Node?, ctx: TypeAliasContext) :
   override val name: String by lazy { ctx.typeAliasHeader().Identifier().text }
   override val type: PklType by lazy { children.firstInstanceOf<PklType>()!! }
   override val isRecursive: Boolean by lazy { isRecursive(mutableSetOf()) }
+  override val typeParameterList: PklTypeParameterList? by lazy {
+    typeAliasHeader.typeParameterList
+  }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTypeAlias(this)
@@ -168,8 +171,8 @@ class TypeAliasHeaderImpl(override val parent: Node?, ctx: TypeAliasHeaderContex
   AbstractNode(parent, ctx), TypeAliasHeader {
   override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
-  override val typeParameterList: TypeParameterList? by lazy {
-    children.firstInstanceOf<TypeParameterList>()
+  override val typeParameterList: PklTypeParameterList? by lazy {
+    children.firstInstanceOf<PklTypeParameterList>()
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {

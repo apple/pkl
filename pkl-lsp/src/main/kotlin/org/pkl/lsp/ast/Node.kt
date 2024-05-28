@@ -116,10 +116,14 @@ sealed interface PklTypeDefOrModule : PklNavigableElement, ModifierListOwner, Do
 interface PklModule : PklTypeDefOrModule {
   val isAmend: Boolean
   val declaration: ModuleDeclaration?
-  val imports: List<PklImport>?
+  val imports: List<PklImport>
   val members: List<PklModuleMember>
   val typeAliases: List<PklTypeAlias>
   val classes: List<PklClass>
+  val typeDefs: List<PklTypeDef>
+  val typeDefsAndProperties: List<PklTypeDefOrProperty>
+  val properties: List<PklClassProperty>
+  val methods: List<PklClassMethod>
   val supermodule: PklModule?
   val cache: ModuleMemberCache
   val shortDisplayName: String
@@ -158,24 +162,31 @@ sealed interface PklModuleMember : PklNavigableElement, DocCommentOwner, Modifie
   val name: String
 }
 
-sealed interface TypeDefOrProperty : Node
+sealed interface PklTypeDefOrProperty : PklModuleMember
 
-sealed interface TypeDef : TypeDefOrProperty, PklTypeDefOrModule, PklModuleMember
+sealed interface PklTypeDef :
+  PklTypeDefOrProperty, PklTypeDefOrModule, PklModuleMember, ModifierListOwner {
+  val typeParameterList: PklTypeParameterList?
+}
 
-interface PklClass : TypeDef {
-  val classHeader: ClassHeader
+interface PklClass : PklTypeDef {
+  val classHeader: PklClassHeader
   val annotations: List<PklAnnotation>?
-  val classBody: ClassBody?
+  val classBody: PklClassBody?
+  val members: List<PklClassMember>
+  val properties: List<PklClassProperty>
+  val methods: List<PklClassMethod>
   val cache: ClassMemberCache
 }
 
-interface ClassBody : Node {
-  val members: List<ClassMember>
+interface PklClassBody : Node {
+  val members: List<PklClassMember>
 }
 
 interface PklAnnotation : PklObjectBodyOwner {
-  val typeName: TypeName
-  override val objectBody: PklObjectBody
+  val type: PklType?
+  val typeName: TypeName?
+  override val objectBody: PklObjectBody?
 }
 
 interface TypeName : Node {
@@ -185,12 +196,12 @@ interface TypeName : Node {
 
 interface SimpleTypeName : Node, IdentifierOwner
 
-interface ClassHeader : Node, IdentifierOwner, ModifierListOwner {
-  val typeParameterList: TypeParameterList?
+interface PklClassHeader : Node, IdentifierOwner, ModifierListOwner {
+  val typeParameterList: PklTypeParameterList?
   val extends: PklType?
 }
 
-sealed interface ClassMember : PklModuleMember, DocCommentOwner
+sealed interface PklClassMember : PklModuleMember, DocCommentOwner
 
 sealed interface PklProperty : PklNavigableElement, ModifierListOwner, IdentifierOwner {
   val name: String
@@ -199,7 +210,7 @@ sealed interface PklProperty : PklNavigableElement, ModifierListOwner, Identifie
   val isDefinition: Boolean
 }
 
-interface PklClassProperty : PklProperty, PklModuleMember, ClassMember, TypeDefOrProperty {
+interface PklClassProperty : PklProperty, PklModuleMember, PklClassMember, PklTypeDefOrProperty {
   val typeAnnotation: TypeAnnotation?
 
   val objectBody: PklObjectBody?
@@ -210,9 +221,11 @@ interface PklMethod : PklNavigableElement, ModifierListOwner {
   val body: PklExpr
 }
 
-interface PklClassMethod : PklMethod, PklModuleMember, ClassMember
+interface PklClassMethod : PklMethod, PklModuleMember, PklClassMember
 
-interface PklObjectMethod : PklMethod, PklObjectMember
+interface PklObjectMethod : PklMethod, PklObjectMember {
+  val name: String
+}
 
 sealed interface PklObjectMember : Node
 
@@ -250,7 +263,7 @@ interface PklObjectSpread : PklObjectMember {
 interface MethodHeader : Node, ModifierListOwner, IdentifierOwner {
   val parameterList: PklParameterList?
 
-  val typeParameterList: TypeParameterList?
+  val typeParameterList: PklTypeParameterList?
 
   val returnType: PklType?
 }
@@ -260,12 +273,16 @@ sealed interface PklObjectBodyOwner : Node {
 }
 
 interface PklObjectBody : Node {
-  val parameterList: PklParameterList?
+  val parameterList: List<PklParameter>
 
-  val members: List<PklObjectMember>?
+  val members: List<PklObjectMember>
+
+  val properties: List<PklObjectProperty>
+
+  val methods: List<PklObjectMethod>
 }
 
-interface TypeParameterList : Node {
+interface PklTypeParameterList : Node {
   val typeParameters: List<PklTypeParameter>
 }
 
@@ -274,7 +291,7 @@ enum class Variance {
   OUT
 }
 
-interface PklTypeParameter : PklNavigableElement {
+interface PklTypeParameter : PklNavigableElement, IdentifierOwner {
   val variance: Variance?
   val name: String
 }
@@ -283,14 +300,14 @@ interface PklParameterList : Node {
   val elements: List<PklParameter>
 }
 
-interface PklTypeAlias : TypeDef {
+interface PklTypeAlias : PklTypeDef {
   val typeAliasHeader: TypeAliasHeader
   val type: PklType
   val isRecursive: Boolean
 }
 
 interface TypeAliasHeader : IdentifierOwner, ModifierListOwner {
-  val typeParameterList: TypeParameterList?
+  val typeParameterList: PklTypeParameterList?
 }
 
 interface Terminal : Node {
@@ -613,14 +630,15 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is ImportClauseContext -> PklImportImpl(parent!!, this)
     is ModuleExtendsOrAmendsClauseContext -> ModuleExtendsAmendsClauseImpl(parent!!, this)
     is ClazzContext -> PklClassImpl(parent!!, this)
-    is ClassHeaderContext -> ClassHeaderImpl(parent!!, this)
-    is ClassBodyContext -> ClassBodyImpl(parent!!, this)
+    is ClassHeaderContext -> PklClassHeaderImpl(parent!!, this)
+    is ClassBodyContext -> PklClassBodyImpl(parent!!, this)
     is ClassPropertyContext -> PklClassPropertyImpl(parent!!, this)
     is MethodHeaderContext -> MethodHeaderImpl(parent!!, this)
     is ClassMethodContext -> PklClassMethodImpl(parent!!, this)
     is ParameterListContext -> PklParameterListImpl(parent!!, this)
     is ParameterContext -> PklParameterImpl(parent!!, this)
     is ArgumentListContext -> PklArgumentListImpl(parent!!, this)
+    is AnnotationContext -> PklAnnotationImpl(parent!!, this)
     is TypeAnnotationContext -> TypeAnnotationImpl(parent!!, this)
     is UnknownTypeContext -> PklUnknownTypeImpl(parent!!, this)
     is NothingTypeContext -> PklNothingTypeImpl(parent!!, this)
@@ -684,7 +702,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is ObjectElementContext -> PklObjectElementImpl(parent!!, this)
     is ObjectSpreadContext -> PklObjectSpreadImpl(parent!!, this)
     is TypeParameterContext -> PklTypeParameterImpl(parent!!, this)
-    is TypeParameterListContext -> TypeParameterListImpl(parent!!, this)
+    is TypeParameterListContext -> PklTypeParameterListImpl(parent!!, this)
     is TypeAliasHeaderContext -> TypeAliasHeaderImpl(parent!!, this)
     is TypeAliasContext -> PklTypeAliasImpl(parent!!, this)
     // is TypeAnnotationContext -> Ty

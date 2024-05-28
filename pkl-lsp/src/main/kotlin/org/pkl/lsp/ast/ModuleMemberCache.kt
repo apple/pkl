@@ -15,6 +15,7 @@
  */
 package org.pkl.lsp.ast
 
+import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.Stdlib
 import org.pkl.lsp.resolvers.ResolveVisitor
 import org.pkl.lsp.resolvers.visitIfNotNull
@@ -23,7 +24,7 @@ import org.pkl.lsp.resolvers.visitIfNotNull
 class ModuleMemberCache
 private constructor(
   val module: PklModule,
-  val types: Map<String, TypeDef>,
+  val types: Map<String, PklTypeDef>,
   val methods: Map<String, PklClassMethod>,
   /** Property definitions */
   val properties: Map<String, PklClassProperty>,
@@ -33,7 +34,7 @@ private constructor(
    * A child that overrides a parent without a type annotation is a "leaf property".
    */
   val leafProperties: Map<String, PklClassProperty>,
-  val typeDefsAndProperties: Map<String, TypeDefOrProperty>,
+  val typeDefsAndProperties: Map<String, PklTypeDefOrProperty>,
   val dependencies: List<Any>
 ) {
 
@@ -119,11 +120,11 @@ private constructor(
         }
       }
 
-      val types = mutableMapOf<String, TypeDef>()
+      val types = mutableMapOf<String, PklTypeDef>()
       val methods = mutableMapOf<String, PklClassMethod>()
       val properties = mutableMapOf<String, PklClassProperty>()
       val leafProperties = mutableMapOf<String, PklClassProperty>()
-      val typesAndProperties = mutableMapOf<String, TypeDefOrProperty>()
+      val typesAndProperties = mutableMapOf<String, PklTypeDefOrProperty>()
       val dependencies = mutableListOf<Any>(module)
 
       if (supercache != null) {
@@ -137,7 +138,7 @@ private constructor(
       } else {
         // has no amends/extends clause or unresolvable extends clause ->
         // extends class pkl.base#Module
-        val pklBaseModuleClassCache = Stdlib.baseModule().cache
+        val pklBaseModuleClassCache = PklBaseModule.instance.moduleType.ctx.cache
         methods.putAll(pklBaseModuleClassCache.methods)
         properties.putAll(pklBaseModuleClassCache.properties)
         leafProperties.putAll(pklBaseModuleClassCache.leafProperties)

@@ -18,58 +18,63 @@ package org.pkl.lsp.features
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.HoverParams
+import org.eclipse.lsp4j.MarkupContent
+import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.PklLSPServer
+import org.pkl.lsp.ast.*
+import org.pkl.lsp.resolvers.ResolveVisitors
+import org.pkl.lsp.resolvers.Resolvers
+import org.pkl.lsp.type.computeThisType
 
 class HoverFeature(private val server: PklLSPServer) {
 
   fun onHover(params: HoverParams): CompletableFuture<Hover> {
-    return server.builder().runningBuild().thenApply { Hover() }
-    //    fun run(mod: Module?): Hover? {
-    //      if (mod == null) return null
-    //      val uri = URI(params.textDocument.uri)
-    //      val line = params.position.line + 1
-    //      val col = params.position.character + 1
-    //      server.logger().log("received hover request at ($line - $col)")
-    ////      val hoverText = findContext(mod, line, col)?.resolve() ?: return null
-    ////      server.logger().log("hover text: $hoverText")
-    ////      return Hover(MarkupContent("markdown", hoverText))
-    //    }
-    //    return server.builder().runningBuild().thenApply(::run)
+    // return server.builder().runningBuild().thenApply { Hover() }
+    fun run(mod: PklModule?): Hover? {
+      if (mod == null) return null
+      // val uri = URI(params.textDocument.uri)
+      val line = params.position.line + 1
+      val col = params.position.character + 1
+      val hoverText = mod.findBySpan(line, col)?.let { resolveHover(it) } ?: return null
+      server.logger().log("hover text: $hoverText")
+      return Hover(MarkupContent("markdown", hoverText))
+    }
+    return server.builder().runningBuild().thenApply(::run)
   }
 
-  sealed class HoverCtx {
-    class Module(val name: String) : HoverCtx()
+  private fun resolveHover(node: Node): String? {
+    return when (node) {
+      is PklProperty -> resolveProperty(node)?.toMarkdown()
+      is PklUnqualifiedAccessExpr -> resolveUnqualifiedAccess(node)?.toMarkdown()
+      is PklQualifiedAccessExpr -> resolveQualifiedAccess(node)?.toMarkdown()
+      else -> null
+    }
+  }
 
-    class Clazz(val name: String, val parent: String?) : HoverCtx()
+  private fun resolveQualifiedAccess(node: PklQualifiedAccessExpr): Node? {
+    val base = PklBaseModule.instance
+    val visitor = ResolveVisitors.firstElementNamed(node.memberNameText, base)
+    // TODO: check if receiver is PklModule
+    return node.resolve(base, null, mapOf(), visitor)
+  }
 
-    class Prop(val name: String, val type: String?) : HoverCtx()
+  private fun resolveUnqualifiedAccess(node: PklUnqualifiedAccessExpr): Node? {
+    val base = PklBaseModule.instance
+    val visitor = ResolveVisitors.firstElementNamed(node.memberNameText, base)
+    return node.resolve(base, null, mapOf(), visitor)
+  }
 
-    fun resolve(): String =
-      when (this) {
-        is Module -> "**module** $name"
-        is Clazz -> "**class** $name"
-        is Prop -> "**$name**"
+  private fun resolveProperty(prop: PklProperty): Node? {
+    val base = PklBaseModule.instance
+    val name = prop.name
+    val visitor = ResolveVisitors.firstElementNamed(name, base)
+    return when {
+      prop.type != null -> visitor.result
+      prop.isLocal -> visitor.result
+      else -> {
+        val receiverType = prop.computeThisType(base, mapOf())
+        Resolvers.resolveQualifiedAccess(receiverType, true, base, visitor)
       }
+    }
   }
-  //
-  //  private fun findContext(mod: PklModule, line: Int, col: Int): HoverCtx? {
-  //    // search module declaration
-  //    val decl = mod.decl
-  //    if (decl != null && decl.span.matches(line, col)) {
-  //      if (decl.nameSpan != null && decl.nameSpan.matches(line, col)) {
-  //        return HoverCtx.Module(decl.name!!.nameString)
-  //      }
-  //    }
-  //
-  //    for (entry in mod.entries) {
-  //      if (entry.name.span.matches(line, col)) {
-  //        return when (entry) {
-  //          is Clazz -> HoverCtx.Clazz(entry.name.value, null)
-  //          is ClassEntry -> HoverCtx.Prop(entry.name.value, null)
-  //          else -> null
-  //        }
-  //      }
-  //    }
-  //    return null
-  //  }
 }

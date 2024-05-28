@@ -34,7 +34,7 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
     children.filterIsInstance<PklModuleMember>()
   }
 
-  override val imports: List<PklImport>? by lazy { getChildren(PklImportImpl::class) }
+  override val imports: List<PklImport> by lazy { children.filterIsInstance<PklImport>() }
 
   override val typeAliases: List<PklTypeAlias> by lazy { children.filterIsInstance<PklTypeAlias>() }
 
@@ -45,7 +45,19 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
 
   override val cache: ModuleMemberCache by lazy { ModuleMemberCache.create(this) }
 
-  override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
+  override val modifiers: List<Terminal>? by lazy { declaration?.moduleHeader?.modifiers }
+
+  override val typeDefs: List<PklTypeDef> by lazy { children.filterIsInstance<PklTypeDef>() }
+
+  override val typeDefsAndProperties: List<PklTypeDefOrProperty> by lazy {
+    members.filterIsInstance<PklTypeDefOrProperty>()
+  }
+
+  override val properties: List<PklClassProperty> by lazy {
+    members.filterIsInstance<PklClassProperty>()
+  }
+
+  override val methods: List<PklClassMethod> by lazy { members.filterIsInstance<PklClassMethod>() }
 
   // TODO: fetch the name of the module from uri
   override val shortDisplayName: String by lazy {
@@ -60,11 +72,11 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
 
 class PklAnnotationImpl(override val parent: Node, override val ctx: PklParser.AnnotationContext) :
   AbstractNode(parent, ctx), PklAnnotation {
-  override val typeName: TypeName
-    get() = TODO("Not yet implemented")
+  override val type: PklType? by lazy { children.firstInstanceOf<PklType>() }
 
-  override val objectBody: PklObjectBody
-    get() = TODO("Not yet implemented")
+  override val typeName: TypeName? by lazy { (type as? PklDeclaredType)?.name }
+
+  override val objectBody: PklObjectBody? by lazy { children.firstInstanceOf<PklObjectBody>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitAnnotation(this)
@@ -148,11 +160,11 @@ class ModuleExtendsAmendsClauseImpl(
 
 class PklClassImpl(override val parent: Node, override val ctx: PklParser.ClazzContext) :
   AbstractNode(parent, ctx), PklClass {
-  override val classHeader: ClassHeader by lazy { getChild(ClassHeaderImpl::class)!! }
+  override val classHeader: PklClassHeader by lazy { getChild(PklClassHeaderImpl::class)!! }
 
   override val annotations: List<PklAnnotation>? by lazy { getChildren(PklAnnotationImpl::class) }
 
-  override val classBody: ClassBody? by lazy { getChild(ClassBodyImpl::class) }
+  override val classBody: PklClassBody? by lazy { getChild(PklClassBodyImpl::class) }
 
   override val name: String by lazy { ctx.classHeader().Identifier().text }
 
@@ -160,19 +172,31 @@ class PklClassImpl(override val parent: Node, override val ctx: PklParser.ClazzC
 
   override val cache: ClassMemberCache by lazy { ClassMemberCache.create(this) }
 
+  override val typeParameterList: PklTypeParameterList? by lazy { classHeader.typeParameterList }
+
+  override val members: List<PklClassMember> by lazy { classBody?.members ?: emptyList() }
+
+  override val properties: List<PklClassProperty> by lazy {
+    members.filterIsInstance<PklClassProperty>()
+  }
+
+  override val methods: List<PklClassMethod> by lazy { members.filterIsInstance<PklClassMethod>() }
+
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitClass(this)
   }
 }
 
-class ClassHeaderImpl(override val parent: Node, override val ctx: PklParser.ClassHeaderContext) :
-  AbstractNode(parent, ctx), ClassHeader {
+class PklClassHeaderImpl(
+  override val parent: Node,
+  override val ctx: PklParser.ClassHeaderContext
+) : AbstractNode(parent, ctx), PklClassHeader {
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
 
   override val modifiers: List<Terminal> by lazy { terminals.takeWhile { it.isModifier } }
 
-  override val typeParameterList: TypeParameterList? by lazy {
-    getChild(TypeParameterListImpl::class)
+  override val typeParameterList: PklTypeParameterList? by lazy {
+    getChild(PklTypeParameterListImpl::class)
   }
 
   override val extends: PklType? by lazy { children.last() as? PklType }
@@ -182,19 +206,19 @@ class ClassHeaderImpl(override val parent: Node, override val ctx: PklParser.Cla
   }
 }
 
-class ClassBodyImpl(override val parent: Node, override val ctx: PklParser.ClassBodyContext) :
-  AbstractNode(parent, ctx), ClassBody {
-  override val members: List<ClassMember> by lazy { children.filterIsInstance<ClassMember>() }
+class PklClassBodyImpl(override val parent: Node, override val ctx: PklParser.ClassBodyContext) :
+  AbstractNode(parent, ctx), PklClassBody {
+  override val members: List<PklClassMember> by lazy { children.filterIsInstance<PklClassMember>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitClassBody(this)
   }
 }
 
-class TypeParameterListImpl(
+class PklTypeParameterListImpl(
   override val parent: Node,
   override val ctx: PklParser.TypeParameterListContext
-) : AbstractNode(parent, ctx), TypeParameterList {
+) : AbstractNode(parent, ctx), PklTypeParameterList {
   override val typeParameters: List<PklTypeParameter> by lazy {
     getChildren(PklTypeParameterImpl::class) ?: listOf()
   }
@@ -211,6 +235,8 @@ class PklTypeParameterImpl(
   override val variance: Variance? by lazy {
     if (ctx.IN() != null) Variance.IN else if (ctx.OUT() != null) Variance.OUT else null
   }
+
+  override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
 
   override val name: String by lazy { ctx.Identifier().text }
 

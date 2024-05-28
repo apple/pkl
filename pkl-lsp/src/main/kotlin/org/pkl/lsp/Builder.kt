@@ -27,6 +27,7 @@ import org.pkl.core.parser.Parser
 import org.pkl.core.util.IoUtils
 import org.pkl.lsp.LSPUtil.toRange
 import org.pkl.lsp.analyzers.Analyzer
+import org.pkl.lsp.analyzers.AnnotationAnalyzer
 import org.pkl.lsp.analyzers.ModifierAnalyzer
 import org.pkl.lsp.analyzers.PklDiagnostic
 import org.pkl.lsp.ast.Node
@@ -39,7 +40,8 @@ class Builder(private val server: PklLSPServer) {
 
   private val parser = Parser()
 
-  private val analyzers: List<Analyzer> = listOf(ModifierAnalyzer(server))
+  private val analyzers: List<Analyzer> =
+    listOf(ModifierAnalyzer(server), AnnotationAnalyzer(server))
 
   fun runningBuild(): CompletableFuture<PklModule?> = runningBuild
 

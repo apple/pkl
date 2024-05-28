@@ -16,6 +16,7 @@
 package org.pkl.lsp.ast
 
 import org.pkl.lsp.PklBaseModule
+import org.pkl.lsp.inferImportPropertyName
 import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.TypeParameterBindings
 import org.pkl.lsp.type.computeResolvedImportType
@@ -96,6 +97,11 @@ fun PklClass.isSubclassOf(other: PklModule): Boolean {
   }
   return false
 }
+
+val PklImport.memberName: String?
+  get() =
+    identifier?.text
+      ?: moduleUri?.stringConstant?.escapedText()?.let { inferImportPropertyName(it) }
 
 fun PklStringConstant.escapedText(): String? = getEscapedText()
 
@@ -210,6 +216,17 @@ fun PklImportBase.resolve(): ModuleResolutionResult =
   if (isGlob) GlobModuleResolutionResult(moduleUri?.resolveGlob() ?: emptyList())
   else SimpleModuleResolutionResult(moduleUri?.resolve())
 
+fun PklImportBase.resolveModules(): List<PklModule> =
+  resolve().let { result ->
+    when (result) {
+      is SimpleModuleResolutionResult -> result.resolved?.let(::listOf) ?: emptyList()
+      else -> {
+        result as GlobModuleResolutionResult
+        result.resolved
+      }
+    }
+  }
+
 fun PklModuleUri.resolveGlob(): List<PklModule> = TODO("implement") // resolveModuleUriGlob(this)
 
 fun PklModuleUri.resolve(): PklModule? = TODO("implement")
@@ -265,3 +282,18 @@ class GlobModuleResolutionResult(val resolved: List<PklModule>) : ModuleResoluti
     }
   }
 }
+
+/** Find the deepest node that matches [line] and [col]. */
+fun Node.findBySpan(line: Int, col: Int, includeTerminals: Boolean = false): Node? {
+  if (!includeTerminals && this is Terminal) return null
+  val hit = if (span.matches(line, col)) this else null
+  val childHit = children.firstNotNullOfOrNull { it.findBySpan(line, col) }
+  return childHit ?: hit
+}
+
+fun Node.toMarkdown(): String? =
+  when (this) {
+    is PklProperty -> "**$name**: ${type?.toMarkdown() ?: "unknown"}"
+    is PklStringLiteralType -> text
+    else -> text
+  }

@@ -43,15 +43,15 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitModuleMember(o)
   }
 
-  open fun visitClassBody(o: ClassBody): R? {
+  open fun visitClassBody(o: PklClassBody): R? {
     return visitElement(o)
   }
 
-  open fun visitClassHeader(o: ClassHeader): R? {
+  open fun visitClassHeader(o: PklClassHeader): R? {
     return visitModifierListOwner(o)
   }
 
-  open fun visitClassMember(o: ClassMember): R? {
+  open fun visitClassMember(o: PklClassMember): R? {
     return visitModuleMember(o)
   }
 
@@ -380,7 +380,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitElement(o)
   }
 
-  open fun visitTypeParameterList(o: TypeParameterList): R? {
+  open fun visitTypeParameterList(o: PklTypeParameterList): R? {
     return visitElement(o)
   }
 

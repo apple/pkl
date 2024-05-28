@@ -84,7 +84,7 @@ fun Node.computeThisType(base: PklBaseModule, bindings: TypeParameterBindings): 
       is PklClass,
       is PklTypeAlias -> return element.computeResolvedImportType(base, bindings)
       is PklAnnotation ->
-        return element.typeName.resolve().computeResolvedImportType(base, bindings)
+        return element.typeName?.resolve().computeResolvedImportType(base, bindings)
     }
     element = element.parent
   }

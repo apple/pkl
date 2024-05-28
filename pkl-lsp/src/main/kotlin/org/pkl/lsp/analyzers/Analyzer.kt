@@ -24,7 +24,7 @@ import org.pkl.lsp.ast.Node
  */
 abstract class Analyzer {
   fun analyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>) {
-    if (doAnalyze(node, diagnosticsHolder)) {
+    if (!doAnalyze(node, diagnosticsHolder)) {
       return
     }
     node.children.forEach { analyze(it, diagnosticsHolder) }

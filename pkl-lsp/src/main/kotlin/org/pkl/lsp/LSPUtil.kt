@@ -15,6 +15,9 @@
  */
 package org.pkl.lsp
 
+import java.net.URI
+import java.net.URISyntaxException
+import kotlin.math.max
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.pkl.lsp.ast.Span
@@ -41,6 +44,45 @@ class UnexpectedTypeError(message: String) : AssertionError(message)
 
 fun unexpectedType(obj: Any?): Nothing {
   throw UnexpectedTypeError(obj?.javaClass?.typeName ?: "null")
+}
+
+private fun takeLastSegment(name: String, separator: Char): String {
+  val lastSep = name.lastIndexOf(separator)
+  return name.substring(lastSep + 1)
+}
+
+private fun dropLastSegment(name: String, separator: Char): String {
+  val lastSep = name.lastIndexOf(separator)
+  return if (lastSep == -1) name else name.substring(0, lastSep)
+}
+
+private fun getNameWithoutExtension(path: String): String {
+  val lastSep = max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  val lastDot = path.lastIndexOf('.')
+  return if (lastDot == -1 || lastDot < lastSep) path.substring(lastSep + 1)
+  else path.substring(lastSep + 1, lastDot)
+}
+
+fun inferImportPropertyName(moduleUriStr: String): String? {
+  val moduleUri =
+    try {
+      URI(moduleUriStr)
+    } catch (e: URISyntaxException) {
+      return null
+    }
+
+  if (moduleUri.isOpaque) {
+    // convention: take last segment of dot-separated name after stripping any colon-separated
+    // version number
+    return takeLastSegment(dropLastSegment(moduleUri.schemeSpecificPart, ':'), '.')
+  }
+  if (moduleUri.scheme == "package") {
+    return moduleUri.fragment?.let(::getNameWithoutExtension)
+  }
+  if (moduleUri.isAbsolute) {
+    return getNameWithoutExtension(moduleUri.path)
+  }
+  return getNameWithoutExtension(moduleUri.schemeSpecificPart)
 }
 
 fun isMathematicalInteger(x: Double): Boolean {

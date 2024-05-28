@@ -22,7 +22,6 @@ import org.pkl.lsp.type.*
 import org.pkl.lsp.unexpectedType
 
 interface ResolveVisitor<R> {
-
   /**
    * Note: [element] may be of type [PklImport], which visitors need to `resolve()` on their own if
    * so desired.
@@ -303,6 +302,43 @@ object ResolveVisitors {
       }
 
       override var result: Node? = null
+
+      override val exactName: String
+        get() = expectedName
+    }
+
+  @Suppress("unused")
+  fun elementsNamed(
+    expectedName: String,
+    base: PklBaseModule,
+    resolveImports: Boolean = true
+  ): ResolveVisitor<List<Node>> =
+    object : ResolveVisitor<List<Node>> {
+      override fun visit(name: String, element: Node, bindings: TypeParameterBindings): Boolean {
+        if (name != expectedName) return true
+
+        when {
+          element is PklImport -> {
+            if (resolveImports) {
+              result.addAll(element.resolveModules())
+            } else {
+              result.add(element)
+            }
+          }
+          element is PklTypeParameter && bindings.contains(element) -> {
+            for (definition in toDefinitions(element, base, bindings)) {
+              visit(name, definition, mapOf())
+            }
+          }
+          element is PklNavigableElement -> result.add(element)
+          element is PklExpr -> return true
+          else -> unexpectedType(element)
+        }
+
+        return true
+      }
+
+      override var result: MutableList<Node> = mutableListOf()
 
       override val exactName: String
         get() = expectedName
