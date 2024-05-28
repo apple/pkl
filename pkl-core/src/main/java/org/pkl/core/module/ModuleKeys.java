@@ -16,9 +16,11 @@
 package org.pkl.core.module;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
@@ -88,8 +90,8 @@ public final class ModuleKeys {
   }
 
   /** Creates a module key for a {@code file:} module. */
-  public static ModuleKey file(URI uri, Path path) {
-    return new File(uri, path);
+  public static ModuleKey file(URI uri) {
+    return new File(uri);
   }
 
   /**
@@ -290,12 +292,10 @@ public final class ModuleKeys {
 
   private static class File extends DependencyAwareModuleKey {
     final URI uri;
-    final Path path;
 
-    File(URI uri, Path path) {
+    File(URI uri) {
       super(uri);
       this.uri = uri;
-      this.path = path;
     }
 
     @Override
@@ -316,7 +316,13 @@ public final class ModuleKeys {
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
-      var realPath = path.toRealPath();
+      // Disallow paths that contain `\\` characters if on Windows
+      // (require `/` as the path separator on all OSes)
+      var uriPath = uri.getPath();
+      if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
+        throw new FileNotFoundException();
+      }
+      var realPath = Path.of(uri).toRealPath();
       var resolvedUri = realPath.toUri();
       securityManager.checkResolveModule(resolvedUri);
       return ResolvedModuleKeys.file(this, resolvedUri, realPath);
@@ -325,7 +331,7 @@ public final class ModuleKeys {
     @Override
     protected Map<String, ? extends Dependency> getDependencies() {
       var projectDepsManager = VmContext.get(null).getProjectDependenciesManager();
-      if (projectDepsManager == null || !projectDepsManager.hasPath(path)) {
+      if (projectDepsManager == null || !projectDepsManager.hasPath(Path.of(uri))) {
         throw new PackageLoadError("cannotResolveDependencyNoProject");
       }
       return projectDepsManager.getDependencies();
@@ -519,6 +525,12 @@ public final class ModuleKeys {
       var url = IoUtils.toUrl(uri);
       var conn = url.openConnection();
       conn.connect();
+      if (conn instanceof JarURLConnection && IoUtils.isWindows()) {
+        // On Windows, opening a JarURLConnection prevents the jar file from being deleted, unless
+        // cacheing is disabled.
+        // See https://bugs.openjdk.org/browse/JDK-8239054
+        conn.setUseCaches(false);
+      }
       try (InputStream stream = conn.getInputStream()) {
         URI redirected;
         try {

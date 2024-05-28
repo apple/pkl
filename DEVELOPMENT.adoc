@@ -40,6 +40,7 @@ pkl-cli/build/executable/jpkl                   # run Java executable
 pkl-cli/build/executable/pkl-macos-amd64        # run Mac executable
 pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
 pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
+pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 
 ----
 
 == Update Gradle
@@ -67,6 +68,13 @@ based on version information from https://search.maven.org, https://plugins.grad
 ** Output dir is `generated/truffle/`
 * ANTLR code generation is performed by task `:pkl-core:generateGrammarSource`
 ** Output dir is `generated/antlr/`
+
+== Remote JVM Debugging
+
+To enable remote JVM debugging when running Gradle tasks (e.g. test), add the flag `-Djvmdebug=true`.
+This will listen on port 5005.
+
+Example: `./gradlew test -Djvmdebug=true`
 
 == Resources
 For automated build setup examples see our https://github.com/apple/pkl/blob/main/.circleci/[CircleCI] jobs like our https://github.com/apple/pkl/blob/main/.circleci/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.

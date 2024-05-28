@@ -15,6 +15,7 @@ import org.pkl.commons.test.FilteringClassLoader
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
 import org.pkl.core.Release
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -197,9 +198,10 @@ class EmbeddedExecutorTest {
         Executors.embedded(listOf("/non/existing".toPath()))
     }
 
+    val sep = File.separatorChar
     assertThat(e.message)
       .contains("Cannot find Jar file")
-      .contains("/non/existing")
+      .contains("${sep}non${sep}existing")
   }
 
   @Test

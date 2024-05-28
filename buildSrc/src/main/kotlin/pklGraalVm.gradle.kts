@@ -2,6 +2,7 @@ import java.nio.file.*
 import java.util.UUID
 import de.undercouch.gradle.tasks.download.Download
 import de.undercouch.gradle.tasks.download.Verify
+import kotlin.io.path.createDirectories
 
 plugins {
   id("de.undercouch.download")
@@ -9,7 +10,10 @@ plugins {
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val BuildInfo.GraalVm.downloadFile get() = file(homeDir).resolve("${baseName}.tar.gz")
+val BuildInfo.GraalVm.downloadFile get(): File {
+  val extension = if (buildInfo.os.isWindows) "zip" else "tar.gz"
+  return file(homeDir).resolve("${baseName}.$extension")
+}
 
 // tries to minimize chance of corruption by download-to-temp-file-and-move
 val downloadGraalVmAarch64 by tasks.registering(Download::class) {
@@ -72,11 +76,10 @@ fun Task.configureInstallGraalVm(graalVm: BuildInfo.GraalVm) {
   }
 
   doLast {
-    val distroDir = "${graalVm.homeDir}/${UUID.randomUUID()}"
+    val distroDir = Paths.get(graalVm.homeDir, UUID.randomUUID().toString())
 
     try {
-      mkdir(distroDir)
-
+      distroDir.createDirectories()
       println("Extracting ${graalVm.downloadFile} into $distroDir")
       // faster and more reliable than Gradle's `copy { from tarTree() }`
       exec {
@@ -85,17 +88,18 @@ fun Task.configureInstallGraalVm(graalVm: BuildInfo.GraalVm) {
         args("--strip-components=1", "-xzf", graalVm.downloadFile)
       }
 
-      val distroBinDir = if (buildInfo.os.isMacOsX) "$distroDir/Contents/Home/bin" else "$distroDir/bin"
+      val distroBinDir = if (buildInfo.os.isMacOsX) distroDir.resolve("Contents/Home/bin") else distroDir.resolve("bin")
 
       println("Installing native-image into $distroDir")
       exec {
-        executable = "$distroBinDir/gu"
+        val executableName = if (buildInfo.os.isWindows) "gu.cmd" else "gu"
+        executable = distroBinDir.resolve(executableName).toString()
         args("install", "--no-progress", "native-image")
       }
 
       println("Creating symlink ${graalVm.installDir} for $distroDir")
-      val tempLink = Paths.get("${graalVm.homeDir}/${UUID.randomUUID()}")
-      Files.createSymbolicLink(tempLink, Paths.get(distroDir))
+      val tempLink = Paths.get(graalVm.homeDir, UUID.randomUUID().toString())
+      Files.createSymbolicLink(tempLink, distroDir)
       try {
         Files.move(tempLink, graalVm.installDir.toPath(), StandardCopyOption.ATOMIC_MOVE)
       } catch (e: Exception) {

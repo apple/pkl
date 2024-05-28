@@ -8,6 +8,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-amd64&e=bin
 :uri-pkl-linux-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-aarch64&e=bin
 :uri-pkl-alpine-download: {uri-sonatype-snapshot-download}&a=pkl-cli-alpine-linux-amd64&e=bin
+:uri-pkl-windows-download: {uri-sonatype-snapshot-download}&a=pkl-cli-windows-amd64&e=exe
 :uri-pkl-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-java&e=jar
 
 ifdef::is-release-version[]
@@ -16,6 +17,7 @@ ifdef::is-release-version[]
 :uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
 :uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
 :uri-pkl-alpine-download: {github-releases}/pkl-alpine-linux-amd64
+:uri-pkl-windows-download: {github-releases}/pkl-windows-amd64.exe
 :uri-pkl-java-download: {uri-maven-repo}/org/pkl-lang/pkl-cli-java/{pkl-artifact-version}/pkl-cli-java-{pkl-artifact-version}.jar
 endif::[]
 
@@ -37,9 +39,10 @@ The CLI comes in multiple flavors:
 * Native Linux executable for amd64
 * Native Linux executable for aarch64
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
-* Java executable (tested with Java 17/21 on macOS and Oracle Linux, may work on other platforms)
+* Native Windows executable for amd64 (tested on Windows Server 2022)
+* Java executable (tested with Java 17/21 on macOS and Oracle Linux)
 
-On macOS and Linux, we recommend using the native executables.
+On macOS, Linux, and Windows, we recommend using the native executables.
 They are self-contained, start up instantly, and run complex Pkl code much faster than the Java executable.
 
 .What is the Difference Between the Linux and Alpine Linux Executables?
@@ -59,7 +62,7 @@ Except where noted otherwise, the rest of this page discusses the native executa
 [[homebrew]]
 === Homebrew
 
-Release versions can be installed with {uri-homebrew}[Homebrew].
+On macOS and Linux, release versions can be installed with {uri-homebrew}[Homebrew].
 
 ifdef::is-release-version[]
 To install Pkl, run:
@@ -111,7 +114,7 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (macOS, native)
@@ -145,7 +148,7 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (Linux, native)
@@ -167,13 +170,30 @@ chmod +x pkl
 
 This should print something similar to:
 
-[source,shell]
+[source]
 [subs="+attributes"]
 ----
 Pkl {pkl-version} (Linux, native)
 ----
 
 NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
+
+=== Windows Executable
+
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-windows-download}' -OutFile pkl.exe
+.\pkl --version
+----
+
+[source]
+[subs="+attributes"]
+----
+Pkl {pkl-version} (Windows 10.0, native)
+----
+
+NOTE: We currently do not support the aarch64 architecture for Windows.
 
 === Java Executable
 
@@ -193,27 +213,8 @@ This should print something similar to:
 Pkl {pkl-version} (macOS 14.2, Java 17.0.10)
 ----
 
-=== Windows support
-Pkl does not currently support running natively on Windows. Pkl has been reported to work on the https://learn.microsoft.com/en-us/windows/wsl/install[Windows Subsystem for Linux] and on a https://www.oracle.com/java/technologies/downloads/#jdk21-windows[Java Runtime] using https://search.maven.org/remote_content?g=org.pkl-lang&a=pkl-cli-java&v=LATEST[`jpkl` (the Java executable version of Pkl)].
-
-The following is from successful uses of `jpkl` on Windows:
-[source,shell]
-[subs="+attributes"]
-----
-> java -jar pkl-cli-java.jar --version
-Pkl 0.26.0-dev+21e0e14 (Windows 10 10.0, Java 21.0.2)
-----
-
-Note: You must use forward slashes in all paths for Windows with absolute paths prefixed with file:///.  The following examples are valid:
-[source,shell]
-[subs="+attributes"]
-----
-> java -jar pkl-cli-java.jar eval file:///C:/Code/pkl/test.pkl
-> java -jar pkl-cli-java.jar eval ../Code/pkl/test.pkl
-> java -jar pkl-cli-java.jar eval pkl/test.pkl
-----
-https://github.com/apple/pkl/issues/20[GitHub Issue #20] is used to track progress on support for the Windows platform.
-
+NOTE: The Java executable does not work as an executable file on Windows.
+However, it will work as a jar, for example, with `java -jar jpkl`.
 
 [[usage]]
 == Usage

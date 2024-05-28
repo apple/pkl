@@ -74,11 +74,12 @@ class EvaluatorTest {
 
   @Test
   fun `evaluate non-existing file`() {
+    val file = File("/non/existing")
     val e = assertThrows<PklException> {
-      evaluator.evaluate(file(File("/non/existing")))
+      evaluator.evaluate(file(file))
     }
     assertThat(e)
-      .hasMessageContaining("Cannot find module `file:///non/existing`.")
+      .hasMessageContaining("Cannot find module `${file.toPath().toUri()}`.")
   }
 
   @Test
@@ -92,13 +93,14 @@ class EvaluatorTest {
 
   @Test
   fun `evaluate non-existing path`() {
+    val path = "/non/existing".toPath()
     val e = assertThrows<PklException> {
-      evaluator.evaluate(path("/non/existing".toPath()))
+      evaluator.evaluate(path(path))
     }
     assertThat(e)
-      .hasMessageContaining("Cannot find module `file:///non/existing`.")
+      .hasMessageContaining("Cannot find module `${path.toUri()}`.")
   }
-  
+
   @Test
   fun `evaluate zip file system path`(@TempDir tempDir: Path) {
     val zipFile = createModulesZip(tempDir)

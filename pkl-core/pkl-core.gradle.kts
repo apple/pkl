@@ -267,6 +267,21 @@ val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
   }
 }
 
+val testWindowsExecutableAmd64 by tasks.registering(Test::class) {
+  dependsOn(":pkl-cli:windowsExecutableAmd64")
+
+  inputs.dir("src/test/files/LanguageSnippetTests/input")
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
+  inputs.dir("src/test/files/LanguageSnippetTests/output")
+
+  testClassesDirs = files(tasks.test.get().testClassesDirs)
+  classpath = tasks.test.get().classpath
+
+  useJUnitPlatform {
+    includeEngines("WindowsLanguageSnippetTestsEngine")
+  }
+}
+
 tasks.testNative {
   when {
     buildInfo.os.isMacOsX -> {
@@ -283,6 +298,9 @@ tasks.testNative {
       if (buildInfo.hasMuslToolchain) {
         dependsOn(testAlpineExecutableAmd64)
       }
+    }
+    buildInfo.os.isWindows -> {
+      dependsOn(testWindowsExecutableAmd64)
     }
   }
 }

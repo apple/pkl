@@ -1,6 +1,7 @@
 package org.pkl.gradle
 
 import org.assertj.core.api.Assertions.assertThat
+import org.pkl.commons.toNormalizedPathString
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import kotlin.io.path.readText
@@ -46,8 +47,7 @@ class TestsTest : AbstractTest() {
 
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
-    assertThat(output.trimStart()).startsWith("""
-      > Task :evalTest FAILED
+    assertThat(output).contains("""
       module test (file:///file, line x)
         test ❌
           Error:
@@ -143,7 +143,7 @@ class TestsTest : AbstractTest() {
     val pklFile = writePklFile(contents = bigTest)
     writeFile("test.pkl-expected.pcf", bigTestExpected)
 
-    writeBuildFile("junitReportsDir = file('${pklFile.parent}/build')")
+    writeBuildFile("junitReportsDir = file('${pklFile.parent.toNormalizedPathString()}/build')")
 
     runTask("evalTest", expectFailure = true)
 

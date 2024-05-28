@@ -15,10 +15,12 @@
  */
 package org.pkl.core.module;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.pkl.core.util.IoUtils;
@@ -75,7 +77,16 @@ public final class ResolvedModuleKeys {
 
     @Override
     public String loadSource() throws IOException {
-      return Files.readString(path, StandardCharsets.UTF_8);
+      try {
+        return Files.readString(path, StandardCharsets.UTF_8);
+      } catch (AccessDeniedException e) {
+        // Windows throws `AccessDeniedException` when reading directories.
+        // Sync error between different OSes.
+        if (Files.isDirectory(path)) {
+          throw new IOException("Is a directory");
+        }
+        throw e;
+      }
     }
   }
 

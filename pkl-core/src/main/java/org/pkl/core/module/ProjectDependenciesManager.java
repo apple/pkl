@@ -207,13 +207,15 @@ public final class ProjectDependenciesManager {
       if (projectDeps == null) {
         var depsPath = getProjectDepsFile();
         if (!Files.exists(depsPath)) {
-          throw new VmExceptionBuilder().evalError("missingProjectDepsJson", projectDir).build();
+          throw new VmExceptionBuilder()
+              .evalError("missingProjectDepsJson", projectDir.toUri())
+              .build();
         }
         try {
           projectDeps = ProjectDeps.parse(depsPath);
         } catch (IOException | URISyntaxException | JsonParseException e) {
           throw new VmExceptionBuilder()
-              .evalError("invalidProjectDepsJson", depsPath, e.getMessage())
+              .evalError("invalidProjectDepsJson", depsPath.toUri(), e.getMessage())
               .withCause(e)
               .build();
         }

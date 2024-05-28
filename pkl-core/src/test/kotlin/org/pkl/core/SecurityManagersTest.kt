@@ -181,11 +181,11 @@ class SecurityManagersTest {
       rootDir
     )
 
-    manager.checkResolveModule(URI("file:///foo/bar/baz.pkl"))
-    manager.checkReadResource(URI("file:///foo/bar/baz.pkl"))
+    manager.checkResolveModule(Path.of("/foo/bar/baz.pkl").toUri())
+    manager.checkReadResource(Path.of("/foo/bar/baz.pkl").toUri())
 
-    manager.checkResolveModule(URI("file:///foo/bar/qux/../baz.pkl"))
-    manager.checkReadResource(URI("file:///foo/bar/qux/../baz.pkl"))
+    manager.checkResolveModule(Path.of("/foo/bar/qux/../baz.pkl").toUri())
+    manager.checkReadResource(Path.of("/foo/bar/qux/../baz.pkl").toUri())
   }
 
   @Test
@@ -233,17 +233,17 @@ class SecurityManagersTest {
     )
 
     assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(URI("file:///foo/baz.pkl"))
+      manager.checkResolveModule(Path.of("/foo/baz.pkl").toUri())
     }
     assertThrows<SecurityManagerException> {
-      manager.checkReadResource(URI("file:///foo/baz.pkl"))
+      manager.checkReadResource(Path.of("/foo/baz.pkl").toUri())
     }
 
     assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(URI("file:///foo/bar/../baz.pkl"))
+      manager.checkResolveModule(Path.of("/foo/bar/../baz.pkl").toUri())
     }
     assertThrows<SecurityManagerException> {
-      manager.checkReadResource(URI("file:///foo/bar/../baz.pkl"))
+      manager.checkReadResource(Path.of("/foo/bar/../baz.pkl").toUri())
     }
   }
 }

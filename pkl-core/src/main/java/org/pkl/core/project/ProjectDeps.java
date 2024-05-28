@@ -35,6 +35,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
@@ -196,7 +197,7 @@ public final class ProjectDeps {
       jsonWriter.beginObject();
       jsonWriter.name("type").value("local");
       jsonWriter.name("uri").value(localDependency.getPackageUri().toString());
-      jsonWriter.name("path").value(localDependency.getPath().toString());
+      jsonWriter.name("path").value(IoUtils.toNormalizedPathString(localDependency.getPath()));
       jsonWriter.endObject();
     }
 

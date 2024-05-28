@@ -26,6 +26,7 @@ open class BuildInfo(project: Project) {
       when {
         os.isMacOsX -> "macos"
         os.isLinux -> "linux"
+        os.isWindows -> "windows"
         else -> throw RuntimeException("${os.familyName} is not supported.")
       }
     }
@@ -36,7 +37,8 @@ open class BuildInfo(project: Project) {
 
     val downloadUrl: String by lazy {
       val jdkMajor = graalVmJdkVersion.takeWhile { it != '.' }
-      "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.tar.gz"
+      val extension = if (os.isWindows) "zip" else "tar.gz"
+      "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.$extension"
     }
 
     val installDir: File by lazy {
@@ -85,9 +87,14 @@ open class BuildInfo(project: Project) {
   val commitId: String by lazy {
     // only run command once per build invocation
     if (project === project.rootProject) {
-      Runtime.getRuntime()
-        .exec(arrayOf("git", "rev-parse", "--short", "HEAD"), arrayOf(), project.rootDir)
-        .inputStream.reader().readText().trim()
+      val process = ProcessBuilder()
+        .command("git", "rev-parse", "--short", "HEAD")
+        .directory(project.rootDir)
+        .start()
+      process.waitFor().also { exitCode ->
+        if (exitCode == -1) throw RuntimeException(process.errorStream.reader().readText())
+      }
+      process.inputStream.reader().readText().trim()
     } else {
       project.rootProject.extensions.getByType(BuildInfo::class.java).commitId
     }

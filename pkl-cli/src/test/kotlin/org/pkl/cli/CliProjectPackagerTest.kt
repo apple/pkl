@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import java.io.File
 import java.io.StringWriter
 import java.net.URI
 import java.nio.file.FileSystems
@@ -27,6 +28,8 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
@@ -35,6 +38,7 @@ import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
+import org.pkl.core.util.IoUtils
 
 class CliProjectPackagerTest {
   companion object {
@@ -690,7 +694,11 @@ class CliProjectPackagerTest {
       )
   }
 
+  // Absolute path imports on Windows must use an absolute URI (e.g. file:///C:/Foo/Bar), because
+  // they must contain drive letters, which conflict with schemes.
+  // We skip validation for absolute URIs, so effectively we skip this check on Windows.
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   fun `import path verification -- absolute import from root dir`(@TempDir tempDir: Path) {
     tempDir.writeFile(
       "main.pkl",
@@ -738,6 +746,7 @@ class CliProjectPackagerTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   fun `import path verification -- absolute read from root dir`(@TempDir tempDir: Path) {
     tempDir.writeFile(
       "main.pkl",
@@ -858,17 +867,18 @@ class CliProjectPackagerTest {
         consoleWriter = out
       )
       .run()
+    val sep = File.separatorChar
     assertThat(out.toString())
-      .isEqualTo(
+      .isEqualToNormalizingNewlines(
         """
-      .out/project1@1.0.0/project1@1.0.0.zip
-      .out/project1@1.0.0/project1@1.0.0.zip.sha256
-      .out/project1@1.0.0/project1@1.0.0
-      .out/project1@1.0.0/project1@1.0.0.sha256
-      .out/project2@2.0.0/project2@2.0.0.zip
-      .out/project2@2.0.0/project2@2.0.0.zip.sha256
-      .out/project2@2.0.0/project2@2.0.0
-      .out/project2@2.0.0/project2@2.0.0.sha256
+      .out${sep}project1@1.0.0${sep}project1@1.0.0.zip
+      .out${sep}project1@1.0.0${sep}project1@1.0.0.zip.sha256
+      .out${sep}project1@1.0.0${sep}project1@1.0.0
+      .out${sep}project1@1.0.0${sep}project1@1.0.0.sha256
+      .out${sep}project2@2.0.0${sep}project2@2.0.0.zip
+      .out${sep}project2@2.0.0${sep}project2@2.0.0.zip.sha256
+      .out${sep}project2@2.0.0${sep}project2@2.0.0
+      .out${sep}project2@2.0.0${sep}project2@2.0.0.sha256
 
     """
           .trimIndent()
@@ -956,13 +966,14 @@ class CliProjectPackagerTest {
         consoleWriter = out
       )
       .run()
+    val sep = File.separatorChar
     assertThat(out.toString())
-      .isEqualTo(
+      .isEqualToNormalizingNewlines(
         """
-      .out/mangos@1.0.0/mangos@1.0.0.zip
-      .out/mangos@1.0.0/mangos@1.0.0.zip.sha256
-      .out/mangos@1.0.0/mangos@1.0.0
-      .out/mangos@1.0.0/mangos@1.0.0.sha256
+      .out${sep}mangos@1.0.0${sep}mangos@1.0.0.zip
+      .out${sep}mangos@1.0.0${sep}mangos@1.0.0.zip.sha256
+      .out${sep}mangos@1.0.0${sep}mangos@1.0.0
+      .out${sep}mangos@1.0.0${sep}mangos@1.0.0.sha256
 
     """
           .trimIndent()
@@ -971,7 +982,7 @@ class CliProjectPackagerTest {
 
   private fun Path.zipFilePaths(): List<String> {
     return FileSystems.newFileSystem(URI("jar:${toUri()}"), emptyMap<String, String>()).use { fs ->
-      Files.walk(fs.getPath("/")).map { it.toString() }.collect(Collectors.toList())
+      Files.walk(fs.getPath("/")).map(IoUtils::toNormalizedPathString).collect(Collectors.toList())
     }
   }
 }

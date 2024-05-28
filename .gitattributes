@@ -4,3 +4,4 @@
 /docs/** linguist-documentation
 
 *.pkl linguist-language=Groovy
+* text eol=lf

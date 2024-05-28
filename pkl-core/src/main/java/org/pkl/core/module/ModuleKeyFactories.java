@@ -18,8 +18,8 @@ package org.pkl.core.module;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -141,15 +141,20 @@ public final class ModuleKeyFactories {
   private static class File implements ModuleKeyFactory {
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      Path path;
-      try {
-        path = Path.of(uri);
-      } catch (FileSystemNotFoundException | IllegalArgumentException e) {
-        // none of the installed file system providers can handle this URI
+      // skip loading providers if the scheme is `file`.
+      if (uri.getScheme().equalsIgnoreCase("file")) {
+        return Optional.of(ModuleKeys.file(uri));
+      }
+      // don't handle jar-file URIs (these are handled by GenericUrl).
+      if (uri.getScheme().equalsIgnoreCase("jar")) {
         return Optional.empty();
       }
-
-      return Optional.of(ModuleKeys.file(uri, path));
+      for (FileSystemProvider provider : FileSystemProvider.installedProviders()) {
+        if (provider.getScheme().equalsIgnoreCase(uri.getScheme())) {
+          return Optional.of(ModuleKeys.file(uri));
+        }
+      }
+      return Optional.empty();
     }
   }
 

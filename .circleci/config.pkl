@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===// 
 // File gets rendered to .circleci/config.yml via git hook.
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.1.0#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.1.1#/PklCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
 import "jobs/GradleCheckJob.pkl"
@@ -96,6 +96,11 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
       musl = true
       isRelease = _dist == "release"
     }
+    ["pkl-cli-windows-amd64-\(_dist)"] {
+      arch = "amd64"
+      os = "windows"
+      isRelease = _dist == "release"
+    }
   }
 }
 
@@ -107,6 +112,11 @@ local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
   ["gradle-check-jdk21"] {
     javaVersion = "21.0"
     isRelease = false
+  }
+  ["gradle-check-jdk17-windows"] {
+    javaVersion = "17.0"
+    isRelease = false
+    os = "windows"
   }
 }
 

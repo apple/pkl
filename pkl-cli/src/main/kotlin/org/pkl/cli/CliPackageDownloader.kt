@@ -42,7 +42,11 @@ class CliPackageDownloader(
     }
     when (errors.size) {
       0 -> return
-      1 -> throw CliException(errors.values.single().message!!)
+      1 ->
+        throw CliException(
+          errors.values.single().message
+            ?: ("An unexpected error occurred: " + errors.values.single())
+        )
       else ->
         throw CliException(
           buildString {

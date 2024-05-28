@@ -117,70 +117,69 @@ class IoUtilsTest {
 
   @Test
   fun `relativize file URLs`() {
-    // perhaps URI("") would be a more precise result
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/bar/baz.pkl")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/bar/baz.pkl")
       )
     ).isEqualTo(URI("baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/bar/qux.pkl")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/bar/qux.pkl")
       )
     ).isEqualTo(URI("baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/bar/")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/bar/")
       )
     ).isEqualTo(URI("baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/bar")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/bar")
       )
     ).isEqualTo(URI("bar/baz.pkl"))
 
     // URI.relativize() returns an absolute URI here
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/qux/")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/qux/")
       )
     ).isEqualTo(URI("../bar/baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/qux/qux2/")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/qux/qux2/")
       )
     ).isEqualTo(URI("../../bar/baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://foo/qux/qux2")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///foo/qux/qux2")
       )
     ).isEqualTo(URI("../bar/baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("file://qux/qux2/")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("file:///qux/qux2/")
       )
-    ).isEqualTo(URI("file://foo/bar/baz.pkl"))
+    ).isEqualTo(URI("../../foo/bar/baz.pkl"))
 
     assertThat(
       IoUtils.relativize(
-        URI("file://foo/bar/baz.pkl"),
-        URI("https://foo/bar/baz.pkl")
+        URI("file:///foo/bar/baz.pkl"),
+        URI("https:///foo/bar/baz.pkl")
       )
-    ).isEqualTo(URI("file://foo/bar/baz.pkl"))
+    ).isEqualTo(URI("file:///foo/bar/baz.pkl"))
   }
 
   @Test
@@ -343,7 +342,7 @@ class IoUtilsTest {
     val file3 = tempDir.resolve("base1/dir2/foo.pkl").createParentDirectories().createFile()
 
     val uri = file2.toUri()
-    val key = ModuleKeys.file(uri, file2)
+    val key = ModuleKeys.file(uri)
 
     assertThat(IoUtils.resolve(FakeSecurityManager, key, URI("..."))).isEqualTo(file1.toUri())
     assertThat(IoUtils.resolve(FakeSecurityManager, key, URI(".../foo.pkl"))).isEqualTo(file1.toUri())

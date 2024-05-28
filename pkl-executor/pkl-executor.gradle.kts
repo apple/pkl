@@ -1,4 +1,5 @@
 import java.nio.file.Files
+import java.nio.file.LinkOption
 
 plugins {
   pklAllProjects
@@ -62,12 +63,23 @@ val prepareHistoricalDistributions by tasks.registering {
     val distributionDir = outputDir.get().asFile.toPath()
       .also(Files::createDirectories)
     for (file in pklHistoricalDistributions.files) {
-      val link = distributionDir.resolve(file.name)
-      if (!Files.isSymbolicLink(link)) {
-        if (Files.exists(link)) {
-          Files.delete(link)
+      val target = distributionDir.resolve(file.name)
+      // Create normal files on Windows, symlink on macOS/linux (need admin priveleges to create
+      // symlinks on Windows)
+      if (buildInfo.os.isWindows) {
+        if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
+          if (Files.exists(target)) {
+            Files.delete(target)
+          }
+          Files.copy(file.toPath(), target)
         }
-        Files.createSymbolicLink(link, file.toPath())
+      } else {
+        if (!Files.isSymbolicLink(target)) {
+          if (Files.exists(target)) {
+            Files.delete(target)
+          }
+          Files.createSymbolicLink(target, file.toPath())
+        }
       }
     }
   }

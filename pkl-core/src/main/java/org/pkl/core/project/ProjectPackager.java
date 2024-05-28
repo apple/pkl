@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestOutputStream;
@@ -119,13 +121,18 @@ public final class ProjectPackager {
     this.outputWriter = outputWriter;
   }
 
+  private void writeLine(String line) throws IOException {
+    outputWriter.write(line);
+    outputWriter.write(IoUtils.getLineSeparator());
+  }
+
   public void createPackages() throws IOException {
     for (var project : projects) {
       var packageResult = doPackage(project);
-      outputWriter.write(workingDir.relativize(packageResult.getMetadataFile()) + "\n");
-      outputWriter.write(workingDir.relativize(packageResult.getMetadataChecksumFile()) + "\n");
-      outputWriter.write(workingDir.relativize(packageResult.getZipFile()) + "\n");
-      outputWriter.write(workingDir.relativize(packageResult.getZipChecksumFile()) + "\n");
+      writeLine(IoUtils.relativize(packageResult.getMetadataFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.getMetadataChecksumFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.getZipFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.getZipChecksumFile(), workingDir).toString());
       outputWriter.flush();
     }
   }
@@ -302,8 +309,8 @@ public final class ProjectPackager {
     }
     try (var zos = new ZipOutputStream(digestOutputStream)) {
       for (var file : files) {
-        var relativePath = project.getProjectDir().relativize(file);
-        var zipEntry = new ZipEntry(relativePath.toString());
+        var relativePath = IoUtils.relativize(file, project.getProjectDir());
+        var zipEntry = new ZipEntry(IoUtils.toNormalizedPathString(relativePath));
         zipEntry.setTimeLocal(ZIP_ENTRY_MTIME);
         zos.putNextEntry(zipEntry);
         Files.copy(file, zos);
@@ -342,8 +349,8 @@ public final class ProjectPackager {
           .filter(Files::isRegularFile)
           .filter(
               (it) -> {
-                var fileNameRelativeToProjectRoot =
-                    project.getProjectDir().relativize(it).toString();
+                var relativePath = IoUtils.relativize(it, project.getProjectDir());
+                var fileNameRelativeToProjectRoot = IoUtils.toNormalizedPathString(relativePath);
                 for (var pattern : excludePatterns) {
                   if (pattern.matcher(it.getFileName().toString()).matches()) {
                     return false;
@@ -363,7 +370,7 @@ public final class ProjectPackager {
   }
 
   private boolean isAbsoluteImport(String importStr) {
-    return importStr.matches("\\w:.*") || importStr.startsWith("@");
+    return importStr.matches("\\w+:.*") || importStr.startsWith("@");
   }
 
   /**
@@ -386,8 +393,17 @@ public final class ProjectPackager {
       if (isAbsoluteImport(importStr)) {
         continue;
       }
-      var importPath = Path.of(importStr);
-      if (importPath.isAbsolute() && !project.getProjectDir().toString().equals("/")) {
+      URI importUri;
+      try {
+        importUri = IoUtils.toUri(importStr);
+      } catch (URISyntaxException e) {
+        throw new VmExceptionBuilder()
+            .evalError("invalidModuleUri", importStr)
+            .withSourceSection(sourceSection)
+            .build()
+            .toPklException(stackFrameTransformer);
+      }
+      if (importStr.startsWith("/") && !project.getProjectDir().toString().equals("/")) {
         throw new VmExceptionBuilder()
             .evalError("invalidRelativeProjectImport", importStr)
             .withSourceSection(sourceSection)
@@ -395,6 +411,7 @@ public final class ProjectPackager {
             .toPklException(stackFrameTransformer);
       }
       var currentPath = pklModulePath.getParent();
+      var importPath = Path.of(importUri.getPath());
       // It's not good enough to just check the normalized path to see whether it exists within the
       // root dir.
       // It's possible that the import path resolves to a path outside the project dir,
@@ -416,7 +433,7 @@ public final class ProjectPackager {
 
   private @Nullable List<Pair<String, SourceSection>> getImportsAndReads(Path pklModulePath) {
     try {
-      var moduleKey = ModuleKeys.file(pklModulePath.toUri(), pklModulePath);
+      var moduleKey = ModuleKeys.file(pklModulePath.toUri());
       var resolvedModuleKey = ResolvedModuleKeys.file(moduleKey, moduleKey.getUri(), pklModulePath);
       return ImportsAndReadsParser.parse(moduleKey, resolvedModuleKey);
     } catch (IOException e) {

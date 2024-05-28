@@ -22,6 +22,7 @@ import kotlin.Pair
 import org.pkl.commons.cli.CliBaseOptions.Companion.getProjectFile
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.toPath
 import org.pkl.core.*
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.packages.*
@@ -136,7 +137,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
     val packageUris = mutableListOf<PackageUri>()
     for (moduleUri in options.base.normalizedSourceModules) {
       if (moduleUri.scheme == "file") {
-        val dir = Path.of(moduleUri).parent
+        val dir = moduleUri.toPath().parent
         val projectFile = dir.getProjectFile(options.base.normalizedRootDir)
         if (projectFile != null) {
           pklProjectPaths.add(projectFile)
@@ -229,13 +230,12 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
             DocPackageInfo.fromPkl(module).apply {
               evaluator.collectImportedModules(overviewImports)
             }
-          schemasByDocPackageInfoAndPath[docPackageInfo to Path.of(uri.path).parent] =
-            mutableSetOf()
+          schemasByDocPackageInfoAndPath[docPackageInfo to uri.toPath().parent] = mutableSetOf()
         }
 
         for (uri in regularModuleUris) {
           val entry =
-            schemasByDocPackageInfoAndPath.keys.find { uri.path.startsWith(it.second.toString()) }
+            schemasByDocPackageInfoAndPath.keys.find { uri.toPath().startsWith(it.second) }
               ?: throw CliException("Could not find a doc-package-info.pkl for module $uri")
           val schema =
             evaluator.evaluateSchema(ModuleSource.uri(uri)).apply {

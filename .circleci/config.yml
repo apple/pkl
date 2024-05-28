@@ -12,18 +12,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -94,18 +88,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -120,18 +108,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -186,18 +168,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -269,18 +245,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -289,6 +259,26 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
+  pkl-cli-windows-amd64-release:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64
+        name: gradle buildNative
+        shell: bash.exe
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: windows.large
+    machine:
+      image: windows-server-2022-gui:current
   pkl-cli-macOS-amd64-snapshot:
     steps:
     - checkout
@@ -298,18 +288,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -380,18 +364,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -406,18 +384,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -472,18 +444,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -555,18 +521,12 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -575,18 +535,32 @@ jobs:
     resource_class: xlarge
     docker:
     - image: oraclelinux:8-slim
+  pkl-cli-windows-amd64-snapshot:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64
+        name: gradle buildNative
+        shell: bash.exe
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-cli/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: windows.large
+    machine:
+      image: windows-server-2022-gui:current
   gradle-check-jdk17:
     steps:
     - checkout
     - run:
-        command: ./gradlew --info --stacktrace check
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results check
         name: gradle check
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -597,32 +571,33 @@ jobs:
     steps:
     - checkout
     - run:
-        command: ./gradlew --info --stacktrace check
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results check
         name: gradle check
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
     docker:
     - image: cimg/openjdk:21.0
+  gradle-check-jdk17-windows:
+    steps:
+    - checkout
+    - run:
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results check
+        name: gradle check
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+    resource_class: windows.large
+    machine:
+      image: windows-server-2022-gui:current
   bench:
     steps:
     - checkout
     - run:
-        command: ./gradlew --info --stacktrace bench:jmh
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results bench:jmh
         name: bench:jmh
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -634,16 +609,10 @@ jobs:
     - checkout
     - run:
         command: |-
-          ./gradlew --info --stacktrace :pkl-gradle:build \
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results :pkl-gradle:build \
             :pkl-gradle:compatibilityTestReleases \
             :pkl-gradle:compatibilityTestCandidate
         name: gradle compatibility
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -656,17 +625,11 @@ jobs:
     - attach_workspace:
         at: '.'
     - run:
-        command: ./gradlew --info --stacktrace publishToSonatype
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results publishToSonatype
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -679,17 +642,11 @@ jobs:
     - attach_workspace:
         at: '.'
     - run:
-        command: ./gradlew --info --stacktrace -DreleaseBuild=true publishToSonatype closeAndReleaseSonatypeStagingRepository
+        command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true publishToSonatype closeAndReleaseSonatypeStagingRepository
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
-    - run:
-        command: |-
-          mkdir ~/test-results/
-          find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/ \;
-        name: Gather test results
-        when: always
     - store_test_results:
         path: ~/test-results
     environment:
@@ -753,6 +710,9 @@ workflows:
     - gradle-check-jdk21:
         requires:
         - hold
+    - gradle-check-jdk17-windows:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -761,6 +721,7 @@ workflows:
     jobs:
     - gradle-check-jdk17
     - gradle-check-jdk21
+    - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -768,10 +729,12 @@ workflows:
     - pkl-cli-macOS-aarch64-snapshot
     - pkl-cli-linux-aarch64-snapshot
     - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
     - deploy-snapshot:
         requires:
         - gradle-check-jdk17
         - gradle-check-jdk21
+        - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -779,6 +742,7 @@ workflows:
         - pkl-cli-macOS-aarch64-snapshot
         - pkl-cli-linux-aarch64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
         context: pkl-maven-release
     - trigger-docsite-build:
         requires:
@@ -798,6 +762,12 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk21:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - gradle-check-jdk17-windows:
         filters:
           branches:
             ignore: /.*/
@@ -845,10 +815,17 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-windows-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
         - gradle-check-jdk17
         - gradle-check-jdk21
+        - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -856,6 +833,7 @@ workflows:
         - pkl-cli-macOS-aarch64-release
         - pkl-cli-linux-aarch64-release
         - pkl-cli-linux-alpine-amd64-release
+        - pkl-cli-windows-amd64-release
         context: pkl-github-release
         filters:
           branches:
@@ -885,6 +863,7 @@ workflows:
     jobs:
     - gradle-check-jdk17
     - gradle-check-jdk21
+    - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
@@ -892,6 +871,7 @@ workflows:
     - pkl-cli-macOS-aarch64-release
     - pkl-cli-linux-aarch64-release
     - pkl-cli-linux-alpine-amd64-release
+    - pkl-cli-windows-amd64-release
     when:
       matches:
         value: << pipeline.git.branch >>

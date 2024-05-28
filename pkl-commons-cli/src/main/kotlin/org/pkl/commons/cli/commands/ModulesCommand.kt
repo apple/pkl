@@ -29,7 +29,7 @@ abstract class ModulesCommand(name: String, helpLink: String, help: String = "")
   ) {
   open val modules: List<URI> by
     argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
-      .convert { parseModuleName(it) }
+      .convert { BaseOptions.parseModuleName(it) }
       .multiple(required = true)
 
   protected val projectOptions by ProjectOptions()

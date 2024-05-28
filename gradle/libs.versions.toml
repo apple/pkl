@@ -15,6 +15,7 @@ graalVmSha256-macos-x64 = "14f4bd6417809905f86e786c779d0fc2feb840d7dac35ae3503eb
 graalVmSha256-macos-aarch64 = "e944c5ce5da56e683fc8f1a57191b46d9cb702930b1688bda064fcf467d876b8"
 graalVmSha256-linux-x64 = "112dc9b92d81a946f1b5b334646151b790785c813e76fcf13527a319003d7e2c"
 graalVmSha256-linux-aarch64 = "c95ac550d070f06666cf8c1023a098380dd565be00866473caf6ff1b7cdf680c"
+graalVmSha256-windows-x64 = "1ab2291e71f54d73e3e57b7fccbf184cabcba37e16ca9d1cf42d08474a7c02f0"
 ideaExtPlugin = "1.1"
 javaPoet = "1.+"
 javaxInject = "1"

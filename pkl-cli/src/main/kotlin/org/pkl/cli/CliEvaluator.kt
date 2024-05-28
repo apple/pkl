@@ -111,7 +111,9 @@ constructor(
 
     return moduleUris.associateWith { uri ->
       val moduleDir: String? =
-        IoUtils.toPath(uri)?.let { workingDir.relativize(it.parent).toString().ifEmpty { "." } }
+        IoUtils.toPath(uri)?.let {
+          IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
+        }
       val moduleKey =
         try {
           moduleResolver.resolve(uri)
@@ -158,7 +160,7 @@ constructor(
           } else {
             if (output.isNotEmpty()) {
               outputFile.writeString(
-                options.moduleOutputSeparator + IoUtils.getLineSeparator(),
+                options.moduleOutputSeparator + '\n',
                 Charsets.UTF_8,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.APPEND
@@ -192,6 +194,14 @@ constructor(
     if (uri == VmUtils.REPL_TEXT_URI) ModuleSource.create(uri, reader.readText())
     else ModuleSource.uri(uri)
 
+  private fun checkPathSpec(pathSpec: String) {
+    val illegal = pathSpec.indexOfFirst { IoUtils.isReservedFilenameChar(it) && it != '/' }
+    if (illegal == -1) {
+      return
+    }
+    throw CliException("Path spec `$pathSpec` contains illegal character `${pathSpec[illegal]}`.")
+  }
+
   /**
    * Renders each module's `output.files`, writing each entry as a file into the specified output
    * directory.
@@ -207,6 +217,7 @@ constructor(
       val moduleSource = toModuleSource(moduleUri, consoleReader)
       val output = evaluator.evaluateOutputFiles(moduleSource)
       for ((pathSpec, fileOutput) in output) {
+        checkPathSpec(pathSpec)
         val resolvedPath = outputDir.resolve(pathSpec).normalize()
         val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
         if (!realPath.startsWith(outputDir)) {
@@ -228,7 +239,10 @@ constructor(
         writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
         realPath.createParentDirectories()
         realPath.writeString(fileOutput.text)
-        consoleWriter.write(currentWorkingDir.relativize(resolvedPath).toString() + "\n")
+        consoleWriter.write(
+          IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
+            IoUtils.getLineSeparator()
+        )
         consoleWriter.flush()
       }
     }

@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import java.io.File
 import java.io.StringWriter
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
@@ -26,6 +27,7 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.core.util.IoUtils
 
 class CliProjectResolverTest {
   companion object {
@@ -354,7 +356,7 @@ class CliProjectResolverTest {
       )
     assertThat(errOut.toString())
       .isEqualTo(
-        "WARN: local dependency `package://localhost:0/fruit@1.0.0` was overridden to remote dependency `package://localhost:0/fruit@1.0.5`.\n"
+        "WARN: local dependency `package://localhost:0/fruit@1.0.0` was overridden to remote dependency `package://localhost:0/fruit@1.0.5`.${IoUtils.getLineSeparator()}"
       )
   }
 
@@ -401,11 +403,12 @@ class CliProjectResolverTest {
         errWriter = errOut
       )
       .run()
+    val sep = File.separatorChar
     assertThat(consoleOut.toString())
-      .isEqualTo(
+      .isEqualToNormalizingNewlines(
         """
-      $tempDir/project1/PklProject.deps.json
-      $tempDir/project2/PklProject.deps.json
+      $tempDir${sep}project1${sep}PklProject.deps.json
+      $tempDir${sep}project2${sep}PklProject.deps.json
     
     """
           .trimIndent()

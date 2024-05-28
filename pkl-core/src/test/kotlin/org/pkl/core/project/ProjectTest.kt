@@ -137,7 +137,7 @@ class ProjectTest {
   @Test
   fun `evaluate project module -- invalid checksum`() {
     PackageServer().use { server ->
-      val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.path)
+      val projectDir = Path.of(javaClass.getResource("badProjectChecksum2/")!!.toURI())
       val project = Project.loadFromPath(projectDir.resolve("PklProject"))
       val httpClient = HttpClient.builder()
         .addCertificates(FileTestUtils.selfSignedCertificate)

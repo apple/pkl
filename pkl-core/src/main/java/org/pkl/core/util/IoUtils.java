@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.pkl.core.PklBugException;
+import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.ModuleKey;
@@ -43,7 +44,10 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 
 public final class IoUtils {
 
-  private static final Pattern uriLike = Pattern.compile("\\w+:.*");
+  // Don't match paths like `C:\`, which are drive letters on Windows.
+  private static final Pattern uriLike = Pattern.compile("\\w+:[^\\\\].*");
+
+  private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
 
   private IoUtils() {}
 
@@ -66,12 +70,20 @@ public final class IoUtils {
     return uriLike.matcher(str).matches();
   }
 
+  public static boolean isWindowsAbsolutePath(String str) {
+    if (!isWindows()) return false;
+    return windowsPathLike.matcher(str).matches();
+  }
+
   /**
    * Converts the given string to a {@link URI}. This method MUST be used for constructing module
    * and resource URIs. Unlike {@code new URI(str)}, it correctly escapes paths of relative URIs.
    */
   public static URI toUri(String str) throws URISyntaxException {
-    return isUriLike(str) ? new URI(str) : new URI(null, null, str, null);
+    if (isUriLike(str)) {
+      return new URI(str);
+    }
+    return new URI(null, null, str, null);
   }
 
   /** Like {@link #toUri(String)}, except without checked exceptions. */
@@ -150,7 +162,8 @@ public final class IoUtils {
           new SimpleFileVisitor<>() {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
-              zipStream.putNextEntry(new ZipEntry(sourceDir.relativize(file).toString()));
+              var relativePath = relativize(file, sourceDir);
+              zipStream.putNextEntry(new ZipEntry(toNormalizedPathString(relativePath)));
               Files.copy(file, zipStream);
               zipStream.closeEntry();
               return FileVisitResult.CONTINUE;
@@ -178,6 +191,10 @@ public final class IoUtils {
   @SuppressWarnings("SystemGetProperty")
   public static String getLineSeparator() {
     return System.getProperty("line.separator");
+  }
+
+  public static Boolean isWindows() {
+    return Platform.current().operatingSystem().name().equals("Windows");
   }
 
   public static String getName(String path) {
@@ -362,7 +379,9 @@ public final class IoUtils {
     }
   }
 
-  // URI.relativize() won't construct relative paths containing ".."
+  // URI.relativize won't construct relative paths containing `..`.
+  // Can't use Path.relativize because certain URI characters will throw InvalidPathException
+  // on Windows.
   public static URI relativize(URI uri, URI base) {
     if (uri.isOpaque()
         || base.isOpaque()
@@ -370,17 +389,58 @@ public final class IoUtils {
         || !Objects.equals(uri.getAuthority(), base.getAuthority())) {
       return uri;
     }
-
-    var basePath = Path.of(base.getPath());
-    if (!base.getRawPath().endsWith("/")) basePath = basePath.getParent();
-    var resultPath = basePath.relativize(Path.of(uri.getPath()));
-
+    var uriPath = uri.normalize().getPath();
+    var basePath = base.normalize().getPath();
     try {
-      return new URI(
-          null, null, null, -1, resultPath.toString(), uri.getQuery(), uri.getFragment());
+      if (basePath.isEmpty()) {
+        return uri;
+      }
+      var uriParts = Arrays.asList(uriPath.split("/"));
+      var baseParts = Arrays.asList(basePath.split("/"));
+      if (!basePath.endsWith("/")) {
+        // strip the last path segment of the base uri, unless it ends in a slash. `/foo/bar.pkl` ->
+        // `/foo`
+        baseParts = baseParts.subList(0, baseParts.size() - 1);
+      }
+      if (uriParts.equals(baseParts)) {
+        return new URI(null, null, null, -1, "", uri.getQuery(), uri.getFragment());
+      }
+      var start = 0;
+      while (start < Math.min(uriParts.size(), baseParts.size())) {
+        if (!uriParts.get(start).equals(baseParts.get(start))) {
+          break;
+        }
+        start++;
+      }
+      var uriPartsRemaining = uriParts.subList(start, uriParts.size());
+      var basePartsRemainig = baseParts.subList(start, baseParts.size());
+      if (basePartsRemainig.isEmpty()) {
+        return new URI(
+            null,
+            null,
+            null,
+            -1,
+            String.join("/", uriPartsRemaining),
+            uri.getQuery(),
+            uri.getFragment());
+      }
+      var resultingPath =
+          "../".repeat(basePartsRemainig.size()) + String.join("/", uriPartsRemaining);
+      return new URI(null, null, null, -1, resultingPath, uri.getQuery(), uri.getFragment());
     } catch (URISyntaxException e) {
-      throw new IllegalArgumentException(e);
+      // Impossible; started from a valid URI to begin with.
+      throw PklBugException.unreachableCode();
     }
+  }
+
+  // On Windows, `Path.relativize` will fail if the two paths have different roots.
+  public static Path relativize(Path path, Path base) {
+    if (isWindows()) {
+      if (path.isAbsolute() && base.isAbsolute() && !path.getRoot().equals(base.getRoot())) {
+        return path;
+      }
+    }
+    return base.relativize(path);
   }
 
   public static boolean isWhitespace(String str) {
@@ -597,6 +657,63 @@ public final class IoUtils {
     return newUri;
   }
 
+  public static boolean isReservedFilenameChar(char character) {
+    if (isWindows()) {
+      return isReservedWindowsFilenameChar(character);
+    }
+    // posix; only NULL and `/` are reserved.
+    return character == 0 || character == '/';
+  }
+
+  /** Tells if this character cannot be used for filenames on Windows. */
+  public static boolean isReservedWindowsFilenameChar(char character) {
+    return switch (character) {
+      case 0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              '<',
+              '>',
+              ':',
+              '"',
+              '\\',
+              '/',
+              '|',
+              '?',
+              '*' ->
+          true;
+      default -> false;
+    };
+  }
+
   /**
    * Windows reserves characters {@code <>:"\|?*} in filenames.
    *
@@ -608,17 +725,25 @@ public final class IoUtils {
     var sb = new StringBuilder();
     for (var i = 0; i < path.length(); i++) {
       var character = path.charAt(i);
-      switch (character) {
-        case '<', '>', ':', '"', '\\', '|', '?', '*' -> {
-          sb.append('(');
-          sb.append(ByteArrayUtils.toHex(new byte[] {(byte) character}));
-          sb.append(")");
-        }
-        case '(' -> sb.append("((");
-        default -> sb.append(path.charAt(i));
+      if (isReservedWindowsFilenameChar(character) && character != '/') {
+        sb.append('(');
+        sb.append(ByteArrayUtils.toHex(new byte[] {(byte) character}));
+        sb.append(")");
+      } else if (character == '(') {
+        sb.append("((");
+      } else {
+        sb.append(character);
       }
     }
     return sb.toString();
+  }
+
+  /** Returns a path string that uses unix-like path separators. */
+  public static String toNormalizedPathString(Path path) {
+    if (isWindows()) {
+      return path.toString().replace("\\", "/");
+    }
+    return path.toString();
   }
 
   private static int getExclamationMarkIndex(String jarUri) {

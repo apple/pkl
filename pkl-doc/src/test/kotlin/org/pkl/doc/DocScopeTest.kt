@@ -16,6 +16,7 @@
 package org.pkl.doc
 
 import java.net.URI
+import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -221,6 +222,6 @@ class DocScopeTest {
     val scope = SiteScope(listOf(), mapOf(), { evaluator.evaluateSchema(uri(it)) }, outputDir)
 
     // used to return `/non/index.html`
-    assertThat(scope.url.path).isEqualTo("/non/existing/index.html")
+    assertThat(scope.url.toPath()).isEqualTo(Path.of("/non/existing/index.html").toAbsolutePath())
   }
 }

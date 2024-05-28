@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Cannot resolve dependency because file `/$snippetsDir/input/projects/badProjectDeps2/PklProject.deps.json` is malformed.
+Cannot resolve dependency because file `file:///$snippetsDir/input/projects/badProjectDeps2/PklProject.deps.json` is malformed.
 Run `pkl project resolve` to re-create this file.
 
 x | import "@bird/Bird.pkl"

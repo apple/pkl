@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.toPath
 import org.pkl.core.http.HttpClient
 import org.pkl.core.PklException
 import org.pkl.core.SecurityManagers
@@ -34,7 +35,7 @@ class ProjectDependenciesResolverTest {
 
   @Test
   fun resolveDependencies() {
-    val project2Path = Path.of(javaClass.getResource("project2/PklProject")!!.path)
+    val project2Path = javaClass.getResource("project2/PklProject")!!.toURI().toPath()
     val project = Project.loadFromPath(project2Path)
     val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, httpClient, null)
     val deps = ProjectDependenciesResolver(project, packageResolver, System.out.writer()).resolve()
@@ -72,7 +73,7 @@ class ProjectDependenciesResolverTest {
 
   @Test
   fun `fails if project declares a package with an incorrect checksum`() {
-    val projectPath = Path.of(javaClass.getResource("badProjectChecksum/PklProject")!!.path)
+    val projectPath = javaClass.getResource("badProjectChecksum/PklProject")!!.toURI().toPath()
     val project = Project.loadFromPath(projectPath)
     val packageResolver = PackageResolver.getInstance(SecurityManagers.defaultManager, httpClient, null)
     val e = assertThrows<PklException> {
