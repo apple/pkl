@@ -713,9 +713,6 @@ workflows:
     - gradle-check-jdk17-windows:
         requires:
         - hold
-    - pkl-cli-windows-amd64-snapshot:
-        requires:
-        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -725,7 +722,6 @@ workflows:
     - gradle-check-jdk17
     - gradle-check-jdk21
     - gradle-check-jdk17-windows
-    - pkl-cli-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -733,12 +729,12 @@ workflows:
     - pkl-cli-macOS-aarch64-snapshot
     - pkl-cli-linux-aarch64-snapshot
     - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
     - deploy-snapshot:
         requires:
         - gradle-check-jdk17
         - gradle-check-jdk21
         - gradle-check-jdk17-windows
-        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -746,6 +742,7 @@ workflows:
         - pkl-cli-macOS-aarch64-snapshot
         - pkl-cli-linux-aarch64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
         context: pkl-maven-release
     - trigger-docsite-build:
         requires:
@@ -771,12 +768,6 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk17-windows:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -835,7 +826,6 @@ workflows:
         - gradle-check-jdk17
         - gradle-check-jdk21
         - gradle-check-jdk17-windows
-        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -873,6 +863,7 @@ workflows:
     jobs:
     - gradle-check-jdk17
     - gradle-check-jdk21
+    - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
@@ -880,6 +871,7 @@ workflows:
     - pkl-cli-macOS-aarch64-release
     - pkl-cli-linux-aarch64-release
     - pkl-cli-linux-alpine-amd64-release
+    - pkl-cli-windows-amd64-release
     when:
       matches:
         value: << pipeline.git.branch >>
