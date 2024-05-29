@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.pkl.core.Duration;
@@ -122,5 +123,61 @@ public record PklEvaluatorSettings(
         throw PklBugException.unreachableCode();
       }
     }
+  }
+
+  private boolean arePatternsEqual(
+    @Nullable List<Pattern> thesePatterns, @Nullable List<Pattern> thosePatterns) {
+    if (thesePatterns == null) {
+      return thosePatterns == null;
+    }
+    if (thosePatterns == null || thesePatterns.size() != thosePatterns.size()) {
+      return false;
+    }
+    for (var i = 0; i < thesePatterns.size(); i++) {
+      if (!thesePatterns.get(i).pattern().equals(thosePatterns.get(i).pattern())) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  @Override
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof PklEvaluatorSettings that)) {
+      return false;
+    }
+
+    return Objects.equals(externalProperties, that.externalProperties) &&
+      Objects.equals(env, that.env) &&
+      arePatternsEqual(allowedModules, that.allowedModules) &&
+      arePatternsEqual(allowedResources, that.allowedResources) &&
+      Objects.equals(noCache, that.noCache) &&
+      Objects.equals(moduleCacheDir, that.moduleCacheDir) &&
+      Objects.equals(timeout, that.timeout) &&
+      Objects.equals(rootDir, that.rootDir) &&
+      Objects.equals(http, that.http);
+  }
+
+  private int hashPatterns(@Nullable List<Pattern> patterns) {
+    if (patterns == null) {
+      return 0;
+    }
+    var ret = 1;
+    for (var pattern : patterns) {
+      ret = 31 * ret + pattern.pattern().hashCode();
+    }
+    return ret;
+  }
+  
+  @Override
+  public int hashCode() {
+    var result =
+      Objects.hash(externalProperties, env, noCache, moduleCacheDir, timeout, rootDir, http);
+    result = 31 * result + hashPatterns(allowedModules);
+    result = 31 * result + hashPatterns(allowedResources);
+    return result;
   }
 }

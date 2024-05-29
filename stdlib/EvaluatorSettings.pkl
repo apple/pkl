@@ -123,10 +123,10 @@ class Proxy {
   ///
   /// The only wildcard is `"*"`, which disables all proxying.
   ///
-  /// A hostname will match all subdomains.
-  /// For example, `example.com` will match `foo.example.com`, but not `fooexample.com`.
-  /// A hostname that is prefixed with a dot will match the hostname itself.
-  /// Effectively, `.example.com` is the same as `example.com`.
+  /// A hostname matches all subdomains.
+  /// For example, `example.com` matches `foo.example.com`, but not `fooexample.com`.
+  /// A hostname that is prefixed with a dot matches the hostname itself,
+  /// so `.example.com` matches `example.com`.
   ///
   /// Optionally, a port can be specified.
   /// If a port is omitted, all ports are matched.

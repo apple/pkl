@@ -70,12 +70,12 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
             .addResourceReader(ResourceReaders.environmentVariable())
             .addEnvironmentVariables(System.getenv())
             .build()) {
-      var module = evaluator.evaluate(moduleSource);
+      var module = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Settings);
       return parseSettings(module, moduleSource);
     }
   }
 
-  private static PklSettings parseSettings(PModule module, ModuleSource location)
+  private static PklSettings parseSettings(PObject module, ModuleSource location)
       throws VmEvalException {
 
     if (!(module.getPropertyOrNull("editor") instanceof PObject pObject)
