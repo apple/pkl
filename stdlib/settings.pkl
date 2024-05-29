@@ -31,37 +31,37 @@ editor: Editor = System
 http: EvaluatorSettings.Http?
 
 /// The editor associated with `file:` URLs ending in `.pkl`.
-hidden const System: Editor = new {
+hidden System: Editor = new {
   urlScheme = "%{url}, line %{line}"
 }
 
 /// The [IntelliJ IDEA](https://www.jetbrains.com/idea) editor.
-hidden const Idea: Editor = new {
+hidden Idea: Editor = new {
   urlScheme = "idea://open?file=%{path}&line=%{line}"
 }
 
 /// The [GoLand](https://www.jetbrains.com/go/) editor.
-hidden const GoLand: Editor = new {
+hidden GoLand: Editor = new {
   urlScheme = "goland://open?file=%{path}&line=%{line}"
 }
 
 /// The [TextMate](https://macromates.com) editor.
-hidden const TextMate: Editor = new {
+hidden TextMate: Editor = new {
   urlScheme = "txmt://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Sublime Text](https://www.sublimetext.com) editor.
-hidden const Sublime: Editor = new {
+hidden Sublime: Editor = new {
   urlScheme = "subl://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Atom](https://atom.io) editor.
-hidden const Atom: Editor = new {
+hidden Atom: Editor = new {
   urlScheme = "atom://open?url=%{url}&line=%{line}&column=%{column}"
 }
 
 /// The [Visual Studio Code](https://code.visualstudio.com) editor.
-hidden const VsCode: Editor = new {
+hidden VsCode: Editor = new {
   urlScheme = "vscode://file/%{path}:%{line}:%{column}"
 }
 
