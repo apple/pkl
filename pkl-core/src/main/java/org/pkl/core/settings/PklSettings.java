@@ -131,6 +131,7 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
      *
      * <p>This method is deprecated; use {@link #urlScheme()} instead.
      */
+    @Deprecated(forRemoval = true)
     public String getUrlScheme() {
       return urlScheme;
     }

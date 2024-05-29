@@ -328,7 +328,13 @@ public final class Project {
     return pkg;
   }
 
-  public PklEvaluatorSettings getSettings() {
+  /** Use {@link org.pkl.core.project.Project#getEvaluatorSettings()} instead. */
+  @Deprecated(forRemoval = true)
+  public EvaluatorSettings getSettings() {
+    return new EvaluatorSettings(evaluatorSettings);
+  }
+
+  public PklEvaluatorSettings getEvaluatorSettings() {
     return evaluatorSettings;
   }
 

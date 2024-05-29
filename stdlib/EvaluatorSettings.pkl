@@ -98,7 +98,9 @@ http: Http?
 
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
-  /// Configuration of the HTTP proxy to use, `null` for none.
+  /// Configuration of the HTTP proxy to use.
+  ///
+  /// If [null], uses the operating system's proxy configuration.
   proxy: Proxy?
 }
 
@@ -110,16 +112,34 @@ class Proxy {
   ///
   /// Example:
   /// ```
-  /// local proxyPassword = read("my-proxy-password.txt").text
-  /// address = "http://myuser@\(proxyPassword):my.proxy.example.com:5080"
+  /// address = "http://my.proxy.example.com:5080"
   /// ```
   address: Uri(startsWith("http://"))
 
   /// Hosts to which all connections should bypass a proxy.
   ///
-  /// Values can be either hostnames, or CIDR blocks.
+  /// Values can be either hostnames, or IP addresses.
+  /// IP addresses can optionally be provided using [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation).
   ///
-  /// Follows the same rules as cURL's [--noproxy](https://curl.se/docs/manpage.html#--noproxy)
-  /// flag.
+  /// The only wildcard is `"*"`, which disables all proxying.
+  ///
+  /// A hostname will match all subdomains.
+  /// For example, `example.com` will match `foo.example.com`, but not `fooexample.com`.
+  /// A hostname that is prefixed with a dot will match the hostname itself.
+  /// Effectively, `.example.com` is the same as `example.com`.
+  ///
+  /// Optionally, a port can be specified.
+  /// If a port is omitted, all ports are matched.
+  ///
+  /// Example:
+  ///
+  /// ```
+  /// noProxy {
+  ///   "127.0.0.1"
+  ///   "169.254/16"
+  ///   "example.com"
+  ///   "localhost:5050"
+  /// }
+  /// ```
   noProxy: Listing<String>(isDistinct)
 }

@@ -189,6 +189,11 @@ class BaseOptions : OptionGroup() {
       )
       .single()
       .split(",")
+      .validate { 
+        require(proxy != null) {
+          "--no-proxy can only be specified alongside a --proxy"
+        }
+      }
 
   // hidden option used by native tests
   private val testPort: Int by

@@ -137,7 +137,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
     // make defensive copies because Supplier may get called after builder was mutated
     var certificateFiles = List.copyOf(this.certificateFiles);
     var certificateUris = List.copyOf(this.certificateUris);
-    java.net.ProxySelector proxySelector =
+    var proxySelector =
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
       var jdkClient =

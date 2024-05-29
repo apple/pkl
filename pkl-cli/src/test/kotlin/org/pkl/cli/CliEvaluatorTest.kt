@@ -1308,7 +1308,7 @@ result = someLib.x
   }
 
   @Test
-  @Disabled // TODO: Re-enable after certification logic is fixed.
+  @Disabled // TODO: figure out why this is failing.
   fun `eval package from proxy`(wwRuntimeInfo: WireMockRuntimeInfo) {
     stubFor(
       any(anyUrl()).willReturn(aResponse().proxiedFrom("https://localhost:${packageServer.port}"))
