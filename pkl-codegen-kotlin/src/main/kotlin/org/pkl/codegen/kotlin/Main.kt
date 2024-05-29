@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.kotlin
 
+import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -80,6 +81,18 @@ class PklKotlinCodegenCommand :
         help = "Whether to make generated classes implement java.io.Serializable"
       )
       .flag()
+  
+  private val packageMapping: Map<String, String> by
+    option(
+      names = arrayOf("-m", "--package-mapping"),
+      metavar = "<module_name=package_name>",
+      help = """
+          Replace the default package name of the generated Kotlin classes (repeatable).
+          By default, the package name of generated classes is derived from the Pkl module name.
+          With this option, you can override the name for the given modules with custom names.
+        """.trimIndent()
+    )
+    .associate()
 
   override fun run() {
     val options =
@@ -89,7 +102,8 @@ class PklKotlinCodegenCommand :
         indent = indent,
         generateKdoc = generateKdoc,
         generateSpringBootConfig = generateSpringboot,
-        implementSerializable = implementSerializable
+        implementSerializable = implementSerializable,
+        packageMapping = packageMapping
       )
     CliKotlinCodeGenerator(options).run()
   }

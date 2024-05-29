@@ -56,6 +56,7 @@ object InMemoryKotlinCompiler {
 
     val (importLines, remainder) =
       sourceFiles.entries
+        .filter { (filename, _) -> filename.endsWith(".kt") }
         .flatMap { (_, text) -> text.lines() }
         .partition { it.startsWith("import") }
     val importBlock = importLines.sorted().distinct()

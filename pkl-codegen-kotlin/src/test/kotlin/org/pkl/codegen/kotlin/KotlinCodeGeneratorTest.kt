@@ -153,8 +153,13 @@ class KotlinCodeGeneratorTest {
     private fun compileKotlinCode(kotlinCode: String): Map<String, KClass<*>> =
       InMemoryKotlinCompiler.compile(mapOf("my/Mod.kt" to kotlinCode))
 
-    private fun assertCompilesSuccessfully(sourceText: String) = compileKotlinCode(sourceText)
+    private fun assertCompilesSuccessfully(sourceText: String) {
+      assertThatCode { compileKotlinCode(sourceText) }.doesNotThrowAnyException()
+    }
   }
+  
+  @TempDir 
+  lateinit var tempDir: Path
 
   @Test
   fun testEquals() {
@@ -1206,7 +1211,7 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
-  fun `import module`(@TempDir tempDir: Path) {
+  fun `import module`() {
     val library =
       PklModule(
         "library",
@@ -1235,7 +1240,7 @@ class KotlinCodeGeneratorTest {
           .trimIndent()
       )
 
-    val kotlinSourceFiles = generateKotlinFiles(tempDir, library, client)
+    val kotlinSourceFiles = generateFiles(library, client)
     val kotlinClientCode =
       kotlinSourceFiles.entries.find { (fileName, _) -> fileName.endsWith("Client.kt") }!!.value
 
@@ -1253,7 +1258,7 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
-  fun `extend module`(@TempDir tempDir: Path) {
+  fun `extend module`() {
     val base =
       PklModule(
         "base",
@@ -1282,7 +1287,7 @@ class KotlinCodeGeneratorTest {
           .trimIndent()
       )
 
-    val kotlinSourceFiles = generateKotlinFiles(tempDir, base, derived)
+    val kotlinSourceFiles = generateFiles(base, derived)
     val kotlinDerivedCode =
       kotlinSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.kt") }!!.value
 
@@ -1317,7 +1322,7 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
-  fun `extend module that only contains type aliases`(@TempDir tempDir: Path) {
+  fun `extend module that only contains type aliases`() {
     val moduleOne =
       PklModule(
         "base",
@@ -1342,7 +1347,7 @@ class KotlinCodeGeneratorTest {
           .trimIndent()
       )
 
-    val kotlinSourceFiles = generateKotlinFiles(tempDir, moduleOne, moduleTwo)
+    val kotlinSourceFiles = generateFiles(moduleOne, moduleTwo)
     val kotlinDerivedCode =
       kotlinSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.kt") }!!.value
 
@@ -1359,7 +1364,7 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
-  fun `generated properties files`(@TempDir tempDir: Path) {
+  fun `generated properties files`() {
     val pklModule =
       PklModule(
         "Mod.pkl",
@@ -1380,17 +1385,16 @@ class KotlinCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val generated = generateFiles(tempDir, pklModule)
+    val generated = generateFiles(pklModule)
     val expectedPropertyFile =
       "resources/META-INF/org/pkl/config/java/mapper/classes/org.pkl.Mod.properties"
     assertThat(generated).containsKey(expectedPropertyFile)
     val propertyFileContents = generated[expectedPropertyFile]!!
-    assertThat(propertyFileContents)
-      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod")
-    assertThat(propertyFileContents)
-      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo")
-    assertThat(propertyFileContents)
-      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar")
+    assertThat(propertyFileContents).contains(
+      "org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod",
+      "org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo",
+      "org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar"
+    )
   }
 
   @Test
@@ -1502,44 +1506,133 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
-  fun `encoded file paths`(@TempDir path: Path) {
+  fun `encoded file paths`() {
     val kotlinCode =
-      generateKotlinFiles(
-        path,
+      generateFiles(
         PklModule(
           "FooBar.pkl",
           """
-      module `Foo*Bar`
-      
-      someProp: String
-    """
-            .trimIndent()
+            module `Foo*Bar`
+            
+            someProp: String
+          """.trimIndent()
         )
       )
     assertThat(kotlinCode).containsKey("kotlin/Foo(2a)Bar.kt")
   }
+  
+  @Test
+  fun `override package names in a standalone module`() {
+    val files = KotlinCodegenOptions(
+      packageMapping = mapOf(
+        "a.b.c" to "x.y.z"
+      )
+    ).generateFiles(
+      "MyModule.pkl" to """
+        module a.b.c.MyModule
+        
+        foo: String = "abc"
+      """.trimIndent()
+    )
+    
+    val kotlinCode = files["kotlin/x/y/z/MyModule.kt"]
+    assertThat(kotlinCode).contains("package x.y.z")
 
-  private fun generateFiles(tempDir: Path, vararg pklModules: PklModule): Map<String, String> {
+    val propertiesCode =
+      files["resources/META-INF/org/pkl/config/java/mapper/classes/a.b.c.MyModule.properties"]
+    assertThat(propertiesCode)
+      .contains("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule")
+  }
+  
+  @Test
+  fun `override package names in multiple modules using each other`() {
+    val files = KotlinCodegenOptions(
+      packageMapping = mapOf(
+        "org.foo" to "com.foo.x",
+        "org.baz" to "com.baz.a.b"
+      )
+    ).generateFiles(
+      "org/foo/Module1" to """
+        module org.foo.Module1
+        
+        class Person {
+          name: String
+        }
+      """.trimIndent(),
+      "org/bar/Module2" to """
+        module org.bar.Module2
+        
+        import "../../org/foo/Module1.pkl"
+
+        class Group {
+          owner: Module1.Person
+          name: String
+        }
+      """.trimIndent(),
+      "org/baz/Module3" to """
+        module org.baz.Module3
+        
+        import "../../org/bar/Module2.pkl"
+
+        class Supergroup {
+          owner: Module2.Group
+        }
+      """.trimIndent()
+    ).toMutableMap()
+    
+    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
+    
+    assertThat(files.remove("kotlin/com/foo/x/Module1.kt")).contains(
+      "package com.foo.x",
+      "object Module1 {",
+      "data class Person("
+    )
+    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties")).contains(
+      "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
+      "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
+    )
+    
+    assertThat(files.remove("kotlin/org/bar/Module2.kt")).contains(
+      "package org.bar",
+      "import com.foo.x.Module1",
+      "object Module2 {",
+      "val owner: Module1.Person"
+    )
+    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties")).contains(
+      "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.Module2",
+      "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.Module2${'$'}Group",
+    )
+
+    assertThat(files.remove("kotlin/com/baz/a/b/Module3.kt")).contains(
+      "package com.baz.a.b",
+      "import org.bar.Module2",
+      "object Module3 {",
+      "val owner: Module2.Group"
+    )
+    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties")).contains(
+      "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
+      "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
+    )
+
+    // No more files.
+    assertThat(files).isEmpty()
+  }
+  
+  private fun KotlinCodegenOptions.generateFiles(vararg pklModules: PklModule): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()
     return pklFiles.fold(mapOf()) { acc, pklFile ->
       val pklSchema = evaluator.evaluateSchema(ModuleSource.path(pklFile))
-      acc + KotlinCodeGenerator(pklSchema, KotlinCodegenOptions()).output
+      val generator = KotlinCodeGenerator(pklSchema, this)
+      acc + generator.output
     }
   }
-
-  private fun generateKotlinFiles(
-    tempDir: Path,
-    vararg pklModules: PklModule
-  ): Map<String, String> {
-    val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
-    val evaluator = Evaluator.preconfigured()
-    return pklFiles.fold(mapOf()) { acc, pklFile ->
-      val pklSchema = evaluator.evaluateSchema(ModuleSource.path(pklFile))
-      val generator = KotlinCodeGenerator(pklSchema, KotlinCodegenOptions())
-      acc + arrayOf(generator.kotlinFileName to generator.kotlinFile)
-    }
-  }
+  
+  private fun KotlinCodegenOptions.generateFiles(vararg pklModules: kotlin.Pair<String, String>): Map<String, String> =
+    generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
+  
+  private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =
+    KotlinCodegenOptions().generateFiles(*pklModules)
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("Other").constructors.first()

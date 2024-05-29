@@ -151,6 +151,119 @@ class CliKotlinCodeGeneratorTest {
       module2KotlinFile.readString()
     )
   }
+  
+  @Test
+  fun `custom package names`(@TempDir tempDir: Path) {
+    val module1 =
+      PklModule(
+        "org.foo.Module1",
+        """
+          module org.foo.Module1
+
+          class Person {
+            name: String
+          }
+        """
+      )
+
+    val module2 =
+      PklModule(
+        "org.bar.Module2",
+        """
+          module org.bar.Module2
+          
+          import "../../org/foo/Module1.pkl"
+
+          class Group {
+            owner: Module1.Person
+            name: String
+          }
+        """
+      )
+
+    val module3 =
+      PklModule(
+        "org.baz.Module3",
+        """
+          module org.baz.Module3
+          
+          import "../../org/bar/Module2.pkl"
+
+          class Supergroup {
+            owner: Module2.Group
+          }
+        """
+      )
+
+    val module1PklFile = module1.writeToDisk(tempDir.resolve("org/foo/Module1.pkl"))
+    val module2PklFile = module2.writeToDisk(tempDir.resolve("org/bar/Module2.pkl"))
+    val module3PklFile = module3.writeToDisk(tempDir.resolve("org/baz/Module3.pkl"))
+    val outputDir = tempDir.resolve("output")
+    
+    val generator =
+      CliKotlinCodeGenerator(
+        CliKotlinCodeGeneratorOptions(
+          CliBaseOptions(listOf(module1PklFile, module2PklFile, module3PklFile).map { it.toUri() }),
+          outputDir,
+          packageMapping = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+        )
+      )
+
+    generator.run()
+    
+    val module1KotlinFile = outputDir.resolve("kotlin/com/foo/x/Module1.kt")
+    module1KotlinFile.readString().let { 
+      assertContains("package com.foo.x", it)
+      
+      assertContains("object Module1 {", it)
+      
+      assertContains(
+        """
+        |  data class Person(
+        |    val name: String
+        |  )
+        """,
+        it
+      )
+    }
+
+    val module2KotlinFile = outputDir.resolve("kotlin/org/bar/Module2.kt")
+    module2KotlinFile.readString().let {
+      assertContains("package org.bar", it)
+
+      assertContains("import com.foo.x.Module1", it)
+
+      assertContains("object Module2 {", it)
+
+      assertContains(
+        """
+        |  data class Group(
+        |    val owner: Module1.Person,
+        |    val name: String
+        |  )
+        """,
+        it
+      )
+    }
+    
+    val module3KotlinFile = outputDir.resolve("kotlin/com/baz/a/b/Module3.kt")
+    module3KotlinFile.readString().let {
+      assertContains("package com.baz.a.b", it)
+
+      assertContains("import org.bar.Module2", it)
+
+      assertContains("object Module3 {", it)
+
+      assertContains(
+        """
+        |  data class Supergroup(
+        |    val owner: Module2.Group
+        |  )
+        """,
+        it
+      )
+    }
+  }
 
   private fun assertContains(part: String, code: String) {
     val trimmedPart = part.trim().trimMargin()

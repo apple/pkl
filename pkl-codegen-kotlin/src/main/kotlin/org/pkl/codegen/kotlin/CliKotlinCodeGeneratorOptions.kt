@@ -36,8 +36,22 @@ data class CliKotlinCodeGeneratorOptions(
   val generateSpringBootConfig: Boolean = false,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+  
+  /**
+   * A mapping of packages.
+   *
+   * When you need to have Kotlin package names different from the default package
+   * names derived from Pkl module names, you can define a package mapping, where the key
+   * is the original Pkl module name, and the value is its replacement.
+   */
+  val packageMapping: Map<String, String> = emptyMap()
 ) {
-  fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(indent, generateKdoc, generateSpringBootConfig, implementSerializable)
+  fun toKotlinCodegenOptions(): KotlinCodegenOptions = KotlinCodegenOptions(
+    indent,
+    generateKdoc,
+    generateSpringBootConfig,
+    implementSerializable,
+    packageMapping
+  )
 }
