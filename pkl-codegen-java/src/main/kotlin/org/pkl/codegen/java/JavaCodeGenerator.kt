@@ -36,6 +36,7 @@ import kotlin.takeIf
 import kotlin.to
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
+import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorException(message: String) : RuntimeException(message)
 
@@ -75,7 +76,7 @@ data class JavaCodegenOptions(
    * 
    * Can be used when the package name in the generated source code should be different from the
    * package name derived from the Pkl module declaration .
-   * */
+   */
   val packageMapping: Map<String, String> = emptyMap()
 )
 
@@ -131,7 +132,7 @@ class JavaCodeGenerator(
     }
 
   private val propertyFileName: String
-    get() = "resources/META-INF/org/pkl/config/java/mapper/classes/${schema.moduleName}.properties"
+    get() = "resources/META-INF/org/pkl/config/java/mapper/classes/${IoUtils.encodePath(schema.moduleName)}.properties"
 
   private val propertiesFile: String
     get() {
