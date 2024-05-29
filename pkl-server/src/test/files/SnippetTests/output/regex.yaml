@@ -1,7 +1,6 @@
-#file: noinspection YAMLIncompatibleTypes
 - 1
-- regex.yml
-- file:///$snippetsDir/input/regex.yml.pkl
+- regex
+- file:///$snippetsDir/input/regex.pkl
 - 
   - 
     - 16

@@ -1,7 +1,6 @@
-#file: noinspection YAMLIncompatibleTypes
 - 1
 - com.foo.bar.MyModule
-- file:///$snippetsDir/input/classes.yml.pkl
+- file:///$snippetsDir/input/classes.pkl
 - 
   - 
     - 16
@@ -9,7 +8,7 @@
     - 
       - 1
       - com.foo.bar.MyModule#Person
-      - file:///$snippetsDir/input/classes.yml.pkl
+      - file:///$snippetsDir/input/classes.pkl
       - 
         - 
           - 16
@@ -29,7 +28,7 @@
     - 
       - 1
       - com.foo.bar.MyModule#Person
-      - file:///$snippetsDir/input/classes.yml.pkl
+      - file:///$snippetsDir/input/classes.pkl
       - 
         - 
           - 16

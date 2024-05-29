@@ -1,7 +1,6 @@
-#file: noinspection YAMLIncompatibleTypes
 - 1
-- list.yml
-- file:///$snippetsDir/input/list.yml.pkl
+- list
+- file:///$snippetsDir/input/list.pkl
 - 
   - 
     - 16

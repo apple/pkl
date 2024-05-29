@@ -19,17 +19,28 @@ import java.nio.file.Path
 import kotlin.Pair
 import kotlin.reflect.KClass
 import org.junit.platform.commons.annotation.Testable
-import org.pkl.commons.test.AbstractSnippetTestsEngine
+import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.core.*
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 
 @Testable class BinaryEvaluatorSnippetTests
 
-class BinaryEvaluatorSnippetTestsEngine : AbstractSnippetTestsEngine() {
+class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
   override val testClass: KClass<*> = BinaryEvaluatorSnippetTests::class
 
-  override val snippetsDir: Path = rootProjectDir.resolve("pkl-server/src/test/files/SnippetTests")
+  private val snippetsDir = rootProjectDir.resolve("pkl-server/src/test/files/SnippetTests")
+
+  private val outputDir = snippetsDir.resolve("output")
+
+  override val inputDir: Path = snippetsDir.resolve("input")
+
+  override val isInputFile: (Path) -> Boolean = { true }
+
+  override fun expectedOutputFileFor(inputFile: Path): Path {
+    val relativePath = inputDir.relativize(inputFile).toString()
+    return outputDir.resolve(relativePath.dropLast(3) + "yaml")
+  }
 
   private val evaluator =
     BinaryEvaluator(
@@ -47,11 +58,11 @@ class BinaryEvaluatorSnippetTestsEngine : AbstractSnippetTestsEngine() {
       null
     )
 
+  private fun String.stripFilePaths() =
+    replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
+
   override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
     val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)
-    return true to bytes.debugRendering.stripFilePaths().addLeadingCommentAndTrailingNewline()
+    return true to bytes.debugRendering.stripFilePaths()
   }
-
-  private fun String.addLeadingCommentAndTrailingNewline(): String =
-    "#file: noinspection YAMLIncompatibleTypes\n$this\n"
 }

@@ -1,7 +1,6 @@
-#file: noinspection YAMLIncompatibleTypes
 - 1
-- duration.yml
-- file:///$snippetsDir/input/duration.yml.pkl
+- duration
+- file:///$snippetsDir/input/duration.pkl
 - 
   - 
     - 16
