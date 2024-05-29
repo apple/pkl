@@ -27,6 +27,7 @@ import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.Pair;
 
 public abstract class UnresolvedTypeNode extends PklNode {
   protected UnresolvedTypeNode(SourceSection sourceSection) {
@@ -132,6 +133,11 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var type = resolveTypeNode.executeGeneric(frame);
+      Object receiver = null;
+      if (type instanceof Pair<?, ?> pair) {
+        receiver = pair.getFirst();
+        type = pair.getSecond();
+      }
 
       if (type instanceof VmClass clazz) {
         // Note: FinalClassTypeNode and NonFinalClassTypeNode assume that
@@ -183,7 +189,10 @@ public abstract class UnresolvedTypeNode extends PklNode {
           }
         }
 
-        return new TypeAliasTypeNode(sourceSection, alias, new TypeNode[0]);
+        if (receiver == null) {
+          receiver = VmUtils.getReceiver(alias.getEnclosingFrame());
+        }
+        return new TypeAliasTypeNode(sourceSection, alias, new TypeNode[0], (VmTyped) receiver);
       }
 
       var module = (VmTyped) type;
@@ -214,6 +223,11 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var baseType = resolveTypeNode.executeGeneric(frame);
+      Object receiver = null;
+      if (baseType instanceof Pair<?, ?> pair) {
+        receiver = pair.getFirst();
+        baseType = pair.getSecond();
+      }
 
       if (baseType instanceof VmClass clazz) {
         checkNumberOfTypeArguments(clazz);
@@ -290,7 +304,11 @@ public abstract class UnresolvedTypeNode extends PklNode {
         for (var i = 0; i < argLength; i++) {
           resolvedTypeArgumentNodes[i] = typeArgumentNodes[i].execute(frame);
         }
-        return new TypeAliasTypeNode(sourceSection, typeAlias, resolvedTypeArgumentNodes);
+        if (receiver == null) {
+          receiver = VmUtils.getReceiver(typeAlias.getEnclosingFrame());
+        }
+        return new TypeAliasTypeNode(
+            sourceSection, typeAlias, resolvedTypeArgumentNodes, (VmTyped) receiver);
       }
 
       var module = (VmTyped) baseType;

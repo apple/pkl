@@ -1,0 +1,3 @@
+typealias IsValid = Any(isValid)
+
+isValid: Boolean = false

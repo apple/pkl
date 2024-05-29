@@ -1,0 +1,9 @@
+prop1 {
+  prop = false
+}
+prop2 {
+  prop = true
+}
+prop3 {
+  prop = false
+}

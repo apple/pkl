@@ -1,0 +1,5 @@
+import "helpers/someModule2.pkl"
+import "helpers/someModule3.pkl"
+
+res1 = 5 is someModule2.IsValid
+res2 = 5 is someModule3.IsValid

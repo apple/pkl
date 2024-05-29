@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.Pair;
 
 public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeNode {
   private final SourceSection moduleNameSection;
@@ -54,7 +55,7 @@ public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeN
     // (type declared in base module is accessible through extending and amending modules)
     for (var currModule = importedModule; currModule != null; currModule = currModule.getParent()) {
       var result = getType(currModule, typeName, sourceSection);
-      if (result != null) return result;
+      if (result != null) return Pair.of(importedModule, result);
     }
 
     throw exceptionBuilder()

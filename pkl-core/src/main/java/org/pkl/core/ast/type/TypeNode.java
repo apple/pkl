@@ -1563,11 +1563,16 @@ public abstract class TypeNode extends PklNode {
   public static final class TypeAliasTypeNode extends TypeNode {
     private final VmTypeAlias typeAlias;
     private final TypeNode[] typeArgumentNodes;
+    private final VmTyped receiver;
     @Child private TypeNode aliasedTypeNode;
 
     public TypeAliasTypeNode(
-        SourceSection sourceSection, VmTypeAlias typeAlias, TypeNode[] typeArgumentNodes) {
+        SourceSection sourceSection,
+        VmTypeAlias typeAlias,
+        TypeNode[] typeArgumentNodes,
+        VmTyped receiver) {
       super(sourceSection);
+      this.receiver = receiver;
 
       if (!typeAlias.isInitialized()) {
         CompilerDirectives.transferToInterpreter();
@@ -1621,9 +1626,11 @@ public abstract class TypeNode extends PklNode {
     public void execute(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
-      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
-      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
-
+      var owner = (VmTyped) VmUtils.getOwner(typeAlias.getEnclosingFrame());
+      VmUtils.setOwner(frame, owner);
+      if (!(prevReceiver instanceof VmTyped vmTyped && vmTyped.isAmending(owner))) {
+        VmUtils.setReceiver(frame, receiver);
+      }
       try {
         aliasedTypeNode.execute(frame, value);
       } finally {

@@ -1,0 +1,3 @@
+amends "someModule2.pkl"
+
+isValid = true

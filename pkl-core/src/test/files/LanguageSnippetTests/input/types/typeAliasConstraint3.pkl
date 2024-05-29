@@ -1,0 +1,25 @@
+typealias IsValid = Any(isValid)
+
+hidden isValid = false
+
+prop: Boolean = 5 is IsValid
+
+hidden obj1 = (module) {
+  isValid = false
+}
+
+hidden obj2 = (module) {
+  isValid = true
+}
+
+hidden obj3 = (module) {
+  local isValid = throw("nuh uh")
+}
+
+output {
+  value = new Dynamic {
+    prop1 = obj1
+    prop2 = obj2
+    prop3 = obj3
+  }
+}

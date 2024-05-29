@@ -64,6 +64,16 @@ public final class VmTyped extends VmObject {
     return (VmTyped) parent;
   }
 
+  public boolean isAmending(VmTyped other) {
+    if (this == other) {
+      return true;
+    }
+    if (parent == null) {
+      return false;
+    }
+    return ((VmTyped) parent).isAmending(other);
+  }
+
   @Override
   public boolean isPrototype() {
     return this == getPrototype();
