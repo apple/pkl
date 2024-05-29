@@ -2,6 +2,7 @@ package org.pkl.core.settings
 
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.createParentDirectories
@@ -96,6 +97,13 @@ class PklSettingsTest {
     checkEquals(Editor.SUBLIME, module.getProperty("sublime") as PObject)
     checkEquals(Editor.ATOM, module.getProperty("atom") as PObject)
     checkEquals(Editor.VS_CODE, module.getProperty("vsCode") as PObject)
+  }
+
+  @Test
+  fun `invalid settings file`(@TempDir tempDir: Path) {
+    val settingsFile = tempDir.resolve("settings.pkl").apply { writeString("foo = 1") }
+    assertThatCode { PklSettings.loadFromPklHomeDir(tempDir) }
+      .hasMessageContaining("Expected `output.value` of module `${settingsFile.toUri()}` to be of type `pkl.settings`, but got type `settings`.")
   }
 
   private fun checkEquals(expected: Editor, actual: PObject) {
