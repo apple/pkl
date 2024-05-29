@@ -117,7 +117,7 @@ class ProjectTest {
     """.trimIndent())
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
-    assertThat(project.settings)
+    assertThat(project.evaluatorSettings)
       .usingRecursiveComparison()
       .withComparatorForType(compareBy(Pattern::toString), Pattern::class.java)
       .isEqualTo(expectedSettings)

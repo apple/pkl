@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.Composite;
+import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.ModuleSource;
@@ -391,5 +393,144 @@ public final class Project {
   public Path getProjectDir() {
     assert projectBaseUri.getScheme().equalsIgnoreCase("file");
     return Path.of(projectBaseUri);
+  }
+
+  @SuppressWarnings(value = "unused")
+  @Deprecated(forRemoval = true)
+  public static class EvaluatorSettings {
+    private final PklEvaluatorSettings delegate;
+
+    public EvaluatorSettings(PklEvaluatorSettings delegate) {
+      this.delegate = delegate;
+    }
+
+    public EvaluatorSettings(
+        @Nullable Map<String, String> externalProperties,
+        @Nullable Map<String, String> env,
+        @Nullable List<Pattern> allowedModules,
+        @Nullable List<Pattern> allowedResources,
+        @Nullable Boolean noCache,
+        @Nullable Path moduleCacheDir,
+        @Nullable List<Path> modulePath,
+        @Nullable Duration timeout,
+        @Nullable Path rootDir) {
+      this.delegate =
+          new PklEvaluatorSettings(
+              externalProperties,
+              env,
+              allowedModules,
+              allowedResources,
+              noCache,
+              moduleCacheDir,
+              modulePath,
+              timeout,
+              rootDir,
+              null);
+    }
+
+    public @Nullable Map<String, String> getExternalProperties() {
+      return delegate.externalProperties();
+    }
+
+    public @Nullable Map<String, String> getEnv() {
+      return delegate.env();
+    }
+
+    public @Nullable List<Pattern> getAllowedModules() {
+      return delegate.allowedModules();
+    }
+
+    public @Nullable List<Pattern> getAllowedResources() {
+      return delegate.allowedResources();
+    }
+
+    public @Nullable Boolean isNoCache() {
+      return delegate.noCache();
+    }
+
+    public @Nullable List<Path> getModulePath() {
+      return delegate.modulePath();
+    }
+
+    public @Nullable Duration getTimeout() {
+      return delegate.timeout();
+    }
+
+    public @Nullable Path getModuleCacheDir() {
+      return delegate.moduleCacheDir();
+    }
+
+    public @Nullable Path getRootDir() {
+      return delegate.rootDir();
+    }
+
+    private boolean arePatternsEqual(
+        @Nullable List<Pattern> myPattern, @Nullable List<Pattern> thatPattern) {
+      if (myPattern == null) {
+        return thatPattern == null;
+      }
+      if (thatPattern == null) {
+        return false;
+      }
+      if (myPattern.size() != thatPattern.size()) {
+        return false;
+      }
+      for (var i = 0; i < myPattern.size(); i++) {
+        if (!myPattern.get(i).pattern().equals(thatPattern.get(i).pattern())) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private int hashPatterns(@Nullable List<Pattern> patterns) {
+      if (patterns == null) {
+        return 0;
+      }
+      var ret = 1;
+      for (var pattern : patterns) {
+        ret = 31 * ret + pattern.pattern().hashCode();
+      }
+      return ret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      return o != null
+          && getClass() == o.getClass()
+          && Objects.equals(delegate, ((EvaluatorSettings) o).delegate);
+    }
+
+    @Override
+    public int hashCode() {
+      return delegate.hashCode();
+    }
+
+    @Override
+    public String toString() {
+      return "EvaluatorSettings{"
+          + "externalProperties="
+          + delegate.externalProperties()
+          + ", env="
+          + delegate.env()
+          + ", allowedModules="
+          + delegate.allowedModules()
+          + ", allowedResources="
+          + delegate.allowedResources()
+          + ", noCache="
+          + delegate.noCache()
+          + ", moduleCacheDir="
+          + delegate.moduleCacheDir()
+          + ", modulePath="
+          + delegate.modulePath()
+          + ", timeout="
+          + delegate.timeout()
+          + ", rootDir="
+          + delegate.rootDir()
+          + '}';
+    }
   }
 }

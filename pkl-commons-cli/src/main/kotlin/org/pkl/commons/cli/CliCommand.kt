@@ -99,7 +99,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
-    if (cliOptions.omitProjectSettings) null else project?.settings
+    if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
@@ -171,7 +171,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if (cliOptions.proxyAddress != null) {
         setProxy(cliOptions.proxyAddress, cliOptions.noProxy)
       } else {
-        project?.settings?.http?.proxy?.let { setProxy(it.address, it.noProxy) }
+        project?.evaluatorSettings?.http?.proxy?.let { setProxy(it.address, it.noProxy) }
           ?: settings.http?.proxy?.let { setProxy(it.address, it.noProxy) }
       }
       // Lazy building significantly reduces execution time of commands that do minimal work.

@@ -99,6 +99,6 @@ class PklSettingsTest {
   }
 
   private fun checkEquals(expected: Editor, actual: PObject) {
-    assertThat(actual.getProperty("urlScheme") as String).isEqualTo(expected.urlScheme)
+    assertThat(actual.getProperty("urlScheme") as String).isEqualTo(expected.urlScheme())
   }
 }
