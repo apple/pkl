@@ -36,4 +36,16 @@ Example: `generateSpringBootConfig = true` +
 Whether to generate config classes for use with Spring Boot.
 ====
 
+.packageMapping: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `packageMapping = ["foo": "com.org.foo", "bar": "com.org.bar"]` +
+Allows to change default package names (derived from Pkl module name prefixes) in the generated code.
+
+When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement. When you do, the generated code `package` declarations, as well as file locations, will be modified according to the mapping.
+
+Keys in this mapping must be valid Pkl module name prefixes. Values must be valid dot-separated package names.
+====
+
 // TODO: fixme (implementSerializable)

@@ -21,3 +21,22 @@ Relative paths are resolved against the working directory.
 Default: (not set) +
 Flag that indicates to generate config classes for use with Spring Boot.
 ====
+
+.--implement-serializable
+[%collapsible]
+====
+Default: (not set) +
+Whether to make generated classes implement `java.io.Serializable`.
+====
+
+.-m, --package-mapping
+[%collapsible]
+====
+Default: (none) +
+Example: `foo=com.org.foo` +
+Allows to change default package names (derived from Pkl module name prefixes) in the generated code.
+
+When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement. When you do, the generated code `package` declarations, as well as file locations, will be modified according to the mapping.
+
+Repeat this option to define multiple mappings. Keys must be valid Pkl module name prefixes. Values must be valid dot-separated package names.
+====
