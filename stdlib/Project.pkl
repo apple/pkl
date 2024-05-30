@@ -98,7 +98,9 @@ local isValidLoadDependency = (it: Project) ->
   && it != module
   && it.package != null
 
-const local function isUriLocal(uri1: String, uri2: String): Boolean =
+const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
+  // This is an imperfect check; should also check that the URIs have the same authority.
+  // We should improve this if/when there is a URI library in the stdlib.
   uri1.substring(0, uri1.indexOf(":")) == uri2.substring(0, uri2.indexOf(":"))
 
 /// The dependencies of this project.
@@ -188,8 +190,7 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 /// Evaluator settings do not get published as part of a package.
 /// It is not possible for a package dependency to influence the evaluator settings of a project.
 ///
-/// Certain values can only be set if this is a file-based project.
-/// These are:
+/// The following values can only be set if this is a file-based project.
 ///
 ///  - [modulePath][EvaluatorSettings.modulePath]
 ///  - [rootDir][EvaluatorSettings.rootDir]

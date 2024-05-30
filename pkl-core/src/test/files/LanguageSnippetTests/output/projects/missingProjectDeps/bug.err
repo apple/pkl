@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Encountered an error when attempting to load PklProject.deps.json at `file:///$snippetsDir/input/projects/missingProjectDeps/PklProject.deps.json`.
+Encountered an error when attempting to load `PklProject.deps.json` at `file:///$snippetsDir/input/projects/missingProjectDeps/PklProject.deps.json`.
 NoSuchFileException: /$snippetsDir/input/projects/missingProjectDeps/PklProject.deps.json
 
 x | import "@birds/Bird.pkl"

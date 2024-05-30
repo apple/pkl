@@ -293,7 +293,6 @@ public final class ModuleKeys {
     final URI uri;
 
     File(URI uri) {
-      super(uri);
       this.uri = uri;
     }
 

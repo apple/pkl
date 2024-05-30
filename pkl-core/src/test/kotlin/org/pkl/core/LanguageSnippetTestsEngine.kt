@@ -38,10 +38,15 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   internal val selection: String = ""
 
   protected val packageServer: PackageServer = PackageServer()
-  
+
   override val includedTests: List<Regex> = listOf(Regex(".*$selection\\.pkl"))
 
-  override val excludedTests: List<Regex> = listOf(Regex(".*/native/.*"))
+  override val excludedTests: List<Regex> = buildList { 
+    add(Regex(".*/native/.*"))
+    if (IoUtils.isWindows()) {
+      addAll(windowsExcludedTests)
+    }
+  }
 
   override val inputDir: Path = snippetsDir.resolve("input")
 
@@ -68,7 +73,12 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     packageServer.close()
   }
 
-  protected fun String.stripFilePaths() = replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
+  private val replacement by lazy {
+    if (snippetsDir.root.toString() != "/") "\$snippetsDir" else "/\$snippetsDir"
+  } 
+
+  protected fun String.stripFilePaths(): String =
+    replace(IoUtils.toNormalizedPathString(snippetsDir), replacement)
 
   protected fun String.stripLineNumbers() = replace(lineNumberRegex) { result ->
     // replace line number with equivalent number of 'x' characters to keep formatting intact
@@ -80,7 +90,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   // can't think of a better solution right now
   protected fun String.stripVersionCheckErrorMessage() =
     replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
-  
+
   protected fun String.stripStdlibLocationSha(): String =
     replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/\$commitId/stdlib/")
 
@@ -261,7 +271,12 @@ class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngin
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
 }
 
+// error message contains different file path on Windows
+private val windowsExcludedTests get() = listOf(Regex(".*missingProjectDeps/bug\\.pkl"))
+
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
   override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
+  override val excludedTests: List<Regex> 
+    get() = super.excludedTests + windowsExcludedTests
 }

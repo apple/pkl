@@ -52,8 +52,8 @@ public abstract class Dependency {
 
     public URI resolveAssetUri(URI projectBaseUri, PackageAssetUri packageAssetUri) {
       // drop 1 to remove leading `/`
-      var assetPath = packageAssetUri.getAssetPath().toString().substring(1);
-      return projectBaseUri.resolve(IoUtils.toUnixPathString(path.resolve(assetPath)));
+      var assetPath = packageAssetUri.getAssetPath().substring(1);
+      return projectBaseUri.resolve(IoUtils.toNormalizedPathString(path.resolve(assetPath)));
     }
 
     @Override

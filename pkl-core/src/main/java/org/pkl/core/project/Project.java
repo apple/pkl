@@ -47,6 +47,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of module {@code pkl.Project}. */
@@ -168,7 +169,7 @@ public final class Project {
     var pkgObj = getNullableProperty(module, "package");
     var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
     var dependencies = parseDependencies(module, projectFileUri, null);
-    var projectBaseUri = projectFileUri.resolve(".");
+    var projectBaseUri = IoUtils.resolve(projectFileUri, ".");
     Package pkg = null;
     if (pkgObj != null) {
       pkg = parsePackage((PObject) pkgObj);

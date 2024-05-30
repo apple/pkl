@@ -35,6 +35,7 @@ import org.pkl.core.project.ProjectDeps;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.json.Json.JsonParseException;
 
 public final class ProjectDependenciesManager {
@@ -69,7 +70,7 @@ public final class ProjectDependenciesManager {
       SecurityManager securityManager) {
     this.declaredDependencies = declaredDependencies;
     // new URI("scheme://host/a/b/c.txt").resolve(".") == new URI("scheme://host/a/b/")
-    this.projectBaseUri = declaredDependencies.getProjectFileUri().resolve(".");
+    this.projectBaseUri = IoUtils.resolve(declaredDependencies.getProjectFileUri(), ".");
     this.moduleResolver = moduleResolver;
     this.securityManager = securityManager;
   }
@@ -211,7 +212,7 @@ public final class ProjectDependenciesManager {
   }
 
   public URI getProjectDepsFileUri() {
-    return projectBaseUri.resolve(PKL_PROJECT_DEPS_FILENAME);
+    return IoUtils.resolve(projectBaseUri, PKL_PROJECT_DEPS_FILENAME);
   }
 
   public URI getProjectFileUri() {
@@ -228,14 +229,11 @@ public final class ProjectDependenciesManager {
           var depsJson = moduleKey.resolve(securityManager).loadSource();
           projectDeps = ProjectDeps.parse(depsJson);
         } catch (IOException e) {
-          var exceptionBuilder =
-              new VmExceptionBuilder().evalError("cannotLoadProjectDepsJson", depsUri).withCause(e);
-          if (e.getMessage() != null) {
-            exceptionBuilder.withHint(e.getMessage());
-          } else {
-            exceptionBuilder.withHint("Encountered error: " + e);
-          }
-          throw exceptionBuilder.build();
+          throw new VmExceptionBuilder()
+              .evalError("cannotLoadProjectDepsJson", depsUri)
+              .withCause(e)
+              .withHint(e.getMessage() != null ? e.getMessage() : ("Encountered error: " + e))
+              .build();
         } catch (JsonParseException e) {
           throw new VmExceptionBuilder()
               .evalError("invalidProjectDepsJson", depsUri, e.getMessage())
