@@ -13,7 +13,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
 
     runTask("configClasses")
 
-    val baseDir = testProjectDir.resolve("build/generated/kotlin/org")
+    val baseDir = testProjectDir.resolve("build/generated/kotlin/foo/bar")
     val kotlinFile = baseDir.resolve("Mod.kt")
 
     assertThat(baseDir.listDirectoryEntries().count()).isEqualTo(1)
@@ -58,9 +58,9 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     runTask("compileKotlin")
 
     val classesDir = testProjectDir.resolve("build/classes/kotlin/main")
-    val moduleClassFile = classesDir.resolve("org/Mod.class")
-    val personClassFile = classesDir.resolve("org/Mod\$Person.class")
-    val addressClassFile = classesDir.resolve("org/Mod\$Address.class")
+    val moduleClassFile = classesDir.resolve("foo/bar/Mod.class")
+    val personClassFile = classesDir.resolve("foo/bar/Mod\$Person.class")
+    val addressClassFile = classesDir.resolve("foo/bar/Mod\$Address.class")
     assertThat(moduleClassFile).exists()
     assertThat(personClassFile).exists()
     assertThat(addressClassFile).exists()
@@ -125,6 +125,9 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
             sourceModules = ["mod.pkl"]
             outputDir = file("build/generated")
             settingsModule = "pkl:settings"
+            packageMapping = [
+              'org': 'foo.bar'
+            ]
           }
         }
       }

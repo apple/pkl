@@ -37,7 +37,8 @@ public abstract class KotlinCodeGenTask extends CodeGenTask {
                 getIndent().get(),
                 getGenerateKdoc().get(),
                 getGenerateSpringBootConfig().get(),
-                getImplementSerializable().get()))
+                getImplementSerializable().get(),
+                getPackageMapping().get()))
         .run();
   }
 }
