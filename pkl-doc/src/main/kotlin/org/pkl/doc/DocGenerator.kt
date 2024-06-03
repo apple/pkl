@@ -45,7 +45,7 @@ class DocGenerator(
   modules: Map<DocPackageInfo, Collection<ModuleSchema>>,
 
   /**
-   * A function to resolve imports in [modules], [packageInfos], and [docsiteInfo].
+   * A function to resolve imports in [modules] and [docsiteInfo].
    *
    * Module `pkl.base` is resolved with this function even if not explicitly imported.
    */
