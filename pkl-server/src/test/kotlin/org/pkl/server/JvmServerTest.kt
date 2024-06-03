@@ -22,10 +22,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.pkl.core.http.HttpClient
 
 class JvmServerTest : AbstractServerTest() {
-  companion object {
-    private const val USE_DIRECT_TRANSPORT = false
-  }
-
   private val transports: Pair<MessageTransport, MessageTransport> = run {
     if (USE_DIRECT_TRANSPORT) {
       MessageTransports.direct()

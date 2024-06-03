@@ -32,8 +32,17 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.core.module.PathElement
 
 abstract class AbstractServerTest {
+
   companion object {
-    val executor: ExecutorService = Executors.newCachedThreadPool()
+    /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
+    const val USE_DIRECT_TRANSPORT = false
+
+    val executor: ExecutorService =
+      if (USE_DIRECT_TRANSPORT) {
+        createDirectExecutor()
+      } else {
+        Executors.newCachedThreadPool()
+      }
 
     @AfterAll
     @JvmStatic
