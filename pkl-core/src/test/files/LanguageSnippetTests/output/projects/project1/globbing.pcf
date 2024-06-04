@@ -262,4 +262,19 @@ examples {
       }
     }
   }
+  ["glob-import behind local project import"] {
+    new {
+      children {
+        ["children/a.pkl"] {
+          name = "a"
+        }
+        ["children/b.pkl"] {
+          name = "b"
+        }
+        ["children/c.pkl"] {
+          name = "c"
+        }
+      }
+    }
+  }
 }

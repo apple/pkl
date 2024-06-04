@@ -22,7 +22,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +38,7 @@ import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.runtime.VmContext;
+import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
@@ -486,10 +486,9 @@ public final class ResourceReaders {
         throws IOException, URISyntaxException, SecurityManagerException {
       var assetUri = new PackageAssetUri(uri);
       var dependency = getProjectDepsResolver().getResolvedDependency(assetUri.getPackageUri());
-      var path = getLocalPath(dependency, assetUri);
-      if (path != null) {
-        var bytes = Files.readAllBytes(path);
-        return Optional.of(new Resource(uri, bytes));
+      var local = getLocalUri(dependency, assetUri);
+      if (local != null) {
+        return VmContext.get(null).getResourceManager().read(local, null);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       var bytes = getPackageResolver().getBytes(assetUri, true, remoteDep.getChecksums());
@@ -518,9 +517,15 @@ public final class ResourceReaders {
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency, packageAssetUri);
-      if (path != null) {
-        return FileResolver.listElements(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        var reader = VmContext.get(null).getResourceManager().getResourceReader(local);
+        if (reader == null) {
+          throw new VmExceptionBuilder()
+              .evalError("noResourceReaderRegistered", local.getScheme())
+              .build();
+        }
+        return reader.listElements(securityManager, local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()
@@ -534,9 +539,15 @@ public final class ResourceReaders {
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
           getProjectDepsResolver().getResolvedDependency(packageAssetUri.getPackageUri());
-      var path = getLocalPath(dependency, packageAssetUri);
-      if (path != null) {
-        return FileResolver.hasElement(path);
+      var local = getLocalUri(dependency, packageAssetUri);
+      if (local != null) {
+        var reader = VmContext.get(null).getResourceManager().getResourceReader(local);
+        if (reader == null) {
+          throw new VmExceptionBuilder()
+              .evalError("noResourceReaderRegistered", local.getScheme())
+              .build();
+        }
+        return reader.hasElement(securityManager, local);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       return getPackageResolver()
@@ -555,12 +566,12 @@ public final class ResourceReaders {
       return projectDepsManager;
     }
 
-    private @Nullable Path getLocalPath(Dependency dependency, PackageAssetUri packageAssetUri) {
+    private @Nullable URI getLocalUri(Dependency dependency, PackageAssetUri packageAssetUri) {
       if (!(dependency instanceof LocalDependency localDependency)) {
         return null;
       }
-      return localDependency.resolveAssetPath(
-          getProjectDepsResolver().getProjectDir(), packageAssetUri);
+      return localDependency.resolveAssetUri(
+          getProjectDepsResolver().getProjectBaseUri(), packageAssetUri);
     }
   }
 

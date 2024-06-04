@@ -34,4 +34,8 @@ examples {
   ["glob-read absolute package uri"] {
     read*("package://localhost:0/birds@0.5.0#/catalog/*.pkl")
   }
+  
+  ["glob-import behind local project import"] {
+    import("@project6/children.pkl")
+  }
 }

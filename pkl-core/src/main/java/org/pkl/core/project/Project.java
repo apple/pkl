@@ -17,6 +17,7 @@ package org.pkl.core.project;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
+import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PClassInfo;
@@ -41,9 +43,11 @@ import org.pkl.core.Version;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of module {@code pkl.Project}. */
@@ -52,8 +56,8 @@ public final class Project {
   private final DeclaredDependencies dependencies;
   private final EvaluatorSettings evaluatorSettings;
   private final URI projectFileUri;
-  private final Path projectDir;
-  private final List<Path> tests;
+  private final URI projectBaseUri;
+  private final List<URI> tests;
   private final Map<String, Project> localProjectDependencies;
 
   /**
@@ -81,10 +85,7 @@ public final class Project {
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .build()) {
-      var output = evaluator.evaluateOutputValueAs(ModuleSource.path(path), PClassInfo.Project);
-      return Project.parseProject(output);
-    } catch (URISyntaxException e) {
-      throw new PklException(e.getMessage(), e);
+      return load(evaluator, ModuleSource.path(path));
     }
   }
 
@@ -101,6 +102,31 @@ public final class Project {
    */
   public static Project loadFromPath(Path path) {
     return loadFromPath(path, SecurityManagers.defaultManager, null);
+  }
+
+  /** Loads a project from the given source. */
+  public static Project load(ModuleSource moduleSource) {
+    try (var evaluator =
+        EvaluatorBuilder.unconfigured()
+            .setSecurityManager(SecurityManagers.defaultManager)
+            .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+            .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
+            .addModuleKeyFactory(ModuleKeyFactories.file)
+            .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
+            .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReader(ResourceReaders.file())
+            .build()) {
+      return load(evaluator, moduleSource);
+    }
+  }
+
+  public static Project load(Evaluator evaluator, ModuleSource moduleSource) {
+    try {
+      var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
+      return Project.parseProject(output);
+    } catch (URISyntaxException e) {
+      throw new PklException(e.getMessage(), e);
+    }
   }
 
   private static DeclaredDependencies parseDependencies(
@@ -143,7 +169,7 @@ public final class Project {
     var pkgObj = getNullableProperty(module, "package");
     var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
     var dependencies = parseDependencies(module, projectFileUri, null);
-    var projectDir = Path.of(projectFileUri).getParent();
+    var projectBaseUri = IoUtils.resolve(projectFileUri, ".");
     Package pkg = null;
     if (pkgObj != null) {
       pkg = parsePackage((PObject) pkgObj);
@@ -152,12 +178,12 @@ public final class Project {
         getProperty(
             module,
             "evaluatorSettings",
-            (settings) -> parseEvaluatorSettings(settings, projectDir));
+            (settings) -> parseEvaluatorSettings(settings, projectBaseUri));
     @SuppressWarnings("unchecked")
     var testPathStrs = (List<String>) getProperty(module, "tests");
     var tests =
         testPathStrs.stream()
-            .map((it) -> projectDir.resolve(it).normalize())
+            .map((it) -> projectBaseUri.resolve(it).normalize())
             .collect(Collectors.toList());
     var localProjectDependencies = parseLocalProjectDependencies(module);
     return new Project(
@@ -165,7 +191,7 @@ public final class Project {
         dependencies,
         evaluatorSettings,
         projectFileUri,
-        projectDir,
+        projectBaseUri,
         tests,
         localProjectDependencies);
   }
@@ -185,7 +211,7 @@ public final class Project {
   }
 
   @SuppressWarnings("unchecked")
-  private static EvaluatorSettings parseEvaluatorSettings(Object settings, Path projectDir) {
+  private static EvaluatorSettings parseEvaluatorSettings(Object settings, URI projectBaseUri) {
     var pSettings = (PObject) settings;
     var externalProperties = getNullableProperty(pSettings, "externalProperties", Project::asMap);
     var env = getNullableProperty(pSettings, "env", Project::asMap);
@@ -194,16 +220,18 @@ public final class Project {
         getNullableProperty(pSettings, "allowedResources", Project::asPatternList);
     var noCache = (Boolean) getNullableProperty(pSettings, "noCache");
     var modulePathStrs = (List<String>) getNullableProperty(pSettings, "modulePath");
+    var timeout = (Duration) getNullableProperty(pSettings, "timeout");
+
     List<Path> modulePath = null;
     if (modulePathStrs != null) {
       modulePath =
           modulePathStrs.stream()
-              .map((it) -> projectDir.resolve(it).normalize())
+              .map((it) -> resolveNullablePath(it, projectBaseUri, "modulePath"))
               .collect(Collectors.toList());
     }
-    var timeout = (Duration) getNullableProperty(pSettings, "timeout");
-    var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectDir);
-    var rootDir = getNullablePath(pSettings, "rootDir", projectDir);
+
+    var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectBaseUri);
+    var rootDir = getNullablePath(pSettings, "rootDir", projectBaseUri);
     return new EvaluatorSettings(
         externalProperties,
         env,
@@ -261,10 +289,28 @@ public final class Project {
     return new URI((String) value);
   }
 
+  /**
+   * Resolve a path string against projectBaseUri.
+   *
+   * @throws PackageLoadError if projectBaseUri is not a {@code file:} URI.
+   */
+  private static @Nullable Path resolveNullablePath(
+      @Nullable String path, URI projectBaseUri, String propertyName) {
+    if (path == null) {
+      return null;
+    }
+    try {
+      return Path.of(projectBaseUri).resolve(path).normalize();
+    } catch (FileSystemNotFoundException e) {
+      throw new PackageLoadError(
+          "relativePathPropertyDefinedByProjectFromNonFileUri", projectBaseUri, propertyName);
+    }
+  }
+
   private static @Nullable Path getNullablePath(
-      Composite object, String propertyName, Path projectDir) {
-    return getNullableProperty(
-        object, propertyName, (obj) -> projectDir.resolve((String) obj).normalize());
+      Composite object, String propertyName, URI projectBaseUri) {
+    return resolveNullablePath(
+        (String) getNullableProperty(object, propertyName), projectBaseUri, propertyName);
   }
 
   @SuppressWarnings("unchecked")
@@ -309,14 +355,14 @@ public final class Project {
       DeclaredDependencies dependencies,
       EvaluatorSettings evaluatorSettings,
       URI projectFileUri,
-      Path projectDir,
-      List<Path> tests,
+      URI projectBaseUri,
+      List<URI> tests,
       Map<String, Project> localProjectDependencies) {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
     this.projectFileUri = projectFileUri;
-    this.projectDir = projectDir;
+    this.projectBaseUri = projectBaseUri;
     this.tests = tests;
     this.localProjectDependencies = localProjectDependencies;
   }
@@ -334,7 +380,16 @@ public final class Project {
   }
 
   public List<Path> getTests() {
-    return tests;
+    return tests.stream()
+        .map(
+            (it) -> {
+              try {
+                return Path.of(it);
+              } catch (FileSystemNotFoundException e) {
+                throw new PackageLoadError("invalidUsageOfProjectFromNonFileUri");
+              }
+            })
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -366,11 +421,17 @@ public final class Project {
     return localProjectDependencies;
   }
 
+  public URI getProjectBaseUri() {
+    return projectBaseUri;
+  }
+
   public Path getProjectDir() {
-    return projectDir;
+    assert projectBaseUri.getScheme().equalsIgnoreCase("file");
+    return Path.of(projectBaseUri);
   }
 
   public static class EvaluatorSettings {
+
     private final @Nullable Map<String, String> externalProperties;
     private final @Nullable Map<String, String> env;
     private final @Nullable List<Pattern> allowedModules;

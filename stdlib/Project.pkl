@@ -91,18 +91,17 @@ package: Package?
 /// ```
 tests: Listing<String>(isDistinct)
 
-/// Tells if the project is a file-based module named `PklProject`.
-local isLocalPklProject = (it: Project) -> 
-  it.projectFileUri.startsWith("file:") && it.projectFileUri.endsWith("/PklProject")
+/// Tells if the project is a local module named `PklProject`, is not self, and has a [package] section
+local isValidLoadDependency = (it: Project) ->
+  isUriLocal(projectFileUri, it.projectFileUri)
+  && it.projectFileUri.endsWith("/PklProject")
+  && it != module
+  && it.package != null
 
-/// A local dependency is another [Project] that is local to the file system.
-///
-/// To declare, use `import("path/to/PklProject")`
-typealias LocalDependency = Project(
-  isLocalPklProject,
-  this != module,
-  this.package != null
-)
+const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
+  // This is an imperfect check; should also check that the URIs have the same authority.
+  // We should improve this if/when there is a URI library in the stdlib.
+  uri1.substring(0, uri1.indexOf(":")) == uri2.substring(0, uri2.indexOf(":"))
 
 /// The dependencies of this project.
 ///
@@ -176,19 +175,31 @@ typealias LocalDependency = Project(
 ///   1. Gather all dependencies, both direct and transitive.
 ///   2. For each package's major version, determine the highest declared minor version.
 ///   3. Write each resolved dependency to sibling file `PklProject.deps.json`.
-dependencies: Mapping<String(!contains("/")), *RemoteDependency|LocalDependency>
+dependencies: Mapping<String(!contains("/")), *RemoteDependency|Project(isValidLoadDependency)>
+
+local isFileBasedProject = projectFileUri.startsWith("file:")
 
 /// If set, controls the base evaluator settings when running the evaluator.
 ///
 /// These settings influence the behavior of the evaluator when running the `pkl eval`, `pkl test`,
 /// and `pkl repl` CLI commands.
-/// Note that command line flags passed to the CLI will override any settings defined here.
+/// Command line flags passed to the CLI will override any settings defined here.
 ///
 /// Other integrations can possibly ignore these evaluator settings.
 ///
 /// Evaluator settings do not get published as part of a package.
 /// It is not possible for a package dependency to influence the evaluator settings of a project.
-evaluatorSettings: EvaluatorSettings
+///
+/// The following values can only be set if this is a file-based project.
+///
+///  - [modulePath][EvaluatorSettings.modulePath]
+///  - [rootDir][EvaluatorSettings.rootDir]
+///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
+evaluatorSettings: EvaluatorSettings(
+  (modulePath != null).implies(isFileBasedProject),
+  (rootDir != null).implies(isFileBasedProject),
+  (moduleCacheDir != null).implies(isFileBasedProject)
+)
 
 /// The URI of the PklProject file.
 ///

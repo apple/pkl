@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "resolvedDependencies": {
+    "package://localhost:0/project7@1": {
+      "type": "local",
+      "uri": "projectpackage://localhost:0/project7@1.0.0",
+      "path": "../project7"
+    }
+  }
+}

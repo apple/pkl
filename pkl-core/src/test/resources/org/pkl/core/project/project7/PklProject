@@ -1,0 +1,8 @@
+amends "pkl:Project"
+
+package {
+  name = "project7"
+  version = "1.0.0"
+  packageZipUrl = "https://bogus.value"
+  baseUri = "package://localhost:0/project7"
+}

@@ -31,6 +31,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.stdlib.VmObjectFactory;
+import org.pkl.core.util.Nullable;
 
 public final class ResourceManager {
   private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
@@ -67,17 +68,23 @@ public final class ResourceManager {
   }
 
   @TruffleBoundary
-  public Optional<Object> read(URI resourceUri, Node readNode) {
+  public Optional<Object> read(URI resourceUri, @Nullable Node readNode) {
     return resources.computeIfAbsent(
         resourceUri.normalize(),
         uri -> {
           try {
             securityManager.checkReadResource(uri);
           } catch (SecurityManagerException e) {
-            throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
+            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
           }
 
-          var reader = getReader(resourceUri, readNode);
+          var reader = resourceReaders.get(uri.getScheme());
+          if (reader == null) {
+            throw new VmExceptionBuilder()
+                .withOptionalLocation(readNode)
+                .evalError("noResourceReaderRegistered", resourceUri.getScheme())
+                .build();
+          }
 
           Optional<Object> resource;
           try {
@@ -86,16 +93,16 @@ public final class ResourceManager {
             throw new VmExceptionBuilder()
                 .evalError("ioErrorReadingResource", uri)
                 .withCause(e)
-                .withLocation(readNode)
+                .withOptionalLocation(readNode)
                 .build();
           } catch (URISyntaxException e) {
             throw new VmExceptionBuilder()
                 .evalError("invalidResourceUri", resourceUri)
                 .withHint(e.getReason())
-                .withLocation(readNode)
+                .withOptionalLocation(readNode)
                 .build();
           } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
-            throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
+            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
           }
           if (resource.isEmpty()) return resource;
 
@@ -108,8 +115,16 @@ public final class ResourceManager {
 
           throw new VmExceptionBuilder()
               .evalError("unsupportedResourceType", reader.getClass().getName(), res.getClass())
-              .withLocation(readNode)
+              .withOptionalLocation(readNode)
               .build();
         });
+  }
+
+  /**
+   * Returns a {@link ResourceReader} registered to read the resource at {@code baseUri}, or {@code
+   * null} if there is none.
+   */
+  public @Nullable ResourceReader getResourceReader(URI baseUri) {
+    return resourceReaders.get(baseUri.getScheme());
   }
 }

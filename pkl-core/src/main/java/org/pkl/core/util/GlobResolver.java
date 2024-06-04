@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.ModuleKey;
@@ -490,7 +491,14 @@ public final class GlobResolver {
         }
         return result;
       }
-      var baseUri = enclosingModuleKey.resolveUri(enclosingUri, URI.create(basePath));
+      URI baseUri;
+      try {
+        baseUri = IoUtils.resolve(securityManager, enclosingModuleKey, URI.create(basePath));
+      } catch (URISyntaxException e) {
+        // assertion: this is only thrown if the pattern starts with a triple-dot import.
+        // the language will throw an error if glob imports is combined with triple-dots.
+        throw new PklBugException(e);
+      }
 
       resolveHierarchicalGlob(
           securityManager,

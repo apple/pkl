@@ -105,7 +105,8 @@ public class EvaluatorImpl implements Evaluator {
                       packageResolver,
                       projectDependencies == null
                           ? null
-                          : new ProjectDependenciesManager(projectDependencies)));
+                          : new ProjectDependenciesManager(
+                              projectDependencies, moduleResolver, securityManager)));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators

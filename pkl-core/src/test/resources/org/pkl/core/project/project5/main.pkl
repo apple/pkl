@@ -1,0 +1,5 @@
+import "@fruit/catalog/apple.pkl"
+import "@project4/module1.pkl"
+
+prop1 = apple
+prop2 = module1

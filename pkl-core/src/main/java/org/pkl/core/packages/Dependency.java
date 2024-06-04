@@ -15,9 +15,11 @@
  */
 package org.pkl.core.packages;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;
 import org.pkl.core.Version;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public abstract class Dependency {
@@ -48,10 +50,10 @@ public abstract class Dependency {
       return path;
     }
 
-    public Path resolveAssetPath(Path projectDir, PackageAssetUri packageAssetUri) {
+    public URI resolveAssetUri(URI projectBaseUri, PackageAssetUri packageAssetUri) {
       // drop 1 to remove leading `/`
       var assetPath = packageAssetUri.getAssetPath().substring(1);
-      return projectDir.resolve(path).resolve(assetPath);
+      return projectBaseUri.resolve(IoUtils.toNormalizedPathString(path.resolve(assetPath)));
     }
 
     @Override
