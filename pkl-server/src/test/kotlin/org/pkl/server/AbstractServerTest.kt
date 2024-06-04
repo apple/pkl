@@ -15,8 +15,6 @@
  */
 package org.pkl.server
 
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
 import java.util.concurrent.ExecutorService
@@ -27,21 +25,20 @@ import kotlin.io.path.outputStream
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
-import org.pkl.core.http.HttpClient
 import org.pkl.core.module.PathElement
 
-class ServerTest {
-  companion object {
-    private const val useDirectTransport = false
+abstract class AbstractServerTest {
 
-    private val executor: ExecutorService =
-      if (useDirectTransport) {
+  companion object {
+    /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
+    const val USE_DIRECT_TRANSPORT = false
+
+    val executor: ExecutorService =
+      if (USE_DIRECT_TRANSPORT) {
         createDirectExecutor()
       } else {
         Executors.newCachedThreadPool()
@@ -49,38 +46,12 @@ class ServerTest {
 
     @AfterAll
     @JvmStatic
-    @Suppress("unused")
     fun afterAll() {
       executor.shutdown()
     }
   }
 
-  private val transports: Pair<MessageTransport, MessageTransport> = run {
-    if (useDirectTransport) {
-      MessageTransports.direct()
-    } else {
-      val in1 = PipedInputStream()
-      val out1 = PipedOutputStream(in1)
-      val in2 = PipedInputStream()
-      val out2 = PipedOutputStream(in2)
-      MessageTransports.stream(in1, out2) to MessageTransports.stream(in2, out1)
-    }
-  }
-
-  private val client: TestTransport = TestTransport(transports.first)
-  private val server: Server = Server(transports.second, HttpClient.dummyClient())
-
-  @BeforeEach
-  fun before() {
-    executor.execute { server.start() }
-    executor.execute { client.start() }
-  }
-
-  @AfterEach
-  fun after() {
-    client.close()
-    server.close()
-  }
+  abstract val client: TestTransport
 
   @Test
   fun `create and close evaluator`() {

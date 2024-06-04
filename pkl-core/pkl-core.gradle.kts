@@ -154,10 +154,7 @@ tasks.compileKotlin {
 }
 
 tasks.test {
-  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
-
+  configureTest()
   useJUnitPlatform {
     excludeEngines("MacAmd64LanguageSnippetTestsEngine")
     excludeEngines("MacAarch64LanguageSnippetTestsEngine")
@@ -168,11 +165,7 @@ tasks.test {
 }
 
 val testJavaExecutable by tasks.registering(Test::class) {
-  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
+  configureExecutableTest("LanguageSnippetTestsEngine")
   classpath =
     // compiled test classes
     sourceSets.test.get().output +
@@ -182,10 +175,6 @@ val testJavaExecutable by tasks.registering(Test::class) {
     // (test dependencies that are also main dependencies must already be contained in java executable;
     // to verify that we don't want to include them here)
     (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
-
-  useJUnitPlatform {
-    includeEngines("LanguageSnippetTestsEngine")
-  }
 }
 
 tasks.check {
@@ -194,92 +183,32 @@ tasks.check {
 
 val testMacExecutableAmd64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:macExecutableAmd64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input").withPropertyName("languageSnippetTestsInput").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper").withPropertyName("languageSnippetTestsInputHelper").withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs.dir("src/test/files/LanguageSnippetTests/output").withPropertyName("languageSnippetTestsOutput").withPathSensitivity(PathSensitivity.RELATIVE)
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("MacAmd64LanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("MacAmd64LanguageSnippetTestsEngine")
 }
 
 val testMacExecutableAarch64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:macExecutableAarch64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("MacAarch64LanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("MacAarch64LanguageSnippetTestsEngine")
 }
 
 val testLinuxExecutableAmd64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:linuxExecutableAmd64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("LinuxAmd64LanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("LinuxAmd64LanguageSnippetTestsEngine")
 }
 
 val testLinuxExecutableAarch64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:linuxExecutableAarch64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("LinuxAarch64LanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("LinuxAarch64LanguageSnippetTestsEngine")
 }
 
 val testAlpineExecutableAmd64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:alpineExecutableAmd64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("AlpineLanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("AlpineLanguageSnippetTestsEngine")
 }
 
 val testWindowsExecutableAmd64 by tasks.registering(Test::class) {
   dependsOn(":pkl-cli:windowsExecutableAmd64")
-
-  inputs.dir("src/test/files/LanguageSnippetTests/input")
-  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
-  inputs.dir("src/test/files/LanguageSnippetTests/output")
-
-  testClassesDirs = files(tasks.test.get().testClassesDirs)
-  classpath = tasks.test.get().classpath
-
-  useJUnitPlatform {
-    includeEngines("WindowsLanguageSnippetTestsEngine")
-  }
+  configureExecutableTest("WindowsLanguageSnippetTestsEngine")
 }
 
 tasks.testNative {
@@ -314,5 +243,26 @@ spotless {
   antlr4 {
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
     target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
+  }
+}
+
+private fun Test.configureTest() {
+  inputs.dir("src/test/files/LanguageSnippetTests/input")
+    .withPropertyName("languageSnippetTestsInput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/input-helper")
+    .withPropertyName("languageSnippetTestsInputHelper")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs.dir("src/test/files/LanguageSnippetTests/output")
+    .withPropertyName("languageSnippetTestsOutput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
+private fun Test.configureExecutableTest(engineName: String) {
+  configureTest()
+  testClassesDirs = files(tasks.test.get().testClassesDirs)
+  classpath = tasks.test.get().classpath
+  useJUnitPlatform {
+    includeEngines(engineName)
   }
 }
