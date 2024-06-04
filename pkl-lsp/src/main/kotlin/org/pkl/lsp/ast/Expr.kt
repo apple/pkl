@@ -488,8 +488,8 @@ class PklParenthesizedExprImpl(
 class PklTypedIdentifierImpl(override val parent: Node, override val ctx: TypedIdentifierContext) :
   AbstractNode(parent, ctx), PklTypedIdentifier {
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
-  override val typeAnnotation: TypeAnnotation? by lazy {
-    children.firstInstanceOf<TypeAnnotation>()
+  override val typeAnnotation: PklTypeAnnotation? by lazy {
+    children.firstInstanceOf<PklTypeAnnotation>()
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {

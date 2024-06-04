@@ -16,6 +16,7 @@
 package org.pkl.lsp
 
 import java.io.IOException
+import java.net.URI
 import org.pkl.core.parser.Parser
 import org.pkl.core.util.IoUtils
 import org.pkl.lsp.ast.PklModule
@@ -27,6 +28,8 @@ object Stdlib {
 
   fun getModule(name: String): PklModule? = stdlibModules[name]
 
+  fun allModules(): Map<String, PklModule> = stdlibModules
+
   private fun loadStdlib() {
     val parser = Parser()
     for (name in stdlibModuleNames) {
@@ -37,7 +40,7 @@ object Stdlib {
   private fun loadStdlibModule(name: String, parser: Parser) {
     val text = loadStdlibSource(name)
     val moduleCtx = parser.parseModule(text)
-    val module = PklModuleImpl(moduleCtx)
+    val module = PklModuleImpl(moduleCtx, URI("pkl:$name"))
     stdlibModules[name] = module
   }
 

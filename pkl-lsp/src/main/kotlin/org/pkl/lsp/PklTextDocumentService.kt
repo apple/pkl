@@ -19,12 +19,16 @@ import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.pkl.lsp.features.GoToDefinitionFeature
 import org.pkl.lsp.features.HoverFeature
 
 class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentService {
 
   private val hover = HoverFeature(server)
+  private val definition = GoToDefinitionFeature(server)
+  // private val completion = CompletionFeature(server)
 
   override fun didOpen(params: DidOpenTextDocumentParams) {
     val uri = URI(params.textDocument.uri)
@@ -57,4 +61,16 @@ class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentSer
   override fun hover(params: HoverParams): CompletableFuture<Hover> {
     return hover.onHover(params)
   }
+
+  override fun definition(
+    params: DefinitionParams
+  ): CompletableFuture<Either<MutableList<out Location>, MutableList<out LocationLink>>> {
+    return definition.onGoToDefinition(params)
+  }
+
+  //  override fun completion(
+  //    params: CompletionParams
+  //  ): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
+  //    return completion.onCompletion(params)
+  //  }
 }

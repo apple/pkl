@@ -20,8 +20,8 @@ import org.pkl.core.parser.antlr.PklParser.*
 import org.pkl.lsp.LSPUtil.firstInstanceOf
 import org.pkl.lsp.PklVisitor
 
-class TypeAnnotationImpl(override val parent: Node, ctx: TypeAnnotationContext) :
-  AbstractNode(parent, ctx), TypeAnnotation {
+class PklTypeAnnotationImpl(override val parent: Node, ctx: TypeAnnotationContext) :
+  AbstractNode(parent, ctx), PklTypeAnnotation {
   override val pklType: PklType? by lazy { children.firstInstanceOf<PklType>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -63,16 +63,16 @@ class PklStringLiteralTypeImpl(override val parent: Node, ctx: StringLiteralType
 
 class PklDeclaredTypeImpl(override val parent: Node, override val ctx: DeclaredTypeContext) :
   AbstractNode(parent, ctx), PklDeclaredType {
-  override val name: TypeName by lazy {
-    toTypeName(children.firstInstanceOf<QualifiedIdentifier>()!!)
+  override val name: PklTypeName by lazy {
+    toTypeName(children.firstInstanceOf<PklQualifiedIdentifier>()!!)
   }
 
   override val typeArgumentList: TypeArgumentList? by lazy {
     children.firstInstanceOf<TypeArgumentList>()
   }
 
-  private fun toTypeName(ident: QualifiedIdentifier): TypeName {
-    return TypeNameImpl(ident, ctx.qualifiedIdentifier())
+  private fun toTypeName(ident: PklQualifiedIdentifier): PklTypeName {
+    return PklTypeNameImpl(ident, ctx.qualifiedIdentifier())
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -180,11 +180,11 @@ class TypeAliasHeaderImpl(override val parent: Node?, ctx: TypeAliasHeaderContex
   }
 }
 
-class TypeNameImpl(ident: QualifiedIdentifier, override val ctx: QualifiedIdentifierContext) :
-  AbstractNode(ident.parent, ctx), TypeName {
+class PklTypeNameImpl(ident: PklQualifiedIdentifier, override val ctx: QualifiedIdentifierContext) :
+  AbstractNode(ident.parent, ctx), PklTypeName {
   override val module: Terminal? by lazy { ident.identifiers[0] }
   override val simpleTypeName: SimpleTypeName by lazy {
-    SimpleTypeNameImpl(ident.identifiers.last(), ctx.Identifier().last())
+    SimpleTypeNameImpl(this, ident.identifiers.last(), ctx.Identifier().last())
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -192,8 +192,8 @@ class TypeNameImpl(ident: QualifiedIdentifier, override val ctx: QualifiedIdenti
   }
 }
 
-class SimpleTypeNameImpl(terminal: Terminal, override val ctx: ParseTree) :
-  AbstractNode(terminal.parent, ctx), SimpleTypeName {
+class SimpleTypeNameImpl(parent: Node, terminal: Terminal, override val ctx: ParseTree) :
+  AbstractNode(parent, ctx), SimpleTypeName {
   override val identifier: Terminal? by lazy { terminal }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {

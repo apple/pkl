@@ -156,7 +156,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitObjectMember(o)
   }
 
-  open fun visitMethodHeader(o: MethodHeader): R? {
+  open fun visitMethodHeader(o: PklMethodHeader): R? {
     return visitModifierListOwner(o)
   }
 
@@ -172,7 +172,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitElement(o)
   }
 
-  open fun visitModuleDeclaration(o: ModuleDeclaration): R? {
+  open fun visitModuleDeclaration(o: PklModuleDeclaration): R? {
     return visitDocCommentOwner(o)
   }
 
@@ -180,11 +180,11 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitExpr(o)
   }
 
-  open fun visitModuleExtendsAmendsClause(o: ModuleExtendsAmendsClause): R? {
+  open fun visitModuleExtendsAmendsClause(o: PklModuleExtendsAmendsClause): R? {
     return visitElement(o)
   }
 
-  open fun visitModuleHeader(o: ModuleHeader): R? {
+  open fun visitModuleHeader(o: PklModuleHeader): R? {
     return visitElement(o)
   }
 
@@ -292,7 +292,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitAccessExpr(o)
   }
 
-  open fun visitQualifiedIdentifier(o: QualifiedIdentifier): R? {
+  open fun visitQualifiedIdentifier(o: PklQualifiedIdentifier): R? {
     return visitElement(o)
   }
 
@@ -364,7 +364,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitModifierListOwner(o)
   }
 
-  open fun visitTypeAnnotation(o: TypeAnnotation): R? {
+  open fun visitTypeAnnotation(o: PklTypeAnnotation): R? {
     return visitElement(o)
   }
 
@@ -372,7 +372,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitElement(o)
   }
 
-  open fun visitTypeName(o: TypeName): R? {
+  open fun visitTypeName(o: PklTypeName): R? {
     return visitElement(o)
   }
 
@@ -412,7 +412,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitObjectMember(o)
   }
 
-  open fun visitDocCommentOwner(o: DocCommentOwner): R? {
+  open fun visitDocCommentOwner(o: PklDocCommentOwner): R? {
     return visitElement(o)
   }
 }

@@ -15,8 +15,13 @@
  */
 package org.pkl.lsp.ast
 
+import java.io.File
+import kotlin.io.path.invariantSeparatorsPathString
 import org.pkl.lsp.PklBaseModule
+import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.inferImportPropertyName
+import org.pkl.lsp.resolvers.ResolveVisitors
+import org.pkl.lsp.resolvers.Resolvers
 import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.TypeParameterBindings
 import org.pkl.lsp.type.computeResolvedImportType
@@ -27,18 +32,16 @@ val PklClass.supertype: PklType?
 
 val PklClass.superclass: PklClass?
   get() {
-    // TODO
-    //    return when (val st = supertype) {
-    //      is DeclaredPklType -> st.typeName.resolve() as? PklClass?
-    //      is ModulePklType -> null // see PklClass.supermodule
-    //      null ->
-    //        when {
-    //          isPklBaseAnyClass -> null
-    //          else -> project.pklBaseModule.typedType.psi
-    //        }
-    //      else -> unexpectedType(st)
-    //    }
-    return null
+    return when (val st = supertype) {
+      is PklDeclaredType -> st.name.resolve() as? PklClass?
+      is PklModuleType -> null // see PklClass.supermodule
+      null ->
+        when {
+          isPklBaseAnyClass -> null
+          else -> PklBaseModule.instance.typedType.ctx
+        }
+      else -> unexpectedType(st)
+    }
   }
 
 // Non-null when [this] extends a module (class).
@@ -54,10 +57,27 @@ val PklClass.supermodule: PklModule?
     }
   }
 
-// TODO
-fun TypeName.resolve(): Node? = TODO("not implemented")
+val PklClass.isPklBaseAnyClass: Boolean
+  get() {
+    return name == "Any" && this === PklBaseModule.instance.anyType.ctx
+  }
 
-fun SimpleTypeName.resolve(): Node? = TODO("not implemented")
+fun PklTypeName.resolve(): Node? = simpleTypeName.resolve()
+
+fun SimpleTypeName.resolve(): Node? {
+  val typeName = parentOfType<PklTypeName>() ?: return null
+  // TODO: check if module name is not null
+  // val moduleName = typeName.moduleName
+  val simpleTypeNameText = identifier?.text ?: return null
+  val base = PklBaseModule.instance
+
+  return Resolvers.resolveUnqualifiedTypeName(
+    this,
+    base,
+    mapOf(),
+    ResolveVisitors.firstElementNamed(simpleTypeNameText, base)
+  )
+}
 
 fun PklClass.isSubclassOf(other: PklClass): Boolean {
   // optimization
@@ -114,6 +134,10 @@ fun PklMultiLineStringLiteral.escapedText(): String? =
 private fun Node.getEscapedText(): String? = buildString {
   for (terminal in terminals) {
     when (terminal.type) {
+      TokenType.SLQuote,
+      TokenType.SLEndQuote,
+      TokenType.MLQuote,
+      TokenType.MLEndQuote -> {} // ignore open/close quotes
       TokenType.SLCharacters,
       TokenType.MLCharacters -> append(terminal.text)
       TokenType.SLCharacterEscape,
@@ -168,7 +192,7 @@ val Node.isInPklBaseModule: Boolean
   get() = enclosingModule?.declaration?.moduleHeader?.qualifiedIdentifier?.fullName == "pkl.base"
 
 interface TypeNameRenderer {
-  fun render(name: TypeName, appendable: Appendable)
+  fun render(name: PklTypeName, appendable: Appendable)
 
   fun render(type: Type.Class, appendable: Appendable)
 
@@ -178,7 +202,7 @@ interface TypeNameRenderer {
 }
 
 object DefaultTypeNameRenderer : TypeNameRenderer {
-  override fun render(name: TypeName, appendable: Appendable) {
+  override fun render(name: PklTypeName, appendable: Appendable) {
     appendable.append(name.simpleTypeName.identifier?.text)
   }
 
@@ -229,7 +253,11 @@ fun PklImportBase.resolveModules(): List<PklModule> =
 
 fun PklModuleUri.resolveGlob(): List<PklModule> = TODO("implement") // resolveModuleUriGlob(this)
 
-fun PklModuleUri.resolve(): PklModule? = TODO("implement")
+fun PklModuleUri.resolve(): PklModule? =
+  this.stringConstant.escapedText()?.let { text ->
+    // TODO: get the actual file
+    resolve(text, text, File("."), enclosingModule)
+  }
 
 sealed class ModuleResolutionResult {
   abstract fun computeResolvedImportType(
@@ -291,9 +319,84 @@ fun Node.findBySpan(line: Int, col: Int, includeTerminals: Boolean = false): Nod
   return childHit ?: hit
 }
 
-fun Node.toMarkdown(): String? =
+fun Node.toMarkdown(): String {
+  val markdown = render()
+  return showDocCommentAndModule(this, markdown)
+}
+
+fun Node.render(): String =
   when (this) {
-    is PklProperty -> "**$name**: ${type?.toMarkdown() ?: "unknown"}"
-    is PklStringLiteralType -> text
+    is PklProperty -> {
+      val modifiers = modifiers.render()
+      "$modifiers$name: ${type?.render() ?: "unknown"}"
+    }
+    is PklStringLiteralType -> "\"$text\""
+    is PklMethod -> {
+      val modifiers = modifiers.render()
+      modifiers + methodHeader.render()
+    }
+    is PklMethodHeader -> {
+      val name = identifier?.text ?: "???"
+      val typePars = typeParameterList?.render() ?: ""
+      val pars = parameterList?.render() ?: "()"
+      val retType = returnType?.render()?.let { ": $it" } ?: ""
+      "$name$typePars$pars$retType"
+    }
+    is PklParameterList -> {
+      elements.joinToString(", ", prefix = "(", postfix = ")") { it.render() }
+    }
+    is PklTypeParameterList -> {
+      typeParameters.joinToString(", ", prefix = "<", postfix = ">") { it.render() }
+    }
+    is PklParameter ->
+      if (isUnderscore) {
+        "_"
+      } else {
+        // cannot be null here if it's not underscore
+        typedIdentifier!!.render()
+      }
+    is PklTypeAnnotation -> ": ${pklType!!.render()}"
+    is PklTypedIdentifier -> {
+      val name = identifier!!.text
+      typeAnnotation?.let { "$name${it.render()}" } ?: name
+    }
+    is PklTypeParameter -> {
+      val vari = variance?.name?.lowercase()?.let { "$it " } ?: ""
+      "$vari$name"
+    }
+    is PklClass -> {
+      val modifiers = modifiers.render()
+      val name = classHeader.identifier?.text ?: "???"
+      "$modifiers$name"
+    }
+    is PklModuleDeclaration -> {
+      val modifiers = modifiers.render()
+      // can never be null
+      val idents = moduleHeader!!.qualifiedIdentifier!!.render()
+      "${modifiers}module $idents"
+    }
+    is PklQualifiedIdentifier -> identifiers.joinToString(".") { it.text }
     else -> text
   }
+
+// render modifiers
+private fun List<Terminal>?.render(): String {
+  return this?.let { if (isEmpty()) "" else joinToString(" ", postfix = " ") { it.text } } ?: ""
+}
+
+private fun showDocCommentAndModule(node: Node, text: String): String {
+  val markdown = "```pkl\n$text\n```"
+  return if (node is PklDocCommentOwner) {
+    node.parsedComment?.let { "$markdown\n\n---\n\n$it" } ?: markdown
+  } else markdown
+}
+
+fun Node.toURIString(server: PklLSPServer): String {
+  val mod = if (this is PklModule) this else enclosingModule!!
+  val uri = mod.uri.toString()
+  return if (uri.startsWith("pkl:")) {
+    val name = uri.replace("pkl:", "")
+    val uriStr = server.stdlibDir.resolve("$name.pkl").invariantSeparatorsPathString
+    "pkl:$uriStr"
+  } else uri
+}

@@ -15,6 +15,7 @@
  */
 package org.pkl.lsp.ast
 
+import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.core.parser.Parser
@@ -47,7 +48,7 @@ class AstTest {
     """
         .trimIndent()
     val parser = Parser()
-    val module = PklModuleImpl(parser.parseModule(mod))
+    val module = PklModuleImpl(parser.parseModule(mod), URI("my:test"))
     assertThat(module.declaration).isNotNull
     assertThat(module.declaration!!.docComment!!.text)
       .isEqualTo(

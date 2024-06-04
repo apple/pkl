@@ -15,13 +15,14 @@
  */
 package org.pkl.lsp.ast
 
+import java.net.URI
 import org.pkl.core.parser.Parser
 
 object PklNodeFactory {
 
   @Suppress("MemberVisibilityCanBePrivate")
   fun createModule(text: String): PklModule {
-    return PklModuleImpl(parser.parseModule(text))
+    return PklModuleImpl(parser.parseModule(text), URI("fake:module"))
   }
 
   fun createTypeParameter(name: String): PklTypeParameter {

@@ -15,20 +15,22 @@
  */
 package org.pkl.lsp.ast
 
-import org.antlr.v4.runtime.tree.ParseTree
+import java.net.URI
 import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.parser.antlr.PklParser.ModuleHeaderContext
 import org.pkl.lsp.LSPUtil.firstInstanceOf
 import org.pkl.lsp.PklVisitor
 
-class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
+class PklModuleImpl(override val ctx: PklParser.ModuleContext, override val uri: URI) :
   AbstractNode(null, ctx), PklModule {
   override val isAmend: Boolean by lazy {
     declaration?.moduleExtendsAmendsClause?.isAmend
       ?: declaration?.moduleHeader?.moduleExtendsAmendsClause?.isAmend ?: false
   }
 
-  override val declaration: ModuleDeclaration? by lazy { getChild(ModuleDeclarationImpl::class) }
+  override val declaration: PklModuleDeclaration? by lazy {
+    getChild(PklModuleDeclarationImpl::class)
+  }
 
   override val members: List<PklModuleMember> by lazy {
     children.filterIsInstance<PklModuleMember>()
@@ -59,10 +61,14 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext) :
 
   override val methods: List<PklClassMethod> by lazy { members.filterIsInstance<PklClassMethod>() }
 
-  // TODO: fetch the name of the module from uri
+  // TODO: fix uri name
   override val shortDisplayName: String by lazy {
-    declaration?.moduleHeader?.shortDisplayName
-      ?: throw RuntimeException("could not fetch uri name")
+    declaration?.moduleHeader?.shortDisplayName ?: uri.toString()
+  }
+
+  // TODO: fix uri name
+  override val moduleName: String? by lazy {
+    declaration?.moduleHeader?.shortDisplayName ?: uri.toString()
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -74,7 +80,7 @@ class PklAnnotationImpl(override val parent: Node, override val ctx: PklParser.A
   AbstractNode(parent, ctx), PklAnnotation {
   override val type: PklType? by lazy { children.firstInstanceOf<PklType>() }
 
-  override val typeName: TypeName? by lazy { (type as? PklDeclaredType)?.name }
+  override val typeName: PklTypeName? by lazy { (type as? PklDeclaredType)?.name }
 
   override val objectBody: PklObjectBody? by lazy { children.firstInstanceOf<PklObjectBody>() }
 
@@ -83,14 +89,14 @@ class PklAnnotationImpl(override val parent: Node, override val ctx: PklParser.A
   }
 }
 
-class ModuleHeaderImpl(override val parent: Node, override val ctx: ModuleHeaderContext) :
-  AbstractNode(parent, ctx), ModuleHeader {
-  override val qualifiedIdentifier: QualifiedIdentifier? by lazy {
-    getChild(QualifiedIdentifierImpl::class)
+class PklModuleHeaderImpl(override val parent: Node, override val ctx: ModuleHeaderContext) :
+  AbstractNode(parent, ctx), PklModuleHeader {
+  override val qualifiedIdentifier: PklQualifiedIdentifier? by lazy {
+    getChild(PklQualifiedIdentifierImpl::class)
   }
 
-  override val moduleExtendsAmendsClause: ModuleExtendsAmendsClause? by lazy {
-    getChild(ModuleExtendsAmendsClauseImpl::class)
+  override val moduleExtendsAmendsClause: PklModuleExtendsAmendsClause? by lazy {
+    getChild(PklModuleExtendsAmendsClauseImpl::class)
   }
 
   override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
@@ -99,26 +105,28 @@ class ModuleHeaderImpl(override val parent: Node, override val ctx: ModuleHeader
     qualifiedIdentifier?.fullName?.substringAfterLast('.')
   }
 
+  override val moduleName: String? by lazy { qualifiedIdentifier?.fullName }
+
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitModuleHeader(this)
   }
 }
 
-class ModuleDeclarationImpl(
+class PklModuleDeclarationImpl(
   override val parent: Node,
   override val ctx: PklParser.ModuleDeclContext
-) : AbstractNode(parent, ctx), ModuleDeclaration {
+) : AbstractNode(parent, ctx), PklModuleDeclaration {
 
   override val annotations: List<PklAnnotation> by lazy {
     ctx.annotation().map { PklAnnotationImpl(this, it) }
   }
 
-  override val moduleHeader: ModuleHeader? by lazy {
-    ctx.moduleHeader()?.let { ModuleHeaderImpl(this, it) }
+  override val moduleHeader: PklModuleHeader? by lazy {
+    ctx.moduleHeader()?.let { PklModuleHeaderImpl(this, it) }
   }
 
-  override val moduleExtendsAmendsClause: ModuleExtendsAmendsClause? by lazy {
-    children.firstInstanceOf<ModuleExtendsAmendsClause>()
+  override val moduleExtendsAmendsClause: PklModuleExtendsAmendsClause? by lazy {
+    children.firstInstanceOf<PklModuleExtendsAmendsClause>()
   }
 
   override val modifiers: List<Terminal> by lazy { moduleHeader?.modifiers ?: emptyList() }
@@ -141,10 +149,10 @@ class PklImportImpl(override val parent: Node, override val ctx: PklParser.Impor
   }
 }
 
-class ModuleExtendsAmendsClauseImpl(
+class PklModuleExtendsAmendsClauseImpl(
   override val parent: Node,
   override val ctx: PklParser.ModuleExtendsOrAmendsClauseContext
-) : AbstractNode(parent, ctx), ModuleExtendsAmendsClause {
+) : AbstractNode(parent, ctx), PklModuleExtendsAmendsClause {
   override val isAmend: Boolean
     get() = ctx.AMENDS() != null
 
@@ -242,16 +250,5 @@ class PklTypeParameterImpl(
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTypeParameter(this)
-  }
-}
-
-class PklModuleUriImpl(override val parent: Node, override val ctx: ParseTree) :
-  AbstractNode(parent, ctx), PklModuleUri {
-  override val stringConstant: PklStringConstant by lazy {
-    children.firstInstanceOf<PklStringConstant>()!!
-  }
-
-  override fun <R> accept(visitor: PklVisitor<R>): R? {
-    return visitor.visitModuleUri(this)
   }
 }

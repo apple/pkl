@@ -15,14 +15,14 @@
  */
 package org.pkl.lsp
 
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
-import org.eclipse.lsp4j.InitializeParams
-import org.eclipse.lsp4j.InitializeResult
-import org.eclipse.lsp4j.ServerCapabilities
-import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
+import org.pkl.core.util.IoUtils
 
 class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClientAware {
 
@@ -33,12 +33,22 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
   private lateinit var logger: ClientLogger
   private val builder: Builder = Builder(this)
 
+  private val cacheDir: Path = Files.createTempDirectory("pklLSP")
+  val stdlibDir = cacheDir.resolve("stdlib")
+
   override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
     val res = InitializeResult(ServerCapabilities())
     res.capabilities.textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
 
-    // Hover capability
+    // hover capability
     res.capabilities.setHoverProvider(true)
+    // go to definition capability
+    res.capabilities.definitionProvider = Either.forLeft(true)
+    // auto completion capability
+    // res.capabilities.completionProvider = CompletionOptions(false, listOf("."))
+
+    // cache the stdlib, so we can open it in the client
+    CompletableFuture.supplyAsync(::cacheStdlib)
 
     return CompletableFuture.supplyAsync { res }
   }
@@ -64,5 +74,14 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
   override fun connect(client: LanguageClient) {
     this.client = client
     logger = ClientLogger(client, verbose)
+  }
+
+  private fun cacheStdlib() {
+    stdlibDir.toFile().mkdirs()
+    for ((name, _) in Stdlib.allModules()) {
+      val file = stdlibDir.resolve("$name.pkl")
+      val text = IoUtils.readClassPathResourceAsString(javaClass, "/org/pkl/core/stdlib/$name.pkl")
+      Files.writeString(file, text, Charsets.UTF_8)
+    }
   }
 }

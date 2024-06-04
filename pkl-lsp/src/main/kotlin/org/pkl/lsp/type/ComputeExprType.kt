@@ -20,23 +20,26 @@ import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.ast.*
 import org.pkl.lsp.resolvers.ResolveVisitors
 
-private val value = Any()
+private val cache: IdentityHashMap<Node, Type> = IdentityHashMap()
 
 fun Node?.computeExprType(base: PklBaseModule, bindings: TypeParameterBindings): Type {
   return when {
     this == null || this !is PklExpr -> Type.Unknown
-    bindings.isEmpty() -> TODO("implement")
+    bindings.isEmpty() -> {
+      val type = cache[this]
+      if (type != null) {
+        type
+      } else {
+        val typ = doComputeExprType(base, bindings)
+        cache[this] = typ
+        typ
+      }
+    }
     else -> doComputeExprType(base, bindings)
   }
 }
 
-private fun Node.doComputeExprType(
-  base: PklBaseModule,
-  bindings: TypeParameterBindings,
-  cache: IdentityHashMap<Node, Any> = IdentityHashMap()
-): Type {
-  if (cache.containsKey(this)) return Type.Unknown
-  cache[this] = value
+private fun Node.doComputeExprType(base: PklBaseModule, bindings: TypeParameterBindings): Type {
   return when (this) {
     is PklUnqualifiedAccessExpr -> {
       val visitor =

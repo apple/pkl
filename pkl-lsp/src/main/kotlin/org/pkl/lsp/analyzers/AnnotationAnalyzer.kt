@@ -22,7 +22,7 @@ import org.pkl.lsp.ast.*
 
 class AnnotationAnalyzer(private val server: PklLSPServer) : Analyzer() {
   override fun doAnalyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
-    if (node is PklModule || node is PklClass || node is ModuleDeclaration) return true
+    if (node is PklModule || node is PklClass || node is PklModuleDeclaration) return true
     if (node !is PklAnnotation) return false
 
     val type = node.type

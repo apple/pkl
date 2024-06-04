@@ -19,10 +19,10 @@ import org.pkl.core.parser.antlr.PklParser.QualifiedIdentifierContext
 import org.pkl.core.parser.antlr.PklParser.StringConstantContext
 import org.pkl.lsp.PklVisitor
 
-class QualifiedIdentifierImpl(
+class PklQualifiedIdentifierImpl(
   override val parent: Node,
   override val ctx: QualifiedIdentifierContext
-) : AbstractNode(parent, ctx), QualifiedIdentifier {
+) : AbstractNode(parent, ctx), PklQualifiedIdentifier {
   override val identifiers: List<Terminal> by lazy { terminals }
   override val fullName: String by lazy { identifiers.joinToString(".") { it.text } }
 

@@ -96,7 +96,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
 
     val (description, applicableModifiers) =
       when (node) {
-        is ModuleDeclaration ->
+        is PklModuleDeclaration ->
           if (node.isAmend) "amending modules" to AMENDING_MODULE_MODIFIERS
           else "modules" to MODULE_MODIFIERS
         is PklClass -> "classes" to CLASS_MODIFIERS

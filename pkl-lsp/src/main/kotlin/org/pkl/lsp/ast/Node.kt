@@ -15,6 +15,8 @@
  */
 package org.pkl.lsp.ast
 
+import java.io.File
+import java.net.URI
 import kotlin.reflect.KClass
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ParseTree
@@ -50,7 +52,7 @@ interface Node {
   }
 }
 
-interface QualifiedIdentifier : Node {
+interface PklQualifiedIdentifier : Node {
   val identifiers: List<Terminal>
   val fullName: String
 }
@@ -103,19 +105,29 @@ interface ModifierListOwner : Node {
   }
 }
 
-interface DocCommentOwner : Node {
+interface PklDocCommentOwner : Node {
   // assertion: DocComment is always the first node
   val docComment: Terminal?
-    get() = (children.firstOrNull() as? Terminal)?.also { assert(it.type == TokenType.DocComment) }
+    get() {
+      val terminal = children.firstOrNull() as? Terminal ?: return null
+      return if (terminal.type == TokenType.DocComment) terminal else null
+    }
+
+  val parsedComment: String?
+    get() {
+      val doc = docComment?.text?.trim() ?: return null
+      return doc.lines().joinToString("\n") { it.removePrefix("///") }.trimIndent()
+    }
 }
 
 sealed interface PklNavigableElement : Node
 
-sealed interface PklTypeDefOrModule : PklNavigableElement, ModifierListOwner, DocCommentOwner
+sealed interface PklTypeDefOrModule : PklNavigableElement, ModifierListOwner, PklDocCommentOwner
 
 interface PklModule : PklTypeDefOrModule {
+  val uri: URI
   val isAmend: Boolean
-  val declaration: ModuleDeclaration?
+  val declaration: PklModuleDeclaration?
   val imports: List<PklImport>
   val members: List<PklModuleMember>
   val typeAliases: List<PklTypeAlias>
@@ -127,30 +139,32 @@ interface PklModule : PklTypeDefOrModule {
   val supermodule: PklModule?
   val cache: ModuleMemberCache
   val shortDisplayName: String
+  val moduleName: String?
 }
 
 /** Either [moduleHeader] is set, or [moduleExtendsAmendsClause] is set. */
-interface ModuleDeclaration : Node, ModifierListOwner, DocCommentOwner {
+interface PklModuleDeclaration : Node, ModifierListOwner, PklDocCommentOwner {
   val annotations: List<PklAnnotation>
 
   val isAmend: Boolean
     get() = effectiveExtendsOrAmendsCluse?.isAmend ?: false
 
-  val moduleHeader: ModuleHeader?
+  val moduleHeader: PklModuleHeader?
 
-  val moduleExtendsAmendsClause: ModuleExtendsAmendsClause?
+  val moduleExtendsAmendsClause: PklModuleExtendsAmendsClause?
 
-  val effectiveExtendsOrAmendsCluse: ModuleExtendsAmendsClause?
+  val effectiveExtendsOrAmendsCluse: PklModuleExtendsAmendsClause?
     get() = moduleHeader?.moduleExtendsAmendsClause ?: moduleExtendsAmendsClause
 }
 
-interface ModuleHeader : Node, ModifierListOwner {
-  val qualifiedIdentifier: QualifiedIdentifier?
-  val moduleExtendsAmendsClause: ModuleExtendsAmendsClause?
+interface PklModuleHeader : Node, ModifierListOwner {
+  val qualifiedIdentifier: PklQualifiedIdentifier?
+  val moduleExtendsAmendsClause: PklModuleExtendsAmendsClause?
   val shortDisplayName: String?
+  val moduleName: String?
 }
 
-interface ModuleExtendsAmendsClause : Node {
+interface PklModuleExtendsAmendsClause : Node {
   val isAmend: Boolean
 
   val isExtend: Boolean
@@ -158,7 +172,7 @@ interface ModuleExtendsAmendsClause : Node {
   val moduleUri: PklModuleUri?
 }
 
-sealed interface PklModuleMember : PklNavigableElement, DocCommentOwner, ModifierListOwner {
+sealed interface PklModuleMember : PklNavigableElement, PklDocCommentOwner, ModifierListOwner {
   val name: String
 }
 
@@ -185,11 +199,11 @@ interface PklClassBody : Node {
 
 interface PklAnnotation : PklObjectBodyOwner {
   val type: PklType?
-  val typeName: TypeName?
+  val typeName: PklTypeName?
   override val objectBody: PklObjectBody?
 }
 
-interface TypeName : Node {
+interface PklTypeName : Node {
   val module: Terminal?
   val simpleTypeName: SimpleTypeName
 }
@@ -201,7 +215,7 @@ interface PklClassHeader : Node, IdentifierOwner, ModifierListOwner {
   val extends: PklType?
 }
 
-sealed interface PklClassMember : PklModuleMember, DocCommentOwner
+sealed interface PklClassMember : PklModuleMember, PklDocCommentOwner
 
 sealed interface PklProperty : PklNavigableElement, ModifierListOwner, IdentifierOwner {
   val name: String
@@ -211,13 +225,13 @@ sealed interface PklProperty : PklNavigableElement, ModifierListOwner, Identifie
 }
 
 interface PklClassProperty : PklProperty, PklModuleMember, PklClassMember, PklTypeDefOrProperty {
-  val typeAnnotation: TypeAnnotation?
+  val typeAnnotation: PklTypeAnnotation?
 
   val objectBody: PklObjectBody?
 }
 
 interface PklMethod : PklNavigableElement, ModifierListOwner {
-  val methodHeader: MethodHeader
+  val methodHeader: PklMethodHeader
   val body: PklExpr
 }
 
@@ -260,7 +274,7 @@ interface PklObjectSpread : PklObjectMember {
   val isNullable: Boolean
 }
 
-interface MethodHeader : Node, ModifierListOwner, IdentifierOwner {
+interface PklMethodHeader : Node, ModifierListOwner, IdentifierOwner {
   val parameterList: PklParameterList?
 
   val typeParameterList: PklTypeParameterList?
@@ -316,6 +330,13 @@ interface Terminal : Node {
 
 interface PklModuleUri : Node {
   val stringConstant: PklStringConstant
+
+  fun resolve(
+    targetUri: String,
+    moduleUri: String,
+    sourceFile: File,
+    enclosingModule: PklModule?
+  ): PklModule?
 }
 
 interface PklImportBase : Node {
@@ -490,12 +511,12 @@ interface PklParenthesizedExpr : PklExpr {
   val expr: PklExpr?
 }
 
-interface TypeAnnotation : Node {
+interface PklTypeAnnotation : Node {
   val pklType: PklType?
 }
 
 interface PklTypedIdentifier : PklNavigableElement, IdentifierOwner {
-  val typeAnnotation: TypeAnnotation?
+  val typeAnnotation: PklTypeAnnotation?
 }
 
 interface PklParameter : Node {
@@ -521,7 +542,7 @@ interface PklStringLiteralType : PklType {
 }
 
 interface PklDeclaredType : PklType {
-  val name: TypeName
+  val name: PklTypeName
   val typeArgumentList: TypeArgumentList?
 }
 
@@ -625,21 +646,23 @@ fun List<ParseTree>.toNode(parent: Node?, idx: Int): Node? {
 
 fun ParseTree.toNode(parent: Node?): Node? {
   return when (this) {
-    is ModuleContext -> PklModuleImpl(this)
-    is ModuleDeclContext -> ModuleDeclarationImpl(parent!!, this)
+    // a module can never be constructed from this function
+    // is ModuleContext -> PklModuleImpl(this)
+    is ModuleDeclContext -> PklModuleDeclarationImpl(parent!!, this)
     is ImportClauseContext -> PklImportImpl(parent!!, this)
-    is ModuleExtendsOrAmendsClauseContext -> ModuleExtendsAmendsClauseImpl(parent!!, this)
+    is ModuleExtendsOrAmendsClauseContext -> PklModuleExtendsAmendsClauseImpl(parent!!, this)
     is ClazzContext -> PklClassImpl(parent!!, this)
     is ClassHeaderContext -> PklClassHeaderImpl(parent!!, this)
     is ClassBodyContext -> PklClassBodyImpl(parent!!, this)
     is ClassPropertyContext -> PklClassPropertyImpl(parent!!, this)
-    is MethodHeaderContext -> MethodHeaderImpl(parent!!, this)
+    is MethodHeaderContext -> PklMethodHeaderImpl(parent!!, this)
     is ClassMethodContext -> PklClassMethodImpl(parent!!, this)
     is ParameterListContext -> PklParameterListImpl(parent!!, this)
     is ParameterContext -> PklParameterImpl(parent!!, this)
     is ArgumentListContext -> PklArgumentListImpl(parent!!, this)
     is AnnotationContext -> PklAnnotationImpl(parent!!, this)
-    is TypeAnnotationContext -> TypeAnnotationImpl(parent!!, this)
+    is TypeAnnotationContext -> PklTypeAnnotationImpl(parent!!, this)
+    is TypedIdentifierContext -> PklTypedIdentifierImpl(parent!!, this)
     is UnknownTypeContext -> PklUnknownTypeImpl(parent!!, this)
     is NothingTypeContext -> PklNothingTypeImpl(parent!!, this)
     is ModuleTypeContext -> PklModuleTypeImpl(parent!!, this)
@@ -668,6 +691,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is SingleLineStringPartContext -> SingleLineStringPartImpl(parent!!, this)
     is MultiLineStringLiteralContext -> PklMultiLineStringLiteralImpl(parent!!, this)
     is MultiLineStringPartContext -> MultiLineStringPartImpl(parent!!, this)
+    is StringConstantContext -> PklStringConstantImpl(parent!!, this)
     is NewExprContext -> PklNewExprImpl(parent!!, this)
     is AmendExprContext -> PklAmendExprImpl(parent!!, this)
     is SuperAccessExprContext -> PklSuperAccessExprImpl(parent!!, this)
@@ -691,7 +715,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is LetExprContext -> PklLetExprImpl(parent!!, this)
     is FunctionLiteralContext -> PklFunctionLiteralExprImpl(parent!!, this)
     is ParenthesizedExprContext -> PklParenthesizedExprImpl(parent!!, this)
-    is QualifiedIdentifierContext -> QualifiedIdentifierImpl(parent!!, this)
+    is QualifiedIdentifierContext -> PklQualifiedIdentifierImpl(parent!!, this)
     is ObjectBodyContext -> PklObjectBodyImpl(parent!!, this)
     is ObjectPropertyContext -> PklObjectPropertyImpl(parent!!, this)
     is ObjectMethodContext -> PklObjectMethodImpl(parent!!, this)

@@ -17,6 +17,7 @@ package org.pkl.lsp
 
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.regex.Pattern
 import kotlin.math.max
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
@@ -99,3 +100,14 @@ private fun getSignificand(d: Double): Long {
   bits = bits and SIGNIFICAND_MASK
   return if (exponent == java.lang.Double.MIN_EXPONENT - 1) bits shl 1 else bits or IMPLICIT_BIT
 }
+
+private val absoluteUriLike = Pattern.compile("\\w+:.*")
+
+fun isAbsoluteUriLike(uriStr: String): Boolean = absoluteUriLike.matcher(uriStr).matches()
+
+fun parseUriOrNull(uriStr: String): URI? =
+  try {
+    if (isAbsoluteUriLike(uriStr)) URI(uriStr) else URI(null, null, uriStr, null)
+  } catch (_: URISyntaxException) {
+    null
+  }

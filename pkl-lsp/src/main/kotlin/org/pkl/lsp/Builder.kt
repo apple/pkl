@@ -36,14 +36,16 @@ import org.pkl.lsp.ast.PklModuleImpl
 import org.pkl.lsp.ast.Span
 
 class Builder(private val server: PklLSPServer) {
-  private var runningBuild: CompletableFuture<PklModule?> = CompletableFuture.supplyAsync(::noop)
+  private val runningBuild: MutableMap<String, CompletableFuture<PklModule?>> = mutableMapOf()
+  private val successfulBuilds: MutableMap<String, PklModule> = mutableMapOf()
 
   private val parser = Parser()
 
   private val analyzers: List<Analyzer> =
     listOf(ModifierAnalyzer(server), AnnotationAnalyzer(server))
 
-  fun runningBuild(): CompletableFuture<PklModule?> = runningBuild
+  fun runningBuild(uri: String): CompletableFuture<PklModule?> =
+    runningBuild[uri] ?: CompletableFuture.supplyAsync(::noop)
 
   fun requestBuild(file: URI) {
     val change = IoUtils.readString(file.toURL())
@@ -51,16 +53,19 @@ class Builder(private val server: PklLSPServer) {
   }
 
   fun requestBuild(file: URI, change: String) {
-    runningBuild = CompletableFuture.supplyAsync { build(file, change) }
+    runningBuild[file.toString()] = CompletableFuture.supplyAsync { build(file, change) }
   }
+
+  fun lastSuccessfulBuild(uri: String): PklModule? = successfulBuilds[uri]
 
   private fun build(file: URI, change: String): PklModule? {
     return try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
-      val module = PklModuleImpl(moduleCtx)
+      val module = PklModuleImpl(moduleCtx, file)
       val diagnostics = analyze(module)
       makeDiagnostics(file, diagnostics)
+      successfulBuilds[file.toString()] = module
       return module
     } catch (e: LexParseException) {
       server.logger().error("Parser Error building $file: ${e.message}")

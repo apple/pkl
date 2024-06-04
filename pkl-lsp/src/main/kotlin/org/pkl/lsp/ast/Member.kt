@@ -33,8 +33,8 @@ class PklClassPropertyImpl(override val parent: Node, override val ctx: ClassPro
     }
   }
 
-  override val typeAnnotation: TypeAnnotation? by lazy {
-    children.firstInstanceOf<TypeAnnotation>()
+  override val typeAnnotation: PklTypeAnnotation? by lazy {
+    children.firstInstanceOf<PklTypeAnnotation>()
   }
 
   override val expr: PklExpr? by lazy { children.firstInstanceOf<PklExpr>() }
@@ -54,7 +54,7 @@ class PklClassPropertyImpl(override val parent: Node, override val ctx: ClassPro
 
 class PklClassMethodImpl(override val parent: Node, override val ctx: ClassMethodContext) :
   AbstractNode(parent, ctx), PklClassMethod {
-  override val methodHeader: MethodHeader by lazy { getChild(MethodHeaderImpl::class)!! }
+  override val methodHeader: PklMethodHeader by lazy { getChild(PklMethodHeaderImpl::class)!! }
 
   override val name: String by lazy { ctx.methodHeader().Identifier().text }
 
@@ -67,8 +67,8 @@ class PklClassMethodImpl(override val parent: Node, override val ctx: ClassMetho
   }
 }
 
-class MethodHeaderImpl(override val parent: Node, override val ctx: MethodHeaderContext) :
-  AbstractNode(parent, ctx), MethodHeader {
+class PklMethodHeaderImpl(override val parent: Node, override val ctx: MethodHeaderContext) :
+  AbstractNode(parent, ctx), PklMethodHeader {
   override val parameterList: PklParameterList? by lazy { getChild(PklParameterListImpl::class) }
 
   override val typeParameterList: PklTypeParameterList? by lazy {
@@ -79,7 +79,9 @@ class MethodHeaderImpl(override val parent: Node, override val ctx: MethodHeader
 
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
 
-  override val returnType: PklType? by lazy { children.firstInstanceOf<TypeAnnotation>()?.pklType }
+  override val returnType: PklType? by lazy {
+    children.firstInstanceOf<PklTypeAnnotation>()?.pklType
+  }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitMethodHeader(this)
@@ -134,7 +136,7 @@ class PklObjectPropertyImpl(override val parent: Node, override val ctx: ObjectP
 
 class PklObjectMethodImpl(override val parent: Node, override val ctx: ObjectMethodContext) :
   AbstractNode(parent, ctx), PklObjectMethod {
-  override val methodHeader: MethodHeader by lazy { getChild(MethodHeaderImpl::class)!! }
+  override val methodHeader: PklMethodHeader by lazy { getChild(PklMethodHeaderImpl::class)!! }
   override val modifiers: List<Terminal>? by lazy { methodHeader.modifiers }
   override val body: PklExpr by lazy { children.firstInstanceOf<PklExpr>()!! }
   override val name: String by lazy { methodHeader.identifier!!.text }
