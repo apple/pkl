@@ -19,18 +19,15 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
 import org.pkl.core.ast.lambda.*;
-import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 
 // duplication between ListNodes and SetNodes is "intentional"
@@ -1295,11 +1292,7 @@ public final class ListNodes {
     @Specialization
     @TruffleBoundary
     protected VmListing eval(VmList self) {
-      return new VmListing(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getListingClass().getPrototype(),
-          toObjectMembers(self),
-          self.getLength());
+      return self.toListing();
     }
   }
 
@@ -1307,22 +1300,7 @@ public final class ListNodes {
     @Specialization
     @TruffleBoundary
     protected VmDynamic eval(VmList self) {
-      return new VmDynamic(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getDynamicClass().getPrototype(),
-          toObjectMembers(self),
-          self.getLength());
+      return self.toDynamic();
     }
-  }
-
-  private static EconomicMap<Object, ObjectMember> toObjectMembers(VmList self) {
-    var result = EconomicMaps.<Object, ObjectMember>create(self.getLength());
-
-    for (long idx = 0; idx < self.getLength(); idx++) {
-      EconomicMaps.put(
-          result, idx, VmUtils.createSyntheticObjectElement(String.valueOf(idx), self.get(idx)));
-    }
-
-    return result;
   }
 }

@@ -33,7 +33,6 @@ import org.pkl.core.util.LateInit;
 @NodeInfo(shortName = "import")
 public final class ImportNode extends AbstractImportNode {
   private final VmLanguage language;
-  private final ResolvedModuleKey currentModule;
 
   @CompilationFinal @LateInit private VmTyped importedModule;
 
@@ -42,9 +41,8 @@ public final class ImportNode extends AbstractImportNode {
       SourceSection sourceSection,
       ResolvedModuleKey currentModule,
       URI importUri) {
-    super(sourceSection, importUri);
+    super(sourceSection, currentModule, importUri);
     this.language = language;
-    this.currentModule = currentModule;
 
     assert importUri.isAbsolute();
   }

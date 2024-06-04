@@ -2218,8 +2218,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       return ReadOrNullNodeGen.create(createSourceSection(ctx), moduleKey, visitExpr(exprCtx));
     }
     assert tokenType == PklLexer.READ_GLOB;
-    return ReadGlobNodeGen.create(
-        language, createSourceSection(ctx), moduleKey, visitExpr(exprCtx));
+    return ReadGlobNodeGen.create(createSourceSection(ctx), moduleKey, visitExpr(exprCtx));
   }
 
   @Override
@@ -2660,8 +2659,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     }
     var resolvedUri = resolveImport(importUri, importUriCtx);
     if (isGlobImport) {
-      return new ImportGlobNode(
-          language, section, moduleInfo.getResolvedModuleKey(), resolvedUri, importUri);
+      return new ImportGlobNode(section, moduleInfo.getResolvedModuleKey(), resolvedUri, importUri);
     }
     return new ImportNode(language, section, moduleInfo.getResolvedModuleKey(), resolvedUri);
   }

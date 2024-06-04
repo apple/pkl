@@ -16,23 +16,37 @@
 package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
-public final class UntypedObjectMemberNode extends RegularMemberNode {
-  public UntypedObjectMemberNode(
+/** A {@code MemberNode} that belongs to a single {@link Member}. */
+public abstract class RegularMemberNode extends MemberNode {
+  protected final Member member;
+
+  protected RegularMemberNode(
       @Nullable VmLanguage language,
       FrameDescriptor descriptor,
-      ObjectMember member,
+      Member member,
       ExpressionNode bodyNode) {
 
-    super(language, descriptor, member, bodyNode);
+    super(language, descriptor, bodyNode);
+    this.member = member;
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
-    return executeBody(frame);
+  public final SourceSection getSourceSection() {
+    return member.getSourceSection();
+  }
+
+  public final SourceSection getHeaderSection() {
+    return member.getHeaderSection();
+  }
+
+  @Override
+  public final String getName() {
+    return member.getQualifiedName();
   }
 }

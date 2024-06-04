@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -250,7 +251,7 @@ public final class GlobResolver {
       ReaderBase reader,
       URI globUri,
       Pattern pattern,
-      ArrayList<ResolvedGlobElement> result)
+      Map<String, ResolvedGlobElement> result)
       throws IOException, SecurityManagerException {
     var elements = reader.listElements(securityManager, globUri);
     for (var elem : sorted(elements)) {
@@ -261,7 +262,8 @@ public final class GlobResolver {
         throw new IllegalArgumentException(e.getMessage(), e);
       }
       if (pattern.matcher(resolvedUri.toString()).matches()) {
-        result.add(new ResolvedGlobElement(resolvedUri.toString(), resolvedUri, false));
+        var path = resolvedUri.toString();
+        result.put(path, new ResolvedGlobElement(path, resolvedUri, false));
       }
     }
   }
@@ -372,7 +374,7 @@ public final class GlobResolver {
       URI baseUri,
       String expandedGlobPatternSoFar,
       boolean hasAbsoluteGlob,
-      List<ResolvedGlobElement> result,
+      Map<String, ResolvedGlobElement> result,
       MutableLong listElementCallCount)
       throws IOException, SecurityManagerException, InvalidGlobPatternException {
     var isLeaf = idx == globPatternParts.length - 1;
@@ -384,7 +386,7 @@ public final class GlobResolver {
         if (reader.hasElement(securityManager, newBaseUri)) {
           // Note: isDirectory is not meaningful here. Setting it to false is a way to skip setting
           // it.
-          result.add(new ResolvedGlobElement(newPath, newBaseUri, false));
+          result.put(newPath, new ResolvedGlobElement(newPath, newBaseUri, false));
         }
       } else {
         var newBaseUri = IoUtils.resolve(reader, baseUri, patternPart + "/");
@@ -414,7 +416,7 @@ public final class GlobResolver {
               listElementCallCount);
       for (var element : matchedElements) {
         if (isLeaf) {
-          result.add(element);
+          result.put(element.getPath(), element);
         } else if (element.isDirectory()) {
           resolveHierarchicalGlob(
               securityManager,
@@ -465,7 +467,7 @@ public final class GlobResolver {
    * <p>Each pair is the expanded form of the glob pattern, paired with its resolved absolute URI.
    */
   @TruffleBoundary
-  public static List<ResolvedGlobElement> resolveGlob(
+  public static Map<String, ResolvedGlobElement> resolveGlob(
       SecurityManager securityManager,
       ReaderBase reader,
       ModuleKey enclosingModuleKey,
@@ -473,7 +475,7 @@ public final class GlobResolver {
       String globPattern)
       throws IOException, SecurityManagerException, InvalidGlobPatternException {
 
-    var result = new ArrayList<ResolvedGlobElement>();
+    var result = new LinkedHashMap<String, ResolvedGlobElement>();
     var hasAbsoluteGlob = globPattern.matches("\\w+:.*");
 
     if (reader.hasHierarchicalUris()) {
@@ -484,7 +486,7 @@ public final class GlobResolver {
       if (globParts.length == 0) {
         var resolvedUri = IoUtils.resolve(reader, enclosingUri, globPattern);
         if (reader.hasElement(securityManager, resolvedUri)) {
-          result.add(new ResolvedGlobElement(globPattern, resolvedUri, true));
+          result.put(globPattern, new ResolvedGlobElement(globPattern, resolvedUri, true));
         }
         return result;
       }

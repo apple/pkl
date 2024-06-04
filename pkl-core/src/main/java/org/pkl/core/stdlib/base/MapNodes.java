@@ -21,13 +21,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.util.Map;
 import org.pkl.core.ast.lambda.*;
-import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableReference;
 
 public final class MapNodes {
@@ -238,28 +236,7 @@ public final class MapNodes {
   public abstract static class toDynamic extends ExternalMethod0Node {
     @Specialization
     protected VmDynamic eval(VmMap self) {
-      var members = EconomicMaps.<Object, ObjectMember>create(self.getLength());
-
-      for (var entry : self) {
-        var key = VmUtils.getKey(entry);
-
-        if (key instanceof String string) {
-          var name = Identifier.get(string);
-          EconomicMaps.put(
-              members,
-              name,
-              VmUtils.createSyntheticObjectProperty(name, "", VmUtils.getValue(entry)));
-        } else {
-          EconomicMaps.put(
-              members, key, VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry)));
-        }
-      }
-
-      return new VmDynamic(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getDynamicClass().getPrototype(),
-          members,
-          0);
+      return self.toDynamic();
     }
   }
 
@@ -287,19 +264,7 @@ public final class MapNodes {
   public abstract static class toMapping extends ExternalMethod0Node {
     @Specialization
     protected VmMapping eval(VmMap self) {
-      var members = EconomicMaps.<Object, ObjectMember>create(self.getLength());
-
-      for (var entry : self) {
-        EconomicMaps.put(
-            members,
-            VmUtils.getKey(entry),
-            VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry)));
-      }
-
-      return new VmMapping(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getMappingClass().getPrototype(),
-          members);
+      return self.toMapping();
     }
   }
 }

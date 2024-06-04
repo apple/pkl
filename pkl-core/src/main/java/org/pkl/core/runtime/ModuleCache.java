@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import org.pkl.core.Release;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -77,7 +76,7 @@ public final class ModuleCache {
       ModuleResolver moduleResolver,
       Supplier<VmTyped> moduleInstantiator,
       ModuleInitializer moduleInitializer,
-      @Nullable ImportNode importNode) {
+      @Nullable Node importNode) {
 
     if (ModuleKeys.isStdLibModule(moduleKey)) {
       var moduleName = moduleKey.getUri().getSchemeSpecificPart();
@@ -162,7 +161,7 @@ public final class ModuleCache {
       ModuleResolver moduleResolver,
       Supplier<VmTyped> moduleInstantiator,
       ModuleInitializer moduleInitializer,
-      @Nullable ImportNode importNode) {
+      @Nullable Node importNode) {
 
     VmTyped module = moduleInstantiator.get();
 
@@ -189,7 +188,7 @@ public final class ModuleCache {
   }
 
   private ResolvedModuleKey resolve(
-      ModuleKey module, SecurityManager securityManager, @Nullable ImportNode importNode) {
+      ModuleKey module, SecurityManager securityManager, @Nullable Node importNode) {
     try {
       return module.resolve(securityManager);
     } catch (SecurityManagerException | PackageLoadError e) {

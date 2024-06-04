@@ -176,4 +176,66 @@ examples {
       }
     }
   }
+  ["use read expression with non-constant glob pattern"] {
+    new {
+      ["globtest/file1.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file1.txt"
+        text = """
+          file1
+          
+          """
+        base64 = "ZmlsZTEK"
+      }
+      ["globtest/file2.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file2.txt"
+        text = """
+          file2
+          
+          """
+        base64 = "ZmlsZTIK"
+      }
+    }
+    new {
+      ["globtest/file1.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file1.txt"
+        text = """
+          file1
+          
+          """
+        base64 = "ZmlsZTEK"
+      }
+    }
+    new {
+      ["globtest/file2.txt"] {
+        uri = "file:///$snippetsDir/input/basic/globtest/file2.txt"
+        text = """
+          file2
+          
+          """
+        base64 = "ZmlsZTIK"
+      }
+    }
+  }
+  ["read different resources with same glob pattern"] {
+    new {
+      ["resource.txt"] {
+        uri = "file:///$snippetsDir/input-helper/basic/read/resource.txt"
+        text = """
+          resource
+          
+          """
+        base64 = "cmVzb3VyY2UK"
+      }
+    }
+    new {
+      ["resource.txt"] {
+        uri = "file:///$snippetsDir/input-helper/basic/read/child/resource.txt"
+        text = """
+          child resource
+          
+          """
+        base64 = "Y2hpbGQgcmVzb3VyY2UK"
+      }
+    }
+  }
 }

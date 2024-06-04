@@ -22,20 +22,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
-import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.util.GlobResolver;
-import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 
 public final class ResourceManager {
   private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
@@ -44,8 +39,6 @@ public final class ResourceManager {
 
   // cache resources indefinitely to make resource reads deterministic
   private final Map<URI, Optional<Object>> resources = new HashMap<>();
-
-  private final Map<URI, List<ResolvedGlobElement>> globExpressions = new HashMap<>();
 
   public ResourceManager(SecurityManager securityManager, Collection<ResourceReader> readers) {
     this.securityManager = securityManager;
@@ -61,61 +54,16 @@ public final class ResourceManager {
             .addProperty("base64", Resource::getBase64);
   }
 
-  /**
-   * Resolves the glob URI into a set of URIs.
-   *
-   * <p>The glob URI must be absolute. For example: {@code "file:///foo/bar/*.pkl"}.
-   */
   @TruffleBoundary
-  public List<ResolvedGlobElement> resolveGlob(
-      URI globUri,
-      URI enclosingUri,
-      ModuleKey enclosingModuleKey,
-      Node readNode,
-      String globExpression) {
-    return globExpressions.computeIfAbsent(
-        globUri.normalize(),
-        uri -> {
-          var scheme = uri.getScheme();
-          URI resolvedUri;
-          try {
-            resolvedUri = enclosingModuleKey.resolveUri(globUri);
-          } catch (SecurityManagerException | IOException e) {
-            throw new VmExceptionBuilder().withLocation(readNode).withCause(e).build();
-          }
-          try {
-            var reader = resourceReaders.get(resolvedUri.getScheme());
-            if (reader == null) {
-              throw new VmExceptionBuilder()
-                  .withLocation(readNode)
-                  .evalError("noResourceReaderRegistered", scheme)
-                  .build();
-            }
-            if (!reader.isGlobbable()) {
-              throw new VmExceptionBuilder()
-                  .evalError("cannotGlobUri", uri, scheme)
-                  .withLocation(readNode)
-                  .build();
-            }
-            var securityManager = VmContext.get(readNode).getSecurityManager();
-            return GlobResolver.resolveGlob(
-                securityManager, reader, enclosingModuleKey, enclosingUri, globExpression);
-          } catch (InvalidGlobPatternException e) {
-            throw new VmExceptionBuilder()
-                .evalError("invalidGlobPattern", globExpression)
-                .withHint(e.getMessage())
-                .withLocation(readNode)
-                .build();
-          } catch (SecurityManagerException | HttpClientInitException e) {
-            throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
-          } catch (IOException e) {
-            throw new VmExceptionBuilder()
-                .evalError("ioErrorResolvingGlob", globExpression)
-                .withCause(e)
-                .withLocation(readNode)
-                .build();
-          }
-        });
+  public ResourceReader getReader(URI resourceUri, Node readNode) {
+    var reader = resourceReaders.get(resourceUri.getScheme());
+    if (reader == null) {
+      throw new VmExceptionBuilder()
+          .withLocation(readNode)
+          .evalError("noResourceReaderRegistered", resourceUri.getScheme())
+          .build();
+    }
+    return reader;
   }
 
   @TruffleBoundary
@@ -129,13 +77,7 @@ public final class ResourceManager {
             throw new VmExceptionBuilder().withCause(e).withLocation(readNode).build();
           }
 
-          var reader = resourceReaders.get(uri.getScheme());
-          if (reader == null) {
-            throw new VmExceptionBuilder()
-                .withLocation(readNode)
-                .evalError("noResourceReaderRegistered", resourceUri.getScheme())
-                .build();
-          }
+          var reader = getReader(resourceUri, readNode);
 
           Optional<Object> resource;
           try {

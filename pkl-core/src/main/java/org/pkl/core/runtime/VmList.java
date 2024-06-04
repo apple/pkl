@@ -382,6 +382,20 @@ public final class VmList extends VmCollection {
     return VmSet.create(rrbt);
   }
 
+  @TruffleBoundary
+  public VmListing toListing() {
+    var builder = new VmObjectBuilder(rrbt.size());
+    for (var elem : rrbt) builder.addElement(elem);
+    return builder.toListing();
+  }
+
+  @TruffleBoundary
+  public VmDynamic toDynamic() {
+    var builder = new VmObjectBuilder(rrbt.size());
+    for (var elem : rrbt) builder.addElement(elem);
+    return builder.toDynamic();
+  }
+
   @Override
   @TruffleBoundary
   public void force(boolean allowUndefinedValues) {

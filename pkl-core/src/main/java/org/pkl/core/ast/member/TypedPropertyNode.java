@@ -20,12 +20,11 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 
 /** A property definition that has a type annotation. */
-public final class TypedPropertyNode extends MemberNode {
+public final class TypedPropertyNode extends RegularMemberNode {
   @Child private DirectCallNode typeCheckCallNode;
 
   @TruffleBoundary
@@ -46,7 +45,7 @@ public final class TypedPropertyNode extends MemberNode {
   @Override
   public Object execute(VirtualFrame frame) {
     var propertyValue = executeBody(frame);
-    if (!shouldRunTypecheck(frame)) {
+    if (shouldRunTypeCheck(frame)) {
       typeCheckCallNode.call(VmUtils.getReceiver(frame), VmUtils.getOwner(frame), propertyValue);
     }
     return propertyValue;

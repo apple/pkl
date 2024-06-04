@@ -22,8 +22,7 @@ import org.pkl.core.ModuleSchema;
 import org.pkl.core.PClass;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.ast.MemberNode;
-import org.pkl.core.ast.expression.unary.ImportGlobNode;
-import org.pkl.core.ast.expression.unary.ImportNode;
+import org.pkl.core.ast.expression.unary.AbstractImportNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
@@ -132,11 +131,8 @@ public final class ModuleInfo {
           if (propertyDef.isImport()) {
             MemberNode memberNode = propertyDef.getMemberNode();
             assert memberNode != null; // import is never a constant
-            var importNode = memberNode.getBodyNode();
-            var importUri =
-                importNode instanceof ImportNode
-                    ? ((ImportNode) importNode).getImportUri()
-                    : ((ImportGlobNode) importNode).getImportUri();
+            var importNode = (AbstractImportNode) memberNode.getBodyNode();
+            var importUri = importNode.getImportUri();
             imports.put(propertyDef.getName().toString(), importUri);
             continue;
           }

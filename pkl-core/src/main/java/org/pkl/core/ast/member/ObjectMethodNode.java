@@ -21,14 +21,13 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-public final class ObjectMethodNode extends MemberNode {
+public final class ObjectMethodNode extends RegularMemberNode {
   private final VmLanguage language;
   private final int parameterCount;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;

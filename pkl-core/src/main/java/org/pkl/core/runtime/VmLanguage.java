@@ -22,7 +22,6 @@ import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.pkl.core.ast.builder.AstBuilder;
-import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.LexParseException;
@@ -73,7 +72,7 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
   }
 
   @TruffleBoundary
-  public VmTyped loadModule(ModuleKey moduleKey, ImportNode importNode) {
+  public VmTyped loadModule(ModuleKey moduleKey, @Nullable Node importNode) {
     var context = VmContext.get(null);
 
     return context
