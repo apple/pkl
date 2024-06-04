@@ -5,3 +5,10 @@
 
 *.pkl linguist-language=Groovy
 * text eol=lf
+*.bat text eol=crlf
+
+*.gif binary
+*.jar binary
+*.woff2 binary
+*.pem binary
+*.png binary
