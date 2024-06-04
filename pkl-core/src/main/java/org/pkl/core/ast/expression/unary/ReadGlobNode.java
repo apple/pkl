@@ -22,6 +22,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
@@ -33,6 +34,7 @@ import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "read*")
@@ -73,7 +75,7 @@ public abstract class ReadGlobNode extends AbstractReadNode {
     var globUri = parseUri(globPattern);
     var context = VmContext.get(this);
     try {
-      var resolvedUri = currentModule.resolveUri(globUri);
+      var resolvedUri = IoUtils.resolve(context.getSecurityManager(), currentModule, globUri);
       var reader = context.getResourceManager().getReader(resolvedUri, this);
       if (!reader.isGlobbable()) {
         throw exceptionBuilder().evalError("cannotGlobUri", globUri, globUri.getScheme()).build();
@@ -94,7 +96,7 @@ public abstract class ReadGlobNode extends AbstractReadNode {
       return cachedResult;
     } catch (IOException e) {
       throw exceptionBuilder().evalError("ioErrorResolvingGlob", globPattern).withCause(e).build();
-    } catch (SecurityManagerException | HttpClientInitException e) {
+    } catch (SecurityManagerException | HttpClientInitException | URISyntaxException e) {
       throw exceptionBuilder().withCause(e).build();
     } catch (InvalidGlobPatternException e) {
       throw exceptionBuilder()

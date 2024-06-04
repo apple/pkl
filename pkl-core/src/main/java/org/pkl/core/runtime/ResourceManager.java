@@ -27,15 +27,10 @@ import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
-import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.util.GlobResolver;
-import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
-import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public final class ResourceManager {
