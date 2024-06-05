@@ -64,9 +64,9 @@ val testNative by tasks.existing
 testNative {
   when {
     buildInfo.os.isMacOsX -> {
-      dependsOn(testMacExecutableAarch64)
+      dependsOn(testMacExecutableAmd64)
       if (buildInfo.arch == "aarch64") {
-        dependsOn(testMacExecutableAmd64)
+        dependsOn(testMacExecutableAarch64)
       }
     }
     buildInfo.os.isWindows -> {
