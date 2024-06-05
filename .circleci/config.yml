@@ -12,7 +12,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -88,7 +88,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -108,7 +108,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -168,7 +168,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -245,7 +245,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -265,7 +265,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
         name: gradle buildNative
         shell: bash.exe
     - persist_to_workspace:
@@ -288,7 +288,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -364,7 +364,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -384,7 +384,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -444,7 +444,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -521,7 +521,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -541,7 +541,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testNative
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
         name: gradle buildNative
         shell: bash.exe
     - persist_to_workspace:

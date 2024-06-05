@@ -126,7 +126,7 @@ steps {
     }
     command = #"""
       export PATH=~/staticdeps/bin:$PATH
-      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize()) pkl-server:testNative
+      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize()) pkl-server:test\#(jobName.capitalize())
       """#
   }
   new Config.PersistToWorkspaceStep {
