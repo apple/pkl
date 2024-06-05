@@ -221,7 +221,7 @@ function newInstance(enclosingModule: Module): Project = new {
   projectFileUri = reflect.Module(enclosingModule).uri
 }
 
-local hasVersion = (it: Uri) ->
+const local hasVersion = (it: Uri) ->
   let (versionSep = it.lastIndexOf("@"))
     if (versionSep == -1) false
     else let (version = it.drop(versionSep + 1))

@@ -1147,9 +1147,13 @@ Therefore, the same rules that apply to `fixed` also apply to `const`:
 * The const-ness of a property or method must be preserved when it is overridden by a child class.
 
 [[class-and-annotation-const]]
-*Class and Annotation Scoping*
+*Class, Annotation, and Typealias Scoping*
 
-Within a class or annotation body, any reference to a property or method of its enclosing module requires that the referenced member is `const`.
+In these following scenarios, any reference to a property or method of its enclosing module requires that the referenced member is `const`:
+
+* Class body
+* Annotation body
+* Typealiased constrained type
 
 .invalid2.pkl
 [source%parsed,{pkl}]
@@ -1162,15 +1166,18 @@ class Bird {
 
 @Deprecated { message = "Replace with \(pigeonName)" } // <2>
 oldPigeonName: String
+
+typealias IsPigeonName = String(pigeonName) // <3>
 ----
 <1> Error: cannot reference non-const property `pigeonName` from a class.
 <2> Error: cannot reference non-const property `pigeonName` from an annotation.
+<3> Error: cannot reference non-const property `pigeonname` from a typealias.
 
-This rule exists because classes and annotations are not <<late-binding,late bound>>;
-it is not possible to change the definition of a class or annotation by amending the module
+This rule exists because classes, annotations, and typealiases are not <<late-binding,late bound>>;
+it is not possible to change the definition of these members by amending the module
 where it is defined.
 
-Generally, there are two strategies for referencing a property from a class or annotation:
+Generally, there are two strategies for referencing such properties:
 
 *Add the `const` modifier to the referenced property*
 

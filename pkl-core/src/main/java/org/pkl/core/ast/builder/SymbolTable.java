@@ -439,7 +439,7 @@ public final class SymbolTable {
         String qualifiedName,
         FrameDescriptor.Builder frameDescriptorBuilder,
         List<TypeParameter> typeParameters) {
-      super(parent, name, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder, typeParameters);
+      super(parent, name, qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder, typeParameters);
     }
   }
 

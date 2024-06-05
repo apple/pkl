@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Cannot reference property `isValid` from here because it is not `const`.
+
+x | typealias MyValue = Any(isValid)
+                            ^^^^^^^
+at constTypeAliasConstraint#myValue (file:///$snippetsDir/input/errors/const/constTypeAliasConstraint.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to property `isValid`
+2. Self-import this module, and reference this property from the import.
+
+x | myValue: MyValue = 1
+                       ^
+at constTypeAliasConstraint#myValue (file:///$snippetsDir/input/errors/const/constTypeAliasConstraint.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
