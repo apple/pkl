@@ -55,13 +55,13 @@ data class CliJavaCodeGeneratorOptions(
 
   /** Whether to make generated classes implement [java.io.Serializable] */
   val implementSerializable: Boolean = false,
-  
+
   /**
    * A mapping of packages.
-   * 
-   * When you need to have Java package names different from the default package
-   * names derived from Pkl module names, you can define a package mapping, where the key
-   * is the original Pkl module name, and the value is its replacement.
+   *
+   * When you need to have Java package names different from the default package names derived from
+   * Pkl module names, you can define a package mapping, where the key is the original Pkl module
+   * name, and the value is its replacement.
    */
   val packageMapping: Map<String, String> = emptyMap()
 ) {

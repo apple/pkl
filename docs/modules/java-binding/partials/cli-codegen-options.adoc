@@ -29,14 +29,46 @@ Default: (not set) +
 Whether to make generated classes implement `java.io.Serializable`.
 ====
 
-.-m, --package-mapping
+.--package-mapping
 [%collapsible]
 ====
 Default: (none) +
-Example: `foo=com.org.foo` +
+Example: `foo.=com.example.foo.` +
 Allows to change default package names (derived from Pkl module name prefixes) in the generated code.
 
-When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement. When you do, the generated code `package` declarations, as well as file locations, will be modified according to the mapping.
+When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement.
+When you do, the generated code's `package` declarations, as well as file locations, will be modified according to the mapping.
 
-Repeat this option to define multiple mappings. Keys must be valid Pkl module name prefixes. Values must be valid dot-separated package names.
+The prefixes are replaced literally, which means that dots at the end are important: in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
+
+....
+// Assuming the following arguments:
+--package-mapping com.foo.=x  // Dot on the left only
+--package-mapping org.bar=y.  // Dot on the right only
+--package-mapping net.baz=z   // No dots
+
+// The following renames will be made:
+"com.foo.bar" -> "xbar"       // Target prefix merged into the suffix
+"org.bar.baz" -> "y..baz"     // Double dot, invalid package name
+"net.baz.qux" -> "z.qux"      // Looks okay, but...
+"net.bazqux"  -> "zqux"       // ...may cut the package name in the middle.
+....
+
+When computing the appropriate target package name, the longest matching prefix is used:
+
+....
+// Assuming the following arguments:
+--package-mapping com.foo.=x.
+--package-mapping com.=y.
+--package-mapping =z.
+
+// The following renames will be made:
+com.foo.bar -> "x.bar"
+com.baz.qux -> "y.baz.qux"
+org.foo.bar -> "z.org.foo.bar"
+....
+
+Repeat this option to define multiple mappings.
+Keys can be arbitrary strings, including an empty string.
+Values must be valid dot-separated package names, also possibly terminated by a dot.
 ====

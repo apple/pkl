@@ -33,7 +33,7 @@ public abstract class CodeGenTask extends ModulesTask {
 
   @Input
   public abstract Property<Boolean> getImplementSerializable();
-  
+
   @Input
   public abstract MapProperty<String, String> getPackageMapping();
 }

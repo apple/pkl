@@ -215,7 +215,7 @@ class CliJavaCodeGeneratorTest {
           }
         """
       )
-    
+
     val module1PklFile = module1.writeToDisk(tempDir.resolve("org/foo/Module1.pkl"))
     val module2PklFile = module2.writeToDisk(tempDir.resolve("org/bar/Module2.pkl"))
     val module3PklFile = module3.writeToDisk(tempDir.resolve("org/baz/Module3.pkl"))
@@ -231,11 +231,11 @@ class CliJavaCodeGeneratorTest {
       )
 
     generator.run()
-    
+
     val module1JavaFile = outputDir.resolve("java/com/foo/x/Module1.java")
     module1JavaFile.readString().let {
       assertContains("package com.foo.x;", it)
-      
+
       assertContains("public final class Module1 {", it)
 
       assertContains(
@@ -246,15 +246,15 @@ class CliJavaCodeGeneratorTest {
         it
       )
     }
-    
+
     val module2JavaFile = outputDir.resolve("java/org/bar/Module2.java")
     module2JavaFile.readString().let {
       assertContains("package org.bar;", it)
-      
+
       assertContains("import com.foo.x.Module1;", it)
-      
+
       assertContains("public final class Module2 {", it)
-      
+
       assertContains(
         """
         |  public static final class Group {
@@ -263,7 +263,7 @@ class CliJavaCodeGeneratorTest {
         it
       )
     }
-    
+
     val module3JavaFile = outputDir.resolve("java/com/baz/a/b/Module3.java")
     module3JavaFile.readString().let {
       assertContains("package com.baz.a.b;", it)

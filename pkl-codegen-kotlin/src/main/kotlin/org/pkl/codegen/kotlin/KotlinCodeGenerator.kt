@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
 import java.net.URI
 import java.util.*
+import org.pkl.commons.PackageMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -184,7 +185,7 @@ class KotlinCodeGenerator(
       }
 
       val moduleName = moduleSchema.moduleName
-      
+
       val (packageName, moduleTypeName) = mapModuleName(moduleName)
 
       val fileSpec = FileSpec.builder(packageName, moduleTypeName).indent(options.indent)
@@ -785,10 +786,11 @@ class KotlinCodeGenerator(
 
   private fun List<PType>.toKotlinPoet(): Array<TypeName> =
     map { it.toKotlinPoetName() }.toTypedArray()
-  
-  private fun mapPackageName(name: String): String =
-    options.packageMapping[name] ?: name
-  
+
+  private val packageMapper = PackageMapper(options.packageMapping)
+
+  private fun mapPackageName(name: String): String = packageMapper.map("$name.").removeSuffix(".")
+
   private fun mapModuleName(name: String): kotlin.Pair<String, String> {
     val packageName = mapPackageName(name.substringBeforeLast('.', ""))
     val className = name.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }

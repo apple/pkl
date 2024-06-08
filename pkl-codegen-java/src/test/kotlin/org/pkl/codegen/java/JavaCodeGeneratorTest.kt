@@ -35,8 +35,8 @@ class JavaCodeGeneratorTest {
   companion object {
     private val simpleClass by lazy {
       compileJavaCode(
-        generateJavaCode(
-          """
+          generateJavaCode(
+            """
             module my.mod
 
             class Simple {
@@ -44,8 +44,8 @@ class JavaCodeGeneratorTest {
               list: List<Int>
             }
           """
+          )
         )
-      )
         .getValue("my.Mod\$Simple")
     }
 
@@ -129,8 +129,7 @@ class JavaCodeGeneratorTest {
     }
   }
 
-  @TempDir
-  lateinit var tempDir: Path
+  @TempDir lateinit var tempDir: Path
 
   @Test
   fun testEquals() {
@@ -771,16 +770,16 @@ class JavaCodeGeneratorTest {
 
     val fooClass =
       compileJavaCode(
-        generateJavaCode(
-          """
+          generateJavaCode(
+            """
       module my.mod
 
       class Foo {
         $props
       }
     """
+          )
         )
-      )
         .getValue("my.Mod\$Foo")
 
     assertThat(fooClass.declaredFields).allSatisfy(Consumer { it.name.startsWith("_") })
@@ -851,14 +850,12 @@ class JavaCodeGeneratorTest {
   @Test
   fun `module class`() {
     val javaCode =
-      generateJavaCode(
-        """
+      generateJavaCode("""
       module my.mod
 
       pigeon: String
       parrot: String
-    """
-      )
+    """)
 
     assertContains(
       """
@@ -1286,13 +1283,11 @@ class JavaCodeGeneratorTest {
   @Test
   fun `union of string literals`() {
     val javaCode =
-      generateJavaCode(
-        """
+      generateJavaCode("""
       module mod
 
       x: "Pigeon"|"Barn Owl"|"Parrot"
-    """
-      )
+    """)
 
     assertContains("public final @NonNull String x;", javaCode)
 
@@ -1303,13 +1298,11 @@ class JavaCodeGeneratorTest {
   fun `other union type`() {
     val e =
       assertThrows<JavaCodeGeneratorException> {
-        generateJavaCode(
-          """
+        generateJavaCode("""
         module mod
 
         x: "Pigeon"|Int|"Parrot"
-      """
-        )
+      """)
       }
     assertThat(e).hasMessageContaining("Pkl union types are not supported")
   }
@@ -1405,11 +1398,9 @@ class JavaCodeGeneratorTest {
       javaCode
     )
 
-    assertContains(
-      """
+    assertContains("""
       |  public final @NonNull Server server;
-    """, javaCode
-    )
+    """, javaCode)
 
     assertContains(
       """
@@ -1723,22 +1714,22 @@ class JavaCodeGeneratorTest {
       var restoredInstance: Any? = null
 
       assertThatCode {
-        // serialize
-        val baos = ByteArrayOutputStream()
-        val oos = ObjectOutputStream(baos)
-        oos.writeObject(instance)
-        oos.flush()
+          // serialize
+          val baos = ByteArrayOutputStream()
+          val oos = ObjectOutputStream(baos)
+          oos.writeObject(instance)
+          oos.flush()
 
-        // deserialize
-        val bais = ByteArrayInputStream(baos.toByteArray())
-        val ois =
-          object : ObjectInputStream(bais) {
-            override fun resolveClass(desc: ObjectStreamClass?): Class<*> {
-              return Class.forName(desc!!.name, false, instance.javaClass.classLoader)
+          // deserialize
+          val bais = ByteArrayInputStream(baos.toByteArray())
+          val ois =
+            object : ObjectInputStream(bais) {
+              override fun resolveClass(desc: ObjectStreamClass?): Class<*> {
+                return Class.forName(desc!!.name, false, instance.javaClass.classLoader)
+              }
             }
-          }
-        restoredInstance = ois.readObject()
-      }
+          restoredInstance = ois.readObject()
+        }
         .doesNotThrowAnyException()
 
       assertThat(restoredInstance!!).isEqualTo(instance)
@@ -1839,17 +1830,17 @@ class JavaCodeGeneratorTest {
 
   @Test
   fun `override package names in a standalone module`() {
-    val files = JavaCodegenOptions(
-      packageMapping = mapOf(
-        "a.b.c" to "x.y.z"
-      )
-    ).generateFiles(
-      "MyModule.pkl" to """
+    val files =
+      JavaCodegenOptions(packageMapping = mapOf("a.b.c." to "x.y.z."))
+        .generateFiles(
+          "MyModule.pkl" to
+            """
         module a.b.c.MyModule
         
         foo: String = "abc"
-      """.trimIndent()
-    )
+      """
+              .trimIndent()
+        )
 
     val javaCode = files["java/x/y/z/MyModule.java"]
     assertThat(javaCode).contains("package x.y.z;")
@@ -1859,23 +1850,78 @@ class JavaCodeGeneratorTest {
     assertThat(propertiesCode)
       .contains("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule")
   }
-  
+
+  @Test
+  fun `override package names based on the longest prefix`() {
+    val files =
+      JavaCodegenOptions(
+          packageMapping =
+            mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
+        )
+        .generateFiles(
+          "com/foo/bar/Module1" to
+            """
+        module com.foo.bar.Module1
+        
+        bar: String
+      """
+              .trimIndent(),
+          "com/Module2" to
+            """
+        module com.Module2
+        
+        com: String
+      """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
+        module org.baz.Module3
+        
+        baz: String
+      """
+              .trimIndent()
+        )
+        .toMutableMap()
+
+    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
+    assertThat(files.remove("java/x/Module1.java"))
+      .contains("package x;", "public final class Module1 {")
+    assertThat(files.remove("$mapperPrefix/com.foo.bar.Module1.properties"))
+      .contains("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1")
+
+    assertThat(files.remove("java/z/Module2.java"))
+      .contains("package z;", "public final class Module2 {")
+    assertThat(files.remove("$mapperPrefix/com.Module2.properties"))
+      .contains("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2")
+
+    assertThat(files.remove("java/w/org/baz/Module3.java"))
+      .contains("package w.org.baz;", "public final class Module3 {")
+    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
+      .contains("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3")
+
+    // No more files.
+    assertThat(files).isEmpty()
+  }
+
   @Test
   fun `override package names in multiple modules using each other`() {
-    val files = JavaCodegenOptions(
-      packageMapping = mapOf(
-        "org.foo" to "com.foo.x",
-        "org.baz" to "com.baz.a.b"
-      )
-    ).generateFiles(
-      "org/foo/Module1" to """
+    val files =
+      JavaCodegenOptions(
+          packageMapping = mapOf("org.foo." to "com.foo.x.", "org.baz." to "com.baz.a.b.")
+        )
+        .generateFiles(
+          "org/foo/Module1" to
+            """
         module org.foo.Module1
         
         class Person {
           name: String
         }
-      """.trimIndent(),
-      "org/bar/Module2" to """
+      """
+              .trimIndent(),
+          "org/bar/Module2" to
+            """
         module org.bar.Module2
         
         import "../../org/foo/Module1.pkl"
@@ -1884,8 +1930,10 @@ class JavaCodeGeneratorTest {
           owner: Module1.Person
           name: String
         }
-      """.trimIndent(),
-      "org/baz/Module3" to """
+      """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
         module org.baz.Module3
         
         import "../../org/bar/Module2.pkl"
@@ -1893,42 +1941,47 @@ class JavaCodeGeneratorTest {
         class Supergroup {
           owner: Module2.Group
         }
-      """.trimIndent()
-    ).toMutableMap()
-    
+      """
+              .trimIndent()
+        )
+        .toMutableMap()
+
     val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
 
-    assertThat(files.remove("java/com/foo/x/Module1.java")).contains(
-      "package com.foo.x;",
-      "public final class Module1 {"
-    )
-    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties")).contains(
-      "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
-      "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
-    )
+    assertThat(files.remove("java/com/foo/x/Module1.java"))
+      .contains("package com.foo.x;", "public final class Module1 {")
+    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
+        "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
+      )
 
-    assertThat(files.remove("java/org/bar/Module2.java")).contains(
-      "package org.bar;",
-      "import com.foo.x.Module1;",
-      "public final class Module2 {",
-      "public final Module1. @NonNull Person owner;"
-    )
-    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties")).contains(
-      "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.Module2",
-      "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.Module2${'$'}Group",
-    )
+    assertThat(files.remove("java/org/bar/Module2.java"))
+      .contains(
+        "package org.bar;",
+        "import com.foo.x.Module1;",
+        "public final class Module2 {",
+        "public final Module1. @NonNull Person owner;"
+      )
+    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.Module2",
+        "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.Module2${'$'}Group",
+      )
 
-    assertThat(files.remove("java/com/baz/a/b/Module3.java")).contains(
-      "package com.baz.a.b;",
-      "import org.bar.Module2;",
-      "public final class Module3 {",
-      "public final Module2. @NonNull Group owner;"
-    )
-    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties")).contains(
-      "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
-      "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
-    )
-    
+    assertThat(files.remove("java/com/baz/a/b/Module3.java"))
+      .contains(
+        "package com.baz.a.b;",
+        "import org.bar.Module2;",
+        "public final class Module3 {",
+        "public final Module2. @NonNull Group owner;"
+      )
+    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
+        "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
+      )
+
     // No more files.
     assertThat(files).isEmpty()
   }
@@ -1943,7 +1996,9 @@ class JavaCodeGeneratorTest {
     }
   }
 
-  private fun JavaCodegenOptions.generateFiles(vararg pklModules: kotlin.Pair<String, String>): Map<String, String> =
+  private fun JavaCodegenOptions.generateFiles(
+    vararg pklModules: kotlin.Pair<String, String>
+  ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =

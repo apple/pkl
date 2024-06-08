@@ -151,7 +151,7 @@ class CliKotlinCodeGeneratorTest {
       module2KotlinFile.readString()
     )
   }
-  
+
   @Test
   fun `custom package names`(@TempDir tempDir: Path) {
     val module1 =
@@ -199,7 +199,7 @@ class CliKotlinCodeGeneratorTest {
     val module2PklFile = module2.writeToDisk(tempDir.resolve("org/bar/Module2.pkl"))
     val module3PklFile = module3.writeToDisk(tempDir.resolve("org/baz/Module3.pkl"))
     val outputDir = tempDir.resolve("output")
-    
+
     val generator =
       CliKotlinCodeGenerator(
         CliKotlinCodeGeneratorOptions(
@@ -210,13 +210,13 @@ class CliKotlinCodeGeneratorTest {
       )
 
     generator.run()
-    
+
     val module1KotlinFile = outputDir.resolve("kotlin/com/foo/x/Module1.kt")
-    module1KotlinFile.readString().let { 
+    module1KotlinFile.readString().let {
       assertContains("package com.foo.x", it)
-      
+
       assertContains("object Module1 {", it)
-      
+
       assertContains(
         """
         |  data class Person(
@@ -245,7 +245,7 @@ class CliKotlinCodeGeneratorTest {
         it
       )
     }
-    
+
     val module3KotlinFile = outputDir.resolve("kotlin/com/baz/a/b/Module3.kt")
     module3KotlinFile.readString().let {
       assertContains("package com.baz.a.b", it)

@@ -40,12 +40,47 @@ Whether to generate config classes for use with Spring Boot.
 [%collapsible]
 ====
 Default: `[:]` +
-Example: `packageMapping = ["foo": "com.org.foo", "bar": "com.org.bar"]` +
+Example: `packageMapping = ["foo.": "com.example.foo.", "bar.": "com.example.bar."]` +
 Allows to change default package names (derived from Pkl module name prefixes) in the generated code.
 
-When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement. When you do, the generated code `package` declarations, as well as file locations, will be modified according to the mapping.
+When you need the generated package names to be different from the default package names derived from Pkl module name prefixes, you can define a package mapping, where the key is the original Pkl module name prefix, and the value is its replacement.
+When you do, the generated code's `package` declarations, as well as file locations, will be modified according to the mapping.
 
-Keys in this mapping must be valid Pkl module name prefixes. Values must be valid dot-separated package names.
+The prefixes are replaced literally, which means that dots at the end are important: in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
+
+....
+// Assuming the following mapping configuration:
+packageMapping = [
+  "com.foo.": "x",  // Dot on the left only
+  "org.bar": "y.",  // Dot on the right only
+  "net.baz": "z"    // No dots
+]
+
+// The following renames will be made:
+"com.foo.bar" -> "xbar"       // Target prefix merged into the suffix
+"org.bar.baz" -> "y..baz"     // Double dot, invalid package name
+"net.baz.qux" -> "z.qux"      // Looks okay, but...
+"net.bazqux"  -> "zqux"       // ...may cut the package name in the middle.
+....
+
+When computing the appropriate target package name, the longest matching prefix is used:
+
+....
+// Assuming the following mapping configuration:
+packageMapping = [
+  "com.foo.": "x.",
+  "com.": "y.",
+  "": "z."
+]
+
+// The following renames will be made:
+com.foo.bar -> "x.bar"
+com.baz.qux -> "y.baz.qux"
+org.foo.bar -> "z.org.foo.bar"
+....
+
+Keys in this mapping can be arbitrary strings, including an empty string.
+Values must be valid dot-separated package names, also possibly terminated by a dot.
 ====
 
 // TODO: fixme (implementSerializable)

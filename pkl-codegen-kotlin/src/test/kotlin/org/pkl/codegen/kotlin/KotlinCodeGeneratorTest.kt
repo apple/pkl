@@ -157,9 +157,8 @@ class KotlinCodeGeneratorTest {
       assertThatCode { compileKotlinCode(sourceText) }.doesNotThrowAnyException()
     }
   }
-  
-  @TempDir 
-  lateinit var tempDir: Path
+
+  @TempDir lateinit var tempDir: Path
 
   @Test
   fun testEquals() {
@@ -1390,11 +1389,12 @@ class KotlinCodeGeneratorTest {
       "resources/META-INF/org/pkl/config/java/mapper/classes/org.pkl.Mod.properties"
     assertThat(generated).containsKey(expectedPropertyFile)
     val propertyFileContents = generated[expectedPropertyFile]!!
-    assertThat(propertyFileContents).contains(
-      "org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod",
-      "org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo",
-      "org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar"
-    )
+    assertThat(propertyFileContents)
+      .contains(
+        "org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod",
+        "org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo",
+        "org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar"
+      )
   }
 
   @Test
@@ -1515,26 +1515,27 @@ class KotlinCodeGeneratorTest {
             module `Foo*Bar`
             
             someProp: String
-          """.trimIndent()
+          """
+            .trimIndent()
         )
       )
     assertThat(kotlinCode).containsKey("kotlin/Foo(2a)Bar.kt")
   }
-  
+
   @Test
   fun `override package names in a standalone module`() {
-    val files = KotlinCodegenOptions(
-      packageMapping = mapOf(
-        "a.b.c" to "x.y.z"
-      )
-    ).generateFiles(
-      "MyModule.pkl" to """
+    val files =
+      KotlinCodegenOptions(packageMapping = mapOf("a.b.c" to "x.y.z"))
+        .generateFiles(
+          "MyModule.pkl" to
+            """
         module a.b.c.MyModule
         
         foo: String = "abc"
-      """.trimIndent()
-    )
-    
+      """
+              .trimIndent()
+        )
+
     val kotlinCode = files["kotlin/x/y/z/MyModule.kt"]
     assertThat(kotlinCode).contains("package x.y.z")
 
@@ -1543,23 +1544,76 @@ class KotlinCodeGeneratorTest {
     assertThat(propertiesCode)
       .contains("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule")
   }
-  
+
+  @Test
+  fun `override package names based on the longest prefix`() {
+    val files =
+      KotlinCodegenOptions(
+          packageMapping =
+            mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
+        )
+        .generateFiles(
+          "com/foo/bar/Module1" to
+            """
+        module com.foo.bar.Module1
+        
+        bar: String
+      """
+              .trimIndent(),
+          "com/Module2" to
+            """
+        module com.Module2
+        
+        com: String
+      """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
+        module org.baz.Module3
+        
+        baz: String
+      """
+              .trimIndent()
+        )
+        .toMutableMap()
+
+    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
+    assertThat(files.remove("kotlin/x/Module1.kt")).contains("package x", "data class Module1(")
+    assertThat(files.remove("$mapperPrefix/com.foo.bar.Module1.properties"))
+      .contains("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1")
+
+    assertThat(files.remove("kotlin/z/Module2.kt")).contains("package z", "data class Module2(")
+    assertThat(files.remove("$mapperPrefix/com.Module2.properties"))
+      .contains("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2")
+
+    assertThat(files.remove("kotlin/w/org/baz/Module3.kt"))
+      .contains("package w.org.baz", "data class Module3(")
+    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
+      .contains("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3")
+
+    // No more files.
+    assertThat(files).isEmpty()
+  }
+
   @Test
   fun `override package names in multiple modules using each other`() {
-    val files = KotlinCodegenOptions(
-      packageMapping = mapOf(
-        "org.foo" to "com.foo.x",
-        "org.baz" to "com.baz.a.b"
-      )
-    ).generateFiles(
-      "org/foo/Module1" to """
+    val files =
+      KotlinCodegenOptions(
+          packageMapping = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+        )
+        .generateFiles(
+          "org/foo/Module1" to
+            """
         module org.foo.Module1
         
         class Person {
           name: String
         }
-      """.trimIndent(),
-      "org/bar/Module2" to """
+      """
+              .trimIndent(),
+          "org/bar/Module2" to
+            """
         module org.bar.Module2
         
         import "../../org/foo/Module1.pkl"
@@ -1568,8 +1622,10 @@ class KotlinCodeGeneratorTest {
           owner: Module1.Person
           name: String
         }
-      """.trimIndent(),
-      "org/baz/Module3" to """
+      """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
         module org.baz.Module3
         
         import "../../org/bar/Module2.pkl"
@@ -1577,48 +1633,54 @@ class KotlinCodeGeneratorTest {
         class Supergroup {
           owner: Module2.Group
         }
-      """.trimIndent()
-    ).toMutableMap()
-    
-    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
-    
-    assertThat(files.remove("kotlin/com/foo/x/Module1.kt")).contains(
-      "package com.foo.x",
-      "object Module1 {",
-      "data class Person("
-    )
-    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties")).contains(
-      "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
-      "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
-    )
-    
-    assertThat(files.remove("kotlin/org/bar/Module2.kt")).contains(
-      "package org.bar",
-      "import com.foo.x.Module1",
-      "object Module2 {",
-      "val owner: Module1.Person"
-    )
-    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties")).contains(
-      "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.Module2",
-      "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.Module2${'$'}Group",
-    )
+      """
+              .trimIndent()
+        )
+        .toMutableMap()
 
-    assertThat(files.remove("kotlin/com/baz/a/b/Module3.kt")).contains(
-      "package com.baz.a.b",
-      "import org.bar.Module2",
-      "object Module3 {",
-      "val owner: Module2.Group"
-    )
-    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties")).contains(
-      "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
-      "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
-    )
+    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
+    assertThat(files.remove("kotlin/com/foo/x/Module1.kt"))
+      .contains("package com.foo.x", "object Module1 {", "data class Person(")
+    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
+        "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
+      )
+
+    assertThat(files.remove("kotlin/org/bar/Module2.kt"))
+      .contains(
+        "package org.bar",
+        "import com.foo.x.Module1",
+        "object Module2 {",
+        "val owner: Module1.Person"
+      )
+    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.Module2",
+        "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.Module2${'$'}Group",
+      )
+
+    assertThat(files.remove("kotlin/com/baz/a/b/Module3.kt"))
+      .contains(
+        "package com.baz.a.b",
+        "import org.bar.Module2",
+        "object Module3 {",
+        "val owner: Module2.Group"
+      )
+    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
+      .contains(
+        "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
+        "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
+      )
 
     // No more files.
     assertThat(files).isEmpty()
   }
-  
-  private fun KotlinCodegenOptions.generateFiles(vararg pklModules: PklModule): Map<String, String> {
+
+  private fun KotlinCodegenOptions.generateFiles(
+    vararg pklModules: PklModule
+  ): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()
     return pklFiles.fold(mapOf()) { acc, pklFile ->
@@ -1627,10 +1689,12 @@ class KotlinCodeGeneratorTest {
       acc + generator.output
     }
   }
-  
-  private fun KotlinCodegenOptions.generateFiles(vararg pklModules: kotlin.Pair<String, String>): Map<String, String> =
+
+  private fun KotlinCodegenOptions.generateFiles(
+    vararg pklModules: kotlin.Pair<String, String>
+  ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
-  
+
   private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =
     KotlinCodegenOptions().generateFiles(*pklModules)
 

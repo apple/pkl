@@ -111,15 +111,17 @@ class PklJavaCodegenCommand :
 
   private val packageMapping: Map<String, String> by
     option(
-      names = arrayOf("-m", "--package-mapping"),
-      metavar = "<module_name=package_name>",
-      help = """
-        Replace the default package name of the generated Java classes (repeatable).
-        By default, the package name of generated classes is derived from the Pkl module name.
-        With this option, you can override the name for the given modules with custom names.
-      """.trimIndent()
-    )
-    .associate()
+        names = arrayOf("--package-mapping"),
+        metavar = "<module_prefix=package_prefix>",
+        help =
+          """
+            Replace the default package name of the generated Java classes (repeatable).
+            By default, the package name of generated classes is derived from the Pkl module name.
+            With this option, you can override the name for the given modules with custom names.
+          """
+            .trimIndent()
+      )
+      .associate()
 
   override fun run() {
     val options =
