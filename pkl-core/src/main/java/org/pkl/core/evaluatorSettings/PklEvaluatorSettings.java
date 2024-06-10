@@ -108,7 +108,16 @@ public record PklEvaluatorSettings(
     }
   }
 
-  public record Proxy(URI address, List<String> noProxy) {
+  public record Proxy(URI address, @Nullable List<String> noProxy) {
+    public static Proxy create(String address, @Nullable List<String> noProxy) {
+      URI addressUri;
+      try {
+        addressUri = new URI(address);
+      } catch (URISyntaxException e) {
+        throw new PklException(ErrorMessages.create("invalidUri", address));
+      }
+      return new Proxy(addressUri, noProxy);
+    }
 
     @SuppressWarnings("unchecked")
     public static @Nullable Proxy parse(Value input) {
@@ -117,13 +126,7 @@ public record PklEvaluatorSettings(
       } else if (input instanceof PObject proxy) {
         var address = (String) proxy.getProperty("address");
         var noProxy = (List<String>) proxy.getProperty("noProxy");
-        URI addressUri;
-        try {
-          addressUri = new URI(address);
-        } catch (URISyntaxException e) {
-          throw new PklException(ErrorMessages.create("invalidUri", address));
-        }
-        return new Proxy(addressUri, noProxy);
+        return create(address, noProxy);
       } else {
         throw PklBugException.unreachableCode();
       }

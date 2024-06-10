@@ -112,7 +112,8 @@ class MessagePackCodecTest {
                 "baz" to
                   RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
               )
-          )
+          ),
+        http = null,
       )
     )
   }

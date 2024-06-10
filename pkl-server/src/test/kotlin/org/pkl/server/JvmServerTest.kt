@@ -19,7 +19,6 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.pkl.core.http.HttpClient
 
 class JvmServerTest : AbstractServerTest() {
   private val transports: Pair<MessageTransport, MessageTransport> = run {
@@ -35,7 +34,7 @@ class JvmServerTest : AbstractServerTest() {
   }
 
   override val client: TestTransport = TestTransport(transports.first)
-  private val server: Server = Server(transports.second, HttpClient.dummyClient())
+  private val server: Server = Server(transports.second)
 
   @BeforeEach
   fun beforeEach() {

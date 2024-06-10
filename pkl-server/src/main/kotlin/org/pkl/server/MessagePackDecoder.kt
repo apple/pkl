@@ -23,6 +23,7 @@ import org.msgpack.core.MessageTypeException
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
 import org.msgpack.value.impl.ImmutableStringValueImpl
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -59,7 +60,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
             rootDir = map.unpackStringOrNull("rootDir")?.let(Path::of),
             cacheDir = map.unpackStringOrNull("cacheDir")?.let(Path::of),
             outputFormat = map.unpackStringOrNull("outputFormat"),
-            project = map.unpackProject("project")
+            project = map.unpackProject("project"),
+            http = map.unpackHttp("http"),
           )
         }
         MessageType.CREATE_EVALUATOR_RESPONSE.code -> {
@@ -251,6 +253,19 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
     val projectFileUri = URI(projMap.unpackString("projectFileUri"))
     val dependencies = projMap.unpackDependencies("dependencies")
     return Project(projectFileUri, null, dependencies)
+  }
+
+  private fun Map<Value, Value>.unpackHttp(name: String): PklEvaluatorSettings.Http? {
+    val httpMap = getNullable(name)?.asMapValue()?.map() ?: return null
+    val proxy = httpMap.unpackProxy("proxy")
+    return PklEvaluatorSettings.Http(proxy)
+  }
+
+  private fun Map<Value, Value>.unpackProxy(name: String): PklEvaluatorSettings.Proxy? {
+    val proxyMap = getNullable(name)?.asMapValue()?.map() ?: return null
+    val address = proxyMap.unpackString("address")
+    val noProxy = proxyMap.unpackStringListOrNull("noProxy")
+    return PklEvaluatorSettings.Proxy.create(address, noProxy)
   }
 
   private fun Map<Value, Value>.unpackDependencies(name: String): Map<String, Dependency> {

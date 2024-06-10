@@ -171,8 +171,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if (cliOptions.proxyAddress != null) {
         setProxy(cliOptions.proxyAddress, cliOptions.noProxy)
       } else {
-        project?.evaluatorSettings?.http?.proxy?.let { setProxy(it.address, it.noProxy) }
-          ?: settings.http?.proxy?.let { setProxy(it.address, it.noProxy) }
+        project?.evaluatorSettings?.http?.proxy?.let {
+          setProxy(it.address, it.noProxy ?: listOf())
+        }
+          ?: settings.http?.proxy?.let { setProxy(it.address, it.noProxy ?: listOf()) }
       }
       // Lazy building significantly reduces execution time of commands that do minimal work.
       // However, it means that HTTP client initialization errors won't surface until an HTTP

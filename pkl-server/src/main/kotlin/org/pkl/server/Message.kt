@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -123,6 +124,21 @@ data class CreateEvaluatorRequest(
   val cacheDir: Path?,
   val outputFormat: String?,
   val project: Project?,
+  val http: PklEvaluatorSettings.Http?, // TODO: Consider the following:
+/*
+It seems inconsistent to include `PklEvaluatorSettings` here for `Http` only; most of the other
+components here are flattened versions of `PklEvaluatorSettings`. Should these be "unflattened"
+and use `PklEvaluatorSettings` explicitly, now that the latter is a Java Record (closer to Kotlin
+data class)?
+Alternatively, should `Http` be fully flattened out here? The planned further extensions to HTTP
+client config suggest it might be worth saving on streams of `\0`, at the cost of hierarchy. In
+other words, most of the above properties could be replaced by
+```
+val settings: PklEvaluatorSettings
+```
+with the corresponding `unpackPklEvaluatorSettings`. Upside; easier to keep server in-sync with
+Pkl's settings.
+ */
 ) : ClientRequestMessage() {
   override val type = MessageType.CREATE_EVALUATOR_REQUEST
 
