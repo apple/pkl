@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
@@ -48,13 +48,16 @@ public record PklEvaluatorSettings(
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
   public static PklEvaluatorSettings parse(
-      Value input, Function<? super String, Path> pathNormalizer) {
+      Value input, BiFunction<? super String, ? super String, Path> pathNormalizer) {
     if (!(input instanceof PObject pSettings)) {
       throw PklBugException.unreachableCode();
     }
 
     var moduleCacheDirStr = (String) pSettings.get("moduleCacheDir");
-    var moduleCacheDir = moduleCacheDirStr == null ? null : pathNormalizer.apply(moduleCacheDirStr);
+    var moduleCacheDir =
+        moduleCacheDirStr == null
+            ? null
+            : pathNormalizer.apply(moduleCacheDirStr, "moduleCacheDir");
 
     var allowedModulesStrs = (List<String>) pSettings.get("allowedModules");
     var allowedModules =
@@ -70,10 +73,12 @@ public record PklEvaluatorSettings(
 
     var modulePathStrs = (List<String>) pSettings.get("modulePath");
     var modulePath =
-        modulePathStrs == null ? null : modulePathStrs.stream().map(pathNormalizer).toList();
+        modulePathStrs == null
+            ? null
+            : modulePathStrs.stream().map(it -> pathNormalizer.apply(it, "modulePath")).toList();
 
     var rootDirStr = (String) pSettings.get("rootDir");
-    var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr);
+    var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr, "rootDir");
 
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),

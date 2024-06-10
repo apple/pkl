@@ -182,7 +182,7 @@ public final class Project {
             "evaluatorSettings",
             (settings) ->
                 PklEvaluatorSettings.parse(
-                    (Value) settings, (it) -> projectBaseUri));
+                    (Value) settings, (it, name) -> resolveNullablePath(it, projectBaseUri, name)));
     @SuppressWarnings("unchecked")
     var testPathStrs = (List<String>) getProperty(module, "tests");
     var tests =
@@ -213,7 +213,7 @@ public final class Project {
     }
     return result;
   }
-  
+
   private static Object getProperty(PObject settings, String propertyName) {
     return settings.getProperty(propertyName);
   }
@@ -264,12 +264,6 @@ public final class Project {
       throw new PackageLoadError(
           "relativePathPropertyDefinedByProjectFromNonFileUri", projectBaseUri, propertyName);
     }
-  }
-
-  private static @Nullable Path getNullablePath(
-      Composite object, String propertyName, URI projectBaseUri) {
-    return resolveNullablePath(
-        (String) getNullableProperty(object, propertyName), projectBaseUri, propertyName);
   }
 
   @SuppressWarnings("unchecked")
