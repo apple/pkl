@@ -122,3 +122,21 @@ Certificates need to be X.509 certificates in PEM format.
 
 For other methods of configuring certificates, see xref:pkl-cli:index.adoc#ca-certs[CA Certificates].
 ====
+
+.--proxy
+[%collapsible]
+====
+Default: (none) +
+Example: `http://proxy.example.com:1234` +
+Configures HTTP connections to connect to the provided proxy address.
+The URI must (currently) have scheme `http`, and may not contain anything other than a host and port.
+====
+
+.--no-proxy
+[%collapsible]
+====
+Default: (none) +
+Example: `*.example.com,1.2.3.4/16` +
+Comma separated list of hosts to which all connections should bypass the proxy.
+Hosts can be specified by name, IP address, or IP range (using [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation)).
+====
