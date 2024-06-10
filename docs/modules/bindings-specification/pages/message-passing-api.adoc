@@ -121,7 +121,7 @@ outputFormat: String?
 /// The project dependency settings.
 project: Project?
 
-/// Configuration of outgoing HTTP requests.
+/// Configuration of outgoing HTTP(s) requests.
 http: Http?
 
 class ClientResourceReader {
@@ -240,7 +240,17 @@ class Checksums {
   /// The sha-256 checksum of this dependency's metadata.
   sha256: String
 }
+
+class Http {
+  /// Certificates to trust when making HTTP requests.
+  ///
+  /// If [null], Pkl will trust its own built-in certificates.
+  caCertificates: Binary?
+}
+
+typealias Binary = Any // <1>
 ----
+<1> link:{uri-messagepack-bin}[bin format] (not expressable in Pkl)
 
 Example:
 [source,json5]

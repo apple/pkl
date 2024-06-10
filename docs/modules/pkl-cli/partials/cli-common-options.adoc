@@ -113,13 +113,11 @@ Defaults to the current working directory.
 .--ca-certificates
 [%collapsible]
 ====
-Default: `~/.pkl/cacerts/` +
+Default: (none) +
 Example: `/some/path/certificates.pem` +
-Path to a file containing CA certificates to be used for TLS connections. +
-Passing a directory has the same effect as passing each of the directory's regular files.
+Path to a file containing CA certificates to be used for TLS connections.
 
-Setting this option to anything other than a non-existing or empty directory 
-replaces the existing set of CA certificates bundled into the CLI.
+Setting this option replaces the existing set of CA certificates bundled into the CLI.
 Certificates need to be X.509 certificates in PEM format.
 
 For other methods of configuring certificates, see xref:pkl-cli:index.adoc#ca-certs[CA Certificates].

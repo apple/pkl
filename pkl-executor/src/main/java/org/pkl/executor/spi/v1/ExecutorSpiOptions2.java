@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
-  private final List<Path> certificatePaths;
+  private final List<Path> certificateFiles;
 
   private final int testPort;
 
@@ -36,7 +36,7 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
       String outputFormat,
       Path moduleCacheDir,
       Path projectDir,
-      List<Path> certificatePaths,
+      List<Path> certificateFiles,
       int testPort) {
     super(
         allowedModules,
@@ -49,12 +49,12 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
         outputFormat,
         moduleCacheDir,
         projectDir);
-    this.certificatePaths = certificatePaths;
+    this.certificateFiles = certificateFiles;
     this.testPort = testPort;
   }
 
-  public List<Path> getCertificatePaths() {
-    return certificatePaths;
+  public List<Path> getCertificateFiles() {
+    return certificateFiles;
   }
 
   public int getTestPort() {

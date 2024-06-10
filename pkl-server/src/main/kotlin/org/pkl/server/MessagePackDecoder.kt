@@ -258,7 +258,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
   private fun Map<Value, Value>.unpackHttp(): PklEvaluatorSettings.Http? {
     val httpMap = getNullable("http")?.asMapValue()?.map() ?: return null
     val proxy = httpMap.unpackProxy()
-    return PklEvaluatorSettings.Http(proxy)
+    val caCertificates = httpMap.getNullable("caCertificates")?.asBinaryValue()?.asByteArray()
+    return Http(proxy, caCertificates)
   }
 
   private fun Map<Value, Value>.unpackProxy(): PklEvaluatorSettings.Proxy? {

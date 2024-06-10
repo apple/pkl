@@ -15,31 +15,29 @@
  */
 package org.pkl.core.http;
 
-<<<<<<< HEAD
 import java.io.IOException;
 import java.net.ProxySelector;
 import java.net.URI;
-=======
->>>>>>> 379c43c3d (Remove ability to load CA certificate file via jar: or file: URI)
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
-<<<<<<< HEAD
 import org.pkl.core.http.HttpClient.Builder;
 import org.pkl.core.util.ErrorMessages;
-=======
->>>>>>> 379c43c3d (Remove ability to load CA certificate file via jar: or file: URI)
+import org.pkl.core.http.HttpClient.Builder;
+import org.pkl.core.util.Nullable;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
   private Duration connectTimeout = Duration.ofSeconds(60);
   private Duration requestTimeout = Duration.ofSeconds(60);
-  private final List<Path> certificatePaths = new ArrayList<>();
+  private final List<Path> certificateFiles = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
+  private @Nullable ByteBuffer certificateBytes = null;
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -66,7 +64,13 @@ final class HttpClientBuilder implements HttpClient.Builder {
 
   @Override
   public HttpClient.Builder addCertificates(Path path) {
-    certificatePaths.add(path);
+    certificateFiles.add(path);
+    return this;
+  }
+
+  @Override
+  public Builder addCertificates(byte[] certificateBytes) {
+    this.certificateBytes = ByteBuffer.wrap(certificateBytes);
     return this;
   }
 
@@ -99,11 +103,11 @@ final class HttpClientBuilder implements HttpClient.Builder {
 
   private Supplier<HttpClient> doBuild() {
     // make defensive copy because Supplier may get called after builder was mutated
-    var certificatePaths = List.copyOf(this.certificatePaths);
+    var certificateFiles = List.copyOf(this.certificateFiles);
     var proxySelector =
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
-      var jdkClient = new JdkHttpClient(certificatePaths, connectTimeout, proxySelector);
+      var jdkClient = new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
     };
   }

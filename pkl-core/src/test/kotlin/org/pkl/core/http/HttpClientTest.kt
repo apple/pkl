@@ -13,7 +13,6 @@ import java.net.http.HttpResponse
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.io.path.copyTo
-import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 
 class HttpClientTest {
@@ -52,14 +51,14 @@ class HttpClientTest {
   }
 
   @Test
-  fun `can load certificates from file system`() {
+  fun `can load certificates from regular file`() {
     assertDoesNotThrow {
       HttpClient.builder().addCertificates(FileTestUtils.selfSignedCertificate).build()
     }
   }
 
   @Test
-  fun `certificate file located on file system cannot be empty`(@TempDir tempDir: Path) {
+  fun `certificate file cannot be empty`(@TempDir tempDir: Path) {
     val file = tempDir.resolve("certs.pem").createFile()
 
     val e = assertThrows<HttpClientInitException> {
@@ -70,55 +69,9 @@ class HttpClientTest {
   }
 
   @Test
-  fun `can load certificates from class path`() {
-    assertDoesNotThrow {
-      HttpClient.builder().addCertificates(javaClass.getResource("/org/pkl/certs/PklCARoots.pem")!!.toURI()).build()
-    }
-  }
-
-  @Test
-  fun `only allows loading jar and file certificate URIs`() {
-    assertThrows<HttpClientInitException> {
-      HttpClient.builder().addCertificates(URI("https://example.com"))
-    }
-  }
-
-  @Test
-  fun `certificate file located on class path cannot be empty`() {
-    val uri = javaClass.getResource("emptyCerts.pem")!!.toURI()
-
-    val e = assertThrows<HttpClientInitException> {
-      HttpClient.builder().addCertificates(uri).build()
-    }
-
-    assertThat(e).hasMessageContaining("empty")
-  }
-
-  @Test
   fun `can load built-in certificates`() {
     assertDoesNotThrow {
-      HttpClient.builder().addBuiltInCertificates().build()
-    }
-  }
-
-  @Test
-  fun `can load certificates from Pkl user home cacerts directory`(@TempDir tempDir: Path) {
-    val certsDir = tempDir.resolve(".pkl")
-      .resolve("cacerts")
-      .createDirectories()
-      .also { dir ->
-        FileTestUtils.selfSignedCertificate.copyTo(dir.resolve("certs.pem"))
-      }
-
-    assertDoesNotThrow {
-      HttpClientBuilder(certsDir).addDefaultCliCertificates().build()
-    }
-  }
-
-  @Test
-  fun `loading certificates from cacerts directory falls back to built-in certificates`(@TempDir certsDir: Path) {
-    assertDoesNotThrow {
-      HttpClientBuilder(certsDir).addDefaultCliCertificates().build()
+      HttpClient.builder().build()
     }
   }
 

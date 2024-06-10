@@ -49,6 +49,15 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
     packDependencies(project.dependencies)
   }
 
+  private fun MessagePacker.packHttp(http: Http) {
+    if (http.caCertificates == null) {
+      packMapHeader(0)
+      return
+    }
+    packMapHeader(1)
+    packKeyValue("caCertificates", http.caCertificates)
+  }
+
   private fun MessagePacker.packDependencies(dependencies: Map<String, Dependency>) {
     packMapHeader(dependencies.size)
     for ((name, dep) in dependencies) {
@@ -87,7 +96,15 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
       when (msg.type.code) {
         MessageType.CREATE_EVALUATOR_REQUEST.code -> {
           msg as CreateEvaluatorRequest
-          packMapHeader(8, msg.timeout, msg.rootDir, msg.cacheDir, msg.outputFormat, msg.project)
+          packMapHeader(
+            8,
+            msg.timeout,
+            msg.rootDir,
+            msg.cacheDir,
+            msg.outputFormat,
+            msg.project,
+            msg.http
+          )
           packKeyValue("requestId", msg.requestId)
           packKeyValue("allowedModules", msg.allowedModules?.map { it.toString() })
           packKeyValue("allowedResources", msg.allowedResources?.map { it.toString() })
@@ -115,6 +132,10 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
           if (msg.project != null) {
             packString("project")
             packProject(msg.project)
+          }
+          if (msg.http != null) {
+            packString("http")
+            packHttp(msg.http)
           }
         }
         MessageType.CREATE_EVALUATOR_RESPONSE.code -> {
@@ -243,7 +264,8 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
     value2: Any?,
     value3: Any?,
     value4: Any?,
-    value5: Any?
+    value5: Any?,
+    value6: Any?
   ) =
     packMapHeader(
       size +
@@ -251,7 +273,8 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
         (if (value2 != null) 1 else 0) +
         (if (value3 != null) 1 else 0) +
         (if (value4 != null) 1 else 0) +
-        (if (value5 != null) 1 else 0)
+        (if (value5 != null) 1 else 0) +
+        (if (value6 != null) 1 else 0)
     )
 
   private fun MessagePacker.packKeyValue(name: String, value: Int?) {

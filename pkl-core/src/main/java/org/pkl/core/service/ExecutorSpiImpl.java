@@ -130,28 +130,28 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
   }
 
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
-    List<Path> certificatePaths;
+    List<Path> certificateFiles;
     int testPort;
     try {
       if (options instanceof ExecutorSpiOptions2 options2) {
-        certificatePaths = options2.getCertificatePaths();
+        certificateFiles = options2.getCertificateFiles();
         testPort = options2.getTestPort();
       } else {
-        certificatePaths = List.of();
+        certificateFiles = List.of();
         testPort = -1;
       }
       // host pkl-executor does not have class ExecutorOptions2 defined.
       // this will happen if the pkl-executor distribution is too old.
     } catch (NoClassDefFoundError e) {
-      certificatePaths = List.of();
+      certificateFiles = List.of();
       testPort = -1;
     }
-    var clientKey = new HttpClientKey(certificatePaths, testPort);
+    var clientKey = new HttpClientKey(certificateFiles, testPort);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
           var builder = HttpClient.builder();
-          for (var path : key.certificatePaths) {
+          for (var path : key.certificateFiles) {
             builder.addCertificates(path);
           }
           builder.setTestPort(key.testPort);
@@ -162,12 +162,12 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
   }
 
   private static final class HttpClientKey {
-    final Set<Path> certificatePaths;
+    final Set<Path> certificateFiles;
     final int testPort;
 
-    HttpClientKey(List<Path> certificatePaths, int testPort) {
+    HttpClientKey(List<Path> certificateFiles, int testPort) {
       // also serves as defensive copy
-      this.certificatePaths = Set.copyOf(certificatePaths);
+      this.certificateFiles = Set.copyOf(certificateFiles);
       this.testPort = testPort;
     }
 
@@ -180,12 +180,12 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
         return false;
       }
       HttpClientKey that = (HttpClientKey) obj;
-      return certificatePaths.equals(that.certificatePaths) && testPort == that.testPort;
+      return certificateFiles.equals(that.certificateFiles) && testPort == that.testPort;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(certificatePaths, testPort);
+      return Objects.hash(certificateFiles, testPort);
     }
   }
 }

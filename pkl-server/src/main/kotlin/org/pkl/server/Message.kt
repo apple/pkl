@@ -124,7 +124,7 @@ data class CreateEvaluatorRequest(
   val cacheDir: Path?,
   val outputFormat: String?,
   val project: Project?,
-  val http: Http?,
+  val http: Http?
 ) : ClientRequestMessage() {
   override val type = MessageType.CREATE_EVALUATOR_REQUEST
 
@@ -151,7 +151,8 @@ data class CreateEvaluatorRequest(
       rootDir.equalsNullable(other.rootDir) &&
       cacheDir.equalsNullable(other.cacheDir) &&
       outputFormat.equalsNullable(other.outputFormat) &&
-      project.equalsNullable(other.project)
+      project.equalsNullable(other.project) &&
+      http.equalsNullable(other.http)
   }
 
   @Suppress("DuplicatedCode") // false duplicate within method
@@ -170,7 +171,26 @@ data class CreateEvaluatorRequest(
     result = 31 * result + outputFormat.hashCode()
     result = 31 * result + project.hashCode()
     result = 31 * result + type.hashCode()
+    result = 31 * result + http.hashCode()
     return result
+  }
+}
+
+data class Http(
+  /** PEM-encoded CA certificates as raw bytes. */
+  val caCertificates: ByteArray?
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Http) return false
+
+    if (!caCertificates.contentEquals(other.caCertificates)) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    return caCertificates.contentHashCode()
   }
 }
 

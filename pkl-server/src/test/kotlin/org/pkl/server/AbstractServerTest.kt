@@ -1004,6 +1004,8 @@ abstract class AbstractServerTest {
       )
   }
 
+  @Test fun `custom ca certs`(@TempDir tempDir: Path) {}
+
   private val ByteArray.debugYaml
     get() = MessagePackDebugRenderer(this).output.trimIndent()
 
@@ -1030,7 +1032,7 @@ abstract class AbstractServerTest {
         cacheDir = cacheDir,
         outputFormat = null,
         project = project,
-        http = null,
+        http = null
       )
 
     send(message)

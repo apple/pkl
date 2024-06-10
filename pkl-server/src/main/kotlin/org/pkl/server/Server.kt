@@ -174,6 +174,11 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       message.project?.let { proj ->
         buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
       }
+    val httpClient =
+      with(HttpClient.builder()) {
+        message.http?.caCertificates?.let { caCertificates -> addCertificates(caCertificates) }
+        buildLazily()
+      }
     log("Got dependencies: $dependencies")
     return BinaryEvaluator(
       StackFrameTransformers.defaultTransformer,

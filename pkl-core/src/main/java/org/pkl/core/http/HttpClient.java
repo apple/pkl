@@ -62,17 +62,26 @@ public interface HttpClient extends AutoCloseable {
     Builder setRequestTimeout(java.time.Duration timeout);
 
     /**
-     * Adds CA certificates to the client's trust store,
+     * Adds a CA certificate file to the client's trust store.
      *
-     * <p>If the given path is a regular file, the certificates contained in that file are added to
-     * the trust store. If the given path is a directory, the certificates contained in each of the
-     * directory's regular files are added to the trust store. Each file must contain <a
-     * href="https://en.wikipedia.org/wiki/X.509">X.509</a> certificates in PEM format.
+     * <p>The given file must contain <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
+     * certificates in PEM format.
      *
-     * <p>If no CA certificates are added via this method, the built-in CA certificates of the Pkl
-     * native executable or JVM are used.
+     * <p>If no CA certificates are added via this method nor {@link #addCertificates(byte[])}, the
+     * built-in CA certificates of the Pkl native executable or JVM are used.
      */
     Builder addCertificates(Path path);
+
+    /**
+     * Adds CA certificate bytes to the client's trust store.
+     *
+     * <p>The given cert must be an <a href="https://en.wikipedia.org/wiki/X.509">X.509</a>
+     * certificate in PEM format.
+     *
+     * <p>If no CA certificates are added via this method nor {@link #addCertificates(Path)}, the
+     * built-in CA certificates of the Pkl native executable or JVM are used.
+     */
+    Builder addCertificates(byte[] certificateBytes);
 
     /**
      * Sets a test server's listening port.

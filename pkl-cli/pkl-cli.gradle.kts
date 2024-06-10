@@ -38,6 +38,8 @@ val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
+val certs: SourceSet by sourceSets.creating
+
 dependencies {
   compileOnly(libs.svm)
 
@@ -145,16 +147,15 @@ tasks.check {
   dependsOn(testStartJavaExecutable)
 }
 
-val pemFile = projectDir.resolve("src/certs/PklCARoots.pem")
 val trustStore = layout.buildDirectory.dir("generateTrustStore/PklCARoots.p12")
 val trustStorePassword = "password" // no sensitive data to protect
 
 // generate a trust store for Pkl's built-in CA certificates
 val generateTrustStore by tasks.registering {
-  inputs.file(pemFile)
+  inputs.file(certs.resources.singleFile)
   outputs.file(trustStore)
   doLast {
-    val certificates = pemFile.inputStream().use { stream ->
+    val certificates = certs.resources.singleFile.inputStream().use { stream ->
       CertificateFactory.getInstance("X.509").generateCertificates(stream)
     }
     KeyStore.getInstance("PKCS12").apply {
