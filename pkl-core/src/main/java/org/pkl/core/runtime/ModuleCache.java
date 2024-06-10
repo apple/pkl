@@ -110,6 +110,8 @@ public final class ModuleCache {
           return TestModule.getModule();
         case "xml":
           return XmlModule.getModule();
+        case "ini":
+          return IniModule.getModule();
         default:
           if (!STDLIB_MODULE_URIS.contains(moduleKey.getUri())) {
             var stdlibModules = String.join("\n", Release.current().standardLibrary().modules());

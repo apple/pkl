@@ -1,0 +1,58 @@
+value = key
+value2 = key2
+value3 = key3
+
+[mapping]
+one = value1
+three = value3
+four = 1.2
+seven = true
+
+[mapping.two]
+name = Pigeon
+age = 19
+
+[mapping.two.address]
+street = fun Street
+
+[mapping.five]
+six = 123
+
+[map]
+one = value1
+three = value3
+four = 1.2
+seven = true
+
+[map.two]
+name = Pigeon
+age = 19
+
+[map.two.address]
+street = Fun Street
+
+[map.five]
+six = 123
+
+[typedObject]
+name = Pigeon
+age = 19
+
+[typedObject.address]
+street = Fun Street
+
+[dynamic]
+one = value1
+three = value3
+four = 1.2
+seven = true
+
+[dynamic.two]
+name = Pigeon
+age = 19
+
+[dynamic.two.address]
+street = fun Street
+
+[dynamic.five]
+six = 123
