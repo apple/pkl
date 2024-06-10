@@ -97,11 +97,6 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
     return editor;
   }
 
-  @Override
-  public String toString() {
-    return "PklSettings{" + "editor=" + editor + ";http=" + http + '}';
-  }
-
   /** An editor for viewing and editing Pkl files. */
   public record Editor(String urlScheme) {
     /** The editor associated with {@code file:} URLs ending in {@code .pkl}. */
@@ -134,11 +129,6 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
     @Deprecated(forRemoval = true)
     public String getUrlScheme() {
       return urlScheme;
-    }
-
-    @Override
-    public String toString() {
-      return "Editor{" + "urlScheme='" + urlScheme + '\'' + '}';
     }
   }
 }

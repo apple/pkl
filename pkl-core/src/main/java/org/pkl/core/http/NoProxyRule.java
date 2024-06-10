@@ -122,7 +122,7 @@ final class NoProxyRule {
       return false;
     }
     var address = parseIpv4(hostname);
-    if (ipv4 == address) {
+    if (ipv4.equals(address)) {
       return true;
     }
     if (ipv4Mask != null) {

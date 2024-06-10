@@ -176,7 +176,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--proxy"),
         metavar = "<address>",
-        help = "Proxy to use for HTTP(s) connctions."
+        help = "Proxy to use for HTTP(S) connections."
       )
       .single()
       .convert { URI(it) }

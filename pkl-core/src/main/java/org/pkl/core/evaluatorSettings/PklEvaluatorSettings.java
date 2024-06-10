@@ -126,7 +126,7 @@ public record PklEvaluatorSettings(
   }
 
   private boolean arePatternsEqual(
-    @Nullable List<Pattern> thesePatterns, @Nullable List<Pattern> thosePatterns) {
+      @Nullable List<Pattern> thesePatterns, @Nullable List<Pattern> thosePatterns) {
     if (thesePatterns == null) {
       return thosePatterns == null;
     }
@@ -140,7 +140,7 @@ public record PklEvaluatorSettings(
     }
     return true;
   }
-  
+
   @Override
   public boolean equals(@Nullable Object obj) {
     if (this == obj) {
@@ -150,15 +150,15 @@ public record PklEvaluatorSettings(
       return false;
     }
 
-    return Objects.equals(externalProperties, that.externalProperties) &&
-      Objects.equals(env, that.env) &&
-      arePatternsEqual(allowedModules, that.allowedModules) &&
-      arePatternsEqual(allowedResources, that.allowedResources) &&
-      Objects.equals(noCache, that.noCache) &&
-      Objects.equals(moduleCacheDir, that.moduleCacheDir) &&
-      Objects.equals(timeout, that.timeout) &&
-      Objects.equals(rootDir, that.rootDir) &&
-      Objects.equals(http, that.http);
+    return Objects.equals(externalProperties, that.externalProperties)
+        && Objects.equals(env, that.env)
+        && arePatternsEqual(allowedModules, that.allowedModules)
+        && arePatternsEqual(allowedResources, that.allowedResources)
+        && Objects.equals(noCache, that.noCache)
+        && Objects.equals(moduleCacheDir, that.moduleCacheDir)
+        && Objects.equals(timeout, that.timeout)
+        && Objects.equals(rootDir, that.rootDir)
+        && Objects.equals(http, that.http);
   }
 
   private int hashPatterns(@Nullable List<Pattern> patterns) {
@@ -171,11 +171,11 @@ public record PklEvaluatorSettings(
     }
     return ret;
   }
-  
+
   @Override
   public int hashCode() {
     var result =
-      Objects.hash(externalProperties, env, noCache, moduleCacheDir, timeout, rootDir, http);
+        Objects.hash(externalProperties, env, noCache, moduleCacheDir, timeout, rootDir, http);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;
