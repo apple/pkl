@@ -1,0 +1,5 @@
+typealias MyValue = Any(isValid)
+
+isValid = true
+
+myValue: MyValue = 1
