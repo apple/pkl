@@ -44,22 +44,72 @@ class NoProxyRuleTest {
     assertFalse(noProxyRule.matches(URI("https://ooofoo.com")))
     assertFalse(noProxyRule.matches(URI("pkl:foo.com")))
   }
-
+  
+  @Test
+  fun `hostname matching, with port`() {
+    val noProxyRule = NoProxyRule("foo.com:5000")
+    assertTrue(noProxyRule.matches(URI("https://foo.com:5000")))
+    assertFalse(noProxyRule.matches(URI("https://foo.com")))
+    assertFalse(noProxyRule.matches(URI("https://foo.com:3000")))
+  }
+  
   @Test
   fun `ipv4 address literal matching`() {
     val noProxyRule = NoProxyRule("192.168.1.1")
+    assertTrue(noProxyRule.matches(URI("http://192.168.1.1:5000")))
     assertTrue(noProxyRule.matches(URI("http://192.168.1.1")))
     assertTrue(noProxyRule.matches(URI("https://192.168.1.1")))
     assertFalse(noProxyRule.matches(URI("https://192.168.1.0")))
+    assertFalse(noProxyRule.matches(URI("https://192.168.1.0:5000")))
+  }
+
+  @Test
+  fun `ipv4 address literal matching, with port`() {
+    val noProxyRule = NoProxyRule("192.168.1.1:5000")
+    assertTrue(noProxyRule.matches(URI("http://192.168.1.1:5000")))
+    assertTrue(noProxyRule.matches(URI("https://192.168.1.1:5000")))
+    assertFalse(noProxyRule.matches(URI("http://192.168.1.1")))
+    assertFalse(noProxyRule.matches(URI("https://192.168.1.1")))
+    assertFalse(noProxyRule.matches(URI("http://192.168.1.1:3000")))
+    assertFalse(noProxyRule.matches(URI("https://192.168.1.1:3000")))
   }
 
   @Test
   fun `ipv6 address literal matching`() {
     val noProxyRule = NoProxyRule("::1")
     assertTrue(noProxyRule.matches(URI("http://[::1]")))
+    assertTrue(noProxyRule.matches(URI("http://[::1]:5000")))
     assertTrue(noProxyRule.matches(URI("https://[::1]")))
     assertTrue(noProxyRule.matches(URI("https://[0000:0000:0000:0000:0000:0000:0000:0001]")))
     assertFalse(noProxyRule.matches(URI("https://[::2]")))
+    assertFalse(noProxyRule.matches(URI("https://[::2]:5000")))
+  }
+
+  @Test
+  fun `ipv6 address literal matching, with port`() {
+    val noProxyRule = NoProxyRule("[::1]:5000")
+    assertTrue(noProxyRule.matches(URI("http://[::1]:5000")))
+    assertTrue(noProxyRule.matches(URI("https://[0000:0000:0000:0000:0000:0000:0000:0001]:5000")))
+    assertFalse(noProxyRule.matches(URI("http://[::1]")))
+    assertFalse(noProxyRule.matches(URI("https://[::1]")))
+    assertFalse(noProxyRule.matches(URI("https://[::2]")))
+    assertFalse(noProxyRule.matches(URI("https://[::2]:5000")))
+  }
+  
+  @Test
+  fun `ipv4 port from protocol`() {
+    val noProxyRuleHttp = NoProxyRule("192.168.1.1:80")
+    assertTrue(noProxyRuleHttp.matches(URI("http://192.168.1.1")))
+    assertTrue(noProxyRuleHttp.matches(URI("http://192.168.1.1:80")))
+    assertTrue(noProxyRuleHttp.matches(URI("https://192.168.1.1:80")))
+    assertFalse(noProxyRuleHttp.matches(URI("https://192.168.1.1")))
+    assertFalse(noProxyRuleHttp.matches(URI("https://192.168.1.1:5000")))
+    
+    val noProxyRuleHttps = NoProxyRule("192.168.1.1:443")
+    assertTrue(noProxyRuleHttps.matches(URI("https://192.168.1.1")))
+    assertTrue(noProxyRuleHttps.matches(URI("http://192.168.1.1:443")))
+    assertFalse(noProxyRuleHttps.matches(URI("http://192.168.1.1")))
+    assertFalse(noProxyRuleHttps.matches(URI("https://192.168.1.1:80")))
   }
 
   @Test
@@ -67,14 +117,17 @@ class NoProxyRuleTest {
     val noProxyRule1 = NoProxyRule("10.0.0.0/16")
     assertTrue(noProxyRule1.matches(URI("https://10.0.0.0")))
     assertTrue(noProxyRule1.matches(URI("https://10.0.255.255")))
+    assertTrue(noProxyRule1.matches(URI("https://10.0.255.255:5000")))
     assertFalse(noProxyRule1.matches(URI("https://10.1.0.0")))
     assertFalse(noProxyRule1.matches(URI("https://11.0.0.0")))
     assertFalse(noProxyRule1.matches(URI("https://9.255.255.255")))
+    assertFalse(noProxyRule1.matches(URI("https://9.255.255.255:5000")))
 
     val noProxyRule2 = NoProxyRule("10.0.0.0/32")
     assertTrue(noProxyRule2.matches(URI("https://10.0.0.0")))
+    assertTrue(noProxyRule2.matches(URI("https://10.0.0.0:5000")))
     assertFalse(noProxyRule2.matches(URI("https://10.0.0.1")))
-    assertFalse(noProxyRule2.matches(URI("https://9.255.255.55")))
+    assertFalse(noProxyRule2.matches(URI("https://9.255.255.55:5000")))
   }
 
   @Test

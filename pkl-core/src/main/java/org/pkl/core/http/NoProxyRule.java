@@ -32,21 +32,27 @@ import org.pkl.core.util.Nullable;
  * {@code no_proxy}</a>
  */
 final class NoProxyRule {
+  private static final String portString = "(?::(?<port>\\d{1,5}))?";
+  private static final String cidrString = "(?:/(?<cidr>\\d{1,3}))?";
   private static final String ipv4AddressString =
-      "[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}";
+      "(?<host>[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3})";
   private static final Pattern ipv4Address = Pattern.compile("^" + ipv4AddressString + "$");
   private static final Pattern ipv4AddressOrCidr =
-      Pattern.compile("^(" + ipv4AddressString + ")(?:/([1-9][0-9]?))?$");
+      Pattern.compile("^" + ipv4AddressString + cidrString + portString + "$");
   private static final String ipv6AddressString =
-      "(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(?:ffff(:0{1,4})?:)?(?:(?:25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])";
+      "(?<host>(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(?::[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(?:ffff(:0{1,4})?:)?(?:(?:25[0-5]|(2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])|(?:[0-9a-fA-F]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])\\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9]))";
   private static final Pattern ipv6AddressOrCidr =
-      Pattern.compile("^(" + ipv6AddressString + ")(?:/([1-9][0-9]{0,2}))?$");
+      Pattern.compile(
+          "^(?<open>\\[)?" + ipv6AddressString + cidrString + "(?<close>])?" + portString + "$");
+  private static final Pattern hostnamePattern =
+      Pattern.compile("^\\.?(?<host>[^:]+)" + portString + "$");
 
   private @Nullable Integer ipv4 = null;
   private @Nullable Integer ipv4Mask = null;
   private @Nullable BigInteger ipv6 = null;
   private @Nullable BigInteger ipv6Mask = null;
   private @Nullable String hostname = null;
+  private int port = 0;
   private boolean allNoProxy = false;
 
   public NoProxyRule(String repr) {
@@ -56,25 +62,28 @@ final class NoProxyRule {
     }
     var ipv4Matcher = ipv4AddressOrCidr.matcher(repr);
     if (ipv4Matcher.matches()) {
-      var ipAddress = ipv4Matcher.group(1);
+      var ipAddress = ipv4Matcher.group("host");
       ipv4 = parseIpv4(ipAddress);
-      if (ipv4Matcher.groupCount() == 2 && ipv4Matcher.group(2) != null) {
-        var prefixLength = Integer.parseInt(ipv4Matcher.group(2));
+      if (ipv4Matcher.group("cidr") != null) {
+        var prefixLength = Integer.parseInt(ipv4Matcher.group("cidr"));
         if (prefixLength > 32) {
           // best-effort (don't fail on invalid cidrs).
           hostname = repr;
         }
         ipv4Mask = 0xffffffff << (32 - prefixLength);
       }
+      if (ipv4Matcher.group("port") != null) {
+        port = Integer.parseInt(ipv4Matcher.group("port"));
+      }
       return;
     }
     var ipv6Matcher = ipv6AddressOrCidr.matcher(repr);
     if (ipv6Matcher.matches()) {
-      var ipAddress = ipv6Matcher.group(1);
+      var ipAddress = ipv6Matcher.group("host");
       ipv6 = parseIpv6(ipAddress);
-      if (ipv6Matcher.groupCount() == 4 && ipv6Matcher.group(4) != null) {
+      if (ipv6Matcher.group("cidr") != null) {
         var maskBuffer = ByteBuffer.allocate(16).putLong(-1L).putLong(-1L);
-        var prefixLength = Integer.parseInt(ipv6Matcher.group(4));
+        var prefixLength = Integer.parseInt(ipv6Matcher.group("cidr"));
         if (prefixLength > 128) {
           // best-effort (don't fail on invalid cidrs).
           hostname = repr;
@@ -82,17 +91,46 @@ final class NoProxyRule {
         }
         ipv6Mask = new BigInteger(1, maskBuffer.array()).not().shiftRight(prefixLength);
       }
+      if (ipv6Matcher.group("port") != null) {
+        port = Integer.parseInt(ipv6Matcher.group("port"));
+      }
       return;
     }
-    if (repr.startsWith(".")) {
-      hostname = repr.substring(1);
-    } else {
-      hostname = repr;
+    var hostnameMatcher = hostnamePattern.matcher(repr);
+    if (hostnameMatcher.matches()) {
+      hostname = hostnameMatcher.group("host");
+      if (hostnameMatcher.group("port") != null) {
+        port = Integer.parseInt(hostnameMatcher.group("port"));
+      }
+      return;
     }
+    throw new RuntimeException("Failed to parse hostname in no-proxy rule: " + repr);
+  }
+
+  public boolean matches(URI uri) {
+    if (allNoProxy) {
+      return true;
+    }
+    if (!hostMatches(uri)) {
+      return false;
+    }
+    if (port == 0) {
+      return true;
+    }
+    var thatPort = uri.getPort();
+    if (thatPort == -1) {
+      thatPort =
+          switch (uri.getScheme()) {
+            case "http" -> 80;
+            case "https" -> 443;
+            default -> -1;
+          };
+    }
+    return port == thatPort;
   }
 
   /** Tells if the provided URI should not be proxied according to the rules described. */
-  public boolean matches(URI uri) {
+  public boolean hostMatches(URI uri) {
     if (allNoProxy) {
       return true;
     }
