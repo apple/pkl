@@ -17,6 +17,7 @@ include("pkl-core")
 include("pkl-doc")
 include("pkl-gradle")
 include("pkl-executor")
+include("pkl-lsp")
 include("pkl-tools")
 include("pkl-server")
 

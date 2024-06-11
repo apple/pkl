@@ -3,11 +3,14 @@
 # This file is expected to be part of source control.
 com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.github.ajalt.clikt:clikt:3.5.1=apiDependenciesMetadata,compileClasspath,default,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+com.google.code.gson:gson:2.10.1=runtimeClasspath,testRuntimeClasspath
 com.tunnelvisionlabs:antlr4-runtime:4.9.0=default,runtimeClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.14.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.java.dev.jna:jna:5.6.0=kotlinCompilerClasspath,kotlinKlibCommonizerClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.25.3=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.22.0=runtimeClasspath,testRuntimeClasspath
+org.eclipse.lsp4j:org.eclipse.lsp4j:0.22.0=runtimeClasspath,testRuntimeClasspath
 org.fusesource.jansi:jansi:2.4.0=default
 org.fusesource.jansi:jansi:2.4.1=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.graalvm.compiler:compiler:23.0.2=compileClasspath,compileOnlyDependenciesMetadata

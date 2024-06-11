@@ -3,6 +3,7 @@
 # This file is expected to be part of source control.
 com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 com.github.ajalt.clikt:clikt:3.5.1=compileClasspath,default,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.google.code.gson:gson:2.10.1=runtimeClasspath,testRuntimeClasspath
 com.squareup:javapoet:1.13.0=default,runtimeClasspath,testRuntimeClasspath
 com.squareup:kotlinpoet:1.6.0=default,runtimeClasspath,testRuntimeClasspath
 com.tunnelvisionlabs:antlr4-runtime:4.9.0=default,runtimeClasspath,testRuntimeClasspath
@@ -12,6 +13,8 @@ org.commonmark:commonmark-ext-gfm-tables:0.21.0=default
 org.commonmark:commonmark-ext-gfm-tables:0.22.0=runtimeClasspath,testRuntimeClasspath
 org.commonmark:commonmark:0.21.0=default
 org.commonmark:commonmark:0.22.0=runtimeClasspath,testRuntimeClasspath
+org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.22.0=runtimeClasspath,testRuntimeClasspath
+org.eclipse.lsp4j:org.eclipse.lsp4j:0.22.0=runtimeClasspath,testRuntimeClasspath
 org.fusesource.jansi:jansi:2.4.0=default
 org.fusesource.jansi:jansi:2.4.1=runtimeClasspath,testRuntimeClasspath
 org.graalvm.sdk:graal-sdk:23.0.2=default,runtimeClasspath,testRuntimeClasspath
