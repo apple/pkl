@@ -67,7 +67,7 @@
 @ModuleInfo { minPklVersion = "0.26.0" }
 module pkl.Project
 
-import "pkl:EvaluatorSettings"
+import "pkl:EvaluatorSettings" as EvaluatorSettingsModule
 import "pkl:Project"
 import "pkl:reflect"
 import "pkl:semver"
@@ -198,7 +198,7 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 ///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
 /// 
 /// For each of these, relative paths are resolved against the project's enclosing directory.
-evaluatorSettings: EvaluatorSettings(
+evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
   (moduleCacheDir != null).implies(isFileBasedProject)
@@ -405,6 +405,9 @@ class Package {
   /// The effective package URI for the package represented by this project.
   fixed uri: PackageUri = "\(baseUri)@\(version)"
 }
+
+@Deprecated { since = "0.26.0"; replaceWith = "EvaluatorSettingsModule" }
+typealias EvaluatorSettings = EvaluatorSettingsModule
 
 /// Common software licenses in the [SPDX License List](https://spdx.org/licenses/).
 typealias CommonSpdxLicenseIdentifier =
