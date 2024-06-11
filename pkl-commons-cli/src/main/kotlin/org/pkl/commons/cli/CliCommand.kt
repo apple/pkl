@@ -36,6 +36,22 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     if (cliOptions.testMode) {
       IoUtils.setTestMode()
     }
+    proxyAddress?.let { proxyAddress ->
+      if (proxyAddress.host == null || proxyAddress.path != null || proxyAddress.scheme != "http") {
+        throw CliException("Malformed proxy URI (expecting `http://<host>[:<port>]`): $proxyAddress") 
+      }
+      
+      // Set HTTP proxy settings to configure the certificate revocation checker, because
+      // there is no other way to configure it. (see https://bugs.openjdk.org/browse/JDK-8256409)
+      //
+      // This only influences the behavior of the revocation checker.
+      // Otherwise, proxying is handled by [ProxySelector].
+      System.setProperty("http.proxyHost", proxyAddress.host)
+      System.setProperty(
+        "http.proxyPort",
+        if (proxyAddress.port == -1) "80" else proxyAddress.port.toString()
+      )
+    }
     try {
       doRun()
     } catch (e: PklException) {
@@ -155,6 +171,13 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
+  val proxyAddress =
+    cliOptions.proxyAddress
+      ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+  val noProxy =
+    cliOptions.noProxy
+      ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+
   /**
    * The HTTP client used for this command.
    *
@@ -168,11 +191,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       } else {
         for (file in cliOptions.normalizedCaCertificates) addCertificates(file)
       }
-      val proxyAddress =
-        cliOptions.proxyAddress
-          ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
-      val noProxy = cliOptions.noProxy
-        ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
       if ((proxyAddress ?: noProxy) != null) {
         setProxy(proxyAddress, noProxy ?: listOf())
       }
