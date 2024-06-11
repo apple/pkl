@@ -136,7 +136,7 @@ The URI must (currently) have scheme `http`, and may not contain anything other 
 [%collapsible]
 ====
 Default: (none) +
-Example: `*.example.com,1.2.3.4/16` +
+Example: `example.com,169.254.0.0/16` +
 Comma separated list of hosts to which all connections should bypass the proxy.
-Hosts can be specified by name, IP address, or IP range (using [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation)).
+Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
 ====
