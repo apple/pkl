@@ -23,6 +23,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import javax.net.ssl.SSLContext;
+import org.pkl.core.util.Nullable;
 
 /**
  * An HTTP client.
@@ -133,7 +134,7 @@ public interface HttpClient extends AutoCloseable {
      *
      * @throws IllegalArgumentException if `proxyAddress` is invalid.
      */
-    Builder setProxy(URI proxyAddress, List<String> noProxy);
+    Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

@@ -22,22 +22,30 @@ import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.List;
+import org.pkl.core.util.Nullable;
 
 final class ProxySelector extends java.net.ProxySelector {
 
   public static final List<Proxy> NO_PROXY = List.of(Proxy.NO_PROXY);
 
-  private final List<Proxy> myProxy;
+  private final @Nullable List<Proxy> myProxy;
   private final List<NoProxyRule> noProxyRules;
+  private final @Nullable java.net.ProxySelector delegate;
 
-  ProxySelector(URI proxyAddress, List<String> noProxyRules) {
+  ProxySelector(@Nullable URI proxyAddress, List<String> noProxyRules) {
     this.noProxyRules = noProxyRules.stream().map(NoProxyRule::new).toList();
-    var port = proxyAddress.getPort();
-    if (port == -1) {
-      port = 80;
+    if (proxyAddress == null) {
+      this.delegate = java.net.ProxySelector.getDefault();
+      this.myProxy = null;
+    } else {
+      this.delegate = null;
+      var port = proxyAddress.getPort();
+      if (port == -1) {
+        port = 80;
+      }
+      this.myProxy =
+          List.of(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyAddress.getHost(), port)));
     }
-    this.myProxy =
-        List.of(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyAddress.getHost(), port)));
   }
 
   @Override
@@ -48,6 +56,10 @@ final class ProxySelector extends java.net.ProxySelector {
         return NO_PROXY;
       }
     }
+    if (delegate != null) {
+      return delegate.select(uri);
+    }
+    assert myProxy != null;
     return myProxy;
   }
 
