@@ -187,6 +187,8 @@ Invoke-WebRequest '{uri-pkl-windows-download}' -OutFile pkl.exe
 .\pkl --version
 ----
 
+This should print something similar to:
+
 [source]
 [subs="+attributes"]
 ----
