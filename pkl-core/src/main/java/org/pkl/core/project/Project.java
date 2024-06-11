@@ -422,38 +422,47 @@ public final class Project {
               null);
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Map<String, String> getExternalProperties() {
       return delegate.externalProperties();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Map<String, String> getEnv() {
       return delegate.env();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Pattern> getAllowedModules() {
       return delegate.allowedModules();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Pattern> getAllowedResources() {
       return delegate.allowedResources();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Boolean isNoCache() {
       return delegate.noCache();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Path> getModulePath() {
       return delegate.modulePath();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Duration getTimeout() {
       return delegate.timeout();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Path getModuleCacheDir() {
       return delegate.moduleCacheDir();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Path getRootDir() {
       return delegate.rootDir();
     }
