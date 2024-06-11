@@ -68,7 +68,7 @@ class PklModuleImpl(override val ctx: PklParser.ModuleContext, override val uri:
 
   // TODO: fix uri name
   override val moduleName: String? by lazy {
-    declaration?.moduleHeader?.shortDisplayName ?: uri.toString()
+    declaration?.moduleHeader?.moduleName ?: uri.toString()
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {

@@ -889,11 +889,11 @@ fun PklType?.toType(
         null -> Type.Unknown
         is PklModule -> Type.module(resolved, simpleName.identifier!!.text)
         is PklClass -> {
-          val typeArguments = typeArgumentList?.types ?: listOf()
+          val typeArguments = this.typeArgumentList?.types ?: listOf()
           Type.Class(resolved, typeArguments.toTypes(base, bindings, preserveUnboundTypeVars))
         }
         is PklTypeAlias -> {
-          val typeArguments = typeArgumentList?.types ?: listOf()
+          val typeArguments = this.typeArgumentList?.types ?: listOf()
           Type.alias(resolved, typeArguments.toTypes(base, bindings, preserveUnboundTypeVars))
         }
         is PklTypeParameter -> bindings[resolved]

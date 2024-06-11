@@ -168,7 +168,7 @@ private constructor(
             val name = member.name
             // record [member] if it (re)defines a property;
             // don't record [member] if it amends/overrides a property defined in a supermodule.
-            if (member.typeAnnotation?.pklType != null || properties[name] == null) {
+            if (member.typeAnnotation?.type != null || properties[name] == null) {
               properties[name] = member
               typesAndProperties[name] = member
             }

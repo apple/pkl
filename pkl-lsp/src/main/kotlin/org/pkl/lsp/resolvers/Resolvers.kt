@@ -212,7 +212,7 @@ object Resolvers {
               skipNextObjectBody = true
             }
             is PklLetExpr -> {
-              if (element === parent.bodyExpr) {
+              if (element == parent.bodyExpr) {
                 parent.parameter?.typedIdentifier?.let { typedId ->
                   if (!visitor.visitIfNotNull(typedId.identifier?.text, typedId, bindings))
                     return visitor.result to LookupMode.LEXICAL
@@ -222,13 +222,13 @@ object Resolvers {
             // flow typing of `if (expr) ... else ...`
             is PklIfExpr -> {
               when {
-                element === parent.thenExpr -> {
+                element == parent.thenExpr -> {
                   parent.conditionExpr.let { condExpr ->
                     if (!visitSatisfiedCondition(condExpr, bindings, visitor))
                       return visitor.result to LookupMode.NONE
                   }
                 }
-                element === parent.elseExpr -> {
+                element == parent.elseExpr -> {
                   parent.conditionExpr.let { condExpr ->
                     if (!visitUnsatisfiedCondition(condExpr, bindings, visitor))
                       return visitor.result to LookupMode.NONE
@@ -238,14 +238,14 @@ object Resolvers {
             }
             // flow typing of `expr && ...`
             is PklLogicalAndExpr -> {
-              if (element === parent.rightExpr) {
+              if (element == parent.rightExpr) {
                 if (!visitSatisfiedCondition(parent.leftExpr, bindings, visitor))
                   return visitor.result to LookupMode.NONE
               }
             }
             // flow typing of `expr || ...`
             is PklLogicalOrExpr -> {
-              if (element === parent.rightExpr) {
+              if (element == parent.rightExpr) {
                 if (!visitUnsatisfiedCondition(parent.leftExpr, bindings, visitor))
                   return visitor.result to LookupMode.NONE
               }
@@ -278,13 +278,13 @@ object Resolvers {
           val parent = element.parent
           if (parent is PklWhenGenerator) {
             when {
-              element === parent.thenBody -> {
+              element == parent.thenBody -> {
                 parent.conditionExpr?.let { condExpr ->
                   if (!visitSatisfiedCondition(condExpr, bindings, visitor))
                     return visitor.result to LookupMode.NONE
                 }
               }
-              element === parent.elseBody -> {
+              element == parent.elseBody -> {
                 parent.conditionExpr?.let { condExpr ->
                   if (!visitUnsatisfiedCondition(condExpr, bindings, visitor))
                     return visitor.result to LookupMode.NONE

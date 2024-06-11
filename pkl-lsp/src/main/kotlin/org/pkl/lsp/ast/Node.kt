@@ -116,7 +116,7 @@ interface PklDocCommentOwner : Node {
   val parsedComment: String?
     get() {
       val doc = docComment?.text?.trim() ?: return null
-      return doc.lines().joinToString("\n") { it.removePrefix("///") }.trimIndent()
+      return doc.lines().joinToString("\n") { it.trimStart().removePrefix("///") }.trimIndent()
     }
 }
 
@@ -222,11 +222,10 @@ sealed interface PklProperty : PklNavigableElement, ModifierListOwner, Identifie
   val type: PklType?
   val expr: PklExpr?
   val isDefinition: Boolean
+  val typeAnnotation: PklTypeAnnotation?
 }
 
 interface PklClassProperty : PklProperty, PklModuleMember, PklClassMember, PklTypeDefOrProperty {
-  val typeAnnotation: PklTypeAnnotation?
-
   val objectBody: PklObjectBody?
 }
 
@@ -315,12 +314,12 @@ interface PklParameterList : Node {
 }
 
 interface PklTypeAlias : PklTypeDef {
-  val typeAliasHeader: TypeAliasHeader
+  val typeAliasHeader: PklTypeAliasHeader
   val type: PklType
   val isRecursive: Boolean
 }
 
-interface TypeAliasHeader : IdentifierOwner, ModifierListOwner {
+interface PklTypeAliasHeader : IdentifierOwner, ModifierListOwner {
   val typeParameterList: PklTypeParameterList?
 }
 
@@ -512,7 +511,7 @@ interface PklParenthesizedExpr : PklExpr {
 }
 
 interface PklTypeAnnotation : Node {
-  val pklType: PklType?
+  val type: PklType?
 }
 
 interface PklTypedIdentifier : PklNavigableElement, IdentifierOwner {
@@ -543,10 +542,10 @@ interface PklStringLiteralType : PklType {
 
 interface PklDeclaredType : PklType {
   val name: PklTypeName
-  val typeArgumentList: TypeArgumentList?
+  val typeArgumentList: PklTypeArgumentList?
 }
 
-interface TypeArgumentList : Node {
+interface PklTypeArgumentList : Node {
   val types: List<PklType>
 }
 
@@ -638,6 +637,15 @@ abstract class AbstractNode(override val parent: Node?, protected open val ctx: 
   override val children: List<Node> by lazy { childrenByType.values.flatten() }
 
   override val text: String by lazy { ctx.text }
+
+  // Two nodes are the same if their contexts are the same object
+  override fun equals(other: Any?): Boolean {
+    return when (other) {
+      null -> false
+      is AbstractNode -> ctx === other.ctx
+      else -> false
+    }
+  }
 }
 
 fun List<ParseTree>.toNode(parent: Node?, idx: Int): Node? {
@@ -649,6 +657,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     // a module can never be constructed from this function
     // is ModuleContext -> PklModuleImpl(this)
     is ModuleDeclContext -> PklModuleDeclarationImpl(parent!!, this)
+    is ModuleHeaderContext -> PklModuleHeaderImpl(parent!!, this)
     is ImportClauseContext -> PklImportImpl(parent!!, this)
     is ModuleExtendsOrAmendsClauseContext -> PklModuleExtendsAmendsClauseImpl(parent!!, this)
     is ClazzContext -> PklClassImpl(parent!!, this)
@@ -674,6 +683,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is UnionTypeContext -> PklUnionTypeImpl(parent!!, this)
     is DefaultUnionTypeContext -> PklDefaultUnionTypeImpl(parent!!, this)
     is FunctionTypeContext -> PklFunctionTypeImpl(parent!!, this)
+    is TypeArgumentListContext -> PklTypeArgumentListImpl(parent!!, this)
     is ThisExprContext -> PklThisExprImpl(parent!!, this)
     is OuterExprContext -> PklOuterExprImpl(parent!!, this)
     is ModuleExprContext -> PklModuleExprImpl(parent!!, this)
@@ -727,7 +737,7 @@ fun ParseTree.toNode(parent: Node?): Node? {
     is ObjectSpreadContext -> PklObjectSpreadImpl(parent!!, this)
     is TypeParameterContext -> PklTypeParameterImpl(parent!!, this)
     is TypeParameterListContext -> PklTypeParameterListImpl(parent!!, this)
-    is TypeAliasHeaderContext -> TypeAliasHeaderImpl(parent!!, this)
+    is TypeAliasHeaderContext -> PklTypeAliasHeaderImpl(parent!!, this)
     is TypeAliasContext -> PklTypeAliasImpl(parent!!, this)
     // is TypeAnnotationContext -> Ty
     // treat modifiers as terminals; matches how we do it in pkl-intellij

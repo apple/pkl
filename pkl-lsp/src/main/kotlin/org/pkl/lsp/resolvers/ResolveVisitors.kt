@@ -77,7 +77,7 @@ object ResolveVisitors {
               parameters.map {
                 it.typedIdentifier
                   ?.typeAnnotation
-                  ?.pklType
+                  ?.type
                   .toType(base, effectiveBindings, !resolveTypeParamsInParamTypes)
               }
           }
@@ -143,6 +143,14 @@ object ResolveVisitors {
             is PklTypeAlias -> base.typeAliasType.withTypeArguments(Type.alias(element))
             is PklNavigableElement ->
               element.computeResolvedImportType(base, bindings, preserveUnboundTypeVars)
+            is PklParameter -> {
+              element.typedIdentifier?.computeResolvedImportType(
+                base,
+                bindings,
+                preserveUnboundTypeVars
+              )
+                ?: unexpectedType(element)
+            }
             else -> unexpectedType(element)
           }
 
@@ -294,6 +302,7 @@ object ResolveVisitors {
           element is PklTypeParameter && bindings.contains(element) ->
             visit(name, toFirstDefinition(element, base, bindings), mapOf())
           element is PklNavigableElement -> result = element
+          element is PklParameter -> result = element.typedIdentifier
           element is PklExpr -> return true
           else -> unexpectedType(element)
         }

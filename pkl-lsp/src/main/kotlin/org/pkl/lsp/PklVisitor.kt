@@ -360,7 +360,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitModuleMember(o)
   }
 
-  open fun visitTypeAliasHeader(o: TypeAliasHeader): R? {
+  open fun visitTypeAliasHeader(o: PklTypeAliasHeader): R? {
     return visitModifierListOwner(o)
   }
 
@@ -368,7 +368,7 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitElement(o)
   }
 
-  open fun visitTypeArgumentList(o: TypeArgumentList): R? {
+  open fun visitTypeArgumentList(o: PklTypeArgumentList): R? {
     return visitElement(o)
   }
 

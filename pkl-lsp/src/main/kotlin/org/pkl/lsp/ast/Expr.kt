@@ -503,7 +503,7 @@ class PklParameterImpl(override val parent: Node, override val ctx: ParameterCon
   override val typedIdentifier: PklTypedIdentifier? by lazy {
     children.firstInstanceOf<PklTypedIdentifier>()
   }
-  override val type: PklType? by lazy { typedIdentifier?.typeAnnotation?.pklType }
+  override val type: PklType? by lazy { typedIdentifier?.typeAnnotation?.type }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitParameter(this)

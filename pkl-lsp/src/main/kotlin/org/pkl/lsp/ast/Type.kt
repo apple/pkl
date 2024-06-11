@@ -22,7 +22,7 @@ import org.pkl.lsp.PklVisitor
 
 class PklTypeAnnotationImpl(override val parent: Node, ctx: TypeAnnotationContext) :
   AbstractNode(parent, ctx), PklTypeAnnotation {
-  override val pklType: PklType? by lazy { children.firstInstanceOf<PklType>() }
+  override val type: PklType? by lazy { children.firstInstanceOf<PklType>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTypeAnnotation(this)
@@ -67,8 +67,8 @@ class PklDeclaredTypeImpl(override val parent: Node, override val ctx: DeclaredT
     toTypeName(children.firstInstanceOf<PklQualifiedIdentifier>()!!)
   }
 
-  override val typeArgumentList: TypeArgumentList? by lazy {
-    children.firstInstanceOf<TypeArgumentList>()
+  override val typeArgumentList: PklTypeArgumentList? by lazy {
+    children.firstInstanceOf<PklTypeArgumentList>()
   }
 
   private fun toTypeName(ident: PklQualifiedIdentifier): PklTypeName {
@@ -80,8 +80,8 @@ class PklDeclaredTypeImpl(override val parent: Node, override val ctx: DeclaredT
   }
 }
 
-class TypeArgumentListImpl(override val parent: Node, ctx: TypeArgumentListContext) :
-  AbstractNode(parent, ctx), TypeArgumentList {
+class PklTypeArgumentListImpl(override val parent: Node, ctx: TypeArgumentListContext) :
+  AbstractNode(parent, ctx), PklTypeArgumentList {
   override val types: List<PklType> by lazy { children.filterIsInstance<PklType>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -151,8 +151,8 @@ class PklDefaultUnionTypeImpl(override val parent: Node, ctx: DefaultUnionTypeCo
 
 class PklTypeAliasImpl(override val parent: Node?, ctx: TypeAliasContext) :
   AbstractNode(parent, ctx), PklTypeAlias {
-  override val typeAliasHeader: TypeAliasHeader by lazy {
-    children.firstInstanceOf<TypeAliasHeader>()!!
+  override val typeAliasHeader: PklTypeAliasHeader by lazy {
+    children.firstInstanceOf<PklTypeAliasHeader>()!!
   }
   override val modifiers: List<Terminal>? by lazy { typeAliasHeader.modifiers }
   override val name: String by lazy { ctx.typeAliasHeader().Identifier().text }
@@ -167,8 +167,8 @@ class PklTypeAliasImpl(override val parent: Node?, ctx: TypeAliasContext) :
   }
 }
 
-class TypeAliasHeaderImpl(override val parent: Node?, ctx: TypeAliasHeaderContext) :
-  AbstractNode(parent, ctx), TypeAliasHeader {
+class PklTypeAliasHeaderImpl(override val parent: Node?, ctx: TypeAliasHeaderContext) :
+  AbstractNode(parent, ctx), PklTypeAliasHeader {
   override val modifiers: List<Terminal>? by lazy { terminals.takeWhile { it.isModifier } }
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
   override val typeParameterList: PklTypeParameterList? by lazy {

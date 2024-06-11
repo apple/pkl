@@ -43,7 +43,7 @@ class PklClassPropertyImpl(override val parent: Node, override val ctx: ClassPro
 
   override val name: String by lazy { ctx.Identifier().text }
 
-  override val type: PklType? by lazy { typeAnnotation?.pklType }
+  override val type: PklType? by lazy { typeAnnotation?.type }
 
   override val isDefinition: Boolean by lazy { expr != null }
 
@@ -79,9 +79,7 @@ class PklMethodHeaderImpl(override val parent: Node, override val ctx: MethodHea
 
   override val identifier: Terminal? by lazy { terminals.find { it.type == TokenType.Identifier } }
 
-  override val returnType: PklType? by lazy {
-    children.firstInstanceOf<PklTypeAnnotation>()?.pklType
-  }
+  override val returnType: PklType? by lazy { children.firstInstanceOf<PklTypeAnnotation>()?.type }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitMethodHeader(this)
@@ -128,6 +126,9 @@ class PklObjectPropertyImpl(override val parent: Node, override val ctx: ObjectP
   override val type: PklType? = null
   override val expr: PklExpr? by lazy { children.firstInstanceOf<PklExpr>() }
   override val isDefinition: Boolean by lazy { expr != null }
+  override val typeAnnotation: PklTypeAnnotation? by lazy {
+    children.firstInstanceOf<PklTypeAnnotation>()
+  }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitObjectProperty(this)

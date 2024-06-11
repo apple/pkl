@@ -36,6 +36,8 @@ fun PklExpr?.toConstraintExpr(base: PklBaseModule): ConstraintExpr {
       when {
         strippedText.startsWith("0x") ->
           strippedText.substring(2).toLongOrNull(16)?.let { IntValue(it) } ?: Error
+        strippedText.startsWith("0o") ->
+          strippedText.substring(2).toLongOrNull(8)?.let { IntValue(it) } ?: Error
         strippedText.startsWith("0b") ->
           strippedText.substring(2).toLongOrNull(2)?.let { IntValue(it) } ?: Error
         else -> strippedText.toLongOrNull()?.let { IntValue(it) } ?: Error

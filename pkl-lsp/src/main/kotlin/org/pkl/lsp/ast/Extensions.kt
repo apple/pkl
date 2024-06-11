@@ -17,15 +17,12 @@ package org.pkl.lsp.ast
 
 import java.io.File
 import kotlin.io.path.invariantSeparatorsPathString
-import org.pkl.lsp.PklBaseModule
-import org.pkl.lsp.PklLSPServer
-import org.pkl.lsp.inferImportPropertyName
+import org.pkl.lsp.*
 import org.pkl.lsp.resolvers.ResolveVisitors
 import org.pkl.lsp.resolvers.Resolvers
 import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.TypeParameterBindings
 import org.pkl.lsp.type.computeResolvedImportType
-import org.pkl.lsp.unexpectedType
 
 val PklClass.supertype: PklType?
   get() = classHeader.extends
@@ -77,6 +74,15 @@ fun SimpleTypeName.resolve(): Node? {
     mapOf(),
     ResolveVisitors.firstElementNamed(simpleTypeNameText, base)
   )
+}
+
+fun Node.isAncestor(of: Node): Boolean {
+  var node = of.parent
+  while (node != null) {
+    if (this == node) return true
+    node = node.parent
+  }
+  return false
 }
 
 fun PklClass.isSubclassOf(other: PklClass): Boolean {
@@ -319,84 +325,12 @@ fun Node.findBySpan(line: Int, col: Int, includeTerminals: Boolean = false): Nod
   return childHit ?: hit
 }
 
-fun Node.toMarkdown(): String {
-  val markdown = render()
-  return showDocCommentAndModule(this, markdown)
-}
-
-fun Node.render(): String =
-  when (this) {
-    is PklProperty -> {
-      val modifiers = modifiers.render()
-      "$modifiers$name: ${type?.render() ?: "unknown"}"
-    }
-    is PklStringLiteralType -> "\"$text\""
-    is PklMethod -> {
-      val modifiers = modifiers.render()
-      modifiers + methodHeader.render()
-    }
-    is PklMethodHeader -> {
-      val name = identifier?.text ?: "???"
-      val typePars = typeParameterList?.render() ?: ""
-      val pars = parameterList?.render() ?: "()"
-      val retType = returnType?.render()?.let { ": $it" } ?: ""
-      "$name$typePars$pars$retType"
-    }
-    is PklParameterList -> {
-      elements.joinToString(", ", prefix = "(", postfix = ")") { it.render() }
-    }
-    is PklTypeParameterList -> {
-      typeParameters.joinToString(", ", prefix = "<", postfix = ">") { it.render() }
-    }
-    is PklParameter ->
-      if (isUnderscore) {
-        "_"
-      } else {
-        // cannot be null here if it's not underscore
-        typedIdentifier!!.render()
-      }
-    is PklTypeAnnotation -> ": ${pklType!!.render()}"
-    is PklTypedIdentifier -> {
-      val name = identifier!!.text
-      typeAnnotation?.let { "$name${it.render()}" } ?: name
-    }
-    is PklTypeParameter -> {
-      val vari = variance?.name?.lowercase()?.let { "$it " } ?: ""
-      "$vari$name"
-    }
-    is PklClass -> {
-      val modifiers = modifiers.render()
-      val name = classHeader.identifier?.text ?: "???"
-      "$modifiers$name"
-    }
-    is PklModuleDeclaration -> {
-      val modifiers = modifiers.render()
-      // can never be null
-      val idents = moduleHeader!!.qualifiedIdentifier!!.render()
-      "${modifiers}module $idents"
-    }
-    is PklQualifiedIdentifier -> identifiers.joinToString(".") { it.text }
-    else -> text
-  }
-
-// render modifiers
-private fun List<Terminal>?.render(): String {
-  return this?.let { if (isEmpty()) "" else joinToString(" ", postfix = " ") { it.text } } ?: ""
-}
-
-private fun showDocCommentAndModule(node: Node, text: String): String {
-  val markdown = "```pkl\n$text\n```"
-  return if (node is PklDocCommentOwner) {
-    node.parsedComment?.let { "$markdown\n\n---\n\n$it" } ?: markdown
-  } else markdown
-}
-
 fun Node.toURIString(server: PklLSPServer): String {
   val mod = if (this is PklModule) this else enclosingModule!!
   val uri = mod.uri.toString()
   return if (uri.startsWith("pkl:")) {
     val name = uri.replace("pkl:", "")
     val uriStr = server.stdlibDir.resolve("$name.pkl").invariantSeparatorsPathString
-    "pkl:$uriStr"
+    "pkl://$uriStr"
   } else uri
 }

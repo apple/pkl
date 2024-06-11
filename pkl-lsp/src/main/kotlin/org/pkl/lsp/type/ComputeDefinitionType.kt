@@ -105,7 +105,7 @@ fun Node?.computeResolvedImportType(
       }
     }
     is PklTypedIdentifier -> {
-      val type = typeAnnotation?.pklType
+      val type = typeAnnotation?.type
       when {
         type != null -> type.toType(base, bindings, preserveUnboundTypeVars)
         else -> { // try to infer identifier type

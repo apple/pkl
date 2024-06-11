@@ -66,7 +66,7 @@ class AstTest {
     assertThat(module.members[0]).isInstanceOf(PklClassProperty::class.java)
     val property = module.members[0] as PklClassProperty
     assertThat(property.identifier?.text).isEqualTo("foo")
-    assertThat(property.typeAnnotation?.pklType).isInstanceOf(PklDeclaredType::class.java)
+    assertThat(property.typeAnnotation?.type).isInstanceOf(PklDeclaredType::class.java)
     assertThat(module.members[1]).isInstanceOf(PklClassMethod::class.java)
     val method = module.members[1] as PklClassMethod
     assertThat(method.methodHeader.identifier?.text).isEqualTo("bar")
