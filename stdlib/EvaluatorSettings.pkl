@@ -74,8 +74,6 @@ noCache: Boolean?
 /// A collection of jars, zips, or directories to be placed into the module path.
 ///
 /// Module path modules and resources may be read and imported using the `modulepath:` scheme.
-///
-/// Relative paths are resolved against PklProject's enclosing directory.
 modulePath: Listing<String>?
 
 /// The duration after which evaluation of a source module will be timed out.
@@ -84,13 +82,9 @@ modulePath: Listing<String>?
 timeout: Duration?
 
 /// The directory where `package:` modules are cached.
-///
-/// Relative paths are resolved against PklProject's enclosing directory.
 moduleCacheDir: String?
 
 /// Restricts access to file-based modules and resources to those located under this directory.
-///
-/// Relative paths are resolved against PklProject's enclosing directory.
 rootDir: String?
 
 /// Configuration of outgoing HTTP requests.
@@ -136,7 +130,7 @@ class Proxy {
   /// ```
   /// noProxy {
   ///   "127.0.0.1"
-  ///   "169.254/16"
+  ///   "169.254.0.0/16"
   ///   "example.com"
   ///   "localhost:5050"
   /// }

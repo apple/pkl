@@ -196,6 +196,8 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 ///  - [modulePath][EvaluatorSettings.modulePath]
 ///  - [rootDir][EvaluatorSettings.rootDir]
 ///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
+/// 
+/// For each of these, relative paths are resolved against the project's enclosing directory.
 evaluatorSettings: EvaluatorSettings(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
