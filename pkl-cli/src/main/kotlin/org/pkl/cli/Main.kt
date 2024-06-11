@@ -25,9 +25,6 @@ import org.pkl.core.Release
 /** Main method of the Pkl CLI (command-line evaluator and REPL). */
 internal fun main(args: Array<String>) {
   cliMain {
-    // Force `native-image` to use system proxies (which does not happen with `-D`).
-    System.setProperty("java.net.useSystemProxies", "true")
-
     val version = Release.current().versionInfo()
     val helpLink = "${Release.current().documentation().homepage()}pkl-cli/index.html#usage"
     RootCommand("pkl", version, helpLink)
