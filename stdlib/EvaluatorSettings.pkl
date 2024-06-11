@@ -114,7 +114,7 @@ class Proxy {
   /// ```
   /// address = "http://my.proxy.example.com:5080"
   /// ```
-  address: Uri(startsWith("http://"))
+  address: Uri(startsWith("http://"))?
 
   /// Hosts to which all connections should bypass a proxy.
   ///

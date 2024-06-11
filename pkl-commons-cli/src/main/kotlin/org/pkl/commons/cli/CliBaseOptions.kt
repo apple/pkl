@@ -133,7 +133,7 @@ data class CliBaseOptions(
   val proxyAddress: URI? = null,
 
   /** Hostnames, IP addresses, or CIDR blocks to not proxy. */
-  val noProxy: List<String> = listOf()
+  val noProxy: List<String>? = null,
 ) {
 
   companion object {
