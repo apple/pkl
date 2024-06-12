@@ -23,59 +23,51 @@ package org.pkl.commons
  * optional dot at the end, and values should be valid class names in the language for which code
  * generation is performed.
  *
- * When computing the appropriate target name, the longest matching prefix is used. For example:
- * ```kotlin
- * val mapper = PackageMapper(mapOf(
- *   "com.foo.Main" to "w.Main",
- *   "com.foo." to "x.",
- *   "com." to "y.",
- *   "" to "z."
- * ))
+ * If the rename patterns do not explicitly rename the class, the class name is capitalized.
  *
- * assert(mapper.map("com.foo.Main") == "w.Main")
- * assert(mapper.map("com.foo.bar") == "x.bar")
- * assert(mapper.map("com.baz.qux") == "y.baz.qux")
- * assert(mapper.map("org.foo.bar") == "z.org.foo.bar")
- * ```
+ * When computing the appropriate target name, the longest matching prefix is used.
  *
  * Prefix replacements are literal, and therefore dots are important. When renaming packages, in
  * most cases, you must ensure that you have an ending dot on both sides of a mapping (except for
  * the empty mapping, if you use it), otherwise you may get unexpected results:
  * ```kotlin
- * val mapper = PackageMapper(mapOf(
- *   "com.foo." to "x",  // Dot on the left only
- *   "org.bar" to "y.",  // Dot on the right only
- *   "net.baz" to "z"    // No dots
- * ))
+ * val mapper = NameMapper(
+ *   mapOf(
+ *     "com.foo." to "x", // Dot on the left only
+ *     "org.bar" to "y.", // Dot on the right only
+ *     "net.baz" to "z" // No dots
+ *   )
+ * )
  *
- * assert(mapper.map("com.foo.bar") == "xbar")    // Target prefix merged into the suffix
- * assert(mapper.map("org.bar.baz") == "y..baz")  // Double dot, invalid package name
- * assert(mapper.map("net.baz.qux") == "z.qux")   // Looks okay, but...
- * assert(mapper.map("net.bazqux") == "zqux")     // ...may cut the package name in the middle.
+ * assertThat(mapper.map("com.foo.bar")).isEqualTo("" to "xbar") // Target prefix merged into the suffix
+ * assertThat(mapper.map("org.bar.baz")).isEqualTo("y." to "Baz") // Double dot, invalid package name
+ * assertThat(mapper.map("net.baz.qux")).isEqualTo("z" to "Qux") // Looks okay, but...
+ * assertThat(mapper.map("net.bazqux")).isEqualTo("" to "zqux") // ...may cut the package name in the middle.
  * ```
  */
 class NameMapper(mapping: Map<String, String>) {
   private val sortedMapping = mapping.toList().sortedBy { -it.first.length }
 
-  fun map(sourceName: String): String {
+  private fun doMap(sourceName: String): Pair<String, Boolean> {
     for ((sourcePrefix, targetPrefix) in sortedMapping) {
       if (sourceName.startsWith(sourcePrefix)) {
-        return targetPrefix + sourceName.substring(sourcePrefix.length)
+        val rest = sourceName.substring(sourcePrefix.length)
+        val mapped = targetPrefix + rest
+        val wasClassRenamed =
+          !targetPrefix.endsWith('.') && (sourcePrefix.length - 1) >= sourceName.lastIndexOf('.')
+        return mapped to wasClassRenamed
       }
     }
-    return sourceName
+    return sourceName to false
   }
 
-  data class MapResult(val packageName: String, val className: String) {
-    fun classNameWasChanged(sourceName: String): Boolean =
-      sourceName != className && !sourceName.endsWith(".$className")
-  }
-
-  fun mapToClassName(sourceName: String): MapResult {
-    val mappedName = map(sourceName)
-    return MapResult(
-      packageName = mappedName.substringBeforeLast('.', ""),
-      className = mappedName.substringAfterLast('.')
-    )
+  fun map(sourceName: String): Pair<String, String> {
+    val (mappedName, wasClassRenamed) = doMap(sourceName)
+    val packageName = mappedName.substringBeforeLast(".", "")
+    val mappedClassName = mappedName.substringAfterLast(".")
+    val className =
+      if (wasClassRenamed) mappedClassName
+      else mappedClassName.replaceFirstChar { it.titlecaseChar() }
+    return packageName to className
   }
 }

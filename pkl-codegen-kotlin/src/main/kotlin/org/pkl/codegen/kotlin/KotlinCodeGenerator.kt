@@ -115,9 +115,9 @@ class KotlinCodeGenerator(
         .toString()
     }
 
-  val kotlinFileName: String
+  private val kotlinFileName: String
     get() = buildString {
-      val (packageName, className) = mapModuleName(moduleSchema.moduleName)
+      val (packageName, className) = nameMapper.map(moduleSchema.moduleName)
       val dirPath = packageName.split('.').joinToString("/", transform = IoUtils::encodePath)
       val fileName = IoUtils.encodePath(className)
       append("kot")
@@ -186,7 +186,7 @@ class KotlinCodeGenerator(
 
       val moduleName = moduleSchema.moduleName
 
-      val (packageName, moduleTypeName) = mapModuleName(moduleName)
+      val (packageName, moduleTypeName) = nameMapper.map(moduleName)
 
       val fileSpec = FileSpec.builder(packageName, moduleTypeName).indent(options.indent)
 
@@ -640,7 +640,7 @@ class KotlinCodeGenerator(
       .endControlFlow()
 
   private fun PClass.toKotlinPoetName(): ClassName {
-    val (packageName, moduleTypeName) = mapModuleName(moduleName)
+    val (packageName, moduleTypeName) = nameMapper.map(moduleName)
     return if (isModuleClass) {
       ClassName(packageName, moduleTypeName)
     } else {
@@ -649,7 +649,7 @@ class KotlinCodeGenerator(
   }
 
   private fun TypeAlias.toKotlinPoetName(): ClassName {
-    val (packageName, moduleTypeName) = mapModuleName(moduleName)
+    val (packageName, moduleTypeName) = nameMapper.map(moduleName)
 
     return when {
       aliasedType is PType.Alias -> {
@@ -788,16 +788,4 @@ class KotlinCodeGenerator(
     map { it.toKotlinPoetName() }.toTypedArray()
 
   private val nameMapper = NameMapper(options.renames)
-
-  private fun mapModuleName(name: String): kotlin.Pair<String, String> {
-    val mappedName = nameMapper.mapToClassName(name)
-    val packageName = mappedName.packageName
-    val className =
-      if (mappedName.classNameWasChanged(name)) {
-        mappedName.className
-      } else {
-        mappedName.className.replaceFirstChar { it.titlecaseChar() }
-      }
-    return packageName to className
-  }
 }

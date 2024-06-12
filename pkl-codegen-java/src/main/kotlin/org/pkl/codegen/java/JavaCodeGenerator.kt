@@ -161,9 +161,9 @@ class JavaCodeGenerator(
       return AnnotationSpec.builder(className).build()
     }
 
-  val javaFileName: String
+  private val javaFileName: String
     get() {
-      val (packageName, className) = mapModuleName(schema.moduleName)
+      val (packageName, className) = nameMapper.map(schema.moduleName)
       val dirPath = packageName.replace('.', '/')
       return if (dirPath.isEmpty()) {
         "java/$className.java"
@@ -202,7 +202,7 @@ class JavaCodeGenerator(
         moduleClass.addMethod(appendPropertyMethod().addModifiers(modifier).build())
       }
 
-      val (packageName, _) = mapModuleName(schema.moduleName)
+      val (packageName, _) = nameMapper.map(schema.moduleName)
 
       return JavaFile.builder(packageName, moduleClass.build())
         .indent(codegenOptions.indent)
@@ -691,7 +691,7 @@ class JavaCodeGenerator(
       .endControlFlow()
 
   private fun PClass.toJavaPoetName(): ClassName {
-    val (packageName, moduleClassName) = mapModuleName(moduleName)
+    val (packageName, moduleClassName) = nameMapper.map(moduleName)
     return if (isModuleClass) {
       ClassName.get(packageName, moduleClassName)
     } else {
@@ -701,7 +701,7 @@ class JavaCodeGenerator(
 
   // generated type is a nested enum class
   private fun TypeAlias.toJavaPoetName(): ClassName {
-    val (packageName, moduleClassName) = mapModuleName(moduleName)
+    val (packageName, moduleClassName) = nameMapper.map(moduleName)
     return ClassName.get(packageName, moduleClassName, simpleName)
   }
 
@@ -874,18 +874,6 @@ class JavaCodeGenerator(
   }
 
   private val nameMapper = NameMapper(codegenOptions.renames)
-
-  private fun mapModuleName(name: String): kotlin.Pair<String, String> {
-    val mappedName = nameMapper.mapToClassName(name)
-    val packageName = mappedName.packageName
-    val className =
-      if (mappedName.classNameWasChanged(name)) {
-        mappedName.className
-      } else {
-        mappedName.className.replaceFirstChar { it.titlecaseChar() }
-      }
-    return packageName to className
-  }
 }
 
 internal val javaReservedWords =
