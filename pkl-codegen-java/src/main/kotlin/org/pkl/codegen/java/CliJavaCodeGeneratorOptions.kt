@@ -57,13 +57,13 @@ data class CliJavaCodeGeneratorOptions(
   val implementSerializable: Boolean = false,
 
   /**
-   * A mapping of packages.
+   * A rename mapping for class names.
    *
-   * When you need to have Java package names different from the default package names derived from
-   * Pkl module names, you can define a package mapping, where the key is the original Pkl module
-   * name, and the value is its replacement.
+   * When you need to have Java class or package names different from the default names derived from
+   * Pkl module names, you can define a rename mapping, where the key is a prefix of the original
+   * Pkl module name, and the value is the desired replacement.
    */
-  val packageMapping: Map<String, String> = emptyMap()
+  val renames: Map<String, String> = emptyMap()
 ) {
   fun toJavaCodegenOptions() =
     JavaCodegenOptions(
@@ -74,6 +74,6 @@ data class CliJavaCodeGeneratorOptions(
       paramsAnnotation,
       nonNullAnnotation,
       implementSerializable,
-      packageMapping
+      renames
     )
 }

@@ -34,7 +34,7 @@ import kotlin.apply
 import kotlin.let
 import kotlin.takeIf
 import kotlin.to
-import org.pkl.commons.PackageMapper
+import org.pkl.commons.NameMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -73,12 +73,12 @@ data class JavaCodegenOptions(
   val implementSerializable: Boolean = false,
 
   /**
-   * A mapping from Pkl module-derived package names and custom package names.
+   * A mapping from Pkl module name prefixes to their replacements.
    *
-   * Can be used when the package name in the generated source code should be different from the
-   * package name derived from the Pkl module declaration .
+   * Can be used when the class or package name in the generated source code should be different
+   * from the corresponding name derived from the Pkl module declaration .
    */
-  val packageMapping: Map<String, String> = emptyMap()
+  val renames: Map<String, String> = emptyMap()
 )
 
 /** Entrypoint for the Java code generator API. */
@@ -873,13 +873,12 @@ class JavaCodeGenerator(
     }
   }
 
-  private val packageMapper = PackageMapper(codegenOptions.packageMapping)
-
-  private fun mapPackageName(name: String): String = packageMapper.map("$name.").removeSuffix(".")
+  private val nameMapper = NameMapper(codegenOptions.renames)
 
   private fun mapModuleName(name: String): kotlin.Pair<String, String> {
-    val packageName = mapPackageName(name.substringBeforeLast('.', ""))
-    val className = name.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
+    val mappedName = nameMapper.map(name)
+    val packageName = mappedName.substringBeforeLast('.', "")
+    val className = mappedName.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
     return packageName to className
   }
 }

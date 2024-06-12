@@ -109,15 +109,16 @@ class PklJavaCodegenCommand :
       )
       .flag()
 
-  private val packageMapping: Map<String, String> by
+  private val renames: Map<String, String> by
     option(
-        names = arrayOf("--package-mapping"),
-        metavar = "<module_prefix=package_prefix>",
+        names = arrayOf("--rename"),
+        metavar = "<module_prefix=class_prefix>",
         help =
           """
-            Replace the default package name of the generated Java classes (repeatable).
-            By default, the package name of generated classes is derived from the Pkl module name.
-            With this option, you can override the name for the given modules with custom names.
+            Replace a prefix in the names of the generated Java classes (repeatable).
+            By default, the names of generated classes are derived from the Pkl module names.
+            With this option, you can override the modify the default names, renaming entire
+            classes or just their packages.
           """
             .trimIndent()
       )
@@ -135,7 +136,7 @@ class PklJavaCodegenCommand :
         paramsAnnotation = paramsAnnotation,
         nonNullAnnotation = nonNullAnnotation,
         implementSerializable = implementSerializable,
-        packageMapping = packageMapping
+        renames = renames
       )
     CliJavaCodeGenerator(options).run()
   }

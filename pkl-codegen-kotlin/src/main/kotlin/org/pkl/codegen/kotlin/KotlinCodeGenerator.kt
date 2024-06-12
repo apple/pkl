@@ -20,7 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
 import java.net.URI
 import java.util.*
-import org.pkl.commons.PackageMapper
+import org.pkl.commons.NameMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -39,12 +39,12 @@ data class KotlinCodegenOptions(
   val implementSerializable: Boolean = false,
 
   /**
-   * A mapping from Pkl module-derived package names and custom package names.
+   * A mapping from Pkl module name prefixes to their replacements.
    *
-   * Can be used when the package name in the generated source code should be different from the
-   * package name derived from the Pkl module declaration .
+   * Can be used when the class or package name in the generated source code should be different
+   * from the corresponding name derived from the Pkl module declaration .
    */
-  val packageMapping: Map<String, String> = emptyMap(),
+  val renames: Map<String, String> = emptyMap(),
 )
 
 class KotlinCodeGeneratorException(message: String) : RuntimeException(message)
@@ -787,13 +787,12 @@ class KotlinCodeGenerator(
   private fun List<PType>.toKotlinPoet(): Array<TypeName> =
     map { it.toKotlinPoetName() }.toTypedArray()
 
-  private val packageMapper = PackageMapper(options.packageMapping)
-
-  private fun mapPackageName(name: String): String = packageMapper.map("$name.").removeSuffix(".")
+  private val nameMapper = NameMapper(options.renames)
 
   private fun mapModuleName(name: String): kotlin.Pair<String, String> {
-    val packageName = mapPackageName(name.substringBeforeLast('.', ""))
-    val className = name.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
+    val mappedName = nameMapper.map(name)
+    val packageName = mappedName.substringBeforeLast('.', "")
+    val className = mappedName.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
     return packageName to className
   }
 }

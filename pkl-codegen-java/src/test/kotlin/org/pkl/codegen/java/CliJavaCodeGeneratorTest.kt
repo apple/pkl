@@ -226,7 +226,7 @@ class CliJavaCodeGeneratorTest {
         CliJavaCodeGeneratorOptions(
           CliBaseOptions(listOf(module1PklFile, module2PklFile, module3PklFile).map { it.toUri() }),
           outputDir,
-          packageMapping = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
         )
       )
 

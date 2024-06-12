@@ -16,30 +16,31 @@
 package org.pkl.commons
 
 /**
- * A helper class for translating package names of Pkl modules to package names of classes and/or
- * objects in the target language of a code generation execution.
+ * A helper class for translating names of Pkl modules to different names of classes and/or objects
+ * in the target language of a code generation execution.
  *
- * The `mapping` parameter is expected to contain valid prefixes of Pkl package names, with an
- * optional dot at the end, and values should be valid package names in the language for which code
+ * The `mapping` parameter is expected to contain valid prefixes of Pkl module names, with an
+ * optional dot at the end, and values should be valid class names in the language for which code
  * generation is performed.
  *
- * When computing the appropriate target package name, the longest matching prefix is used. For
- * example:
+ * When computing the appropriate target name, the longest matching prefix is used. For example:
  * ```kotlin
  * val mapper = PackageMapper(mapOf(
+ *   "com.foo.Main" to "w.Main",
  *   "com.foo." to "x.",
  *   "com." to "y.",
  *   "" to "z."
  * ))
  *
+ * assert(mapper.map("com.foo.Main") == "w.Main")
  * assert(mapper.map("com.foo.bar") == "x.bar")
  * assert(mapper.map("com.baz.qux") == "y.baz.qux")
  * assert(mapper.map("org.foo.bar") == "z.org.foo.bar")
  * ```
  *
- * Prefix replacements are literal, and therefore dots are important: in most cases, you must ensure
- * that you have an ending dot on both sides of a mapping (except for the empty mapping, if you use
- * it), otherwise you may get unexpected results:
+ * Prefix replacements are literal, and therefore dots are important. When renaming packages, in
+ * most cases, you must ensure that you have an ending dot on both sides of a mapping (except for
+ * the empty mapping, if you use it), otherwise you may get unexpected results:
  * ```kotlin
  * val mapper = PackageMapper(mapOf(
  *   "com.foo." to "x",  // Dot on the left only
@@ -53,7 +54,7 @@ package org.pkl.commons
  * assert(mapper.map("net.bazqux") == "zqux")     // ...may cut the package name in the middle.
  * ```
  */
-class PackageMapper(mapping: Map<String, String>) {
+class NameMapper(mapping: Map<String, String>) {
   private val sortedMapping = mapping.toList().sortedBy { -it.first.length }
 
   fun map(sourceName: String): String {
