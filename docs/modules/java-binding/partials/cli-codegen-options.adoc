@@ -42,7 +42,7 @@ When you do, the generated code's `package` declarations, class names, as well a
 The prefixes are replaced literally, which means that dots at the end are important.
 If you want to rename packages only, in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
 
-....
+----
 // Assuming the following arguments:
 --rename com.foo.=x  // Dot on the left only
 --rename org.bar=y.  // Dot on the right only
@@ -53,11 +53,11 @@ If you want to rename packages only, in most cases, you must ensure that you hav
 "org.bar.baz" -> "y..baz"     // Double dot, invalid name
 "net.baz.qux" -> "z.qux"      // Looks okay, but...
 "net.bazqux"  -> "zqux"       // ...may cut the name in the middle.
-....
+----
 
 When computing the appropriate target name, the longest matching prefix is used:
 
-....
+----
 // Assuming the following arguments:
 --rename com.foo.Main=w.Main
 --rename com.foo.=x.
@@ -69,7 +69,7 @@ com.foo.Main -> w.Main
 com.foo.bar  -> x.bar
 com.baz.qux  -> y.baz.qux
 org.foo.bar  -> z.org.foo.bar
-....
+----
 
 Repeat this option to define multiple mappings.
 Keys can be arbitrary strings, including an empty string.
