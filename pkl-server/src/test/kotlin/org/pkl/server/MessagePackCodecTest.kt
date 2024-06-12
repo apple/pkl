@@ -115,13 +115,11 @@ class MessagePackCodecTest {
                   RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
               )
           ),
-        http = Http(
-          proxy = PklEvaluatorSettings.Proxy(
-            URI("http://foo.com:1234"),
-            listOf("bar", "baz")
-          ),
-          caCertificates = byteArrayOf(1, 2, 3, 4)
-        )
+        http =
+          Http(
+            proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
+            caCertificates = byteArrayOf(1, 2, 3, 4)
+          )
       )
     )
   }
