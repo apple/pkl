@@ -39,7 +39,9 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.StackFrameTransformers;
+import org.pkl.core.Value;
 import org.pkl.core.Version;
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -54,7 +56,7 @@ import org.pkl.core.util.Nullable;
 public final class Project {
   private final @Nullable Package pkg;
   private final DeclaredDependencies dependencies;
-  private final EvaluatorSettings evaluatorSettings;
+  private final PklEvaluatorSettings evaluatorSettings;
   private final URI projectFileUri;
   private final URI projectBaseUri;
   private final List<URI> tests;
@@ -178,7 +180,9 @@ public final class Project {
         getProperty(
             module,
             "evaluatorSettings",
-            (settings) -> parseEvaluatorSettings(settings, projectBaseUri));
+            (settings) ->
+                PklEvaluatorSettings.parse(
+                    (Value) settings, (it, name) -> resolveNullablePath(it, projectBaseUri, name)));
     @SuppressWarnings("unchecked")
     var testPathStrs = (List<String>) getProperty(module, "tests");
     var tests =
@@ -208,51 +212,6 @@ public final class Project {
       }
     }
     return result;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static EvaluatorSettings parseEvaluatorSettings(Object settings, URI projectBaseUri) {
-    var pSettings = (PObject) settings;
-    var externalProperties = getNullableProperty(pSettings, "externalProperties", Project::asMap);
-    var env = getNullableProperty(pSettings, "env", Project::asMap);
-    var allowedModules = getNullableProperty(pSettings, "allowedModules", Project::asPatternList);
-    var allowedResources =
-        getNullableProperty(pSettings, "allowedResources", Project::asPatternList);
-    var noCache = (Boolean) getNullableProperty(pSettings, "noCache");
-    var modulePathStrs = (List<String>) getNullableProperty(pSettings, "modulePath");
-    var timeout = (Duration) getNullableProperty(pSettings, "timeout");
-
-    List<Path> modulePath = null;
-    if (modulePathStrs != null) {
-      modulePath =
-          modulePathStrs.stream()
-              .map((it) -> resolveNullablePath(it, projectBaseUri, "modulePath"))
-              .collect(Collectors.toList());
-    }
-
-    var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectBaseUri);
-    var rootDir = getNullablePath(pSettings, "rootDir", projectBaseUri);
-    return new EvaluatorSettings(
-        externalProperties,
-        env,
-        allowedModules,
-        allowedResources,
-        noCache,
-        moduleCacheDir,
-        modulePath,
-        timeout,
-        rootDir);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Map<String, String> asMap(Object t) {
-    assert t instanceof Map;
-    return (Map<String, String>) t;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static List<Pattern> asPatternList(Object t) {
-    return ((List<String>) t).stream().map(Pattern::compile).collect(Collectors.toList());
   }
 
   private static Object getProperty(PObject settings, String propertyName) {
@@ -307,12 +266,6 @@ public final class Project {
     }
   }
 
-  private static @Nullable Path getNullablePath(
-      Composite object, String propertyName, URI projectBaseUri) {
-    return resolveNullablePath(
-        (String) getNullableProperty(object, propertyName), projectBaseUri, propertyName);
-  }
-
   @SuppressWarnings("unchecked")
   private static Package parsePackage(PObject pObj) throws URISyntaxException {
     var name = (String) pObj.getProperty("name");
@@ -353,7 +306,7 @@ public final class Project {
   private Project(
       @Nullable Package pkg,
       DeclaredDependencies dependencies,
-      EvaluatorSettings evaluatorSettings,
+      PklEvaluatorSettings evaluatorSettings,
       URI projectFileUri,
       URI projectBaseUri,
       List<URI> tests,
@@ -371,7 +324,13 @@ public final class Project {
     return pkg;
   }
 
+  /** Use {@link org.pkl.core.project.Project#getEvaluatorSettings()} instead. */
+  @Deprecated(forRemoval = true)
   public EvaluatorSettings getSettings() {
+    return new EvaluatorSettings(evaluatorSettings);
+  }
+
+  public PklEvaluatorSettings getEvaluatorSettings() {
     return evaluatorSettings;
   }
 
@@ -430,17 +389,13 @@ public final class Project {
     return Path.of(projectBaseUri);
   }
 
+  @Deprecated(forRemoval = true)
   public static class EvaluatorSettings {
+    private final PklEvaluatorSettings delegate;
 
-    private final @Nullable Map<String, String> externalProperties;
-    private final @Nullable Map<String, String> env;
-    private final @Nullable List<Pattern> allowedModules;
-    private final @Nullable List<Pattern> allowedResources;
-    private final @Nullable Boolean noCache;
-    private final @Nullable Path moduleCacheDir;
-    private final @Nullable List<Path> modulePath;
-    private final @Nullable Duration timeout;
-    private final @Nullable Path rootDir;
+    public EvaluatorSettings(PklEvaluatorSettings delegate) {
+      this.delegate = delegate;
+    }
 
     public EvaluatorSettings(
         @Nullable Map<String, String> externalProperties,
@@ -452,81 +407,63 @@ public final class Project {
         @Nullable List<Path> modulePath,
         @Nullable Duration timeout,
         @Nullable Path rootDir) {
-      this.externalProperties = externalProperties;
-      this.env = env;
-      this.allowedModules = allowedModules;
-      this.allowedResources = allowedResources;
-      this.noCache = noCache;
-      this.moduleCacheDir = moduleCacheDir;
-      this.modulePath = modulePath;
-      this.timeout = timeout;
-      this.rootDir = rootDir;
+      this.delegate =
+          new PklEvaluatorSettings(
+              externalProperties,
+              env,
+              allowedModules,
+              allowedResources,
+              noCache,
+              moduleCacheDir,
+              modulePath,
+              timeout,
+              rootDir,
+              null);
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Map<String, String> getExternalProperties() {
-      return externalProperties;
+      return delegate.externalProperties();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Map<String, String> getEnv() {
-      return env;
+      return delegate.env();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Pattern> getAllowedModules() {
-      return allowedModules;
+      return delegate.allowedModules();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Pattern> getAllowedResources() {
-      return allowedResources;
+      return delegate.allowedResources();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Boolean isNoCache() {
-      return noCache;
+      return delegate.noCache();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable List<Path> getModulePath() {
-      return modulePath;
+      return delegate.modulePath();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Duration getTimeout() {
-      return timeout;
+      return delegate.timeout();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Path getModuleCacheDir() {
-      return moduleCacheDir;
+      return delegate.moduleCacheDir();
     }
 
+    @Deprecated(forRemoval = true)
     public @Nullable Path getRootDir() {
-      return rootDir;
-    }
-
-    private boolean arePatternsEqual(
-        @Nullable List<Pattern> myPattern, @Nullable List<Pattern> thatPattern) {
-      if (myPattern == null) {
-        return thatPattern == null;
-      }
-      if (thatPattern == null) {
-        return false;
-      }
-      if (myPattern.size() != thatPattern.size()) {
-        return false;
-      }
-      for (var i = 0; i < myPattern.size(); i++) {
-        if (!myPattern.get(i).pattern().equals(thatPattern.get(i).pattern())) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    private int hashPatterns(@Nullable List<Pattern> patterns) {
-      if (patterns == null) {
-        return 0;
-      }
-      var ret = 1;
-      for (var pattern : patterns) {
-        ret = 31 * ret + pattern.pattern().hashCode();
-      }
-      return ret;
+      return delegate.rootDir();
     }
 
     @Override
@@ -534,52 +471,37 @@ public final class Project {
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      EvaluatorSettings that = (EvaluatorSettings) o;
-      return Objects.equals(externalProperties, that.externalProperties)
-          && Objects.equals(env, that.env)
-          && arePatternsEqual(allowedModules, that.allowedModules)
-          && arePatternsEqual(allowedResources, that.allowedResources)
-          && Objects.equals(noCache, that.noCache)
-          && Objects.equals(moduleCacheDir, that.moduleCacheDir)
-          && Objects.equals(modulePath, that.modulePath)
-          && Objects.equals(timeout, that.timeout)
-          && Objects.equals(rootDir, that.rootDir);
+      return o != null
+          && getClass() == o.getClass()
+          && Objects.equals(delegate, ((EvaluatorSettings) o).delegate);
     }
 
     @Override
     public int hashCode() {
-      var result =
-          Objects.hash(
-              externalProperties, env, noCache, moduleCacheDir, modulePath, timeout, rootDir);
-      result = 31 * result + hashPatterns(allowedModules);
-      result = 31 * result + hashPatterns(allowedResources);
-      return result;
+      return delegate.hashCode();
     }
 
     @Override
     public String toString() {
       return "EvaluatorSettings{"
           + "externalProperties="
-          + externalProperties
+          + delegate.externalProperties()
           + ", env="
-          + env
+          + delegate.env()
           + ", allowedModules="
-          + allowedModules
+          + delegate.allowedModules()
           + ", allowedResources="
-          + allowedResources
+          + delegate.allowedResources()
           + ", noCache="
-          + noCache
+          + delegate.noCache()
           + ", moduleCacheDir="
-          + moduleCacheDir
+          + delegate.moduleCacheDir()
           + ", modulePath="
-          + modulePath
+          + delegate.modulePath()
           + ", timeout="
-          + timeout
+          + delegate.timeout()
           + ", rootDir="
-          + rootDir
+          + delegate.rootDir()
           + '}';
     }
   }

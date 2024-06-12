@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.*
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -123,6 +124,7 @@ data class CreateEvaluatorRequest(
   val cacheDir: Path?,
   val outputFormat: String?,
   val project: Project?,
+  val http: Http?,
 ) : ClientRequestMessage() {
   override val type = MessageType.CREATE_EVALUATOR_REQUEST
 

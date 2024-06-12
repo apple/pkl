@@ -18,6 +18,7 @@ package org.pkl.commons.cli
 import java.nio.file.Path
 import java.util.regex.Pattern
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -35,6 +36,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     if (cliOptions.testMode) {
       IoUtils.setTestMode()
     }
+
+    proxyAddress?.let(IoUtils::setSystemProxy)
+
     try {
       doRun()
     } catch (e: PklException) {
@@ -97,42 +101,44 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  private val projectSettings: Project.EvaluatorSettings? by lazy {
-    if (cliOptions.omitProjectSettings) null else project?.settings
+  private val evaluatorSettings: PklEvaluatorSettings? by lazy {
+    if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
     cliOptions.allowedModules
-      ?: projectSettings?.allowedModules ?: SecurityManagers.defaultAllowedModules
+      ?: evaluatorSettings?.allowedModules ?: SecurityManagers.defaultAllowedModules
   }
 
   protected val allowedResources: List<Pattern> by lazy {
     cliOptions.allowedResources
-      ?: projectSettings?.allowedResources ?: SecurityManagers.defaultAllowedResources
+      ?: evaluatorSettings?.allowedResources ?: SecurityManagers.defaultAllowedResources
   }
 
-  protected val rootDir: Path? by lazy { cliOptions.normalizedRootDir ?: projectSettings?.rootDir }
+  protected val rootDir: Path? by lazy {
+    cliOptions.normalizedRootDir ?: evaluatorSettings?.rootDir
+  }
 
   protected val environmentVariables: Map<String, String> by lazy {
-    cliOptions.environmentVariables ?: projectSettings?.env ?: System.getenv()
+    cliOptions.environmentVariables ?: evaluatorSettings?.env ?: System.getenv()
   }
 
   protected val externalProperties: Map<String, String> by lazy {
-    cliOptions.externalProperties ?: projectSettings?.externalProperties ?: emptyMap()
+    cliOptions.externalProperties ?: evaluatorSettings?.externalProperties ?: emptyMap()
   }
 
   protected val moduleCacheDir: Path? by lazy {
     if (cliOptions.noCache) null
     else
       cliOptions.normalizedModuleCacheDir
-        ?: projectSettings?.let { settings ->
-          if (settings.isNoCache == true) null else settings.moduleCacheDir
+        ?: evaluatorSettings?.let { settings ->
+          if (settings.noCache == true) null else settings.moduleCacheDir
         }
           ?: IoUtils.getDefaultModuleCacheDir()
   }
 
   protected val modulePath: List<Path> by lazy {
-    cliOptions.normalizedModulePath ?: projectSettings?.modulePath ?: emptyList()
+    cliOptions.normalizedModulePath ?: evaluatorSettings?.modulePath ?: emptyList()
   }
 
   protected val stackFrameTransformer: StackFrameTransformer by lazy {
@@ -152,9 +158,36 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  // share HTTP client with other commands with the same cliOptions
-  protected val httpClient: HttpClient
-    get() = cliOptions.httpClient
+  private val proxyAddress =
+    cliOptions.proxyAddress
+      ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+
+  private val noProxy =
+    cliOptions.noProxy
+      ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+
+  /**
+   * The HTTP client used for this command.
+   *
+   * To release resources held by the HTTP client in a timely manner, call [HttpClient.close].
+   */
+  val httpClient: HttpClient by lazy {
+    with(HttpClient.builder()) {
+      setTestPort(cliOptions.testPort)
+      if (cliOptions.normalizedCaCertificates.isEmpty()) {
+        addDefaultCliCertificates()
+      } else {
+        for (file in cliOptions.normalizedCaCertificates) addCertificates(file)
+      }
+      if ((proxyAddress ?: noProxy) != null) {
+        setProxy(proxyAddress, noProxy ?: listOf())
+      }
+      // Lazy building significantly reduces execution time of commands that do minimal work.
+      // However, it means that HTTP client initialization errors won't surface until an HTTP
+      // request is made.
+      buildLazily()
+    }
+  }
 
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {

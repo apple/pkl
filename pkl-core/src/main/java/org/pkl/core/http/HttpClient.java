@@ -21,7 +21,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
+import java.util.List;
 import javax.net.ssl.SSLContext;
+import org.pkl.core.util.Nullable;
 
 /**
  * An HTTP client.
@@ -36,6 +38,7 @@ import javax.net.ssl.SSLContext;
 public interface HttpClient extends AutoCloseable {
 
   /** A builder of {@linkplain HttpClient HTTP clients}. */
+  @SuppressWarnings("unused")
   interface Builder {
     /**
      * Sets the {@code User-Agent} header.
@@ -115,6 +118,32 @@ public interface HttpClient extends AutoCloseable {
      * internal test option.
      */
     Builder setTestPort(int port);
+
+    /**
+     * Sets the proxy selector to use when establishing connections.
+     *
+     * <p>Defaults to: {@link java.net.ProxySelector#getDefault()}.
+     */
+    Builder setProxySelector(java.net.ProxySelector proxySelector);
+
+    /**
+     * Configures HTTP connections to connect to the provided proxy address.
+     *
+     * <p>The provided {@code proxyAddress} must have scheme http, not contain userInfo, and not
+     * have a path segment.
+     *
+     * <p>If {@code proxyAddress} is {@code null}, uses the proxy address provided by {@link
+     * java.net.ProxySelector#getDefault()}.
+     *
+     * <p>NOTE: Due to a <a href="https://bugs.openjdk.org/browse/JDK-8256409">limitation in the
+     * JDK</a>, this does not configure the proxy server used for certificate revocation checking.
+     * To configure the certificate revocation checker, the result of {@link
+     * java.net.ProxySelector#getDefault} needs to be changed either by setting system properties,
+     * or via {@link java.net.ProxySelector#setDefault}.
+     *
+     * @throws IllegalArgumentException if `proxyAddress` is invalid.
+     */
+    Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

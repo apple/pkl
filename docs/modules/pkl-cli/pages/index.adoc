@@ -829,3 +829,18 @@ These certificates can be overridden via either of the two options:
 Both these options will *replace* the default CA certificates bundled with Pkl. +
 The CLI option takes precedence over the certificates in `~/.pkl/cacerts/`. +
 Certificates need to be X.509 certificates in PEM format.
+
+[[http-proxy]]
+== HTTP Proxy
+
+When making HTTP(S) requests, Pkl can use a proxy.
+By default, no proxy is configured.
+A proxy can be configured as follows:
+
+- Using `--proxy <uri>`.
+  The URI must (currently) have scheme `http`, and may not contain anything other than a host and port.
+- Using `--no-proxy <hosts>`.
+  The given (comma separated list of) hosts bypass the proxy.
+  Hosts can be specified by domain name (in which case all subdomains also bypass the proxy), IP addresses, or IP ranges (using link:https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation]).
+  For individual hosts (not CIDRs), ports can be specified.
+  When no port is specified for a given host, connections to all ports bypass the proxy.

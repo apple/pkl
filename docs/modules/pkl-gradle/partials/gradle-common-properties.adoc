@@ -83,3 +83,21 @@ Example: `modulePath.from files("dir1", "zip1.zip", "jar1.jar")` +
 The directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs.
 Relative paths are resolved against the project directory.
 ====
+
+.proxy: Property<URI>
+[%collapsible]
+====
+Default: `null` +
+Example: `http://proxy.example.com:1234` +
+Configures HTTP connections to connect to the provided proxy address.
+The URI must have scheme `http`, and may not contain anything other than a host and port.
+====
+
+.noProxy: ListProperty<String>
+[%collapsible]
+====
+Default: `null` +
+Example: `example.com,169.254.0.0/16` +
+Hosts to which all connections should bypass the proxy.
+Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
+====

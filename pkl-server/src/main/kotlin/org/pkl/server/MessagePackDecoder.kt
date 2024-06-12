@@ -23,6 +23,7 @@ import org.msgpack.core.MessageTypeException
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
 import org.msgpack.value.impl.ImmutableStringValueImpl
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -50,8 +51,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
             allowedModules = map.unpackStringListOrNull("allowedModules")?.map(Pattern::compile),
             allowedResources =
               map.unpackStringListOrNull("allowedResources")?.map(Pattern::compile),
-            clientModuleReaders = map.unpackModuleReaderSpec("clientModuleReaders"),
-            clientResourceReaders = map.unpackResourceReaderSpec("clientResourceReaders"),
+            clientModuleReaders = map.unpackModuleReaderSpec(),
+            clientResourceReaders = map.unpackResourceReaderSpec(),
             modulePaths = map.unpackStringListOrNull("modulePaths")?.map(Path::of),
             env = map.unpackStringMapOrNull("env"),
             properties = map.unpackStringMapOrNull("properties"),
@@ -59,7 +60,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
             rootDir = map.unpackStringOrNull("rootDir")?.let(Path::of),
             cacheDir = map.unpackStringOrNull("cacheDir")?.let(Path::of),
             outputFormat = map.unpackStringOrNull("outputFormat"),
-            project = map.unpackProject("project")
+            project = map.unpackProject(),
+            http = map.unpackHttp(),
           )
         }
         MessageType.CREATE_EVALUATOR_RESPONSE.code -> {
@@ -221,8 +223,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
       PathElement(map.unpackString("name"), map.unpackBoolean("isDirectory"))
     }
 
-  private fun Map<Value, Value>.unpackModuleReaderSpec(name: String): List<ModuleReaderSpec>? {
-    val keys = getNullable(name) ?: return null
+  private fun Map<Value, Value>.unpackModuleReaderSpec(): List<ModuleReaderSpec>? {
+    val keys = getNullable("clientModuleReaders") ?: return null
     return keys.asArrayValue().toList().map { value ->
       val readerMap = value.asMapValue().map()
       ModuleReaderSpec(
@@ -234,8 +236,8 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
     }
   }
 
-  private fun Map<Value, Value>.unpackResourceReaderSpec(name: String): List<ResourceReaderSpec> {
-    val keys = getNullable(name) ?: return emptyList()
+  private fun Map<Value, Value>.unpackResourceReaderSpec(): List<ResourceReaderSpec> {
+    val keys = getNullable("clientResourceReaders") ?: return emptyList()
     return keys.asArrayValue().toList().map { value ->
       val readerMap = value.asMapValue().map()
       ResourceReaderSpec(
@@ -246,11 +248,24 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
     }
   }
 
-  private fun Map<Value, Value>.unpackProject(name: String): Project? {
-    val projMap = getNullable(name)?.asMapValue()?.map() ?: return null
+  private fun Map<Value, Value>.unpackProject(): Project? {
+    val projMap = getNullable("project")?.asMapValue()?.map() ?: return null
     val projectFileUri = URI(projMap.unpackString("projectFileUri"))
     val dependencies = projMap.unpackDependencies("dependencies")
     return Project(projectFileUri, null, dependencies)
+  }
+
+  private fun Map<Value, Value>.unpackHttp(): PklEvaluatorSettings.Http? {
+    val httpMap = getNullable("http")?.asMapValue()?.map() ?: return null
+    val proxy = httpMap.unpackProxy()
+    return PklEvaluatorSettings.Http(proxy)
+  }
+
+  private fun Map<Value, Value>.unpackProxy(): PklEvaluatorSettings.Proxy? {
+    val proxyMap = getNullable("proxy")?.asMapValue()?.map() ?: return null
+    val address = proxyMap.unpackString("address")
+    val noProxy = proxyMap.unpackStringListOrNull("noProxy")
+    return PklEvaluatorSettings.Proxy.create(address, noProxy)
   }
 
   private fun Map<Value, Value>.unpackDependencies(name: String): Map<String, Dependency> {

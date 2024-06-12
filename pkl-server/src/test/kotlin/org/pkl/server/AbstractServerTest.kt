@@ -1029,7 +1029,8 @@ abstract class AbstractServerTest {
         rootDir = null,
         cacheDir = cacheDir,
         outputFormat = null,
-        project = project
+        project = project,
+        http = null,
       )
 
     send(message)

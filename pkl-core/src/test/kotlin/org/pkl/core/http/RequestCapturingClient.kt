@@ -6,7 +6,7 @@ import java.net.http.HttpResponse
 
 class RequestCapturingClient : HttpClient {
   lateinit var request: HttpRequest
-
+  
   override fun <T : Any> send(
     request: HttpRequest,
     responseBodyHandler: HttpResponse.BodyHandler<T>

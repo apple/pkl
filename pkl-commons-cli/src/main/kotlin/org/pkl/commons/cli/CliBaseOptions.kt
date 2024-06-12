@@ -20,7 +20,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
-import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
 
@@ -129,6 +128,12 @@ data class CliBaseOptions(
    * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
    */
   val caCertificates: List<Path> = listOf(),
+
+  /** The proxy to connect to. */
+  val proxyAddress: URI? = null,
+
+  /** Hostnames, IP addresses, or CIDR blocks to not proxy. */
+  val noProxy: List<String>? = null,
 ) {
 
   companion object {
@@ -177,24 +182,4 @@ data class CliBaseOptions(
 
   /** [caCertificates] after normalization. */
   val normalizedCaCertificates: List<Path> = caCertificates.map(normalizedWorkingDir::resolve)
-
-  /**
-   * The HTTP client shared between CLI commands created with this [CliBaseOptions] instance.
-   *
-   * To release the resources held by the HTTP client in a timely manner, call its `close()` method.
-   */
-  val httpClient: HttpClient by lazy {
-    with(HttpClient.builder()) {
-      setTestPort(testPort)
-      if (normalizedCaCertificates.isEmpty()) {
-        addDefaultCliCertificates()
-      } else {
-        for (file in normalizedCaCertificates) addCertificates(file)
-      }
-      // Lazy building significantly reduces execution time of commands that do minimal work.
-      // However, it means that HTTP client initialization errors won't surface until an HTTP
-      // request is made.
-      buildLazily()
-    }
-  }
 }

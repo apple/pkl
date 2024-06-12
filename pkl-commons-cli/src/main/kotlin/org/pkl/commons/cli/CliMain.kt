@@ -27,6 +27,9 @@ fun cliMain(block: () -> Unit) {
     if (!message.endsWith('\n')) stream.println()
   }
 
+  // Force `native-image` to use system proxies (which does not happen with `-D`).
+  System.setProperty("java.net.useSystemProxies", "true")
+
   try {
     block()
   } catch (e: CliTestException) {

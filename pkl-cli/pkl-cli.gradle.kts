@@ -56,6 +56,7 @@ dependencies {
   }
 
   testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.wiremock)
 
   fun executableDir(name: String) = files(layout.buildDirectory.dir("executable/$name"))
   stagedMacAmd64Executable(executableDir("pkl-macos-amd64"))

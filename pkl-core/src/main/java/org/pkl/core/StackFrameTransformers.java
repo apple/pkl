@@ -108,7 +108,7 @@ public final class StackFrameTransformers {
   public static StackFrameTransformer createDefault(PklSettings settings) {
     return defaultTransformer
         // order is relevant
-        .andThen(convertFilePathToUriScheme(settings.getEditor().getUrlScheme()));
+        .andThen(convertFilePathToUriScheme(settings.editor().urlScheme()));
   }
 
   private static StackFrameTransformer loadFromServiceProviders() {
