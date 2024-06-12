@@ -53,7 +53,6 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
-import org.pkl.core.util.Nullable;
 
 /** An {@code HttpClient} implementation backed by {@link java.net.http.HttpClient}. */
 @ThreadSafe
@@ -81,7 +80,7 @@ final class JdkHttpClient implements HttpClient {
 
   JdkHttpClient(
       List<Path> certificateFiles,
-      @Nullable ByteBuffer certificateBytes,
+      List<ByteBuffer> certificateBytes,
       Duration connectTimeout,
       java.net.ProxySelector proxySelector) {
     underlying =
@@ -128,9 +127,9 @@ final class JdkHttpClient implements HttpClient {
 
   // https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#security-algorithm-implementation-requirements
   private static SSLContext createSslContext(
-      List<Path> certificateFiles, @Nullable ByteBuffer certificateBytes) {
+      List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
     try {
-      if (certificateFiles.isEmpty() && certificateBytes == null) {
+      if (certificateFiles.isEmpty() && certificateBytes.isEmpty()) {
         // use Pkl native executable's or JVM's built-in CA certificates
         return SSLContext.getDefault();
       }
@@ -163,9 +162,7 @@ final class JdkHttpClient implements HttpClient {
   }
 
   private static Set<TrustAnchor> createTrustAnchors(
-      CertificateFactory factory,
-      List<Path> certificateFiles,
-      @Nullable ByteBuffer certificateBytes) {
+      CertificateFactory factory, List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
     var anchors = new HashSet<TrustAnchor>();
     for (var file : certificateFiles) {
       try (var stream = Files.newInputStream(file)) {
@@ -177,8 +174,8 @@ final class JdkHttpClient implements HttpClient {
             ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
       }
     }
-    if (certificateBytes != null) {
-      var stream = new ByteArrayInputStream(certificateBytes.array());
+    for (var byteBuffer : certificateBytes) {
+      var stream = new ByteArrayInputStream(byteBuffer.array());
       collectTrustAnchors(anchors, factory, stream, "<unavailable>");
     }
     return anchors;

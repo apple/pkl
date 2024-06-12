@@ -20,7 +20,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.Proxy
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -177,20 +177,26 @@ data class CreateEvaluatorRequest(
 }
 
 data class Http(
-  /** PEM-encoded CA certificates as raw bytes. */
-  val caCertificates: ByteArray?
+  /** PEM-format CA certificates as raw bytes. */
+  val caCertificates: ByteArray?,
+  /** Proxy settings */
+  val proxy: Proxy?
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is Http) return false
 
-    if (!caCertificates.contentEquals(other.caCertificates)) return false
-
-    return true
+    if (caCertificates != null) {
+      if (other.caCertificates == null) return false
+      if (!caCertificates.contentEquals(other.caCertificates)) return false
+    } else if (other.caCertificates != null) return false
+    return Objects.equals(proxy, other.proxy)
   }
 
   override fun hashCode(): Int {
-    return caCertificates.contentHashCode()
+    var result = caCertificates?.contentHashCode() ?: 0
+    result = 31 * result + (proxy?.hashCode() ?: 0)
+    return result
   }
 }
 

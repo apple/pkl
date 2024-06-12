@@ -15,7 +15,6 @@
  */
 package org.pkl.core.http;
 
-import java.io.IOException;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -26,18 +25,15 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
-import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.http.HttpClient.Builder;
-import org.pkl.core.util.Nullable;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;
   private Duration connectTimeout = Duration.ofSeconds(60);
   private Duration requestTimeout = Duration.ofSeconds(60);
   private final List<Path> certificateFiles = new ArrayList<>();
+  private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
-  private @Nullable ByteBuffer certificateBytes = null;
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -70,7 +66,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
 
   @Override
   public Builder addCertificates(byte[] certificateBytes) {
-    this.certificateBytes = ByteBuffer.wrap(certificateBytes);
+    this.certificateBytes.add(ByteBuffer.wrap(certificateBytes));
     return this;
   }
 
@@ -107,7 +103,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
     var proxySelector =
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
-      var jdkClient = new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
+      var jdkClient =
+          new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
     };
   }

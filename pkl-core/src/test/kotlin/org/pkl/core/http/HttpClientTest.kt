@@ -12,8 +12,8 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Path
 import java.time.Duration
-import kotlin.io.path.copyTo
 import kotlin.io.path.createFile
+import kotlin.io.path.readBytes
 
 class HttpClientTest {
   @Test
@@ -54,6 +54,13 @@ class HttpClientTest {
   fun `can load certificates from regular file`() {
     assertDoesNotThrow {
       HttpClient.builder().addCertificates(FileTestUtils.selfSignedCertificate).build()
+    }
+  }
+
+  @Test
+  fun `can load certificates from a byte array`() {
+    assertDoesNotThrow {
+      HttpClient.builder().addCertificates(FileTestUtils.selfSignedCertificate.readBytes()).build()
     }
   }
 

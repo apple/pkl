@@ -178,8 +178,27 @@ class Project {
   dependencies: Mapping<String, Project|RemoteDependency>
 }
 
-/// Settings that control how Pkl talks to HTTP(S) servers.
+class RemoteDependency {
+  type: "remote"
+
+  /// The canonical URI of this dependency
+  packageUri: String?
+
+  /// The checksums of this remote dependency
+  checksums: Checksums?
+}
+
+class Checksums {
+  /// The sha-256 checksum of this dependency's metadata.
+  sha256: String
+}
+
 class Http {
+  /// PEM format certificates to trust when making HTTP requests.
+  ///
+  /// If [null], Pkl will trust its own built-in certificates.
+  caCertificates: Binary?
+
   /// Configuration of the HTTP proxy to use.
   ///
   /// If [null], uses the operating system's proxy configuration.
@@ -224,28 +243,6 @@ class Proxy {
   /// }
   /// ```
   noProxy: Listing<String>(isDistinct)
-}
-
-class RemoteDependency {
-  type: "remote"
-
-  /// The canonical URI of this dependency
-  packageUri: String?
-
-  /// The checksums of this remote dependency
-  checksums: Checksums?
-}
-
-class Checksums {
-  /// The sha-256 checksum of this dependency's metadata.
-  sha256: String
-}
-
-class Http {
-  /// Certificates to trust when making HTTP requests.
-  ///
-  /// If [null], Pkl will trust its own built-in certificates.
-  caCertificates: Binary?
 }
 
 typealias Binary = Any // <1>

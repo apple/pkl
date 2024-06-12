@@ -15,8 +15,10 @@
  */
 package org.pkl.commons.cli
 
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
+import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
@@ -165,6 +167,13 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   private val noProxy =
     cliOptions.noProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+
+  private fun HttpClient.Builder.addDefaultCliCertificates() {
+    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
+    if (Files.isDirectory(caCertsDir)) {
+      Files.list(caCertsDir).filter { it.isRegularFile() }.forEach { addCertificates(it) }
+    }
+  }
 
   /**
    * The HTTP client used for this command.

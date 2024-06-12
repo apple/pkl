@@ -20,9 +20,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
-import kotlin.io.path.isRegularFile
-import org.pkl.core.http.HttpClient
-import org.pkl.core.http.HttpClientInitException
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
 
@@ -131,16 +128,12 @@ data class CliBaseOptions(
    * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
    */
   val caCertificates: List<Path> = listOf(),
-<<<<<<< HEAD
 
   /** The proxy to connect to. */
   val proxyAddress: URI? = null,
 
   /** Hostnames, IP addresses, or CIDR blocks to not proxy. */
   val noProxy: List<String>? = null,
-  val caCertificates: List<Path> = listOf(IoUtils.getPklHomeDir().resolve("cacerts")),
-=======
->>>>>>> 6b9800f3a (Adjustments)
 ) {
 
   companion object {
@@ -188,37 +181,5 @@ data class CliBaseOptions(
   }
 
   /** [caCertificates] after normalization. */
-  private val normalizedCaCertificates: List<Path> =
-    caCertificates.map(normalizedWorkingDir::resolve)
-
-  private fun HttpClient.Builder.addDefaultCliCertificates() {
-    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
-    if (Files.isDirectory(caCertsDir)) {
-      Files.list(caCertsDir).filter { it.isRegularFile() }.forEach { addCertificates(it) }
-    }
-  }
-
-  /**
-   * The HTTP client shared between CLI commands created with this [CliBaseOptions] instance.
-   *
-   * To release the resources held by the HTTP client in a timely manner, call its `close()` method.
-   */
-  val httpClient: HttpClient by lazy {
-    try {
-      with(HttpClient.builder()) {
-        setTestPort(testPort)
-        if (normalizedCaCertificates.isEmpty()) {
-          addDefaultCliCertificates()
-        } else {
-          normalizedCaCertificates.forEach { addCertificates(it) }
-        }
-        // Lazy building significantly reduces execution time of commands that do minimal work.
-        // However, it means that HTTP client initialization errors won't surface until an HTTP
-        // request is made.
-        buildLazily()
-      }
-    } catch (e: HttpClientInitException) {
-      throw CliException(e.message!!)
-    }
-  }
+  val normalizedCaCertificates: List<Path> = caCertificates.map(normalizedWorkingDir::resolve)
 }

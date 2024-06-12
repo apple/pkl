@@ -50,12 +50,18 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
   }
 
   private fun MessagePacker.packHttp(http: Http) {
-    if (http.caCertificates == null) {
+    if ((http.caCertificates ?: http.proxy) == null) {
       packMapHeader(0)
       return
     }
-    packMapHeader(1)
+    packMapHeader(0, http.caCertificates, http.proxy)
     packKeyValue("caCertificates", http.caCertificates)
+    http.proxy?.let { proxy ->
+      packString("http")
+      packMapHeader(0, proxy.address, proxy.noProxy)
+      packKeyValue("address", proxy.address?.toString())
+      packKeyValue("noProxy", proxy.noProxy)
+    }
   }
 
   private fun MessagePacker.packDependencies(dependencies: Map<String, Dependency>) {
