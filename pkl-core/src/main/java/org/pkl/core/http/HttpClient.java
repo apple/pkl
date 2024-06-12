@@ -133,7 +133,7 @@ public interface HttpClient extends AutoCloseable {
      * have a path segment.
      *
      * <p>If {@code proxyAddress} is {@code null}, delegates to the default proxy selector.
-     * 
+     *
      * @throws IllegalArgumentException if `proxyAddress` is invalid.
      */
     Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
