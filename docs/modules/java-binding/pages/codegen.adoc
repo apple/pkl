@@ -164,13 +164,6 @@ This annotation is required to have `java.lang.annotation.ElementType.TYPE_USE` 
 or it may generate code that does not compile.
 ====
 
-.--implement-serializable
-[%collapsible]
-====
-Default: (flag not set) +
-Whether to make generated classes implement `java.io.Serializable`.
-====
-
 Common code generator options:
 
 include::{partialsdir}/cli-codegen-options.adoc[]

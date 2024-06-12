@@ -16,6 +16,7 @@
 package org.pkl.gradle.spec;
 
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 
@@ -30,4 +31,6 @@ public interface CodeGenSpec extends ModulesSpec {
   Property<Boolean> getGenerateSpringBootConfig();
 
   Property<Boolean> getImplementSerializable();
+
+  MapProperty<String, String> getPackageMapping();
 }

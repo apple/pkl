@@ -34,8 +34,10 @@ import kotlin.apply
 import kotlin.let
 import kotlin.takeIf
 import kotlin.to
+import org.pkl.commons.NameMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
+import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorException(message: String) : RuntimeException(message)
 
@@ -68,7 +70,15 @@ data class JavaCodegenOptions(
   val nonNullAnnotation: String? = null,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+
+  /**
+   * A mapping from Pkl module name prefixes to their replacements.
+   *
+   * Can be used when the class or package name in the generated source code should be different
+   * from the corresponding name derived from the Pkl module declaration .
+   */
+  val renames: Map<String, String> = emptyMap()
 )
 
 /** Entrypoint for the Java code generator API. */
@@ -123,7 +133,8 @@ class JavaCodeGenerator(
     }
 
   private val propertyFileName: String
-    get() = "resources/META-INF/org/pkl/config/java/mapper/classes/${schema.moduleName}.properties"
+    get() =
+      "resources/META-INF/org/pkl/config/java/mapper/classes/${IoUtils.encodePath(schema.moduleName)}.properties"
 
   private val propertiesFile: String
     get() {
@@ -150,8 +161,16 @@ class JavaCodeGenerator(
       return AnnotationSpec.builder(className).build()
     }
 
-  val javaFileName: String
-    get() = relativeOutputPathFor(schema.moduleName)
+  private val javaFileName: String
+    get() {
+      val (packageName, className) = nameMapper.map(schema.moduleName)
+      val dirPath = packageName.replace('.', '/')
+      return if (dirPath.isEmpty()) {
+        "java/$className.java"
+      } else {
+        "java/$dirPath/$className.java"
+      }
+    }
 
   val javaFile: String
     get() {
@@ -183,9 +202,7 @@ class JavaCodeGenerator(
         moduleClass.addMethod(appendPropertyMethod().addModifiers(modifier).build())
       }
 
-      val moduleName = schema.moduleName
-      val index = moduleName.lastIndexOf(".")
-      val packageName = if (index == -1) "" else moduleName.substring(0, index)
+      val (packageName, _) = nameMapper.map(schema.moduleName)
 
       return JavaFile.builder(packageName, moduleClass.build())
         .indent(codegenOptions.indent)
@@ -193,20 +210,7 @@ class JavaCodeGenerator(
         .toString()
     }
 
-  private fun relativeOutputPathFor(moduleName: String): String {
-    val moduleNameParts = moduleName.split(".")
-    val dirPath = moduleNameParts.dropLast(1).joinToString("/")
-    val fileName = moduleNameParts.last().replaceFirstChar { it.titlecaseChar() }
-    return if (dirPath.isEmpty()) {
-      "java/$fileName.java"
-    } else {
-      "java/$dirPath/$fileName.java"
-    }
-  }
-
-  @Suppress("NAME_SHADOWING")
   private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): TypeSpec.Builder {
-
     val isModuleClass = pClass == schema.moduleClass
     val javaPoetClassName = pClass.toJavaPoetName()
     val superclass =
@@ -687,9 +691,7 @@ class JavaCodeGenerator(
       .endControlFlow()
 
   private fun PClass.toJavaPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
-    val moduleClassName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val (packageName, moduleClassName) = nameMapper.map(moduleName)
     return if (isModuleClass) {
       ClassName.get(packageName, moduleClassName)
     } else {
@@ -699,9 +701,7 @@ class JavaCodeGenerator(
 
   // generated type is a nested enum class
   private fun TypeAlias.toJavaPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
-    val moduleClassName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val (packageName, moduleClassName) = nameMapper.map(moduleName)
     return ClassName.get(packageName, moduleClassName, simpleName)
   }
 
@@ -872,6 +872,8 @@ class JavaCodeGenerator(
       } else key
     }
   }
+
+  private val nameMapper = NameMapper(codegenOptions.renames)
 }
 
 internal val javaReservedWords =

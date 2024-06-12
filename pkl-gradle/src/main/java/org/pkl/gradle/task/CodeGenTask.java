@@ -16,6 +16,7 @@
 package org.pkl.gradle.task;
 
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
@@ -32,4 +33,7 @@ public abstract class CodeGenTask extends ModulesTask {
 
   @Input
   public abstract Property<Boolean> getImplementSerializable();
+
+  @Input
+  public abstract MapProperty<String, String> getPackageMapping();
 }

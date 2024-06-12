@@ -36,4 +36,54 @@ Example: `generateSpringBootConfig = true` +
 Whether to generate config classes for use with Spring Boot.
 ====
 
+.packageMapping: MapProperty<String, String>
+[%collapsible]
+====
+Default: `[:]` +
+Example: `packageMapping = ["foo.": "com.example.foo.", "bar.Config": "com.example.bar.Config"]` +
+Allows to change default class and package names (derived from Pkl module names) in the generated code.
+
+When you need the generated class or package names to be different from the default names derived from the Pkl module names, you can define a rename mapping, where the key is the original Pkl module name prefix, and the value is its replacement.
+When you do, the generated code's `package` declarations, class names, as well as file locations, will be modified according to this mapping.
+
+The prefixes are replaced literally, which means that dots at the end are important.
+If you want to rename packages only, in most cases, you must ensure that you have an ending dot on both sides of a mapping (except for an empty mapping, if you use it), otherwise you may get unexpected results:
+
+....
+// Assuming the following mapping configuration:
+packageMapping = [
+  "com.foo.": "x",  // Dot on the left only
+  "org.bar": "y.",  // Dot on the right only
+  "net.baz": "z"    // No dots
+]
+
+// The following renames will be made:
+"com.foo.bar" -> "xbar"       // Target prefix merged into the suffix
+"org.bar.baz" -> "y..baz"     // Double dot, invalid name
+"net.baz.qux" -> "z.qux"      // Looks okay, but...
+"net.bazqux"  -> "zqux"       // ...may cut the name in the middle.
+....
+
+When computing the appropriate target name, the longest matching prefix is used:
+
+....
+// Assuming the following mapping configuration:
+packageMapping = [
+  "com.foo.Main": "w.Main",
+  "com.foo.": "x.",
+  "com.": "y.",
+  "": "z."
+]
+
+// The following renames will be made:
+com.foo.Main -> w.Main
+com.foo.bar  -> x.bar
+com.baz.qux  -> y.baz.qux
+org.foo.bar  -> z.org.foo.bar
+....
+
+Keys in this mapping can be arbitrary strings, including an empty string.
+Values must be valid dot-separated fully qualifed class name prefixes, possibly terminated by a dot.
+====
+
 // TODO: fixme (implementSerializable)

@@ -412,6 +412,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getOutputDir().set(spec.getOutputDir());
     task.getGenerateSpringBootConfig().set(spec.getGenerateSpringBootConfig());
     task.getImplementSerializable().set(spec.getImplementSerializable());
+    task.getPackageMapping().set(spec.getPackageMapping());
   }
 
   private <T extends BasePklTask, S extends BasePklSpec> void configureBaseTask(T task, S spec) {

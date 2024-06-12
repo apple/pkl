@@ -33,6 +33,8 @@ import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorTest {
   companion object {
+    const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
     private val simpleClass by lazy {
       compileJavaCode(
           generateJavaCode(
@@ -101,7 +103,8 @@ class JavaCodeGeneratorTest {
       generateJavadoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
       nonNullAnnotation: String? = null,
-      implementSerializable: Boolean = false
+      implementSerializable: Boolean = false,
+      renames: Map<String, String> = emptyMap()
     ): String {
       val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
       val generator =
@@ -113,6 +116,7 @@ class JavaCodeGeneratorTest {
             generateSpringBootConfig = generateSpringBootConfig,
             nonNullAnnotation = nonNullAnnotation,
             implementSerializable = implementSerializable,
+            renames = renames
           )
         )
       return generator.javaFile
@@ -126,6 +130,8 @@ class JavaCodeGeneratorTest {
       compileJavaCode(sourceText)
     }
   }
+
+  @TempDir lateinit var tempDir: Path
 
   @Test
   fun testEquals() {
@@ -1420,7 +1426,7 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun `import module`(@TempDir tempDir: Path) {
+  fun `import module`() {
     val library =
       PklModule(
         "library",
@@ -1449,7 +1455,7 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    val javaSourceFiles = generateJavaFiles(tempDir, library, client)
+    val javaSourceFiles = generateFiles(library, client)
     val javaClientCode =
       javaSourceFiles.entries.find { (fileName, _) -> fileName.endsWith("Client.java") }!!.value
 
@@ -1467,7 +1473,7 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun `extend module`(@TempDir tempDir: Path) {
+  fun `extend module`() {
     val base =
       PklModule(
         "base",
@@ -1496,7 +1502,7 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    val javaSourceFiles = generateJavaFiles(tempDir, base, derived)
+    val javaSourceFiles = generateFiles(base, derived)
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
 
@@ -1520,7 +1526,7 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun `extend module that only contains type aliases`(@TempDir tempDir: Path) {
+  fun `extend module that only contains type aliases`() {
     val base =
       PklModule(
         "base",
@@ -1545,7 +1551,7 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    val javaSourceFiles = generateJavaFiles(tempDir, base, derived)
+    val javaSourceFiles = generateFiles(base, derived)
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
 
@@ -1561,7 +1567,7 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun `generated properties files`(@TempDir tempDir: Path) {
+  fun `generated properties files`() {
     val pklModule =
       PklModule(
         "Mod.pkl",
@@ -1582,7 +1588,7 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val generated = generateFiles(tempDir, pklModule)
+    val generated = generateFiles(pklModule)
     val expectedPropertyFile =
       "resources/META-INF/org/pkl/config/java/mapper/classes/org.pkl.Mod.properties"
     assertThat(generated).containsKey(expectedPropertyFile)
@@ -1596,7 +1602,7 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun `generated properties files with normalized java name`(@TempDir tempDir: Path) {
+  fun `generated properties files with normalized java name`() {
     val pklModule =
       PklModule(
         "mod.pkl",
@@ -1617,7 +1623,7 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val generated = generateFiles(tempDir, pklModule)
+    val generated = generateFiles(pklModule)
     val expectedPropertyFile =
       "resources/META-INF/org/pkl/config/java/mapper/classes/my.mod.properties"
     assertThat(generated).containsKey(expectedPropertyFile)
@@ -1824,24 +1830,235 @@ class JavaCodeGeneratorTest {
     assertCompilesSuccessfully(javaCode)
   }
 
-  private fun generateFiles(tempDir: Path, vararg pklModules: PklModule): Map<String, String> {
+  @Test
+  fun `override names in a standalone module`() {
+    val files =
+      JavaCodegenOptions(
+          renames = mapOf("a.b.c." to "x.y.z.", "d.e.f.AnotherModule" to "u.v.w.RenamedModule")
+        )
+        .generateFiles(
+          "MyModule.pkl" to
+            """
+              module a.b.c.MyModule
+              
+              foo: String = "abc"
+            """
+              .trimIndent(),
+          "AnotherModule.pkl" to
+            """
+              module d.e.f.AnotherModule
+              
+              bar: Int = 123
+            """
+              .trimIndent()
+        )
+        .toMutableMap()
+
+    files.validateContents(
+      "java/x/y/z/MyModule.java" to listOf("package x.y.z;", "public final class MyModule {"),
+      "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
+        listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule"),
+      // ---
+      "java/u/v/w/RenamedModule.java" to
+        listOf("package u.v.w;", "public final class RenamedModule {"),
+      "$MAPPER_PREFIX/d.e.f.AnotherModule.properties" to
+        listOf("org.pkl.config.java.mapper.d.e.f.AnotherModule\\#ModuleClass=u.v.w.RenamedModule"),
+    )
+  }
+
+  @Test
+  fun `override names based on the longest prefix`() {
+    val files =
+      JavaCodegenOptions(
+          renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
+        )
+        .generateFiles(
+          "com/foo/bar/Module1" to
+            """
+              module com.foo.bar.Module1
+              
+              bar: String
+            """
+              .trimIndent(),
+          "com/Module2" to
+            """
+              module com.Module2
+              
+              com: String
+            """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
+              module org.baz.Module3
+              
+              baz: String
+            """
+              .trimIndent()
+        )
+
+    files.validateContents(
+      "java/x/Module1.java" to listOf("package x;", "public final class Module1 {"),
+      "$MAPPER_PREFIX/com.foo.bar.Module1.properties" to
+        listOf("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1"),
+      // ---
+      "java/z/Module2.java" to listOf("package z;", "public final class Module2 {"),
+      "$MAPPER_PREFIX/com.Module2.properties" to
+        listOf("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2"),
+      // ---
+      "java/w/org/baz/Module3.java" to listOf("package w.org.baz;", "public final class Module3 {"),
+      "$MAPPER_PREFIX/org.baz.Module3.properties" to
+        listOf("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3"),
+    )
+  }
+
+  @Test
+  fun `override names in multiple modules using each other`() {
+    val files =
+      JavaCodegenOptions(
+          renames =
+            mapOf(
+              "org.foo." to "com.foo.x.",
+              "org.bar.Module2" to "org.bar.RenamedModule",
+              "org.baz." to "com.baz.a.b."
+            )
+        )
+        .generateFiles(
+          "org/foo/Module1" to
+            """
+              module org.foo.Module1
+              
+              class Person {
+                name: String
+              }
+            """
+              .trimIndent(),
+          "org/bar/Module2" to
+            """
+              module org.bar.Module2
+              
+              import "../../org/foo/Module1.pkl"
+
+              class Group {
+                owner: Module1.Person
+                name: String
+              }
+            """
+              .trimIndent(),
+          "org/baz/Module3" to
+            """
+              module org.baz.Module3
+              
+              import "../../org/bar/Module2.pkl"
+
+              class Supergroup {
+                owner: Module2.Group
+              }
+            """
+              .trimIndent()
+        )
+
+    files.validateContents(
+      "java/com/foo/x/Module1.java" to listOf("package com.foo.x;", "public final class Module1 {"),
+      "$MAPPER_PREFIX/org.foo.Module1.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
+          "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
+        ),
+      // ---
+      "java/org/bar/RenamedModule.java" to
+        listOf(
+          "package org.bar;",
+          "import com.foo.x.Module1;",
+          "public final class RenamedModule {",
+          "public final Module1. @NonNull Person owner;"
+        ),
+      "$MAPPER_PREFIX/org.bar.Module2.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.RenamedModule",
+          "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.RenamedModule${'$'}Group",
+        ),
+      // ---
+      "java/com/baz/a/b/Module3.java" to
+        listOf(
+          "package com.baz.a.b;",
+          "import org.bar.RenamedModule;",
+          "public final class Module3 {",
+          "public final RenamedModule. @NonNull Group owner;"
+        ),
+      "$MAPPER_PREFIX/org.baz.Module3.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
+          "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
+        ),
+    )
+  }
+
+  @Test
+  fun `do not capitalize names of renamed classes`() {
+    val files =
+      JavaCodegenOptions(
+          renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
+        )
+        .generateFiles(
+          "MyModule.pkl" to
+            """
+              module a.b.c.MyModule
+              
+              foo: String = "abc"
+            """
+              .trimIndent(),
+          "lower_module.pkl" to
+            """
+              module d.e.f.lower_module 
+              
+              bar: Int = 123
+            """
+              .trimIndent()
+        )
+
+    files.validateContents(
+      "java/x/y/z/renamed_module.java" to
+        listOf("package x.y.z;", "public final class renamed_module {"),
+      "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
+        listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.renamed_module"),
+      // ---
+      "java/u/v/w/Lower_module.java" to
+        listOf("package u.v.w;", "public final class Lower_module {"),
+      "$MAPPER_PREFIX/d.e.f.lower_module.properties" to
+        listOf("org.pkl.config.java.mapper.d.e.f.lower_module\\#ModuleClass=u.v.w.Lower_module"),
+    )
+  }
+
+  private fun Map<String, String>.validateContents(
+    vararg assertions: kotlin.Pair<String, List<String>>
+  ) {
+    val files = toMutableMap()
+
+    for ((fileName, lines) in assertions) {
+      assertThat(files).containsKey(fileName)
+      assertThat(files.remove(fileName)).describedAs("Contents of $fileName").contains(lines)
+    }
+
+    assertThat(files).isEmpty()
+  }
+
+  private fun JavaCodegenOptions.generateFiles(vararg pklModules: PklModule): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()
     return pklFiles.fold(mapOf()) { acc, pklFile ->
       val pklSchema = evaluator.evaluateSchema(path(pklFile))
-      acc + JavaCodeGenerator(pklSchema, JavaCodegenOptions()).output
+      val generator = JavaCodeGenerator(pklSchema, this)
+      acc + generator.output
     }
   }
 
-  private fun generateJavaFiles(tempDir: Path, vararg pklModules: PklModule): Map<String, String> {
-    val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
-    val evaluator = Evaluator.preconfigured()
-    return pklFiles.fold(mapOf()) { acc, pklFile ->
-      val pklSchema = evaluator.evaluateSchema(path(pklFile))
-      val generator = JavaCodeGenerator(pklSchema, JavaCodegenOptions())
-      acc + arrayOf(generator.javaFileName to generator.javaFile)
-    }
-  }
+  private fun JavaCodegenOptions.generateFiles(
+    vararg pklModules: kotlin.Pair<String, String>
+  ): Map<String, String> =
+    generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
+
+  private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =
+    JavaCodegenOptions().generateFiles(*pklModules)
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("my.Mod\$Other").constructors.first()

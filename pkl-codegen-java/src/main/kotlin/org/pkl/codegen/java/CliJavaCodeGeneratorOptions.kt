@@ -54,7 +54,16 @@ data class CliJavaCodeGeneratorOptions(
   val nonNullAnnotation: String? = null,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+
+  /**
+   * A rename mapping for class names.
+   *
+   * When you need to have Java class or package names different from the default names derived from
+   * Pkl module names, you can define a rename mapping, where the key is a prefix of the original
+   * Pkl module name, and the value is the desired replacement.
+   */
+  val renames: Map<String, String> = emptyMap()
 ) {
   fun toJavaCodegenOptions() =
     JavaCodegenOptions(
@@ -64,6 +73,7 @@ data class CliJavaCodeGeneratorOptions(
       generateSpringBootConfig,
       paramsAnnotation,
       nonNullAnnotation,
-      implementSerializable
+      implementSerializable,
+      renames
     )
 }

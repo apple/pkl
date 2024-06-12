@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.java
 
+import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -108,6 +109,21 @@ class PklJavaCodegenCommand :
       )
       .flag()
 
+  private val renames: Map<String, String> by
+    option(
+        names = arrayOf("--rename"),
+        metavar = "<old_name=new_name>",
+        help =
+          """
+            Replace a prefix in the names of the generated Java classes (repeatable).
+            By default, the names of generated classes are derived from the Pkl module names.
+            With this option, you can override the modify the default names, renaming entire
+            classes or just their packages.
+          """
+            .trimIndent()
+      )
+      .associate()
+
   override fun run() {
     val options =
       CliJavaCodeGeneratorOptions(
@@ -119,7 +135,8 @@ class PklJavaCodegenCommand :
         generateSpringBootConfig = generateSpringboot,
         paramsAnnotation = paramsAnnotation,
         nonNullAnnotation = nonNullAnnotation,
-        implementSerializable = implementSerializable
+        implementSerializable = implementSerializable,
+        renames = renames
       )
     CliJavaCodeGenerator(options).run()
   }

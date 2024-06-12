@@ -26,7 +26,11 @@ dependencies {
   //
   // To debug shaded code in IntelliJ, temporarily remove the conditional.
   if (System.getProperty("idea.sync.active") == null) {
-    runtimeOnly(project(":pkl-tools", "fatJar"))
+    runtimeOnly(projects.pklTools) {
+      attributes {
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
+      }
+    }
   }
 
   testImplementation(projects.pklCommonsTest)

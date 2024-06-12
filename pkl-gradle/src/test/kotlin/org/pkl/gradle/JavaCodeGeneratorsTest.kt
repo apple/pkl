@@ -13,7 +13,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
     runTask("configClasses")
     
-    val baseDir = testProjectDir.resolve("build/generated/java/org")
+    val baseDir = testProjectDir.resolve("build/generated/java/foo/bar")
     val moduleFile = baseDir.resolve("Mod.java")
 
     assertThat(baseDir.listDirectoryEntries().count()).isEqualTo(1)
@@ -36,7 +36,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       |  public static final class Person {
       |    public final @Nonnull String name;
       |
-      |    public final @Nonnull List<@Nonnull Address> addresses;
+      |    public final @Nonnull List<Address> addresses;
     """
     )
 
@@ -53,28 +53,14 @@ class JavaCodeGeneratorsTest : AbstractTest() {
   @Test
   fun `compile generated code`() {
     writeBuildFile()
-    writeFile("mod.pkl", """
-      module org.mod
-      
-      class Person {
-        name: String
-        addresses: List<Address?>
-      }
-      
-      class Address {
-        street: String
-        zip: Int
-      }
-      
-      other: Any = 42
-    """.trimIndent())
+    writePklFile()
     
     runTask("compileJava")
 
     val classesDir = testProjectDir.resolve("build/classes/java/main")
-    val moduleClassFile = classesDir.resolve("org/Mod.class")
-    val personClassFile = classesDir.resolve("org/Mod\$Person.class")
-    val addressClassFile = classesDir.resolve("org/Mod\$Address.class")
+    val moduleClassFile = classesDir.resolve("foo/bar/Mod.class")
+    val personClassFile = classesDir.resolve("foo/bar/Mod\$Person.class")
+    val addressClassFile = classesDir.resolve("foo/bar/Mod\$Address.class")
     assertThat(moduleClassFile).exists()
     assertThat(personClassFile).exists()
     assertThat(addressClassFile).exists()
@@ -127,6 +113,9 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             paramsAnnotation = "javax.inject.Named"
             nonNullAnnotation = "javax.annotation.Nonnull"
             settingsModule = "pkl:settings"
+            packageMapping = [
+              'org': 'foo.bar'
+            ]
           }
         }
       }
@@ -134,18 +123,6 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     )
   }
 
-  private fun writeGradlePropertiesFile() {
-    writeFile("gradle.properties", """
-      systemProp.http.proxyHost=proxy.config.pcp.local
-      systemProp.http.proxyPort=3128
-      systemProp.http.nonProxyHosts=localhost|*.apple.com
-      
-      systemProp.https.proxyHost=proxy.config.pcp.local
-      systemProp.https.proxyPort=3128
-      systemProp.https.nonProxyHosts=localhost|*.apple.com
-    """)
-  }
-  
   private fun writePklFile() {
     writeFile(
       "mod.pkl", """
@@ -153,7 +130,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
   
         class Person {
           name: String
-          addresses: List<Address>
+          addresses: List<Address?>
         }
   
         class Address {

@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
 import java.net.URI
 import java.util.*
+import org.pkl.commons.NameMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -35,7 +36,15 @@ data class KotlinCodegenOptions(
   val generateSpringBootConfig: Boolean = false,
 
   /** Whether to make generated classes implement [java.io.Serializable] */
-  val implementSerializable: Boolean = false
+  val implementSerializable: Boolean = false,
+
+  /**
+   * A mapping from Pkl module name prefixes to their replacements.
+   *
+   * Can be used when the class or package name in the generated source code should be different
+   * from the corresponding name derived from the Pkl module declaration .
+   */
+  val renames: Map<String, String> = emptyMap(),
 )
 
 class KotlinCodeGeneratorException(message: String) : RuntimeException(message)
@@ -106,10 +115,17 @@ class KotlinCodeGenerator(
         .toString()
     }
 
-  val kotlinFileName: String
+  private val kotlinFileName: String
     get() = buildString {
+      val (packageName, className) = nameMapper.map(moduleSchema.moduleName)
+      val dirPath = packageName.split('.').joinToString("/", transform = IoUtils::encodePath)
+      val fileName = IoUtils.encodePath(className)
       append("kot")
-      append("lin/${relativeOutputPathFor(moduleSchema.moduleName)}")
+      append("lin/")
+      if (dirPath.isNotEmpty()) {
+        append("$dirPath/")
+      }
+      append("$fileName.kt")
     }
 
   val kotlinFile: String
@@ -169,9 +185,8 @@ class KotlinCodeGenerator(
       }
 
       val moduleName = moduleSchema.moduleName
-      val index = moduleName.lastIndexOf(".")
-      val packageName = if (index == -1) "" else moduleName.substring(0, index)
-      val moduleTypeName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+
+      val (packageName, moduleTypeName) = nameMapper.map(moduleName)
 
       val fileSpec = FileSpec.builder(packageName, moduleTypeName).indent(options.indent)
 
@@ -194,17 +209,6 @@ class KotlinCodeGenerator(
       fileSpec.addType(moduleType.build())
       return fileSpec.build().toString()
     }
-
-  private fun relativeOutputPathFor(moduleName: String): String {
-    val nameParts = moduleName.split(".").map(IoUtils::encodePath)
-    val dirPath = nameParts.dropLast(1).joinToString("/")
-    val fileName = nameParts.last().replaceFirstChar { it.titlecaseChar() }
-    return if (dirPath.isEmpty()) {
-      "$fileName.kt"
-    } else {
-      "$dirPath/$fileName.kt"
-    }
-  }
 
   private fun generateObjectSpec(pClass: PClass): TypeSpec.Builder {
     val builder = TypeSpec.objectBuilder(pClass.toKotlinPoetName())
@@ -636,9 +640,7 @@ class KotlinCodeGenerator(
       .endControlFlow()
 
   private fun PClass.toKotlinPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
-    val moduleTypeName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
+    val (packageName, moduleTypeName) = nameMapper.map(moduleName)
     return if (isModuleClass) {
       ClassName(packageName, moduleTypeName)
     } else {
@@ -647,8 +649,7 @@ class KotlinCodeGenerator(
   }
 
   private fun TypeAlias.toKotlinPoetName(): ClassName {
-    val index = moduleName.lastIndexOf(".")
-    val packageName = if (index == -1) "" else moduleName.substring(0, index)
+    val (packageName, moduleTypeName) = nameMapper.map(moduleName)
 
     return when {
       aliasedType is PType.Alias -> {
@@ -663,7 +664,6 @@ class KotlinCodeGenerator(
           )
         }
         // Kotlin type generated for [this] is a nested enum class
-        val moduleTypeName = moduleName.substring(index + 1).replaceFirstChar { it.titlecaseChar() }
         ClassName(packageName, moduleTypeName, simpleName)
       }
       else -> {
@@ -786,4 +786,6 @@ class KotlinCodeGenerator(
 
   private fun List<PType>.toKotlinPoet(): Array<TypeName> =
     map { it.toKotlinPoetName() }.toTypedArray()
+
+  private val nameMapper = NameMapper(options.renames)
 }

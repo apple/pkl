@@ -173,6 +173,115 @@ class CliJavaCodeGeneratorTest {
     )
   }
 
+  @Test
+  fun `custom package names`(@TempDir tempDir: Path) {
+    val module1 =
+      PklModule(
+        "org.foo.Module1",
+        """
+          module org.foo.Module1
+
+          class Person {
+            name: String
+          }
+        """
+      )
+
+    val module2 =
+      PklModule(
+        "org.bar.Module2",
+        """
+          module org.bar.Module2
+          
+          import "../../org/foo/Module1.pkl"
+
+          class Group {
+            owner: Module1.Person
+            name: String
+          }
+        """
+      )
+
+    val module3 =
+      PklModule(
+        "org.baz.Module3",
+        """
+          module org.baz.Module3
+          
+          import "../../org/bar/Module2.pkl"
+
+          class Supergroup {
+            owner: Module2.Group
+          }
+        """
+      )
+
+    val module1PklFile = module1.writeToDisk(tempDir.resolve("org/foo/Module1.pkl"))
+    val module2PklFile = module2.writeToDisk(tempDir.resolve("org/bar/Module2.pkl"))
+    val module3PklFile = module3.writeToDisk(tempDir.resolve("org/baz/Module3.pkl"))
+    val outputDir = tempDir.resolve("output")
+
+    val generator =
+      CliJavaCodeGenerator(
+        CliJavaCodeGeneratorOptions(
+          CliBaseOptions(listOf(module1PklFile, module2PklFile, module3PklFile).map { it.toUri() }),
+          outputDir,
+          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+        )
+      )
+
+    generator.run()
+
+    val module1JavaFile = outputDir.resolve("java/com/foo/x/Module1.java")
+    module1JavaFile.readString().let {
+      assertContains("package com.foo.x;", it)
+
+      assertContains("public final class Module1 {", it)
+
+      assertContains(
+        """
+        |  public static final class Person {
+        |    public final @NonNull String name;
+        """,
+        it
+      )
+    }
+
+    val module2JavaFile = outputDir.resolve("java/org/bar/Module2.java")
+    module2JavaFile.readString().let {
+      assertContains("package org.bar;", it)
+
+      assertContains("import com.foo.x.Module1;", it)
+
+      assertContains("public final class Module2 {", it)
+
+      assertContains(
+        """
+        |  public static final class Group {
+        |    public final Module1. @NonNull Person owner;
+        """,
+        it
+      )
+    }
+
+    val module3JavaFile = outputDir.resolve("java/com/baz/a/b/Module3.java")
+    module3JavaFile.readString().let {
+      assertContains("package com.baz.a.b;", it)
+
+      assertContains("import org.bar.Module2;", it)
+
+      assertContains("public final class Module3 {", it)
+
+      assertContains(
+        """
+        |  public static final class Supergroup {
+        |    public final Module2. @NonNull Group owner;
+        """,
+        it
+      )
+    }
+  }
+
   private fun assertContains(part: String, code: String) {
     val trimmedPart = part.trim().trimMargin()
     if (!code.contains(trimmedPart)) {

@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.kotlin
 
+import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -81,6 +82,21 @@ class PklKotlinCodegenCommand :
       )
       .flag()
 
+  private val renames: Map<String, String> by
+    option(
+        names = arrayOf("--rename"),
+        metavar = "<old_name=new_name>",
+        help =
+          """
+            Replace a prefix in the names of the generated Kotlin classes (repeatable).
+            By default, the names of generated classes are derived from the Pkl module names.
+            With this option, you can override the modify the default names, renaming entire
+            classes or just their packages.
+          """
+            .trimIndent()
+      )
+      .associate()
+
   override fun run() {
     val options =
       CliKotlinCodeGeneratorOptions(
@@ -89,7 +105,8 @@ class PklKotlinCodegenCommand :
         indent = indent,
         generateKdoc = generateKdoc,
         generateSpringBootConfig = generateSpringboot,
-        implementSerializable = implementSerializable
+        implementSerializable = implementSerializable,
+        renames = renames
       )
     CliKotlinCodeGenerator(options).run()
   }
