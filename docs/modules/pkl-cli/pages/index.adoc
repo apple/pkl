@@ -831,16 +831,31 @@ The CLI option takes precedence over the certificates in `~/.pkl/cacerts/`. +
 Certificates need to be X.509 certificates in PEM format.
 
 [[http-proxy]]
-== HTTP Proxy
+== HTTP Proxying
 
-When making HTTP(S) requests, Pkl can use a proxy.
-By default, no proxy is configured.
-A proxy can be configured as follows:
+When making HTTP(s) requests, Pkl can possibly make use of an HTTP proxy.
 
-- Using `--proxy <uri>`.
-  The URI must (currently) have scheme `http`, and may not contain anything other than a host and port.
-- Using `--no-proxy <hosts>`.
-  The given (comma separated list of) hosts bypass the proxy.
-  Hosts can be specified by domain name (in which case all subdomains also bypass the proxy), IP addresses, or IP ranges (using link:https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation]).
-  For individual hosts (not CIDRs), ports can be specified.
-  When no port is specified for a given host, connections to all ports bypass the proxy.
+When determining proxy settings, Pkl will look at the following locations, in order of precedence (lowest to highest):
+
+1. OS settings (on macOS, Windows, and GNOME environments)
+2. <<settings-file,Settings file>>
+3. xref:language-reference:index.adoc#projects[PklProject file]
+4. `--proxy` and `--no-proxy` CLI flags
+
+Pkl only supports HTTP proxies, and does not support HTTPS nor SOCKS proxies.
+
+When specifying a proxy address, it must have scheme `http`, and may not contain anything other than a host and port.
+
+=== Proxy exclusions
+
+Pkl can be configured to bypass the proxy for specific requests via a proxy exclusion rule (i.e. the `--no-proxy` flag).
+It may be provided either as a hostname, an IP address, or an IP range via https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
+When determining whether a proxy should be excluded, hostnames do not get resolved to their IP address.
+For example, a request to `localhost` will not match `--no-proxy=127.0.0.1`.
+
+For individual hosts (not CIDRs), ports can be specified.
+When no port is specified for a given host, connections to all ports bypass the proxy.
+
+The value `*` is a special wildcard that matches all hosts.
+
+NOTE: Pkl follows the rules described in https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/#standardizing-no_proxy[Standardizing `no_proxy`], except it does not look at environment variables.

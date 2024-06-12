@@ -88,7 +88,7 @@ Relative paths are resolved against the project directory.
 [%collapsible]
 ====
 Default: `null` +
-Example: `http://proxy.example.com:1234` +
+Example: `proxy = uri("http://proxy.example.com:1234")` +
 Configures HTTP connections to connect to the provided proxy address.
 The URI must have scheme `http`, and may not contain anything other than a host and port.
 ====
@@ -97,7 +97,7 @@ The URI must have scheme `http`, and may not contain anything other than a host 
 [%collapsible]
 ====
 Default: `null` +
-Example: `example.com,169.254.0.0/16` +
+Example: `noProxy = ["example.com", "169.254.0.0/16"]` +
 Hosts to which all connections should bypass the proxy.
 Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
 ====
