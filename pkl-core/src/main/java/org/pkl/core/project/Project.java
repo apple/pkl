@@ -389,7 +389,6 @@ public final class Project {
     return Path.of(projectBaseUri);
   }
 
-  @SuppressWarnings(value = "unused")
   @Deprecated(forRemoval = true)
   public static class EvaluatorSettings {
     private final PklEvaluatorSettings delegate;
@@ -465,36 +464,6 @@ public final class Project {
     @Deprecated(forRemoval = true)
     public @Nullable Path getRootDir() {
       return delegate.rootDir();
-    }
-
-    private boolean arePatternsEqual(
-        @Nullable List<Pattern> myPattern, @Nullable List<Pattern> thatPattern) {
-      if (myPattern == null) {
-        return thatPattern == null;
-      }
-      if (thatPattern == null) {
-        return false;
-      }
-      if (myPattern.size() != thatPattern.size()) {
-        return false;
-      }
-      for (var i = 0; i < myPattern.size(); i++) {
-        if (!myPattern.get(i).pattern().equals(thatPattern.get(i).pattern())) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    private int hashPatterns(@Nullable List<Pattern> patterns) {
-      if (patterns == null) {
-        return 0;
-      }
-      var ret = 1;
-      for (var pattern : patterns) {
-        ret = 31 * ret + pattern.pattern().hashCode();
-      }
-      return ret;
     }
 
     @Override

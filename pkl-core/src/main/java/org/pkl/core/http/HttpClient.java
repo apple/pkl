@@ -135,10 +135,11 @@ public interface HttpClient extends AutoCloseable {
      * <p>If {@code proxyAddress} is {@code null}, uses the proxy address provided by {@link
      * java.net.ProxySelector#getDefault()}.
      *
-     * <p>NOTE: Due to a limitation in the JDK, this does not configure the proxy server used for
-     * certificate revocation checking. To configure the certificate revocation checker, the result
-     * of {@link java.net.ProxySelector#getDefault} needs to be changed either by setting system
-     * properties, or via {@link java.net.ProxySelector#setDefault}.
+     * <p>NOTE: Due to a <a href="https://bugs.openjdk.org/browse/JDK-8256409">limitation in the
+     * JDK</a>, this does not configure the proxy server used for certificate revocation checking.
+     * To configure the certificate revocation checker, the result of {@link
+     * java.net.ProxySelector#getDefault} needs to be changed either by setting system properties,
+     * or via {@link java.net.ProxySelector#setDefault}.
      *
      * @throws IllegalArgumentException if `proxyAddress` is invalid.
      */

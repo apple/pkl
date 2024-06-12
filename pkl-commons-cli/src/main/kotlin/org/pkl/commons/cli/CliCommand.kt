@@ -158,10 +158,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  val proxyAddress =
+  private val proxyAddress =
     cliOptions.proxyAddress
       ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
-  val noProxy =
+
+  private val noProxy =
     cliOptions.noProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
 
