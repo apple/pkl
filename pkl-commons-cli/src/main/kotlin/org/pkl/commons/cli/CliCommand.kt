@@ -36,26 +36,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     if (cliOptions.testMode) {
       IoUtils.setTestMode()
     }
-    proxyAddress?.let { proxyAddress ->
-      if (
-        proxyAddress.host == null || proxyAddress.path.isNotEmpty() || proxyAddress.scheme != "http"
-      ) {
-        throw CliException(
-          "Malformed proxy URI (expecting `http://<host>[:<port>]`): $proxyAddress"
-        )
-      }
 
-      // Set HTTP proxy settings to configure the certificate revocation checker, because
-      // there is no other way to configure it. (see https://bugs.openjdk.org/browse/JDK-8256409)
-      //
-      // This only influences the behavior of the revocation checker.
-      // Otherwise, proxying is handled by [ProxySelector].
-      System.setProperty("http.proxyHost", proxyAddress.host)
-      System.setProperty(
-        "http.proxyPort",
-        if (proxyAddress.port == -1) "80" else proxyAddress.port.toString()
-      )
-    }
+    proxyAddress?.let(IoUtils::setSystemProxy)
+
     try {
       doRun()
     } catch (e: PklException) {

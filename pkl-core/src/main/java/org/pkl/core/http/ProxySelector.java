@@ -22,6 +22,7 @@ import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.List;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
 final class ProxySelector extends java.net.ProxySelector {
@@ -38,6 +39,13 @@ final class ProxySelector extends java.net.ProxySelector {
       this.delegate = java.net.ProxySelector.getDefault();
       this.myProxy = null;
     } else {
+      if (!proxyAddress.getScheme().equalsIgnoreCase("http")
+          || proxyAddress.getHost() == null
+          || !proxyAddress.getPath().isEmpty()
+          || proxyAddress.getUserInfo() != null) {
+        throw new IllegalArgumentException(
+            ErrorMessages.create("malformedProxyAddress", proxyAddress));
+      }
       this.delegate = null;
       var port = proxyAddress.getPort();
       if (port == -1) {

@@ -29,6 +29,7 @@ import org.pkl.core.packages.PackageUri
 import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.util.IoUtils
 
 class Server(private val transport: MessageTransport) : AutoCloseable {
   private val evaluators: MutableMap<Long, BinaryEvaluator> = ConcurrentHashMap()
@@ -163,7 +164,10 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     val cacheDir = message.cacheDir
     val http =
       with(HttpClient.builder()) {
-        message.http?.proxy?.let { setProxy(it.address, message.http.proxy?.noProxy ?: listOf()) }
+        message.http?.proxy?.let { proxy ->
+          setProxy(proxy.address, message.http.proxy?.noProxy ?: listOf())
+          proxy.address?.let(IoUtils::setSystemProxy)
+        }
         buildLazily()
       }
     val dependencies =

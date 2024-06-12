@@ -540,6 +540,18 @@ public final class IoUtils {
     System.setProperty("org.pkl.testMode", "true");
   }
 
+  public static void setSystemProxy(URI proxyAddress) {
+    // Set HTTP proxy settings to configure the certificate revocation checker, because
+    // there is no other way to configure it. (see https://bugs.openjdk.org/browse/JDK-8256409)
+    //
+    // This only influences the behavior of the revocation checker.
+    // Otherwise, proxying is handled by [ProxySelector].
+    System.setProperty("http.proxyHost", proxyAddress.getHost());
+    System.setProperty(
+        "http.proxyPort",
+        proxyAddress.getPort() == -1 ? "80" : String.valueOf(proxyAddress.getPort()));
+  }
+
   public static @Nullable String parseTripleDotPath(URI importUri) throws URISyntaxException {
     var importScheme = importUri.getScheme();
     if (importScheme != null) return null;

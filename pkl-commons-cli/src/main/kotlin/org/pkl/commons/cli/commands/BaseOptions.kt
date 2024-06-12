@@ -180,6 +180,13 @@ class BaseOptions : OptionGroup() {
       )
       .single()
       .convert { URI(it) }
+      .validate { uri ->
+        require(
+          uri.scheme == "http" && uri.host != null && uri.path.isEmpty() && uri.userInfo == null
+        ) {
+          "Malformed proxy URI (expecting `http://<host>[:<port>]`)"
+        }
+      }
 
   val noProxy: List<String>? by
     option(

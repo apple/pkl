@@ -108,11 +108,11 @@ public record PklEvaluatorSettings(
     }
   }
 
-  public record Proxy(URI address, @Nullable List<String> noProxy) {
-    public static Proxy create(String address, @Nullable List<String> noProxy) {
+  public record Proxy(@Nullable URI address, @Nullable List<String> noProxy) {
+    public static Proxy create(@Nullable String address, @Nullable List<String> noProxy) {
       URI addressUri;
       try {
-        addressUri = new URI(address);
+        addressUri = address == null ? null : new URI(address);
       } catch (URISyntaxException e) {
         throw new PklException(ErrorMessages.create("invalidUri", address));
       }
@@ -124,8 +124,8 @@ public record PklEvaluatorSettings(
       if (input instanceof PNull) {
         return null;
       } else if (input instanceof PObject proxy) {
-        var address = (String) proxy.getProperty("address");
-        var noProxy = (List<String>) proxy.getProperty("noProxy");
+        var address = (String) proxy.get("address");
+        var noProxy = (List<String>) proxy.get("noProxy");
         return create(address, noProxy);
       } else {
         throw PklBugException.unreachableCode();
