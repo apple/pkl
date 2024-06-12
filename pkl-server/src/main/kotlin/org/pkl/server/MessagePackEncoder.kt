@@ -57,7 +57,7 @@ internal class MessagePackEncoder(private val packer: MessagePacker) : MessageEn
     packMapHeader(0, http.caCertificates, http.proxy)
     packKeyValue("caCertificates", http.caCertificates)
     http.proxy?.let { proxy ->
-      packString("http")
+      packString("proxy")
       packMapHeader(0, proxy.address, proxy.noProxy)
       packKeyValue("address", proxy.address?.toString())
       packKeyValue("noProxy", proxy.noProxy)
