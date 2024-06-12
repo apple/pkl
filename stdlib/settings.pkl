@@ -28,6 +28,7 @@ import "pkl:EvaluatorSettings"
 editor: Editor = System
 
 /// Settings for controlling how Pkl makes HTTP(S) requests.
+@Since { version = "0.26.0" }
 http: EvaluatorSettings.Http?
 
 /// The editor associated with `file:` URLs ending in `.pkl`.
