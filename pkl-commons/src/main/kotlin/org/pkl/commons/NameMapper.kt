@@ -65,4 +65,17 @@ class NameMapper(mapping: Map<String, String>) {
     }
     return sourceName
   }
+
+  data class MapResult(val packageName: String, val className: String) {
+    fun classNameWasChanged(sourceName: String): Boolean =
+      sourceName != className && !sourceName.endsWith(".$className")
+  }
+
+  fun mapToClassName(sourceName: String): MapResult {
+    val mappedName = map(sourceName)
+    return MapResult(
+      packageName = mappedName.substringBeforeLast('.', ""),
+      className = mappedName.substringAfterLast('.')
+    )
+  }
 }

@@ -790,9 +790,14 @@ class KotlinCodeGenerator(
   private val nameMapper = NameMapper(options.renames)
 
   private fun mapModuleName(name: String): kotlin.Pair<String, String> {
-    val mappedName = nameMapper.map(name)
-    val packageName = mappedName.substringBeforeLast('.', "")
-    val className = mappedName.substringAfterLast('.').replaceFirstChar { it.titlecaseChar() }
+    val mappedName = nameMapper.mapToClassName(name)
+    val packageName = mappedName.packageName
+    val className =
+      if (mappedName.classNameWasChanged(name)) {
+        mappedName.className
+      } else {
+        mappedName.className.replaceFirstChar { it.titlecaseChar() }
+      }
     return packageName to className
   }
 }

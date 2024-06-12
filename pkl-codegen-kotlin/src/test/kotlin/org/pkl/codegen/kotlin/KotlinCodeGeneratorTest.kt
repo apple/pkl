@@ -32,6 +32,8 @@ import org.pkl.core.util.IoUtils
 
 class KotlinCodeGeneratorTest {
   companion object {
+    const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
     // according to:
     // https://github.com/JetBrains/kotlin/blob/master/core/descriptors/
     // src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
@@ -1546,19 +1548,15 @@ class KotlinCodeGeneratorTest {
         )
         .toMutableMap()
 
-    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
-
-    assertThat(files.remove("kotlin/x/y/z/MyModule.kt"))
-      .contains("package x.y.z", "data class MyModule(")
-    assertThat(files.remove("$mapperPrefix/a.b.c.MyModule.properties"))
-      .contains("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule")
-
-    assertThat(files.remove("kotlin/u/v/w/RenamedModule.kt"))
-      .contains("package u.v.w", "data class RenamedModule(")
-    assertThat(files.remove("$mapperPrefix/d.e.f.AnotherModule.properties"))
-      .contains("org.pkl.config.java.mapper.d.e.f.AnotherModule\\#ModuleClass=u.v.w.RenamedModule")
-
-    assertThat(files).isEmpty()
+    files.validateContents(
+      "kotlin/x/y/z/MyModule.kt" to listOf("package x.y.z", "data class MyModule("),
+      "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
+        listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule"),
+      // ---
+      "kotlin/u/v/w/RenamedModule.kt" to listOf("package u.v.w", "data class RenamedModule("),
+      "$MAPPER_PREFIX/d.e.f.AnotherModule.properties" to
+        listOf("org.pkl.config.java.mapper.d.e.f.AnotherModule\\#ModuleClass=u.v.w.RenamedModule"),
+    )
   }
 
   @Test
@@ -1592,23 +1590,19 @@ class KotlinCodeGeneratorTest {
         )
         .toMutableMap()
 
-    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
-
-    assertThat(files.remove("kotlin/x/Module1.kt")).contains("package x", "data class Module1(")
-    assertThat(files.remove("$mapperPrefix/com.foo.bar.Module1.properties"))
-      .contains("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1")
-
-    assertThat(files.remove("kotlin/z/Module2.kt")).contains("package z", "data class Module2(")
-    assertThat(files.remove("$mapperPrefix/com.Module2.properties"))
-      .contains("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2")
-
-    assertThat(files.remove("kotlin/w/org/baz/Module3.kt"))
-      .contains("package w.org.baz", "data class Module3(")
-    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
-      .contains("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3")
-
-    // No more files.
-    assertThat(files).isEmpty()
+    files.validateContents(
+      "kotlin/x/Module1.kt" to listOf("package x", "data class Module1("),
+      "$MAPPER_PREFIX/com.foo.bar.Module1.properties" to
+        listOf("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1"),
+      // ---
+      "kotlin/z/Module2.kt" to listOf("package z", "data class Module2("),
+      "$MAPPER_PREFIX/com.Module2.properties" to
+        listOf("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2"),
+      // ---
+      "kotlin/w/org/baz/Module3.kt" to listOf("package w.org.baz", "data class Module3("),
+      "$MAPPER_PREFIX/org.baz.Module3.properties" to
+        listOf("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3")
+    )
   }
 
   @Test
@@ -1656,45 +1650,88 @@ class KotlinCodeGeneratorTest {
             """
               .trimIndent()
         )
-        .toMutableMap()
 
-    val mapperPrefix = "resources/META-INF/org/pkl/config/java/mapper/classes"
+    files.validateContents(
+      "kotlin/com/foo/x/Module1.kt" to
+        listOf("package com.foo.x", "object Module1 {", "data class Person("),
+      "$MAPPER_PREFIX/org.foo.Module1.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
+          "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
+        ),
+      // ---
+      "kotlin/org/bar/RenamedModule.kt" to
+        listOf(
+          "package org.bar",
+          "import com.foo.x.Module1",
+          "object RenamedModule {",
+          "val owner: Module1.Person"
+        ),
+      "$MAPPER_PREFIX/org.bar.Module2.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.RenamedModule",
+          "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.RenamedModule${'$'}Group",
+        ),
+      // ---
+      "kotlin/com/baz/a/b/Module3.kt" to
+        listOf(
+          "package com.baz.a.b",
+          "import org.bar.RenamedModule",
+          "object Module3 {",
+          "val owner: RenamedModule.Group"
+        ),
+      "$MAPPER_PREFIX/org.baz.Module3.properties" to
+        listOf(
+          "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
+          "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
+        ),
+    )
+  }
 
-    assertThat(files.remove("kotlin/com/foo/x/Module1.kt"))
-      .contains("package com.foo.x", "object Module1 {", "data class Person(")
-    assertThat(files.remove("$mapperPrefix/org.foo.Module1.properties"))
-      .contains(
-        "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
-        "org.pkl.config.java.mapper.org.foo.Module1\\#Person=com.foo.x.Module1${'$'}Person",
-      )
+  @Test
+  fun `do not capitalize names of renamed classes`() {
+    val files =
+      KotlinCodegenOptions(
+          renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
+        )
+        .generateFiles(
+          "MyModule.pkl" to
+            """
+              module a.b.c.MyModule
+              
+              foo: String = "abc"
+            """
+              .trimIndent(),
+          "lower_module.pkl" to
+            """
+              module d.e.f.lower_module 
+              
+              bar: Int = 123
+            """
+              .trimIndent()
+        )
 
-    assertThat(files.remove("kotlin/org/bar/RenamedModule.kt"))
-      .contains(
-        "package org.bar",
-        "import com.foo.x.Module1",
-        "object RenamedModule {",
-        "val owner: Module1.Person"
-      )
-    assertThat(files.remove("$mapperPrefix/org.bar.Module2.properties"))
-      .contains(
-        "org.pkl.config.java.mapper.org.bar.Module2\\#ModuleClass=org.bar.RenamedModule",
-        "org.pkl.config.java.mapper.org.bar.Module2\\#Group=org.bar.RenamedModule${'$'}Group",
-      )
+    files.validateContents(
+      "kotlin/x/y/z/renamed_module.kt" to listOf("package x.y.z", "data class renamed_module("),
+      "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
+        listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.renamed_module"),
+      // ---
+      "kotlin/u/v/w/Lower_module.kt" to listOf("package u.v.w", "data class Lower_module("),
+      "$MAPPER_PREFIX/d.e.f.lower_module.properties" to
+        listOf("org.pkl.config.java.mapper.d.e.f.lower_module\\#ModuleClass=u.v.w.Lower_module"),
+    )
+  }
 
-    assertThat(files.remove("kotlin/com/baz/a/b/Module3.kt"))
-      .contains(
-        "package com.baz.a.b",
-        "import org.bar.RenamedModule",
-        "object Module3 {",
-        "val owner: RenamedModule.Group"
-      )
-    assertThat(files.remove("$mapperPrefix/org.baz.Module3.properties"))
-      .contains(
-        "org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=com.baz.a.b.Module3",
-        "org.pkl.config.java.mapper.org.baz.Module3\\#Supergroup=com.baz.a.b.Module3${'$'}Supergroup",
-      )
+  private fun Map<String, String>.validateContents(
+    vararg assertions: kotlin.Pair<String, List<String>>
+  ) {
+    val files = toMutableMap()
 
-    // No more files.
+    for ((fileName, lines) in assertions) {
+      assertThat(files).containsKey(fileName)
+      assertThat(files.remove(fileName)).describedAs("Contents of $fileName").contains(lines)
+    }
+
     assertThat(files).isEmpty()
   }
 

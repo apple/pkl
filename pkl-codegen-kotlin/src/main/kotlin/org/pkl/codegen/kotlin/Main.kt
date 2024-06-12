@@ -85,7 +85,7 @@ class PklKotlinCodegenCommand :
   private val renames: Map<String, String> by
     option(
         names = arrayOf("--rename"),
-        metavar = "<module_prefix=class_prefix>",
+        metavar = "<old_name=new_name>",
         help =
           """
             Replace a prefix in the names of the generated Kotlin classes (repeatable).
