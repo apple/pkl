@@ -255,14 +255,14 @@ internal class MessagePackDecoder(private val unpacker: MessageUnpacker) : Messa
     return Project(projectFileUri, null, dependencies)
   }
 
-  private fun Map<Value, Value>.unpackHttp(name: String): PklEvaluatorSettings.Http? {
-    val httpMap = getNullable(name)?.asMapValue()?.map() ?: return null
-    val proxy = httpMap.unpackProxy("proxy")
+  private fun Map<Value, Value>.unpackHttp(): PklEvaluatorSettings.Http? {
+    val httpMap = getNullable("http")?.asMapValue()?.map() ?: return null
+    val proxy = httpMap.unpackProxy()
     return PklEvaluatorSettings.Http(proxy)
   }
 
-  private fun Map<Value, Value>.unpackProxy(name: String): PklEvaluatorSettings.Proxy? {
-    val proxyMap = getNullable(name)?.asMapValue()?.map() ?: return null
+  private fun Map<Value, Value>.unpackProxy(): PklEvaluatorSettings.Proxy? {
+    val proxyMap = getNullable("proxy")?.asMapValue()?.map() ?: return null
     val address = proxyMap.unpackString("address")
     val noProxy = proxyMap.unpackStringListOrNull("noProxy")
     return PklEvaluatorSettings.Proxy.create(address, noProxy)

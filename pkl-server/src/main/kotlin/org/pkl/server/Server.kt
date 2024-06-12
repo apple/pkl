@@ -164,7 +164,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     val http =
       with(HttpClient.builder()) {
         message.http?.proxy?.let { setProxy(it.address, message.http.proxy?.noProxy ?: listOf()) }
-        build()
+        buildLazily()
       }
     val dependencies =
       message.project?.let { proj ->

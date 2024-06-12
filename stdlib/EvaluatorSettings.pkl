@@ -16,6 +16,7 @@
 
 /// Common settings for Pkl's own evaluator.
 @ModuleInfo { minPklVersion = "0.26.0" }
+@Since { version = "0.26.0" }
 module pkl.EvaluatorSettings
 
 /// The external properties available to Pkl, read using the `prop:` scheme.
