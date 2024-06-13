@@ -94,8 +94,6 @@ http: Http?
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
   /// Configuration of the HTTP proxy to use.
-  ///
-  /// If [null], uses the operating system's proxy configuration.
   proxy: Proxy?
 }
 
@@ -103,7 +101,11 @@ class Http {
 class Proxy {
   /// The proxy to use for HTTP(S) connections.
   ///
-  /// At the moment, only HTTP proxies are supported.
+  /// Only HTTP proxies are supported.
+  /// The proxy address must start with `http://`, and can only contain a host and a port.
+  /// If a port is omitted, it defaults to port `80`.
+  ///
+  /// Proxy authentication is not supported.
   ///
   /// Example:
   /// ```
@@ -114,14 +116,18 @@ class Proxy {
   /// Hosts to which all connections should bypass a proxy.
   ///
   /// Values can be either hostnames, or IP addresses.
-  /// IP addresses can optionally be provided using [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation).
+  /// IP addresses can optionally be provided using
+  /// [CIDR notation](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation).
   ///
-  /// The only wildcard is `"*"`, which disables all proxying.
+  /// The value `"*"` is a wildcard that disables proxying for all hosts.
   ///
   /// A hostname matches all subdomains.
   /// For example, `example.com` matches `foo.example.com`, but not `fooexample.com`.
   /// A hostname that is prefixed with a dot matches the hostname itself,
   /// so `.example.com` matches `example.com`.
+  ///
+  /// Hostnames do not match their resolved IP addresses.
+  /// For example, the hostname `localhost` will not match `127.0.0.1`.
   ///
   /// Optionally, a port can be specified.
   /// If a port is omitted, all ports are matched.
