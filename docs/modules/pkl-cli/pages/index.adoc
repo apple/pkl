@@ -851,7 +851,7 @@ For example, using the `--no-proxy` flag but not the `--proxy` flag will cause P
 One exception to this rule is that setting a proxy address will cause Pkl to ignore any noproxy values set at the OS level.
 ====
 
-Pkl only supports HTTP proxies, and does not support HTTPS nor SOCKS proxies.
+Pkl only supports HTTP proxies, so neither HTTPS nor SOCKS proxies are supported.
 Pkl does not support authentication with a proxy.
 
 When specifying a proxy address, it must have scheme `http`, and may not contain anything other than a host and port.
