@@ -1,3 +1,6 @@
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+
 plugins {
   pklAllProjects
   pklKotlinLibrary
@@ -34,6 +37,8 @@ val stagedLinuxAmd64Executable: Configuration by configurations.creating
 val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 val stagedWindowsAmd64Executable: Configuration by configurations.creating
+
+val certs: SourceSet by sourceSets.creating
 
 dependencies {
   compileOnly(libs.svm)
@@ -142,11 +147,38 @@ tasks.check {
   dependsOn(testStartJavaExecutable)
 }
 
+val trustStore = layout.buildDirectory.dir("generateTrustStore/PklCARoots.p12")
+val trustStorePassword = "password" // no sensitive data to protect
+
+// generate a trust store for Pkl's built-in CA certificates
+val generateTrustStore by tasks.registering {
+  inputs.file(certs.resources.singleFile)
+  outputs.file(trustStore)
+  doLast {
+    val certificates = certs.resources.singleFile.inputStream().use { stream ->
+      CertificateFactory.getInstance("X.509").generateCertificates(stream)
+    }
+    KeyStore.getInstance("PKCS12").apply {
+      load(null, trustStorePassword.toCharArray()) // initialize empty trust store
+      for ((index, certificate) in certificates.withIndex()) {
+        setCertificateEntry("cert-$index", certificate)
+      }
+      val trustStoreFile = trustStore.get().asFile
+      trustStoreFile.parentFile.mkdirs()
+      trustStoreFile.outputStream().use { stream ->
+        store(stream, trustStorePassword.toCharArray())
+      }
+    }
+  }
+}
+
 fun Exec.configureExecutable(
   graalVm: BuildInfo.GraalVm,
   outputFile: Provider<RegularFile>,
   extraArgs: List<String> = listOf()
 ) {
+  dependsOn(generateTrustStore)
+
   inputs.files(sourceSets.main.map { it.output })
     .withPropertyName("mainSourceSets")
     .withPathSensitivity(PathSensitivity.RELATIVE)
@@ -175,9 +207,13 @@ fun Exec.configureExecutable(
         // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
         ,"--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess"
         ,"--no-fallback"
+        ,"-Djavax.net.ssl.trustStore=${trustStore.get().asFile}"
+        ,"-Djavax.net.ssl.trustStorePassword=$trustStorePassword"
+        ,"-Djavax.net.ssl.trustStoreType=PKCS12"
+        // security property "ocsp.enable=true" is set in Main.kt
+        ,"-Dcom.sun.net.ssl.checkRevocation=true"
         ,"-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl"
         ,"-H:IncludeResources=org/jline/utils/.*"
-        ,"-H:IncludeResources=org/pkl/certs/PklCARoots.pem"
         ,"-H:IncludeResourceBundles=org.pkl.core.errorMessages"
         ,"--macro:truffle"
         ,"-H:Class=org.pkl.cli.Main"

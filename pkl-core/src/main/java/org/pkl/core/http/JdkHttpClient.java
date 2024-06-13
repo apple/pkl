@@ -15,17 +15,18 @@
  */
 package org.pkl.core.http;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.ConnectException;
-import java.net.URI;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -79,12 +80,12 @@ final class JdkHttpClient implements HttpClient {
 
   JdkHttpClient(
       List<Path> certificateFiles,
-      List<URI> certificateUris,
+      List<ByteBuffer> certificateBytes,
       Duration connectTimeout,
       java.net.ProxySelector proxySelector) {
     underlying =
         java.net.http.HttpClient.newBuilder()
-            .sslContext(createSslContext(certificateFiles, certificateUris))
+            .sslContext(createSslContext(certificateFiles, certificateBytes))
             .connectTimeout(connectTimeout)
             .proxy(proxySelector)
             .followRedirects(Redirect.NORMAL)
@@ -126,10 +127,10 @@ final class JdkHttpClient implements HttpClient {
 
   // https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#security-algorithm-implementation-requirements
   private static SSLContext createSslContext(
-      List<Path> certificateFiles, List<URI> certificateUris) {
+      List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
     try {
-      if (certificateFiles.isEmpty() && certificateUris.isEmpty()) {
-        // fall back to JVM defaults (not Pkl built-in certs)
+      if (certificateFiles.isEmpty() && certificateBytes.isEmpty()) {
+        // use Pkl native executable's or JVM's built-in CA certificates
         return SSLContext.getDefault();
       }
 
@@ -141,7 +142,7 @@ final class JdkHttpClient implements HttpClient {
 
       var certFactory = CertificateFactory.getInstance("X.509");
       Set<TrustAnchor> trustAnchors =
-          createTrustAnchors(certFactory, certificateFiles, certificateUris);
+          createTrustAnchors(certFactory, certificateFiles, certificateBytes);
       var pkixParameters = new PKIXBuilderParameters(trustAnchors, new X509CertSelector());
       // equivalent of "com.sun.net.ssl.checkRevocation=true"
       pkixParameters.setRevocationEnabled(true);
@@ -161,9 +162,8 @@ final class JdkHttpClient implements HttpClient {
   }
 
   private static Set<TrustAnchor> createTrustAnchors(
-      CertificateFactory factory, List<Path> certificateFiles, List<URI> certificateUris) {
+      CertificateFactory factory, List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
     var anchors = new HashSet<TrustAnchor>();
-
     for (var file : certificateFiles) {
       try (var stream = Files.newInputStream(file)) {
         collectTrustAnchors(anchors, factory, stream, file);
@@ -174,16 +174,10 @@ final class JdkHttpClient implements HttpClient {
             ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
       }
     }
-
-    for (var uri : certificateUris) {
-      try (var stream = uri.toURL().openStream()) {
-        collectTrustAnchors(anchors, factory, stream, uri);
-      } catch (IOException e) {
-        throw new HttpClientInitException(
-            ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
-      }
+    for (var byteBuffer : certificateBytes) {
+      var stream = new ByteArrayInputStream(byteBuffer.array());
+      collectTrustAnchors(anchors, factory, stream, "<unavailable>");
     }
-
     return anchors;
   }
 

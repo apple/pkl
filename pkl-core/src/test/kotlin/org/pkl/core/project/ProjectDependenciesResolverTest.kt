@@ -13,7 +13,6 @@ import org.pkl.core.SecurityManagers
 import org.pkl.core.packages.PackageResolver
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
-import java.nio.file.Path
 
 class ProjectDependenciesResolverTest {
   companion object {

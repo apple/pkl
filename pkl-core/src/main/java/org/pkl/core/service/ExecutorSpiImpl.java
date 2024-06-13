@@ -17,7 +17,6 @@ package org.pkl.core.service;
 
 import static org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -132,35 +131,35 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
 
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
     List<Path> certificateFiles;
-    List<URI> certificateUris;
+    List<byte[]> certificateBytes;
     int testPort;
     try {
       if (options instanceof ExecutorSpiOptions2 options2) {
         certificateFiles = options2.getCertificateFiles();
-        certificateUris = options2.getCertificateUris();
+        certificateBytes = options2.getCertificateBytes();
         testPort = options2.getTestPort();
       } else {
         certificateFiles = List.of();
-        certificateUris = List.of();
+        certificateBytes = List.of();
         testPort = -1;
       }
       // host pkl-executor does not have class ExecutorOptions2 defined.
       // this will happen if the pkl-executor distribution is too old.
     } catch (NoClassDefFoundError e) {
       certificateFiles = List.of();
-      certificateUris = List.of();
+      certificateBytes = List.of();
       testPort = -1;
     }
-    var clientKey = new HttpClientKey(certificateFiles, certificateUris, testPort);
+    var clientKey = new HttpClientKey(certificateFiles, certificateBytes, testPort);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
           var builder = HttpClient.builder();
-          for (var file : key.certificateFiles) {
-            builder.addCertificates(file);
+          for (var path : key.certificateFiles) {
+            builder.addCertificates(path);
           }
-          for (var uri : key.certificateUris) {
-            builder.addCertificates(uri);
+          for (var bytes : key.certificateBytes) {
+            builder.addCertificates(bytes);
           }
           builder.setTestPort(key.testPort);
           // If the above didn't add any certificates,
@@ -171,13 +170,13 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
 
   private static final class HttpClientKey {
     final Set<Path> certificateFiles;
-    final Set<URI> certificateUris;
+    final Set<byte[]> certificateBytes;
     final int testPort;
 
-    HttpClientKey(List<Path> certificateFiles, List<URI> certificateUris, int testPort) {
-      // also serve as defensive copies
+    HttpClientKey(List<Path> certificateFiles, List<byte[]> certificateBytes, int testPort) {
+      // also serves as defensive copy
       this.certificateFiles = Set.copyOf(certificateFiles);
-      this.certificateUris = Set.copyOf(certificateUris);
+      this.certificateBytes = Set.copyOf(certificateBytes);
       this.testPort = testPort;
     }
 
@@ -191,13 +190,13 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
       }
       HttpClientKey that = (HttpClientKey) obj;
       return certificateFiles.equals(that.certificateFiles)
-          && certificateUris.equals(that.certificateUris)
+          && certificateBytes.equals(that.certificateBytes)
           && testPort == that.testPort;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(certificateFiles, certificateUris, testPort);
+      return Objects.hash(certificateFiles, certificateBytes, testPort);
     }
   }
 }

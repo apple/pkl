@@ -162,12 +162,13 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     val properties = message.properties ?: emptyMap()
     val timeout = message.timeout
     val cacheDir = message.cacheDir
-    val http =
+    val httpClient =
       with(HttpClient.builder()) {
         message.http?.proxy?.let { proxy ->
-          setProxy(proxy.address, message.http.proxy?.noProxy ?: listOf())
+          setProxy(proxy.address, proxy.noProxy ?: listOf())
           proxy.address?.let(IoUtils::setSystemProxy)
         }
+        message.http?.caCertificates?.let { caCertificates -> addCertificates(caCertificates) }
         buildLazily()
       }
     val dependencies =
@@ -183,7 +184,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         SecurityManagers.defaultTrustLevels,
         rootDir
       ),
-      http,
+      httpClient,
       ClientLogger(evaluatorId, transport),
       createModuleKeyFactories(message, evaluatorId, resolver),
       createResourceReaders(message, evaluatorId, resolver),

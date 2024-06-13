@@ -20,7 +20,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.Proxy
 import org.pkl.core.module.PathElement
 import org.pkl.core.packages.Checksums
 
@@ -124,7 +124,7 @@ data class CreateEvaluatorRequest(
   val cacheDir: Path?,
   val outputFormat: String?,
   val project: Project?,
-  val http: Http?,
+  val http: Http?
 ) : ClientRequestMessage() {
   override val type = MessageType.CREATE_EVALUATOR_REQUEST
 
@@ -151,7 +151,8 @@ data class CreateEvaluatorRequest(
       rootDir.equalsNullable(other.rootDir) &&
       cacheDir.equalsNullable(other.cacheDir) &&
       outputFormat.equalsNullable(other.outputFormat) &&
-      project.equalsNullable(other.project)
+      project.equalsNullable(other.project) &&
+      http.equalsNullable(other.http)
   }
 
   @Suppress("DuplicatedCode") // false duplicate within method
@@ -170,6 +171,31 @@ data class CreateEvaluatorRequest(
     result = 31 * result + outputFormat.hashCode()
     result = 31 * result + project.hashCode()
     result = 31 * result + type.hashCode()
+    result = 31 * result + http.hashCode()
+    return result
+  }
+}
+
+data class Http(
+  /** PEM-format CA certificates as raw bytes. */
+  val caCertificates: ByteArray?,
+  /** Proxy settings */
+  val proxy: Proxy?
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Http) return false
+
+    if (caCertificates != null) {
+      if (other.caCertificates == null) return false
+      if (!caCertificates.contentEquals(other.caCertificates)) return false
+    } else if (other.caCertificates != null) return false
+    return Objects.equals(proxy, other.proxy)
+  }
+
+  override fun hashCode(): Int {
+    var result = caCertificates?.contentHashCode() ?: 0
+    result = 31 * result + (proxy?.hashCode() ?: 0)
     return result
   }
 }
