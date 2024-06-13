@@ -282,7 +282,7 @@ public class PklPlugin implements Plugin<Project> {
 
     spec.getTestPort().convention(-1);
 
-    spec.getNoProxy().convention(List.of());
+    spec.getHttpNoProxy().convention(List.of());
   }
 
   private void configureCodeGenSpec(CodeGenSpec spec) {
@@ -427,8 +427,8 @@ public class PklPlugin implements Plugin<Project> {
     task.getModuleCacheDir().set(spec.getModuleCacheDir());
     task.getEvalTimeout().set(spec.getEvalTimeout());
     task.getTestPort().set(spec.getTestPort());
-    task.getProxyAddress().set(spec.getProxyAddress());
-    task.getNoProxy().set(spec.getNoProxy());
+    task.getHttpProxy().set(spec.getHttpProxy());
+    task.getHttpNoProxy().set(spec.getHttpNoProxy());
   }
 
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(T task, S spec) {

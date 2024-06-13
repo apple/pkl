@@ -123,7 +123,7 @@ Certificates need to be X.509 certificates in PEM format.
 For other methods of configuring certificates, see xref:pkl-cli:index.adoc#ca-certs[CA Certificates].
 ====
 
-.--proxy
+.--http-proxy
 [%collapsible]
 ====
 Default: (none) +
@@ -132,7 +132,7 @@ Configures HTTP connections to connect to the provided proxy address.
 The URI must have scheme `http`, and may not contain anything other than a host and port.
 ====
 
-.--no-proxy
+.--http-no-proxy
 [%collapsible]
 ====
 Default: (none) +

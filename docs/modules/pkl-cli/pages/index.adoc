@@ -841,12 +841,12 @@ When determining proxy settings, Pkl will look at the following locations, in or
 1. OS settings (on macOS, Windows, and GNOME environments)
 2. <<settings-file,Settings file>>
 3. xref:language-reference:index.adoc#projects[PklProject file]
-4. `--proxy` and `--no-proxy` CLI flags
+4. `--http-proxy` and `--http-no-proxy` CLI flags
 
 [NOTE]
 ====
 The proxy and noproxy values are individually set.
-For example, using the `--no-proxy` flag but not the `--proxy` flag will cause Pkl to look at the PklProject file, then the settings file, then system settings for the proxy address.
+For example, using the `--http-no-proxy` flag but not the `--http-proxy` flag will cause Pkl to look at the PklProject file, then the settings file, then system settings for the proxy address.
 
 One exception to this rule is that setting a proxy address will cause Pkl to ignore any noproxy values set at the OS level.
 ====
@@ -858,10 +858,10 @@ When specifying a proxy address, it must have scheme `http`, and may not contain
 
 === Proxy exclusions
 
-Pkl can be configured to bypass the proxy for specific requests via a proxy exclusion rule (i.e. the `--no-proxy` flag).
+Pkl can be configured to bypass the proxy for specific requests via a proxy exclusion rule (i.e. the `--http-no-proxy` flag).
 It may be provided either as a hostname, an IP address, or an IP range via https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
 When determining whether a proxy should be excluded, hostnames do not get resolved to their IP address.
-For example, a request to `localhost` will not match `--no-proxy=127.0.0.1`.
+For example, a request to `localhost` will not match `--http-no-proxy=127.0.0.1`.
 
 For individual hosts (not CIDRs), ports can be specified.
 When no port is specified for a given host, connections to all ports bypass the proxy.
