@@ -852,6 +852,7 @@ One exception to this rule is that setting a proxy address will cause Pkl to ign
 ====
 
 Pkl only supports HTTP proxies, and does not support HTTPS nor SOCKS proxies.
+Pkl does not support authentication with a proxy.
 
 When specifying a proxy address, it must have scheme `http`, and may not contain anything other than a host and port.
 
