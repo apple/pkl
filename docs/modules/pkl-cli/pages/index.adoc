@@ -835,12 +835,21 @@ Certificates need to be X.509 certificates in PEM format.
 
 When making HTTP(s) requests, Pkl can possibly make use of an HTTP proxy.
 
+There are two values that determine proxy settings; the proxy address and list of noproxy rules.
 When determining proxy settings, Pkl will look at the following locations, in order of precedence (lowest to highest):
 
 1. OS settings (on macOS, Windows, and GNOME environments)
 2. <<settings-file,Settings file>>
 3. xref:language-reference:index.adoc#projects[PklProject file]
 4. `--proxy` and `--no-proxy` CLI flags
+
+[NOTE]
+====
+The proxy and noproxy values are individually set.
+For example, using the `--no-proxy` flag but not the `--proxy` flag will cause Pkl to look at the PklProject file, then the settings file, then system settings for the proxy address.
+
+One exception to this rule is that setting a proxy address will cause Pkl to ignore any noproxy values set at the OS level.
+====
 
 Pkl only supports HTTP proxies, and does not support HTTPS nor SOCKS proxies.
 
