@@ -113,7 +113,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             paramsAnnotation = "javax.inject.Named"
             nonNullAnnotation = "javax.annotation.Nonnull"
             settingsModule = "pkl:settings"
-            packageMapping = [
+            renames = [
               'org': 'foo.bar'
             ]
           }

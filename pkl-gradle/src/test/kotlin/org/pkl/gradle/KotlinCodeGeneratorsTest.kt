@@ -125,7 +125,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
             sourceModules = ["mod.pkl"]
             outputDir = file("build/generated")
             settingsModule = "pkl:settings"
-            packageMapping = [
+            renames = [
               'org.': 'foo.bar.'
             ]
           }

@@ -35,5 +35,5 @@ public abstract class CodeGenTask extends ModulesTask {
   public abstract Property<Boolean> getImplementSerializable();
 
   @Input
-  public abstract MapProperty<String, String> getPackageMapping();
+  public abstract MapProperty<String, String> getRenames();
 }
