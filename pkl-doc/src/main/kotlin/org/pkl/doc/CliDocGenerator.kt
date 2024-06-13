@@ -58,7 +58,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
             PklInfo.current()
               .packageIndex
               .getPackagePage("pkl", Release.current().version().toString())
-          )
+          ),
     )
 
   private fun DependencyMetadata.getPackageDependencies(): List<DocPackageInfo.PackageDependency> {
@@ -74,7 +74,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           }
         val packageDependency =
           DocPackageInfo.PackageDependency(
-            name = metadata.name,
+            name =
+              "${dependency.packageUri.uri.authority}${dependency.packageUri.uri.path.substringBeforeLast('@')}",
             uri = dependency.packageUri.uri,
             version = metadata.version.toString(),
             sourceCode = metadata.sourceCode,
