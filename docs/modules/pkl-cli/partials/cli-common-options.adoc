@@ -127,7 +127,7 @@ For other methods of configuring certificates, see xref:pkl-cli:index.adoc#ca-ce
 [%collapsible]
 ====
 Default: (none) +
-Example: `http://proxy.example.com:1234` +
+Example: `\http://proxy.example.com:1234` +
 Configures HTTP connections to connect to the provided proxy address.
 The URI must have scheme `http`, and may not contain anything other than a host and port.
 ====
