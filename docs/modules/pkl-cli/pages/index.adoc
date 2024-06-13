@@ -866,6 +866,11 @@ For example, a request to `localhost` will not match `--no-proxy=127.0.0.1`.
 For individual hosts (not CIDRs), ports can be specified.
 When no port is specified for a given host, connections to all ports bypass the proxy.
 
+A hostname will match all of its subdomains.
+For example, `example.com` will match `foo.example.com`, and `bar.foo.example.com`, but not `fooexample.com`.
+
 The value `*` is a special wildcard that matches all hosts.
+
+A port can optionally be specified. If omitted, it matches all ports.
 
 NOTE: Pkl follows the rules described in https://about.gitlab.com/blog/2021/01/27/we-need-to-talk-no-proxy/#standardizing-no_proxy[Standardizing `no_proxy`], except it does not look at environment variables.
