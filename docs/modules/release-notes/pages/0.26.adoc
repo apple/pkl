@@ -442,7 +442,7 @@ Package `package://example.com/foo@1.0.0` was already published with different c
 
 To mitigate, the package's version needs to be bumped, even if package contents have not changed.
 
-== Miscellaneous 
+== Miscellaneous [small]#🐸#
 
 The following changes have been made that are not new features, nor breaking changes.
 
@@ -458,7 +458,7 @@ After: `Pkl/0.26 (macOS; native)`
 * Improve rendering of string values within generated `<file>.pkl-expected.pcf` files when running `pkl test` (https://github.com/apple/pkl/pull/416[#416]).
 * Improve performance of loading Pkl's built-in CA certificates (https://github.com/apple/pkl/pull/518[#518]) 
 
-== Bug Fixes
+== Bug Fixes [small]#🐜#
 
 The following bugs have been fixed.
 
