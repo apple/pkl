@@ -32,5 +32,5 @@ public interface CodeGenSpec extends ModulesSpec {
 
   Property<Boolean> getImplementSerializable();
 
-  MapProperty<String, String> getPackageMapping();
+  MapProperty<String, String> getRenames();
 }

@@ -53,7 +53,7 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getParamsAnnotation().getOrNull(),
                 getNonNullAnnotation().getOrNull(),
                 getImplementSerializable().get(),
-                getPackageMapping().get()))
+                getRenames().get()))
         .run();
   }
 }
