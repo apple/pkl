@@ -127,11 +127,11 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
-  public abstract Property<URI> getProxyAddress();
+  public abstract Property<URI> getHttpProxy();
 
   @Input
   @Optional
-  public abstract ListProperty<String> getNoProxy();
+  public abstract ListProperty<String> getHttpNoProxy();
 
   @TaskAction
   public void runTask() {
@@ -165,8 +165,8 @@ public abstract class BasePklTask extends DefaultTask {
               false,
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
-              getProxyAddress().getOrNull(),
-              getNoProxy().getOrElse(List.of()));
+              getHttpProxy().getOrNull(),
+              getHttpNoProxy().getOrElse(List.of()));
     }
     return cachedOptions;
   }

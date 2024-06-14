@@ -1276,7 +1276,7 @@ result = someLib.x
       CliEvaluatorOptions(
         CliBaseOptions(
           sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
-          proxyAddress = URI("http://localhost:${wwRuntimeInfo.httpPort}"),
+          httpProxy = URI("http://localhost:${wwRuntimeInfo.httpPort}"),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
         ),
       )
@@ -1295,8 +1295,8 @@ result = someLib.x
         CliBaseOptions(
           // use loopback address to prevent test from making outbound http connection.
           sourceModules = listOf(URI("$targetAddress/foo.pkl")),
-          proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
-          noProxy = listOf("*"),
+          httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
+          httpNoProxy = listOf("*"),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
         )
       )
@@ -1315,7 +1315,7 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostritch.pkl")),
           noCache = true,
-          proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
+          httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:")
         )

@@ -160,12 +160,12 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val proxyAddress by lazy {
-    cliOptions.proxyAddress
+    cliOptions.httpProxy
       ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
   }
 
   private val noProxy by lazy {
-    cliOptions.noProxy
+    cliOptions.httpNoProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
   }
 

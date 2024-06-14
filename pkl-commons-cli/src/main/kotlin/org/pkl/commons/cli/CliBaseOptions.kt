@@ -130,10 +130,10 @@ data class CliBaseOptions(
   val caCertificates: List<Path> = listOf(),
 
   /** The proxy to connect to. */
-  val proxyAddress: URI? = null,
+  val httpProxy: URI? = null,
 
   /** Hostnames, IP addresses, or CIDR blocks to not proxy. */
-  val noProxy: List<String>? = null,
+  val httpNoProxy: List<String>? = null,
 ) {
 
   companion object {

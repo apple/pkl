@@ -175,7 +175,7 @@ class BaseOptions : OptionGroup() {
   @Suppress("HttpUrlsUsage")
   val proxy: URI? by
     option(
-        names = arrayOf("--proxy"),
+        names = arrayOf("--http-proxy"),
         metavar = "<address>",
         help = "Proxy to use for HTTP(S) connections."
       )
@@ -191,7 +191,7 @@ class BaseOptions : OptionGroup() {
 
   val noProxy: List<String>? by
     option(
-        names = arrayOf("--no-proxy"),
+        names = arrayOf("--http-no-proxy"),
         metavar = "<pattern1,pattern2>",
         help = "Hostnames that should not be connected to via a proxy."
       )
@@ -229,8 +229,8 @@ class BaseOptions : OptionGroup() {
       omitProjectSettings = projectOptions?.omitProjectSettings ?: false,
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
-      proxyAddress = proxy,
-      noProxy = noProxy ?: emptyList()
+      httpProxy = proxy,
+      httpNoProxy = noProxy ?: emptyList()
     )
   }
 }

@@ -52,7 +52,7 @@ public interface BasePklSpec {
 
   Property<Integer> getTestPort();
 
-  Property<URI> getProxyAddress();
+  Property<URI> getHttpProxy();
 
-  ListProperty<String> getNoProxy();
+  ListProperty<String> getHttpNoProxy();
 }
