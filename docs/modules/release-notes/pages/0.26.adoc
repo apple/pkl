@@ -194,7 +194,7 @@ This module can be considered as having moved class https://pkl-lang.org/package
 ==== HTTP Java Client (https://github.com/apple/pkl/pull/217[#217], https://github.com/apple/pkl/pull/295[#295], https://github.com/apple/pkl/pull/506[#506], https://github.com/apple/pkl/pull/518[#518])
 
 A new Java API is introduced, named `org.pkl.core.http.HttpClient`.
-This interface provides the ability to manage how Pkl makes HTTP(s) calls, including how it deals with CA certificates, as well as proxies.
+This interface provides the ability to manage how Pkl makes HTTP(S) calls, including how it deals with CA certificates, as well as proxies.
 
 This client can be passed to Pkl's evaluator using `EvaluatorBuilder` for users of pkl-core, and `ConfigEvaluatorBuilder` for users of pkl-config-java or pkl-config-kotlin.
 
@@ -416,9 +416,9 @@ A new (deprecated) typealias is added that points to new module `pkl.EvaluatorSe
 === Type-checked settings file (https://github.com/apple/pkl/pull/477[#477])
 
 The xref:pkl-cli:index.adoc#settings-file[Settings file] is a way to control the behavior of the Pkl CLI.
-This module is expected to `amends "pkl:settings"`, but this behavior is not checked.
+This module is expected to `amends "pkl:settings"`, but this behavior was not checked.
 
-In 0.26, it will be an error if the settings module does not amend `"pkl:settings"`, nor set its `output.value` to an instance of the settings module.
+In 0.26, it is an error if the settings module neither amends `"pkl:settings"`, nor set its `output.value` to an instance of the settings module.
 
 [[empty-directories-excluded-from-packaging]]
 === Empty directories excluded from packaging (https://github.com/apple/pkl/pull/330[#330])
@@ -480,6 +480,7 @@ We would like to thank the contributors to this release (in alphabetical order):
 
 * https://github.com/fumiya-kume[@fumiya-kume]
 * https://github.com/garysassano[@garysassano]
+* https://github.com/HT154[@HT154]
 * https://github.com/hoxell[@hoxell]
 * https://github.com/jw-y[@jw-y]
 * https://github.com/KushalP[@KushalP]
