@@ -454,7 +454,7 @@ The following changes have been made that are not new features, nor breaking cha
 +
 Before: `Pkl/0.26 (macOS native)` + 
 After: `Pkl/0.26 (macOS; native)`
-* Documentation improvements (https://github.com/apple/pkl/pull/120[#120], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/142[#142], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/337[#337], https://github.com/apple/pkl/pull/341[#341], https://github.com/apple/pkl/pull/372[#372], https://github.com/apple/pkl/pull/386[#386], https://github.com/apple/pkl/pull/391[#391], https://github.com/apple/pkl/pull/397[#397], https://github.com/apple/pkl/pull/422[#422], https://github.com/apple/pkl/pull/436[#436], https://github.com/apple/pkl/pull/469[#469], https://github.com/apple/pkl/pull/484[#484], https://github.com/apple/pkl/pull/[#491]).
+* Documentation improvements (https://github.com/apple/pkl/pull/120[#120], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/142[#142], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/337[#337], https://github.com/apple/pkl/pull/341[#341], https://github.com/apple/pkl/pull/372[#372], https://github.com/apple/pkl/pull/386[#386], https://github.com/apple/pkl/pull/391[#391], https://github.com/apple/pkl/pull/397[#397], https://github.com/apple/pkl/pull/422[#422], https://github.com/apple/pkl/pull/436[#436], https://github.com/apple/pkl/pull/469[#469], https://github.com/apple/pkl/pull/484[#484], https://github.com/apple/pkl/pull/485[#485], https://github.com/apple/pkl/pull/[#491]).
 * Optimization: `const` access is checked when variables are resolved, instead of every time the variable is accessed (https://github.com/apple/pkl/pull/438[#438]).
 * Optimization: use logical AND instead of bitwise AND when comparing numbers (https://github.com/apple/pkl/pull/102[#102])
 * Mark Java classes `final` (https://github.com/apple/pkl/pull/458[#458]).
@@ -482,6 +482,7 @@ The following bugs have been fixed.
 
 We would like to thank the contributors to this release (in alphabetical order):
 
+* https://github.com/flyinprogrammer[@flyinprogrammer]
 * https://github.com/fumiya-kume[@fumiya-kume]
 * https://github.com/garysassano[@garysassano]
 * https://github.com/HT154[@HT154]
