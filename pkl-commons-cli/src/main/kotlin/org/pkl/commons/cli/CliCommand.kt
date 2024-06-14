@@ -39,9 +39,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       IoUtils.setTestMode()
     }
 
-    proxyAddress?.let(IoUtils::setSystemProxy)
-
     try {
+      proxyAddress?.let(IoUtils::setSystemProxy)
       doRun()
     } catch (e: PklException) {
       throw CliException(e.message!!)
@@ -160,13 +159,15 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  private val proxyAddress =
+  private val proxyAddress by lazy {
     cliOptions.proxyAddress
       ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+  }
 
-  private val noProxy =
+  private val noProxy by lazy {
     cliOptions.noProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+  }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
     val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
