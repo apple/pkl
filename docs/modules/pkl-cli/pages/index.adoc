@@ -178,6 +178,7 @@ Pkl {pkl-version} (Linux, native)
 
 NOTE: We currently do not support the aarch64 architecture for Alpine Linux.
 
+[[windows-executable]]
 === Windows Executable
 
 [source,PowerShell]
@@ -197,6 +198,7 @@ Pkl {pkl-version} (Windows 10.0, native)
 
 NOTE: We currently do not support the aarch64 architecture for Windows.
 
+[[java-executable]]
 === Java Executable
 
 [source,shell]
