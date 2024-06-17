@@ -22,9 +22,10 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 News you don't want to miss.
 
 [[windows-support]]
-=== Windows Support (https://github.com/apple/pkl/pull/492[#492])
+=== Windows Support
 
-Pkl is now available on Windows!
+Pkl is now available on Windows! (https://github.com/apple/pkl/pull/492[#492])
+
 
 In addition to macOS and Linux, Pkl is now available for download on Windows operating systems.
 
@@ -76,9 +77,9 @@ local inputUri =
 To learn more about this design, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0006-import-paths-on-windows.adoc[SPICE-0006].
 
 [[http-proxying]]
-=== HTTP proxying (https://github.com/apple/pkl/pull/506[#506])
+=== HTTP proxying
 
-Pkl now supports proxying HTTP(S) requests.
+Pkl now supports proxying HTTP(S) requests (https://github.com/apple/pkl/pull/506[#506]).
 
 For users of the CLI, Pkl will by default look for proxy settings configured within the OS when on macOS, Windows, and GNOME environments.
 
@@ -99,7 +100,9 @@ For details, see <<message-passing-api-changes,Message passing API changes>>.
 To read more about the design of HTTP proxying, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0004-HTTP-Proxy-Support.adoc[SPICE-0004], and also the xref:pkl-cli:index.adoc#http-proxy[documentation].
 
 [[scheme-agnostic-project-dependencies]]
-=== Scheme-agnostic project dependencies (https://github.com/apple/pkl/pull/486[#486])
+=== Scheme-agnostic project dependencies
+
+Improvements have been made to project dependencies (https://github.com/apple/pkl/pull/486[#486]).
 
 A project dependency is a way to manage `package`-based modules.
 It provides two uses:
@@ -129,7 +132,9 @@ The URI `myscheme:/foo.pkl` is hierarchical, whereas the URI `myscheme:foo.pkl` 
 To read more about this design, consult https://github.com/apple/pkl-evolution/tree/main/spices/SPICE-0005-scheme-agnostic-projects.adoc[SPICE-0005].
 
 [[typealias-scoping-fix-and-change]]
-=== Typealias scoping fix and change (https://github.com/apple/pkl/pull/144[#144], https://github.com/apple/pkl/pull/373[#373], https://github.com/apple/pkl/pull/516[#516])
+=== Typealias scoping fix and change
+
+Improvements have been made to `typealias`es (https://github.com/apple/pkl/pull/144[#144], https://github.com/apple/pkl/pull/373[#373], https://github.com/apple/pkl/pull/516[#516]).
 
 Currently, a typealias that references a value on its enclosing module will break if used in another module.
 
@@ -180,9 +185,9 @@ The following improvements have been made to xref:pkl-doc:index.adoc[Pkldoc]:
 3. Fewer characters are percent-encoded. For example, the `(` and `)` characters are no longer percent-encoded (https://github.com/apple/pkl/pull/489[#489]).
 
 [[standard-library-changes]]
-=== Standard library changes (https://github.com/apple/pkl/pull/506[#506])
+=== Standard library changes
 
-To support <<http-proxying,http proxying>>, several changes have been made to the standard library.
+To support <<http-proxying,http proxying>>, several changes have been made to the standard library (https://github.com/apple/pkl/pull/506[#506]).
 
 * Module `pkl.settings` has new property `http`.
 * class `EvaluatorSettings` originally in `pkl.Project` has been moved to its own module.
@@ -191,17 +196,17 @@ For backwards compatibility, `pkl.Project` now has a `typealias EvaluatorSetting
 === Java API Changes
 
 [[http-java-client]]
-==== HTTP Java Client (https://github.com/apple/pkl/pull/217[#217], https://github.com/apple/pkl/pull/295[#295], https://github.com/apple/pkl/pull/506[#506], https://github.com/apple/pkl/pull/518[#518])
+==== HTTP Java Client
 
-A new Java API is introduced, named `org.pkl.core.http.HttpClient`.
+A new Java API is introduced, named `org.pkl.core.http.HttpClient` (https://github.com/apple/pkl/pull/217[#217], https://github.com/apple/pkl/pull/295[#295], https://github.com/apple/pkl/pull/506[#506], https://github.com/apple/pkl/pull/518[#518]).
 This interface provides the ability to manage how Pkl makes HTTP(S) calls, including how it deals with CA certificates, as well as proxies.
 
 This client can be passed to Pkl's evaluator using `EvaluatorBuilder` for users of pkl-core, and `ConfigEvaluatorBuilder` for users of pkl-config-java or pkl-config-kotlin.
 
 [[http-module-key-factory]]
-==== New HTTP ModuleKeyFactory (https://github.com/apple/pkl/pull/495[#495])
+==== New HTTP ModuleKeyFactory
 
-A new module key factory for HTTP(S) modules has been added, and can be built with `org.pkl.core.ModuleKeyFactories#http`.
+A new module key factory for HTTP(S) modules has been added (https://github.com/apple/pkl/pull/495[#495]), and can be built with `org.pkl.core.ModuleKeyFactories#http`.
 
 The preconfigured evaluator (`org.pkl.core.EvaluatorBuilder#preconfigured`) includes this module key.
 Users that build their own evaluator from scratch should add this module key factory if HTTP(S) modules are needed.
@@ -223,9 +228,9 @@ If this module key factory is not added, Pkl may still make HTTP(S) requests if 
 However, this bypasses proxy and CA certificate settings.
 
 [[pkl-executor-changes]]
-==== `pkl-executor` changes (https://github.com/apple/pkl/pull/217[#217], https://github.com/apple/pkl/pull/518[#518])
+==== `pkl-executor` changes
 
-A new set of parameters are now available to `org.pkl.executor.Executor`.
+A new set of parameters are now available to `org.pkl.executor.Executor` (https://github.com/apple/pkl/pull/217[#217], https://github.com/apple/pkl/pull/518[#518]).
 These new parameters are exposed by `org.pkl.executor.spi.v1.ExecutorSpiOptions2`.
 
 The new parameters are:
@@ -237,16 +242,16 @@ The new parameters are:
 These options are ignored when using a Pkl distribution whose version is lower than 0.26.0.
 
 [[message-passing-api-changes]]
-=== Message passing API changes (https://github.com/apple/pkl/pull/506[#506], https://github.com/apple/pkl/pull/518[#518])
+=== Message passing API changes
 
-A new property, `http`, is added to xref:bindings-specification:message-passing-api.adoc#create-evaluator-request[Create Evaluator Request].
+A new property, `http`, is added to xref:bindings-specification:message-passing-api.adoc#create-evaluator-request[Create Evaluator Request] (https://github.com/apple/pkl/pull/506[#506], https://github.com/apple/pkl/pull/518[#518]).
 
 This allows for the configuration of Pkl's HTTP proxy, as well as CA certificates.
 
 [[rename-codegen-classes]]
-=== Ability to rename classes produced by Java/Kotlin code generators (https://github.com/apple/pkl/pull/499[#499])
+=== Ability to rename classes produced by Java/Kotlin code generators
 
-The Java and Kotlin code generators have a new option that allows users to change the name of Java/Kotlin classes that get produced during code generation.
+The Java and Kotlin code generators have a new option that allows users to change the name of Java/Kotlin classes that get produced during code generation (https://github.com/apple/pkl/pull/499[#499]).
 
 The CLIs have a new flag, `--rename`, and the Gradle plugin receives a similarly named property called `renames`.
 
@@ -259,7 +264,9 @@ For example, when generating `module foo.Bar`, specifying `--rename foo.=com.foo
 Things to watch out for when upgrading.
 
 [[typealiases-are-treated-as-const]]
-=== Typealiases are treated as `const` (https://github.com/apple/pkl/pull/516[#516])
+=== Typealiases are treated as `const`
+
+A breaking change has been made to typealiases (https://github.com/apple/pkl/pull/516[#516]).
 
 Typealiases are types that can stand in for another type declaration.
 
@@ -320,7 +327,9 @@ This change aligns with the behavior of class and annotation bodies.
 To read more about the rationale behind this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0007-const-checks-in-typealiases.adoc[SPICE-0007].
 
 [[expanded-dependency-notation-uris]]
-=== Expanded dependency notation URIs (https://github.com/apple/pkl/pull/486[#486])
+=== Expanded dependency notation URIs
+
+The parsing of relative path imports has changed (https://github.com/apple/pkl/pull/486[#486]).
 
 Currently, the declaration `import "@foo/bar.pkl"` is treated as the import of a dependency named `foo`, but _only_ when declared within file-based and package-based modules.
 In an HTTP-based module, for example, the above import is treated as "bar.pkl inside directory @foo".
@@ -338,22 +347,22 @@ Example:
 ----
 
 [[minimum-java-version-bump]]
-=== Minimum Java version bumped to Java 17 (https://github.com/apple/pkl/pull/439[#439])
+=== Minimum Java version bumped to Java 17
 
-The minimum Java version for Pkl has been bumped to Java 17.
+The minimum Java version for Pkl has been bumped to Java 17 (https://github.com/apple/pkl/pull/439[#439]).
 
 This means that when running the xref:pkl-cli:index.adoc#java-executable[jpkl] CLI, the installed `java` is expected to be Java 17 or higher.
 This also means that users of the JVM libraries need to be on at least Java 17 or higher.
 
 [[minimum-gradle-version-bump]]
-=== Gradle plugin minimum version bump (https://github.com/apple/pkl/pull/454[#454])
+=== Gradle plugin minimum version bump
 
-The minimum Gradle version for the xref:main:pkl-gradle:index.adoc[Gradle plugin] is now 8.1.
+The minimum Gradle version for the xref:main:pkl-gradle:index.adoc[Gradle plugin] is now 8.1 (https://github.com/apple/pkl/pull/454[#454]).
 
 [[path-encoding-changes]]
-=== Path encoding changes (https://github.com/apple/pkl/pull/489[#489])
+=== Path encoding changes
 
-In order to support Windows, the output of some Pkl tools have unsafe characters encoded in a special format.
+In order to support Windows, the output of some Pkl tools have unsafe characters encoded in a special format (https://github.com/apple/pkl/pull/489[#489]).
 
 On Windows, the characters `<`, `>`, `:`, `"`, `\`, `|`, `?`, and `*` are reserved and cannot exist in a filename.
 Additionally, the ASCII control character code points `0x0` through `0x1f` are also illegal.
@@ -411,25 +420,28 @@ The following Java APIs have breaking changes:
 |===
 
 [[standard-library-breaking-changes]]
-=== Standard library breaking changes (https://github.com/apple/pkl/pull/506[#506])
+=== Standard library breaking changes
 
 Class `pkl.Project.EvaluatorSettings` has been removed.
 A new (deprecated) typealias is added that points to new module `pkl.EvaluatorSettings`.
+For both of these, see https://github.com/apple/pkl/pull/506[#506].
 
 [[type-checked-settings-file]]
-=== Type-checked settings file (https://github.com/apple/pkl/pull/477[#477])
+=== Type-checked settings file
 
-The xref:pkl-cli:index.adoc#settings-file[Settings file] is a way to control the behavior of the Pkl CLI.
+The loading of the xref:pkl-cli:index.adoc#settings-file[settings file] has changed (https://github.com/apple/pkl/pull/477[#477]).
+
+The settings file is a way to control the behavior of the Pkl CLI.
 This module is expected to `amends "pkl:settings"`, but this behavior was not checked.
 
 In 0.26, it is an error if the settings module neither amends `"pkl:settings"`, nor set its `output.value` to an instance of the settings module.
 
 [[empty-directories-excluded-from-packaging]]
-=== Empty directories excluded from packaging (https://github.com/apple/pkl/pull/330[#330])
+=== Empty directories excluded from packaging
 
 Currently, the `pkl project package` command will bundle empty directories into the resulting ZIP file.
 
-In version 0.26, this has been changed to exclude these directories.
+In version 0.26, this has been changed to exclude these directories (https://github.com/apple/pkl/pull/330[#330]).
 This means that the packages can produce a _different_ checksum if there are any empty directories.
 
 This does not break the usage of existing packages, and does not affect compatibility of new packages used with older Pkl 0.25.
