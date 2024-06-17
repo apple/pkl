@@ -151,7 +151,7 @@ jobs {
         name = "Publish release on GitHub"
         command = #"""
           # exclude build_artifacts.txt from publish
-          rm pkl-cli/build/executable/*.build_artifacts.txt
+          rm -f pkl-cli/build/executable/*.build_artifacts.txt
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
