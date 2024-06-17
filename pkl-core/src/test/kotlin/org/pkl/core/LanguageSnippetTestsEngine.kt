@@ -91,8 +91,16 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   protected fun String.stripVersionCheckErrorMessage() =
     replace("Pkl version is ${Release.current().version()}", "Pkl version is xxx")
 
-  protected fun String.stripStdlibLocationSha(): String =
-    replace("https://github.com/apple/pkl/blob/${Release.current().commitId()}/stdlib/", "https://github.com/apple/pkl/blob/\$commitId/stdlib/")
+  protected fun String.stripStdlibLocationSha(): String {
+    // Logic must be kept in-sync with `doc-package-info.pkl`.
+    val commitIsh =
+      if (Release.current().version().isNormal) Release.current().version()
+      else Release.current().commitId()
+    return replace(
+      "https://github.com/apple/pkl/blob/${commitIsh}/stdlib/",
+      "https://github.com/apple/pkl/blob/\$commitId/stdlib/"
+    )
+  }
 
   protected fun String.withUnixLineEndings(): String {
     return if (System.lineSeparator() == "\r\n") replace("\r\n", "\n")
