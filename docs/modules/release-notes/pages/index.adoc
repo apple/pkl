@@ -1,5 +1,6 @@
 = Release Notes
 
+* xref:0.27.adoc[0.27 Release Notes]
 * xref:0.26.adoc[0.26 Release Notes]
 * xref:0.25.adoc[0.25 Release Notes]
 * xref:changelog.adoc[Changelog]
