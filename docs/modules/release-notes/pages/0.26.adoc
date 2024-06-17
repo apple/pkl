@@ -88,10 +88,13 @@ This can be changed by adding settings in the following locations:
 2. xref:language-reference:index.adoc#projects[PklProject file]
 3. `--http-proxy` and `--http-no-proxy` CLI flags
 
+As part of this, some changes have been made to the standard library. For details, see <<standard-library-changes,Standard Library changes>>.
+
 Users of the Java/Kotlin bindings can specify proxy settings when building an <<http-java-client,HTTP client>>.
 
-HTTP proxy settings are also added as new fields in the xref:bindings-specification:message-passing-api.adoc#create-evaluator-request[message passing API].
+HTTP proxy settings are also added as new fields in the message-passing-api.
 Authors of external Pkl clients are encouraged to support these new fields to provide proxy support in their libraries.
+For details, see <<message-passing-api-changes,Message passing API changes>>.
 
 To read more about the design of HTTP proxying, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0004-HTTP-Proxy-Support.adoc[SPICE-0004], and also the xref:pkl-cli:index.adoc#http-proxy[documentation].
 
@@ -105,7 +108,11 @@ It provides two uses:
 2. Conflicting versions in the transitive dependency graph are resolved.
 
 Currently, dependencies can only be used with file-based modules.
-On the other hand, JVM library users typically interact with Pkl by bundling Pkl files a classpath resources, and load them using `modulepath:` URIs.
+This can be limiting in some circumstances:
+
+1. JVM library users typically interact with Pkl by bundling Pkl files a classpath resources, and load them using `modulepath:` URIs.
+2. Go library users often embed Pkl code using the https://pkg.go.dev/embed#hdr-Directives[`go:embed` directive], and load them using https://pkg.go.dev/github.com/apple/pkl-go/pkl#WithFs[`WithFs`].
+
 This means that these users miss out on the benefits of project dependencies.
 
 Pkl 0.26 adds support for using dependencies in any hierarchical module scheme.
@@ -175,20 +182,11 @@ The following improvements have been made to xref:pkl-doc:index.adoc[Pkldoc]:
 [[standard-library-changes]]
 === Standard library changes (https://github.com/apple/pkl/pull/506[#506])
 
-Multiple changes have been more to the standard library.
+To support <<http-proxying,http proxying>>, several changes have been made to the standard library.
 
-==== New property in `pkl.settings`
-
-Module `pkl.settings` has new property `http: Http?`.
-
-==== New module: `pkl.EvaluatorSettings`
-
-A new standard library module link:https://pkl-lang.org/package-docs/pkl/current/EvaluatorSettings.html[`pkl.EvaluatorSettings`] is added.
-This module can be considered as having moved class https://pkl-lang.org/package-docs/pkl/0.25.3/Project/EvaluatorSettings.html[`pkl.Project.EvaluatorSettings`].
-
-==== class `EvaluatorSettings` in `pkl.Project` changed to typealias
-
-`EvaluatorSettings` within module `pkl.Project` is now a typealias for module class `pkl.EvaluatorSettings`, and is deprecated.
+* Module `pkl.settings` has new property `http`.
+* class `EvaluatorSettings` originally in `pkl.Project` has been moved to its own module.
+For backwards compatibility, `pkl.Project` now has a `typealias EvaluatorSettings` pointing to the new module, but it is marked `@Deprecated`.
 
 === Java API Changes
 
@@ -456,7 +454,7 @@ Before: `Pkl/0.26 (macOS native)` +
 After: `Pkl/0.26 (macOS; native)`
 * Documentation improvements (https://github.com/apple/pkl/pull/120[#120], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/142[#142], https://github.com/apple/pkl/pull/121[#121], https://github.com/apple/pkl/pull/337[#337], https://github.com/apple/pkl/pull/341[#341], https://github.com/apple/pkl/pull/372[#372], https://github.com/apple/pkl/pull/386[#386], https://github.com/apple/pkl/pull/391[#391], https://github.com/apple/pkl/pull/397[#397], https://github.com/apple/pkl/pull/422[#422], https://github.com/apple/pkl/pull/436[#436], https://github.com/apple/pkl/pull/469[#469], https://github.com/apple/pkl/pull/484[#484], https://github.com/apple/pkl/pull/485[#485], https://github.com/apple/pkl/pull/[#491]).
 * Optimization: `const` access is checked when variables are resolved, instead of every time the variable is accessed (https://github.com/apple/pkl/pull/438[#438]).
-* Optimization: use logical AND instead of bitwise AND when comparing numbers (https://github.com/apple/pkl/pull/102[#102])
+* Optimization: use logical AND instead of bitwise AND when comparing numbers (https://github.com/apple/pkl/pull/102[#102]).
 * Mark Java classes `final` (https://github.com/apple/pkl/pull/458[#458]).
 * Migrate code to newer JDK17 features, and clean up existing Java code (https://github.com/apple/pkl/pull/451[#451], https://github.com/apple/pkl/pull/458[#458], https://github.com/apple/pkl/pull/512[#512]).
 * Improve rendering of string values within generated `<file>.pkl-expected.pcf` files when running `pkl test` (https://github.com/apple/pkl/pull/416[#416]).
