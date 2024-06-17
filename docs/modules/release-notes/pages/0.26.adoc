@@ -298,7 +298,9 @@ To fix the above typealias, the `const` modifier should be added to `isValid`.
 +const isValid = true
 ----
 
-If the property can't be marked as `const` (maybe because it is amended somewhere downstream), another fix is to self-import the enclosing module.
+It might not always be valid to add the `const` modifier.
+For example, this property may be overwritten in a downstream module, so adding the `const` modifier this would break that module.
+In these cases, another fix is to self-import the enclosing module.
 This works because import declarations introduce values that are implicitly marked `const`.
 
 .baseModule.pkl
