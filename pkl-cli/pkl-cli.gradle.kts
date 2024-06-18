@@ -241,6 +241,8 @@ fun Exec.configureExecutable(
       val processors = Runtime.getRuntime().availableProcessors() /
         if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
       add("-J-XX:ActiveProcessorCount=${processors}")
+      // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed tools.
+      addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
       addAll(extraArgs)
     }
   })
