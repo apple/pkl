@@ -35,7 +35,7 @@ abstract class CliProjectCommand(cliOptions: CliBaseOptions, private val project
           )
       return@lazy listOf(projectFile.normalize())
     }
-    projectDirs.map { dir ->
+    projectDirs.map(cliOptions.normalizedWorkingDir::resolve).map { dir ->
       val projectFile = dir.resolve(PKL_PROJECT_FILENAME)
       if (!Files.exists(projectFile)) {
         throw CliException("Directory $dir does not contain a PklProject file.")
