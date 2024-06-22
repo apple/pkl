@@ -508,6 +508,7 @@ We would like to thank the contributors to this release (in alphabetical order):
 * https://github.com/MarkSRobinson[@MarkSRobinson]
 * https://github.com/mitchcapper[@mitchcapper]
 * https://github.com/mrs1669[@mrs1669]
+* https://github.com/netvl[@netvl]
 * https://github.com/nirinchev[@nirinchev]
 * https://github.com/raj-j-shah[@raj-j-shah]
 * https://github.com/sgammon[@sgammon]
