@@ -8,6 +8,7 @@ net.sf.jopt-simple:jopt-simple:5.0.4=jmh,jmhCompileClasspath,jmhImplementationDe
 org.apache.commons:commons-math3:3.6.1=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.26.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+org.fusesource.jansi:jansi:2.4.1=jmh,jmhRuntimeClasspath
 org.graalvm.compiler:compiler:23.0.2=graal
 org.graalvm.sdk:graal-sdk:23.0.2=graal,jmh,jmhRuntimeClasspath,truffle
 org.graalvm.truffle:truffle-api:23.0.2=graal,jmh,jmhRuntimeClasspath,truffle

@@ -11,7 +11,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
-
+  implementation(libs.jansi)
   implementation(projects.pklCommons)
   testImplementation(projects.pklCommonsTest)
 }

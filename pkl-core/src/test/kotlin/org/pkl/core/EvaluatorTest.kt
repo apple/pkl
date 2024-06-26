@@ -429,7 +429,7 @@ class EvaluatorTest {
     val evaluatorBuilder = EvaluatorBuilder.preconfigured().setModuleCacheDir(cacheDir)
     val project = Project.load(modulePath("/org/pkl/core/project/project6/PklProject"))
     evaluatorBuilder.setProjectDependencies(project.dependencies).build().use { evaluator ->
-      assertThatCode { 
+      assertThatCode {
         evaluator.evaluateOutputText(modulePath("/org/pkl/core/project/project6/globWithinDependency.pkl"))
       }.hasMessageContaining("""
         Cannot resolve import in local dependency because scheme `modulepath` is not globbable.

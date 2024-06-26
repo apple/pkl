@@ -59,7 +59,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
   }
-
+  
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.wiremock)
 
@@ -208,7 +208,8 @@ fun Exec.configureExecutable(
       // that the "initialize everything at build time" *CLI* option is likely here to stay
       add("--initialize-at-build-time=")
       // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
-      add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
+      // needed for jansi (see https://github.com/fusesource/jansi/issues/199#issuecomment-1252268229)
+      add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess,org.fusesource.jansi.internal")
       add("--no-fallback")
       add("-Djavax.net.ssl.trustStore=${trustStore.get().asFile}")
       add("-Djavax.net.ssl.trustStorePassword=$trustStorePassword")

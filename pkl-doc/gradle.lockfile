@@ -40,6 +40,7 @@ org.commonmark:commonmark:0.21.0=default
 org.commonmark:commonmark:0.22.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.eclipse.jetty:jetty-util-ajax:9.4.18.v20190429=validator
 org.eclipse.jetty:jetty-util:9.4.18.v20190429=validator
+org.fusesource.jansi:jansi:2.4.1=testCompileClasspath,testRuntimeClasspath
 org.graalvm.js:js:23.0.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.graalvm.regex:regex:23.0.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.graalvm.sdk:graal-sdk:23.0.2=default,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

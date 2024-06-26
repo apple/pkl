@@ -3,7 +3,6 @@ package org.pkl.core
 import org.pkl.commons.createTempFile
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.writeString
@@ -11,7 +10,6 @@ import org.pkl.core.ModuleSource.*
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createFile
-import kotlin.io.path.name
 
 class EvaluateTestsTest {
 
