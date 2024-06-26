@@ -149,8 +149,9 @@ class ProjectTest {
         .setModuleCacheDir(null)
         .setHttpClient(httpClient)
         .build()
-      assertThatCode { evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl"))) }
-        .hasMessageStartingWith("""
+      assertThatCode {
+        evaluator.evaluate(ModuleSource.path(projectDir.resolve("bug.pkl")))
+      }.hasMessageStartingWith("""
         –– Pkl Error ––
         Cannot download package `package://localhost:0/fruit@1.0.5` because the computed checksum for package metadata does not match the expected checksum.
         

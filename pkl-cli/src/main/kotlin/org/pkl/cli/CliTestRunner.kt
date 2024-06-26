@@ -89,6 +89,7 @@ constructor(
         } catch (ex: Exception) {
           errWriter.appendLine("Error evaluating module ${moduleUri.path}:")
           errWriter.write(ex.message ?: "")
+          errWriter.write(ex.stackTraceToString())
           if (moduleUri != sources.last()) {
             errWriter.appendLine()
           }

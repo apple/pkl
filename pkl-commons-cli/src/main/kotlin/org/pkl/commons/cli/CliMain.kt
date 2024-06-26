@@ -17,6 +17,7 @@ package org.pkl.commons.cli
 
 import java.io.PrintStream
 import kotlin.system.exitProcess
+import org.fusesource.jansi.AnsiConsole
 
 /** Building block for CLIs. Intended to be called from a `main` method. */
 fun cliMain(block: () -> Unit) {
@@ -27,6 +28,9 @@ fun cliMain(block: () -> Unit) {
     if (!message.endsWith('\n')) stream.println()
   }
 
+  // Setup AnsiConsole. This will automatically strip escape codes if
+  // the target shell doesn't appear to support them.
+  AnsiConsole.systemInstall()
   // Force `native-image` to use system proxies (which does not happen with `-D`).
   System.setProperty("java.net.useSystemProxies", "true")
   try {
