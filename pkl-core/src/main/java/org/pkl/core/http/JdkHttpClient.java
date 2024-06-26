@@ -37,11 +37,13 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.PKIXRevocationChecker;
+import java.security.cert.PKIXRevocationChecker.Option;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,7 +132,7 @@ final class JdkHttpClient implements HttpClient {
       List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
     try {
       if (certificateFiles.isEmpty() && certificateBytes.isEmpty()) {
-        // use Pkl native executable's or JVM's built-in CA certificates
+        // use JVM's built-in CA certificates
         return SSLContext.getDefault();
       }
 
@@ -138,13 +140,11 @@ final class JdkHttpClient implements HttpClient {
       // create a non-legacy revocation checker that is configured via setOptions() instead of
       // security property "ocsp.enabled"
       var revocationChecker = (PKIXRevocationChecker) certPathBuilder.getRevocationChecker();
-      revocationChecker.setOptions(Set.of()); // prefer OCSP, fall back to CRLs
-
       var certFactory = CertificateFactory.getInstance("X.509");
       Set<TrustAnchor> trustAnchors =
           createTrustAnchors(certFactory, certificateFiles, certificateBytes);
+      revocationChecker.setOptions(EnumSet.of(Option.SOFT_FAIL)); // prefer OCSP, fall back to CRLs
       var pkixParameters = new PKIXBuilderParameters(trustAnchors, new X509CertSelector());
-      // equivalent of "com.sun.net.ssl.checkRevocation=true"
       pkixParameters.setRevocationEnabled(true);
       pkixParameters.addCertPathChecker(revocationChecker);
 

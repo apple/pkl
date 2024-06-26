@@ -173,6 +173,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir).filter { it.isRegularFile() }.forEach { addCertificates(it) }
+    } else {
+      val defaultCerts =
+        javaClass.classLoader.getResourceAsStream("org/pkl/commons/cli/PklCARoots.pem")
+          ?: throw CliException("Could not find bundled certificates")
+      addCertificates(defaultCerts.readAllBytes())
     }
   }
 
