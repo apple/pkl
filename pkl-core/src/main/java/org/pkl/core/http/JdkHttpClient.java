@@ -31,24 +31,17 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.security.cert.CertPathBuilder;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXBuilderParameters;
-import java.security.cert.PKIXRevocationChecker;
-import java.security.cert.PKIXRevocationChecker.Option;
-import java.security.cert.TrustAnchor;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
-import javax.net.ssl.CertPathTrustManagerParameters;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -136,37 +129,32 @@ final class JdkHttpClient implements HttpClient {
         return SSLContext.getDefault();
       }
 
-      var certPathBuilder = CertPathBuilder.getInstance("PKIX");
-      // create a non-legacy revocation checker that is configured via setOptions() instead of
-      // security property "ocsp.enabled"
-      var revocationChecker = (PKIXRevocationChecker) certPathBuilder.getRevocationChecker();
       var certFactory = CertificateFactory.getInstance("X.509");
-      Set<TrustAnchor> trustAnchors =
-          createTrustAnchors(certFactory, certificateFiles, certificateBytes);
-      revocationChecker.setOptions(EnumSet.of(Option.SOFT_FAIL)); // prefer OCSP, fall back to CRLs
-      var pkixParameters = new PKIXBuilderParameters(trustAnchors, new X509CertSelector());
-      pkixParameters.setRevocationEnabled(true);
-      pkixParameters.addCertPathChecker(revocationChecker);
-
+      List<Certificate> certs = gatherCertificates(certFactory, certificateFiles, certificateBytes);
+      var keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      keystore.load(null);
+      for (var i = 0; i < certs.size(); i++) {
+        keystore.setCertificateEntry("Certificate" + i, certs.get(i));
+      }
       var trustManagerFactory = TrustManagerFactory.getInstance("PKIX");
-      trustManagerFactory.init(new CertPathTrustManagerParameters(pkixParameters));
+      trustManagerFactory.init(keystore);
 
       var sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
 
       return sslContext;
-    } catch (GeneralSecurityException e) {
+    } catch (GeneralSecurityException | IOException e) {
       throw new HttpClientInitException(
           ErrorMessages.create("cannotInitHttpClient", Exceptions.getRootReason(e)), e);
     }
   }
 
-  private static Set<TrustAnchor> createTrustAnchors(
+  private static List<Certificate> gatherCertificates(
       CertificateFactory factory, List<Path> certificateFiles, List<ByteBuffer> certificateBytes) {
-    var anchors = new HashSet<TrustAnchor>();
+    var certificates = new ArrayList<Certificate>();
     for (var file : certificateFiles) {
       try (var stream = Files.newInputStream(file)) {
-        collectTrustAnchors(anchors, factory, stream, file);
+        collectCertificates(certificates, factory, stream, file);
       } catch (NoSuchFileException e) {
         throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
       } catch (IOException e) {
@@ -176,13 +164,13 @@ final class JdkHttpClient implements HttpClient {
     }
     for (var byteBuffer : certificateBytes) {
       var stream = new ByteArrayInputStream(byteBuffer.array());
-      collectTrustAnchors(anchors, factory, stream, "<unavailable>");
+      collectCertificates(certificates, factory, stream, "<unavailable>");
     }
-    return anchors;
+    return certificates;
   }
 
-  private static void collectTrustAnchors(
-      Collection<TrustAnchor> anchors,
+  private static void collectCertificates(
+      ArrayList<Certificate> anchors,
       CertificateFactory factory,
       InputStream stream,
       Object source) {
@@ -197,8 +185,6 @@ final class JdkHttpClient implements HttpClient {
     if (certificates.isEmpty()) {
       throw new HttpClientInitException(ErrorMessages.create("emptyCertFile", source));
     }
-    for (var certificate : certificates) {
-      anchors.add(new TrustAnchor(certificate, null));
-    }
+    anchors.addAll(certificates);
   }
 }
