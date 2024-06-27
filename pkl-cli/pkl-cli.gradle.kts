@@ -232,6 +232,7 @@ fun Exec.configureExecutable(
       if (!buildInfo.isReleaseBuild) {
         add("-Ob")
       }
+      add("-march=compatibility")
       // native-image rejects non-existing class path entries -> filter
       add("--class-path")
       val pathInput = sourceSets.main.get().output + configurations.runtimeClasspath.get()
@@ -316,7 +317,7 @@ val windowsExecutableAmd64: TaskProvider<Exec> by tasks.registering(Exec::class)
   configureExecutable(
     buildInfo.graalVmAmd64,
     layout.buildDirectory.file("executable/pkl-windows-amd64"),
-    listOf("-Dfile.encoding=UTF-8", "-march=compatibility")
+    listOf("-Dfile.encoding=UTF-8")
   )
 }
 
