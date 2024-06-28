@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.pkl.core.Release;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -191,7 +192,7 @@ public final class ModuleCache {
       ModuleKey module, SecurityManager securityManager, @Nullable Node importNode) {
     try {
       return module.resolve(securityManager);
-    } catch (SecurityManagerException | PackageLoadError e) {
+    } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
       throw new VmExceptionBuilder().withOptionalLocation(importNode).withCause(e).build();
     } catch (FileNotFoundException | NoSuchFileException e) {
       var exceptionBuilder =
