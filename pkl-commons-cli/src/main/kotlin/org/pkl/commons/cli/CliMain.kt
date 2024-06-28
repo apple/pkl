@@ -16,7 +16,6 @@
 package org.pkl.commons.cli
 
 import java.io.PrintStream
-import java.security.Security
 import kotlin.system.exitProcess
 
 /** Building block for CLIs. Intended to be called from a `main` method. */
@@ -30,9 +29,6 @@ fun cliMain(block: () -> Unit) {
 
   // Force `native-image` to use system proxies (which does not happen with `-D`).
   System.setProperty("java.net.useSystemProxies", "true")
-  // enable OCSP for default SSL context
-  Security.setProperty("ocsp.enable", "true")
-
   try {
     block()
   } catch (e: CliTestException) {
