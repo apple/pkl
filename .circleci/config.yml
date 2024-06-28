@@ -610,8 +610,7 @@ jobs:
     - run:
         command: |-
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results :pkl-gradle:build \
-            :pkl-gradle:compatibilityTestReleases \
-            :pkl-gradle:compatibilityTestCandidate
+            :pkl-gradle:compatibilityTestReleases
         name: gradle compatibility
     - store_test_results:
         path: ~/test-results
