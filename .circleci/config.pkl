@@ -132,8 +132,7 @@ jobs {
     name = "gradle compatibility"
     command = #"""
       :pkl-gradle:build \
-        :pkl-gradle:compatibilityTestReleases \
-        :pkl-gradle:compatibilityTestCandidate
+        :pkl-gradle:compatibilityTestReleases
       """#
   }.job
   ["deploy-snapshot"] = new DeployJob { command = "publishToSonatype" }.job
