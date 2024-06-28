@@ -6,6 +6,27 @@ include::ROOT:partial$component-attributes.adoc[]
 
 xref:0.27.adoc[Release notes]
 
+[[release-0.26.1]]
+== 0.26.1 (2024-06-28)
+
+=== Fixes
+
+* Fixes a regression where native executables fail to run on some environments that don't support newer CPU features (https://github.com/apple/pkl/pull/551[#551]).
+* Fixes a `PklBugException` when passing `.` as a project directory to `pkl project resolve` and `pkl project package` (https://github.com/apple/pkl/pull/544[#544]).
+
+=== Changes
+
+* Disable revocation checking of TLS certificates (https://github.com/apple/pkl/pull/553[#553]).
++
+As part of HTTP improvements in 0.26, we unwittingly fixed a bug where Pkl does not actually perform cert revocation checks when making HTTPS requests.
+This fix, unfortunately, caused a regression in some cases.
+For example, this happens when connecting to a server that bears a public trust certificate, while in an environment with no internet access.
+This is because the HTTP client needs to check the revocation status of all certificates in the chain.
++
+Revocation checks are a nuanced topic with some benefits, and also with its own problem areas.
+For this reason, revocation checking is disabled for Pkl's native CLIs.
+Users of Pkl's Java APIs will respect the revocation settings set in the JVM.
+
 [[release-0.26.0]]
 == 0.26.0 (2024-06-17)
 
