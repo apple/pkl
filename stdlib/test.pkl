@@ -18,7 +18,7 @@
 ///
 /// To write tests, amend this module and define [facts] or [examples] (or both).
 /// To run tests, evaluate the amended module.
-@ModuleInfo { minPklVersion = "0.26.0" }
+@ModuleInfo { minPklVersion = "0.26.1" }
 open module pkl.test
 
 /// Named groups of boolean expressions that are expected to evaluate to [true].
