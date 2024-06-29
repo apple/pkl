@@ -40,7 +40,7 @@ idea {
   }
 }
 
-val clean by tasks.registering(Delete::class) {
+val clean by tasks.existing {
   delete(layout.buildDirectory)
 }
 

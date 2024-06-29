@@ -23,11 +23,3 @@ dependencies {
 tasks.compileKotlin {
   enabled = true // disabled by pklJavaLibrary
 }
-
-spotless {
-  kotlin {
-    ktfmt(libs.versions.ktfmt.get()).googleStyle()
-    targetExclude("**/generated/**", "**/build/**")
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
-  }
-}

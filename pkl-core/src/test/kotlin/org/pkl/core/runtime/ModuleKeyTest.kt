@@ -1,4 +1,4 @@
-//package org.pkl.core.runtime;
+package org.pkl.core.runtime;
 //
 //import java.io.File;
 //import java.io.IOException;
