@@ -1,15 +1,12 @@
 package org.pkl.gradle
 
 import org.assertj.core.api.Assertions
-import org.pkl.commons.readString
-import org.pkl.commons.readString
-import org.pkl.commons.test.PackageServer
-import org.pkl.commons.toNormalizedPathString
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.readString
+import org.pkl.commons.toNormalizedPathString
 import org.pkl.commons.test.PackageServer
 import java.nio.file.Path
 import kotlin.io.path.readText
