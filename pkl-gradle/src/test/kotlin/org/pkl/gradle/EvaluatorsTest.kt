@@ -553,7 +553,7 @@ class EvaluatorsTest : AbstractTest() {
   }
 
   @Test
-  fun `implicit dependency tracking for output file`() {
+  fun `implicit dependency tracking for effective output files`() {
     writeFile("file1.pkl", "foo = 1")
     
     writeFile("file2.pkl", "bar = 1")
@@ -582,7 +582,7 @@ class EvaluatorsTest : AbstractTest() {
       }
 
       val printEvalFiles by tasks.registering {
-        inputs.files(doEval)
+        inputs.files(doEval.map { it.effectiveOutputFiles })
         doLast {
           println("evalCounter.txt")
           println(file("evalCounter.txt").readText())
@@ -594,12 +594,12 @@ class EvaluatorsTest : AbstractTest() {
         }
       }
     """.trimIndent())
-    
+
     val result1 = runTask("printEvalFiles")
-    
+
     // `doEval` task is invoked transitively.
     assertThat(result1.task(":doEval")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
-    
+
     assertThat(result1.output).contains("""
       evalCounter.txt
       doEval executed
@@ -697,7 +697,7 @@ class EvaluatorsTest : AbstractTest() {
         }
         
         tasks.register('printEvalDirs', PrintTask) {
-          inputDirs.from(tasks.named('evalTest'))
+          inputDirs.from(tasks.named('evalTest').map { it.effectiveOutputDirectories })
           
           doLast {
             println "evalCounter.txt"

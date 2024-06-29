@@ -67,9 +67,10 @@ public abstract class EvalTask extends ModulesTask {
                               getMultipleFileOutputDir(), it -> it.getAsFile().getAbsolutePath()),
                           getExpression().get())));
 
+  @SuppressWarnings("unused")
   @OutputFiles
   @Optional
-  public FileCollection getEffectiveOutputFilePaths() {
+  public FileCollection getEffectiveOutputFiles() {
     return getObjects()
         .fileCollection()
         .from(cliEvaluator.map(e -> nullToEmpty(e.getOutputFiles())));
@@ -77,7 +78,7 @@ public abstract class EvalTask extends ModulesTask {
 
   @OutputDirectories
   @Optional
-  public FileCollection getOutputDirectories() {
+  public FileCollection getEffectiveOutputDirectories() {
     return getObjects()
         .fileCollection()
         .from(cliEvaluator.map(e -> nullToEmpty(e.getOutputDirectories())));
