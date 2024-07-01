@@ -13,6 +13,8 @@ If the project is opened but not imported, look for a popup in the lower right c
 and click its "Import Gradle Project" link.
 . (recommended) Install {uri-gng}[gng] +
 _gng_ enables to run Gradle commands with `gw` (instead of `./gradlew`) from any subdirectory.
+. (recommended) Set up Git ignore-revs +
+`git config blame.ignoreRevsFile .git-blame-ignore-revs`
 . (recommended) Install {uri-jenv}[jenv] and plugins +
 _jenv_ use specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 17. +
 Enable _jenv_ plugins for better handling by `gradle`:
