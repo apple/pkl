@@ -101,7 +101,7 @@ data class DocPackageInfo(
               version = dependency["version"] as String,
               sourceCode = (dependency["sourceCode"] as String?)?.toUri(),
               sourceCodeUrlScheme = dependency["sourceCodeUrlScheme"] as String?,
-              documentation = (dependency["documentation"] as String?)?.toUri()
+              documentation = (dependency["documentation"] as String?)?.toUri(),
             )
           },
         overview = module["overview"] as String,
