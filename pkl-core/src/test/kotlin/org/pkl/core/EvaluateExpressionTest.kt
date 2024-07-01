@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
 import org.assertj.core.api.Assertions.assertThat
@@ -22,13 +37,15 @@ class EvaluateExpressionTest {
 
   @Test
   fun `evaluate expression`() {
-    val program = """
+    val program =
+      """
       res1 = 1
       res2 {
         res3 = 3
         res4 = 4
       }
-    """.trimIndent()
+    """
+        .trimIndent()
     assertThat(evaluate(program, "res1")).isEqualTo(1L)
     val res2 = evaluate(program, "res2")
     assertThat(res2).isInstanceOf(PObject::class.java)
@@ -39,18 +56,25 @@ class EvaluateExpressionTest {
 
   @Test
   fun `evaluate subpath`() {
-    val resp = evaluate("""
+    val resp =
+      evaluate(
+        """
       foo {
         bar = 2
       }
-    """.trimIndent(), "foo.bar")
+    """
+          .trimIndent(),
+        "foo.bar"
+      )
 
     assertThat(resp).isEqualTo(2L)
   }
 
   @Test
   fun `evaluate output text`() {
-    val result = evaluate("""
+    val result =
+      evaluate(
+        """
       foo {
         bar = 2
       }
@@ -58,13 +82,20 @@ class EvaluateExpressionTest {
       output {
         renderer = new YamlRenderer {}
       }
-    """.trimIndent(), "output.text")
+    """
+          .trimIndent(),
+        "output.text"
+      )
 
-    assertThat(result).isEqualTo("""
+    assertThat(result)
+      .isEqualTo(
+        """
       foo:
         bar: 2
 
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -76,10 +107,7 @@ class EvaluateExpressionTest {
 
   @Test
   fun `evaluate import expression`() {
-    val result = evaluate(
-      "",
-      """import("pkl:release").current.documentation.homepage"""
-    )
+    val result = evaluate("", """import("pkl:release").current.documentation.homepage""")
 
     assertThat(result as String).startsWith("https://pkl-lang.org/")
   }

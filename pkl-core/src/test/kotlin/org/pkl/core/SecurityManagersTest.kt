@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
 import java.net.URI
@@ -12,116 +27,84 @@ import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.toPath
 
 class SecurityManagersTest {
-  private val manager = SecurityManagers.standard(
-    listOf(Pattern.compile("test:foo/bar")),
-    listOf(Pattern.compile("env:FOO_BAR")),
-    { uri -> if (uri.scheme == "one") 1 else if (uri.scheme == "two") 2 else 0 },
-    null
-  )
+  private val manager =
+    SecurityManagers.standard(
+      listOf(Pattern.compile("test:foo/bar")),
+      listOf(Pattern.compile("env:FOO_BAR")),
+      { uri -> if (uri.scheme == "one") 1 else if (uri.scheme == "two") 2 else 0 },
+      null
+    )
 
   @Test
   fun `checkResolveModule() - complete match`() {
-    val e = catchThrowable {
-      manager.checkResolveModule(URI("test:foo/bar"))
-    }
+    val e = catchThrowable { manager.checkResolveModule(URI("test:foo/bar")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
   fun `checkResolveModule() - partial match from start`() {
-    val e = catchThrowable {
-      manager.checkResolveModule(URI("test:foo/bar/baz"))
-    }
+    val e = catchThrowable { manager.checkResolveModule(URI("test:foo/bar/baz")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
   fun `checkResolveModule() - partial match not from start`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(URI("other:test:foo/bar"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkResolveModule(URI("other:test:foo/bar")) }
   }
 
   @Test
   fun `checkResolveModule() - no match`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(URI("other:uri"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkResolveModule(URI("other:uri")) }
   }
 
   @Test
   fun `checkResolveModule() - no match #2`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(URI("test:foo/baz"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkResolveModule(URI("test:foo/baz")) }
   }
 
   @Test
   fun `checkReadResource() - complete match`() {
-    val e = catchThrowable {
-      manager.checkReadResource(URI("env:FOO_BAR"))
-    }
+    val e = catchThrowable { manager.checkReadResource(URI("env:FOO_BAR")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
   fun `checkReadResource() - partial match from start`() {
-    val e = catchThrowable {
-      manager.checkReadResource(URI("env:FOO_BAR_BAZ"))
-    }
+    val e = catchThrowable { manager.checkReadResource(URI("env:FOO_BAR_BAZ")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
   fun `checkReadResource() - partial match not from start`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkReadResource(URI("other:env:FOO_BAR"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("other:env:FOO_BAR")) }
   }
 
   @Test
   fun `checkReadResource() - no match`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkReadResource(URI("other:uri"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("other:uri")) }
   }
 
   @Test
   fun `checkReadResource() - no match #2`() {
-    assertThrows<SecurityManagerException> {
-      manager.checkReadResource(URI("env:FOO_BAZ"))
-    }
+    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("env:FOO_BAZ")) }
   }
 
   @Test
   fun `checkImportModule() - same trust level`() {
-    val e = catchThrowable {
-      manager.checkImportModule(
-        URI("one:foo"),
-        URI("one:bar")
-      )
-    }
+    val e = catchThrowable { manager.checkImportModule(URI("one:foo"), URI("one:bar")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
   fun `checkImportModule() - higher trust level`() {
     assertThrows<SecurityManagerException> {
-      manager.checkImportModule(
-        URI("one:foo"),
-        URI("two:bar")
-      )
+      manager.checkImportModule(URI("one:foo"), URI("two:bar"))
     }
   }
 
   @Test
   fun `checkImportModule() - lower trust level`() {
-    val e = catchThrowable {
-      manager.checkImportModule(
-        URI("two:foo"),
-        URI("one:bar")
-      )
-    }
+    val e = catchThrowable { manager.checkImportModule(URI("two:foo"), URI("one:bar")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
@@ -154,12 +137,13 @@ class SecurityManagersTest {
     val rootDir = tempDir.resolve("root")
     Files.createDirectory(rootDir)
 
-    val manager = SecurityManagers.standard(
-      listOf(Pattern.compile("file")),
-      listOf(Pattern.compile("file")),
-      SecurityManagers.defaultTrustLevels,
-      rootDir
-    )
+    val manager =
+      SecurityManagers.standard(
+        listOf(Pattern.compile("file")),
+        listOf(Pattern.compile("file")),
+        SecurityManagers.defaultTrustLevels,
+        rootDir
+      )
 
     val path = rootDir.resolve("baz.pkl")
     Files.createFile(path)
@@ -174,12 +158,13 @@ class SecurityManagersTest {
   fun `can resolve modules and resources under root dir - files don't exist`() {
     val rootDir = "/foo/bar".toPath()
 
-    val manager = SecurityManagers.standard(
-      listOf(Pattern.compile("file")),
-      listOf(Pattern.compile("file")),
-      SecurityManagers.defaultTrustLevels,
-      rootDir
-    )
+    val manager =
+      SecurityManagers.standard(
+        listOf(Pattern.compile("file")),
+        listOf(Pattern.compile("file")),
+        SecurityManagers.defaultTrustLevels,
+        rootDir
+      )
 
     manager.checkResolveModule(Path.of("/foo/bar/baz.pkl").toUri())
     manager.checkReadResource(Path.of("/foo/bar/baz.pkl").toUri())
@@ -189,48 +174,44 @@ class SecurityManagersTest {
   }
 
   @Test
-  fun `cannot resolve modules and resources outside root dir - files do exist`(@TempDir tempDir: Path) {
+  fun `cannot resolve modules and resources outside root dir - files do exist`(
+    @TempDir tempDir: Path
+  ) {
     val rootDir = tempDir.resolve("root")
     Files.createDirectory(rootDir)
 
-    val manager = SecurityManagers.standard(
-      listOf(Pattern.compile("file")),
-      listOf(Pattern.compile("file")),
-      SecurityManagers.defaultTrustLevels,
-      rootDir
-    )
+    val manager =
+      SecurityManagers.standard(
+        listOf(Pattern.compile("file")),
+        listOf(Pattern.compile("file")),
+        SecurityManagers.defaultTrustLevels,
+        rootDir
+      )
 
     val path = rootDir.resolve("../baz.pkl")
     Files.createFile(path)
-    assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(path.toUri())
-    }
-    assertThrows<SecurityManagerException> {
-      manager.checkReadResource(path.toUri())
-    }
+    assertThrows<SecurityManagerException> { manager.checkResolveModule(path.toUri()) }
+    assertThrows<SecurityManagerException> { manager.checkReadResource(path.toUri()) }
 
     val symlink = rootDir.resolve("qux")
     Files.createSymbolicLink(symlink, tempDir)
     val path2 = symlink.resolve("baz2.pkl")
     Files.createFile(path2)
-    assertThrows<SecurityManagerException> {
-      manager.checkResolveModule(path2.toUri())
-    }
-    assertThrows<SecurityManagerException> {
-      manager.checkReadResource(path2.toUri())
-    }
+    assertThrows<SecurityManagerException> { manager.checkResolveModule(path2.toUri()) }
+    assertThrows<SecurityManagerException> { manager.checkReadResource(path2.toUri()) }
   }
 
   @Test
   fun `cannot resolve modules and resources outside root dir - files don't exist`() {
     val rootDir = "/foo/bar".toPath()
 
-    val manager = SecurityManagers.standard(
-      listOf(Pattern.compile("file")),
-      listOf(Pattern.compile("file")),
-      SecurityManagers.defaultTrustLevels,
-      rootDir
-    )
+    val manager =
+      SecurityManagers.standard(
+        listOf(Pattern.compile("file")),
+        listOf(Pattern.compile("file")),
+        SecurityManagers.defaultTrustLevels,
+        rootDir
+      )
 
     assertThrows<SecurityManagerException> {
       manager.checkResolveModule(Path.of("/foo/baz.pkl").toUri())

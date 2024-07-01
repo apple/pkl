@@ -1,33 +1,54 @@
-package org.pkl.core.packages;
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.packages
 
-import org.pkl.core.Version
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.nio.charset.StandardCharsets
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.pkl.core.Version
 
 class DependencyMetadataTest {
-  private val dependencyMetadata = DependencyMetadata(
-    "my-proj-name",
-    PackageUri("package://example.com/my-proj-name@0.10.0"),
-    Version.parse("0.10.0"),
-    URI("https://example.com/foo/bar@0.5.3.zip"),
-    Checksums("abc123"),
-    mapOf(
-      "foo" to Dependency.RemoteDependency(PackageUri("package://example.com/foo@0.5.3"), Checksums("abc123")),
-    ),
-    "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
-    URI("https://example.com/my/source"),
-    URI("https://example.com/my/docs"),
-    "MIT",
-    "The MIT License, you know it",
-    listOf("birdy@bird.com"),
-    URI("https://example.com/issues"),
-    "Some package description"
-  )
+  private val dependencyMetadata =
+    DependencyMetadata(
+      "my-proj-name",
+      PackageUri("package://example.com/my-proj-name@0.10.0"),
+      Version.parse("0.10.0"),
+      URI("https://example.com/foo/bar@0.5.3.zip"),
+      Checksums("abc123"),
+      mapOf(
+        "foo" to
+          Dependency.RemoteDependency(
+            PackageUri("package://example.com/foo@0.5.3"),
+            Checksums("abc123")
+          ),
+      ),
+      "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
+      URI("https://example.com/my/source"),
+      URI("https://example.com/my/docs"),
+      "MIT",
+      "The MIT License, you know it",
+      listOf("birdy@bird.com"),
+      URI("https://example.com/issues"),
+      "Some package description"
+    )
 
-  private val dependencyMetadataStr = """
+  private val dependencyMetadataStr =
+    """
      {
        "name": "my-proj-name",
        "packageUri": "package://example.com/my-proj-name@0.10.0",
@@ -55,7 +76,8 @@ class DependencyMetadataTest {
        "issueTracker": "https://example.com/issues",
        "description": "Some package description"
      }
-    """.trimIndent()
+    """
+      .trimIndent()
 
   @Test
   fun parse() {
@@ -64,10 +86,11 @@ class DependencyMetadataTest {
   }
 
   @Test
-  fun writeTo(){
-    val str = ByteArrayOutputStream()
-      .apply { dependencyMetadata.writeTo(this) }
-      .toString(StandardCharsets.UTF_8)
+  fun writeTo() {
+    val str =
+      ByteArrayOutputStream()
+        .apply { dependencyMetadata.writeTo(this) }
+        .toString(StandardCharsets.UTF_8)
     assertThat(str).isEqualTo(dependencyMetadataStr)
   }
 }

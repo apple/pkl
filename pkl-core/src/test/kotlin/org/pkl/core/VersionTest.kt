@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
 import org.assertj.core.api.Assertions.assertThat
@@ -37,23 +52,16 @@ class VersionTest {
 
   @Test
   fun `parse invalid version`() {
-    assertThat(Version.parseOrNull("not a version number"))
-      .isNull()
+    assertThat(Version.parseOrNull("not a version number")).isNull()
 
-    assertThrows<IllegalArgumentException> {
-      Version.parse("not a version number")
-    }
+    assertThrows<IllegalArgumentException> { Version.parse("not a version number") }
   }
 
   @Test
   fun `parse too large version`() {
-    assertThrows<IllegalArgumentException> {
-      Version.parse("not a version number")
-    }
+    assertThrows<IllegalArgumentException> { Version.parse("not a version number") }
 
-    assertThrows<IllegalArgumentException> {
-      Version.parse("999999999999999.0.0")
-    }
+    assertThrows<IllegalArgumentException> { Version.parse("999999999999999.0.0") }
   }
 
   @Test
@@ -66,137 +74,80 @@ class VersionTest {
 
   @Test
   fun withMethods() {
-    val version = Version.parse("0.0.0")
-      .withMajor(1)
-      .withMinor(2)
-      .withPatch(3)
-      .withPreRelease("rc.1")
-      .withBuild("456.789")
+    val version =
+      Version.parse("0.0.0")
+        .withMajor(1)
+        .withMinor(2)
+        .withPatch(3)
+        .withPreRelease("rc.1")
+        .withBuild("456.789")
 
     assertThat(version).isEqualTo(Version.parse("1.2.3-rc.1+456.789"))
 
-    val version2 = Version.parse("0.0.0")
-      .withBuild("456.789")
-      .withPreRelease("rc.1")
-      .withPatch(3)
-      .withMinor(2)
-      .withMajor(1)
+    val version2 =
+      Version.parse("0.0.0")
+        .withBuild("456.789")
+        .withPreRelease("rc.1")
+        .withPatch(3)
+        .withMinor(2)
+        .withMajor(1)
 
     assertThat(version2).isEqualTo(version)
   }
 
   @Test
   fun `compareTo()`() {
-    assertThat(
-      Version(1, 2, 3, null, null).compareTo(
-        Version(1, 2, 3, null, null)
-      )
-    ).isEqualTo(0)
-    assertThat(
-      Version(1, 2, 3, "SNAPSHOT", null).compareTo(
-        Version(1, 2, 3, "SNAPSHOT", null)
-      )
-    ).isEqualTo(0)
-    assertThat(
-      Version(1, 2, 3, "alpha", null).compareTo(
-        Version(1, 2, 3, "alpha", null)
-      )
-    ).isEqualTo(0)
-    assertThat(
-      Version(1, 2, 3, "alpha", null).compareTo(
-        Version(1, 2, 3, "alpha", "build123")
-      )
-    ).isEqualTo(0)
+    assertThat(Version(1, 2, 3, null, null).compareTo(Version(1, 2, 3, null, null))).isEqualTo(0)
+    assertThat(Version(1, 2, 3, "SNAPSHOT", null).compareTo(Version(1, 2, 3, "SNAPSHOT", null)))
+      .isEqualTo(0)
+    assertThat(Version(1, 2, 3, "alpha", null).compareTo(Version(1, 2, 3, "alpha", null)))
+      .isEqualTo(0)
+    assertThat(Version(1, 2, 3, "alpha", null).compareTo(Version(1, 2, 3, "alpha", "build123")))
+      .isEqualTo(0)
 
-    assertThat(
-      Version(1, 2, 3, null, null).compareTo(
-        Version(2, 2, 3, null, null)
-      )
-    ).isLessThan(0)
-    assertThat(
-      Version(1, 2, 3, null, null).compareTo(
-        Version(1, 3, 3, null, null)
-      )
-    ).isLessThan(0)
-    assertThat(
-      Version(1, 2, 3, null, null).compareTo(
-        Version(1, 2, 4, null, null)
-      )
-    ).isLessThan(0)
+    assertThat(Version(1, 2, 3, null, null).compareTo(Version(2, 2, 3, null, null))).isLessThan(0)
+    assertThat(Version(1, 2, 3, null, null).compareTo(Version(1, 3, 3, null, null))).isLessThan(0)
+    assertThat(Version(1, 2, 3, null, null).compareTo(Version(1, 2, 4, null, null))).isLessThan(0)
 
-    assertThat(
-      Version(2, 2, 3, null, null).compareTo(
-        Version(1, 2, 3, null, null)
-      )
-    ).isGreaterThan(0)
-    assertThat(
-      Version(1, 3, 3, null, null).compareTo(
-        Version(1, 2, 3, null, null)
-      )
-    ).isGreaterThan(0)
-    assertThat(
-      Version(1, 2, 4, null, null).compareTo(
-        Version(1, 2, 3, null, null)
-      )
-    ).isGreaterThan(0)
+    assertThat(Version(2, 2, 3, null, null).compareTo(Version(1, 2, 3, null, null)))
+      .isGreaterThan(0)
+    assertThat(Version(1, 3, 3, null, null).compareTo(Version(1, 2, 3, null, null)))
+      .isGreaterThan(0)
+    assertThat(Version(1, 2, 4, null, null).compareTo(Version(1, 2, 3, null, null)))
+      .isGreaterThan(0)
 
-    assertThat(
-      Version(1, 2, 3, "SNAPSHOT", null).compareTo(
-        Version(1, 2, 3, null, null)
-      )
-    ).isLessThan(0)
-    assertThat(
-      Version(1, 2, 3, "alpha", null).compareTo(
-        Version(1, 2, 3, "beta", null)
-      )
-    ).isLessThan(0)
-    assertThat(
-      Version(1, 2, 3, "alpha", "build123").compareTo(
-        Version(1, 2, 3, "beta", null)
-      )
-    ).isLessThan(0)
+    assertThat(Version(1, 2, 3, "SNAPSHOT", null).compareTo(Version(1, 2, 3, null, null)))
+      .isLessThan(0)
+    assertThat(Version(1, 2, 3, "alpha", null).compareTo(Version(1, 2, 3, "beta", null)))
+      .isLessThan(0)
+    assertThat(Version(1, 2, 3, "alpha", "build123").compareTo(Version(1, 2, 3, "beta", null)))
+      .isLessThan(0)
 
-    assertThat(
-      Version(1, 2, 3, null, null).compareTo(
-        Version(1, 2, 3, "SNAPSHOT", null)
-      )
-    ).isGreaterThan(0)
-    assertThat(
-      Version(1, 2, 3, "beta", null).compareTo(
-        Version(1, 2, 3, "alpha", "build123")
-      )
-    ).isGreaterThan(0)
+    assertThat(Version(1, 2, 3, null, null).compareTo(Version(1, 2, 3, "SNAPSHOT", null)))
+      .isGreaterThan(0)
+    assertThat(Version(1, 2, 3, "beta", null).compareTo(Version(1, 2, 3, "alpha", "build123")))
+      .isGreaterThan(0)
   }
 
   @Test
   fun `compare version with too large numeric pre-release identifier`() {
     // error is deferred until compareTo(), but should be good enough
     assertThrows<IllegalArgumentException> {
-      Version(1, 2, 3, "999", null).compareTo(
-        Version(1, 2, 3, "9999999999999999999", null)
-      )
+      Version(1, 2, 3, "999", null).compareTo(Version(1, 2, 3, "9999999999999999999", null))
     }
   }
 
   @Test
   fun `equals()`() {
-    assertThat(Version(1, 2, 3, null, null))
-      .isEqualTo(Version(1, 2, 3, null, null))
-    assertThat(Version(1, 2, 3, "SNAPSHOT", null))
-      .isEqualTo(Version(1, 2, 3, "SNAPSHOT", null))
-    assertThat(Version(1, 2, 3, "alpha", null))
-      .isEqualTo(Version(1, 2, 3, "alpha", null))
-    assertThat(Version(1, 2, 3, "beta", "build123"))
-      .isEqualTo(Version(1, 2, 3, "beta", "build456"))
+    assertThat(Version(1, 2, 3, null, null)).isEqualTo(Version(1, 2, 3, null, null))
+    assertThat(Version(1, 2, 3, "SNAPSHOT", null)).isEqualTo(Version(1, 2, 3, "SNAPSHOT", null))
+    assertThat(Version(1, 2, 3, "alpha", null)).isEqualTo(Version(1, 2, 3, "alpha", null))
+    assertThat(Version(1, 2, 3, "beta", "build123")).isEqualTo(Version(1, 2, 3, "beta", "build456"))
 
-    assertThat(Version(1, 3, 3, null, null))
-      .isNotEqualTo(Version(1, 2, 3, null, null))
-    assertThat(Version(1, 2, 4, null, null))
-      .isNotEqualTo(Version(1, 2, 3, null, null))
-    assertThat(Version(1, 2, 3, "SNAPSHOT", null))
-      .isNotEqualTo(Version(1, 2, 3, null, null))
-    assertThat(Version(1, 2, 3, "beta", null))
-      .isNotEqualTo(Version(1, 2, 3, "alpha", null))
+    assertThat(Version(1, 3, 3, null, null)).isNotEqualTo(Version(1, 2, 3, null, null))
+    assertThat(Version(1, 2, 4, null, null)).isNotEqualTo(Version(1, 2, 3, null, null))
+    assertThat(Version(1, 2, 3, "SNAPSHOT", null)).isNotEqualTo(Version(1, 2, 3, null, null))
+    assertThat(Version(1, 2, 3, "beta", null)).isNotEqualTo(Version(1, 2, 3, "alpha", null))
   }
 
   @Test

@@ -1,9 +1,24 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
+import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.net.URI
 
 class PObjectTest {
   private val testUri = URI("repl:test")
@@ -29,14 +44,12 @@ class PObjectTest {
 
   @Test
   fun `get unknown property`() {
-    val e = assertThrows<NoSuchPropertyException> {
-      pigeon.getProperty("other")
-    }
+    val e = assertThrows<NoSuchPropertyException> { pigeon.getProperty("other") }
 
     assertThat(e)
       .hasMessage(
         "Object of type `test#Person` does not have a property " +
-            "named `other`. Available properties: [name, age]"
+          "named `other`. Available properties: [name, age]"
       )
   }
 
@@ -52,15 +65,16 @@ class PObjectTest {
     var objectVisited = false
     var moduleVisited = false
 
-    val visitor = object : ValueVisitor {
-      override fun visitObject(value: PObject) {
-        objectVisited = true
-      }
+    val visitor =
+      object : ValueVisitor {
+        override fun visitObject(value: PObject) {
+          objectVisited = true
+        }
 
-      override fun visitModule(value: PModule) {
-        moduleVisited = true
+        override fun visitModule(value: PModule) {
+          moduleVisited = true
+        }
       }
-    }
 
     pigeon.accept(visitor)
 
@@ -73,10 +87,7 @@ class PObjectTest {
     assertThat(pigeon).isEqualTo(pigeon)
     assertThat(pigeon.hashCode()).isEqualTo(pigeon.hashCode())
 
-    val pigeon2 = PObject(
-      PClassInfo.get("test", "Person", URI("repl:test")),
-      HashMap(properties)
-    )
+    val pigeon2 = PObject(PClassInfo.get("test", "Person", URI("repl:test")), HashMap(properties))
 
     assertThat(pigeon2).isEqualTo(pigeon)
     assertThat(pigeon2.hashCode()).isEqualTo(pigeon.hashCode())
@@ -84,10 +95,7 @@ class PObjectTest {
 
   @Test
   fun `non-equal - different type`() {
-    val pigeon2 = PObject(
-      PClassInfo.get("test", "Other", URI("repl:Other")),
-      properties
-    )
+    val pigeon2 = PObject(PClassInfo.get("test", "Other", URI("repl:Other")), properties)
 
     assertThat(pigeon2).isNotEqualTo(pigeon)
     assertThat(pigeon2.hashCode()).isNotEqualTo(pigeon.hashCode())
@@ -95,10 +103,11 @@ class PObjectTest {
 
   @Test
   fun `non-equal - different property value`() {
-    val pigeon2 = PObject(
-      PClassInfo.get("test", "Person", URI("repl:test")),
-      mapOf("name" to "Pigeon", "age" to 21)
-    )
+    val pigeon2 =
+      PObject(
+        PClassInfo.get("test", "Person", URI("repl:test")),
+        mapOf("name" to "Pigeon", "age" to 21)
+      )
 
     assertThat(pigeon2).isNotEqualTo(pigeon)
     assertThat(pigeon2.hashCode()).isNotEqualTo(pigeon.hashCode())
@@ -106,10 +115,8 @@ class PObjectTest {
 
   @Test
   fun `non-equal - missing property`() {
-    val pigeon2 = PObject(
-      PClassInfo.get("test", "Person", URI("repl:test")),
-      mapOf("name" to "Pigeon")
-    )
+    val pigeon2 =
+      PObject(PClassInfo.get("test", "Person", URI("repl:test")), mapOf("name" to "Pigeon"))
 
     assertThat(pigeon2).isNotEqualTo(pigeon)
     assertThat(pigeon2.hashCode()).isNotEqualTo(pigeon.hashCode())
@@ -117,10 +124,11 @@ class PObjectTest {
 
   @Test
   fun `non-equal - extra property`() {
-    val pigeon2 = PObject(
-      PClassInfo.get("test", "Person", URI("repl:test")),
-      mapOf("name" to "Pigeon", "age" to 42, "other" to true)
-    )
+    val pigeon2 =
+      PObject(
+        PClassInfo.get("test", "Person", URI("repl:test")),
+        mapOf("name" to "Pigeon", "age" to 42, "other" to true)
+      )
 
     assertThat(pigeon2).isNotEqualTo(pigeon)
     assertThat(pigeon2.hashCode()).isNotEqualTo(pigeon.hashCode())
@@ -128,7 +136,6 @@ class PObjectTest {
 
   @Test
   fun `toString()`() {
-    assertThat(pigeon.toString())
-      .isEqualTo("test#Person { name = Pigeon; age = 42 }")
+    assertThat(pigeon.toString()).isEqualTo("test#Person { name = Pigeon; age = 42 }")
   }
 }

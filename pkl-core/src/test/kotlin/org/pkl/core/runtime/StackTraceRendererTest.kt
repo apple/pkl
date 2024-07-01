@@ -1,10 +1,25 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core.runtime
 
-import org.pkl.core.*
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.pkl.core.*
 
 class StackTraceRendererTest {
   companion object {
@@ -20,39 +35,51 @@ class StackTraceRendererTest {
 
   @Test
   fun `stringy self-reference`() {
-    val message = assertThrows<PklException> {
-      evaluator.evaluate(
-        ModuleSource.text(
-          """
+    val message =
+      assertThrows<PklException> {
+          evaluator.evaluate(
+            ModuleSource.text(
+              """
           self: String = "Strings; if they were lazy, you could tie the knot on \(self.take(7))"
-          """.trimIndent())
-        )
-      }.message!!
+          """
+                .trimIndent()
+            )
+          )
+        }
+        .message!!
     assertThat(message)
       .contains("A stack overflow occurred.")
-      .containsPattern("""
+      .containsPattern(
+        """
 ┌─ \d* repetitions of:
 │ 1 | self: String = "Strings; if they were lazy, you could tie the knot on \\\(self.take\(7\)\)"
 │                                                                             ^^^^
-   """.trim())
+   """
+          .trim()
+      )
   }
 
   @Test
   fun `cyclic property references`() {
-    val message = assertThrows<PklException> {
-        evaluator.evaluate(
-          ModuleSource.text(
-            """
+    val message =
+      assertThrows<PklException> {
+          evaluator.evaluate(
+            ModuleSource.text(
+              """
               foo: String = "FOO:" + bar
               bar: String = "BAR:" + baz
               baz: String = "BAZ:" + qux
               qux: String = "QUX:" + foo
-            """.trimIndent())
+            """
+                .trimIndent()
+            )
           )
-      }.message!!
+        }
+        .message!!
     assertThat(message)
       .contains("A stack overflow occurred.")
-      .containsPattern("""
+      .containsPattern(
+        """
 ┌─ \d+ repetitions of:
 │ 4 | qux: String = "QUX:" + foo
 │                            ^^^
@@ -70,13 +97,16 @@ class StackTraceRendererTest {
 │                            ^^^
 │ at text#foo (repl:text)
 └─        
-      """.trim())
+      """
+          .trim()
+      )
   }
-  
+
   @Test
   @Suppress("RegExpRepeatedSpace")
   fun `reduce stack overflow from actual Pkl code`() {
-    val pklCode = """
+    val pklCode =
+      """
         function suffix(n: UInt): UInt =
           if (n == 0)
             0
@@ -106,15 +136,15 @@ class StackTraceRendererTest {
             prefix(n - 1)
 
         result = prefix(13)
-      """.trimIndent()
-    val message = assertThrows<PklException> {
-        evaluator.evaluate(ModuleSource.text(pklCode))
-      }.message!!
-    
+      """
+        .trimIndent()
+    val message =
+      assertThrows<PklException> { evaluator.evaluate(ModuleSource.text(pklCode)) }.message!!
+
     if (message.contains("5 | suffix")) {
       assertThat(message).containsPattern("repetitions of:\n│ 5 | suffix(n - 1)")
     }
-    
+
     assertThat(message)
       .contains("A stack overflow occurred.")
       .containsPattern("┌─ \\d+ repetitions of:\n│ \n│ 9 | loop\\(\\)")
@@ -159,15 +189,11 @@ class StackTraceRendererTest {
       add(createFrame("foo", 3))
     }
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
-    val frames = listOf(
-      createFrame("bar", 1),
-      createFrame("baz", 2),
-      loop
-    )
-    val renderedFrames = buildString {
-      renderer.doRender(frames, null, this, "", true)
-    }
-    assertThat(renderedFrames).isEqualTo("""
+    val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
+    val renderedFrames = buildString { renderer.doRender(frames, null, this, "", true) }
+    assertThat(renderedFrames)
+      .isEqualTo(
+        """
       1 | foo
           ^
       at <unknown> (file:bar)
@@ -188,7 +214,9 @@ class StackTraceRendererTest {
           ^
       at <unknown> (file:foo)
 
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   private fun createFrame(name: String, id: Int): StackFrame {

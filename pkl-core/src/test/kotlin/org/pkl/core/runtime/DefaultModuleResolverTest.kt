@@ -1,38 +1,58 @@
-package org.pkl.core.runtime;
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.runtime
+
 //
-//import java.io.IOException;
-//import java.net.URI;
-//import java.net.URISyntaxException;
-//import java.nio.file.Files;
-//import java.nio.file.Path;
-//import java.util.Arrays;
-//import java.util.Collections;
+// import java.io.IOException;
+// import java.net.URI;
+// import java.net.URISyntaxException;
+// import java.nio.file.Files;
+// import java.nio.file.Path;
+// import java.util.Arrays;
+// import java.util.Collections;
 //
-//import org.pkl.core.EvalOptions;
-//import org.pkl.core.EvalException;
-//import org.pkl.core.resolve.ModuleKey;
-//import org.pkl.core.resolve.ModuleKeyFactories;
-//import org.pkl.core.resolve.ModuleKeys;
-//import com.oracle.truffle.api.source.SourceSection;
-//import org.junit.Ignore;
-//import org.junit.Test;
+// import org.pkl.core.EvalOptions;
+// import org.pkl.core.EvalException;
+// import org.pkl.core.resolve.ModuleKey;
+// import org.pkl.core.resolve.ModuleKeyFactories;
+// import org.pkl.core.resolve.ModuleKeys;
+// import com.oracle.truffle.api.source.SourceSection;
+// import org.junit.Ignore;
+// import org.junit.Test;
 //
-//import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertTrue;
+// import static org.junit.Assert.assertEquals;
+// import static org.junit.Assert.assertTrue;
 //
-//public class DefaultModuleResolverTest {
+// public class DefaultModuleResolverTest {
 //  private final SourceSection sourceSection = VmUtils.unavailableSourceSection();
 //  private final ModuleResolver resolver =
-//      new ModuleResolver(ModuleKeyFactories.namedModuleOnClassPath, EvalOptions.namedModuleOnClassPath.getAllowedModules());
+//      new ModuleResolver(ModuleKeyFactories.namedModuleOnClassPath,
+// EvalOptions.namedModuleOnClassPath.getAllowedModules());
 //  private final ModuleKey fileUrlModule;
 //  private final ModuleKey httpsUrlModule;
 //  private final ModuleKey literalUrlModule;
 //
 //  {
 //    try {
-//      fileUrlModule = ModuleKeys.genericUrl(new URI("file:///path/script.pkl"), ModuleKeys.FULL_TRUST);
-//      httpsUrlModule = ModuleKeys.genericUrl(new URI("https://some.domain.com/path/script.pkl"), ModuleKeys.FULL_TRUST);
-//      literalUrlModule = ModuleKeys.synthetic("myLiteralModule", "my literal source code", ModuleKeys.FULL_TRUST);
+//      fileUrlModule = ModuleKeys.genericUrl(new URI("file:///path/script.pkl"),
+// ModuleKeys.FULL_TRUST);
+//      httpsUrlModule = ModuleKeys.genericUrl(new URI("https://some.domain.com/path/script.pkl"),
+// ModuleKeys.FULL_TRUST);
+//      literalUrlModule = ModuleKeys.synthetic("myLiteralModule", "my literal source code",
+// ModuleKeys.FULL_TRUST);
 //    } catch (URISyntaxException e) {
 //      throw new RuntimeException(e);
 //    }
@@ -61,7 +81,8 @@ package org.pkl.core.runtime;
 //
 //  @Test
 //  public void importHttpsUrlFromFileUrl() throws IOException {
-//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl", fileUrlModule, sourceSection);
+//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl",
+// fileUrlModule, sourceSection);
 //    assertTrue(result instanceof ModuleKey.Url);
 //    assertEquals("https://other.domain.com/path2/script2.pkl", result.toString());
 //  }
@@ -94,7 +115,8 @@ package org.pkl.core.runtime;
 //
 //  @Test
 //  public void importHttpsUrlFromHttpsUrl() throws IOException {
-//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl", httpsUrlModule, sourceSection);
+//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl",
+// httpsUrlModule, sourceSection);
 //    assertTrue(result instanceof ModuleKey.Url);
 //    assertEquals("https://other.domain.com/path2/script2.pkl", result.toString());
 //  }
@@ -127,14 +149,16 @@ package org.pkl.core.runtime;
 //
 //  @Test
 //  public void importFileUrlFromLiteral() throws IOException {
-//    ModuleKey result = resolver.resolve("file:///import/file.pkl", literalUrlModule, sourceSection);
+//    ModuleKey result = resolver.resolve("file:///import/file.pkl", literalUrlModule,
+// sourceSection);
 //    assertTrue(result instanceof ModuleKey.Url);
 //    assertEquals("file:///import/file.pkl", result.toString());
 //  }
 //
 //  @Test
 //  public void importHttpsUrlFromLiteral() throws IOException {
-//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl", literalUrlModule, sourceSection);
+//    ModuleKey result = resolver.resolve("https://other.domain.com/path2/script2.pkl",
+// literalUrlModule, sourceSection);
 //    assertTrue(result instanceof ModuleKey.Url);
 //    assertEquals("https://other.domain.com/path2/script2.pkl", result.toString());
 //  }
@@ -183,4 +207,4 @@ package org.pkl.core.runtime;
 //
 //    resolver.resolve("pkl:base", fileUrlModule, sourceSection);
 //  }
-//}
+// }

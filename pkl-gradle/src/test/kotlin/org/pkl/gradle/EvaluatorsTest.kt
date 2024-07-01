@@ -1,14 +1,26 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.gradle
 
-import org.assertj.core.api.Assertions
-import org.pkl.commons.readString
-import org.pkl.commons.readString
-import org.pkl.commons.test.PackageServer
-import org.pkl.commons.toNormalizedPathString
+import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import java.nio.file.Path
+import org.pkl.commons.readString
+import org.pkl.commons.test.PackageServer
 
 class EvaluatorsTest : AbstractTest() {
   @Test
@@ -21,12 +33,14 @@ class EvaluatorsTest : AbstractTest() {
 
     val outputFile = testProjectDir.resolve("test.pcf")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       person {
         name = "Pigeon"
         age = 30
       }
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
@@ -40,11 +54,13 @@ class EvaluatorsTest : AbstractTest() {
 
     val outputFile = testProjectDir.resolve("test.yaml")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       person:
         name: Pigeon
         age: 30
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
@@ -58,14 +74,16 @@ class EvaluatorsTest : AbstractTest() {
 
     val outputFile = testProjectDir.resolve("test.json")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       {
         "person": {
           "name": "Pigeon",
           "age": 30
         }
       }
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
@@ -79,7 +97,8 @@ class EvaluatorsTest : AbstractTest() {
 
     val outputFile = testProjectDir.resolve("test.plist")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
       <plist version="1.0">
@@ -93,16 +112,19 @@ class EvaluatorsTest : AbstractTest() {
         </dict>
       </dict>
       </plist>
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
   @Test
   fun `set external properties`() {
     writeBuildFile(
-      "pcf", """
+      "pcf",
+      """
       externalProperties = [prop1: "value1", prop2: "value2"]
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     writePklFile(
@@ -110,18 +132,21 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read("prop:prop1")
       prop2 = read("prop:prop2")
       other = read?("prop:other")
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     runTask("evalTest")
 
     val outputFile = testProjectDir.resolve("test.pcf")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       prop1 = "value1"
       prop2 = "value2"
       other = null
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
@@ -134,27 +159,32 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read?("env:USER")
       prop2 = read?("env:PATH")
       prop3 = read?("env:JAVA_HOME")
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     runTask("evalTest")
 
     val outputFile = testProjectDir.resolve("test.pcf")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       prop1 = null
       prop2 = null
       prop3 = null
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
   @Test
   fun `set environment variables`() {
     writeBuildFile(
-      "pcf", """
+      "pcf",
+      """
       environmentVariables = [VAR1: "value1", VAR2: "value2"]
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     writePklFile(
@@ -162,25 +192,29 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read("env:VAR1")
       prop2 = read("env:VAR2")
       other = read?("env:OTHER")
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     runTask("evalTest")
 
     val outputFile = testProjectDir.resolve("test.pcf")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       prop1 = "value1"
       prop2 = "value2"
       other = null
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
   @Test
   fun `no source modules`() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -202,7 +236,8 @@ class EvaluatorsTest : AbstractTest() {
   @Test
   fun `source module URIs`() {
     writeFile(
-      "testDir/test.pkl", """
+      "testDir/test.pkl",
+      """
       person {
         name = "Pigeon"
         age = 20 + 10
@@ -211,7 +246,8 @@ class EvaluatorsTest : AbstractTest() {
     )
 
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -233,19 +269,22 @@ class EvaluatorsTest : AbstractTest() {
 
     val outputFile = testProjectDir.resolve("test.pcf")
     checkFileContents(
-      outputFile, """
+      outputFile,
+      """
       person {
         name = "Pigeon"
         age = 30
       }
-    """.trimIndent()
+    """
+        .trimIndent()
     )
   }
 
   @Test
   fun `cannot evaluate module located outside evalRootDir`() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -264,17 +303,18 @@ class EvaluatorsTest : AbstractTest() {
 
     val result = runTask("evalTest", expectFailure = true)
     assertThat(result.output).contains("Refusing to load module")
-    assertThat(result.output).contains("because it does not match any entry in the module allowlist (`--allowed-modules`).")
+    assertThat(result.output)
+      .contains(
+        "because it does not match any entry in the module allowlist (`--allowed-modules`)."
+      )
   }
 
   @Test
   fun `evaluation timeout`() {
     // Gradle 4.10 doesn't automatically import Duration
-    writeBuildFile(
-      "pcf", """
+    writeBuildFile("pcf", """
       evalTimeout = java.time.Duration.ofMillis(100)
-    """
-    )
+    """)
 
     writePklFile(
       """
@@ -291,7 +331,8 @@ class EvaluatorsTest : AbstractTest() {
   fun `module output separator`() {
     val outputFile = testProjectDir.resolve("test.pcf")
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -309,32 +350,34 @@ class EvaluatorsTest : AbstractTest() {
     """
     )
 
-    writeFile(
-      "test1.pkl",
-      "foo = 1"
-    )
-    writeFile(
-      "test2.pkl",
-      "bar = 2"
-    )
+    writeFile("test1.pkl", "foo = 1")
+    writeFile("test2.pkl", "bar = 2")
     runTask("evalTask")
 
-    checkFileContents(outputFile, """
+    checkFileContents(
+      outputFile,
+      """
       foo = 1
       // hello
       bar = 2
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
   }
-  
+
   @Test
   fun `compliant file URIs`() {
     writeBuildFile("pcf")
-    writeFile("test.pkl", """
+    writeFile(
+      "test.pkl",
+      """
       import "pkl:reflect"
       output {
         text = reflect.Module(module).uri
       }
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
 
     runTask("evalTest")
 
@@ -345,9 +388,13 @@ class EvaluatorsTest : AbstractTest() {
 
   @Test
   fun `multiple file output`() {
-    writeBuildFile("pcf", """
+    writeBuildFile(
+      "pcf",
+      """
       multipleFileOutputDir = layout.projectDirectory.dir("my-output")
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
     writeFile(
       "test.pkl",
       """
@@ -361,7 +408,8 @@ class EvaluatorsTest : AbstractTest() {
             }
           }
         }
-      """.trimIndent()
+      """
+        .trimIndent()
     )
     runTask("evalTest")
     checkFileContents(testProjectDir.resolve("my-output/output-1.txt"), "My output 1")
@@ -370,17 +418,22 @@ class EvaluatorsTest : AbstractTest() {
 
   @Test
   fun expression() {
-    writeBuildFile("yaml", """
+    writeBuildFile(
+      "yaml",
+      """
       expression = "metadata.name"
       outputFile = layout.projectDirectory.file("output.txt")
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
     writeFile(
       "test.pkl",
       """
         metadata {
           name = "Uni"
         }
-      """.trimIndent()
+      """
+        .trimIndent()
     )
     runTask("evalTest")
     checkFileContents(testProjectDir.resolve("output.txt"), "Uni")
@@ -388,26 +441,33 @@ class EvaluatorsTest : AbstractTest() {
 
   @Test
   fun `explicitly set cache dir`(@TempDir tempDir: Path) {
-    writeBuildFile("pcf", """
+    writeBuildFile(
+      "pcf",
+      """
       moduleCacheDir = file("${tempDir.toUri()}")
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
     writeFile(
       "test.pkl",
       """
         import "package://localhost:0/birds@0.5.0#/Bird.pkl"
         
         res = new Bird { name = "Wally"; favoriteFruit { name = "bananas" } }
-      """.trimIndent()
+      """
+        .trimIndent()
     )
     PackageServer.populateCacheDir(tempDir)
     runTask("evalTest")
   }
-  
+
   @Test
   fun `explicitly set project dir`() {
     writeBuildFile("pcf", "projectDir = file(\"proj1\")", listOf("proj1/foo.pkl"))
-    
-    writeFile("proj1/PklProject", """
+
+    writeFile(
+      "proj1/PklProject",
+      """
       amends "pkl:Project"
       
       dependencies {
@@ -420,9 +480,13 @@ class EvaluatorsTest : AbstractTest() {
         version = "1.0.0"
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
-    """.trimIndent())
-    
-    writeFile("proj2/PklProject", """
+    """
+        .trimIndent()
+    )
+
+    writeFile(
+      "proj2/PklProject",
+      """
       amends "pkl:Project"
       
       package {
@@ -431,9 +495,13 @@ class EvaluatorsTest : AbstractTest() {
         version = "1.0.0"
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
-    """.trimIndent())
-    
-    writeFile("proj1/PklProject.deps.json", """
+    """
+        .trimIndent()
+    )
+
+    writeFile(
+      "proj1/PklProject.deps.json",
+      """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {
@@ -444,38 +512,53 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """.trimIndent())
-    
-    writeFile("proj2/PklProject.deps.json", """
+    """
+        .trimIndent()
+    )
+
+    writeFile(
+      "proj2/PklProject.deps.json",
+      """
       {
         "schemaVersion": 1,
         "resolvedDependencies": {}
       }
-    """.trimIndent())
-    
-    writeFile("proj1/foo.pkl", """
+    """
+        .trimIndent()
+    )
+
+    writeFile(
+      "proj1/foo.pkl",
+      """
       module proj1.foo
       
       bar: String = import("@proj2/baz.pkl").qux
-    """.trimIndent())
-    
-    writeFile("proj2/baz.pkl", """
+    """
+        .trimIndent()
+    )
+
+    writeFile(
+      "proj2/baz.pkl",
+      """
       qux: String = "Contents of @proj2/qux"
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
 
     runTask("evalTest")
     assertThat(testProjectDir.resolve("proj1/foo.pcf")).exists()
   }
 
   private fun writeBuildFile(
-    // don't use `org.pkl.core.OutputFormat` 
+    // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core
-    outputFormat: String, 
+    outputFormat: String,
     additionalContents: String = "",
     sourceModules: List<String> = listOf("test.pkl")
   ) {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }

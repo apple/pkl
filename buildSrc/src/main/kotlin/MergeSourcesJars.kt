@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import java.io.File
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -15,21 +30,18 @@ import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.mapProperty
 
 open class MergeSourcesJars : DefaultTask() {
-  @get:InputFiles
-  val inputJars: ConfigurableFileCollection = project.objects.fileCollection()
+  @get:InputFiles val inputJars: ConfigurableFileCollection = project.objects.fileCollection()
 
   @get:InputFiles
   val mergedBinaryJars: ConfigurableFileCollection = project.objects.fileCollection()
 
-  @get:Input
-  val relocatedPackages: MapProperty<String, String> = project.objects.mapProperty()
+  @get:Input val relocatedPackages: MapProperty<String, String> = project.objects.mapProperty()
 
   @get:Input
-  var sourceFileExtensions: ListProperty<String> = project.objects.listProperty<String>()
-    .convention(listOf(".java", ".kt"))
+  var sourceFileExtensions: ListProperty<String> =
+    project.objects.listProperty<String>().convention(listOf(".java", ".kt"))
 
-  @get:OutputFile
-  val outputJar: RegularFileProperty = project.objects.fileProperty()
+  @get:OutputFile val outputJar: RegularFileProperty = project.objects.fileProperty()
 
   @TaskAction
   @Suppress("unused")
@@ -38,12 +50,15 @@ open class MergeSourcesJars : DefaultTask() {
 
     val relocatedPkgs = relocatedPackages.get()
 
-    val relocatedPaths = relocatedPkgs.entries.associate { (key, value) -> toPath(key) to toPath(value) }
+    val relocatedPaths =
+      relocatedPkgs.entries.associate { (key, value) -> toPath(key) to toPath(value) }
 
     // use negative lookbehind to match any that don't precede with
     // a word or a period character. should catch most cases.
-    val importPattern = Pattern.compile("(?<!(\\w|\\.))(" +
-        relocatedPkgs.keys.joinToString("|") { it.replace(".", "\\.") } + ")")
+    val importPattern =
+      Pattern.compile(
+        "(?<!(\\w|\\.))(" + relocatedPkgs.keys.joinToString("|") { it.replace(".", "\\.") } + ")"
+      )
 
     val sourceFileExts = sourceFileExtensions.get()
 

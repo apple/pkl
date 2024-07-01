@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
 import org.assertj.core.api.Assertions.assertThat
@@ -11,36 +26,30 @@ import org.pkl.core.repl.ReplServer
 import org.pkl.core.resource.ResourceReaders
 
 class ReplServerTest {
-  private val server = ReplServer(
-    SecurityManagers.defaultManager,
-    HttpClient.dummyClient(),
-    Loggers.stdErr(),
-    listOf(
-      ModuleKeyFactories.standardLibrary,
-      ModuleKeyFactories.classPath(this::class.java.classLoader),
-      ModuleKeyFactories.file
-    ),
-    listOf(
-      ResourceReaders.environmentVariable(),
-      ResourceReaders.externalProperty()
-    ),
-    mapOf("NAME1" to "value1", "NAME2" to "value2"),
-    mapOf("name1" to "value1", "name2" to "value2"),
-    null,
-    null,
-    null,
-    "/".toPath(),
-    StackFrameTransformers.defaultTransformer
-  )
+  private val server =
+    ReplServer(
+      SecurityManagers.defaultManager,
+      HttpClient.dummyClient(),
+      Loggers.stdErr(),
+      listOf(
+        ModuleKeyFactories.standardLibrary,
+        ModuleKeyFactories.classPath(this::class.java.classLoader),
+        ModuleKeyFactories.file
+      ),
+      listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+      mapOf("NAME1" to "value1", "NAME2" to "value2"),
+      mapOf("name1" to "value1", "name2" to "value2"),
+      null,
+      null,
+      null,
+      "/".toPath(),
+      StackFrameTransformers.defaultTransformer
+    )
 
   @Test
   fun `complete members of local property`() {
-    server.handleRequest(
-      ReplRequest.Eval("id", "local foo = new { bar = 10 }", false, false)
-    )
-    val responses = server.handleRequest(
-      ReplRequest.Completion("id", "foo")
-    )
+    server.handleRequest(ReplRequest.Eval("id", "local foo = new { bar = 10 }", false, false))
+    val responses = server.handleRequest(ReplRequest.Completion("id", "foo"))
 
     assertThat(responses.size).isEqualTo(1)
 
@@ -51,9 +60,18 @@ class ReplServerTest {
     assertThat(completionResponse.members.toSortedSet())
       .isEqualTo(
         sortedSetOf(
-          "default", "bar", "toList()", "toMap()", "getProperty(",
-          "getPropertyOrNull(", "hasProperty(", "ifNonNull(",
-          "length()", "getClass()", "toString()", "toTyped("
+          "default",
+          "bar",
+          "toList()",
+          "toMap()",
+          "getProperty(",
+          "getPropertyOrNull(",
+          "hasProperty(",
+          "ifNonNull(",
+          "length()",
+          "getClass()",
+          "toString()",
+          "toTyped("
         )
       )
   }
@@ -61,9 +79,7 @@ class ReplServerTest {
   @Test
   fun `complete members of module import`() {
     server.handleRequest(ReplRequest.Eval("id", "import \"pkl:test\"", false, false))
-    val responses = server.handleRequest(
-      ReplRequest.Completion("id", "test")
-    )
+    val responses = server.handleRequest(ReplRequest.Completion("id", "test"))
 
     assertThat(responses.size).isEqualTo(1)
 
@@ -79,14 +95,11 @@ class ReplServerTest {
 
   @Test
   fun `complete members of 'this' expression`() {
-    val responses1 = server.handleRequest(
-      ReplRequest.Eval("id", "x = 1; function f() = 3", false, false)
-    )
+    val responses1 =
+      server.handleRequest(ReplRequest.Eval("id", "x = 1; function f() = 3", false, false))
     assertThat(responses1.size).isEqualTo(0)
 
-    val responses2 = server.handleRequest(
-      ReplRequest.Completion("id", "this")
-    )
+    val responses2 = server.handleRequest(ReplRequest.Completion("id", "this"))
     assertThat(responses2.size).isEqualTo(1)
 
     val response = responses2[0]
@@ -96,8 +109,18 @@ class ReplServerTest {
     assertThat(completionResponse.members.toSortedSet())
       .isEqualTo(
         sortedSetOf(
-          "output", "toDynamic()", "toMap()", "f()", "x", "ifNonNull(", "getClass()",
-          "getProperty(", "getPropertyOrNull(", "hasProperty(", "relativePathTo(", "toString()"
+          "output",
+          "toDynamic()",
+          "toMap()",
+          "f()",
+          "x",
+          "ifNonNull(",
+          "getClass()",
+          "getProperty(",
+          "getPropertyOrNull(",
+          "hasProperty(",
+          "relativePathTo(",
+          "toString()"
         )
       )
   }
@@ -156,7 +179,10 @@ class ReplServerTest {
     val result2 = makeEvalRequest("""greet(42)""")
     assertThat(result2).isEqualTo("\"Hello, 42!\"")
 
-    val result3 = makeEvalRequest("function greet(name: String): String = \"Hello, \\(name)!\"; greet(\"Pigeon\") ")
+    val result3 =
+      makeEvalRequest(
+        "function greet(name: String): String = \"Hello, \\(name)!\"; greet(\"Pigeon\") "
+      )
     assertThat(result3).isEqualTo("\"Hello, Pigeon!\"")
 
     val result4 = makeFailingEvalRequest("""greet(44)""")
@@ -164,8 +190,7 @@ class ReplServerTest {
   }
 
   private fun makeEvalRequest(text: String): String {
-    val responses =
-      server.handleRequest(ReplRequest.Eval("id", text, false, false))
+    val responses = server.handleRequest(ReplRequest.Eval("id", text, false, false))
 
     assertThat(responses).hasSize(1)
     val response = responses[0]
@@ -176,8 +201,7 @@ class ReplServerTest {
   }
 
   private fun makeFailingEvalRequest(text: String): String {
-    val responses =
-      server.handleRequest(ReplRequest.Eval("id", text, false, false))
+    val responses = server.handleRequest(ReplRequest.Eval("id", text, false, false))
 
     assertThat(responses).hasSize(1)
     val response = responses[0]

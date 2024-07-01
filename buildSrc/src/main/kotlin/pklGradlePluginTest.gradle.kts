@@ -1,19 +1,19 @@
 /**
- * Allows to run Gradle plugin tests against different Gradle versions.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
- * Adds a `compatibilityTestX` task for every Gradle version X
- * between `ext.minSupportedGradleVersion` and `ext.maxSupportedGradleVersion`
- * that is not in `ext.gradleVersionsExcludedFromTesting`.
- * The list of available Gradle versions is obtained from services.gradle.org.
- * Adds lifecycle tasks to test against multiple Gradle versions at once, for example all Gradle release versions.
- * Compatibility test tasks run the same tests and use the same task configuration as the project's `test` task.
- * They set system properties for the Gradle version and distribution URL to be used.
- * These properties are consumed by the `AbstractTest` class.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
-plugins {
-  java
-}
+plugins { java }
 
 val gradlePluginTests = extensions.create<GradlePluginTests>("gradlePluginTests")
 
@@ -24,18 +24,23 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
   when (val taskNameSuffix = matchResult.groupValues[1]) {
     "All" ->
       task("compatibilityTestAll") {
-        dependsOn("compatibilityTestReleases", "compatibilityTestCandidate", "compatibilityTestNightly")
+        dependsOn(
+          "compatibilityTestReleases",
+          "compatibilityTestCandidate",
+          "compatibilityTestNightly"
+        )
       }
     // releases in configured range
     "Releases" ->
       task("compatibilityTestReleases") {
         val versionInfos = GradleVersionInfo.fetchReleases()
-        val versionsToTestAgainst = versionInfos.filter { versionInfo ->
-          val v = versionInfo.gradleVersion
-          !versionInfo.broken &&
+        val versionsToTestAgainst =
+          versionInfos.filter { versionInfo ->
+            val v = versionInfo.gradleVersion
+            !versionInfo.broken &&
               v in gradlePluginTests.minGradleVersion..gradlePluginTests.maxGradleVersion &&
               v !in gradlePluginTests.skippedGradleVersions
-        }
+          }
 
         dependsOn(versionsToTestAgainst.map { createCompatibilityTestTask(it) })
       }
@@ -45,8 +50,10 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
         val versionInfo = GradleVersionInfo.fetchCurrent()
         if (versionInfo.version == gradle.gradleVersion) {
           doLast {
-            println("No new Gradle release available. " +
-                "(Run `gradlew test` to test against ${versionInfo.version}.)")
+            println(
+              "No new Gradle release available. " +
+                "(Run `gradlew test` to test against ${versionInfo.version}.)"
+            )
           }
         } else {
           dependsOn(createCompatibilityTestTask(versionInfo))
@@ -59,9 +66,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
         if (versionInfo?.activeRc == true) {
           dependsOn(createCompatibilityTestTask(versionInfo))
         } else {
-          doLast {
-            println("No active Gradle release candidate available.")
-          }
+          doLast { println("No active Gradle release candidate available.") }
         }
       }
     // latest nightly
@@ -73,14 +78,14 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
     // explicit version
     else ->
       createCompatibilityTestTask(
-          taskNameSuffix,
-          "https://services.gradle.org/distributions-snapshots/gradle-$taskNameSuffix-bin.zip"
+        taskNameSuffix,
+        "https://services.gradle.org/distributions-snapshots/gradle-$taskNameSuffix-bin.zip"
       )
   }
 }
 
 fun createCompatibilityTestTask(versionInfo: GradleVersionInfo): Task =
-    createCompatibilityTestTask(versionInfo.version, versionInfo.downloadUrl)
+  createCompatibilityTestTask(versionInfo.version, versionInfo.downloadUrl)
 
 fun createCompatibilityTestTask(version: String, downloadUrl: String): Task {
   return tasks.create("compatibilityTest$version", Test::class.java) {
