@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core.util
 
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -26,77 +41,74 @@ class GlobResolverTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "foo.pkl",
-    "bar.pkl",
-    "baz.pkl",
-    "buzzy...baz.pkl",
-    "ted_lasso.min.pkl",
-    "ted_lasso.pkl.min.pkl"
-  ])
+  @ValueSource(
+    strings =
+      [
+        "foo.pkl",
+        "bar.pkl",
+        "baz.pkl",
+        "buzzy...baz.pkl",
+        "ted_lasso.min.pkl",
+        "ted_lasso.pkl.min.pkl"
+      ]
+  )
   fun `glob match`(input: String) {
     val pattern = GlobResolver.toRegexPattern("*.pkl")
     assertTrue(pattern.matcher(input).matches())
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "bar.pcf",
-    "bar.yml",
-    "bar.pkl.bcl",
-    "bar.pklpkl",
-    "pkl",
-    // crosses directory boundaries
-    "/bar/baz.pkl",
-    "/baz.pkl"
-  ])
+  @ValueSource(
+    strings =
+      [
+        "bar.pcf",
+        "bar.yml",
+        "bar.pkl.bcl",
+        "bar.pklpkl",
+        "pkl",
+        // crosses directory boundaries
+        "/bar/baz.pkl",
+        "/baz.pkl"
+      ]
+  )
   fun `glob non-match`(input: String) {
     val pattern = GlobResolver.toRegexPattern("*.pkl")
     assertFalse(pattern.matcher(input).matches())
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "/foo.pkl/bar/baz.pkl",
-    "//fo///ba.pkl",
-    ".pkl",
-    "buz.pkl",
-    "pkl.pkl.pkl.pkl"
-  ])
+  @ValueSource(
+    strings = ["/foo.pkl/bar/baz.pkl", "//fo///ba.pkl", ".pkl", "buz.pkl", "pkl.pkl.pkl.pkl"]
+  )
   fun `globstar match`(input: String) {
     val pattern = GlobResolver.toRegexPattern("**.pkl")
     assertTrue(pattern.matcher(input).matches())
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "/foo.pkl/bar/baz.pkl",
-    "//fo///ba.pkl",
-    ".pkl",
-    "buz.pkl",
-    "pkl.pkl.pkl.pkl"
-  ])
+  @ValueSource(
+    strings = ["/foo.pkl/bar/baz.pkl", "//fo///ba.pkl", ".pkl", "buz.pkl", "pkl.pkl.pkl.pkl"]
+  )
   fun `globstar non-match`(input: String) {
     val pattern = GlobResolver.toRegexPattern("**.pkl")
     assertTrue(pattern.matcher(input).matches())
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "/foo.pkl/bar/baz.pkl",
-    "//fo///ba.pkl",
-  ])
+  @ValueSource(
+    strings =
+      [
+        "/foo.pkl/bar/baz.pkl",
+        "//fo///ba.pkl",
+      ]
+  )
   fun `globstar match 2`(input: String) {
     val pattern = GlobResolver.toRegexPattern("/**/*.pkl")
     assertTrue(pattern.matcher(input).matches())
   }
 
   @ParameterizedTest
-  @ValueSource(strings = [
-    "bar.pkl",
-    ".pkl",
-    "/foo.pkl"
-  ])
+  @ValueSource(strings = ["bar.pkl", ".pkl", "/foo.pkl"])
   fun `globstar non-match 2`(input: String) {
     val pattern = GlobResolver.toRegexPattern("/**/*.pkl")
     assertFalse(pattern.matcher(input).matches())
@@ -135,7 +147,9 @@ class GlobResolverTest {
 
   @Test
   fun `invalid sub-patterns`() {
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("{foo{bar}}") }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("{foo{bar}}")
+    }
     assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("{foo") }
     // no leading open curly means closing curly is treated verbatim
     assertDoesNotThrow { GlobResolver.toRegexPattern("foo}") }
@@ -164,21 +178,39 @@ class GlobResolverTest {
   @Test
   fun `invalid character classes`() {
     assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("thing[") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("thing[foo/bar]") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("[[=a=]]") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("[[:alnum:]]") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("[[.a-acute.]]") }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("thing[foo/bar]")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("[[=a=]]")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("[[:alnum:]]")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("[[.a-acute.]]")
+    }
     // no leading open square bracket means closing square bracket is verbatim
     assertDoesNotThrow { GlobResolver.toRegexPattern("]") }
   }
 
   @Test
   fun `invalid extglob`() {
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("!(foo|bar)") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("+(foo|bar)") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("?(foo|bar)") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("@(foo|bar)") }
-    assertThrows<GlobResolver.InvalidGlobPatternException> { GlobResolver.toRegexPattern("*(foo|bar)") }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("!(foo|bar)")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("+(foo|bar)")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("?(foo|bar)")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("@(foo|bar)")
+    }
+    assertThrows<GlobResolver.InvalidGlobPatternException> {
+      GlobResolver.toRegexPattern("*(foo|bar)")
+    }
   }
 
   @Test

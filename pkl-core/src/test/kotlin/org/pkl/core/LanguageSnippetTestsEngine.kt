@@ -1,5 +1,27 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
+import java.io.PrintWriter
+import java.io.StringWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
+import kotlin.reflect.KClass
 import org.junit.platform.engine.EngineDiscoveryRequest
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.UniqueId
@@ -11,13 +33,6 @@ import org.pkl.commons.test.PklExecutablePaths
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
 import org.pkl.core.util.IoUtils
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.exists
-import kotlin.io.path.isRegularFile
-import kotlin.reflect.KClass
 
 abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
@@ -31,17 +46,17 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val expectedOutputDir: Path = snippetsDir.resolve("output")
 
   /**
-   * Convenience for development; this selects which snippet test(s) to run.
-   * There is a (non-language-snippet) test to make sure this is `""` before commit.
+   * Convenience for development; this selects which snippet test(s) to run. There is a
+   * (non-language-snippet) test to make sure this is `""` before commit.
    */
-  //language=regexp
+  // language=regexp
   internal val selection: String = ""
 
   protected val packageServer: PackageServer = PackageServer()
 
   override val includedTests: List<Regex> = listOf(Regex(".*$selection\\.pkl"))
 
-  override val excludedTests: List<Regex> = buildList { 
+  override val excludedTests: List<Regex> = buildList {
     add(Regex(".*/native/.*"))
     if (IoUtils.isWindows()) {
       addAll(windowsExcludedTests)
@@ -53,8 +68,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   override val isInputFile: (Path) -> Boolean = { it.isRegularFile() }
 
   protected tailrec fun Path.getProjectDir(): Path? =
-    if (Files.exists(this.resolve("PklProject"))) this
-    else parent?.getProjectDir()
+    if (Files.exists(this.resolve("PklProject"))) this else parent?.getProjectDir()
 
   override fun expectedOutputFileFor(inputFile: Path): Path {
     val relativePath = IoUtils.relativize(inputFile, inputDir).toString()
@@ -75,17 +89,19 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
 
   private val replacement by lazy {
     if (snippetsDir.root.toString() != "/") "\$snippetsDir" else "/\$snippetsDir"
-  } 
+  }
 
   protected fun String.stripFilePaths(): String =
     replace(IoUtils.toNormalizedPathString(snippetsDir), replacement)
 
-  protected fun String.stripLineNumbers() = replace(lineNumberRegex) { result ->
-    // replace line number with equivalent number of 'x' characters to keep formatting intact
-    (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
-  }
+  protected fun String.stripLineNumbers() =
+    replace(lineNumberRegex) { result ->
+      // replace line number with equivalent number of 'x' characters to keep formatting intact
+      (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
+    }
 
-  protected fun String.stripWebsite() = replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
+  protected fun String.stripWebsite() =
+    replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
 
   // can't think of a better solution right now
   protected fun String.stripVersionCheckErrorMessage() =
@@ -103,8 +119,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   }
 
   protected fun String.withUnixLineEndings(): String {
-    return if (System.lineSeparator() == "\r\n") replace("\r\n", "\n")
-      else this
+    return if (System.lineSeparator() == "\r\n") replace("\r\n", "\n") else this
   }
 }
 
@@ -123,16 +138,16 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
           "file:///foo/bar" to "file:///foo/bar"
         )
       )
-      .setExternalProperties(mapOf(
-        "name1" to "value1",
-        "name2" to "value2",
-        "/foo/bar" to "foobar"
-      ))
+      .setExternalProperties(
+        mapOf("name1" to "value1", "name2" to "value2", "/foo/bar" to "foobar")
+      )
       .setModuleCacheDir(null)
-      .setHttpClient(HttpClient.builder()
-        .setTestPort(packageServer.port)
-        .addCertificates(FileTestUtils.selfSignedCertificate)
-        .buildLazily())
+      .setHttpClient(
+        HttpClient.builder()
+          .setTestPort(packageServer.port)
+          .addCertificates(FileTestUtils.selfSignedCertificate)
+          .buildLazily()
+      )
   }
 
   override val testClass: KClass<*> = LanguageSnippetTests::class
@@ -140,60 +155,65 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
   override fun generateOutputFor(inputFile: Path): kotlin.Pair<Boolean, String> {
     val logWriter = StringWriter()
 
-    val (success, output) = try {
-      val evaluator = evaluatorBuilder()
-        .setLogger(Loggers.writer(PrintWriter(logWriter)))
-        .apply {
-          if (inputFile.startsWith(projectsDir)) {
-            val projectDir = inputFile.getProjectDir() ?: return@apply
-            val project = Project.loadFromPath(
-              projectDir.resolve("PklProject"),
-              SecurityManagers.defaultManager,
-              null,
-              StackFrameTransformers.empty,
-              mapOf()
-            )
-            securityManager = null
-            applyFromProject(project)
-          }
-        }
-        .build()
-      evaluator.use { true to it.evaluateOutputText(ModuleSource.path(inputFile)) }
-    } catch (e: PklBugException) {
-      false to e.stackTraceToString()
-    } catch (e: PklException) {
-      false to e.message!!
-        .stripLineNumbers()
-        .stripVersionCheckErrorMessage()
-    }
+    val (success, output) =
+      try {
+        val evaluator =
+          evaluatorBuilder()
+            .setLogger(Loggers.writer(PrintWriter(logWriter)))
+            .apply {
+              if (inputFile.startsWith(projectsDir)) {
+                val projectDir = inputFile.getProjectDir() ?: return@apply
+                val project =
+                  Project.loadFromPath(
+                    projectDir.resolve("PklProject"),
+                    SecurityManagers.defaultManager,
+                    null,
+                    StackFrameTransformers.empty,
+                    mapOf()
+                  )
+                securityManager = null
+                applyFromProject(project)
+              }
+            }
+            .build()
+        evaluator.use { true to it.evaluateOutputText(ModuleSource.path(inputFile)) }
+      } catch (e: PklBugException) {
+        false to e.stackTraceToString()
+      } catch (e: PklException) {
+        false to e.message!!.stripLineNumbers().stripVersionCheckErrorMessage()
+      }
 
     val stderr = logWriter.toString().withUnixLineEndings()
 
-    return (success && stderr.isBlank()) to (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
+    return (success && stderr.isBlank()) to
+      (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
   }
 }
 
 abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
   abstract val pklExecutablePath: Path
 
-  override val excludedTests: List<Regex> = listOf(
-    // exclude test that loads module from class path (there is no class path when using native executable)
-    // on the other hand, don't exclude /native/
-    Regex(".*/import1b\\.pkl"),
-  )
+  override val excludedTests: List<Regex> =
+    listOf(
+      // exclude test that loads module from class path (there is no class path when using native
+      // executable)
+      // on the other hand, don't exclude /native/
+      Regex(".*/import1b\\.pkl"),
+    )
 
-  /**
-   * Avoid running tests for native binaries when those native binaries have not been built.
-   */
-  override fun discover(discoveryRequest: EngineDiscoveryRequest, uniqueId: UniqueId): TestDescriptor {
+  /** Avoid running tests for native binaries when those native binaries have not been built. */
+  override fun discover(
+    discoveryRequest: EngineDiscoveryRequest,
+    uniqueId: UniqueId
+  ): TestDescriptor {
     if (!pklExecutablePath.exists()) {
       // return empty descriptor w/o children
       return EngineDescriptor(uniqueId, javaClass.simpleName)
     }
-    
+
     return super.discover(discoveryRequest, uniqueId)
   }
-  
+
   override fun generateOutputFor(inputFile: Path): kotlin.Pair<Boolean, String> {
     val args = buildList {
       add(pklExecutablePath.toString())
@@ -234,20 +254,22 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       add(inputFile.toString())
     }
 
-    val builder = ProcessBuilder()
-      .command(args)
+    val builder = ProcessBuilder().command(args)
 
     val process = builder.start()
     return try {
-      val (out, err) = listOf(process.inputStream, process.errorStream)
-        .map { it.reader().readText().withUnixLineEndings() }
+      val (out, err) =
+        listOf(process.inputStream, process.errorStream).map {
+          it.reader().readText().withUnixLineEndings()
+        }
       val success = process.waitFor() == 0 && err.isBlank()
-      success to (out + err)
-        .stripFilePaths()
-        .stripLineNumbers()
-        .stripWebsite()
-        .stripVersionCheckErrorMessage()
-        .stripStdlibLocationSha()
+      success to
+        (out + err)
+          .stripFilePaths()
+          .stripLineNumbers()
+          .stripWebsite()
+          .stripVersionCheckErrorMessage()
+          .stripStdlibLocationSha()
     } finally {
       process.destroy()
     }
@@ -280,11 +302,12 @@ class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngin
 }
 
 // error message contains different file path on Windows
-private val windowsExcludedTests get() = listOf(Regex(".*missingProjectDeps/bug\\.pkl"))
+private val windowsExcludedTests
+  get() = listOf(Regex(".*missingProjectDeps/bug\\.pkl"))
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
   override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
-  override val excludedTests: List<Regex> 
+  override val excludedTests: List<Regex>
     get() = super.excludedTests + windowsExcludedTests
 }

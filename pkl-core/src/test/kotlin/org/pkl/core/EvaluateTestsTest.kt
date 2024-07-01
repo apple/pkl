@@ -1,15 +1,30 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
-import org.pkl.commons.createTempFile
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.createFile
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.createTempFile
 import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource.*
-import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.createFile
 
 class EvaluateTestsTest {
 
@@ -17,7 +32,10 @@ class EvaluateTestsTest {
 
   @Test
   fun `test successful module`() {
-    val results = evaluator.evaluateTest(text("""
+    val results =
+      evaluator.evaluateTest(
+        text(
+          """
       amends "pkl:test"
 
       facts {
@@ -26,7 +44,11 @@ class EvaluateTestsTest {
           "foo" == "foo"
         }
       }
-    """.trimIndent()), true)
+    """
+            .trimIndent()
+        ),
+        true
+      )
 
     assertThat(results.moduleName).isEqualTo("text")
     assertThat(results.displayUri).isEqualTo("repl:text")
@@ -38,9 +60,10 @@ class EvaluateTestsTest {
 
   @Test
   fun `test module failure`() {
-    val results = evaluator.evaluateTest(
-      text(
-        """
+    val results =
+      evaluator.evaluateTest(
+        text(
+          """
         amends "pkl:test"
   
         facts {
@@ -49,19 +72,20 @@ class EvaluateTestsTest {
             "foo" == "bar"
           }
         }
-        """.trimIndent()
-      ),
-      true
-    )
+        """
+            .trimIndent()
+        ),
+        true
+      )
 
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.totalFailures()).isEqualTo(2)
     assertThat(results.failed()).isTrue
-    
+
     val res = results.results[0]
     assertThat(res.name).isEqualTo("should fail")
     assertThat(res.errors).isEmpty()
-    
+
     val fail1 = res.failures[0]
     assertThat(fail1.rendered).isEqualTo("1 == 2 ❌ (repl:text)")
 
@@ -71,9 +95,10 @@ class EvaluateTestsTest {
 
   @Test
   fun `test module error`() {
-    val results = evaluator.evaluateTest(
-      text(
-        """
+    val results =
+      evaluator.evaluateTest(
+        text(
+          """
         amends "pkl:test"
   
         facts {
@@ -82,10 +107,11 @@ class EvaluateTestsTest {
             throw("got an error")
           }
         }
-        """.trimIndent()
-      ),
-      true
-    )
+        """
+            .trimIndent()
+        ),
+        true
+      )
 
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.totalFailures()).isEqualTo(0)
@@ -95,10 +121,12 @@ class EvaluateTestsTest {
     assertThat(res.name).isEqualTo("text")
     assertThat(res.failures).isEmpty()
     assertThat(res.errors.size).isEqualTo(1)
-    
+
     val error = res.errors[0]
     assertThat(error.message).isEqualTo("got an error")
-    assertThat(error.exception.message).isEqualTo("""
+    assertThat(error.exception.message)
+      .isEqualTo(
+        """
       –– Pkl Error ––
       got an error
 
@@ -110,13 +138,17 @@ class EvaluateTestsTest {
           ^^^^^^^
       at text#facts (repl:text)
 
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
-  
+
   @Test
   fun `test successful example`(@TempDir tempDir: Path) {
     val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
-    Files.writeString(file, """
+    Files.writeString(
+      file,
+      """
       amends "pkl:test"
       
       examples {
@@ -127,9 +159,13 @@ class EvaluateTestsTest {
           }
         }
       }
-    """.trimIndent())
-    
-    Files.writeString(createExpected(file), """
+    """
+        .trimIndent()
+    )
+
+    Files.writeString(
+      createExpected(file),
+      """
       examples {
         ["user"] {
           new {
@@ -138,7 +174,9 @@ class EvaluateTestsTest {
           }
         }
       }
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
 
     val results = evaluator.evaluateTest(path(file), false)
     assertThat(results.moduleName).startsWith("example")
@@ -151,7 +189,9 @@ class EvaluateTestsTest {
   @Test
   fun `test example failure`(@TempDir tempDir: Path) {
     val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
-    Files.writeString(file, """
+    Files.writeString(
+      file,
+      """
       amends "pkl:test"
       
       examples {
@@ -162,9 +202,13 @@ class EvaluateTestsTest {
           }
         }
       }
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
 
-    Files.writeString(createExpected(file), """
+    Files.writeString(
+      createExpected(file),
+      """
       examples {
         ["user"] {
           new {
@@ -173,7 +217,9 @@ class EvaluateTestsTest {
           }
         }
       }
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
 
     val results = evaluator.evaluateTest(path(file), false)
     assertThat(results.moduleName).startsWith("example")
@@ -187,7 +233,9 @@ class EvaluateTestsTest {
     assertThat(res.errors.isEmpty()).isTrue
 
     val fail1 = res.failures[0]
-    assertThat(fail1.rendered.stripFileAndLines(tempDir)).isEqualTo("""
+    assertThat(fail1.rendered.stripFileAndLines(tempDir))
+      .isEqualTo(
+        """
       (/tempDir/example.pkl)
       Expected: (/tempDir/example.pkl-expected.pcf)
       new {
@@ -199,13 +247,17 @@ class EvaluateTestsTest {
         name = "Bob"
         age = 33
       }
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   @Test
   fun `written examples use custom string delimiters`(@TempDir tempDir: Path) {
     val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
-    Files.writeString(file, """
+    Files.writeString(
+      file,
+      """
       amends "pkl:test"
       
       examples {
@@ -213,25 +265,33 @@ class EvaluateTestsTest {
           "my \"string\""
         }
       }
-    """.trimIndent())
+    """
+        .trimIndent()
+    )
     evaluator.evaluateTest(path(file), false)
     val expectedFile = file.parent.resolve(file.fileName.toString() + "-expected.pcf")
     assertThat(expectedFile).exists()
-    assertThat(expectedFile).hasContent("""
+    assertThat(expectedFile)
+      .hasContent(
+        """
       examples {
         ["myStr"] {
           #"my "string""#
         }
       }
 
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   // test for backwards compatibility
   @Test
   fun `examples that don't use custom string delimiters still pass`(@TempDir tempDir: Path) {
     val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
-    Files.writeString(file, """
+    Files.writeString(
+      file,
+      """
       amends "pkl:test"
       
       examples {
@@ -239,25 +299,28 @@ class EvaluateTestsTest {
           "my \"string\""
         }
       }
-    """.trimIndent())
-    createExpected(file).writeString("""
+    """
+        .trimIndent()
+    )
+    createExpected(file)
+      .writeString(
+        """
       examples {
         ["myStr"] {
           "my \"string\""
         }
       }
 
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
     val result = evaluator.evaluateTest(path(file), false)
     assertFalse(result.failed())
   }
 
   companion object {
     private fun createExpected(path: Path): Path {
-      return path
-        .parent
-        .resolve(path.fileName.toString() + "-expected.pcf")
-        .createFile()
+      return path.parent.resolve(path.fileName.toString() + "-expected.pcf").createFile()
     }
 
     private fun String.stripFileAndLines(tmpDir: Path) =

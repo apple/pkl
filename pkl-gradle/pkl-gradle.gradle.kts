@@ -1,3 +1,18 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 plugins {
   pklAllProjects
   pklJavaLibrary
@@ -15,21 +30,19 @@ dependencies {
   compileOnly(projects.pklTools)
 
   // Declare a `runtimeOnly` dependency on `project(":pkl-tools", "fatJar")`
-  // to ensure that the published plugin 
-  // (and also plugin tests, see the generated `plugin-under-test-metadata.properties`) 
+  // to ensure that the published plugin
+  // (and also plugin tests, see the generated `plugin-under-test-metadata.properties`)
   // only depends on the pkl-tools shaded fat JAR.
   // This avoids dependency version conflicts with other Gradle plugins.
   //
-  // Hide this dependency from IntelliJ 
+  // Hide this dependency from IntelliJ
   // to prevent IntelliJ from reindexing the pkl-tools fat JAR after every build.
   // (IntelliJ gets everything it needs from the `compileOnly` dependency.)
   //
   // To debug shaded code in IntelliJ, temporarily remove the conditional.
   if (System.getProperty("idea.sync.active") == null) {
     runtimeOnly(projects.pklTools) {
-      attributes {
-        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
-      }
+      attributes { attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED)) }
     }
   }
 

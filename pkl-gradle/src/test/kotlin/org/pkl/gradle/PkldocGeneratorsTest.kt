@@ -1,14 +1,30 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.gradle
 
+import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import kotlin.io.path.readText
 
 class PkldocGeneratorsTest : AbstractTest() {
   @Test
   fun `generate docs`() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -25,7 +41,8 @@ class PkldocGeneratorsTest : AbstractTest() {
     """
     )
     writeFile(
-      "doc-package-info.pkl", """
+      "doc-package-info.pkl",
+      """
       /// A test package.
       amends "pkl:DocPackageInfo"
       name = "test"
@@ -34,10 +51,12 @@ class PkldocGeneratorsTest : AbstractTest() {
       authors { "publisher@apple.com" }
       sourceCode = "sources.apple.com/"
       issueTracker = "issues.apple.com"
-    """.trimIndent()
+    """
+        .trimIndent()
     )
     writeFile(
-      "person.pkl", """
+      "person.pkl",
+      """
       module test.person
 
       class Person {
@@ -51,7 +70,8 @@ class PkldocGeneratorsTest : AbstractTest() {
       }
 
       other = 42
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     runTask("pkldoc")
@@ -79,7 +99,8 @@ class PkldocGeneratorsTest : AbstractTest() {
   @Test
   fun `no source modules`() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -90,7 +111,8 @@ class PkldocGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """.trimIndent()
+    """
+        .trimIndent()
     )
 
     val result = runTask("pkldoc", true)

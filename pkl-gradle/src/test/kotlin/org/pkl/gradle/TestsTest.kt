@@ -1,10 +1,25 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.gradle
 
-import org.assertj.core.api.Assertions.assertThat
-import org.pkl.commons.toNormalizedPathString
-import org.junit.jupiter.api.Test
 import java.nio.file.Path
 import kotlin.io.path.readText
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.pkl.commons.toNormalizedPathString
 
 class TestsTest : AbstractTest() {
 
@@ -22,12 +37,16 @@ class TestsTest : AbstractTest() {
   fun `facts fail`() {
     writeBuildFile()
 
-    writePklFile(additionalFacts = """
+    writePklFile(
+      additionalFacts =
+        """
       ["should fail"] {
         1 == 3
         "foo" == "bar"
       }
-    """.trimIndent())
+    """
+          .trimIndent()
+    )
 
     val res = runTask("evalTest", expectFailure = true)
     assertThat(res.output).contains("should fail ❌")
@@ -39,15 +58,21 @@ class TestsTest : AbstractTest() {
   fun error() {
     writeBuildFile()
 
-    writePklFile(additionalFacts = """
+    writePklFile(
+      additionalFacts =
+        """
       ["error"] {
         throw("exception")
       }
-    """.trimIndent())
+    """
+          .trimIndent()
+    )
 
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
-    assertThat(output).contains("""
+    assertThat(output)
+      .contains(
+        """
       module test (file:///file, line x)
         test ❌
           Error:
@@ -61,7 +86,9 @@ class TestsTest : AbstractTest() {
               3 | facts {
                   ^^^^^^^
               at test#facts (file:///file, line x)
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -73,7 +100,9 @@ class TestsTest : AbstractTest() {
 
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
-    assertThat(output.trimStart()).contains("""
+    assertThat(output.trimStart())
+      .contains(
+        """
       module test (file:///file, line x)
         sum numbers ✅
         divide numbers ✅
@@ -105,12 +134,16 @@ class TestsTest : AbstractTest() {
             name = "Welma"
             age = 35
           }
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
   @Test
   fun `overwrite expected examples`() {
-    writePklFile(additionalExamples = """
+    writePklFile(
+      additionalExamples =
+        """
       ["user 0"] {
         new {
           name = "Cool"
@@ -127,7 +160,9 @@ class TestsTest : AbstractTest() {
           age = 35
         }
       }
-    """.trimIndent())
+    """
+          .trimIndent()
+    )
     writeFile("test.pkl-expected.pcf", bigTestExpected)
 
     writeBuildFile("overwrite = true")
@@ -150,7 +185,9 @@ class TestsTest : AbstractTest() {
     val outputFile = testProjectDir.resolve("build/test.xml")
     val report = outputFile.readText().stripFilesAndLines()
 
-    assertThat(report).isEqualTo("""
+    assertThat(report)
+      .isEqualTo(
+        """
       <?xml version="1.0" encoding="UTF-8"?>
       <testsuite name="test" tests="6" failures="4">
           <testcase classname="test" name="sum numbers"></testcase>
@@ -190,10 +227,13 @@ class TestsTest : AbstractTest() {
       ]]></system-err>
       </testsuite>
       
-    """.trimIndent())
+    """
+          .trimIndent()
+      )
   }
 
-  private val bigTest = """
+  private val bigTest =
+    """
     amends "pkl:test"
 
     local function sum(a, b) = a + b
@@ -231,9 +271,11 @@ class TestsTest : AbstractTest() {
         }
       }
     }
-  """.trimIndent()
+  """
+      .trimIndent()
 
-  private val bigTestExpected = """
+  private val bigTestExpected =
+    """
     examples {
       ["user 0"] {
         new {
@@ -252,11 +294,13 @@ class TestsTest : AbstractTest() {
         }
       }
     }
-  """.trimIndent()
+  """
+      .trimIndent()
 
   private fun writeBuildFile(additionalContents: String = "") {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -277,7 +321,8 @@ class TestsTest : AbstractTest() {
   private fun writePklFile(
     additionalFacts: String = "",
     additionalExamples: String = "",
-    contents: String = """
+    contents: String =
+      """
     amends "pkl:test"
     
     facts {

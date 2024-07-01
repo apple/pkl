@@ -1,10 +1,25 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core
 
-import org.pkl.core.ModuleSource.*
 import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.pkl.core.ModuleSource.*
 import org.pkl.core.runtime.BaseModule
 
 class EvaluateSchemaTest {
@@ -17,9 +32,7 @@ class EvaluateSchemaTest {
 
   @Test
   fun `evaluate test schema`() {
-    val module = evaluator.evaluateSchema(
-      modulePath("org/pkl/core/EvaluateSchemaTest.pkl")
-    )
+    val module = evaluator.evaluateSchema(modulePath("org/pkl/core/EvaluateSchemaTest.pkl"))
 
     checkModuleMetadata(module)
 
@@ -35,28 +48,27 @@ class EvaluateSchemaTest {
   @Test
   fun `evaluate pkl_base schema`() {
     val module = evaluator.evaluateSchema(uri(URI("pkl:base")))
-    assertThat(module.moduleClass.superclass)
-      .isEqualTo(BaseModule.getModuleClass().export())
+    assertThat(module.moduleClass.superclass).isEqualTo(BaseModule.getModuleClass().export())
   }
 
   @Test
   fun `does not export local classes`() {
-    val module = evaluator.evaluateSchema(
-      text(
-        """
+    val module =
+      evaluator.evaluateSchema(
+        text(
+          """
         class Foo {}
         local class Baz {}
-        """.trimIndent()
+        """
+            .trimIndent()
+        )
       )
-    )
 
-    assertThat(module.classes.keys)
-      .containsExactly("Foo")
+    assertThat(module.classes.keys).containsExactly("Foo")
   }
 
   private fun checkModuleMetadata(module: ModuleSchema) {
-    assertThat(module.moduleUri)
-      .isEqualTo(URI("modulepath:/org/pkl/core/EvaluateSchemaTest.pkl"))
+    assertThat(module.moduleUri).isEqualTo(URI("modulepath:/org/pkl/core/EvaluateSchemaTest.pkl"))
 
     assertThat(module.moduleName).isEqualTo("test")
 
@@ -79,9 +91,8 @@ class EvaluateSchemaTest {
     val paramType = propertyb2.type
     assertThat(paramType).isInstanceOf(PType.Class::class.java)
     paramType as PType.Class
-    assertThat(paramType.pClass)
-      .isEqualTo(BaseModule.getIntClass().export())
-    
+    assertThat(paramType.pClass).isEqualTo(BaseModule.getIntClass().export())
+
     val propertyb3 = properties.getValue("propertyb3")
     assertThat(propertyb3.sourceLocation.startLine).isEqualTo(24)
     assertThat(propertyb3.sourceLocation.endLine).isEqualTo(24)
@@ -106,10 +117,8 @@ class EvaluateSchemaTest {
     val paramBaseType = paramType.baseType
     assertThat(paramBaseType).isInstanceOf(PType.Class::class.java)
     paramBaseType as PType.Class
-    assertThat(paramBaseType.pClass)
-      .isEqualTo(BaseModule.getStringClass().export())
-    assertThat(paramType.constraints)
-      .isEqualTo(listOf("!isEmpty", "startsWith(\"a\")"))
+    assertThat(paramBaseType.pClass).isEqualTo(BaseModule.getStringClass().export())
+    assertThat(paramType.constraints).isEqualTo(listOf("!isEmpty", "startsWith(\"a\")"))
 
     val returnType = methodb2.returnType
     assertThat(returnType).isInstanceOf(PType.Constrained::class.java)
@@ -119,7 +128,7 @@ class EvaluateSchemaTest {
     returnBaseType as PType.Class
     assertThat(returnBaseType.pClass).isEqualTo(BaseModule.getIntClass().export())
     assertThat(returnType.constraints).isEqualTo(listOf("isPositive"))
-    
+
     val methodb3 = methods.getValue("methodb3")
     assertThat(methodb3.sourceLocation.startLine).isEqualTo(26)
     assertThat(methodb3.sourceLocation.endLine).isEqualTo(26)
@@ -141,10 +150,8 @@ class EvaluateSchemaTest {
     assertThat(supermodule).isNotNull
     assertThat(supermodule!!.supermodule).isNull()
 
-    assertThat(module.moduleClass.superclass)
-      .isEqualTo(supermodule.moduleClass)
-    assertThat(supermodule.moduleClass.superclass)
-      .isEqualTo(BaseModule.getModuleClass().export())
+    assertThat(module.moduleClass.superclass).isEqualTo(supermodule.moduleClass)
+    assertThat(supermodule.moduleClass.superclass).isEqualTo(BaseModule.getModuleClass().export())
 
     assertThat(supermodule.moduleUri)
       .isEqualTo(URI("modulepath:/org/pkl/core/EvaluateSchemaTestBaseModule.pkl"))

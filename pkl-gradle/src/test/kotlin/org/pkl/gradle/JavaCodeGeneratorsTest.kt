@@ -1,9 +1,24 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.gradle
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
 class JavaCodeGeneratorsTest : AbstractTest() {
   @Test
@@ -12,7 +27,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     writePklFile()
 
     runTask("configClasses")
-    
+
     val baseDir = testProjectDir.resolve("build/generated/java/foo/bar")
     val moduleFile = baseDir.resolve("Mod.java")
 
@@ -23,16 +38,18 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
     // shading must not affect generated code
     assertThat(text).doesNotContain("org.pkl.thirdparty")
-    
+
     checkTextContains(
-      text, """
+      text,
+      """
       |public final class Mod {
       |  public final @Nonnull Object other;
     """
     )
 
     checkTextContains(
-      text, """
+      text,
+      """
       |  public static final class Person {
       |    public final @Nonnull String name;
       |
@@ -41,7 +58,8 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     )
 
     checkTextContains(
-      text, """
+      text,
+      """
       |  public static final class Address {
       |    public final @Nonnull String street;
       |
@@ -54,7 +72,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
   fun `compile generated code`() {
     writeBuildFile()
     writePklFile()
-    
+
     runTask("compileJava")
 
     val classesDir = testProjectDir.resolve("build/classes/java/main")
@@ -65,11 +83,12 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(personClassFile).exists()
     assertThat(addressClassFile).exists()
   }
-  
+
   @Test
   fun `no source modules`() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "org.pkl-lang"
       }
@@ -90,7 +109,8 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
   private fun writeBuildFile() {
     writeFile(
-      "build.gradle", """
+      "build.gradle",
+      """
       plugins {
         id "java"
         id "org.pkl-lang"
@@ -125,7 +145,8 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
   private fun writePklFile() {
     writeFile(
-      "mod.pkl", """
+      "mod.pkl",
+      """
         module org.mod
   
         class Person {

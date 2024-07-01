@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-plugins {
-  `kotlin-dsl`
-}
+plugins { `kotlin-dsl` }
 
 dependencies {
   implementation(libs.downloadTaskPlugin)

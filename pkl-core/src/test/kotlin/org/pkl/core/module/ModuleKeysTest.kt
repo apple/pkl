@@ -1,19 +1,34 @@
+/**
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core.module
 
-import org.pkl.commons.createParentDirectories
-import org.pkl.commons.toPath
-import org.pkl.commons.writeString
-import org.pkl.core.SecurityManagers
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.io.TempDir
 import java.io.FileNotFoundException
 import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
 import kotlin.io.path.createFile
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.createParentDirectories
+import org.pkl.commons.toPath
+import org.pkl.commons.writeString
+import org.pkl.core.SecurityManagers
 
 class ModuleKeysTest {
   private val securityManager = SecurityManagers.defaultManager
@@ -46,9 +61,7 @@ class ModuleKeysTest {
 
   @Test
   fun `standard library - wrong scheme`() {
-    assertThrows<IllegalArgumentException> {
-      ModuleKeys.standardLibrary(URI("other:base"))
-    }
+    assertThrows<IllegalArgumentException> { ModuleKeys.standardLibrary(URI("other:base")) }
   }
 
   @Test
@@ -97,18 +110,18 @@ class ModuleKeysTest {
 
   @Test
   fun `class path - module not found`() {
-    val key = ModuleKeys.classPath(URI("modulepath:/non/existing"), ModuleKeysTest::class.java.classLoader)
+    val key =
+      ModuleKeys.classPath(URI("modulepath:/non/existing"), ModuleKeysTest::class.java.classLoader)
 
-    assertThrows<FileNotFoundException> {
-      key.resolve(SecurityManagers.defaultManager)
-    }
+    assertThrows<FileNotFoundException> { key.resolve(SecurityManagers.defaultManager) }
   }
 
   @Test
   fun `class path - missing leading slash`() {
-    val e = assertThrows<IllegalArgumentException> {
-      ModuleKeys.classPath(URI("modulepath:foo/bar.pkl"), ModuleKeysTest::class.java.classLoader)
-    }
+    val e =
+      assertThrows<IllegalArgumentException> {
+        ModuleKeys.classPath(URI("modulepath:foo/bar.pkl"), ModuleKeysTest::class.java.classLoader)
+      }
     assertThat(e).hasMessageContaining("`/`")
   }
 
@@ -127,10 +140,8 @@ class ModuleKeysTest {
 
     val resolvedKey = key.resolve(securityManager)
 
-    assertThat(resolvedKey.uri.scheme)
-      .isEqualTo("file")
-    assertThat(resolvedKey.loadSource())
-      .isEqualTo("age = 40")
+    assertThat(resolvedKey.uri.scheme).isEqualTo("file")
+    assertThat(resolvedKey.loadSource()).isEqualTo("age = 40")
   }
 
   @Test
@@ -144,61 +155,55 @@ class ModuleKeysTest {
   fun `module path - module not found`() {
     val key = ModuleKeys.modulePath(URI("modulepath:/non/existing"), ModulePathResolver(listOf()))
 
-    assertThrows<FileNotFoundException> {
-      key.resolve(SecurityManagers.defaultManager)
-    }
+    assertThrows<FileNotFoundException> { key.resolve(SecurityManagers.defaultManager) }
   }
 
   @Test
   fun `module path - missing leading slash`() {
-    val e = assertThrows<IllegalArgumentException> {
-      ModuleKeys.modulePath(URI("modulepath:foo/bar.pkl"), ModulePathResolver(listOf()))
-    }
+    val e =
+      assertThrows<IllegalArgumentException> {
+        ModuleKeys.modulePath(URI("modulepath:foo/bar.pkl"), ModulePathResolver(listOf()))
+      }
     assertThat(e).hasMessageContaining("`/`")
   }
 
   @Test
   fun `package - no version`() {
-    val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package://localhost:0/birds#/Bird.pkl"))
-    }
+    val e =
+      assertThrows<URISyntaxException> {
+        ModuleKeys.pkg(URI("package://localhost:0/birds#/Bird.pkl"))
+      }
     assertThat(e).hasMessageContaining("A package URI must have its path suffixed by its version")
   }
 
   @Test
   fun `package - invalid semver`() {
-    val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package://localhost:0/birds@notAVersion#/Bird.pkl"))
-    }
+    val e =
+      assertThrows<URISyntaxException> {
+        ModuleKeys.pkg(URI("package://localhost:0/birds@notAVersion#/Bird.pkl"))
+      }
     assertThat(e).hasMessageContaining("`notAVersion` could not be parsed")
   }
 
   @Test
   fun `package - missing leading slash`() {
-    val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package:invalid"))
-    }
-    assertThat(e).hasMessageContaining("Module URI `package:invalid` is missing a `/` after `package:`")
+    val e = assertThrows<URISyntaxException> { ModuleKeys.pkg(URI("package:invalid")) }
+    assertThat(e)
+      .hasMessageContaining("Module URI `package:invalid` is missing a `/` after `package:`")
   }
 
   @Test
   fun `package - missing authority`() {
-    val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package:/not/a/valid/path"))
-    }
+    val e = assertThrows<URISyntaxException> { ModuleKeys.pkg(URI("package:/not/a/valid/path")) }
     assertThat(e).hasMessageContaining("Package URIs must have an authority component")
 
-    val e2 = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package:///not/a/valid/path"))
-    }
+    val e2 = assertThrows<URISyntaxException> { ModuleKeys.pkg(URI("package:///not/a/valid/path")) }
     assertThat(e2).hasMessageContaining("Package URIs must have an authority component")
   }
 
   @Test
   fun `package - missing path`() {
-    val e = assertThrows<URISyntaxException> {
-      ModuleKeys.pkg(URI("package://example.com"))
-    }
+    val e = assertThrows<URISyntaxException> { ModuleKeys.pkg(URI("package://example.com")) }
     assertThat(e).hasMessageContaining("Package URIs must have a path component")
   }
 
@@ -234,11 +239,8 @@ class ModuleKeysTest {
     val uri = URI("repl:foo")
     val key = ModuleKeys.genericUrl(uri)
 
-    val e = assertThrows<MalformedURLException> {
-      key.resolve(securityManager)
-    }
+    val e = assertThrows<MalformedURLException> { key.resolve(securityManager) }
 
-    assertThat(e)
-      .hasMessage("unknown protocol: repl")
+    assertThat(e).hasMessage("unknown protocol: repl")
   }
 }
