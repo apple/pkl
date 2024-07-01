@@ -51,9 +51,10 @@ constructor(
   private val consoleWriter: Writer = System.out.writer(),
 ) : CliCommand(options.base) {
   /**
-   * Output files for the modules to be evaluated. Returns `null` if `options.outputPath` is `null`.
-   * Multiple modules may be mapped to the same output file, in which case their outputs are
-   * concatenated with [CliEvaluatorOptions.moduleOutputSeparator].
+   * Output files for the modules to be evaluated. Returns `null` if `options.outputPath` is `null`
+   * or if `options.multipleFileOutputPath` is not `null`. Multiple modules may be mapped to the
+   * same output file, in which case their outputs are concatenated with
+   * [CliEvaluatorOptions.moduleOutputSeparator].
    */
   @Suppress("MemberVisibilityCanBePrivate")
   val outputFiles: Set<File>? by lazy {
