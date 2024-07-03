@@ -15,22 +15,14 @@
  */
 package org.pkl.core.runtime;
 
-import static org.fusesource.jansi.Ansi.ansi;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Color;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.Nullable;
 
 public final class StackTraceRenderer {
   private final Function<StackFrame, StackFrame> frameTransformer;
-
-  private static final Ansi.Color frameColor = Color.YELLOW;
-  private static final Ansi.Color lineNumColor = Color.BLUE;
-  private static final Ansi.Color repetitionColor = Color.MAGENTA;
 
   public StackTraceRenderer(Function<StackFrame, StackFrame> frameTransformer) {
     this.frameTransformer = frameTransformer;
@@ -48,7 +40,6 @@ public final class StackTraceRenderer {
       StringBuilder builder,
       String leftMargin,
       boolean isFirstElement) {
-    var out = ansi(builder);
     for (var frame : frames) {
       if (frame instanceof StackFrameLoop loop) {
         // ensure a cycle of length 1 doesn't get rendered as a loop
@@ -56,28 +47,20 @@ public final class StackTraceRenderer {
           doRender(loop.frames, null, builder, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
-            out.fgBright(frameColor).a(leftMargin).reset().a("\n");
+            builder.append(leftMargin).append("\n");
           }
-          out.fgBright(frameColor)
-              .a(leftMargin)
-              .a("┌─ ")
-              .reset()
-              .bold()
-              .fg(repetitionColor)
-              .a(Integer.toString(loop.count))
-              .reset()
-              .a(" repetitions of:\n");
+          builder.append(leftMargin).append("┌─ ").append(loop.count).append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
           doRender(loop.frames, null, builder, newLeftMargin, isFirstElement);
           if (isFirstElement) {
             renderHint(hint, builder, newLeftMargin);
             isFirstElement = false;
           }
-          out.fgBright(frameColor).a(leftMargin).a("└─").reset().a("\n");
+          builder.append(leftMargin).append("└─\n");
         }
       } else {
         if (!isFirstElement) {
-          out.fgBright(frameColor).a(leftMargin).reset().a('\n');
+          builder.append(leftMargin).append('\n');
         }
         renderFrame((StackFrame) frame, builder, leftMargin);
       }
@@ -97,16 +80,14 @@ public final class StackTraceRenderer {
 
   private void renderHint(@Nullable String hint, StringBuilder builder, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
-    var out = ansi(builder);
 
-    out.a('\n');
-    out.fgBright(frameColor).a(leftMargin);
-    out.fgBright(frameColor).bold().a(hint).reset();
-    out.a('\n');
+    builder.append('\n');
+    builder.append(leftMargin);
+    builder.append(hint);
+    builder.append('\n');
   }
 
   private void renderSourceLine(StackFrame frame, StringBuilder builder, String leftMargin) {
-    var out = ansi(builder);
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -117,36 +98,27 @@ public final class StackTraceRenderer {
             : sourceLine.length();
 
     var prefix = frame.getStartLine() + " | ";
-    out.fgBright(frameColor)
-        .a(leftMargin)
-        .fgBright(lineNumColor)
-        .a(prefix)
-        .reset()
-        .a(sourceLine)
-        .a('\n');
-    out.fgBright(frameColor).a(leftMargin).reset();
+    builder.append(leftMargin).append(prefix).append(sourceLine).append('\n');
+    builder.append(leftMargin);
     //noinspection StringRepeatCanBeUsed
     for (int i = 1; i < prefix.length() + startColumn; i++) {
-      out.append(' ');
+      builder.append(' ');
     }
-
-    out.fgRed();
     //noinspection StringRepeatCanBeUsed
     for (int i = startColumn; i <= endColumn; i++) {
-      out.a('^');
+      builder.append('^');
     }
-    out.reset().a('\n');
+    builder.append('\n');
   }
 
   private void renderSourceLocation(StackFrame frame, StringBuilder builder, String leftMargin) {
-    var out = ansi(builder);
-    out.fgBright(frameColor).a(leftMargin).reset().a("at ");
+    builder.append(leftMargin).append("at ");
     if (frame.getMemberName() != null) {
-      out.a(frame.getMemberName());
+      builder.append(frame.getMemberName());
     } else {
-      out.a("<unknown>");
+      builder.append("<unknown>");
     }
-    out.a(" (").a(frame.getModuleUri()).a(')').a('\n');
+    builder.append(" (").append(frame.getModuleUri()).append(')').append('\n');
   }
 
   /**
