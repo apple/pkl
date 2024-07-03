@@ -15,14 +15,10 @@
  */
 package org.pkl.core.runtime;
 
-import static org.fusesource.jansi.Ansi.ansi;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.Ansi.Color;
 import org.pkl.core.Release;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
@@ -30,8 +26,6 @@ import org.pkl.core.util.StringBuilderWriter;
 
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
-
-  private static final Ansi.Color errorColor = Color.RED;
 
   /**
    * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
@@ -79,8 +73,7 @@ public final class VmExceptionRenderer {
   }
 
   private void renderException(VmException exception, StringBuilder builder) {
-    var out = ansi(builder);
-    out.fg(errorColor).a("–– Pkl Error ––").reset();
+    var header = "–– Pkl Error ––";
 
     String message;
     var hint = exception.getHint();
@@ -101,7 +94,7 @@ public final class VmExceptionRenderer {
       message = exception.getMessage();
     }
 
-    out.a('\n').fgBright(errorColor).a(message).reset().a('\n');
+    builder.append(header).append('\n').append(message).append('\n');
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
