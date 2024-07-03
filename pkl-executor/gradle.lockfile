@@ -6,6 +6,7 @@ net.bytebuddy:byte-buddy:1.14.16=testCompileClasspath,testImplementationDependen
 net.java.dev.jna:jna:5.6.0=kotlinCompilerClasspath,kotlinKlibCommonizerClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.26.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+org.fusesource.jansi:jansi:2.4.1=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.graalvm.sdk:graal-sdk:23.0.2=testRuntimeClasspath
 org.graalvm.truffle:truffle-api:23.0.2=testRuntimeClasspath
 org.jetbrains.intellij.deps:trove4j:1.0.20200330=kotlinCompilerClasspath,kotlinKlibCommonizerClasspath

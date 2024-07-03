@@ -37,6 +37,9 @@ tasks.withType<Test>().configureEach {
   // enable checking of stdlib return types
   systemProperty("org.pkl.testMode", "true")
 
+  // Disable colour output in tests
+  systemProperty("org.fusesource.jansi.Ansi.disable", "true")
+
   reports.named("html") { enabled = true }
 
   testLogging { exceptionFormat = TestExceptionFormat.FULL }

@@ -64,6 +64,8 @@ dependencies {
 
   implementation(libs.snakeYaml)
 
+  implementation(libs.jansi)
+
   testImplementation(projects.pklCommonsTest)
 
   add("generatorImplementation", libs.javaPoet)

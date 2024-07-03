@@ -87,6 +87,12 @@ gradlePluginTests {
   skippedGradleVersions = listOf()
 }
 
+tasks.withType<Test>().configureEach {
+  // Disable colour output in tests
+  // Need additional disablement here because of how Jansi is packaged in the plugin
+  systemProperty("org.pkl.thirdparty.jansiAnsi.disable", "true")
+}
+
 signing {
   publishing.publications.withType(MavenPublication::class.java).configureEach {
     if (name != "library") {

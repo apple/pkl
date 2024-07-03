@@ -26,6 +26,7 @@ dependencies {
   api(libs.junitApi)
   api(libs.junitEngine)
   api(libs.junitParams)
+  api(libs.jansi)
   api(projects.pklCommons) // for convenience
   implementation(libs.assertj)
 }
