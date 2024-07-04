@@ -29,11 +29,13 @@ class GoToDefinitionFeature(override val server: PklLSPServer) : Feature(server)
   fun onGoToDefinition(
     params: DefinitionParams
   ): CompletableFuture<Either<MutableList<out Location>, MutableList<out LocationLink>>> {
-    fun run(mod: PklModule?): Either<MutableList<out Location>, MutableList<out LocationLink>>? {
-      if (mod == null) return null
+    fun run(mod: PklModule?): Either<MutableList<out Location>, MutableList<out LocationLink>> {
+      if (mod == null) return Either.forLeft(mutableListOf())
       val line = params.position.line + 1
       val col = params.position.character + 1
-      val location = mod.findBySpan(line, col)?.let { resolveDeclaration(it) } ?: return null
+      val location =
+        mod.findBySpan(line, col)?.let { resolveDeclaration(it) }
+          ?: return Either.forLeft(mutableListOf())
       return Either.forLeft(mutableListOf(location))
     }
     return server.builder().runningBuild(params.textDocument.uri).thenApply(::run)
@@ -44,13 +46,23 @@ class GoToDefinitionFeature(override val server: PklLSPServer) : Feature(server)
       // is PklProperty -> resolveProperty(node)?.toLocation()
       is PklUnqualifiedAccessExpr -> resolveUnqualifiedAccess(node)?.toLocation()
       is PklQualifiedAccessExpr -> resolveQualifiedAccess(node)?.toLocation()
+      is PklStringConstant ->
+        when (val parent = node.parent) {
+          is PklImportBase ->
+            when (val res = parent.resolve()) {
+              is SimpleModuleResolutionResult -> res.resolved?.toLocation()
+              is GlobModuleResolutionResult -> null // TODO: globs
+            }
+          is PklModuleExtendsAmendsClause -> parent.moduleUri?.resolve()?.toLocation()
+          else -> null
+        }
       else -> null
     }
   }
 
   private fun Node.toLocation(): Location {
     val range = spanNoDocs().toRange()
-    val uri = toURIString(server)
+    val uri = toURIString()
     return Location(uri, range)
   }
 

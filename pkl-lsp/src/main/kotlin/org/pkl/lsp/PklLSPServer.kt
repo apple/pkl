@@ -15,12 +15,14 @@
  */
 package org.pkl.lsp
 
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import kotlin.system.exitProcess
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.services.JsonRequest
 import org.eclipse.lsp4j.services.*
 import org.pkl.core.util.IoUtils
 
@@ -74,6 +76,27 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
   override fun connect(client: LanguageClient) {
     this.client = client
     logger = ClientLogger(client, verbose)
+  }
+
+  @JsonRequest(value = "pkl/fileContents")
+  fun fileContentsRequest(param: TextDocumentIdentifier): CompletableFuture<String> {
+    return CompletableFuture.supplyAsync {
+      val uri = URI.create(param.uri)
+      val origin = Origin.valueOf(uri.authority.uppercase())
+      val path = uri.path.drop(1)
+      logger.log("parsed uri: $uri")
+      when (origin) {
+        Origin.HTTPS -> CacheManager.findHttpContent(URI.create(path)) ?: ""
+        Origin.STDLIB -> {
+          val name = path.replace("pkl:", "")
+          IoUtils.readClassPathResourceAsString(javaClass, "/org/pkl/core/stdlib/$name")
+        }
+        // if origin is file either we have a bug or this is an absolute file import
+        // from inside a non-file module, which shouldn't be allowed
+        Origin.FILE -> ""
+        else -> ""
+      }
+    }
   }
 
   private fun cacheStdlib() {

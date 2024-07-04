@@ -15,14 +15,16 @@
  */
 package org.pkl.lsp.ast
 
+import java.io.File
 import java.net.URI
 import org.pkl.core.parser.Parser
+import org.pkl.lsp.FsFile
 
 object PklNodeFactory {
 
   @Suppress("MemberVisibilityCanBePrivate")
   fun createModule(text: String): PklModule {
-    return PklModuleImpl(parser.parseModule(text), URI("fake:module"))
+    return PklModuleImpl(parser.parseModule(text), URI("fake:module"), FsFile(File(".")))
   }
 
   fun createTypeParameter(name: String): PklTypeParameter {

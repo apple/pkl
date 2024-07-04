@@ -19,6 +19,7 @@ import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.core.parser.Parser
+import org.pkl.lsp.StdlibFile
 
 class AstTest {
   @Test
@@ -48,7 +49,7 @@ class AstTest {
     """
         .trimIndent()
     val parser = Parser()
-    val module = PklModuleImpl(parser.parseModule(mod), URI("my:test"))
+    val module = PklModuleImpl(parser.parseModule(mod), URI("my:test"), StdlibFile("file"))
     assertThat(module.declaration).isNotNull
     assertThat(module.declaration!!.docComment!!.text)
       .isEqualTo(

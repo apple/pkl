@@ -79,15 +79,17 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
           else -> null
         }
       is PklDeclaredType -> node.name.resolve()?.toMarkdown(originalNode)
-      is PklStringConstant -> {
-        val parent = node.parent
-        if (parent is PklImportBase) {
-          when (val res = parent.resolve()) {
-            is SimpleModuleResolutionResult -> res.resolved?.toMarkdown(originalNode)
-            is GlobModuleResolutionResult -> null // TODO: globs
+      is PklStringConstant ->
+        when (val parent = node.parent) {
+          is PklImportBase -> {
+            when (val res = parent.resolve()) {
+              is SimpleModuleResolutionResult -> res.resolved?.toMarkdown(originalNode)
+              is GlobModuleResolutionResult -> null // TODO: globs
+            }
           }
-        } else null
-      }
+          is PklModuleExtendsAmendsClause -> parent.moduleUri?.resolve()?.toMarkdown(originalNode)
+          else -> null
+        }
       // render the typealias which contains the doc comments
       is PklTypeAliasHeader -> node.parent?.toMarkdown(originalNode)
       is PklTypedIdentifier ->
@@ -250,6 +252,6 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
         node.parsedComment?.let { "$markdown\n\n---\n\n$it" } ?: markdown
       } else markdown
     val module = (if (node is PklModule) node else node.enclosingModule!!)
-    return "$withDoc\n\n---\n\nin [${module.moduleName}](${module.toURIString(server)})"
+    return "$withDoc\n\n---\n\nin [${module.moduleName}](${module.toCommandURIString()})"
   }
 }

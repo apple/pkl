@@ -20,9 +20,13 @@ import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.parser.antlr.PklParser.ModuleHeaderContext
 import org.pkl.lsp.LSPUtil.firstInstanceOf
 import org.pkl.lsp.PklVisitor
+import org.pkl.lsp.VirtualFile
 
-class PklModuleImpl(override val ctx: PklParser.ModuleContext, override val uri: URI) :
-  AbstractNode(null, ctx), PklModule {
+class PklModuleImpl(
+  override val ctx: PklParser.ModuleContext,
+  override val uri: URI,
+  override val virtualFile: VirtualFile
+) : AbstractNode(null, ctx), PklModule {
   override val isAmend: Boolean by lazy {
     declaration?.moduleExtendsAmendsClause?.isAmend
       ?: declaration?.moduleHeader?.moduleExtendsAmendsClause?.isAmend ?: false

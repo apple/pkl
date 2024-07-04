@@ -40,7 +40,7 @@ object Stdlib {
   private fun loadStdlibModule(name: String, parser: Parser) {
     val text = loadStdlibSource(name)
     val moduleCtx = parser.parseModule(text)
-    val module = PklModuleImpl(moduleCtx, URI("pkl:$name"))
+    val module = PklModuleImpl(moduleCtx, URI("pkl:$name"), StdlibFile(name))
     stdlibModules[name] = module
   }
 

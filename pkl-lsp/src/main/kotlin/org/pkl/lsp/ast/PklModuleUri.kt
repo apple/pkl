@@ -16,12 +16,9 @@
 package org.pkl.lsp.ast
 
 import java.io.File
-import java.net.URI
 import org.antlr.v4.runtime.tree.ParseTree
+import org.pkl.lsp.*
 import org.pkl.lsp.LSPUtil.firstInstanceOf
-import org.pkl.lsp.PklVisitor
-import org.pkl.lsp.Stdlib
-import org.pkl.lsp.parseUriOrNull
 
 class PklModuleUriImpl(override val parent: Node, override val ctx: ParseTree) :
   AbstractNode(parent, ctx), PklModuleUri {
@@ -33,46 +30,100 @@ class PklModuleUriImpl(override val parent: Node, override val ctx: ParseTree) :
     return visitor.visitModuleUri(this)
   }
 
-  override fun resolve(
-    targetUri: String,
-    moduleUri: String,
-    sourceFile: File,
-    enclosingModule: PklModule?
-  ): PklModule? {
-    // if `targetUri == "..."`, add enough context to make it resolvable on its own
-    val effectiveTargetUri =
-      when (targetUri) {
-        "..." ->
-          when {
-            moduleUri == "..." -> ".../${sourceFile.name}"
-            moduleUri.startsWith(".../") -> {
-              val nextPathSegment = moduleUri.drop(4).substringBefore("/")
-              if (nextPathSegment.isEmpty()) return null
-              ".../$nextPathSegment/.."
+  companion object {
+
+    fun resolve(
+      targetUri: String,
+      moduleUri: String,
+      sourceFile: VirtualFile,
+      enclosingModule: PklModule?
+    ): PklModule? {
+      // if `targetUri == "..."`, add enough context to make it resolvable on its own
+      val effectiveTargetUri =
+        when (targetUri) {
+          "..." ->
+            when {
+              moduleUri == "..." -> ".../${sourceFile.name}"
+              moduleUri.startsWith(".../") -> {
+                val nextPathSegment = moduleUri.drop(4).substringBefore("/")
+                if (nextPathSegment.isEmpty()) return null
+                ".../$nextPathSegment/.."
+              }
+              else -> return null
             }
-            else -> return null
+          else -> targetUri
+        }
+
+      return resolveVirtual(effectiveTargetUri, sourceFile, enclosingModule)
+    }
+
+    private fun resolveVirtual(
+      targetUriStr: String,
+      sourceFile: VirtualFile,
+      enclosingModule: PklModule?
+    ): PklModule? {
+
+      val targetUri = parseUriOrNull(targetUriStr) ?: return null
+
+      return when (targetUri.scheme) {
+        "pkl" -> Stdlib.getModule(targetUri.schemeSpecificPart)
+        "file" ->
+          when {
+            // be on the safe side and only follow file: URLs from local files
+            sourceFile is FsFile -> {
+              findByAbsolutePath(targetUri.path)
+            }
+            else -> null
           }
-        else -> targetUri
+        "https" ->
+          when {
+            targetUri.host != null -> CacheManager.findHttpModule(targetUri)
+            else -> null
+          }
+        // targetUri is a relative URI
+        null -> {
+          when {
+            sourceFile is FsFile -> findOnFileSystem(sourceFile, targetUri.path)
+            sourceFile is HttpsFile -> sourceFile.resolve(targetUriStr).toModule()
+
+            // TODO: handle other types of relative uris
+            else -> null
+          }
+        }
+        // unsupported scheme
+        else -> null
       }
+    }
 
-    return resolveVirtual(effectiveTargetUri, sourceFile, enclosingModule)?.mod
-  }
+    private fun findOnFileSystem(sourceFile: VirtualFile, targetPath: String): PklModule? {
+      return when {
+        targetPath.startsWith(".../") -> findTripleDotPathOnFileSystem(sourceFile, targetPath)
+        targetPath.startsWith("/") -> findByAbsolutePath(targetPath)
+        else -> sourceFile.parent()?.resolve(targetPath)?.toModule()
+      }
+    }
 
-  private fun resolveVirtual(
-    targetUriStr: String,
-    sourceFile: File,
-    enclosingModule: PklModule?
-  ): ResolvedModule? {
+    private fun findByAbsolutePath(targetPath: String): PklModule? {
+      val file = File(targetPath)
+      return Builder.fileToModule(file, FsFile(file))
+    }
 
-    val targetUri = parseUriOrNull(targetUriStr) ?: return null
+    private fun findTripleDotPathOnFileSystem(
+      sourceFile: VirtualFile,
+      targetPath: String
+    ): PklModule? {
+      val targetPathAfterTripleDot = targetPath.substring(4)
 
-    when (targetUri.scheme) {
-      "pkl" ->
-        return Stdlib.getModule(targetUri.schemeSpecificPart)?.let { ResolvedModule(it, it.uri) }
-      // unsupported scheme
-      else -> return null
+      var currentDir = sourceFile.parent()?.parent()
+      while (currentDir != null) {
+        val file = currentDir.resolve(targetPathAfterTripleDot)
+        if (file == null || file.uri == sourceFile.uri) {
+          currentDir = currentDir.parent()
+          continue
+        }
+        return file.toModule()
+      }
+      return null
     }
   }
-
-  private data class ResolvedModule(val mod: PklModule?, val uri: URI)
 }

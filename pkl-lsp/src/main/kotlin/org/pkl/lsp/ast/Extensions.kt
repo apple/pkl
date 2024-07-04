@@ -15,9 +15,9 @@
  */
 package org.pkl.lsp.ast
 
-import java.io.File
-import kotlin.io.path.invariantSeparatorsPathString
+import java.net.URLEncoder
 import org.pkl.lsp.*
+import org.pkl.lsp.ast.PklModuleUriImpl.Companion.resolve
 import org.pkl.lsp.resolvers.ResolveVisitors
 import org.pkl.lsp.resolvers.Resolvers
 import org.pkl.lsp.type.Type
@@ -261,8 +261,7 @@ fun PklModuleUri.resolveGlob(): List<PklModule> = TODO("implement") // resolveMo
 
 fun PklModuleUri.resolve(): PklModule? =
   this.stringConstant.escapedText()?.let { text ->
-    // TODO: get the actual file
-    resolve(text, text, File("."), enclosingModule)
+    resolve(text, text, containingFile, enclosingModule)
   }
 
 sealed class ModuleResolutionResult {
@@ -325,12 +324,20 @@ fun Node.findBySpan(line: Int, col: Int, includeTerminals: Boolean = false): Nod
   return childHit ?: hit
 }
 
-fun Node.toURIString(server: PklLSPServer): String {
-  val mod = if (this is PklModule) this else enclosingModule!!
-  val uri = mod.uri.toString()
-  return if (uri.startsWith("pkl:")) {
-    val name = uri.replace("pkl:", "")
-    val uriStr = server.stdlibDir.resolve("$name.pkl").invariantSeparatorsPathString
-    "pkl://$uriStr"
-  } else uri
+fun Node.toURIString(): String {
+  return when (val file = containingFile) {
+    is StdlibFile -> "pkl://stdlib/${file.name}.pkl"
+    !is FsFile -> {
+      val uri = file.uri.toString()
+      "pkl://${file.pklAuthority}/${URLEncoder.encode(uri, Charsets.UTF_8)}"
+    }
+    else -> file.uri.toString()
+  }
+}
+
+fun Node.toCommandURIString(): String {
+  return if (containingFile !is FsFile) {
+    val params = """["${toURIString()}"]"""
+    "command:pkl.open.file?${URLEncoder.encode(params, Charsets.UTF_8)}"
+  } else containingFile.uri.toString()
 }

@@ -15,7 +15,6 @@
  */
 package org.pkl.lsp.ast
 
-import java.io.File
 import java.net.URI
 import kotlin.reflect.KClass
 import org.antlr.v4.runtime.ParserRuleContext
@@ -24,6 +23,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.pkl.core.parser.antlr.PklParser.*
 import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.PklVisitor
+import org.pkl.lsp.VirtualFile
 import org.pkl.lsp.resolvers.ResolveVisitor
 import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.TypeParameterBindings
@@ -32,6 +32,7 @@ interface Node {
   val span: Span
   val parent: Node?
   val children: List<Node>
+  val containingFile: VirtualFile
   val enclosingModule: PklModule?
   val terminals: List<Terminal>
   /** The verbatim text of this node. */
@@ -126,6 +127,7 @@ sealed interface PklTypeDefOrModule : PklNavigableElement, ModifierListOwner, Pk
 
 interface PklModule : PklTypeDefOrModule {
   val uri: URI
+  val virtualFile: VirtualFile
   val isAmend: Boolean
   val declaration: PklModuleDeclaration?
   val imports: List<PklImport>
@@ -329,13 +331,6 @@ interface Terminal : Node {
 
 interface PklModuleUri : Node {
   val stringConstant: PklStringConstant
-
-  fun resolve(
-    targetUri: String,
-    moduleUri: String,
-    sourceFile: File,
-    enclosingModule: PklModule?
-  ): PklModule?
 }
 
 interface PklImportBase : Node {
@@ -624,6 +619,10 @@ abstract class AbstractNode(override val parent: Node?, protected open val ctx: 
     null
   }
 
+  override val containingFile: VirtualFile by lazy {
+    enclosingModule?.virtualFile ?: throw RuntimeException("Node is not contained in a module")
+  }
+
   protected fun <T : Node> getChild(clazz: KClass<T>): T? {
     @Suppress("UNCHECKED_CAST") return childrenByType[clazz]?.firstOrNull() as T?
   }
@@ -637,6 +636,10 @@ abstract class AbstractNode(override val parent: Node?, protected open val ctx: 
   override val children: List<Node> by lazy { childrenByType.values.flatten() }
 
   override val text: String by lazy { ctx.text }
+
+  override fun hashCode(): Int {
+    return ctx.hashCode()
+  }
 
   // Two nodes are the same if their contexts are the same object
   override fun equals(other: Any?): Boolean {

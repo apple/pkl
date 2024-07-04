@@ -15,6 +15,8 @@
  */
 package org.pkl.lsp
 
+import java.io.File
+import java.io.IOException
 import java.net.URI
 import java.text.MessageFormat
 import java.util.*
@@ -47,22 +49,19 @@ class Builder(private val server: PklLSPServer) {
   fun runningBuild(uri: String): CompletableFuture<PklModule?> =
     runningBuild[uri] ?: CompletableFuture.supplyAsync(::noop)
 
-  fun requestBuild(file: URI) {
-    val change = IoUtils.readString(file.toURL())
-    requestBuild(file, change)
-  }
-
-  fun requestBuild(file: URI, change: String) {
-    runningBuild[file.toString()] = CompletableFuture.supplyAsync { build(file, change) }
+  fun requestBuild(uri: URI, vfile: VirtualFile, change: String): CompletableFuture<PklModule?> {
+    val build = CompletableFuture.supplyAsync { build(uri, vfile, change) }
+    runningBuild[uri.toString()] = build
+    return build
   }
 
   fun lastSuccessfulBuild(uri: String): PklModule? = successfulBuilds[uri]
 
-  private fun build(file: URI, change: String): PklModule? {
+  private fun build(file: URI, vfile: VirtualFile, change: String): PklModule? {
     return try {
       server.logger().log("building $file")
       val moduleCtx = parser.parseModule(change)
-      val module = PklModuleImpl(moduleCtx, file)
+      val module = PklModuleImpl(moduleCtx, file, vfile)
       val diagnostics = analyze(module)
       makeDiagnostics(file, diagnostics)
       successfulBuilds[file.toString()] = module
@@ -108,6 +107,22 @@ class Builder(private val server: PklLSPServer) {
   companion object {
     private fun noop(): PklModule? {
       return null
+    }
+
+    fun fileToModule(file: File, virtualFile: VirtualFile): PklModule? {
+      if (!file.exists() || file.isDirectory) return null
+      val change = file.readText()
+      return fileToModule(change, file.normalize().toURI(), virtualFile)
+    }
+
+    fun fileToModule(contents: String, uri: URI, virtualFile: VirtualFile): PklModule? {
+      val parser = Parser()
+      try {
+        val moduleCtx = parser.parseModule(contents)
+        return PklModuleImpl(moduleCtx, uri, virtualFile)
+      } catch (_: IOException) {
+        return null
+      }
     }
 
     private fun toParserError(ex: LexParseException): ParseError {

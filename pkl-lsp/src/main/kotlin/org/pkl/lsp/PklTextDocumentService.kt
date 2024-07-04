@@ -21,6 +21,8 @@ import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.pkl.core.util.IoUtils
+import org.pkl.lsp.features.CompletionFeature
 import org.pkl.lsp.features.GoToDefinitionFeature
 import org.pkl.lsp.features.HoverFeature
 
@@ -28,22 +30,18 @@ class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentSer
 
   private val hover = HoverFeature(server)
   private val definition = GoToDefinitionFeature(server)
-  // private val completion = CompletionFeature(server)
+  private val completion = CompletionFeature(server)
 
   override fun didOpen(params: DidOpenTextDocumentParams) {
     val uri = URI(params.textDocument.uri)
-    val file = Paths.get(uri).toFile()
-    if (file.isFile && file.extension == "pkl") {
-      server.builder().requestBuild(uri)
-    }
+    val vfile = VirtualFile.fromUri(uri, server.logger()) ?: return
+    server.builder().requestBuild(uri, vfile, params.textDocument.text)
   }
 
   override fun didChange(params: DidChangeTextDocumentParams) {
     val uri = URI(params.textDocument.uri)
-    val file = Paths.get(uri).toFile()
-    if (file.isFile && file.extension == "pkl") {
-      server.builder().requestBuild(uri, params.contentChanges[0].text)
-    }
+    val vfile = VirtualFile.fromUri(uri, server.logger()) ?: return
+    server.builder().requestBuild(uri, vfile, params.contentChanges[0].text)
   }
 
   override fun didClose(params: DidCloseTextDocumentParams) {
@@ -52,9 +50,15 @@ class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentSer
 
   override fun didSave(params: DidSaveTextDocumentParams) {
     val uri = URI(params.textDocument.uri)
+    if (!uri.scheme.equals("file", ignoreCase = true)) {
+      // you can only save files
+      server.logger().error("Saved non file URI: $uri")
+      return
+    }
     val file = Paths.get(uri).toFile()
     if (file.isFile && file.extension == "pkl") {
-      server.builder().requestBuild(uri)
+      val contents = IoUtils.readString(uri.toURL())
+      server.builder().requestBuild(uri, FsFile(file), contents)
     }
   }
 
@@ -68,9 +72,9 @@ class PklTextDocumentService(private val server: PklLSPServer) : TextDocumentSer
     return definition.onGoToDefinition(params)
   }
 
-  //  override fun completion(
-  //    params: CompletionParams
-  //  ): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
-  //    return completion.onCompletion(params)
-  //  }
+  override fun completion(
+    params: CompletionParams
+  ): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
+    return completion.onCompletion(params)
+  }
 }
