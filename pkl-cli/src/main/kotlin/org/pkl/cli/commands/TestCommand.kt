@@ -39,7 +39,7 @@ class TestCommand(helpLink: String) :
 
   override fun run() {
     CliTestRunner(
-        options = baseOptions.baseOptions(modules, projectOptions),
+        options = baseOptions.baseOptions(modules, projectOptions, disableColors = true),
         testOptions = testOptions.cliTestOptions
       )
       .run()

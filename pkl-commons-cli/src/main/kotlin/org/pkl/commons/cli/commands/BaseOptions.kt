@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
@@ -198,6 +199,11 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val colors: String by
+    option(names = arrayOf("--colors"), help = "Enable or disable colour output in the terminal")
+      .choice("auto", "never", "always")
+      .default("auto")
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -208,7 +214,8 @@ class BaseOptions : OptionGroup() {
   fun baseOptions(
     modules: List<URI>,
     projectOptions: ProjectOptions? = null,
-    testMode: Boolean = false
+    testMode: Boolean = false,
+    disableColors: Boolean = false,
   ): CliBaseOptions {
     return CliBaseOptions(
       sourceModules = modules,
@@ -230,7 +237,8 @@ class BaseOptions : OptionGroup() {
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
       httpProxy = proxy,
-      httpNoProxy = noProxy ?: emptyList()
+      httpNoProxy = noProxy ?: emptyList(),
+      colors = if (disableColors) "never" else colors,
     )
   }
 }

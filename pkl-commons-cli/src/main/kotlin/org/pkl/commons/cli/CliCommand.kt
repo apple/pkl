@@ -19,6 +19,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
+import org.fusesource.jansi.Ansi
+import org.fusesource.jansi.AnsiConsole
+import org.fusesource.jansi.AnsiMode
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
@@ -37,6 +40,20 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   fun run() {
     if (cliOptions.testMode) {
       IoUtils.setTestMode()
+    }
+    when (cliOptions.colors) {
+      "never" -> {
+        // Configure Jansi to not even inject Ansi codes
+        System.setProperty(Ansi.DISABLE, "true")
+
+        // But also strip anything that might end up in the output
+        AnsiConsole.err().mode = AnsiMode.Strip
+        AnsiConsole.out().mode = AnsiMode.Strip
+      }
+      "always" -> {
+        AnsiConsole.err().mode = AnsiMode.Force
+        AnsiConsole.out().mode = AnsiMode.Force
+      }
     }
 
     try {

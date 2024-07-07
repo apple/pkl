@@ -166,7 +166,8 @@ public abstract class BasePklTask extends DefaultTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
-              getHttpNoProxy().getOrElse(List.of()));
+              getHttpNoProxy().getOrElse(List.of()),
+              "auto");
     }
     return cachedOptions;
   }

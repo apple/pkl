@@ -162,7 +162,6 @@ abstract class InputOutputTestEngine :
       context: ExecutionContext,
       dynamicTestExecutor: DynamicTestExecutor
     ): ExecutionContext {
-
       val (success, actualOutput) = generateOutputFor(inputFile)
       val expectedOutputFile = expectedOutputFileFor(inputFile)
 

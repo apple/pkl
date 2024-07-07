@@ -134,6 +134,7 @@ data class CliBaseOptions(
 
   /** Hostnames, IP addresses, or CIDR blocks to not proxy. */
   val httpNoProxy: List<String>? = null,
+  val colors: String = "auto"
 ) {
 
   companion object {

@@ -180,7 +180,8 @@ public abstract class ModulesTask extends BasePklTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               null,
-              List.of());
+              List.of(),
+              "auto");
     }
     return cachedOptions;
   }

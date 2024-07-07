@@ -219,6 +219,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       add(pklExecutablePath.toString())
       add("eval")
       add("--no-cache")
+      add("--colors=never")
       if (inputFile.startsWith(projectsDir)) {
         val projectDir = inputFile.getProjectDir()
         if (projectDir != null) {
