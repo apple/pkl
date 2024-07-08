@@ -518,6 +518,20 @@ because the entire .member.with-page-link is effectively a link (via JS).
   display: none;
 }
 
+#_declaration .expandable {
+  transform: none;
+  transition: none;
+}
+
+#_declaration .expandable.collapsed {
+  mask: linear-gradient(rgb(0 0 0), transparent) content-box;
+  height: 100px;
+}
+
+#_declaration .expandable.hidden {
+  display: block;
+}
+
 /* show an otherwise hidden inherited member if it's a link target */
 .anchor:target + .expandable.collapsed.hidden {
   display: inherit;
