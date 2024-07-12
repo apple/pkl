@@ -46,8 +46,11 @@ class PklModuleImpl(
 
   override val classes: List<PklClass> by lazy { children.filterIsInstance<PklClass>() }
 
-  // TODO: resolve the super module
-  override val supermodule: PklModule? by lazy { null }
+  private val extendsAmendsUri: PklModuleUri? by lazy {
+    declaration?.moduleExtendsAmendsClause?.moduleUri
+  }
+
+  override val supermodule: PklModule? by lazy { extendsAmendsUri?.resolve() }
 
   override val cache: ModuleMemberCache by lazy { ModuleMemberCache.create(this) }
 
@@ -65,14 +68,14 @@ class PklModuleImpl(
 
   override val methods: List<PklClassMethod> by lazy { members.filterIsInstance<PklClassMethod>() }
 
-  // TODO: fix uri name
   override val shortDisplayName: String by lazy {
-    declaration?.moduleHeader?.shortDisplayName ?: uri.toString()
+    declaration?.moduleHeader?.shortDisplayName
+      ?: uri.toString().substringAfterLast('/').replace(".pkl", "")
   }
 
-  // TODO: fix uri name
   override val moduleName: String? by lazy {
-    declaration?.moduleHeader?.moduleName ?: uri.toString()
+    declaration?.moduleHeader?.moduleName
+      ?: uri.toString().substringAfterLast('/').replace(".pkl", "")
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -130,7 +133,7 @@ class PklModuleDeclarationImpl(
   }
 
   override val moduleExtendsAmendsClause: PklModuleExtendsAmendsClause? by lazy {
-    children.firstInstanceOf<PklModuleExtendsAmendsClause>()
+    moduleHeader?.moduleExtendsAmendsClause
   }
 
   override val modifiers: List<Terminal> by lazy { moduleHeader?.modifiers ?: emptyList() }

@@ -193,6 +193,16 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
 
   override fun toString(): String = render()
 
+  fun getNode(): Node? =
+    when (this) {
+      is Class -> ctx
+      is Module -> ctx
+      is StringLiteral -> PklBaseModule.instance.stringType.getNode()
+      is Alias -> unaliased(PklBaseModule.instance).getNode()
+      is Union -> null
+      else -> null
+    }
+
   object Unknown : Type() {
     override fun visitMembers(
       isProperty: Boolean,
@@ -532,7 +542,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
 
     override fun hasDefaultImpl(base: PklBaseModule): Boolean =
       when (base.objectType) {
-        is Class -> isSubtypeOf(base.objectType as Class, base) && !ctx.isAbstract
+        is Class -> isSubtypeOf(base.objectType, base) && !ctx.isAbstract
         else -> false
       }
 
@@ -708,8 +718,7 @@ sealed class Type(val constraints: List<ConstraintExpr> = listOf()) {
       base: PklBaseModule,
       visitor: ResolveVisitor<*>
     ): Boolean {
-      // return base.stringType.visitMembers(isProperty, allowClasses, base, visitor)
-      return true
+      return base.stringType.visitMembers(isProperty, allowClasses, base, visitor)
     }
 
     override fun isSubtypeOf(classType: Class, base: PklBaseModule): Boolean {
@@ -926,18 +935,9 @@ fun PklType?.toType(
     is PklParenthesizedType -> type.toType(base, bindings, preserveUnboundTypeVars)
     is PklDefaultUnionType -> type.toType(base, bindings, preserveUnboundTypeVars)
     is PklConstrainedType -> {
-      //      val project = base.project
-      //      val cacheManager = CachedValuesManager.getManager(project)
-      //      val psiManager = PsiManager.getInstance(project)
-      //      val constraintExprs =
-      //        cacheManager.getCachedValue(this) {
-      //          CachedValueProvider.Result.create(
-      //            typeConstraintList.elements.toConstraintExprs(project.pklBaseModule),
-      //            psiManager.modificationTracker.forLanguage(PklLanguage)
-      //          )
-      //        }
-      //      type.toType(base, bindings, preserveUnboundTypeVars).withConstraints(constraintExprs)
-      TODO("not implemented")
+      // TODO: cache `constraintExprs`
+      val constraintExprs = exprs.toConstraintExprs(PklBaseModule.instance)
+      type.toType(base, bindings, preserveUnboundTypeVars).withConstraints(constraintExprs)
     }
     is PklNullableType -> type.toType(base, bindings, preserveUnboundTypeVars).nullable(base)
     is PklUnknownType -> Type.Unknown
@@ -950,7 +950,6 @@ fun PklType?.toType(
         ?: Type.Unknown
     is PklTypeParameter -> bindings[this]
         ?: if (preserveUnboundTypeVars) Type.Variable(this) else Type.Unknown
-    else -> unexpectedType(this)
   }
 
 fun List<PklType>.toTypes(

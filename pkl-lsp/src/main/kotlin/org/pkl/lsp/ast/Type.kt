@@ -182,9 +182,14 @@ class PklTypeAliasHeaderImpl(override val parent: Node?, ctx: TypeAliasHeaderCon
 
 class PklTypeNameImpl(ident: PklQualifiedIdentifier, override val ctx: QualifiedIdentifierContext) :
   AbstractNode(ident.parent, ctx), PklTypeName {
-  override val module: Terminal? by lazy { ident.identifiers[0] }
-  override val simpleTypeName: SimpleTypeName by lazy {
-    SimpleTypeNameImpl(this, ident.identifiers.last(), ctx.Identifier().last())
+  override val moduleName: PklModuleName? by lazy {
+    // if there's only 1 identifier it's not qualified, therefore, there's no module name
+    if (ctx.Identifier().size > 1) {
+      PklModuleNameImpl(this, ident.identifiers[0], ctx.Identifier().first())
+    } else null
+  }
+  override val simpleTypeName: PklSimpleTypeName by lazy {
+    PklSimpleTypeNameImpl(this, ident.identifiers.last(), ctx.Identifier().last())
   }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
@@ -192,11 +197,20 @@ class PklTypeNameImpl(ident: PklQualifiedIdentifier, override val ctx: Qualified
   }
 }
 
-class SimpleTypeNameImpl(parent: Node, terminal: Terminal, override val ctx: ParseTree) :
-  AbstractNode(parent, ctx), SimpleTypeName {
+class PklSimpleTypeNameImpl(parent: Node, terminal: Terminal, override val ctx: ParseTree) :
+  AbstractNode(parent, ctx), PklSimpleTypeName {
   override val identifier: Terminal? by lazy { terminal }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitSimpleTypeName(this)
+  }
+}
+
+class PklModuleNameImpl(parent: Node, terminal: Terminal, override val ctx: ParseTree) :
+  AbstractNode(parent, ctx), PklModuleName {
+  override val identifier: Terminal? by lazy { terminal }
+
+  override fun <R> accept(visitor: PklVisitor<R>): R? {
+    return visitor.visitModuleName(this)
   }
 }

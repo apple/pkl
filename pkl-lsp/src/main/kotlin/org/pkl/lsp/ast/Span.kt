@@ -21,7 +21,14 @@ data class Span(val beginLine: Int, val beginCol: Int, val endLine: Int, val end
   }
 
   /** True if the given line and column are inside this span. */
-  fun matches(line: Int, col: Int): Boolean = line in beginLine..endLine && col in beginCol..endCol
+  fun matches(line: Int, col: Int): Boolean =
+    when {
+      line < beginLine || line > endLine -> false
+      beginLine == endLine -> col in beginCol..endCol
+      line == beginLine -> col >= beginCol
+      line == endLine -> col <= endCol
+      else -> true
+    }
 
   companion object {
     fun from(s1: Span, s2: Span): Span = Span(s1.beginLine, s1.beginCol, s2.endLine, s2.endCol)

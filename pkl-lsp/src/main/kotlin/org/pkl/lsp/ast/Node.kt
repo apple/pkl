@@ -64,6 +64,8 @@ interface PklStringConstant : Node {
 
 interface IdentifierOwner : Node {
   val identifier: Terminal?
+
+  fun matches(line: Int, col: Int): Boolean = identifier?.span?.matches(line, col) == true
 }
 
 interface ModifierListOwner : Node {
@@ -206,11 +208,13 @@ interface PklAnnotation : PklObjectBodyOwner {
 }
 
 interface PklTypeName : Node {
-  val module: Terminal?
-  val simpleTypeName: SimpleTypeName
+  val moduleName: PklModuleName?
+  val simpleTypeName: PklSimpleTypeName
 }
 
-interface SimpleTypeName : Node, IdentifierOwner
+interface PklSimpleTypeName : Node, IdentifierOwner
+
+interface PklModuleName : Node, IdentifierOwner
 
 interface PklClassHeader : Node, IdentifierOwner, ModifierListOwner {
   val typeParameterList: PklTypeParameterList?
@@ -523,21 +527,42 @@ interface PklArgumentList : Node {
   val elements: List<PklExpr>
 }
 
-sealed interface PklType : Node
+sealed interface PklType : Node {
+  fun render(): String
+}
 
-interface PklUnknownType : PklType
+interface PklUnknownType : PklType {
+  override fun render(): String = "unknown"
+}
 
-interface PklNothingType : PklType
+interface PklNothingType : PklType {
+  override fun render(): String = "nothing"
+}
 
-interface PklModuleType : PklType
+interface PklModuleType : PklType {
+  override fun render(): String = "module"
+}
 
 interface PklStringLiteralType : PklType {
   val stringConstant: PklStringConstant
+
+  override fun render(): String = "\"${stringConstant.text}\""
 }
 
 interface PklDeclaredType : PklType {
   val name: PklTypeName
   val typeArgumentList: PklTypeArgumentList?
+
+  override fun render(): String {
+    return buildString {
+      append(name.text)
+      if (typeArgumentList != null) {
+        append(
+          typeArgumentList!!.types.joinToString(", ", prefix = "<", postfix = ">") { it.render() }
+        )
+      }
+    }
+  }
 }
 
 interface PklTypeArgumentList : Node {
@@ -546,30 +571,68 @@ interface PklTypeArgumentList : Node {
 
 interface PklParenthesizedType : PklType {
   val type: PklType
+
+  override fun render(): String {
+    return buildString {
+      append('(')
+      append(type.render())
+      append(')')
+    }
+  }
 }
 
 interface PklNullableType : PklType {
   val type: PklType
+
+  override fun render(): String {
+    return "${type.render()}?"
+  }
 }
 
 interface PklConstrainedType : PklType {
   val type: PklType?
   val exprs: List<PklExpr>
+
+  override fun render(): String {
+    return buildString {
+      append(type?.render())
+      append('(')
+      // TODO: properly render expressions
+      append(exprs.joinToString(", ") { it.text })
+      append(')')
+    }
+  }
 }
 
 interface PklUnionType : PklType {
   val typeList: List<PklType>
   val leftType: PklType
   val rightType: PklType
+
+  override fun render(): String {
+    return leftType.render() + " | " + rightType.render()
+  }
 }
 
 interface PklFunctionType : PklType {
   val parameterList: List<PklType>
   val returnType: PklType
+
+  override fun render(): String {
+    return buildString {
+      append(parameterList.joinToString(", ", prefix = "(", postfix = ")") { it.render() })
+      append(" -> ")
+      append(returnType.render())
+    }
+  }
 }
 
 interface PklDefaultUnionType : PklType {
   val type: PklType
+
+  override fun render(): String {
+    return "*" + type.render()
+  }
 }
 
 abstract class AbstractNode(override val parent: Node?, protected open val ctx: ParseTree) : Node {

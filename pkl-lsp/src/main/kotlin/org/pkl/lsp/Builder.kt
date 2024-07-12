@@ -26,7 +26,6 @@ import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.pkl.core.parser.LexParseException
 import org.pkl.core.parser.Parser
-import org.pkl.core.util.IoUtils
 import org.pkl.lsp.LSPUtil.toRange
 import org.pkl.lsp.analyzers.Analyzer
 import org.pkl.lsp.analyzers.AnnotationAnalyzer
@@ -130,13 +129,15 @@ class Builder(private val server: PklLSPServer) {
       return ParseError(ex.message ?: "Parser error", span)
     }
 
+    private val errorBundle by lazy {
+      ResourceBundle.getBundle("org.pkl.lsp.errorMessages", Locale.getDefault())
+    }
+
     private fun resolveErrorMessage(key: String, vararg args: Any): String {
-      val locale = Locale.getDefault()
-      val bundle = ResourceBundle.getBundle("org.pkl.lsp.errorMessages", locale)
-      return if (bundle.containsKey(key)) {
-        val msg = bundle.getString(key)
+      return if (errorBundle.containsKey(key)) {
+        val msg = errorBundle.getString(key)
         if (args.isNotEmpty()) {
-          val formatter = MessageFormat(msg, locale)
+          val formatter = MessageFormat(msg, Locale.getDefault())
           formatter.format(args)
         } else msg
       } else key

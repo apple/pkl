@@ -47,7 +47,7 @@ class PklLSPServer(private val verbose: Boolean) : LanguageServer, LanguageClien
     // go to definition capability
     res.capabilities.definitionProvider = Either.forLeft(true)
     // auto completion capability
-    // res.capabilities.completionProvider = CompletionOptions(false, listOf("."))
+    res.capabilities.completionProvider = CompletionOptions(false, listOf("."))
 
     // cache the stdlib, so we can open it in the client
     CompletableFuture.supplyAsync(::cacheStdlib)

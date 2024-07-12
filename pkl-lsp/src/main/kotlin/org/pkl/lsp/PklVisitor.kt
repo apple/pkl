@@ -300,7 +300,11 @@ open class PklVisitor<R> : NodeVisitor() {
     return visitExpr(o)
   }
 
-  open fun visitSimpleTypeName(o: SimpleTypeName): R? {
+  open fun visitSimpleTypeName(o: PklSimpleTypeName): R? {
+    return visitIdentifierOwner(o)
+  }
+
+  open fun visitModuleName(o: PklModuleName): R? {
     return visitIdentifierOwner(o)
   }
 

@@ -368,3 +368,30 @@ object ResolveVisitors {
     bindings: TypeParameterBindings
   ): PklNavigableElement = toDefinitions(typeParameter, base, bindings)[0]
 }
+
+/**
+ * Only visits the first encountered property/method with a given name. Used to enforce scoping
+ * rules.
+ */
+fun <R> ResolveVisitor<R>.withoutShadowedElements(): ResolveVisitor<R> =
+  object : ResolveVisitor<R> by this {
+    private val visitedProperties = mutableSetOf<String>()
+    private val visitedMethods = mutableSetOf<String>()
+
+    override fun visit(name: String, element: Node, bindings: TypeParameterBindings): Boolean {
+      return when (element) {
+        is PklMethod ->
+          if (visitedMethods.add(name)) {
+            this@withoutShadowedElements.visit(name, element, bindings)
+          } else true
+        is PklExpr -> {
+          // expression such as `<name> is Foo` doesn't shadow enclosing definition of <name>
+          this@withoutShadowedElements.visit(name, element, bindings)
+        }
+        else ->
+          if (visitedProperties.add(name)) {
+            this@withoutShadowedElements.visit(name, element, bindings)
+          } else true
+      }
+    }
+  }

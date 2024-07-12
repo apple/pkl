@@ -161,7 +161,13 @@ fun Node?.computeResolvedImportType(
                     is PklObjectBodyOwner -> {
                       @Suppress("BooleanLiteralArgument")
                       val functionType =
-                        objectBodyOwner.computeResolvedImportType(base, bindings, false, false)
+                        objectBodyOwner.computeResolvedImportType(
+                          base,
+                          bindings,
+                          false,
+                          false,
+                          cache
+                        )
                       getFunctionParameterType(this, identifierOwner, functionType, base)
                     }
                     else -> Type.Unknown

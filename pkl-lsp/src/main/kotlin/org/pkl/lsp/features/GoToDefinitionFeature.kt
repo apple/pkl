@@ -21,8 +21,10 @@ import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.pkl.lsp.LSPUtil.toRange
+import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.*
+import org.pkl.lsp.type.computeThisType
 
 class GoToDefinitionFeature(override val server: PklLSPServer) : Feature(server) {
 
@@ -34,18 +36,27 @@ class GoToDefinitionFeature(override val server: PklLSPServer) : Feature(server)
       val line = params.position.line + 1
       val col = params.position.character + 1
       val location =
-        mod.findBySpan(line, col)?.let { resolveDeclaration(it) }
+        mod.findBySpan(line, col)?.let { resolveDeclaration(it, line, col) }
           ?: return Either.forLeft(mutableListOf())
       return Either.forLeft(mutableListOf(location))
     }
     return server.builder().runningBuild(params.textDocument.uri).thenApply(::run)
   }
 
-  private fun resolveDeclaration(node: Node): Location? {
+  private fun resolveDeclaration(node: Node, line: Int, col: Int): Location? {
     return when (node) {
-      // is PklProperty -> resolveProperty(node)?.toLocation()
       is PklUnqualifiedAccessExpr -> resolveUnqualifiedAccess(node)?.toLocation()
       is PklQualifiedAccessExpr -> resolveQualifiedAccess(node)?.toLocation()
+      is PklSuperAccessExpr -> {
+        if (node.matches(line, col)) {
+          resolveSuperAccess(node)?.toLocation()
+        } else null
+      }
+      is PklProperty -> {
+        if (node.matches(line, col)) {
+          resolveProperty(node)?.toLocation()
+        } else null
+      }
       is PklStringConstant ->
         when (val parent = node.parent) {
           is PklImportBase ->
@@ -56,21 +67,43 @@ class GoToDefinitionFeature(override val server: PklLSPServer) : Feature(server)
           is PklModuleExtendsAmendsClause -> parent.moduleUri?.resolve()?.toLocation()
           else -> null
         }
+      is PklImport -> {
+        if (node.matches(line, col)) {
+          when (val res = node.resolve()) {
+            is SimpleModuleResolutionResult -> res.resolved?.toLocation()
+            is GlobModuleResolutionResult -> null // TODO: globs
+          }
+        } else null
+      }
+      is PklQualifiedIdentifier ->
+        when (val par = node.parent) {
+          is PklDeclaredType -> {
+            val mname = par.name.moduleName
+            if (mname != null && mname.span.matches(line, col)) {
+              mname.resolve()?.toLocation()
+            } else par.name.resolve()?.toLocation()
+          }
+          else -> null
+        }
+      is PklThisExpr ->
+        node.computeThisType(PklBaseModule.instance, mapOf()).getNode()?.toLocation()
       else -> null
     }
   }
 
   private fun Node.toLocation(): Location {
-    val range = spanNoDocs().toRange()
-    val uri = toURIString()
-    return Location(uri, range)
+    return Location(toURIString(), spanNoDocs().toRange())
   }
 
   // returns the span of this node without doc comments
   private fun Node.spanNoDocs(): Span {
     return children
       .find { it !is Terminal || it.type != TokenType.DocComment }
-      ?.let { Span.from(it.span, span) }
+      ?.let {
+        if (it is PklModuleDeclaration) {
+          it.spanNoDocs()
+        } else Span.from(it.span, span)
+      }
       ?: span
   }
 }

@@ -18,8 +18,12 @@ package org.pkl.lsp.features
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.*
+import org.pkl.lsp.type.computeResolvedImportType
+import org.pkl.lsp.type.computeThisType
+import org.pkl.lsp.type.toType
 
 class CompletionFeature(override val server: PklLSPServer) : Feature(server) {
   fun onCompletion(
@@ -49,30 +53,67 @@ class CompletionFeature(override val server: PklLSPServer) : Feature(server) {
     return server.builder().runningBuild(params.textDocument.uri).thenApply(::run)
   }
 
-  private fun Node.resolveCompletion(): MutableList<CompletionItem>? =
-    when (this) {
-      is PklUnqualifiedAccessExpr -> {
-        // val typ = inferExprTypeFromContext(PklBaseModule.instance, mapOf(), false)
-        resolveUnqualifiedAccess(this)?.complete()
+  private fun Node.resolveCompletion(): MutableList<CompletionItem>? {
+    val showTypes = parentOfType<PklNewExpr>() != null
+    val module = if (this is PklModule) this else enclosingModule
+    return when (this) {
+      is PklUnqualifiedAccessExpr -> resolveUnqualifiedAccess(this)?.complete(showTypes, module)
+      is PklQualifiedAccessExpr -> resolveQualifiedAccess(this)?.complete(showTypes, module)
+      is PklSingleLineStringLiteral,
+      is PklMultiLineStringLiteral -> PklBaseModule.instance.stringType.ctx.complete()
+      is PklQualifiedIdentifier ->
+        when (val par = parent) {
+          is PklDeclaredType -> par.name.resolve()?.complete(showTypes, module)
+          else -> null
+        }
+      is PklModule -> complete(showTypes, module)
+      is PklThisExpr -> {
+        val base = PklBaseModule.instance
+        computeThisType(base, mapOf()).toClassType(base)?.ctx?.complete()
       }
-      is PklQualifiedAccessExpr -> resolveQualifiedAccess(this)?.complete()
       else -> null
     }
+  }
 
-  private fun Node.complete(): MutableList<CompletionItem> =
+  private fun Node.complete(
+    showTypes: Boolean,
+    sourceModule: PklModule?
+  ): MutableList<CompletionItem> =
     when (this) {
-      is PklModule -> complete()
+      is PklModule -> complete(showTypes, sourceModule)
       is PklClass -> complete()
       is PklClassProperty -> complete()
       else -> mutableListOf()
     }
 
-  private fun PklModule.complete(): MutableList<CompletionItem> =
-    buildList {
-        addAll(properties.map { it.toCompletionItem() })
-        addAll(methods.map { it.toCompletionItem() })
+  private fun PklModule.complete(
+    showTypes: Boolean,
+    sourceModule: PklModule?
+  ): MutableList<CompletionItem> =
+    if (showTypes) {
+      completeTypes(sourceModule)
+    } else {
+      val list = completeProps(sourceModule)
+      list.addAll(completeTypes(sourceModule))
+      list
+    }
+
+  private fun PklModule.completeTypes(sourceModule: PklModule?): MutableList<CompletionItem> {
+    val sameModule = this == sourceModule
+    return buildList {
+        addAll(typeDefs.filter { sameModule || !it.isLocal }.map { it.toCompletionItem() })
       }
       .toMutableList()
+  }
+
+  private fun PklModule.completeProps(sourceModule: PklModule?): MutableList<CompletionItem> {
+    val sameModule = this == sourceModule
+    return buildList {
+        addAll(properties.filter { sameModule || !it.isLocal }.map { it.toCompletionItem() })
+        addAll(methods.filter { sameModule || !it.isLocal }.map { it.toCompletionItem() })
+      }
+      .toMutableList()
+  }
 
   private fun PklClass.complete(): MutableList<CompletionItem> =
     buildList {
@@ -82,9 +123,10 @@ class CompletionFeature(override val server: PklLSPServer) : Feature(server) {
       .toMutableList()
 
   private fun PklClassProperty.complete(): MutableList<CompletionItem> {
-    type?.let {}
-
-    return mutableListOf()
+    val base = PklBaseModule.instance
+    val typ = type?.toType(base, mapOf()) ?: computeResolvedImportType(base, mapOf())
+    val clazz = typ.toClassType(base) ?: return mutableListOf()
+    return clazz.ctx.complete()
   }
 
   private fun PklClassProperty.toCompletionItem(): CompletionItem {
@@ -101,6 +143,31 @@ class CompletionFeature(override val server: PklLSPServer) : Feature(server) {
     item.detail = methodHeader.returnType?.text ?: "unknown"
     item.documentation = getDoc(this)
     return item
+  }
+
+  private fun PklTypeDef.toCompletionItem(): CompletionItem {
+    val item = CompletionItem(name)
+    item.kind = CompletionItemKind.Class
+    item.detail =
+      when (this) {
+        is PklTypeAlias -> type.render()
+        is PklClass -> classHeader.render()
+      }
+    item.documentation = getDoc(this)
+    return item
+  }
+
+  private fun PklClassHeader.render(): String {
+    return buildString {
+      if (modifiers != null) {
+        append(modifiers!!.joinToString(" ", postfix = " ") { it.text })
+      }
+      append(identifier?.text ?: "<class>")
+      if (extends != null) {
+        append(' ')
+        append(extends!!.render())
+      }
+    }
   }
 
   companion object {

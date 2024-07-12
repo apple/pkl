@@ -24,7 +24,9 @@ import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.*
 import org.pkl.lsp.resolvers.ResolveVisitors
 import org.pkl.lsp.resolvers.Resolvers
+import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.computeResolvedImportType
+import org.pkl.lsp.type.computeThisType
 
 class HoverFeature(override val server: PklLSPServer) : Feature(server) {
 
@@ -41,6 +43,7 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
   }
 
   private fun resolveHover(node: Node, line: Int, col: Int, originalNode: Node? = null): String? {
+    val base = PklBaseModule.instance
     return when (node) {
       is PklUnqualifiedAccessExpr -> {
         val element = resolveUnqualifiedAccess(node) ?: return null
@@ -48,12 +51,19 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
         else resolveHover(element, line, col, node)
       }
       is PklQualifiedAccessExpr -> resolveQualifiedAccess(node)?.toMarkdown(originalNode)
-      is PklProperty -> {
-        if (originalNode != null) node.toMarkdown(originalNode)
-        else if (node.identifier?.span?.matches(line, col) == true) {
-          resolveProperty(node)?.toMarkdown(originalNode)
+      is PklSuperAccessExpr -> {
+        if (node.matches(line, col)) {
+          resolveSuperAccess(node)?.toMarkdown(originalNode)
         } else null
       }
+      is PklProperty ->
+        when {
+          originalNode != null -> node.toMarkdown(originalNode)
+          node.matches(line, col) -> {
+            resolveProperty(node)?.toMarkdown(node)
+          }
+          else -> null
+        }
       is PklMethod -> node.toMarkdown(originalNode)
       is PklMethodHeader -> {
         val name = node.identifier
@@ -75,7 +85,12 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
         when (val par = node.parent) {
           // render the module declaration
           is PklModuleHeader -> par.parent?.toMarkdown(originalNode)
-          is PklDeclaredType -> par.name.resolve()?.toMarkdown(originalNode)
+          is PklDeclaredType -> {
+            val mname = par.name.moduleName
+            if (mname != null && mname.span.matches(line, col)) {
+              mname.resolve()?.toMarkdown(originalNode)
+            } else par.name.resolve()?.toMarkdown(originalNode)
+          }
           else -> null
         }
       is PklDeclaredType -> node.name.resolve()?.toMarkdown(originalNode)
@@ -90,20 +105,35 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
           is PklModuleExtendsAmendsClause -> parent.moduleUri?.resolve()?.toMarkdown(originalNode)
           else -> null
         }
+      is PklImport -> {
+        if (node.matches(line, col)) {
+          when (val res = node.resolve()) {
+            is SimpleModuleResolutionResult -> res.resolved?.toMarkdown(originalNode)
+            is GlobModuleResolutionResult -> null // TODO: globs
+          }
+        } else null
+      }
       // render the typealias which contains the doc comments
       is PklTypeAliasHeader -> node.parent?.toMarkdown(originalNode)
-      is PklTypedIdentifier ->
-        renderTypeAnnotation(node.identifier?.text, node.typeAnnotation?.type, node, originalNode)
+      is PklTypedIdentifier -> node.toMarkdown(originalNode)
+      is PklThisExpr -> node.computeThisType(base, mapOf()).toMarkdown()
       else -> null
     }
   }
 
   private fun Node.render(originalNode: Node?): String =
     when (this) {
-      is PklProperty -> {
-        val modifiers = modifiers.render()
-        "$modifiers$name: ${type?.render(originalNode) ?: "unknown"}"
-      }
+      is PklProperty ->
+        buildString {
+          append(modifiers.render())
+          if (isLocal || isFixedOrConst) {
+            append(renderTypeAnnotation(name, type, this@render, originalNode))
+          } else {
+            append(name)
+            append(": ")
+            append(type?.render(originalNode) ?: "unknown")
+          }
+        }
       is PklStringLiteralType -> "\"$text\""
       is PklMethod -> {
         val modifiers = modifiers.render()
@@ -132,7 +162,7 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
         }
       is PklTypeAnnotation -> ": ${type!!.render(originalNode)}"
       is PklTypedIdentifier ->
-        renderTypeAnnotation(identifier!!.text, typeAnnotation?.type, this, originalNode)!!
+        renderTypeAnnotation(identifier?.text, typeAnnotation?.type, this, originalNode)!!
       is PklTypeParameter -> {
         val vari = variance?.name?.lowercase()?.let { "$it " } ?: ""
         "$vari$name"
@@ -158,7 +188,7 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
         }
       is PklModuleHeader ->
         buildString {
-          append(moduleName)
+          append(moduleName ?: enclosingModule?.moduleName ?: "<module>")
           moduleExtendsAmendsClause?.let {
             append(if (it.isAmend) " amends " else " extends ")
             append(it.moduleUri!!.stringConstant.text)
@@ -185,6 +215,7 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
           append(identifier?.text)
           typeParameterList?.let { append(it.render(originalNode)) }
         }
+      is PklType -> render()
       else -> text
     }
 
@@ -237,6 +268,16 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
     }
   }
 
+  private fun Type.toMarkdown(): String {
+    val markdown = render()
+    val ctx = getNode()
+    return when {
+      ctx is PklModule && ctx.declaration != null ->
+        showDocCommentAndModule(ctx.declaration!!, markdown)
+      else -> showDocCommentAndModule(ctx, markdown)
+    }
+  }
+
   private fun Node.toMarkdown(originalNode: Node?): String {
     val markdown = render(originalNode)
     return when {
@@ -245,13 +286,17 @@ class HoverFeature(override val server: PklLSPServer) : Feature(server) {
     }
   }
 
-  private fun showDocCommentAndModule(node: Node, text: String): String {
+  private fun showDocCommentAndModule(node: Node?, text: String): String {
     val markdown = "```pkl\n$text\n```"
     val withDoc =
       if (node is PklDocCommentOwner) {
         node.parsedComment?.let { "$markdown\n\n---\n\n$it" } ?: markdown
       } else markdown
-    val module = (if (node is PklModule) node else node.enclosingModule!!)
-    return "$withDoc\n\n---\n\nin [${module.moduleName}](${module.toCommandURIString()})"
+    val module = (if (node is PklModule) node else node?.enclosingModule)
+    val footer =
+      if (module != null) {
+        "\n\n---\n\nin [${module.moduleName}](${module.toCommandURIString()})"
+      } else ""
+    return "$withDoc$footer"
   }
 }

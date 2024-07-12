@@ -61,12 +61,16 @@ val PklClass.isPklBaseAnyClass: Boolean
 
 fun PklTypeName.resolve(): Node? = simpleTypeName.resolve()
 
-fun SimpleTypeName.resolve(): Node? {
+fun PklSimpleTypeName.resolve(): Node? {
   val typeName = parentOfType<PklTypeName>() ?: return null
-  // TODO: check if module name is not null
-  // val moduleName = typeName.moduleName
+
+  val moduleName = typeName.moduleName
   val simpleTypeNameText = identifier?.text ?: return null
   val base = PklBaseModule.instance
+
+  if (moduleName != null) {
+    return moduleName.resolve()?.cache?.types?.get(simpleTypeNameText)
+  }
 
   return Resolvers.resolveUnqualifiedTypeName(
     this,
@@ -74,6 +78,18 @@ fun SimpleTypeName.resolve(): Node? {
     mapOf(),
     ResolveVisitors.firstElementNamed(simpleTypeNameText, base)
   )
+}
+
+fun PklModuleName.resolve(): PklModule? {
+  val module = enclosingModule ?: return null
+  val moduleNameText = identifier!!.text
+  for (import in module.imports) {
+    if (import.memberName == moduleNameText) {
+      val resolved = import.resolve() as? SimpleModuleResolutionResult ?: return null
+      return resolved.resolved
+    }
+  }
+  return null
 }
 
 fun Node.isAncestor(of: Node): Boolean {
@@ -90,12 +106,10 @@ fun PklClass.isSubclassOf(other: PklClass): Boolean {
   if (this === other) return true
 
   // optimization
-  // TODO: check if this works
   if (!other.isAbstractOrOpen) return this == other
 
   var clazz: PklClass? = this
   while (clazz != null) {
-    // TODO: check if this works
     if (clazz == other) return true
     if (clazz.supermodule != null) {
       return PklBaseModule.instance.moduleType.ctx.isSubclassOf(other)
@@ -117,7 +131,6 @@ fun PklClass.isSubclassOf(other: PklModule): Boolean {
   }
   var module = clazz.supermodule
   while (module != null) {
-    // TODO: check if this works
     if (module == other) return true
     module = module.supermodule
   }

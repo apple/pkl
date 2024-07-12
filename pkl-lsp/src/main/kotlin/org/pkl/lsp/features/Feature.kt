@@ -17,10 +17,7 @@ package org.pkl.lsp.features
 
 import org.pkl.lsp.PklBaseModule
 import org.pkl.lsp.PklLSPServer
-import org.pkl.lsp.ast.Node
-import org.pkl.lsp.ast.PklProperty
-import org.pkl.lsp.ast.PklQualifiedAccessExpr
-import org.pkl.lsp.ast.PklUnqualifiedAccessExpr
+import org.pkl.lsp.ast.*
 import org.pkl.lsp.resolvers.ResolveVisitors
 import org.pkl.lsp.resolvers.Resolvers
 import org.pkl.lsp.type.computeThisType
@@ -34,6 +31,12 @@ abstract class Feature(protected open val server: PklLSPServer) {
   }
 
   protected fun resolveUnqualifiedAccess(node: PklUnqualifiedAccessExpr): Node? {
+    val base = PklBaseModule.instance
+    val visitor = ResolveVisitors.firstElementNamed(node.memberNameText, base)
+    return node.resolve(base, null, mapOf(), visitor)
+  }
+
+  protected fun resolveSuperAccess(node: PklSuperAccessExpr): Node? {
     val base = PklBaseModule.instance
     val visitor = ResolveVisitors.firstElementNamed(node.memberNameText, base)
     return node.resolve(base, null, mapOf(), visitor)

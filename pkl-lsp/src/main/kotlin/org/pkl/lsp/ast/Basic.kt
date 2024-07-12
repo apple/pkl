@@ -33,8 +33,7 @@ class PklQualifiedIdentifierImpl(
 
 class PklStringConstantImpl(override val parent: Node, override val ctx: StringConstantContext) :
   AbstractNode(parent, ctx), PklStringConstant {
-  override val value: String
-    get() = TODO("Not yet implemented")
+  override val value: String by lazy { text }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitStringConstant(this)

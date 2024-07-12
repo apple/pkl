@@ -32,7 +32,8 @@ fun PklExpr?.inferExprTypeFromContext(
 ): Type =
   when {
     this == null -> Type.Unknown
-    bindings.isEmpty() && resolveTypeParamsInParamTypes && canInferParentExpr -> TODO("implement")
+    // TODO: cache the results
+    // bindings.isEmpty() && resolveTypeParamsInParamTypes && canInferParentExpr -> ...
     else ->
       doInferExprTypeFromContext(
         base,

@@ -112,7 +112,7 @@ private fun Node.doComputeExprType(base: PklBaseModule, bindings: TypeParameterB
       if (operator == TypeTestOperator.IS) {
         base.booleanType
       } else {
-        type!!.toType(base, bindings)
+        type.toType(base, bindings)
       }
     is PklModuleExpr -> enclosingModule?.computeResolvedImportType(base, mapOf()) ?: Type.Unknown
     is PklUnaryMinusExpr -> {
