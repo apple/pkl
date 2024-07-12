@@ -192,6 +192,14 @@ public final class VmUtils {
   }
 
   @TruffleBoundary
+  public static Object readMember(VmObjectLike receiver, VmObjectLike parent, Object memberKey) {
+    var result = readMemberOrNull(receiver, parent, memberKey);
+    if (result != null) return result;
+
+    throw new VmExceptionBuilder().cannotFindMember(receiver, memberKey).build();
+  }
+
+  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType) {
     return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached());
@@ -206,6 +214,12 @@ public final class VmUtils {
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
     return readMemberOrNull(receiver, memberKey, true, IndirectCallNode.getUncached());
+  }
+
+  @TruffleBoundary
+  public static @Nullable Object readMemberOrNull(
+      VmObjectLike receiver, VmObjectLike parent, Object memberKey) {
+    return readMemberOrNull(receiver, parent, memberKey, true, IndirectCallNode.getUncached());
   }
 
   /**
@@ -243,6 +257,28 @@ public final class VmUtils {
       var member = owner.getMember(memberKey);
       if (member == null) continue;
       return doReadMember(receiver, owner, memberKey, member, checkType, callNode);
+    }
+
+    return null;
+  }
+
+  @TruffleBoundary
+  public static @Nullable Object readMemberOrNull(
+      VmObjectLike receiver,
+      VmObjectLike parent,
+      Object memberKey,
+      boolean checkType,
+      IndirectCallNode callNode) {
+    assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
+        : "Must use ReadLocalPropertyNode for local properties.";
+
+    final var cachedValue = receiver.getCachedValue(memberKey);
+    if (cachedValue != null) return cachedValue;
+
+    for (var owner = parent; owner != null; owner = owner.getParent()) {
+      var member = owner.getMember(memberKey);
+      if (member == null) continue;
+      return VmUtils.doReadMember(receiver, owner, memberKey, member, checkType, callNode);
     }
 
     return null;
