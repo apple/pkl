@@ -15,7 +15,6 @@
  */
 package org.pkl.lsp.analyzers
 
-import org.eclipse.lsp4j.DiagnosticSeverity
 import org.pkl.lsp.ErrorMessages
 import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.*
@@ -27,9 +26,7 @@ class AnnotationAnalyzer(private val server: PklLSPServer) : Analyzer() {
 
     val type = node.type
     if (type !is PklDeclaredType) {
-      diagnosticsHolder.add(
-        error(type ?: node, ErrorMessages.create("annotationHasNoName"))
-      )
+      diagnosticsHolder.add(error(type ?: node, ErrorMessages.create("annotationHasNoName")))
     }
     return false
   }

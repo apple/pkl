@@ -162,7 +162,7 @@ class PklFunctionTypeImpl(override val parent: Node, override val ctx: FunctionT
   }
 
   override fun checkClosingDelimiter(): String? {
-    if (ctx.type().isNotEmpty() && ctx.errs.size != ctx.type().size - 1) {
+    if (ctx.type().isNotEmpty() && ctx.errs.size != ctx.type().size - 2) {
       return ","
     }
     return if (ctx.err != null) null else ")"
