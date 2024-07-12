@@ -18,9 +18,8 @@ package org.pkl.lsp.ast
 import java.net.URI
 import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.parser.antlr.PklParser.ModuleHeaderContext
+import org.pkl.lsp.*
 import org.pkl.lsp.LSPUtil.firstInstanceOf
-import org.pkl.lsp.PklVisitor
-import org.pkl.lsp.VirtualFile
 
 class PklModuleImpl(
   override val ctx: PklParser.ModuleContext,
@@ -228,6 +227,10 @@ class PklClassBodyImpl(override val parent: Node, override val ctx: PklParser.Cl
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitClassBody(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else "}"
+  }
 }
 
 class PklTypeParameterListImpl(
@@ -240,6 +243,13 @@ class PklTypeParameterListImpl(
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTypeParameterList(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.typeParameter().isNotEmpty() && ctx.errs.size != ctx.typeParameter().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ")"
   }
 }
 

@@ -28,11 +28,7 @@ class AnnotationAnalyzer(private val server: PklLSPServer) : Analyzer() {
     val type = node.type
     if (type !is PklDeclaredType) {
       diagnosticsHolder.add(
-        PklDiagnostic(
-          type ?: node,
-          ErrorMessages.create("annotationHasNoName"),
-          DiagnosticSeverity.Error
-        )
+        error(type ?: node, ErrorMessages.create("annotationHasNoName"))
       )
     }
     return false

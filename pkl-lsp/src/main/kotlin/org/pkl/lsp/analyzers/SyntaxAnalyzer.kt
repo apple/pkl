@@ -15,11 +15,23 @@
  */
 package org.pkl.lsp.analyzers
 
+import org.pkl.lsp.ErrorMessages
 import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.Node
 
 class SyntaxAnalyzer(private val server: PklLSPServer) : Analyzer() {
   override fun doAnalyze(node: Node, diagnosticsHolder: MutableList<PklDiagnostic>): Boolean {
-    TODO("Not yet implemented")
+
+    val del = node.checkClosingDelimiter()
+    if (del != null) {
+      val err =
+        if (del == ",") {
+          ErrorMessages.create("missingCommaSeparator")
+        } else {
+          ErrorMessages.create("missingDelimiter", del)
+        }
+      diagnosticsHolder += error(node, err)
+    }
+    return true
   }
 }

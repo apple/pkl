@@ -80,21 +80,36 @@ class PklDeclaredTypeImpl(override val parent: Node, override val ctx: DeclaredT
   }
 }
 
-class PklTypeArgumentListImpl(override val parent: Node, ctx: TypeArgumentListContext) :
-  AbstractNode(parent, ctx), PklTypeArgumentList {
+class PklTypeArgumentListImpl(
+  override val parent: Node,
+  override val ctx: TypeArgumentListContext
+) : AbstractNode(parent, ctx), PklTypeArgumentList {
   override val types: List<PklType> by lazy { children.filterIsInstance<PklType>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTypeArgumentList(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.type().isNotEmpty() && ctx.errs.size != ctx.type().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ">"
+  }
 }
 
-class PklParenthesizedTypeImpl(override val parent: Node, ctx: ParenthesizedTypeContext) :
-  AbstractNode(parent, ctx), PklParenthesizedType {
+class PklParenthesizedTypeImpl(
+  override val parent: Node,
+  override val ctx: ParenthesizedTypeContext
+) : AbstractNode(parent, ctx), PklParenthesizedType {
   override val type: PklType by lazy { children.firstInstanceOf<PklType>()!! }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitParenthesizedType(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -107,13 +122,20 @@ class PklNullableTypeImpl(override val parent: Node, ctx: NullableTypeContext) :
   }
 }
 
-class PklConstrainedTypeImpl(override val parent: Node, ctx: ConstrainedTypeContext) :
+class PklConstrainedTypeImpl(override val parent: Node, override val ctx: ConstrainedTypeContext) :
   AbstractNode(parent, ctx), PklConstrainedType {
   override val type: PklType? by lazy { children.firstInstanceOf<PklType>() }
   override val exprs: List<PklExpr> by lazy { children.filterIsInstance<PklExpr>() }
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitConstrainedType(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.expr().isNotEmpty() && ctx.errs.size != ctx.expr().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -128,7 +150,7 @@ class PklUnionTypeImpl(override val parent: Node, ctx: UnionTypeContext) :
   }
 }
 
-class PklFunctionTypeImpl(override val parent: Node, ctx: FunctionTypeContext) :
+class PklFunctionTypeImpl(override val parent: Node, override val ctx: FunctionTypeContext) :
   AbstractNode(parent, ctx), PklFunctionType {
   override val parameterList: List<PklType> by lazy {
     children.filterIsInstance<PklType>().dropLast(1)
@@ -137,6 +159,13 @@ class PklFunctionTypeImpl(override val parent: Node, ctx: FunctionTypeContext) :
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitFunctionType(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.type().isNotEmpty() && ctx.errs.size != ctx.type().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ")"
   }
 }
 

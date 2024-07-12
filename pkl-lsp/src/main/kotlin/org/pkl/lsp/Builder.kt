@@ -18,8 +18,6 @@ package org.pkl.lsp
 import java.io.File
 import java.io.IOException
 import java.net.URI
-import java.text.MessageFormat
-import java.util.*
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
@@ -27,10 +25,7 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.pkl.core.parser.LexParseException
 import org.pkl.core.parser.Parser
 import org.pkl.lsp.LSPUtil.toRange
-import org.pkl.lsp.analyzers.Analyzer
-import org.pkl.lsp.analyzers.AnnotationAnalyzer
-import org.pkl.lsp.analyzers.ModifierAnalyzer
-import org.pkl.lsp.analyzers.PklDiagnostic
+import org.pkl.lsp.analyzers.*
 import org.pkl.lsp.ast.Node
 import org.pkl.lsp.ast.PklModule
 import org.pkl.lsp.ast.PklModuleImpl
@@ -43,7 +38,7 @@ class Builder(private val server: PklLSPServer) {
   private val parser = Parser()
 
   private val analyzers: List<Analyzer> =
-    listOf(ModifierAnalyzer(server), AnnotationAnalyzer(server))
+    listOf(ModifierAnalyzer(server), AnnotationAnalyzer(server), SyntaxAnalyzer(server))
 
   fun runningBuild(uri: String): CompletableFuture<PklModule?> =
     runningBuild[uri] ?: CompletableFuture.supplyAsync(::noop)
@@ -86,7 +81,7 @@ class Builder(private val server: PklLSPServer) {
   private fun makeParserDiagnostics(file: URI, errors: List<ParseError>) {
     val diags =
       errors.map { err ->
-        val msg = resolveErrorMessage(err.errorType, *err.args)
+        val msg = ErrorMessages.create(err.errorType, *err.args)
         val diag = Diagnostic(err.span.toRange(), "$msg\n\n")
         diag.severity = DiagnosticSeverity.Error
         diag.source = "Pkl Language Server"
@@ -127,20 +122,6 @@ class Builder(private val server: PklLSPServer) {
     private fun toParserError(ex: LexParseException): ParseError {
       val span = Span(ex.line, ex.column, ex.line, ex.column + ex.length)
       return ParseError(ex.message ?: "Parser error", span)
-    }
-
-    private val errorBundle by lazy {
-      ResourceBundle.getBundle("org.pkl.lsp.errorMessages", Locale.getDefault())
-    }
-
-    private fun resolveErrorMessage(key: String, vararg args: Any): String {
-      return if (errorBundle.containsKey(key)) {
-        val msg = errorBundle.getString(key)
-        if (args.isNotEmpty()) {
-          val formatter = MessageFormat(msg, Locale.getDefault())
-          formatter.format(args)
-        } else msg
-      } else key
     }
   }
 }

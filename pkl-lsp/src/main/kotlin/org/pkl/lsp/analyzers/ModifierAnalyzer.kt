@@ -15,7 +15,6 @@
  */
 package org.pkl.lsp.analyzers
 
-import org.eclipse.lsp4j.DiagnosticSeverity
 import org.pkl.lsp.ErrorMessages
 import org.pkl.lsp.PklLSPServer
 import org.pkl.lsp.ast.*
@@ -64,11 +63,7 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
           ) {
             if (node.identifier != null) {
               diagnosticsHolder.add(
-                PklDiagnostic(
-                  node.identifier!!,
-                  ErrorMessages.create("missingModifierLocal"),
-                  DiagnosticSeverity.Error
-                )
+                error(node.identifier!!, ErrorMessages.create("missingModifierLocal"))
               )
               return true
             }
@@ -79,18 +74,10 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
 
     if (abstractModifier != null && openModifier != null) {
       diagnosticsHolder.add(
-        PklDiagnostic(
-          abstractModifier,
-          ErrorMessages.create("modifierAbstractConflictsWithOpen"),
-          DiagnosticSeverity.Error
-        )
+        error(abstractModifier, ErrorMessages.create("modifierAbstractConflictsWithOpen"))
       )
       diagnosticsHolder.add(
-        PklDiagnostic(
-          openModifier,
-          ErrorMessages.create("modifierOpenConflictsWithAbstract"),
-          DiagnosticSeverity.Error
-        )
+        error(openModifier, ErrorMessages.create("modifierOpenConflictsWithAbstract"))
       )
     }
 
@@ -108,10 +95,9 @@ class ModifierAnalyzer(private val server: PklLSPServer) : Analyzer() {
     for (modifier in node.modifiers!!) {
       if (modifier.type !in applicableModifiers) {
         diagnosticsHolder.add(
-          PklDiagnostic(
+          error(
             modifier,
-            ErrorMessages.create("modifierIsNotApplicable", modifier.text, description),
-            DiagnosticSeverity.Error
+            ErrorMessages.create("modifierIsNotApplicable", modifier.text, description)
           )
         )
       }

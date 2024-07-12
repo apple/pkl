@@ -21,9 +21,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.pkl.core.parser.antlr.PklParser.*
-import org.pkl.lsp.PklBaseModule
-import org.pkl.lsp.PklVisitor
-import org.pkl.lsp.VirtualFile
+import org.pkl.lsp.*
 import org.pkl.lsp.resolvers.ResolveVisitor
 import org.pkl.lsp.type.Type
 import org.pkl.lsp.type.TypeParameterBindings
@@ -51,6 +49,10 @@ interface Node {
     }
     return null
   }
+
+  // for syntax analyzer
+  // TODO: removed when we get rid of ANTLR
+  fun checkClosingDelimiter(): String? = null
 }
 
 interface PklQualifiedIdentifier : Node {

@@ -19,15 +19,18 @@ import java.text.MessageFormat
 import java.util.*
 
 object ErrorMessages {
+  private val bundle: ResourceBundle by lazy {
+    ResourceBundle.getBundle("org.pkl.lsp.errorMessages", Locale.getDefault())
+  }
+
   fun create(messageName: String, vararg args: Any): String {
+    if (!bundle.containsKey(messageName)) return messageName
 
-    val locale = Locale.getDefault()
-    val errorMessage =
-      ResourceBundle.getBundle("org.pkl.lsp.errorMessages", locale).getString(messageName)
-
+    val errorMessage = bundle.getString(messageName)
     // only format if `errorMessage` is a format string
     if (args.isEmpty()) return errorMessage
 
+    val locale = Locale.getDefault()
     val formatter = MessageFormat(errorMessage, locale)
     return formatter.format(args)
   }

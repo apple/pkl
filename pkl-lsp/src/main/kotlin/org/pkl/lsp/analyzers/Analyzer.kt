@@ -15,6 +15,7 @@
  */
 package org.pkl.lsp.analyzers
 
+import org.eclipse.lsp4j.DiagnosticSeverity
 import org.pkl.lsp.ast.Node
 
 /**
@@ -40,4 +41,10 @@ abstract class Analyzer {
     node: Node,
     diagnosticsHolder: MutableList<PklDiagnostic>
   ): Boolean
+
+  protected fun warn(node: Node, message: String): PklDiagnostic =
+    PklDiagnostic(node, message, DiagnosticSeverity.Warning)
+
+  protected fun error(node: Node, message: String): PklDiagnostic =
+    PklDiagnostic(node, message, DiagnosticSeverity.Error)
 }

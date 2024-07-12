@@ -16,9 +16,8 @@
 package org.pkl.lsp.ast
 
 import org.pkl.core.parser.antlr.PklParser.*
+import org.pkl.lsp.*
 import org.pkl.lsp.LSPUtil.firstInstanceOf
-import org.pkl.lsp.PklBaseModule
-import org.pkl.lsp.PklVisitor
 import org.pkl.lsp.resolvers.ResolveVisitor
 import org.pkl.lsp.resolvers.Resolvers
 import org.pkl.lsp.type.Type
@@ -89,6 +88,10 @@ class PklThrowExprImpl(override val parent: Node, override val ctx: ThrowExprCon
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitThrowExpr(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
+  }
 }
 
 class PklTraceExprImpl(override val parent: Node, override val ctx: TraceExprContext) :
@@ -97,6 +100,10 @@ class PklTraceExprImpl(override val parent: Node, override val ctx: TraceExprCon
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitTraceExpr(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -109,6 +116,10 @@ class PklImportExprImpl(override val parent: Node, override val ctx: ImportExprC
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitImportExpr(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
+  }
 }
 
 class PklReadExprImpl(override val parent: Node, override val ctx: ReadExprContext) :
@@ -119,6 +130,10 @@ class PklReadExprImpl(override val parent: Node, override val ctx: ReadExprConte
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitReadExpr(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -252,6 +267,10 @@ class PklSuperSubscriptExprImpl(
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitSuperSubscriptExpr(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else "]"
+  }
 }
 
 class PklQualifiedAccessExprImpl(
@@ -289,6 +308,10 @@ class PklSubscriptExprImpl(override val parent: Node, override val ctx: Subscrip
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitSubscriptExpr(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else "]"
   }
 }
 
@@ -446,6 +469,10 @@ class PklIfExprImpl(override val parent: Node, override val ctx: IfExprContext) 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitIfExpr(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
+  }
 }
 
 class PklLetExprImpl(override val parent: Node, override val ctx: LetExprContext) :
@@ -457,6 +484,10 @@ class PklLetExprImpl(override val parent: Node, override val ctx: LetExprContext
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitLetExpr(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -482,6 +513,10 @@ class PklParenthesizedExprImpl(
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitParenthesizedExpr(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
@@ -516,5 +551,12 @@ class PklArgumentListImpl(override val parent: Node, override val ctx: ArgumentL
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitArgumentList(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.expr().isNotEmpty() && ctx.errs.size != ctx.expr().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ")"
   }
 }

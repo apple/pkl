@@ -93,6 +93,13 @@ class PklParameterListImpl(override val parent: Node, override val ctx: Paramete
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitParameterList(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.parameter().isNotEmpty() && ctx.errs.size != ctx.parameter().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else ")"
+  }
 }
 
 class PklObjectBodyImpl(override val parent: Node, override val ctx: ObjectBodyContext) :
@@ -115,6 +122,13 @@ class PklObjectBodyImpl(override val parent: Node, override val ctx: ObjectBodyC
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitObjectBody(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    if (ctx.parameter().isNotEmpty() && ctx.errs.size != ctx.parameter().size - 1) {
+      return ","
+    }
+    return if (ctx.err != null) null else "}"
   }
 }
 
@@ -178,6 +192,10 @@ class PklForGeneratorImpl(override val parent: Node, override val ctx: ForGenera
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitForGenerator(this)
   }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
+  }
 }
 
 class PklWhenGeneratorImpl(override val parent: Node, override val ctx: WhenGeneratorContext) :
@@ -188,6 +206,10 @@ class PklWhenGeneratorImpl(override val parent: Node, override val ctx: WhenGene
 
   override fun <R> accept(visitor: PklVisitor<R>): R? {
     return visitor.visitWhenGenerator(this)
+  }
+
+  override fun checkClosingDelimiter(): String? {
+    return if (ctx.err != null) null else ")"
   }
 }
 
