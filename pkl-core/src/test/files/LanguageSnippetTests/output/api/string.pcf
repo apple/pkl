@@ -183,6 +183,8 @@ examples {
   ["toInt()"] {
     123
     -123
+    123
+    -123
     0
     0
     "Cannot parse string as `Int`. String: \"1.2\""
@@ -191,6 +193,8 @@ examples {
     "Cannot parse string as `Int`. String: \"abc\""
   }
   ["toIntOrNull()"] {
+    123
+    -123
     123
     -123
     0

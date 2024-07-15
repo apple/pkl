@@ -225,6 +225,8 @@ examples {
   ["toInt()"] {
     "123".toInt()
     "-123".toInt()
+    "1_2__3___".toInt()
+    "-1_2__3___".toInt()
     "0".toInt()
     "-0".toInt()
     module.catch(() -> "1.2".toInt())
@@ -236,6 +238,8 @@ examples {
   ["toIntOrNull()"] {
     "123".toIntOrNull()
     "-123".toIntOrNull()
+    "1_2__3___".toInt()
+    "-1_2__3___".toInt()
     "0".toIntOrNull()
     "-0".toIntOrNull()
     "1.2".toIntOrNull()
@@ -445,7 +449,7 @@ examples {
     "".sha256
     quickBrownFox.sha256
   }
-  
+
   ["sha256Int"] {
     "".sha256Int
     quickBrownFox.sha256Int
@@ -460,7 +464,7 @@ examples {
     "".base64
     quickBrownFox.base64
   }
-  
+
   ["base64Decoded"] {
     module.catch(() -> "~~~".base64Decoded)
   }

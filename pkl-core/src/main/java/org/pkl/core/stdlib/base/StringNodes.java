@@ -768,7 +768,7 @@ public final class StringNodes {
     @Specialization
     protected long eval(String self) {
       try {
-        return Long.parseLong(self);
+        return Long.parseLong(self.replaceAll("_", ""));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Int")
@@ -783,7 +783,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Long.parseLong(self);
+        return Long.parseLong(self.replaceAll("_", ""));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
