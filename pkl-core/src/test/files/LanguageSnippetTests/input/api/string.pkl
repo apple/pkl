@@ -233,19 +233,21 @@ examples {
     module.catch(() -> "9223372036854775808".toInt())
     module.catch(() -> "-9223372036854775809".toInt())
     module.catch(() -> "abc".toInt())
+    module.catch(() -> "_1_000".toInt())
   }
 
   ["toIntOrNull()"] {
     "123".toIntOrNull()
     "-123".toIntOrNull()
-    "1_2__3___".toInt()
-    "-1_2__3___".toInt()
+    "1_2__3___".toIntOrNull()
+    "-1_2__3___".toIntOrNull()
     "0".toIntOrNull()
     "-0".toIntOrNull()
     "1.2".toIntOrNull()
     "9223372036854775808".toIntOrNull()
     "-9223372036854775809".toIntOrNull()
     "abc".toIntOrNull()
+    "_1_2__3___".toIntOrNull()
   }
 
   ["toFloat()"] {
@@ -282,13 +284,17 @@ examples {
     "-.45e-9".toFloat()
     "9e1024".toFloat()
     "-9e1024".toFloat()
+    "-1_2__3___.2_e+1_".toFloat()
     module.catch(() -> "abc".toFloat())
+    module.catch(() -> "123._34".toFloat())
+    module.catch(() -> "123e_34".toFloat())
   }
 
   ["toFloatOrNull()"] {
     "0".toFloatOrNull()
     "-0".toFloatOrNull()
     "abc".toFloatOrNull()
+    "_123_.1_".toFloatOrNull()
   }
 
   ["take()"] {
