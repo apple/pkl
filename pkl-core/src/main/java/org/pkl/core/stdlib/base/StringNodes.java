@@ -768,7 +768,7 @@ public final class StringNodes {
     @Specialization
     protected long eval(String self) {
       try {
-        return Long.parseLong(self.replaceAll("_", ""));
+        return Long.parseLong(removeUnderlinesFromNumber(self));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Int")
@@ -783,7 +783,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Long.parseLong(self.replaceAll("_", ""));
+        return Long.parseLong(removeUnderlinesFromNumber(self));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -795,7 +795,7 @@ public final class StringNodes {
     @Specialization
     protected double eval(String self) {
       try {
-        return Double.parseDouble(self);
+        return Double.parseDouble(removeUnderlinesFromNumber(self));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Float")
@@ -810,7 +810,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Double.parseDouble(self);
+        return Double.parseDouble(removeUnderlinesFromNumber(self));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -933,5 +933,24 @@ public final class StringNodes {
     var regexMatch = RegexMatchFactory.create(Pair.of(matcher.toMatchResult(), -1));
     var replacement = mapper.applyString(regexMatch);
     return Matcher.quoteReplacement(replacement);
+  }
+
+  /**
+   * Removes `_` from numbers to be parsed to be compatible with how Pkl parses numbers. Will return
+   * the string unmodified if it's invalid.
+   */
+  private static String removeUnderlinesFromNumber(String number) {
+    var builder = new StringBuilder();
+    var numberStart = true;
+    for (var i = 0; i < number.length(); i++) {
+      var c = number.charAt(i);
+      if (c != '_') {
+        builder.append(c);
+      } else if (numberStart) return number;
+
+      numberStart = c == '.' || c == 'e' || c == 'E';
+    }
+
+    return builder.toString();
   }
 }
