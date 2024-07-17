@@ -458,7 +458,7 @@ final class PackageResolvers {
       Files.createDirectories(path.getParent());
       var inputStream = openExternalUri(downloadUri);
       try (var digestInputStream = newDigestInputStream(inputStream)) {
-        Files.copy(digestInputStream, path);
+        Files.copy(digestInputStream, path, StandardCopyOption.REPLACE_EXISTING);
         return digestInputStream.getMessageDigest().digest();
       }
     }
@@ -472,7 +472,7 @@ final class PackageResolvers {
       }
       try (var in = inputStream) {
         Files.createDirectories(path.getParent());
-        Files.copy(in, path);
+        Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
         if (checksums != null) {
           var digestInputStream = (DigestInputStream) inputStream;
           var checksumBytes = digestInputStream.getMessageDigest().digest();
@@ -490,7 +490,8 @@ final class PackageResolvers {
       if (Files.exists(cachePath)) {
         return cachePath;
       }
-      var tmpPath = tmpDir.resolve(metadataRelativePath);
+      Files.createDirectories(tmpDir);
+      var tmpPath = Files.createTempFile(tmpDir, null, ".json");
       try {
         downloadMetadata(packageUri, requestUri, tmpPath, checksums);
         Files.createDirectories(cachePath.getParent());
@@ -539,7 +540,8 @@ final class PackageResolvers {
       if (Files.exists(cachePath)) {
         return cachePath;
       }
-      var tmpPath = tmpDir.resolve(relativePath);
+      Files.createDirectories(tmpDir);
+      var tmpPath = Files.createTempFile(tmpDir, null, ".zip");
       try {
         var checksumBytes =
             downloadUriToPathAndComputeChecksum(dependencyMetadata.getPackageZipUrl(), tmpPath);
