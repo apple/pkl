@@ -455,7 +455,6 @@ final class PackageResolvers {
 
     private byte[] downloadUriToPathAndComputeChecksum(URI downloadUri, Path path)
         throws IOException, SecurityManagerException {
-      Files.createDirectories(path.getParent());
       var inputStream = openExternalUri(downloadUri);
       try (var digestInputStream = newDigestInputStream(inputStream)) {
         Files.copy(digestInputStream, path, StandardCopyOption.REPLACE_EXISTING);
@@ -491,7 +490,9 @@ final class PackageResolvers {
         return cachePath;
       }
       Files.createDirectories(tmpDir);
-      var tmpPath = Files.createTempFile(tmpDir, null, ".json");
+      var tmpPath =
+          Files.createTempFile(
+              tmpDir, IoUtils.encodePath(packageUri.toString().replaceAll("/", "-")), ".json");
       try {
         downloadMetadata(packageUri, requestUri, tmpPath, checksums);
         Files.createDirectories(cachePath.getParent());
@@ -541,7 +542,9 @@ final class PackageResolvers {
         return cachePath;
       }
       Files.createDirectories(tmpDir);
-      var tmpPath = Files.createTempFile(tmpDir, null, ".zip");
+      var tmpPath =
+          Files.createTempFile(
+              tmpDir, IoUtils.encodePath(packageUri.toString().replaceAll("/", "-")), ".zip");
       try {
         var checksumBytes =
             downloadUriToPathAndComputeChecksum(dependencyMetadata.getPackageZipUrl(), tmpPath);
