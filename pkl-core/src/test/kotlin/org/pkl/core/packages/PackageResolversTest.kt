@@ -22,10 +22,9 @@ import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.pkl.commons.deleteRecursively
 import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
@@ -60,7 +59,9 @@ class PackageResolversTest {
       }
     }
 
-    @Test
+    // execute test 3 times to check concurrent writes
+    @RepeatedTest(3)
+    @Execution(ExecutionMode.CONCURRENT)
     fun `get module bytes`() {
       val expectedBirdModule =
         packageRoot.resolve("birds@0.5.0/package/Bird.pkl").readString(StandardCharsets.UTF_8)
