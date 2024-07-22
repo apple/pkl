@@ -172,7 +172,6 @@ class BaseOptions : OptionGroup() {
       .path()
       .multiple()
 
-  @Suppress("HttpUrlsUsage")
   val proxy: URI? by
     option(
         names = arrayOf("--http-proxy"),
