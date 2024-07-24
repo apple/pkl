@@ -45,10 +45,10 @@ class BaseCommandTest {
 
   @Test
   fun `external properties without value default to 'true'`() {
-    cmd.parse(arrayOf("-p", "flag1", "-p", "flag2", "-p", "FOO=bar"))
+    cmd.parse(arrayOf("-p", "flag1", "-p", "flag2=", "-p", "FOO=bar"))
     val props = cmd.baseOptions.baseOptions(emptyList()).externalProperties
 
-    assertThat(props).isEqualTo(mapOf("flag1" to "true", "flag2" to "true", "FOO" to "bar"))
+    assertThat(props).isEqualTo(mapOf("flag1" to "true", "flag2" to "", "FOO" to "bar"))
   }
 
   @Test

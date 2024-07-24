@@ -64,6 +64,18 @@ class BaseOptions : OptionGroup() {
             throw CliException(message)
           }
       }
+
+    fun RawOption.splitProps(): NullableOption<Pair<String, String>, Pair<String, String>> {
+      return convert {
+        val parts = it.split("=")
+        if (parts.size <= 1) parts[0] to "true" else parts[0] to parts[1]
+      }
+    }
+
+    fun RawOption.associateProps():
+      OptionWithValues<Map<String, String>, Pair<String, String>, Pair<String, String>> {
+      return splitProps().multiple().toMap()
+    }
   }
 
   private val defaults = CliBaseOptions()
@@ -116,7 +128,7 @@ class BaseOptions : OptionGroup() {
         metavar = "<name=value>",
         help = "External property to set (repeatable)."
       )
-      .associate()
+      .associateProps()
 
   val noCache: Boolean by
     option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
@@ -214,7 +226,7 @@ class BaseOptions : OptionGroup() {
       allowedModules = allowedModules.ifEmpty { null },
       allowedResources = allowedResources.ifEmpty { null },
       environmentVariables = envVars.ifEmpty { null },
-      externalProperties = properties.mapValues { it.value.ifBlank { "true" } }.ifEmpty { null },
+      externalProperties = properties.ifEmpty { null },
       modulePath = modulePath.ifEmpty { null },
       workingDir = workingDir,
       settings = settings,
