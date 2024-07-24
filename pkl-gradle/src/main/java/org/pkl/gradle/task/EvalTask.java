@@ -78,7 +78,7 @@ public abstract class EvalTask extends ModulesTask {
 
   @OutputDirectories
   @Optional
-  public FileCollection getEffectiveOutputDirectories() {
+  public FileCollection getEffectiveOutputDirs() {
     return getObjects()
         .fileCollection()
         .from(cliEvaluator.map(e -> nullToEmpty(e.getOutputDirectories())));
