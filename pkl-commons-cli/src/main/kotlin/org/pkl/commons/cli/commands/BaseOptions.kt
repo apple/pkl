@@ -65,16 +65,14 @@ class BaseOptions : OptionGroup() {
           }
       }
 
-    fun RawOption.splitProps(): NullableOption<Pair<String, String>, Pair<String, String>> {
-      return convert {
-        val parts = it.split("=")
-        if (parts.size <= 1) parts[0] to "true" else parts[0] to parts[1]
-      }
-    }
-
     fun RawOption.associateProps():
       OptionWithValues<Map<String, String>, Pair<String, String>, Pair<String, String>> {
-      return splitProps().multiple().toMap()
+      return convert {
+          val parts = it.split("=")
+          if (parts.size <= 1) parts[0] to "true" else parts[0] to parts[1]
+        }
+        .multiple()
+        .toMap()
     }
   }
 
