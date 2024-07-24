@@ -30,6 +30,10 @@ dependencies {
   jmh(libs.antlrRuntime)
   truffle(libs.truffleApi)
   graal(libs.graalCompiler)
+
+  implementation(libs.truffleApi)
+  implementation(libs.graalSdk)
+  compileOnly(libs.jsr305)
 }
 
 jmh {

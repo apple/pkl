@@ -236,9 +236,20 @@ public final class VmUtils {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
-    final var cachedValue = receiver.getCachedValue(memberKey);
+    final var cachedValue = getCachedValue(receiver, memberKey);
     if (cachedValue != null) return cachedValue;
 
+    return lookupMember(receiver, memberKey, checkType, callNode);
+  }
+
+  @TruffleBoundary
+  private static @Nullable Object getCachedValue(VmObjectLike receiver, Object memberKey) {
+    return receiver.getCachedValue(memberKey);
+  }
+
+  @TruffleBoundary
+  private static @Nullable Object lookupMember(
+      VmObjectLike receiver, Object memberKey, boolean checkType, IndirectCallNode callNode) {
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
       var member = owner.getMember(memberKey);
       if (member == null) continue;
