@@ -128,12 +128,15 @@ public abstract class ModulesTask extends BasePklTask {
   }
 
   /**
-   * Converts either a file or a URI to a URI. We convert a file to a URI via the {@link
+   * Converts either a file or a URI to a URI. We convert a relative file to a URI via the {@link
    * IoUtils#createUri(String)} because other ways of conversion can make relative paths into
    * absolute URIs, which may break module loading.
    */
   private URI parsedModuleNotationToUri(Object notation) {
     if (notation instanceof File file) {
+      if (file.isAbsolute()) {
+        return file.toPath().toUri();
+      }
       return IoUtils.createUri(IoUtils.toNormalizedPathString(file.toPath()));
     } else if (notation instanceof URI uri) {
       return uri;
