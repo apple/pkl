@@ -15,16 +15,19 @@
  */
 package org.pkl.core.ast.type;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ControlFlowException;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.pkl.core.StackFrame;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.Nullable;
 
 /**
  * Indicates that a type check failed. [TypeNode]s use this exception instead of [VmException] to
@@ -35,6 +38,7 @@ import org.pkl.core.util.ErrorMessages;
 public abstract class VmTypeMismatchException extends ControlFlowException {
   protected final SourceSection sourceSection;
   protected final Object actualValue;
+  protected @Nullable Map<CallTarget, StackFrame> insertedStackFrames = null;
 
   protected VmTypeMismatchException(SourceSection sourceSection, Object actualValue) {
     this.sourceSection = sourceSection;
@@ -42,10 +46,26 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   @TruffleBoundary
+  public void putInsertedStackFrame(CallTarget callTarget, StackFrame stackFrame) {
+    if (this.insertedStackFrames == null) {
+      this.insertedStackFrames = new HashMap<>();
+    }
+    this.insertedStackFrames.put(callTarget, stackFrame);
+  }
+
+  @TruffleBoundary
   public abstract void describe(StringBuilder builder, String indent);
 
   @TruffleBoundary
   public abstract VmException toVmException();
+
+  protected VmExceptionBuilder baseExceptionBuilder() {
+    var builder = new VmExceptionBuilder();
+    if (insertedStackFrames != null) {
+      builder.withInsertedStackFrames(insertedStackFrames);
+    }
+    return builder;
+  }
 
   public static final class Simple extends VmTypeMismatchException {
     private final Object expectedType;
@@ -132,7 +152,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return new VmExceptionBuilder()
+      return baseExceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }
@@ -166,7 +186,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return new VmExceptionBuilder()
+      return baseExceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }
@@ -206,7 +226,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var details = new StringBuilder();
       describeDetails(details, "");
 
-      return new VmExceptionBuilder()
+      return baseExceptionBuilder()
           .adhocEvalError(summary.toString())
           .withSourceSection(sourceSection)
           .withHint(details.toString());
@@ -308,7 +328,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return new VmExceptionBuilder()
+      return baseExceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }

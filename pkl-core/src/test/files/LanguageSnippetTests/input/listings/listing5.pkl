@@ -1,0 +1,168 @@
+amends "../snippetTest.pkl"
+
+facts {
+  ["equals"] {
+    local l1 = new Listing<String(length.isOdd)> {}
+    local l2: Listing<String(this == capitalize())> = l1
+
+    l1 == l2
+  }
+}
+
+examples {
+  ["type check: new with explicit parent"] {
+    local l = new Listing<String> {
+      1
+    }
+
+    module.catch(() -> l[0])
+  }
+
+  ["type check: local new with inferred parent"] {
+    local l: Listing<String> = new {
+      1
+    }
+
+    module.catch(() -> l[0])
+  }
+
+  ["type check: local paramaterized property type, unparamaterized new with explicit parent"] {
+    local m: Listing<String> = new Listing {
+      1
+    }
+    module.catch(() -> m[0])
+  }
+
+  ["type check: local unparameterized property type, paramaterized new with explicit parent"] {
+    local m: Listing = new Listing<String> {
+      1
+    }
+    module.catch(() -> m[0])
+  }
+
+  ["amending listings does not require type checks on amending object members"] {
+    local m: Listing<String> = new {
+      "hi"
+    }
+    // ElementsLiteralNode
+    (m) {
+      1
+    }
+    // ElementsEntriesLiteralNode
+    (m) {
+      [0] = 1
+      2
+    }
+    // GeneratorObjectLiteralNode
+    (m) {
+      when (false) {
+        "hi"
+      }
+      1
+    }
+  }
+
+  ["type check: constraints on both property type node and explicit parent type node are checked"] {
+    local l: Listing<String(length.isOdd)> = new Listing<String(this == capitalize())> {
+      "Ba"
+      "bar"
+    }
+
+    module.catch(() -> l[0])
+    module.catch(() -> l[1])
+  }
+
+  ["type check: nested listings: constraints on both parent type node and child type node are checked"] {
+    local res12: Listing<Listing<String(length.isOdd)>> =
+      new Listing<Listing<String(this == capitalize())>> {
+        new {
+          "Ba"
+          "bar"
+        }
+      }
+
+    module.catch(() -> res12[0][0])
+    module.catch(() -> res12[0][1])
+  }
+
+  ["type check: propagate from List"] {
+    local l: List<Listing<String(length.isOdd)>> = List(
+      new Listing<String(this == capitalize())> {
+        "Ba"
+        "bar"
+      }
+    )
+    module.catch(() -> l[0][1])
+    module.catch(() -> l[0][2])
+  }
+
+  ["type check: propagate function types"] {
+    local l = new Listing<String(this == capitalize())> {
+      "Ba" // fails `length.isOdd`
+      "bar" // fails `this == capitalize()`
+    }
+    local l2 = new Listing {
+      "Ba" // fails `length.isOdd`
+      "bar" // fails `this == capitalize()`
+    }
+    // type check String(length.isOdd) should be propagated to the listing via a paramater type
+    // annotation
+    local function func1(listing: Listing<String(length.isOdd)>) = listing
+    // type check String(length.isOdd) should be propagated to the listing via a return type
+    // annotation
+    local function func2(listing): Listing<String(length.isOdd)> = listing
+    // type check String(length.isOdd) and String(this == capitalize()) should be propagated to the
+    // listing via both parameter type and return type annotations
+    local function func3(listing: Listing<String(length.isOdd)>): Listing<String(this == capitalize())> = listing
+
+    module.catch(() -> func1(l)[0])
+    module.catch(() -> func1(l)[1])
+    module.catch(() -> func2(l)[0])
+    module.catch(() -> func2(l)[1])
+    module.catch(() -> func3(l2)[0])
+    module.catch(() -> func3(l2)[1])
+  }
+
+  ["type check: union type"] {
+    local l: Listing<String(length.isOdd)>|Listing<String(length == 4)> =
+      new Listing<String(this == capitalize())> {
+        "Ba"   // fails length.isOdd and length == 4
+        "bar"  // fails this == capitalize()
+        "Bazz" // passes this == capitalize() and length == 4
+        "Qux"  // passes this == capitalize() and length.isOdd
+      }
+    module.catch(() -> l)
+  }
+
+  ["type check: nullable type"] {
+    local l: Listing<String(length.isOdd)>? =
+      new Listing<String(this == capitalize())> {
+        "Ba"   // fails length.isOdd
+        "bar"  // fails this == capitalize()
+      }
+    module.catch(() -> l!![0])
+    module.catch(() -> l!![1])
+  }
+
+  ["type check: propagate lambda type"] {
+    local func1 = (it: Listing<String(length.isOdd)>) -> it
+
+    local l = new Listing<String(this == capitalize())> {
+      "Ba" // fails `length.isOdd`
+      "bar" // fails `this == capitalize()`
+    }
+
+    module.catch(() -> func1.apply(l)[0])
+    module.catch(() -> func1.apply(l)[1])
+  }
+
+  ["intermediary objects are not checked"] {
+    local l = new Listing<String> {
+      // okay, because this node never gets evaluated
+      50
+    }
+    (l) {
+      [0] = "Hello"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `endsWith("ga")` violated.
+Value: "hola"
+
+x | res: Listing<String(!isEmpty)> = new Listing<String(endsWith("ga"))> {
+                                                        ^^^^^^^^^^^^^^
+at listingTypeCheckError4#res (file:///$snippetsDir/input/errors/listingTypeCheckError4.pkl)
+
+x | "hola"
+    ^^^^^^
+at listingTypeCheckError4#res[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError4.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

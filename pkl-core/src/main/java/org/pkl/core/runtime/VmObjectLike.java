@@ -52,7 +52,7 @@ public abstract class VmObjectLike extends VmValue {
     return extraStorage != null;
   }
 
-  public final Object getExtraStorage() {
+  public Object getExtraStorage() {
     assert extraStorage != null;
     return extraStorage;
   }
@@ -96,7 +96,7 @@ public abstract class VmObjectLike extends VmValue {
    * receiver.
    */
   @TruffleBoundary
-  public abstract void setCachedValue(Object key, Object value);
+  public abstract void setCachedValue(Object key, Object value, ObjectMember objectMember);
 
   /**
    * Prefer this method over {@link #getCachedValue} if the value is not required. (There is no

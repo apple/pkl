@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `!isEmpty` violated.
+Value: ""
+
+x | res: Listing<String(!isEmpty)> = new Listing<String> {
+                        ^^^^^^^^
+at listingTypeCheckError3#res (file:///$snippetsDir/input/errors/listingTypeCheckError3.pkl)
+
+x | ""
+    ^^
+at listingTypeCheckError3#res[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -1,0 +1,4 @@
+// ensure that this member is only evaluated once (should result in only one trace)
+listing = new Listing { trace(1) }
+
+listing2: Listing<Int> = listing

@@ -1,0 +1,17 @@
+examples {
+  ["set of listing"] {
+    1
+    false
+    "Expected value of type `Int`, but got type `String`. Value: \"one\""
+  }
+  ["listing"] {
+    true
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+  }
+  ["mapping"] {
+    true
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+    "Expected value of type `String`, but got type `Int`. Value: 2"
+    "Expected value of type `Int`, but got type `String`. Value: \"hi\""
+  }
+}

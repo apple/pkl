@@ -82,12 +82,12 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   @Override
-  public final @Nullable Object getCachedValue(Object key) {
+  public @Nullable Object getCachedValue(Object key) {
     return EconomicMaps.get(cachedValues, key);
   }
 
   @Override
-  public final void setCachedValue(Object key, Object value) {
+  public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
     EconomicMaps.put(cachedValues, key, value);
   }
 

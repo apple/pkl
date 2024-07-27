@@ -10,6 +10,6 @@ at pkl.Project#dependencies (pkl:Project)
   Type constraint `isValidLoadDependency` violated.
   Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetti...
 
-x | dependencies {
-    ^^^^^^^^^^^^^^
-at PklProject#dependencies (file:///$snippetsDir/input/projects/badProjectDeps4/PklProject)
+x | ["badLocalProject"] = import("../badLocalProject/PklProject")
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at PklProject#dependencies["badLocalProject"] (file:///$snippetsDir/input/projects/badProjectDeps4/PklProject)

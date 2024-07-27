@@ -20,7 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.pkl.core.*;
@@ -33,8 +32,7 @@ public abstract class VmException extends AbstractTruffleException {
   private final @Nullable SourceSection sourceSection;
   private final @Nullable String memberName;
   protected @Nullable String hint;
-
-  private final Map<CallTarget, StackFrame> insertedStackFrames = new HashMap<>();
+  private final Map<CallTarget, StackFrame> insertedStackFrames;
 
   public VmException(
       String message,
@@ -45,7 +43,8 @@ public abstract class VmException extends AbstractTruffleException {
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint) {
+      @Nullable String hint,
+      Map<CallTarget, StackFrame> insertedStackFrames) {
     super(message, cause, UNLIMITED_STACK_TRACE, location);
     this.isExternalMessage = isExternalMessage;
     this.messageArguments = messageArguments;
@@ -53,6 +52,7 @@ public abstract class VmException extends AbstractTruffleException {
     this.sourceSection = sourceSection;
     this.memberName = memberName;
     this.hint = hint;
+    this.insertedStackFrames = insertedStackFrames;
   }
 
   public final boolean isExternalMessage() {

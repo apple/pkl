@@ -71,7 +71,7 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
 
     if (result == null) {
       result = callNode.call(objReceiver, owner, property.getName());
-      objReceiver.setCachedValue(property, result);
+      objReceiver.setCachedValue(property, result, property);
     }
 
     return result;

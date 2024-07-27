@@ -21,14 +21,14 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
 
-// TODO: make sure that "default" isn't forced
-// when a mapping is rendered ("default" should be allowed to be partial)
-public final class VmMapping extends VmObject {
+public final class VmMapping extends VmListingOrMapping<VmMapping> {
+
   private int cachedEntryCount = -1;
 
   @GuardedBy("this")
@@ -51,7 +51,23 @@ public final class VmMapping extends VmObject {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
-    super(enclosingFrame, Objects.requireNonNull(parent), members);
+    super(enclosingFrame, Objects.requireNonNull(parent), members, null, null, null);
+  }
+
+  public VmMapping(
+      MaterializedFrame enclosingFrame,
+      VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      VmMapping surrogatee,
+      ListingOrMappingTypeCheckNode typeCheckNode,
+      MaterializedFrame typeNodeFrame) {
+    super(
+        enclosingFrame,
+        Objects.requireNonNull(parent),
+        members,
+        surrogatee,
+        typeCheckNode,
+        typeNodeFrame);
   }
 
   public static boolean isDefaultProperty(Object propertyKey) {
@@ -180,5 +196,18 @@ public final class VmMapping extends VmObject {
     }
     cachedEntryCount = result;
     return result;
+  }
+
+  @Override
+  @TruffleBoundary
+  public VmMapping createSurrogate(
+      ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame) {
+    return new VmMapping(
+        getEnclosingFrame(),
+        Objects.requireNonNull(getParent()),
+        getMembers(),
+        this,
+        typeCheckNode,
+        typeNodeFrame);
   }
 }

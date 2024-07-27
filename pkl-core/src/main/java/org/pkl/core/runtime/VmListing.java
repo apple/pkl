@@ -21,13 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
-// TODO: make sure that "default" isn't forced
-// when a listing is rendered ("default" should be allowed to be partial)
-public final class VmListing extends VmObject {
+public final class VmListing extends VmListingOrMapping<VmListing> {
   private static final class EmptyHolder {
     private static final VmListing EMPTY =
         new VmListing(
@@ -48,7 +47,25 @@ public final class VmListing extends VmObject {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members);
+    super(enclosingFrame, Objects.requireNonNull(parent), members, null, null, null);
+    this.length = length;
+  }
+
+  public VmListing(
+      MaterializedFrame enclosingFrame,
+      VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      int length,
+      @Nullable VmListing surrogatee,
+      ListingOrMappingTypeCheckNode typeCheckNode,
+      MaterializedFrame typeNodeFrame) {
+    super(
+        enclosingFrame,
+        Objects.requireNonNull(parent),
+        members,
+        surrogatee,
+        typeCheckNode,
+        typeNodeFrame);
     this.length = length;
   }
 
@@ -98,6 +115,19 @@ public final class VmListing extends VmObject {
   @Override
   public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
     return converter.convertListing(this, path);
+  }
+
+  @Override
+  public VmListing createSurrogate(
+      ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame) {
+    return new VmListing(
+        getEnclosingFrame(),
+        Objects.requireNonNull(parent),
+        members,
+        length,
+        this,
+        typeCheckNode,
+        typeNodeFrame);
   }
 
   @Override

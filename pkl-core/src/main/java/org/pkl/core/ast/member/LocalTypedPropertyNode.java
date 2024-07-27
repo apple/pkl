@@ -66,8 +66,7 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
         unresolvedTypeNode = null;
       }
       var result = bodyNode.executeGeneric(frame);
-      typeNode.execute(frame, result);
-      return result;
+      return typeNode.execute(frame, result);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
       throw e.toVmException();

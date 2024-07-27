@@ -103,7 +103,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
             var callTarget = member.getCallTarget();
             value = callTarget.call(parent, owner, key);
           }
-          owner.setCachedValue(key, value);
+          owner.setCachedValue(key, value, member);
         }
 
         frame.setAuxiliarySlot(customThisSlot, value);

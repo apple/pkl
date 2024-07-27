@@ -1,0 +1,69 @@
+facts {
+  ["equals"] {
+    true
+  }
+}
+examples {
+  ["type check: new with explicit parent"] {
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+  }
+  ["type check: local new with inferred parent"] {
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+  }
+  ["type check: local paramaterized property type, unparamaterized new with explicit parent"] {
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+  }
+  ["type check: local unparameterized property type, paramaterized new with explicit parent"] {
+    "Expected value of type `String`, but got type `Int`. Value: 1"
+  }
+  ["amending listings does not require type checks on amending object members"] {
+    new {
+      "hi"
+      1
+    }
+    new {
+      1
+      2
+    }
+    new {
+      "hi"
+      1
+    }
+  }
+  ["type check: constraints on both property type node and explicit parent type node are checked"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+  }
+  ["type check: nested listings: constraints on both parent type node and child type node are checked"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+  }
+  ["type check: propagate from List"] {
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+    "Element index `2` is out of range `0`..`1`."
+  }
+  ["type check: propagate function types"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+  }
+  ["type check: union type"] {
+    "Expected value of type `Listing<String(length.isOdd)>|Listing<String(length == 4)>`, but got a different `Listing`. Value: new Listing { \"Ba\"; ?; ?; ? }"
+  }
+  ["type check: nullable type"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+  }
+  ["type check: propagate lambda type"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
+    "Type constraint `this == capitalize()` violated. Value: \"bar\""
+  }
+  ["intermediary objects are not checked"] {
+    new {
+      "Hello"
+    }
+  }
+}

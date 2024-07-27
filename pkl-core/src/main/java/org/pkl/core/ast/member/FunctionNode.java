@@ -118,7 +118,7 @@ public final class FunctionNode extends RegularMemberNode {
       var result = bodyNode.executeGeneric(frame);
 
       if (checkedReturnTypeNode != null) {
-        checkedReturnTypeNode.execute(frame, result);
+        return checkedReturnTypeNode.execute(frame, result);
       }
 
       return result;

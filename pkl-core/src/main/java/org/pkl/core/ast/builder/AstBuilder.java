@@ -442,13 +442,21 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         : doVisitNewExprWithInferredParent(ctx);
   }
 
+  // `new Listing<Person> {}` is sugar for: `new Listing<Person> {} as Listing<Person>`
   private Object doVisitNewExprWithExplicitParent(NewExprContext ctx, TypeContext typeCtx) {
-    return doVisitObjectBody(
-        ctx.objectBody(),
-        new GetParentForTypeNode(
-            createSourceSection(ctx),
-            visitType(typeCtx),
-            symbolTable.getCurrentScope().getQualifiedName()));
+    var parentType = visitType(typeCtx);
+    var expr =
+        doVisitObjectBody(
+            ctx.objectBody(),
+            new GetParentForTypeNode(
+                createSourceSection(ctx),
+                visitType(typeCtx),
+                symbolTable.getCurrentScope().getQualifiedName()));
+    if (typeCtx instanceof DeclaredTypeContext declaredTypeContext
+        && declaredTypeContext.typeArgumentList() != null) {
+      return new TypeCastNode(parentType.getSourceSection(), expr, parentType);
+    }
+    return expr;
   }
 
   private Object doVisitNewExprWithInferredParent(NewExprContext ctx) {

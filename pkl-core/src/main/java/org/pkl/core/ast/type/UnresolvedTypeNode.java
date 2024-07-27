@@ -219,11 +219,11 @@ public abstract class UnresolvedTypeNode extends PklNode {
         checkNumberOfTypeArguments(clazz);
 
         if (clazz.isCollectionClass()) {
-          return CollectionTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
+          return new CollectionTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isListClass()) {
-          return ListTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
+          return new ListTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isSetClass()) {
@@ -231,25 +231,25 @@ public abstract class UnresolvedTypeNode extends PklNode {
         }
 
         if (clazz.isMapClass()) {
-          return MapTypeNodeGen.create(
+          return new MapTypeNode(
               sourceSection,
               typeArgumentNodes[0].execute(frame),
               typeArgumentNodes[1].execute(frame));
         }
 
         if (clazz.isListingClass()) {
-          return ListingTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
+          return new ListingTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isMappingClass()) {
-          return MappingTypeNodeGen.create(
+          return new MappingTypeNode(
               sourceSection,
               typeArgumentNodes[0].execute(frame),
               typeArgumentNodes[1].execute(frame));
         }
 
         if (clazz.isPairClass()) {
-          return PairTypeNodeGen.create(
+          return new PairTypeNode(
               sourceSection,
               typeArgumentNodes[0].execute(frame),
               typeArgumentNodes[1].execute(frame));
@@ -324,7 +324,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return NullableTypeNodeGen.create(sourceSection, elementTypeNode.execute(frame));
+      return new NullableTypeNode(sourceSection, elementTypeNode.execute(frame));
     }
   }
 

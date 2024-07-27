@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 1
+
+x | res = new Listing<String> {
+                      ^^^^^^
+at listingTypeCheckError1#res (file:///$snippetsDir/input/errors/listingTypeCheckError1.pkl)
+
+x | 1
+    ^
+at listingTypeCheckError1#res[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError1.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

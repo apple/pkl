@@ -29,9 +29,11 @@ import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.pkl.core.PType;
 import org.pkl.core.PType.StringLiteral;
+import org.pkl.core.PklBugException;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
@@ -39,11 +41,13 @@ import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
+import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
+import org.pkl.core.util.MutableLong;
 import org.pkl.core.util.Nonnull;
 import org.pkl.core.util.Nullable;
 
@@ -67,16 +71,28 @@ public abstract class TypeNode extends PklNode {
   public abstract TypeNode initWriteSlotNode(int slot);
 
   /**
-   * Checks if `value` conforms to this type. If so, returns normally. Otherwise, throws a
-   * `VmTypeMismatchException`.
+   * Checks if {@code value} conforms to this type, and possibly casts it in the case of {@link
+   * MappingTypeNode} or {@link ListingTypeNode}.
    */
-  public abstract void execute(VirtualFrame frame, Object value);
+  public abstract Object execute(VirtualFrame frame, Object value);
 
   /**
-   * Checks if `value` conforms to this type. If so, sets `slot` to `value`. Otherwise, throws a
-   * `VmTypeMismatchException`.
+   * Checks if {@code value} conforms to this type, and possibly casts its value.
+   *
+   * <p>If {@code value} is conforming, sets {@code slot} to {@code value}. Otherwise, throws a
+   * {@link VmTypeMismatchException}.
    */
-  public abstract void executeAndSet(VirtualFrame frame, Object value);
+  public abstract Object executeAndSet(VirtualFrame frame, Object value);
+
+  /**
+   * Checks if {@code value} conforms to this type.
+   *
+   * <p>In the case of a parameterized {@link VmObject} (e.g. {@link VmListing}), shallow-force and
+   * check its members.
+   */
+  public Object executeEagerly(VirtualFrame frame, Object value) {
+    return execute(frame, value);
+  }
 
   // method arguments are used when default value contains a root node
   public @Nullable Object createDefaultValue(
@@ -87,6 +103,12 @@ public abstract class TypeNode extends PklNode {
       String qualifiedName) {
     return null;
   }
+
+  /**
+   * Visit child type nodes; but not paramaterized types (does not visit {@code String} in {@code
+   * Listing<String>}).
+   */
+  protected abstract void acceptTypeNode(Consumer<TypeNode> visitor);
 
   public static TypeNode forClass(SourceSection sourceSection, VmClass clazz) {
     return clazz.isClosed()
@@ -179,10 +201,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final void executeAndSet(VirtualFrame frame, Object value) {
+    public final Object executeAndSet(VirtualFrame frame, Object value) {
       execute(frame, value);
-
       frame.setLong(slot, (long) value);
+      return value;
     }
   }
 
@@ -196,10 +218,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final void executeAndSet(VirtualFrame frame, Object value) {
-      execute(frame, value);
-
-      frame.setObject(slot, value);
+    public final Object executeAndSet(VirtualFrame frame, Object value) {
+      var result = execute(frame, value);
+      frame.setObject(slot, result);
+      return result;
     }
   }
 
@@ -229,9 +251,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final void executeAndSet(VirtualFrame frame, Object value) {
-      execute(frame, value);
-      writeSlotNode.executeWithValue(frame, value);
+    public final Object executeAndSet(VirtualFrame frame, Object value) {
+      var result = execute(frame, value);
+      writeSlotNode.executeWithValue(frame, result);
+      return result;
     }
   }
 
@@ -247,8 +270,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       // do nothing
+      return value;
     }
 
     public VmTyped getMirror() {
@@ -258,6 +282,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected PType doExport() {
       return PType.UNKNOWN;
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -274,14 +303,17 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       CompilerDirectives.transferToInterpreter();
       throw new VmTypeMismatchException.Nothing(sourceSection, value);
     }
 
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
+    public Object executeAndSet(VirtualFrame frame, Object value) {
       execute(frame, value);
+      // guaranteed to never run (execute will always throw).
+      CompilerDirectives.transferToInterpreter();
+      throw PklBugException.unreachableCode();
     }
 
     @Override
@@ -298,6 +330,11 @@ public abstract class TypeNode extends PklNode {
     protected PType doExport() {
       return PType.NOTHING;
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   /** The `module` type for a final module. */
@@ -310,8 +347,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmTyped typed && typed.getVmClass() == moduleClass) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmTyped typed && typed.getVmClass() == moduleClass) return value;
 
       throw typeMismatch(value, moduleClass);
     }
@@ -330,6 +367,11 @@ public abstract class TypeNode extends PklNode {
     public VmClass getVmClass() {
       return moduleClass;
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   /** The `module` type for an open module. */
@@ -344,12 +386,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
 
       if (value instanceof VmTyped typed) {
         var valueClass = typed.getVmClass();
-        if (moduleClass.isSuperclassOf(valueClass)) return;
+        if (moduleClass.isSuperclassOf(valueClass)) return value;
       }
 
       throw typeMismatch(value, moduleClass);
@@ -369,6 +411,11 @@ public abstract class TypeNode extends PklNode {
     public VmClass getVmClass() {
       return moduleClass;
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class StringLiteralTypeNode extends ObjectSlotTypeNode {
@@ -384,8 +431,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (literal.equals(value)) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (literal.equals(value)) return value;
 
       throw typeMismatch(value, literal);
     }
@@ -406,6 +453,11 @@ public abstract class TypeNode extends PklNode {
     protected PType doExport() {
       return new PType.StringLiteral(literal);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class TypedTypeNode extends ObjectSlotTypeNode {
@@ -414,8 +466,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmTyped) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmTyped) return value;
 
       throw typeMismatch(value, BaseModule.getTypedClass());
     }
@@ -423,6 +475,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getTypedClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -432,8 +489,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmDynamic) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmDynamic) return value;
 
       throw typeMismatch(value, BaseModule.getDynamicClass());
     }
@@ -448,6 +505,11 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return VmDynamic.empty();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -465,8 +527,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof VmValue vmValue && clazz == vmValue.getVmClass()) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmValue vmValue && clazz == vmValue.getVmClass()) return value;
 
       throw typeMismatch(value, clazz);
     }
@@ -488,6 +550,11 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -517,25 +584,25 @@ public abstract class TypeNode extends PklNode {
     @ExplodeLoop
     @SuppressWarnings("unused")
     @Specialization(guards = "value.getVmClass() == cachedClass")
-    protected void eval(
+    protected Object eval(
         VmValue value,
         @Cached("value.getVmClass()") VmClass cachedClass,
         @Cached("clazz.isSuperclassOf(cachedClass)") boolean isSuperclass) {
 
-      if (isSuperclass) return;
+      if (isSuperclass) return value;
 
       throw typeMismatch(value, clazz);
     }
 
     @Specialization
-    protected void eval(VmValue value) {
-      if (clazz.isSuperclassOf(value.getVmClass())) return;
+    protected Object eval(VmValue value) {
+      if (clazz.isSuperclassOf(value.getVmClass())) return value;
 
       throw typeMismatch(value, clazz);
     }
 
     @Fallback
-    protected void eval(Object value) {
+    protected Object eval(Object value) {
       throw typeMismatch(value, clazz);
     }
 
@@ -545,9 +612,14 @@ public abstract class TypeNode extends PklNode {
 
       return TypeNode.createDefaultValue(clazz);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
-  public abstract static class NullableTypeNode extends WriteFrameSlotTypeNode {
+  public static class NullableTypeNode extends WriteFrameSlotTypeNode {
     @Child private TypeNode elementTypeNode;
 
     public NullableTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
@@ -582,17 +654,32 @@ public abstract class TypeNode extends PklNode {
       return new PType.Nullable(elementTypeNode.doExport());
     }
 
-    @Specialization
-    @SuppressWarnings("unused")
-    protected void eval(VmNull value) {} // do nothing
+    @Override
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmNull) {
+        // do nothing
+        return value;
+      }
+      return elementTypeNode.execute(frame, value);
+    }
 
-    @Fallback
-    protected void eval(VirtualFrame frame, Object value) {
-      elementTypeNode.execute(frame, value);
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (value instanceof VmNull) {
+        // do nothing
+        return value;
+      }
+      return elementTypeNode.executeEagerly(frame, value);
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+      elementTypeNode.acceptTypeNode(visitor);
     }
   }
 
-  public static final class UnionTypeNode extends WriteFrameSlotTypeNode {
+  public static class UnionTypeNode extends WriteFrameSlotTypeNode {
     @Children final TypeNode[] elementTypeNodes;
     private final boolean skipElementTypeChecks;
     private final int defaultIndex;
@@ -646,21 +733,106 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    public void execute(VirtualFrame frame, Object value) {
-      if (skipElementTypeChecks) return;
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+      //noinspection ForLoopReplaceableByForEach
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        elementTypeNodes[i].acceptTypeNode(visitor);
+      }
+      LoopNode.reportLoopCount(this, elementTypeNodes.length);
+    }
+
+    /**
+     * Tells if the union type should be eagerly checked or not (shallow-force members of
+     * Listing/Mapping).
+     *
+     * <p>Union types should be eagerly checked if two of the alternatives are the same generic
+     * type; e.g. {@code Listing<Person>|Listing<Animal>}
+     */
+    @TruffleBoundary
+    private boolean shouldEagerCheck() {
+      var seenListings = new MutableLong(0);
+      var seenMappings = new MutableLong(0);
+      var seenLists = new MutableLong(0);
+      var seenMaps = new MutableLong(0);
+      var seenSets = new MutableLong(0);
+      var seenPairs = new MutableLong(0);
+      var seenCollections = new MutableLong(0);
+      this.acceptTypeNode(
+          (typeNode) -> {
+            if (typeNode instanceof ListingTypeNode) {
+              seenListings.getAndIncrement();
+            }
+            if (typeNode instanceof MappingTypeNode) {
+              seenMappings.getAndIncrement();
+            }
+            if (typeNode instanceof ListTypeNode) {
+              seenLists.getAndIncrement();
+            }
+            if (typeNode instanceof MapTypeNode) {
+              seenMaps.getAndIncrement();
+            }
+            if (typeNode instanceof SetTypeNode) {
+              seenSets.getAndIncrement();
+            }
+            if (typeNode instanceof PairTypeNode) {
+              seenPairs.getAndIncrement();
+            }
+            if (typeNode instanceof CollectionTypeNode) {
+              seenCollections.getAndIncrement();
+            }
+          });
+      return seenMappings.get() >= 2
+          || seenListings.get() >= 2
+          || seenLists.get() >= 2
+          || seenMaps.get() >= 2
+          || seenSets.get() >= 2
+          || seenPairs.get() >= 2
+          || seenCollections.get() >= 2;
+    }
+
+    @Fallback
+    @ExplodeLoop
+    public Object execute(VirtualFrame frame, Object value) {
+      if (skipElementTypeChecks) return value;
+
+      // escape analysis should remove this allocation in compiled code
+      var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
+
+      // Do eager checks (shallow-force) if there are two listings or two mappings represented.
+      // (we can't know that `new Listing { 0; "hi" }[0]` fails for `Listing<Int>|Listing<String>`
+      // without checking both index 0 and index 1).
+      var shouldEagerCheck = shouldEagerCheck();
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        var elementTypeNode = elementTypeNodes[i];
+        try {
+          if (shouldEagerCheck) {
+            return elementTypeNode.executeEagerly(frame, value);
+          } else {
+            return elementTypeNode.execute(frame, value);
+          }
+        } catch (VmTypeMismatchException e) {
+          typeMismatches[i] = e;
+        }
+      }
+      throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (skipElementTypeChecks) return value;
 
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
       for (var i = 0; i < elementTypeNodes.length; i++) {
+        // eager checks
         try {
-          elementTypeNodes[i].execute(frame, value);
-          return;
+          return elementTypeNodes[i].executeEagerly(frame, value);
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
         }
       }
-
       throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
     }
   }
@@ -696,8 +868,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (contains(value)) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (contains(value)) return value;
 
       throw typeMismatch(value, stringLiterals);
     }
@@ -715,6 +887,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
+    @Override
     @TruffleBoundary
     public @Nullable Object createDefaultValue(
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
@@ -723,17 +900,40 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class CollectionTypeNode extends ObjectSlotTypeNode {
+  public static final class CollectionTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
 
-    protected CollectionTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
+    public CollectionTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
 
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
     }
 
     @Override
-    public @Nullable Object createDefaultValue(
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmList vmList) {
+        return evalList(frame, vmList);
+      }
+      if (value instanceof VmSet vmSet) {
+        return evalSet(frame, vmSet);
+      }
+      throw typeMismatch(value, BaseModule.getCollectionClass());
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (value instanceof VmList vmList) {
+        return evalListEagerly(frame, vmList);
+      }
+      if (value instanceof VmSet vmSet) {
+        // sets are always checked eagerly
+        return evalSet(frame, vmSet);
+      }
+      throw typeMismatch(value, BaseModule.getCollectionClass());
+    }
+
+    @Override
+    public Object createDefaultValue(
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return VmList.EMPTY;
@@ -745,58 +945,86 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       return new PType.Class(BaseModule.getCollectionClass().export(), elementTypeNode.doExport());
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       return VmList.of(elementTypeNode.getMirror());
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmList value) {
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
+    private Object evalList(VirtualFrame frame, VmList value) {
+      var ret = value;
+      var idx = 0;
+
       for (var elem : value) {
-        elementTypeNode.execute(frame, elem);
+        var result = elementTypeNode.execute(frame, elem);
+        if (result != elem) {
+          ret = ret.replace(idx, result);
+        }
+        idx++;
+      }
+
+      LoopNode.reportLoopCount(this, idx);
+      return ret;
+    }
+
+    private Object evalListEagerly(VirtualFrame frame, VmList value) {
+      var ret = value;
+      var idx = 0;
+
+      for (var elem : value) {
+        var result = elementTypeNode.executeEagerly(frame, elem);
+        if (result != elem) {
+          ret = ret.replace(idx, result);
+        }
+        idx++;
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
+      return value;
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmSet value) {
+    private Object evalSet(VirtualFrame frame, VmSet value) {
       for (var elem : value) {
-        elementTypeNode.execute(frame, elem);
+        elementTypeNode.executeEagerly(frame, elem);
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
-    }
-
-    @Fallback
-    protected void fallback(Object value) {
-      throw typeMismatch(value, BaseModule.getCollectionClass());
+      return value;
     }
   }
 
-  public abstract static class ListTypeNode extends ObjectSlotTypeNode {
+  public static final class ListTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
     private final boolean skipElementTypeChecks;
 
-    protected ListTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
+    public ListTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
       skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
     @Override
-    public final Object createDefaultValue(
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
+    @Override
+    public Object createDefaultValue(
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return VmList.EMPTY;
     }
 
     @Override
-    public final VmClass getVmClass() {
+    public VmClass getVmClass() {
       return BaseModule.getListClass();
     }
 
@@ -805,29 +1033,49 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       return VmList.of(elementTypeNode.getMirror());
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       return new PType.Class(BaseModule.getListClass().export(), elementTypeNode.doExport());
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmList value) {
-      if (skipElementTypeChecks) return;
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmList vmList)) {
+        throw typeMismatch(value, BaseModule.getListClass());
+      }
+      if (skipElementTypeChecks) return vmList;
 
-      for (var elem : value) {
-        elementTypeNode.execute(frame, elem);
+      for (var elem : vmList) {
+        elementTypeNode.executeEagerly(frame, elem);
       }
 
-      LoopNode.reportLoopCount(this, value.getLength());
+      LoopNode.reportLoopCount(this, vmList.getLength());
+      return value;
     }
 
-    @Fallback
-    protected void fallback(Object value) {
-      throw typeMismatch(value, BaseModule.getListClass());
+    @Override
+    public Object execute(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmList vmList)) {
+        throw typeMismatch(value, BaseModule.getListClass());
+      }
+      if (skipElementTypeChecks) return vmList;
+      var ret = vmList;
+      var idx = 0;
+
+      for (var elem : vmList) {
+        var result = elementTypeNode.execute(frame, elem);
+        if (result != elem) {
+          ret = ret.replace(idx, result);
+        }
+        idx++;
+      }
+
+      LoopNode.reportLoopCount(this, vmList.getLength());
+      return ret;
     }
   }
 
@@ -867,30 +1115,36 @@ public abstract class TypeNode extends PklNode {
       return new PType.Class(BaseModule.getSetClass().export(), elementTypeNode.doExport());
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmSet value) {
-      if (skipElementTypeChecks) return;
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
 
+    @Specialization
+    protected Object eval(VirtualFrame frame, VmSet value) {
+      if (skipElementTypeChecks) return value;
       for (var elem : value) {
-        elementTypeNode.execute(frame, elem);
+        // no point doing a lazy check because set members have their hash code computed, which
+        // necessarily deep-forces them.
+        elementTypeNode.executeEagerly(frame, elem);
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
+      return value;
     }
 
     @Fallback
-    protected void fallback(Object value) {
+    protected Object fallback(Object value) {
       throw typeMismatch(value, BaseModule.getSetClass());
     }
   }
 
-  public abstract static class MapTypeNode extends ObjectSlotTypeNode {
+  public static final class MapTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode keyTypeNode;
     @Child private TypeNode valueTypeNode;
     private final boolean skipEntryTypeChecks;
 
-    protected MapTypeNode(
-        SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
+    public MapTypeNode(SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
 
       super(sourceSection);
       this.keyTypeNode = keyTypeNode;
@@ -899,14 +1153,30 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final Object createDefaultValue(
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmMap vmMap) {
+        return eval(frame, vmMap);
+      }
+      throw typeMismatch(value, BaseModule.getMapClass());
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (value instanceof VmMap vmMap) {
+        return evalEager(frame, vmMap);
+      }
+      throw typeMismatch(value, BaseModule.getMapClass());
+    }
+
+    @Override
+    public Object createDefaultValue(
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return VmMap.EMPTY;
     }
 
     @Override
-    public final VmClass getVmClass() {
+    public VmClass getVmClass() {
       return BaseModule.getMapClass();
     }
 
@@ -915,94 +1185,151 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       return VmList.of(keyTypeNode.getMirror(), valueTypeNode.getMirror());
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       return new PType.Class(
           BaseModule.getMapClass().export(), keyTypeNode.doExport(), valueTypeNode.doExport());
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmMap value) {
-      if (skipEntryTypeChecks) return;
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
+    private Object eval(VirtualFrame frame, VmMap value) {
+      if (skipEntryTypeChecks) return value;
+      var ret = value;
 
       for (var entry : value) {
-        keyTypeNode.execute(frame, VmUtils.getKey(entry));
+        var key = VmUtils.getKey(entry);
+        keyTypeNode.executeEagerly(frame, key);
+        var result = valueTypeNode.execute(frame, VmUtils.getValue(entry));
+        if (result != VmUtils.getValue(entry)) {
+          ret = ret.put(key, result);
+        }
+      }
+
+      LoopNode.reportLoopCount(this, value.getLength());
+      return ret;
+    }
+
+    private Object evalEager(VirtualFrame frame, VmMap value) {
+      if (skipEntryTypeChecks) return value;
+      for (var entry : value) {
+        keyTypeNode.executeEagerly(frame, VmUtils.getKey(entry));
         valueTypeNode.execute(frame, VmUtils.getValue(entry));
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
-    }
-
-    @Fallback
-    protected void fallback(Object value) {
-      throw typeMismatch(value, BaseModule.getMapClass());
+      return value;
     }
   }
 
-  public abstract static class ListingTypeNode extends ListingOrMappingTypeNode {
+  public static final class ListingTypeNode extends ListingOrMappingTypeNode {
     public ListingTypeNode(SourceSection sourceSection, TypeNode valueTypeNode) {
       super(sourceSection, null, valueTypeNode);
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmListing value) {
-      doEval(frame, value);
+    @Override
+    public Object execute(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmListing vmListing)) {
+        throw typeMismatch(value, BaseModule.getListingClass());
+      }
+      return valueTypeNode.isNoopTypeCheck()
+          ? vmListing
+          : vmListing.createSurrogate(getListingOrMappingTypeCheckNode(), frame.materialize());
     }
 
     @Override
-    public final VmClass getVmClass() {
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmListing vmListing)) {
+        throw typeMismatch(value, BaseModule.getListingClass());
+      }
+      doEagerCheck(frame, vmListing);
+      return value;
+    }
+
+    @Override
+    public VmClass getVmClass() {
       return BaseModule.getListingClass();
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       return VmList.of(valueTypeNode.getMirror());
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       return new PType.Class(BaseModule.getListingClass().export(), valueTypeNode.doExport());
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
-  public abstract static class MappingTypeNode extends ListingOrMappingTypeNode {
+  public static final class MappingTypeNode extends ListingOrMappingTypeNode {
     public MappingTypeNode(
         SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
 
       super(sourceSection, keyTypeNode, valueTypeNode);
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmMapping value) {
-      doEval(frame, value);
+    @Override
+    public Object execute(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmMapping vmMapping)) {
+        throw typeMismatch(value, BaseModule.getMappingClass());
+      }
+      // execute type checks on mapping keys
+      doEagerCheck(frame, vmMapping, false, true);
+      return valueTypeNode.isNoopTypeCheck()
+          ? vmMapping
+          : vmMapping.createSurrogate(getListingOrMappingTypeCheckNode(), frame.materialize());
     }
 
     @Override
-    public final VmClass getVmClass() {
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmMapping vmMapping)) {
+        throw typeMismatch(value, BaseModule.getMappingClass());
+      }
+      doEagerCheck(frame, vmMapping, false, false);
+      return value;
+    }
+
+    @Override
+    public VmClass getVmClass() {
       return BaseModule.getMappingClass();
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       assert keyTypeNode != null;
       return VmList.of(keyTypeNode.getMirror(), valueTypeNode.getMirror());
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       assert keyTypeNode != null;
       return new PType.Class(
           BaseModule.getMappingClass().export(), keyTypeNode.doExport(), valueTypeNode.doExport());
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
   public abstract static class ListingOrMappingTypeNode extends ObjectSlotTypeNode {
     @Child protected @Nullable TypeNode keyTypeNode;
     @Child protected TypeNode valueTypeNode;
+    @Child @Nullable protected ListingOrMappingTypeCheckNode listingOrMappingTypeCheckNode;
 
     private final boolean skipKeyTypeChecks;
     private final boolean skipValueTypeChecks;
@@ -1028,6 +1355,19 @@ public abstract class TypeNode extends PklNode {
 
     public TypeNode getValueTypeNode() {
       return valueTypeNode;
+    }
+
+    protected ListingOrMappingTypeCheckNode getListingOrMappingTypeCheckNode() {
+      if (listingOrMappingTypeCheckNode == null) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        listingOrMappingTypeCheckNode =
+            new ListingOrMappingTypeCheckNode(
+                VmLanguage.get(this),
+                getRootNode().getFrameDescriptor(),
+                valueTypeNode,
+                getRootNode().getName());
+      }
+      return listingOrMappingTypeCheckNode;
     }
 
     // either (if defaultMemberValue != null):
@@ -1108,7 +1448,15 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
     }
 
-    protected void doEval(VirtualFrame frame, VmObject object) {
+    protected void doEagerCheck(VirtualFrame frame, VmObject object) {
+      doEagerCheck(frame, object, skipKeyTypeChecks, skipValueTypeChecks);
+    }
+
+    protected void doEagerCheck(
+        VirtualFrame frame,
+        VmObject object,
+        boolean skipKeyTypeChecks,
+        boolean skipValueTypeChecks) {
       if (skipKeyTypeChecks && skipValueTypeChecks) return;
 
       var loopCount = 0;
@@ -1125,7 +1473,15 @@ public abstract class TypeNode extends PklNode {
 
           if (!skipKeyTypeChecks) {
             assert keyTypeNode != null;
-            keyTypeNode.execute(frame, memberKey);
+            try {
+              keyTypeNode.executeEagerly(frame, memberKey);
+            } catch (VmTypeMismatchException e) {
+              CompilerDirectives.transferToInterpreter();
+              e.putInsertedStackFrame(
+                  getRootNode().getCallTarget(),
+                  VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
+              throw e;
+            }
           }
 
           if (!skipValueTypeChecks) {
@@ -1136,21 +1492,14 @@ public abstract class TypeNode extends PklNode {
                 var callTarget = member.getCallTarget();
                 memberValue = callTarget.call(object, owner, memberKey);
               }
-              object.setCachedValue(memberKey, memberValue);
+              object.setCachedValue(memberKey, memberValue, member);
             }
-            valueTypeNode.execute(frame, memberValue);
+            valueTypeNode.executeEagerly(frame, memberValue);
           }
         }
       }
 
       LoopNode.reportLoopCount(this, loopCount);
-    }
-
-    @Fallback
-    protected void fallback(Object value) {
-      var clazz = getVmClass();
-      assert clazz != null; // either Listing or Mapping
-      throw typeMismatch(value, clazz);
     }
   }
 
@@ -1191,14 +1540,20 @@ public abstract class TypeNode extends PklNode {
       return new PType.Function(parameterTypes, TypeNode.export(returnTypeNode));
     }
 
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
     @SuppressWarnings("unused")
     @Specialization(guards = "value.getVmClass() == getFunctionNClass()")
-    protected void eval(VmFunction value) {
+    protected Object eval(VmFunction value) {
       /* do nothing */
+      return value;
     }
 
     @Fallback
-    protected void fallback(Object value) {
+    protected Object fallback(Object value) {
       throw typeMismatch(value, getFunctionNClass());
     }
 
@@ -1233,13 +1588,19 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Specialization
-    protected void eval(@SuppressWarnings("unused") VmFunction value) {
+    protected Object eval(VmFunction value) {
       /* do nothing */
+      return value;
     }
 
     @Fallback
     protected void fallback(Object value) {
       throw typeMismatch(value, BaseModule.getFunctionClass());
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1270,12 +1631,12 @@ public abstract class TypeNode extends PklNode {
 
     @SuppressWarnings("unused")
     @Specialization(guards = "value.getVmClass() == getFunctionNClass()")
-    protected void eval(VmFunction value) {
-      /* do nothing */
+    protected Object eval(VmFunction value) {
+      return value;
     }
 
     @Fallback
-    protected void fallback(Object value) {
+    protected Object fallback(Object value) {
       throw typeMismatch(value, getFunctionNClass());
     }
 
@@ -1283,13 +1644,18 @@ public abstract class TypeNode extends PklNode {
     protected VmClass getFunctionNClass() {
       return BaseModule.getFunctionNClass(typeArgumentNodes.length - 1);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
-  public abstract static class PairTypeNode extends ObjectSlotTypeNode {
+  public static final class PairTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode firstTypeNode;
     @Child private TypeNode secondTypeNode;
 
-    protected PairTypeNode(
+    public PairTypeNode(
         SourceSection sourceSection, TypeNode firstTypeNode, TypeNode secondTypeNode) {
 
       super(sourceSection);
@@ -1298,30 +1664,47 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public final VmClass getVmClass() {
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof VmPair vmPair) {
+        var first = firstTypeNode.execute(frame, vmPair.getFirst());
+        var second = secondTypeNode.execute(frame, vmPair.getSecond());
+        if (first == vmPair.getFirst() && second == vmPair.getSecond()) {
+          return vmPair;
+        }
+        return new VmPair(first, second);
+      }
+      throw typeMismatch(value, BaseModule.getPairClass());
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      if (value instanceof VmPair vmPair) {
+        firstTypeNode.executeEagerly(frame, vmPair.getFirst());
+        secondTypeNode.executeEagerly(frame, vmPair.getSecond());
+        return value;
+      }
+      throw typeMismatch(value, BaseModule.getPairClass());
+    }
+
+    @Override
+    public VmClass getVmClass() {
       return BaseModule.getPairClass();
     }
 
     @Override
-    public final VmList getTypeArgumentMirrors() {
+    public VmList getTypeArgumentMirrors() {
       return VmList.of(firstTypeNode.getMirror(), secondTypeNode.getMirror());
     }
 
     @Override
-    protected final PType doExport() {
+    protected PType doExport() {
       return new PType.Class(
           BaseModule.getPairClass().export(), firstTypeNode.doExport(), secondTypeNode.doExport());
     }
 
-    @Specialization
-    protected void eval(VirtualFrame frame, VmPair value) {
-      firstTypeNode.execute(frame, value.getFirst());
-      secondTypeNode.execute(frame, value.getSecond());
-    }
-
-    @Fallback
-    protected void fallback(Object value) {
-      throw typeMismatch(value, BaseModule.getPairClass());
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1351,9 +1734,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("internalStdLibClass", "VarArgs").build();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1385,13 +1773,19 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       // do nothing
+      return value;
     }
 
     @Override
     protected PType doExport() {
       return new PType.TypeVariable(typeParameter);
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1401,11 +1795,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getNonNullTypeAlias().getConstraintSection(), value);
       }
+      return value;
     }
 
     @Override
@@ -1416,6 +1811,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1431,9 +1831,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
-        if ((l & mask) == l) return;
+        if ((l & mask) == l) return value;
 
         throw new VmTypeMismatchException.Constraint(typeAlias.getConstraintSection(), value);
       }
@@ -1456,6 +1856,11 @@ public abstract class TypeNode extends PklNode {
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class Int8TypeAliasTypeNode extends IntSlotTypeNode {
@@ -1464,9 +1869,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
-        if (l == l.byteValue()) return;
+        if (l == l.byteValue()) return value;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt8TypeAlias().getConstraintSection(), value);
@@ -1490,6 +1895,11 @@ public abstract class TypeNode extends PklNode {
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class Int16TypeAliasTypeNode extends IntSlotTypeNode {
@@ -1498,9 +1908,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
-        if (l == l.shortValue()) return;
+        if (l == l.shortValue()) return value;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt16TypeAlias().getConstraintSection(), value);
@@ -1524,6 +1934,11 @@ public abstract class TypeNode extends PklNode {
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class Int32TypeAliasTypeNode extends IntSlotTypeNode {
@@ -1532,9 +1947,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
-        if (l == l.intValue()) return;
+        if (l == l.intValue()) return value;
 
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getInt32TypeAlias().getConstraintSection(), value);
@@ -1557,6 +1972,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1618,14 +2038,14 @@ public abstract class TypeNode extends PklNode {
      * <p>Before executing the typealias body, use the owner and receiver of the original frame
      * where the typealias was declared, so that we preserve its original scope.
      */
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
       VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
-        aliasedTypeNode.execute(frame, value);
+        return aliasedTypeNode.execute(frame, value);
       } finally {
         VmUtils.setOwner(frame, prevOwner);
         VmUtils.setReceiver(frame, prevReceiver);
@@ -1634,14 +2054,14 @@ public abstract class TypeNode extends PklNode {
 
     /** See docstring on {@link TypeAliasTypeNode#execute}. */
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
+    public Object executeAndSet(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
       VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
-        aliasedTypeNode.executeAndSet(frame, value);
+        return aliasedTypeNode.executeAndSet(frame, value);
       } finally {
         VmUtils.setOwner(frame, prevOwner);
         VmUtils.setReceiver(frame, prevReceiver);
@@ -1695,6 +2115,11 @@ public abstract class TypeNode extends PklNode {
           Arrays.stream(typeArgumentNodes).map(TypeNode::export).collect(Collectors.toList()),
           aliasedTypeNode.doExport());
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class ConstrainedTypeNode extends TypeNode {
@@ -1722,7 +2147,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @ExplodeLoop
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       if (customThisSlot == -1) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
@@ -1730,18 +2155,20 @@ public abstract class TypeNode extends PklNode {
             frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
       }
 
-      childNode.execute(frame, value);
+      var ret = childNode.execute(frame, value);
 
       frame.setAuxiliarySlot(customThisSlot, value);
       for (var node : constraintNodes) {
         node.execute(frame);
       }
+      return ret;
     }
 
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
-      execute(frame, value);
-      childNode.executeAndSet(frame, value);
+    public Object executeAndSet(VirtualFrame frame, Object value) {
+      var ret = execute(frame, value);
+      childNode.executeAndSet(frame, ret);
+      return ret;
     }
 
     @Override
@@ -1768,6 +2195,11 @@ public abstract class TypeNode extends PklNode {
               .collect(Collectors.toList()));
     }
 
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
+
     public VmTyped getMirror() {
       // pkl:reflect doesn't currently expose constraints
       return childNode.getMirror();
@@ -1785,13 +2217,19 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
+    public Object execute(VirtualFrame frame, Object value) {
       // do nothing
+      return value;
     }
 
     @Override
     public VmClass getVmClass() {
       return BaseModule.getAnyClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1801,8 +2239,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof String) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof String) return value;
 
       throw typeMismatch(value, BaseModule.getStringClass());
     }
@@ -1810,6 +2248,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getStringClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1824,14 +2267,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long || value instanceof Double) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof Long || value instanceof Double) return value;
 
       throw typeMismatch(value, BaseModule.getNumberClass());
     }
 
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
+    public Object executeAndSet(VirtualFrame frame, Object value) {
       var kind = frame.getFrameDescriptor().getSlotKind(slot);
       if (value instanceof Long l) {
         if (kind == FrameSlotKind.Double || kind == FrameSlotKind.Object) {
@@ -1841,6 +2284,7 @@ public abstract class TypeNode extends PklNode {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Long);
           frame.setLong(slot, l);
         }
+        return value;
       } else if (value instanceof Double d) {
         if (kind == FrameSlotKind.Long || kind == FrameSlotKind.Object) {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Object);
@@ -1849,6 +2293,7 @@ public abstract class TypeNode extends PklNode {
           frame.getFrameDescriptor().setSlotKind(slot, FrameSlotKind.Double);
           frame.setDouble(slot, d);
         }
+        return value;
       } else {
         throw typeMismatch(value, BaseModule.getNumberClass());
       }
@@ -1858,6 +2303,11 @@ public abstract class TypeNode extends PklNode {
     public VmClass getVmClass() {
       return BaseModule.getNumberClass();
     }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
+    }
   }
 
   public static final class IntTypeNode extends IntSlotTypeNode {
@@ -1866,8 +2316,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Long) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof Long) return value;
 
       throw typeMismatch(value, BaseModule.getIntClass());
     }
@@ -1875,6 +2325,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getIntClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1889,21 +2344,27 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Double) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof Double) return value;
 
       throw typeMismatch(value, BaseModule.getFloatClass());
     }
 
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
+    public Object executeAndSet(VirtualFrame frame, Object value) {
       execute(frame, value);
       frame.setDouble(slot, (double) value);
+      return value;
     }
 
     @Override
     public VmClass getVmClass() {
       return BaseModule.getFloatClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 
@@ -1918,21 +2379,27 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public void execute(VirtualFrame frame, Object value) {
-      if (value instanceof Boolean) return;
+    public Object execute(VirtualFrame frame, Object value) {
+      if (value instanceof Boolean) return value;
 
       throw typeMismatch(value, BaseModule.getBooleanClass());
     }
 
     @Override
-    public void executeAndSet(VirtualFrame frame, Object value) {
+    public Object executeAndSet(VirtualFrame frame, Object value) {
       execute(frame, value);
       frame.setBoolean(slot, (boolean) value);
+      return value;
     }
 
     @Override
     public VmClass getVmClass() {
       return BaseModule.getBooleanClass();
+    }
+
+    @Override
+    protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
     }
   }
 

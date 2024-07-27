@@ -1,0 +1,32 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["listings are lazy"] {
+    // backed by ConstantEntriesLiteralNode
+    local listing = new Listing<String> {
+      "foo"
+      throw("uh oh")
+    }
+    listing[0]
+    module.catch(() -> listing[1])
+  }
+  ["listings are lazy with generator entries"] {
+    local listing = new Listing<String> {
+      when (false) {
+        "uh oh"
+      }
+      "foo"
+      throw("uh oh")
+    }
+    listing[0]
+  }
+  ["nested listings are also lazy"] {
+    local listing = new Listing<Listing<String>> {
+      new {
+        "bar"
+        throw("uh oh")
+      }
+    }
+    listing[0][0]
+  }
+}

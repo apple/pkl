@@ -17,10 +17,12 @@ package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.util.LateInit;
 
+@NodeInfo(shortName = "as")
 public final class TypeCastNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
   @Child private UnresolvedTypeNode unresolvedTypeNode;
@@ -45,10 +47,10 @@ public final class TypeCastNode extends ExpressionNode {
       unresolvedTypeNode = null;
     }
 
+    // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
     var value = valueNode.executeGeneric(frame);
     try {
-      typeNode.execute(frame, value);
-      return value;
+      return typeNode.execute(frame, value);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
       throw e.toVmException();

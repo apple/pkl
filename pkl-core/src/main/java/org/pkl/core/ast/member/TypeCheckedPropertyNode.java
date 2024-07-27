@@ -54,8 +54,8 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
     var result = executeBody(frame);
 
     // TODO: propagate SUPER_CALL_MARKER to disable constraint (but not type) check
-    if (callNode != null && shouldRunTypeCheck(frame)) {
-      callNode.call(VmUtils.getReceiverOrNull(frame), property.getOwner(), result);
+    if (callNode != null && VmUtils.shouldRunTypeCheck(frame)) {
+      return callNode.call(VmUtils.getReceiverOrNull(frame), property.getOwner(), result);
     }
 
     return result;
@@ -67,11 +67,11 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
 
     var result = executeBody(frame);
 
-    if (shouldRunTypeCheck(frame)) {
+    if (VmUtils.shouldRunTypeCheck(frame)) {
       var property = getProperty(owner.getVmClass());
       var typeAnnNode = property.getTypeNode();
       if (typeAnnNode != null) {
-        callNode.call(
+        return callNode.call(
             typeAnnNode.getCallTarget(),
             VmUtils.getReceiverOrNull(frame),
             property.getOwner(),
