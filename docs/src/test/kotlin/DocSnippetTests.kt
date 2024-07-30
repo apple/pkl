@@ -41,7 +41,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
   companion object {
     val headingRegex = Regex("""(?u)^\s*(=++)\s*(.+)""")
     val collapsibleBlockRegex = Regex("""(?u)^\s*\[%collapsible""")
-    val codeBlockRegex = Regex("""(?u)^\s*\[source(?:%(tested|parsed)(%error)?)?(?:,(?:\{)?([a-zA-Z-_]+)}?)?""")
+    val codeBlockRegex = Regex("""(?u)^\s*\[source(?:%(tested|parsed)(%error)?)?(?:,\{?([a-zA-Z-_]+)}?)?""")
     val codeBlockNameRegex = Regex("""(?u)^\s*\.(.+)""")
     val codeBlockDelimiterRegex = Regex("""(?u)^\s*----""")
     val graphicsRegex = Regex("\\[small]#.+#")

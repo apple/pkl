@@ -6,6 +6,13 @@ include::ROOT:partial$component-attributes.adoc[]
 
 xref:0.27.adoc[Release notes]
 
+[[release-0.26.2]]
+== 0.26.2 (2024-07-18)
+
+=== Fixes
+
+* Fixes a possible race condition where multiple concurrent Pkl evaluations results in a thrown exception when downloading packages (https://github.com/apple/pkl/pull/584[#584]).
+
 [[release-0.26.1]]
 == 0.26.1 (2024-06-28)
 

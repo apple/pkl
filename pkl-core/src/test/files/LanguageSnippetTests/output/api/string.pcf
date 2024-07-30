@@ -183,18 +183,24 @@ examples {
   ["toInt()"] {
     123
     -123
+    123
+    -123
     0
     0
     "Cannot parse string as `Int`. String: \"1.2\""
     "Cannot parse string as `Int`. String: \"9223372036854775808\""
     "Cannot parse string as `Int`. String: \"-9223372036854775809\""
     "Cannot parse string as `Int`. String: \"abc\""
+    "Cannot parse string as `Int`. String: \"_1_000\""
   }
   ["toIntOrNull()"] {
     123
     -123
+    123
+    -123
     0
     0
+    null
     null
     null
     null
@@ -234,11 +240,15 @@ examples {
     -4.5E-10
     Infinity
     -Infinity
+    -1232.0
     "Cannot parse string as `Float`. String: \"abc\""
+    "Cannot parse string as `Float`. String: \"123._34\""
+    "Cannot parse string as `Float`. String: \"123e_34\""
   }
   ["toFloatOrNull()"] {
     0.0
     -0.0
+    null
     null
   }
   ["take()"] {

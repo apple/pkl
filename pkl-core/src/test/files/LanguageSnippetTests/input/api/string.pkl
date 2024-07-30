@@ -225,23 +225,29 @@ examples {
   ["toInt()"] {
     "123".toInt()
     "-123".toInt()
+    "1_2__3___".toInt()
+    "-1_2__3___".toInt()
     "0".toInt()
     "-0".toInt()
     module.catch(() -> "1.2".toInt())
     module.catch(() -> "9223372036854775808".toInt())
     module.catch(() -> "-9223372036854775809".toInt())
     module.catch(() -> "abc".toInt())
+    module.catch(() -> "_1_000".toInt())
   }
 
   ["toIntOrNull()"] {
     "123".toIntOrNull()
     "-123".toIntOrNull()
+    "1_2__3___".toIntOrNull()
+    "-1_2__3___".toIntOrNull()
     "0".toIntOrNull()
     "-0".toIntOrNull()
     "1.2".toIntOrNull()
     "9223372036854775808".toIntOrNull()
     "-9223372036854775809".toIntOrNull()
     "abc".toIntOrNull()
+    "_1_2__3___".toIntOrNull()
   }
 
   ["toFloat()"] {
@@ -278,13 +284,17 @@ examples {
     "-.45e-9".toFloat()
     "9e1024".toFloat()
     "-9e1024".toFloat()
+    "-1_2__3___.2_e+1_".toFloat()
     module.catch(() -> "abc".toFloat())
+    module.catch(() -> "123._34".toFloat())
+    module.catch(() -> "123e_34".toFloat())
   }
 
   ["toFloatOrNull()"] {
     "0".toFloatOrNull()
     "-0".toFloatOrNull()
     "abc".toFloatOrNull()
+    "_123_.1_".toFloatOrNull()
   }
 
   ["take()"] {
@@ -445,7 +455,7 @@ examples {
     "".sha256
     quickBrownFox.sha256
   }
-  
+
   ["sha256Int"] {
     "".sha256Int
     quickBrownFox.sha256Int
@@ -460,7 +470,7 @@ examples {
     "".base64
     quickBrownFox.base64
   }
-  
+
   ["base64Decoded"] {
     module.catch(() -> "~~~".base64Decoded)
   }

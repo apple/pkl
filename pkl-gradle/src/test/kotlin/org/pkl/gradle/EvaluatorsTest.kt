@@ -16,7 +16,9 @@
 package org.pkl.gradle
 
 import java.nio.file.Path
+import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.readString
@@ -549,12 +551,301 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(testProjectDir.resolve("proj1/foo.pcf")).exists()
   }
 
+  @Test
+  fun `implicit dependency tracking for effective output files`() {
+    writeFile("file1.pkl", "foo = 1")
+
+    writeFile("file2.pkl", "bar = 1")
+
+    writeFile(
+      "build.gradle.kts",
+      """
+      import org.pkl.gradle.task.EvalTask
+
+      plugins {
+        id("org.pkl-lang")
+      }
+
+      pkl {
+        evaluators {
+          register("doEval") {
+            sourceModules = files("file1.pkl", "file2.pkl")
+            outputFile = layout.projectDirectory.file("%{moduleName}.%{outputFormat}")
+            outputFormat = "yaml"
+          }
+        }
+      }
+
+      val doEval by tasks.existing(EvalTask::class) {
+        doLast {
+          file("evalCounter.txt").appendText("doEval executed\n")
+        }
+      }
+
+      val printEvalFiles by tasks.registering {
+        inputs.files(doEval)
+        doLast {
+          println("evalCounter.txt")
+          println(file("evalCounter.txt").readText())
+          
+          inputs.files.forEach {
+            println(it.name)
+            println(it.readText())
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    val result1 = runTask("printEvalFiles")
+
+    // `doEval` task is invoked transitively.
+    assertThat(result1.task(":doEval")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    assertThat(result1.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      doEval executed
+      
+      file1.yaml
+      foo: 1
+
+      file2.yaml
+      bar: 1
+      """
+          .trimIndent()
+      )
+
+    // Run the task again to check that it is cached.
+    val result2 = runTask("printEvalFiles")
+
+    assertThat(result2.task(":doEval")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    // evalCounter.txt content is the same as before.
+    assertThat(result2.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      doEval executed
+      
+      file1.yaml
+      foo: 1
+
+      file2.yaml
+      bar: 1
+      """
+          .trimIndent()
+      )
+
+    // Modify the input file.
+    writeFile("file1.pkl", "foo = 7")
+
+    // Run the build again - the evaluation task will not be cached.
+    val result3 = runTask("printEvalFiles")
+
+    assertThat(result3.task(":doEval")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // evalCounter.txt content is updated too.
+    assertThat(result3.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      doEval executed
+      doEval executed
+      
+      file1.yaml
+      foo: 7
+
+      file2.yaml
+      bar: 1
+      """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `implicit dependency tracking for multiple output directory`() {
+    writePklFile(
+      """
+      pigeon {
+        name = "Pigeon"
+        diet = "Seeds"
+      }
+      
+      parrot {
+        name = "Parrot"
+        diet = "Seeds"
+      }
+      
+      output {
+        files {
+          ["birds/pigeon.json"] {
+            value = pigeon
+            renderer = new JsonRenderer {}
+          }
+          ["birds/parrot.pcf"] {
+            value = parrot
+            renderer = new PcfRenderer {}
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    writeBuildFile(
+      "yaml",
+      additionalContents =
+        """
+        multipleFileOutputDir = layout.projectDirectory.dir("%{moduleDir}/%{moduleName}-%{outputFormat}")
+      """
+          .trimIndent(),
+      additionalBuildScript =
+        """
+        tasks.named('evalTest') {
+          doLast {
+            file("evalCounter.txt").append("evalTest executed\n")
+          }
+        }
+        
+        abstract class PrintTask extends DefaultTask {
+          @InputFiles
+          public abstract ConfigurableFileCollection getInputDirs();
+        }
+        
+        // ensure that iteration order is the same across environments
+        def sortByTypeThenName = { a, b ->
+            a.isFile() != b.isFile() ? a.isFile() <=> b.isFile() : a.name <=> b.name
+        }
+
+        tasks.register('printEvalDirs', PrintTask) {
+          inputDirs.from(tasks.named('evalTest'))
+          
+          doLast {
+            println "evalCounter.txt"
+            println file("evalCounter.txt").text
+
+            inputDirs.forEach { f ->
+              f.traverse(visitRoot: true, sort: sortByTypeThenName) {
+                if (it.isDirectory()) {
+                  println layout.projectDirectory.asFile.relativePath(it) + '/'
+                  println()
+                } else {
+                  println layout.projectDirectory.asFile.relativePath(it)
+                  println it.text
+                }
+              }
+            }
+          }
+        }
+      """
+          .trimIndent()
+    )
+
+    val result1 = runTask("printEvalDirs")
+
+    // `doEval` task is invoked transitively.
+    assertThat(result1.task(":evalTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // NB: Configured output format, 'yaml', is only used to replace the placeholder in the path;
+    // the output files themselves are formatted according to configuration
+    // in the rendered module.
+
+    assertThat(result1.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      evalTest executed
+      
+      test-yaml/birds/
+      
+      test-yaml/birds/parrot.pcf
+      name = "Parrot"
+      diet = "Seeds"
+      
+      test-yaml/birds/pigeon.json
+      {
+        "name": "Pigeon",
+        "diet": "Seeds"
+      }
+      
+      test-yaml/
+      """
+          .trimIndent()
+      )
+
+    // Run the task again to check that it is cached.
+    val result2 = runTask("printEvalDirs")
+
+    assertThat(result2.task(":evalTest")?.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    // evalCounter.txt content is the same as before.
+    assertThat(result2.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      evalTest executed
+      
+      test-yaml/birds/
+      
+      test-yaml/birds/parrot.pcf
+      name = "Parrot"
+      diet = "Seeds"
+      
+      test-yaml/birds/pigeon.json
+      {
+        "name": "Pigeon",
+        "diet": "Seeds"
+      }
+      
+      test-yaml/
+      """
+          .trimIndent()
+      )
+
+    // Modify the input file.
+    writePklFile(testProjectDir.resolve("test.pkl").readText().replace("Parrot", "Macaw"))
+
+    // Run the build again - the evaluation task will not be cached.
+    val result3 = runTask("printEvalDirs")
+
+    assertThat(result3.task(":evalTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // evalCounter.txt content is updated too.
+    assertThat(result3.output)
+      .containsIgnoringNewLines(
+        """
+      evalCounter.txt
+      evalTest executed
+      evalTest executed
+      
+      test-yaml/birds/
+      
+      test-yaml/birds/parrot.pcf
+      name = "Macaw"
+      diet = "Seeds"
+      
+      test-yaml/birds/pigeon.json
+      {
+        "name": "Pigeon",
+        "diet": "Seeds"
+      }
+      
+      test-yaml/
+      """
+          .trimIndent()
+      )
+  }
+
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core
     outputFormat: String,
     additionalContents: String = "",
-    sourceModules: List<String> = listOf("test.pkl")
+    sourceModules: List<String> = listOf("test.pkl"),
+    additionalBuildScript: String = ""
   ) {
     writeFile(
       "build.gradle",
@@ -573,6 +864,8 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
+      
+      $additionalBuildScript
     """
     )
   }
