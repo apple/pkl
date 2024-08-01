@@ -8,6 +8,14 @@ examples {
     read*("globtest/*.txt")
   }
 
+  ["amended"] {
+    (read*("../../input-helper/globtest/**.pkl")) {
+      [[true]] {
+        text = "hi"
+      }
+    }
+  }
+
   ["env:"] {
     // doesn't match names that include slashes
     read*("env:*")
