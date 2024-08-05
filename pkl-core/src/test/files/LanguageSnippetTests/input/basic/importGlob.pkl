@@ -16,6 +16,16 @@ examples {
     import*("../../input-helper/globtest/**.pkl").keys.toListing()
   }
 
+  ["amended"] {
+    (import*("../../input-helper/globtest/**.pkl")) {
+      [[true]] {
+        output {
+          renderer = new YamlRenderer {}
+        }
+      }
+    }.toMap().values.map((it) -> it.output.text).join("\n---\n")
+  }
+
   ["globstar then up one level"] {
     import*("../../input-helper/globtest/**/../*.pkl").keys.toListing()
   }

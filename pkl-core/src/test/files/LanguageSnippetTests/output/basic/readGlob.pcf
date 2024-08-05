@@ -50,6 +50,30 @@ examples {
       }
     }
   }
+  ["amended"] {
+    new {
+      ["../../input-helper/globtest/module with [weird] ~!characters.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/module%20with%20%5Bweird%5D%20~!characters.pkl"
+        text = "hi"
+        base64 = ""
+      }
+      ["../../input-helper/globtest/moduleA.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/moduleA.pkl"
+        text = "hi"
+        base64 = "bmFtZSA9ICJtb2R1bGVBIgo="
+      }
+      ["../../input-helper/globtest/moduleB.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/moduleB.pkl"
+        text = "hi"
+        base64 = "bmFtZSA9ICJtb2R1bGVCIgo="
+      }
+      ["../../input-helper/globtest/child/moduleC.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/child/moduleC.pkl"
+        text = "hi"
+        base64 = "bmFtZSA9ICJjaGlsZC9tb2R1bGVDIgo="
+      }
+    }
+  }
   ["env:"] {
     new {
       ["env:NAME1"] = "value1"
