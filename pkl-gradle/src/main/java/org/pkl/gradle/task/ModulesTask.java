@@ -134,6 +134,9 @@ public abstract class ModulesTask extends BasePklTask {
    */
   private URI parsedModuleNotationToUri(Object notation) {
     if (notation instanceof File file) {
+      if (file.isAbsolute()) {
+        return file.toPath().toUri();
+      }
       return IoUtils.createUri(IoUtils.toNormalizedPathString(file.toPath()));
     } else if (notation instanceof URI uri) {
       return uri;
