@@ -21,6 +21,21 @@ examples {
       "../../input-helper/globtest/child/moduleC.pkl"
     }
   }
+  ["amended"] {
+    """
+     {}
+    
+    ---
+    name: moduleA
+    
+    ---
+    name: moduleB
+    
+    ---
+    name: child/moduleC
+    
+    """
+  }
   ["globstar then up one level"] {
     new {
       "../../input-helper/globtest/child/../module with [weird] ~!characters.pkl"

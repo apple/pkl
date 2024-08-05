@@ -33,7 +33,7 @@ public class ReadGlobMemberBodyNode extends ExpressionNode {
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    var mapping = VmUtils.getObjectReceiver(frame);
+    var mapping = VmUtils.getOwner(frame);
     var path = (String) VmUtils.getMemberKey(frame);
     return readResource(mapping, path);
   }
