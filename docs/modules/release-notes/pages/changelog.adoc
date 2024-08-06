@@ -1,6 +1,15 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.26.3]]
+== 0.26.3 (2024-08-06)
+
+=== Fixes
+
+* Fixes an issue where CLI argument `--property foo=""` is effectively parsed as `--property foo="true"`. This is now parsed as an empty string (https://github.com/apple/pkl/pull/596[#596]).
+* Fixes a regression where amending a globbed import or globbed read results in a PklBugException (https://github.com/apple/pkl/pull/607[#607]).
+* Fixes an issue around using `file()` notation when using the pkl-gradle plugin on Windows (https://github.com/apple/pkl/pull/611[#611]).
+
 [[release-0.26.2]]
 == 0.26.2 (2024-07-18)
 

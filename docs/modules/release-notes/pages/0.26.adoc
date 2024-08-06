@@ -1,6 +1,6 @@
 = Pkl 0.26 Release Notes
 :version: 0.26
-:version-minor: 0.26.2
+:version-minor: 0.26.3
 :release-date: June 17th, 2024
 
 include::ROOT:partial$component-attributes.adoc[]
