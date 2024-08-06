@@ -569,9 +569,9 @@ class EvaluatorsTest : AbstractTest() {
       pkl {
         evaluators {
           register("doEval") {
-            sourceModules = files("file1.pkl", "file2.pkl")
-            outputFile = layout.projectDirectory.file("%{moduleName}.%{outputFormat}")
-            outputFormat = "yaml"
+            sourceModules.set(files("file1.pkl", "file2.pkl"))
+            outputFile.set(layout.projectDirectory.file("%{moduleName}.%{outputFormat}"))
+            outputFormat.set("yaml")
           }
         }
       }
