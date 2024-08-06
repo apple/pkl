@@ -800,3 +800,34 @@ numbers {
 
 squares = numbers.toList().map((num) -> num ** 2).toListing()
 ----
+
+[[class-as-a-function]]
+=== Class-as-a-Function Pattern
+
+In many languages, method parameters may be assigned default values allowing the argument to be omitted in calls.
+Many of these languages offer named parameters, which aid in API self-documentation.
+Pkl does not provide either feature, but one way to achieve a similar result is a pattern known as "class-as-a-function" (CaaF).
+In this pattern, a class is created that accepts input properties and has one or more `fixed` output properties.
+
+[source%tested,{pkl}]
+----
+class GreetingFunction {
+  name: String // <1>
+
+  greeting: String = "Hello" // <2>
+
+  fixed result: String = "\(greeting), \(name)!" // <3>
+}
+
+greetPigeon = new GreetingFunction { name = "Pigeon" }.result // <4>
+
+greetHawk = new GreetingFunction { name = "Hawk"; greeting = "Good day" }.result // <5>
+----
+<1> A required input property.
+<2> An optional input property with a default value.
+<3> The function's result, calculated from the input properties.
+<4> result: `"Hello, Pigeon!"`
+<5> result: `"Good day, Hawk!"`
+
+This pattern can be especially compelling in cases where multiple output values must be derived from the same set of inputs.
+Instead of defining multiple methods that accept the same parameters, a single class may be defined with multiple output properties.

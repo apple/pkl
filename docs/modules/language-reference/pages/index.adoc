@@ -2021,6 +2021,12 @@ greeting2 = greetPigeon(parrot)  // <4>
 <3> Call instance method on `pigeon`.
 <4> Call module method (on `this`).
 
+NOTE: Methods do not support named parameters or default parameter values.
+The xref:style-guide:index.adoc#class-as-a-function[Class-as-a-function] pattern may be a suitable replacement.
+
+TIP: In most cases, methods without parameters should not be defined.
+Instead, use <<fixed-properties,`fixed` properties>> on the module or class.
+
 [[modules]]
 == Modules
 
@@ -5146,8 +5152,8 @@ It is defined by the presence of a `PklProject` file that amends the standard li
 Defining a project serves the following purposes:
 
 1. It allows defining common evaluator settings for Pkl modules within a logical project.
-2. It helps with managing <<packages,package>> dependencies for Pkl modules within a logical project.
-3. It enables packaging and sharing the contents of the project as a <<packages,package>>.
+2. It helps with managing <<package-asset-uri,package>> dependencies for Pkl modules within a logical project.
+3. It enables packaging and sharing the contents of the project as a <<package-asset-uri,package>>.
 4. It allows importing packages via dependency notation.
 
 [[project-dependencies]]
