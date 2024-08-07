@@ -3721,6 +3721,7 @@ bird2: Bird? = null // <2>
 The only class types that admit `null` values despite not ending in `?` are `Any` and `Null`.
 (`Null` is not very useful as a type because it _only_ admits `null` values.)
 `Any?` and `Null?` are equivalent to `Any` and `Null`, respectively.
+In some languages, nullable types are also known as _optional types_.
 
 [[generic-types]]
 ==== Generic Types
