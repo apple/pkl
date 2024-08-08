@@ -79,19 +79,25 @@ public final class TestRunner {
     var factsMapping = (VmMapping) facts;
     factsMapping.forceAndIterateMemberValues(
         (groupKey, groupMember, groupValue) -> {
+          var listing = (VmListing) groupValue;
           var result = results.newResult(String.valueOf(groupKey));
-          var groupListing = (VmListing) groupValue;
-          groupListing.forceAndIterateMemberValues(
-              ((factIndex, factMember, factValue) -> {
-                assert factValue instanceof Boolean;
-                if (factValue == Boolean.FALSE) {
-                  result.addFailure(
-                      Failure.buildFactFailure(
-                          factMember.getSourceSection(), getDisplayUri(factMember)));
+          return listing.iterateMembers(
+              (idx, member) -> {
+                if (member.isLocalOrExternalOrHidden()) {
+                  return true;
+                }
+                try {
+                  var factValue = VmUtils.readMember(listing, idx);
+                  if (factValue == Boolean.FALSE) {
+                    result.addFailure(
+                        Failure.buildFactFailure(member.getSourceSection(), getDisplayUri(member)));
+                  }
+                } catch (VmException err) {
+                  result.addError(
+                      new Error(err.getMessage(), err.toPklException(stackFrameTransformer)));
                 }
                 return true;
-              }));
-          return true;
+              });
         });
   }
 
@@ -142,12 +148,14 @@ public final class TestRunner {
     var expectedExampleOutputs = loadExampleOutputs(expectedOutputFile);
     var actualExampleOutputs = new MutableReference<VmDynamic>(null);
     var allGroupsSucceeded = new MutableBoolean(true);
+    var errored = new MutableBoolean(false);
     examples.forceAndIterateMemberValues(
         (groupKey, groupMember, groupValue) -> {
           var testName = String.valueOf(groupKey);
           var group = (VmListing) groupValue;
           var expectedGroup =
               (VmDynamic) VmUtils.readMemberOrNull(expectedExampleOutputs, groupKey);
+          var result = results.newResult(testName);
 
           if (expectedGroup == null) {
             results.newResult(
@@ -158,8 +166,7 @@ public final class TestRunner {
           }
 
           if (group.getLength() != expectedGroup.getLength()) {
-            results.newResult(
-                testName,
+            result.addFailure(
                 Failure.buildExampleLengthMismatchFailure(
                     getDisplayUri(groupMember),
                     String.valueOf(groupKey),
@@ -169,8 +176,21 @@ public final class TestRunner {
           }
 
           var groupSucceeded = new MutableBoolean(true);
-          group.forceAndIterateMemberValues(
-              ((exampleIndex, exampleMember, exampleValue) -> {
+          group.iterateMembers(
+              ((exampleIndex, exampleMember) -> {
+                if (exampleMember.isLocalOrExternalOrHidden()) {
+                  return true;
+                }
+                Object exampleValue;
+                try {
+                  exampleValue = VmUtils.readMember(group, exampleIndex);
+                } catch (VmException err) {
+                  errored.set(true);
+                  result.addError(
+                      new Error(err.getMessage(), err.toPklException(stackFrameTransformer)));
+                  groupSucceeded.set(false);
+                  return true;
+                }
                 var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
 
                 var exampleValuePcf = renderAsPcf(exampleValue);
@@ -202,8 +222,7 @@ public final class TestRunner {
                         .build();
                   }
 
-                  results.newResult(
-                      testName,
+                  result.addFailure(
                       Failure.buildExampleFailure(
                           getDisplayUri(exampleMember),
                           getDisplayUri(expectedMember),
@@ -215,9 +234,7 @@ public final class TestRunner {
                 return true;
               }));
 
-          if (groupSucceeded.get()) {
-            results.newResult(testName);
-          } else {
+          if (!groupSucceeded.get()) {
             allGroupsSucceeded.set(false);
           }
 
@@ -231,26 +248,52 @@ public final class TestRunner {
           }
           if (examples.getCachedValue(groupKey) == null) {
             allGroupsSucceeded.set(false);
-            results.newResult(
-                String.valueOf(groupKey),
-                Failure.buildExamplePropertyMismatchFailure(
-                    getDisplayUri(groupMember), String.valueOf(groupKey), false));
+            results
+                .newResult(String.valueOf(groupKey))
+                .addFailure(
+                    Failure.buildExamplePropertyMismatchFailure(
+                        getDisplayUri(groupMember), String.valueOf(groupKey), false));
           }
           return true;
         });
 
-    if (!allGroupsSucceeded.get() && actualExampleOutputs.isNull()) {
+    if (!allGroupsSucceeded.get() && actualExampleOutputs.isNull() && !errored.get()) {
       writeExampleOutputs(actualOutputFile, examples);
     }
   }
 
   private void doRunAndWriteExamples(VmMapping examples, Path outputFile, TestResults results) {
-    examples.forceAndIterateMemberValues(
-        (groupKey, groupMember, groupValue) -> {
-          results.newResult(String.valueOf(groupKey)).setExampleWritten(true);
-          return true;
-        });
-    writeExampleOutputs(outputFile, examples);
+    var allSucceeded =
+        examples.forceAndIterateMemberValues(
+            (groupKey, groupMember, groupValue) -> {
+              var listing = (VmListing) groupValue;
+              var success =
+                  listing.iterateMembers(
+                      (idx, member) -> {
+                        if (member.isLocalOrExternalOrHidden()) {
+                          return true;
+                        }
+                        try {
+                          VmUtils.readMember(listing, idx);
+                          return true;
+                        } catch (VmException err) {
+                          results
+                              .newResult(String.valueOf(groupKey))
+                              .addError(
+                                  new Error(
+                                      err.getMessage(), err.toPklException(stackFrameTransformer)));
+                          return false;
+                        }
+                      });
+              if (!success) {
+                return false;
+              }
+              results.newResult(String.valueOf(groupKey)).setExampleWritten(true);
+              return true;
+            });
+    if (allSucceeded) {
+      writeExampleOutputs(outputFile, examples);
+    }
   }
 
   private void writeExampleOutputs(Path outputFile, VmMapping examples) {

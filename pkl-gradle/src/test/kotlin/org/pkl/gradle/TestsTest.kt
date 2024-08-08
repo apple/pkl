@@ -71,10 +71,12 @@ class TestsTest : AbstractTest() {
     val output = runTask("evalTest", expectFailure = true).output.stripFilesAndLines()
 
     assertThat(output)
-      .contains(
+      .containsIgnoringNewLines(
         """
+      > Task :evalTest FAILED
       module test (file:///file, line x)
-        test ❌
+        should pass ✅
+        error ❌
           Error:
               –– Pkl Error ––
               exception
@@ -82,11 +84,7 @@ class TestsTest : AbstractTest() {
               9 | throw("exception")
                   ^^^^^^^^^^^^^^^^^^
               at test#facts["error"][#1] (file:///file, line x)
-              
-              3 | facts {
-                  ^^^^^^^
-              at test#facts (file:///file, line x)
-    """
+      """
           .trimIndent()
       )
   }
@@ -122,7 +120,6 @@ class TestsTest : AbstractTest() {
             name = "Pigeon"
             age = 41
           }
-        user 1 ❌
           (file:///file, line x)
           Expected: (file:///file, line x)
           new {
@@ -189,7 +186,7 @@ class TestsTest : AbstractTest() {
       .isEqualTo(
         """
       <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="6" failures="4">
+      <testsuite name="test" tests="5" failures="4">
           <testcase classname="test" name="sum numbers"></testcase>
           <testcase classname="test" name="divide numbers"></testcase>
           <testcase classname="test" name="fail">
@@ -209,8 +206,6 @@ class TestsTest : AbstractTest() {
         name = &quot;Pigeon&quot;
         age = 41
       }</failure>
-          </testcase>
-          <testcase classname="test" name="user 1">
               <failure message="Example Failure">(file:///file, line x)
       Expected: (file:///file, line x)
       new {
@@ -226,7 +221,7 @@ class TestsTest : AbstractTest() {
           <system-err><![CDATA[8 = 8
       ]]></system-err>
       </testsuite>
-      
+
     """
           .trimIndent()
       )

@@ -114,13 +114,13 @@ class EvaluateTestsTest {
       )
 
     assertThat(results.totalTests()).isEqualTo(1)
-    assertThat(results.totalFailures()).isEqualTo(0)
+    assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
     val res = results.results[0]
-    assertThat(res.name).isEqualTo("text")
-    assertThat(res.failures).isEmpty()
-    assertThat(res.errors.size).isEqualTo(1)
+    assertThat(res.name).isEqualTo("should fail")
+    assertThat(res.failures).hasSize(1)
+    assertThat(res.errors).hasSize(1)
 
     val error = res.errors[0]
     assertThat(error.message).isEqualTo("got an error")
@@ -133,10 +133,6 @@ class EvaluateTestsTest {
       6 | throw("got an error")
           ^^^^^^^^^^^^^^^^^^^^^
       at text#facts["should fail"][#2] (repl:text)
-
-      3 | facts {
-          ^^^^^^^
-      at text#facts (repl:text)
 
     """
           .trimIndent()

@@ -108,6 +108,138 @@ class CliTestRunnerTest {
   }
 
   @Test
+  fun `CliTestRunner thrown error in facts`(@TempDir tempDir: Path) {
+    val code =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["fail"] {
+          throw("uh oh")
+        }
+      }
+    """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    assertThatCode { runner.run() }.hasMessage("Tests failed.")
+
+    assertThat(out.toString().stripFileAndLines(tempDir))
+      .isEqualToNormalizingNewlines(
+        """
+      module test
+        fail ❌
+          Error:
+              –– Pkl Error ––
+              uh oh
+              
+              5 | throw("uh oh")
+                  ^^^^^^^^^^^^^^
+              at test#facts["fail"][#1]
+
+    """
+          .trimIndent()
+      )
+    assertThat(err.toString()).isEqualTo("")
+  }
+
+  @Test
+  fun `CliTestRunner thrown error in examples -- no expected output`(@TempDir tempDir: Path) {
+    val code =
+      """
+      amends "pkl:test"
+
+      examples {
+        ["fail"] {
+          throw("uh oh")
+        }
+      }
+    """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    assertThatCode { runner.run() }.hasMessage("Tests failed.")
+
+    assertThat(out.toString().stripFileAndLines(tempDir))
+      .isEqualTo(
+        """
+      module test
+        fail ❌
+          Error:
+              –– Pkl Error ––
+              uh oh
+              
+              5 | throw("uh oh")
+                  ^^^^^^^^^^^^^^
+              at test#examples["fail"][#1]
+
+    """
+          .trimIndent()
+      )
+    assertThat(err.toString()).isEqualTo("")
+  }
+
+  @Test
+  fun `CliTestRunner thrown error in examples -- existing expected output`(@TempDir tempDir: Path) {
+    val code =
+      """
+      amends "pkl:test"
+
+      examples {
+        ["fail"] {
+          throw("uh oh")
+        }
+      }
+    """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    tempDir
+      .resolve("test.pkl-expected.pcf")
+      .writeString(
+        """
+      examples {
+        ["fail"] {
+          "never compared to"
+        }
+      }
+    """
+          .trimIndent()
+      )
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    assertThatCode { runner.run() }.hasMessage("Tests failed.")
+
+    assertThat(out.toString().stripFileAndLines(tempDir))
+      .isEqualToNormalizingNewlines(
+        """
+      module test
+        fail ❌
+          Error:
+              –– Pkl Error ––
+              uh oh
+              
+              5 | throw("uh oh")
+                  ^^^^^^^^^^^^^^
+              at test#examples["fail"][#1]
+
+    """
+          .trimIndent()
+      )
+    assertThat(err.toString()).isEqualTo("")
+  }
+
+  @Test
   fun `CliTestRunner JUnit reports`(@TempDir tempDir: Path) {
     val code =
       """
@@ -139,6 +271,54 @@ class CliTestRunnerTest {
           <testcase classname="test" name="foo"></testcase>
           <testcase classname="test" name="fail">
               <failure message="Fact Failure">5 == 9 ❌</failure>
+          </testcase>
+          <system-err><![CDATA[9 = 9
+      ]]></system-err>
+      </testsuite>
+      
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `CliTestRunner JUnit reports, with thrown error`(@TempDir tempDir: Path) {
+    val code =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["foo"] {
+          9 == trace(9)
+          "foo" == "foo"
+        }
+        ["fail"] {
+          throw("uh oh")
+        }
+      }
+    """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions(junitDir = tempDir)
+    val runner = CliTestRunner(opts, testOpts)
+    assertThatCode { runner.run() }.hasMessageContaining("failed")
+
+    val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
+    assertThat(junitReport)
+      .isEqualTo(
+        """
+      <?xml version="1.0" encoding="UTF-8"?>
+      <testsuite name="test" tests="2" failures="0">
+          <testcase classname="test" name="foo"></testcase>
+          <testcase classname="test" name="fail">
+              <error message="uh oh">–– Pkl Error ––
+      uh oh
+      
+      9 | throw(&quot;uh oh&quot;)
+          ^^^^^^^^^^^^^^
+      at test#facts[&quot;fail&quot;][#1]
+      </error>
           </testcase>
           <system-err><![CDATA[9 = 9
       ]]></system-err>
