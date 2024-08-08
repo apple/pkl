@@ -936,18 +936,17 @@ pigeonInIndex = pigeon.nameAndLifespanInIndex // <4>
 pigeonDynamic = pigeon.toDynamic() // <5>
 
 favoritePigeon = (pigeon) {
-  nameAndLifespanInIndex = "Bettie, \(lifespan)" // <6>
+  nameAndLifespanInIndex = "Bettie, \(lifespan)"
 }
 
-samePigeon = pigeon == favoritePigeon // <7>
+samePigeon = pigeon == favoritePigeon // <6>
 ----
 <1> Properties defined as `hidden` are accessible on any `Bird` instance, but not output by default.
 <2> Non-hidden properties can refer to hidden properties as usual.
 <3> `pigeon` is an object with _four_ properties, but is rendered with _three_ properties.
 <4> Accessing a `hidden` property from outside the class and object is like any other property.
 <5> Object conversions omit hidden properties, so the resulting `Dynamic` has three properties.
-<6> Our favorite pigeon should be indexed with her name!
-<7> Objects that differ only in `hidden` property values are considered equal
+<6> Objects that differ only in `hidden` property values are considered equal
 
 Invoking Pkl on this file produces the following result.
 
