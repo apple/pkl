@@ -3179,6 +3179,33 @@ This section discusses language features that are generally more relevant to tem
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>>
 
+[[the-meaning-of-new]]
+=== The Meaning of `new`
+
+Pkl has no "true" object instantiation: the `new` keyword is a special case of <<amending-objects, amending>>.
+In Pkl, objects can be instantiated in three major ways:
+
+* Amending a property/entry `someProperty {}` directly, which may specify properties that have not previously been declared or defined
+* Invoking `new` without type information `new {}`, which amends a contextually inferred value
+* Invoking `new` with explicit type information: `new Dynamic {}`, which always amends the default value of the specified type
+
+When amending previously undeclared properties and using the untyped `new` invocation, there is no explicit parent value to amend.
+In these cases, Pkl infers the amend operation's parent value based on context.
+In order of precedence:
+
+1. When amending an existing value, the parent value's type is used.
+2. When amending a declared but undefined property, the property's explicit type's default value is used (<<amend-null, including `null`>>).
+3. Within a `Listing` or `Mapping`, the container's `default` value is used.
+4. Within a `Listing` or `Mapping`, the default value of the container's explicit element or entry value type argument is used.
+5. In module or object body context, when no type information is otherwise available, an empty `Dynamic` object is used.
+6. In other cases, type inference fails with the error message "Cannot tell which parent to amend".
+
+These rules yield some corollaries that may not be obvious:
+ 
+* Instantiating with explicit type information ignores a collection's `default` value.
+* The type information of a <<methods,method>> parameter is not currently used for type inference, which may lead to surprising type inference errors.
+In this case, argument type information should be specified explicitly.
+
 [[let-expressions]]
 === Let Expressions
 
