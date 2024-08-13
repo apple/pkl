@@ -1992,11 +1992,10 @@ pigeon: ParentBird = new {
 [[methods]]
 == Functions and Methods
 
-Modules and classes can define methods.
-Submodules and subclasses can override them.
+Pkl does not have true functions; anything defined with the keyword `function` is a _method_ on the class or module it is defined in and may access properties of those types.
+When modules and classes define methods, submodules and subclasses can override them.
 
 Like Java and most other object-oriented languages, Pkl uses _single dispatch_ -- methods are dynamically dispatched based on the receiver's runtime type.
-Pkl does not have true functions; all methods are defined in the context of a module or class and may access properties of those types. 
 
 [source%tested,{pkl}]
 ----
