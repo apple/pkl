@@ -251,5 +251,4 @@ reservedKeyword
   | 'case'
   | 'switch'
   | 'vararg'
-  | 'const'
   ;
