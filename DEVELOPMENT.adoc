@@ -81,7 +81,7 @@ For automated build setup examples see our https://github.com/apple/pkl/blob/mai
 
 === ANTLR
 
-* https://github.com/antlr/antlr4/blob/main/doc/index.md[Documentation]
+* https://github.com/antlr/antlr4/blob/master/doc/index.md[Documentation]
 * https://groups.google.com/forum/#!forum/antlr-discussion[Forums]
 * https://github.com/mobileink/lab.clj.antlr/tree/main/doc[Some third-party docs]
 
