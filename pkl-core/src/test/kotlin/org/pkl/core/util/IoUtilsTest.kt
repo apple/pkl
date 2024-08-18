@@ -31,6 +31,7 @@ import org.pkl.core.SecurityManager
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeys
 import org.pkl.core.runtime.ModuleResolver
+import java.io.File
 
 class IoUtilsTest {
   object FakeSecurityManager : SecurityManager {
@@ -400,6 +401,19 @@ class IoUtilsTest {
     assertThrows<IllegalArgumentException> { IoUtils.readString(URI("http://example.com").toURL()) }
   }
 
+  @Test
+  fun `toUrl() supports remote file URIs`() {
+    // Use a publicly available text file on GitHub as the test URI
+    val uri = URI("file://raw.githubusercontent.com/octocat/Hello-World/master/README")
+    val resultUrl = IoUtils.toUrl(uri)
+
+    val tempFile = File(resultUrl.toURI())
+    assertThat(tempFile.exists()).isTrue
+
+    val downloadedContent = IoUtils.readString(resultUrl.openStream())
+    assertThat(downloadedContent).contains("Hello World!")
+  }
+  
   @Test
   fun `encodePath encodes characters reserved on windows`() {
     assertThat(IoUtils.encodePath("foo:bar")).isEqualTo("foo(3a)bar")
