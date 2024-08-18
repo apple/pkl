@@ -80,15 +80,17 @@ public final class IoUtils {
     File tempFile = File.createTempFile("pkl_", ".tmp");
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setInstanceFollowRedirects(true); // Enable automatic redirection
-    // connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // Some servers might reject requests without a User-Agent header
+    // connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // Some servers might reject
+    // requests without a User-Agent header
 
     int responseCode = connection.getResponseCode();
 
     // Handle redirection manually
-    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
+        || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
       String newUrl = connection.getHeaderField("Location");
       connection = (HttpURLConnection) new URL(newUrl).openConnection();
-      // connection.setRequestProperty("User-Agent", "Mozilla/5.0"); 
+      // connection.setRequestProperty("User-Agent", "Mozilla/5.0");
       responseCode = connection.getResponseCode();
     }
 
@@ -97,7 +99,7 @@ public final class IoUtils {
     }
 
     try (InputStream in = connection.getInputStream();
-      FileOutputStream out = new FileOutputStream(tempFile)) {
+        FileOutputStream out = new FileOutputStream(tempFile)) {
       byte[] buffer = new byte[1024];
       int bytesRead;
       while ((bytesRead = in.read(buffer)) != -1) {
@@ -106,7 +108,6 @@ public final class IoUtils {
     }
     return tempFile;
   }
-
 
   /** Checks whether the given string is "URI-like", i.e. matches a pattern like {@code foo:bar}. */
   public static boolean isUriLike(String str) {

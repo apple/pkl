@@ -15,6 +15,7 @@
  */
 package org.pkl.core.util
 
+import java.io.File
 import java.io.FileNotFoundException
 import java.net.URI
 import java.net.URISyntaxException
@@ -31,7 +32,6 @@ import org.pkl.core.SecurityManager
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeys
 import org.pkl.core.runtime.ModuleResolver
-import java.io.File
 
 class IoUtilsTest {
   object FakeSecurityManager : SecurityManager {
@@ -413,7 +413,7 @@ class IoUtilsTest {
     val downloadedContent = IoUtils.readString(resultUrl.openStream())
     assertThat(downloadedContent).contains("Hello World!")
   }
-  
+
   @Test
   fun `encodePath encodes characters reserved on windows`() {
     assertThat(IoUtils.encodePath("foo:bar")).isEqualTo("foo(3a)bar")
