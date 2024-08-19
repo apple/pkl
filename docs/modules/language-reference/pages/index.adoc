@@ -2006,7 +2006,8 @@ pigeon: ParentBird = new {
 [[methods]]
 == Methods
 
-Modules and classes can define methods.
+Pkl methods can be defined on classes and modules using the `function` keyword.
+Methods may access properties of their containing type.
 Submodules and subclasses can override them.
 
 Like Java and most other object-oriented languages, Pkl uses _single dispatch_ -- methods are dynamically dispatched based on the receiver's runtime type.
