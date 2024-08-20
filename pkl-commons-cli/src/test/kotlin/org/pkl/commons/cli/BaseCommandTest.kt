@@ -48,8 +48,8 @@ class BaseCommandTest {
     cmd.parse(arrayOf("-p", "flag1", "-p", "flag2=", "-p", "FOO=bar", "-p", "baz=qux=quux"))
     val props = cmd.baseOptions.baseOptions(emptyList()).externalProperties
 
-    assertThat(props).isEqualTo(
-      mapOf("flag1" to "true", "flag2" to "", "FOO" to "bar", "baz" to "qux=quux"))
+    assertThat(props)
+      .isEqualTo(mapOf("flag1" to "true", "flag2" to "", "FOO" to "bar", "baz" to "qux=quux"))
   }
 
   @Test
