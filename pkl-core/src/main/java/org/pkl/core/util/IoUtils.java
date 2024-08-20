@@ -16,13 +16,10 @@
 package org.pkl.core.util;
 
 import com.oracle.truffle.api.TruffleOptions;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -59,54 +56,15 @@ public final class IoUtils {
   public static URL toUrl(URI uri) throws IOException {
     try {
       if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null) {
-        // Dynamically determine the protocol, defaulting to http
-        String protocol = "http"; // Default protocol
-        URL remoteFileUrl = new URL(protocol, uri.getHost(), uri.getPort(), uri.getPath());
-        File localFile = downloadFile(remoteFileUrl);
-        return localFile.toURI().toURL();
+        throw new UnsupportedOperationException("Remote file URIs are not supported: " + uri);
       }
       return uri.toURL();
     } catch (Error e) {
-      // best we can do for now
-      // rely on caller to provide context, e.g., the requested module URI
       if (e.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")) {
         throw new IOException("Unsupported protocol: " + uri.getScheme());
       }
       throw e;
     }
-  }
-
-  private static File downloadFile(URL url) throws IOException {
-    File tempFile = File.createTempFile("pkl_", ".tmp");
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setInstanceFollowRedirects(true); // Enable automatic redirection
-    // connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // Some servers might reject
-    // requests without a User-Agent header
-
-    int responseCode = connection.getResponseCode();
-
-    // Handle redirection manually
-    if (responseCode == HttpURLConnection.HTTP_MOVED_PERM
-        || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
-      String newUrl = connection.getHeaderField("Location");
-      connection = (HttpURLConnection) new URL(newUrl).openConnection();
-      // connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-      responseCode = connection.getResponseCode();
-    }
-
-    if (responseCode != HttpURLConnection.HTTP_OK) {
-      throw new IOException("Failed to download file: HTTP response code " + responseCode);
-    }
-
-    try (InputStream in = connection.getInputStream();
-        FileOutputStream out = new FileOutputStream(tempFile)) {
-      byte[] buffer = new byte[1024];
-      int bytesRead;
-      while ((bytesRead = in.read(buffer)) != -1) {
-        out.write(buffer, 0, bytesRead);
-      }
-    }
-    return tempFile;
   }
 
   /** Checks whether the given string is "URI-like", i.e. matches a pattern like {@code foo:bar}. */
@@ -168,6 +126,10 @@ public final class IoUtils {
   }
 
   public static byte[] readBytes(URI uri) throws IOException {
+    if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null) {
+      throw new UnsupportedOperationException("Remote file URIs are not supported: " + uri);
+    }
+
     if (HttpUtils.isHttpUrl(uri)) {
       throw new IllegalArgumentException("Should use HTTP client to GET " + uri);
     }

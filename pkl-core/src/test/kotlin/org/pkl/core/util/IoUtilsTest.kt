@@ -15,7 +15,6 @@
  */
 package org.pkl.core.util
 
-import java.io.File
 import java.io.FileNotFoundException
 import java.net.URI
 import java.net.URISyntaxException
@@ -402,16 +401,10 @@ class IoUtilsTest {
   }
 
   @Test
-  fun `toUrl() supports remote file URIs`() {
-    // Use a publicly available text file on GitHub as the test URI
-    val uri = URI("file://raw.githubusercontent.com/octocat/Hello-World/master/README")
-    val resultUrl = IoUtils.toUrl(uri)
-
-    val tempFile = File(resultUrl.toURI())
-    assertThat(tempFile.exists()).isTrue
-
-    val downloadedContent = IoUtils.readString(resultUrl.openStream())
-    assertThat(downloadedContent).contains("Hello World!")
+  fun `toUrl() throws UnsupportedOperationException for file URIs with remote hostnames`() {
+    val uri = URI("file://example.com/bar/baz.pkl")
+    val exception = assertThrows<UnsupportedOperationException> { IoUtils.toUrl(uri) }
+    assertThat(exception.message).contains("Remote file URIs are not supported")
   }
 
   @Test
