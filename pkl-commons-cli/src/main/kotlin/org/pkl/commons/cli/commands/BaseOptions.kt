@@ -68,8 +68,8 @@ class BaseOptions : OptionGroup() {
     fun RawOption.associateProps():
       OptionWithValues<Map<String, String>, Pair<String, String>, Pair<String, String>> {
       return convert {
-          val parts = it.split("=")
-          if (parts.size <= 1) parts[0] to "true" else parts[0] to parts[1]
+          val eq = it.indexOf('=')
+          if (eq == -1) it to "true" else it.substring(0, eq) to it.substring(eq + 1)
         }
         .multiple()
         .toMap()
