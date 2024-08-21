@@ -60,6 +60,8 @@ public final class IoUtils {
       }
       return uri.toURL();
     } catch (Error e) {
+      // best we can do for now
+      // rely on caller to provide context, e.g., the requested module URI
       if (e.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")) {
         throw new IOException("Unsupported protocol: " + uri.getScheme());
       }
