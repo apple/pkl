@@ -3268,9 +3268,9 @@ The value will not have property `isDefault = true` as the `default` property of
 <3> Assigning a `new` explicitly-typed value to a `Mapping` entry.
 The value will not have property `isDefault = true` as the `default` property of the `Mapping` is not used.
 
-==== Untyped `new`
+==== Implicitly Typed `new`
 
-When using the untyped `new` invocation, there is no explicit parent value to amend.
+When using the implicitly typed `new` invocation, there is no explicit parent value to amend.
 In these cases, Pkl infers the amend operation's parent value based on context.
 In order of precedence:
 
