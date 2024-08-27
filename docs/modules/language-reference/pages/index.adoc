@@ -3156,7 +3156,7 @@ pkl: TRACE: num1 * num2 = 672 (at file:///some/module.pkl, line 42)
 
 This section discusses language features that are generally more relevant to template and library authors than template consumers.
 
-<<object-instantiation,Object Instantiation>> +
+<<meaning-of-new,Meaning of `new`>> +
 <<let-expressions,Let Expressions>> +
 <<type-tests,Type Tests>> +
 <<type-casts,Type Casts>> +
@@ -3180,16 +3180,17 @@ This section discusses language features that are generally more relevant to tem
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>>
 
-[[object-instantiation]]
-=== Object Instantiation
+[[meaning-of-new]]
+=== Meaning of `new`
 
-Object instantiation in Pkl always <<amending-objects, amends>> _some_ value.
-The `new` keyword is a special case of amending where a contextual default value is amended. 
-In Pkl, objects can be instantiated in three major ways:
+Objects in Pkl always <<amending-objects, amends>> _some_ value.
+The `new` keyword is a special case of amending where a contextual value is amended.
+In Pkl, there are two forms of `new` objects:
 
-* Amending some parent property or value directly.
-* Invoking `new` with explicit type information, which always amends the default value of the specified type.
-* Invoking `new` without type information, which amends a contextually inferred value.
+* `new` with explicit type information, for example, `new Foo {}`.
+* `new` without type information, for example, `new {}`.
+
+==== Type defaults
 
 To understand instantiation cases without explicit parent or type information, it's important to first understand implicit default values.
 When a property is declared in a module or class but is not provided an explicit default value, the property's default value becomes the type's default value.
@@ -3199,137 +3200,141 @@ Some types, including `Pair` and primitives like `String`, `Number`, and `Boolea
 
 [source,{pkl}]
 ----
-class Gizmo {
-  name: String = "doodad"
+class Bird {
+  name: String = "polly"
 }
 
-gizmo: Gizmo // <1>
-gizmoListing: Listing<Gizmo> // <2>
-gizmoMapping: Mapping<String, Gizmo> // <3> 
+bird: Bird // <1>
+birdListing: Listing<Bird> // <2>
+birdMapping: Mapping<String, Bird> // <3> 
 ----
-<1> Without an explicit default value, this property has default value `new Gizmo { name = "doodad" }`
-<2> With an explicit element type argument, this property's default value is equivalent to `new Listing<Gizmo> { default = new Gizmo { name = "doodad" } }`
-<3> With an explicit value type argument, this property's default value is equivalent to `new Mapping<String, Gizmo> { default = (_) -> new Gizmo { name = "doodad" } }`
-
-==== Explicit Parent
-
-Explicit amending is covered in detail by <<amending-objects, Amending Objects>>.
-Amending a property, entry, or value results in a new value with the same type as the parent.
-When amending a property that has not been previously declared, an empty `Dynamic` object is used as the parent.
-
-[source,{pkl}]
-----
-newProperty { // <1>
-  hello = "world"
-}
-amendedProperty = (newProperty) { // <2> 
-  hello = "there"
-}
-someMapping = new Mapping {
-  ["greetings"] { // <3>
-    hello = "everyone"
-  }
-}
-----
-<1> Amending a property.
-<2> Amending a value.
-<3> Amending a new `Mapping` entry.
+<1> Without an explicit default value, this property has default value `new Bird { name = "polly" }`
+<2> With an explicit element type argument, this property's default value is equivalent to `new Listing<Bird> { default = (_) -> new Bird { name = "polly" } }`
+<3> With an explicit value type argument, this property's default value is equivalent to `new Mapping<String, Bird> { default = (_) -> new Bird { name = "polly" } }`
 
 ==== Explicitly Typed `new`
 
 Instantiating an object with `new <type>` results in a value that amends the specified type's default value.
-Notably, creating a `Listing` element or assigning a `Mapping` value with an explicitly typed `new` ignores a collection's `default` value.
+Notably, creating a `Listing` element or assigning a `Mapping` entry value with an explicitly typed `new` ignores the object's `default` value.
 
 [source,{pkl}]
 ----
-newProperty = new Dynamic { // <1>
-  hello = "world"
+class Bird {
+  /// The name of the bird
+  name: String
+
+  /// Whether this is a bird of prey or not.
+  isPredatory: Boolean?
 }
-someListing = new Listing {
+
+newProperty = new Bird { // <1>
+  name = "Warbler"
+}
+
+someListing = new Listing<Bird> {
   default {
-    isDefault = true
+    isPredatory = true
   }
-  new Dynamic { // <2>
-    hello = "there"
+  new Bird { // <2>
+    name = "Sand Piper"
   }
 }
-someMapping = new Mapping {
+
+someMapping = new Mapping<String, Bird> {
   default {
-    isDefault = true
+    isPredatory = true
   }
-  ["greetings"] = new Dynamic { // <3>
-    hello = "everyone"
+  ["Penguin"] = new Bird { // <3>
+    name = "Penguin"
   }
 }
 ----
 <1> Assigning a `new` explicitly-typed value to a property.
 <2> Adding an `new` explicitly-typed `Listing` element.
-The value will not have property `isDefault = true` as the `default` property of the `Listing` is not used.
+The value will not have property `isPredatory = true` as the `default` property of the `Listing` is not used.
 <3> Assigning a `new` explicitly-typed value to a `Mapping` entry.
-The value will not have property `isDefault = true` as the `default` property of the `Mapping` is not used.
+The value will not have property `isPredatory = true` as the `default` property of the `Mapping` is not used.
 
 ==== Implicitly Typed `new`
 
 When using the implicitly typed `new` invocation, there is no explicit parent value to amend.
-In these cases, Pkl infers the amend operation's parent value based on context.
-In order of precedence:
+In these cases, Pkl infers the amend operation's parent value based on context:
 
-1. When assigning to a declared property, the property's default value is amended (<<amend-null, including `null`>>).
-2. Within a `Listing` or `Mapping`, the container's function-typed `default` property is applied to the corresponding index or key, respectively, to produce the value to be amended.
-3. In module or object body context, when no type information is otherwise available, an empty `Dynamic` object is amended.
-4. In other cases, type inference fails with the error message "Cannot tell which parent to amend".
+* When assigning to a declared property, the property's default value is amended (<<amend-null, including `null`>>).
+If there is no type associated with the property, an empty `Dynamic` object is amended.
+* When assigning to an entry (e.g. a `Mapping` member) or element (e.g. a `Listing` member), the enclosing object's `default` property is applied to the corresponding index or key, respectively, to produce the value to be amended.
+* In other cases, type inference fails with the error message "Cannot tell which parent to amend".
 
-Currently, the type information of a <<methods,method>> parameter is not used for type inference, which may lead to surprising type inference errors.
+The type information of a <<methods,method>> parameter is not used for type inference.
 In this case, argument type information should be specified explicitly.
 
 [source,{pkl}]
 ----
-class Gizmo {
+class Bird {
   name: String
 
-  function gizmofy(items: Listing<String>): Listing<String> = new {
+  function listHatchlings(items: Listing<String>): Listing<String> = new {
     for (item in items) {
       "\(name):\(item)"
     }
   }
 }
-typedProperty: Gizmo = new { // <1>
-  name = "doodad"
+
+typedProperty: Bird = new { // <1>
+  name = "Swift"
 }
+
 untypedProperty = new { // <2>
   hello = "world"
 }
-typedListing: Listing<Gizmo> = new {
+
+typedListing: Listing<Bird> = new {
   new { // <3>
-    name = "thingy"
+    name = "Kite"
   }
 }
+
 untypedListing: Listing = new {
   new { // <4>
     hello = "there"
   }
 }
-typedMapping: Mapping<String, Gizmo> = new {
+
+typedMapping: Mapping<String, Bird> = new {
   default { entryKey ->
     name = entryKey
   }
-  ["doohicky"] = new { // <5>
-    name = "thingamabob"
+  ["Saltmarsh Sparrow"] = new { // <5>
+    name = "Sharp-tailed Sparrow"
   }
 }
+
 amendedMapping = (typedMapping) {
-  ["doohicky"] = new {} // <6>
+  ["Saltmarsh Sparrow"] = new {} // <6>
 }
 
-doodadGizmos = typedProperty.gizmofy(new { "widget"; "whatchamacallit" }) // <7>
+class Aviary {
+  birds: Listing<Bird> = new {
+    new { name = "Osprey" }
+  }
+}
+
+aviary: Aviary = new {
+  birds = new { // <7>
+    new { name = "Kiwi" }
+  }
+}
+
+swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
 ----
-<1> Assignment to a property with an explicitly declared type, amending `new Gizmo {}` (case 1 above).
-<2> Assignment to an undeclared property in module context, amending `new Dynamic {}` (case 3 above).
-<3> `Listing` element creation, amending implicit `default`, `new Gizmo {}` (case 2 above).
-<4> `Listing` element creation, amending implicit `default`, `new Dynamic {}` (case 2 above).
-<5> `Mapping` value assignment, amdending the result of applying `default` to `"doohicky"`, `new Gizmo { name = "doohicky" }` (case 2 above).
-<6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"doohicky"`, `new Gizmo { name = "doohicky" }` (case 2 above).
-<7> Error: Cannot tell which parent to amend (case 4 above).
+<1> Assignment to a property with an explicitly declared type, amending `new Bird {}`.
+<2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
+<3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
+<4> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
+<5> `Mapping` value assignment, amdending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<7> Admending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
+<8> Error: Cannot tell which parent to amend.
 
 [[let-expressions]]
 === Let Expressions
