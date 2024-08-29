@@ -3263,10 +3263,10 @@ In these cases, Pkl infers the amend operation's parent value based on context:
 * When assigning to a declared property, the property's default value is amended (<<amend-null, including `null`>>).
 If there is no type associated with the property, an empty `Dynamic` object is amended.
 * When assigning to an entry (e.g. a `Mapping` member) or element (e.g. a `Listing` member), the enclosing object's `default` property is applied to the corresponding index or key, respectively, to produce the value to be amended.
-* In other cases, type inference fails with the error message "Cannot tell which parent to amend".
+* In other cases, evaluation fails with the error message "Cannot tell which parent to amend".
 
-The type information of a <<methods,method>> parameter is not used for type inference.
-In this case, argument type information should be specified explicitly.
+The type annotation of a <<methods,method>> parameter is not used for inference.
+In this case, the argument's type should be specified explicitly.
 
 [source,{pkl}]
 ----
