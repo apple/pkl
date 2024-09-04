@@ -23,8 +23,9 @@ import org.pkl.core.BufferedLogger;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.module.ModuleKeys;
-import org.pkl.core.runtime.TestResults.Error;
-import org.pkl.core.runtime.TestResults.Failure;
+import org.pkl.core.runtime.TestResults.TestSectionResults;
+import org.pkl.core.runtime.TestResults.TestSectionResults.Error;
+import org.pkl.core.runtime.TestResults.TestSectionResults.Failure;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
 import org.pkl.core.util.EconomicMaps;
@@ -51,12 +52,25 @@ public final class TestRunner {
 
     try {
       checkAmendsPklTest(testModule);
-      runFacts(testModule, results);
-      runExamples(testModule, info, results);
     } catch (VmException v) {
-      var meta = results.newResult(info.getModuleName());
-      meta.addError(new Error(v.getMessage(), v.toPklException(stackFrameTransformer)));
+      var error = new Error(v.getMessage(), v.toPklException(stackFrameTransformer));
+      results.module.setError(error);
     }
+
+    try {
+      runFacts(testModule, results.facts);
+    } catch (VmException v) {
+      var error = new Error(v.getMessage(), v.toPklException(stackFrameTransformer));
+      results.facts.setError(error);
+    }
+
+    try {
+      runExamples(testModule, info, results.examples);
+    } catch (VmException v) {
+      var error = new Error(v.getMessage(), v.toPklException(stackFrameTransformer));
+      results.examples.setError(error);
+    }
+
     results.setErr(logger.getLogs());
     return results;
   }
@@ -72,7 +86,7 @@ public final class TestRunner {
     }
   }
 
-  private void runFacts(VmTyped testModule, TestResults results) {
+  private void runFacts(VmTyped testModule, TestSectionResults results) {
     var facts = VmUtils.readMember(testModule, Identifier.FACTS);
     if (facts instanceof VmNull) return;
 
@@ -83,11 +97,13 @@ public final class TestRunner {
           var groupListing = (VmListing) groupValue;
           groupListing.forceAndIterateMemberValues(
               ((factIndex, factMember, factValue) -> {
+                result.countAssert();
+
                 assert factValue instanceof Boolean;
                 if (factValue == Boolean.FALSE) {
                   result.addFailure(
                       Failure.buildFactFailure(
-                          factMember.getSourceSection(), getDisplayUri(factMember)));
+                          getDisplayUri(factMember), factMember.getSourceSection()));
                 }
                 return true;
               }));
@@ -95,7 +111,7 @@ public final class TestRunner {
         });
   }
 
-  private void runExamples(VmTyped testModule, ModuleInfo info, TestResults results) {
+  private void runExamples(VmTyped testModule, ModuleInfo info, TestSectionResults results) {
     var examples = VmUtils.readMember(testModule, Identifier.EXAMPLES);
     if (examples instanceof VmNull) return;
 
@@ -138,7 +154,10 @@ public final class TestRunner {
   }
 
   private void doRunAndValidateExamples(
-      VmMapping examples, Path expectedOutputFile, Path actualOutputFile, TestResults results) {
+      VmMapping examples,
+      Path expectedOutputFile,
+      Path actualOutputFile,
+      TestSectionResults results) {
     var expectedExampleOutputs = loadExampleOutputs(expectedOutputFile);
     var actualExampleOutputs = new MutableReference<VmDynamic>(null);
     var allGroupsSucceeded = new MutableBoolean(true);
@@ -202,8 +221,11 @@ public final class TestRunner {
                         .build();
                   }
 
+                  var exampleName =
+                      group.getLength() == 1 ? testName : testName + " #" + exampleIndex;
+
                   results.newResult(
-                      testName,
+                      exampleName,
                       Failure.buildExampleFailure(
                           getDisplayUri(exampleMember),
                           getDisplayUri(expectedMember),
@@ -244,10 +266,12 @@ public final class TestRunner {
     }
   }
 
-  private void doRunAndWriteExamples(VmMapping examples, Path outputFile, TestResults results) {
+  private void doRunAndWriteExamples(
+      VmMapping examples, Path outputFile, TestSectionResults results) {
     examples.forceAndIterateMemberValues(
         (groupKey, groupMember, groupValue) -> {
-          results.newResult(String.valueOf(groupKey)).setExampleWritten(true);
+          var example = results.newResult(String.valueOf(groupKey));
+          example.setExampleWritten(true);
           return true;
         });
     writeExampleOutputs(outputFile, examples);

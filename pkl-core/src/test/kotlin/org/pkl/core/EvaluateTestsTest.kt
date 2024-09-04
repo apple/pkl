@@ -54,7 +54,7 @@ class EvaluateTestsTest {
     assertThat(results.displayUri).isEqualTo("repl:text")
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.failed()).isFalse
-    assertThat(results.results[0].name).isEqualTo("should pass")
+    assertThat(results.facts.results[0].name).isEqualTo("should pass")
     assertThat(results.err.isBlank()).isTrue
   }
 
@@ -79,18 +79,19 @@ class EvaluateTestsTest {
       )
 
     assertThat(results.totalTests()).isEqualTo(1)
-    assertThat(results.totalFailures()).isEqualTo(2)
+    assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    val res = results.results[0]
+    val res = results.facts.results[0]
     assertThat(res.name).isEqualTo("should fail")
-    assertThat(res.errors).isEmpty()
+    assertThat(results.facts.hasError()).isFalse
+    assertThat(res.failures.size).isEqualTo(2)
 
     val fail1 = res.failures[0]
-    assertThat(fail1.rendered).isEqualTo("1 == 2 ❌ (repl:text)")
+    assertThat(fail1.rendered).isEqualTo("1 == 2 (repl:text)")
 
     val fail2 = res.failures[1]
-    assertThat(fail2.rendered).isEqualTo(""""foo" == "bar" ❌ (repl:text)""")
+    assertThat(fail2.rendered).isEqualTo(""""foo" == "bar" (repl:text)""")
   }
 
   @Test
@@ -114,15 +115,14 @@ class EvaluateTestsTest {
       )
 
     assertThat(results.totalTests()).isEqualTo(1)
-    assertThat(results.totalFailures()).isEqualTo(0)
+    assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    val res = results.results[0]
-    assertThat(res.name).isEqualTo("text")
-    assertThat(res.failures).isEmpty()
-    assertThat(res.errors.size).isEqualTo(1)
+    val res = results.facts
+    assertThat(res.results).isEmpty()
+    assertThat(res.hasError()).isTrue
 
-    val error = res.errors[0]
+    val error = res.error
     assertThat(error.message).isEqualTo("got an error")
     assertThat(error.exception.message)
       .isEqualTo(
@@ -183,7 +183,114 @@ class EvaluateTestsTest {
     assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.failed()).isFalse
-    assertThat(results.results[0].name).isEqualTo("user")
+    assertThat(results.examples.results[0].name).isEqualTo("user")
+  }
+
+  @Test
+  fun `test fact failures with successful example`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(
+      file,
+      """
+      amends "pkl:test"
+      
+      facts {
+        ["should fail"] {
+          1 == 2
+          "foo" == "bar"
+        }
+      }
+      
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    Files.writeString(
+      createExpected(file),
+      """
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    val results = evaluator.evaluateTest(path(file), false)
+    assertThat(results.moduleName).startsWith("example")
+    assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
+    assertThat(results.totalTests()).isEqualTo(2)
+    assertThat(results.totalFailures()).isEqualTo(1)
+    assertThat(results.failed()).isTrue
+
+    assertThat(results.facts.results[0].name).isEqualTo("should fail")
+    assertThat(results.facts.results[0].failures.size).isEqualTo(2)
+    assertThat(results.examples.results[0].name).isEqualTo("user")
+  }
+
+  @Test
+  fun `test fact error with successful example`(@TempDir tempDir: Path) {
+    val file = tempDir.createTempFile(prefix = "example", suffix = ".pkl")
+    Files.writeString(
+      file,
+      """
+      amends "pkl:test"
+      
+      facts {
+        ["should fail"] {
+          throw("exception")
+        }
+      }
+      
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    Files.writeString(
+      createExpected(file),
+      """
+      examples {
+        ["user"] {
+          new {
+            name = "Bob"
+            age = 33
+          }
+        }
+      }
+    """
+        .trimIndent()
+    )
+
+    val results = evaluator.evaluateTest(path(file), false)
+    assertThat(results.moduleName).startsWith("example")
+    assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
+    assertThat(results.totalTests()).isEqualTo(2)
+    assertThat(results.totalFailures()).isEqualTo(1)
+    assertThat(results.failed()).isTrue
+
+    assertThat(results.facts.results).isEmpty()
+    assertThat(results.facts.hasError()).isTrue
+    assertThat(results.examples.results[0].name).isEqualTo("user")
   }
 
   @Test
@@ -228,9 +335,9 @@ class EvaluateTestsTest {
     assertThat(results.failed()).isTrue
     assertThat(results.totalFailures()).isEqualTo(1)
 
-    val res = results.results[0]
+    val res = results.examples.results[0]
     assertThat(res.name).isEqualTo("user")
-    assertThat(res.errors.isEmpty()).isTrue
+    assertFalse(results.examples.hasError())
 
     val fail1 = res.failures[0]
     assertThat(fail1.rendered.stripFileAndLines(tempDir))

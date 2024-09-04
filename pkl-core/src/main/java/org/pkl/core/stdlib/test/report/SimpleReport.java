@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.stream.Collectors;
 import org.pkl.core.runtime.TestResults;
-import org.pkl.core.runtime.TestResults.Failure;
-import org.pkl.core.runtime.TestResults.TestResult;
+import org.pkl.core.runtime.TestResults.TestSectionResults;
+import org.pkl.core.runtime.TestResults.TestSectionResults.TestResult;
 import org.pkl.core.util.StringUtils;
 
 public final class SimpleReport implements TestReport {
@@ -28,38 +28,66 @@ public final class SimpleReport implements TestReport {
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
     var builder = new StringBuilder();
-    builder.append("module ");
-    builder.append(results.getModuleName());
-    builder.append(" (").append(results.getDisplayUri()).append(")\n");
-    StringUtils.joinToStringBuilder(
-        builder, results.getResults(), "\n", res -> reportResult(res, builder));
-    builder.append("\n");
+
+    builder.append("module ").append(results.moduleName).append("\n");
+
+    reportResults(results.facts, builder);
+    reportResults(results.examples, builder);
+
+    builder.append(results.failed() ? "❌ " : "✅ ");
+
+    var totalStatsLine =
+        makeStatsLine("tests", results.totalTests(), results.totalFailures(), results.failed());
+    builder.append(totalStatsLine);
+
+    var totalAssertsStatsLine =
+        makeStatsLine(
+            "asserts", results.totalAsserts(), results.totalAssertsFailed(), results.failed());
+    builder.append(", ").append(totalAssertsStatsLine);
+
+    builder.append("\n\n");
+
     writer.append(builder);
   }
 
-  private void reportResult(TestResult result, StringBuilder builder) {
-    builder.append("  ").append(result.getName());
-    if (result.isExampleWritten()) {
-      builder.append(" ✍️");
-    } else if (result.isSuccess()) {
-      builder.append(" ✅");
-    } else {
-      builder.append(" ❌\n");
+  private void reportResults(TestSectionResults section, StringBuilder builder) {
+    if (!section.getResults().isEmpty()) {
+      builder.append("  ").append(section.name).append("\n");
+
       StringUtils.joinToStringBuilder(
-          builder, result.getFailures(), "\n", failure -> reportFailure(failure, builder));
-      StringUtils.joinToStringBuilder(
-          builder,
-          result.getErrors(),
-          "\n",
-          error -> {
-            builder.append("    Error:\n");
-            appendPadded(builder, error.getException().getMessage(), "        ");
-          });
+          builder, section.getResults(), "\n", res -> reportResult(res, builder));
+      builder.append("\n");
+    } else if (section.hasError()) {
+      builder.append("  ").append(section.name).append("\n");
+      var error = "Error:\n" + section.getError().getRendered();
+      appendPadded(builder, error, "    ");
+      builder.append("\n");
     }
   }
 
-  public static void reportFailure(Failure failure, StringBuilder builder) {
-    appendPadded(builder, failure.getRendered(), "    ");
+  private void reportResult(TestResult result, StringBuilder builder) {
+    builder.append("    ");
+
+    if (result.isExampleWritten()) {
+      builder.append(result.name).append(" ✍️");
+    } else {
+      builder.append(result.isFailure() ? "❌ " : "✅ ").append(result.name);
+
+      if (!result.isExample) {
+        var statsLine =
+            makeStatsLine(
+                "asserts", result.totalAsserts(), result.getFailures().size(), result.isFailure());
+      }
+
+      if (result.isFailure()) {
+        builder.append("\n");
+        StringUtils.joinToStringBuilder(
+            builder,
+            result.getFailures(),
+            "\n",
+            failure -> appendPadded(builder, failure.getRendered(), "       "));
+      }
+    }
   }
 
   private static void appendPadded(StringBuilder builder, String lines, String padding) {
@@ -68,5 +96,20 @@ public final class SimpleReport implements TestReport {
         lines.lines().collect(Collectors.toList()),
         "\n",
         str -> builder.append(padding).append(str));
+  }
+
+  private String makeStatsLine(String kind, int total, int failed, boolean isFailed) {
+    var passed = total - failed;
+    var pct_passed = total > 0 ? 100.0 * passed / total : 0.0;
+
+    String line = String.format("%.1f%% %s pass", pct_passed, kind);
+
+    if (isFailed) {
+      line += String.format(" [%d/%d failed]", failed, total);
+    } else {
+      line += String.format(" [%d passed]", passed);
+    }
+
+    return line;
   }
 }
