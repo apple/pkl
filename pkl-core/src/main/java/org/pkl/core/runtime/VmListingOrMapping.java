@@ -19,11 +19,14 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.PklBugException;
-import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
+import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> extends VmObject {
@@ -34,20 +37,21 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
    */
   private final @Nullable SELF delegate;
 
-  private final ListingOrMappingTypeCheckNode typeCheckNode;
+  private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final MaterializedFrame typeNodeFrame;
   private final EconomicMap<Object, ObjectMember> cachedMembers = EconomicMaps.create();
+  private final EconomicSet<Object> checkedMembers = EconomicSets.create();
 
   public VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       @Nullable SELF delegate,
-      @Nullable ListingOrMappingTypeCheckNode typeCheckNode,
+      @Nullable ListingOrMappingTypeCastNode typeCastNode,
       @Nullable MaterializedFrame typeNodeFrame) {
     super(enclosingFrame, parent, members);
     this.delegate = delegate;
-    this.typeCheckNode = typeCheckNode;
+    this.typeCastNode = typeCastNode;
     this.typeNodeFrame = typeNodeFrame;
   }
 
@@ -64,27 +68,39 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     throw PklBugException.unreachableCode();
   }
 
+  public @Nullable ListingOrMappingTypeCastNode getTypeCastNode() {
+    return typeCastNode;
+  }
+
   @Override
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
     super.setCachedValue(key, value, objectMember);
     EconomicMaps.put(cachedMembers, key, objectMember);
   }
 
-  // If a cached value already exists on the delegate, use it, and check its type.
   @Override
   public @Nullable Object getCachedValue(Object key) {
     var myCachedValue = super.getCachedValue(key);
     if (myCachedValue != null || delegate == null) {
       return myCachedValue;
     }
+    if (EconomicSets.contains(checkedMembers, key)) {
+      return delegate.getCachedValue(key);
+    }
+    // If a cached value already exists on the delegate, use it, and check its type.
     var memberValue = delegate.getCachedValue(key);
     if (memberValue == null) {
       return null;
     }
     // optimization: don't use VmUtils.findMember to avoid iterating over all members
     var objectMember = findMember(key);
-    var ret = checkMemberType(objectMember, memberValue, IndirectCallNode.getUncached());
-    EconomicMaps.put(cachedValues, key, ret);
+    var ret = typecastObjectMember(objectMember, memberValue, IndirectCallNode.getUncached());
+    if (ret != memberValue) {
+      EconomicMaps.put(cachedValues, key, ret);
+    } else {
+      // optimization: don't add to own cached values if typecast results in the same value
+      EconomicSets.add(checkedMembers, key);
+    }
     return ret;
   }
 
@@ -97,18 +113,18 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     return extraStorage;
   }
 
-  /** Perform a typecheck on this member, */
-  public Object checkMemberType(
+  /** Perform a typecast on this member, */
+  public Object typecastObjectMember(
       ObjectMember member, Object memberValue, IndirectCallNode callNode) {
-    if (!(member.isEntry() || member.isElement()) || typeCheckNode == null) {
+    if (!(member.isEntry() || member.isElement()) || typeCastNode == null) {
       return memberValue;
     }
     assert typeNodeFrame != null;
     var ret = memberValue;
     if (delegate != null) {
-      ret = delegate.checkMemberType(member, ret, callNode);
+      ret = delegate.typecastObjectMember(member, ret, callNode);
     }
-    var callTarget = typeCheckNode.getCallTarget();
+    var callTarget = typeCastNode.getCallTarget();
     try {
       return callNode.call(
           callTarget, VmUtils.getReceiver(typeNodeFrame), VmUtils.getOwner(typeNodeFrame), ret);
@@ -129,6 +145,23 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     }
   }
 
-  public abstract SELF createDelegated(
-      ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame);
+  public abstract SELF withCheckedMembers(
+      ListingOrMappingTypeCastNode typeCastNode, MaterializedFrame typeNodeFrame);
+
+  /** Tells if this mapping/listing runs the same typechecks as {@code typeNode}. */
+  public boolean hasSameChecksAs(TypeNode typeNode) {
+    if (typeCastNode == null) {
+      return false;
+    }
+    if (typeCastNode.getTypeNode().isEquivalentTo(typeNode)) {
+      return true;
+    }
+    // we can say the check is the same if the delegate has this check.
+    // when `Listing<Any>` delegates to `Listing<UInt>`, it has the same checks as a `UInt`
+    // typenode.
+    if (delegate != null) {
+      return delegate.hasSameChecksAs(typeNode);
+    }
+    return false;
+  }
 }

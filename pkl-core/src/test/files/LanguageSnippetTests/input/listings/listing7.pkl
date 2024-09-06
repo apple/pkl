@@ -1,4 +1,10 @@
-// ensure that this member is only evaluated once (should result in only one trace)
+// ensure that these members are only evaluated once (trace should only be emitted once)
 listing = new Listing { trace(1) }
 
 listing2: Listing<Int> = listing
+
+listing3 = new Listing {
+  new Listing { trace(2) }
+}
+
+listing4: Listing<Listing<Int>> = listing3

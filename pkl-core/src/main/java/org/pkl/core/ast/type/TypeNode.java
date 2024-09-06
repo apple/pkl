@@ -41,7 +41,7 @@ import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
-import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
+import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
@@ -149,9 +149,12 @@ public abstract class TypeNode extends PklNode {
         .build();
   }
 
-  protected Boolean isParametric() {
+  protected boolean isParametric() {
     return false;
   }
+
+  /** Tells if this typenode is the same typecheck as the other typenode. */
+  public abstract boolean isEquivalentTo(TypeNode other);
 
   public @Nullable VmClass getVmClass() {
     return null;
@@ -275,6 +278,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof UnknownTypeNode;
+    }
+
+    @Override
     public Object execute(VirtualFrame frame, Object value) {
       // do nothing
       return value;
@@ -332,6 +340,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof NothingTypeNode;
+    }
+
+    @Override
     protected PType doExport() {
       return PType.NOTHING;
     }
@@ -361,6 +374,14 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.moduleTypeFactory.create(null);
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof FinalModuleTypeNode finalModuleTypeNode)) {
+        return false;
+      }
+      return moduleClass.equals(finalModuleTypeNode.moduleClass);
     }
 
     @Override
@@ -408,6 +429,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof NonFinalModuleTypeNode nonFinalModuleTypeNode)) {
+        return false;
+      }
+      return moduleClass.equals(nonFinalModuleTypeNode.moduleClass);
+    }
+
+    @Override
     protected PType doExport() {
       return PType.MODULE;
     }
@@ -433,6 +462,14 @@ public abstract class TypeNode extends PklNode {
 
     public String getLiteral() {
       return literal;
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof StringLiteralTypeNode stringLiteralTypeNode)) {
+        return false;
+      }
+      return literal.equals(stringLiteralTypeNode.literal);
     }
 
     @Override
@@ -483,6 +520,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof TypedTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -510,6 +552,11 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return VmDynamic.empty();
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof DynamicTypeNode;
     }
 
     @Override
@@ -555,6 +602,14 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof FinalClassTypeNode finalClassTypeNode)) {
+        return false;
+      }
+      return clazz.equals(finalClassTypeNode.clazz);
     }
 
     @Override
@@ -619,6 +674,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof NonFinalClassTypeNode nonFinalClassTypeNode)) {
+        return false;
+      }
+      return clazz.equals(nonFinalClassTypeNode.clazz);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -678,6 +741,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof NullableTypeNode nullableTypeNode)) {
+        return false;
+      }
+      return elementTypeNode.isEquivalentTo(nullableTypeNode.elementTypeNode);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
       elementTypeNode.acceptTypeNode(visitor);
@@ -734,6 +805,33 @@ public abstract class TypeNode extends PklNode {
       var elementTypes =
           Arrays.stream(elementTypeNodes).map(TypeNode::export).collect(Collectors.toList());
       return new PType.Union(elementTypes);
+    }
+
+    @Override
+    @ExplodeLoop
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof UnionTypeNode unionTypeNode)) {
+        return false;
+      }
+      if (elementTypeNodes.length != unionTypeNode.elementTypeNodes.length) {
+        return false;
+      }
+      var ret = true;
+      // Note: a further optimization is to say that A|B is equivalent to B|A,
+      // but this requires knowing how to match A to A first, e.g. by sorting them, which we don't
+      // know how to do.
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        if (!ret) {
+          // don't return early so that we can ensure a constant number of loop iterations; helps
+          // the partial evaluator unroll this loop to be flat.
+          continue;
+        }
+        if (!elementTypeNodes[i].isEquivalentTo(unionTypeNode.elementTypeNodes[i])) {
+          ret = false;
+        }
+      }
+      LoopNode.reportLoopCount(this, elementTypeNodes.length);
+      return ret;
     }
 
     @Override
@@ -871,6 +969,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    @TruffleBoundary
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode)) {
+        return false;
+      }
+      return stringLiterals.equals(unionOfStringLiteralsTypeNode.stringLiterals);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -939,10 +1046,16 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return false;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
 
+    @ExplodeLoop
     private Object evalList(VirtualFrame frame, VmList value) {
       var ret = value;
       var idx = 0;
@@ -960,15 +1073,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     private Object evalListEagerly(VirtualFrame frame, VmList value) {
-      var ret = value;
-      var idx = 0;
-
       for (var elem : value) {
-        var result = elementTypeNode.executeEagerly(frame, elem);
-        if (result != elem) {
-          ret = ret.replace(idx, result);
-        }
-        idx++;
+        elementTypeNode.executeEagerly(frame, elem);
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
@@ -985,7 +1091,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1047,6 +1153,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    @ExplodeLoop
     public Object execute(VirtualFrame frame, Object value) {
       if (!(value instanceof VmList vmList)) {
         throw typeMismatch(value, BaseModule.getListClass());
@@ -1068,7 +1175,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof ListTypeNode listTypeNode)) {
+        return false;
+      }
+      return elementTypeNode.isEquivalentTo(listTypeNode.elementTypeNode);
+    }
+
+    @Override
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1105,6 +1220,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof SetTypeNode setTypeNode)) {
+        return false;
+      }
+      return elementTypeNode.isEquivalentTo(setTypeNode.elementTypeNode);
+    }
+
+    @Override
     protected final PType doExport() {
       return new PType.Class(BaseModule.getSetClass().export(), elementTypeNode.doExport());
     }
@@ -1133,7 +1256,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1189,6 +1312,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof MapTypeNode mapTypeNode)) {
+        return false;
+      }
+      return keyTypeNode.isEquivalentTo(mapTypeNode.keyTypeNode)
+          && valueTypeNode.isEquivalentTo(mapTypeNode.valueTypeNode);
+    }
+
+    @Override
     protected PType doExport() {
       return new PType.Class(
           BaseModule.getMapClass().export(), keyTypeNode.doExport(), valueTypeNode.doExport());
@@ -1228,7 +1360,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1243,9 +1375,7 @@ public abstract class TypeNode extends PklNode {
       if (!(value instanceof VmListing vmListing)) {
         throw typeMismatch(value, BaseModule.getListingClass());
       }
-      return valueTypeNode.isNoopTypeCheck()
-          ? vmListing
-          : vmListing.createDelegated(getListingOrMappingTypeCheckNode(), frame.materialize());
+      return doTypeCast(frame, vmListing);
     }
 
     @Override
@@ -1273,6 +1403,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof ListingTypeNode listingTypeNode)) {
+        return false;
+      }
+      return valueTypeNode.isEquivalentTo(listingTypeNode.valueTypeNode);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -1292,9 +1430,7 @@ public abstract class TypeNode extends PklNode {
       }
       // execute type checks on mapping keys
       doEagerCheck(frame, vmMapping, false, true);
-      return valueTypeNode.isNoopTypeCheck()
-          ? vmMapping
-          : vmMapping.createDelegated(getListingOrMappingTypeCheckNode(), frame.materialize());
+      return doTypeCast(frame, vmMapping);
     }
 
     @Override
@@ -1325,6 +1461,17 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof MappingTypeNode mappingTypeNode)) {
+        return false;
+      }
+      assert keyTypeNode != null;
+      assert mappingTypeNode.keyTypeNode != null;
+      return keyTypeNode.isEquivalentTo(mappingTypeNode.keyTypeNode)
+          && valueTypeNode.isEquivalentTo(mappingTypeNode.valueTypeNode);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -1333,7 +1480,7 @@ public abstract class TypeNode extends PklNode {
   public abstract static class ListingOrMappingTypeNode extends ObjectSlotTypeNode {
     @Child protected @Nullable TypeNode keyTypeNode;
     @Child protected TypeNode valueTypeNode;
-    @Child @Nullable protected ListingOrMappingTypeCheckNode listingOrMappingTypeCheckNode;
+    @Child @Nullable protected ListingOrMappingTypeCastNode listingOrMappingTypeCastNode;
 
     private final boolean skipKeyTypeChecks;
     private final boolean skipValueTypeChecks;
@@ -1361,17 +1508,17 @@ public abstract class TypeNode extends PklNode {
       return valueTypeNode;
     }
 
-    protected ListingOrMappingTypeCheckNode getListingOrMappingTypeCheckNode() {
-      if (listingOrMappingTypeCheckNode == null) {
+    protected ListingOrMappingTypeCastNode getListingOrMappingTypeCastNode() {
+      if (listingOrMappingTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        listingOrMappingTypeCheckNode =
-            new ListingOrMappingTypeCheckNode(
+        listingOrMappingTypeCastNode =
+            new ListingOrMappingTypeCastNode(
                 VmLanguage.get(this),
                 getRootNode().getFrameDescriptor(),
                 valueTypeNode,
                 getRootNode().getName());
       }
-      return listingOrMappingTypeCheckNode;
+      return listingOrMappingTypeCastNode;
     }
 
     // either (if defaultMemberValue != null):
@@ -1452,6 +1599,15 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
     }
 
+    protected <T extends VmListingOrMapping<T>> T doTypeCast(VirtualFrame frame, T original) {
+      // optimization: don't create new object if the original already has the same typecheck, or if
+      // this typecheck is a no-op.
+      if (isNoopTypeCheck() || original.hasSameChecksAs(valueTypeNode)) {
+        return original;
+      }
+      return original.withCheckedMembers(getListingOrMappingTypeCastNode(), frame.materialize());
+    }
+
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
       doEagerCheck(frame, object, skipKeyTypeChecks, skipValueTypeChecks);
     }
@@ -1507,7 +1663,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1543,6 +1699,34 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    @ExplodeLoop
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof FunctionTypeNode functionTypeNode)) {
+        return false;
+      }
+      if (!returnTypeNode.isEquivalentTo(functionTypeNode.returnTypeNode)) {
+        return false;
+      }
+      if (parameterTypeNodes.length != functionTypeNode.parameterTypeNodes.length) {
+        return false;
+      }
+      var ret = true;
+      // optimization: don't return early so that we can ensure a constant number of loop iterations
+      for (var i = 0; i < parameterTypeNodes.length; i++) {
+        var typeNode = parameterTypeNodes[i];
+        var otherTypeNode = functionTypeNode.parameterTypeNodes[i];
+        if (!ret) {
+          continue;
+        }
+        if (!typeNode.isEquivalentTo(otherTypeNode)) {
+          ret = false;
+        }
+      }
+      LoopNode.reportLoopCount(this, parameterTypeNodes.length);
+      return ret;
+    }
+
+    @Override
     protected final PType doExport() {
       var parameterTypes =
           Arrays.stream(parameterTypeNodes).map(TypeNode::export).collect(Collectors.toList());
@@ -1572,7 +1756,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1613,12 +1797,20 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof FunctionClassTypeNode functionClassTypeNode)) {
+        return false;
+      }
+      return typeArgumentNode.isEquivalentTo(functionClassTypeNode.typeArgumentNode);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1639,6 +1831,31 @@ public abstract class TypeNode extends PklNode {
 
     public final VmList getTypeArgumentMirrors() {
       return getMirrors(typeArgumentNodes);
+    }
+
+    @Override
+    @ExplodeLoop
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof FunctionNClassTypeNode functionNClassTypeNode)) {
+        return false;
+      }
+      if (typeArgumentNodes.length != functionNClassTypeNode.typeArgumentNodes.length) {
+        return false;
+      }
+      var ret = true;
+      for (var i = 0; i < typeArgumentNodes.length; i++) {
+        if (!ret) {
+          // don't return early so that we can ensure a constant number of loop iterations.
+          continue;
+        }
+        var typeNode = typeArgumentNodes[i];
+        var otherTypeNode = functionNClassTypeNode.typeArgumentNodes[i];
+        if (!typeNode.isEquivalentTo(otherTypeNode)) {
+          ret = false;
+        }
+      }
+      LoopNode.reportLoopCount(this, typeArgumentNodes.length);
+      return ret;
     }
 
     @Override
@@ -1670,7 +1887,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1721,6 +1938,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof PairTypeNode pairTypeNode)) {
+        return false;
+      }
+      return firstTypeNode.isEquivalentTo(pairTypeNode.firstTypeNode)
+          && secondTypeNode.isEquivalentTo(pairTypeNode.secondTypeNode);
+    }
+
+    @Override
     protected PType doExport() {
       return new PType.Class(
           BaseModule.getPairClass().export(), firstTypeNode.doExport(), secondTypeNode.doExport());
@@ -1732,7 +1958,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1769,12 +1995,20 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if (!(other instanceof VarArgsTypeNode varArgsTypeNode)) {
+        return false;
+      }
+      return elementTypeNode.isEquivalentTo(varArgsTypeNode.elementTypeNode);
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return true;
     }
   }
@@ -1813,6 +2047,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof TypeVariableNode;
+    }
+
+    @Override
     protected PType doExport() {
       return new PType.TypeVariable(typeParameter);
     }
@@ -1845,6 +2084,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof NonNullTypeAliasTypeNode;
     }
 
     @Override
@@ -1892,6 +2136,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof UIntTypeAliasTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -1928,6 +2177,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof Int8TypeAliasTypeNode;
     }
 
     @Override
@@ -1970,6 +2224,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof Int16TypeAliasTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -2006,6 +2265,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmTyped getMirror() {
       return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof Int32TypeAliasTypeNode;
     }
 
     @Override
@@ -2143,6 +2407,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      if ((other instanceof TypeAliasTypeNode typeAliasTypeNode)) {
+        return aliasedTypeNode.isEquivalentTo(typeAliasTypeNode.aliasedTypeNode);
+      }
+      return aliasedTypeNode.isEquivalentTo(other);
+    }
+
+    @Override
     protected PType doExport() {
       return new PType.Alias(
           typeAlias.export(),
@@ -2157,7 +2429,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected Boolean isParametric() {
+    protected boolean isParametric() {
       return typeArgumentNodes.length > 0;
     }
   }
@@ -2236,7 +2508,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      // consider constrained types as always different
+      return false;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
+      visitor.accept(this);
       childNode.acceptTypeNode(visitor);
     }
 
@@ -2268,6 +2547,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof AnyTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -2288,6 +2572,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getStringClass();
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof StringTypeNode;
     }
 
     @Override
@@ -2345,6 +2634,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof NumberTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -2365,6 +2659,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getIntClass();
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof IntTypeNode;
     }
 
     @Override
@@ -2403,6 +2702,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof FloatTypeNode;
+    }
+
+    @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
@@ -2435,6 +2739,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getBooleanClass();
+    }
+
+    @Override
+    public boolean isEquivalentTo(TypeNode other) {
+      return other instanceof BooleanTypeNode;
     }
 
     @Override

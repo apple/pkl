@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.UnmodifiableEconomicMap;
-import org.pkl.core.ast.member.ListingOrMappingTypeCheckNode;
+import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
@@ -59,7 +59,7 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       VmMapping delegate,
-      ListingOrMappingTypeCheckNode typeCheckNode,
+      ListingOrMappingTypeCastNode typeCheckNode,
       MaterializedFrame typeNodeFrame) {
     super(
         enclosingFrame,
@@ -200,8 +200,8 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
 
   @Override
   @TruffleBoundary
-  public VmMapping createDelegated(
-      ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame) {
+  public VmMapping withCheckedMembers(
+      ListingOrMappingTypeCastNode typeCheckNode, MaterializedFrame typeNodeFrame) {
     return new VmMapping(
         getEnclosingFrame(),
         Objects.requireNonNull(getParent()),

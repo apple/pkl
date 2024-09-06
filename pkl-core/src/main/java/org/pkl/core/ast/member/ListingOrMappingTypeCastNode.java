@@ -25,17 +25,21 @@ import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
-/** Performs a typecheck on a mapping entry value, or a listing element. */
-public class ListingOrMappingTypeCheckNode extends PklRootNode {
+/** Performs a typecast on a Mapping entry value, or a Listing element. */
+public class ListingOrMappingTypeCastNode extends PklRootNode {
 
   @Child private TypeNode typeNode;
   private final String qualifiedName;
 
-  public ListingOrMappingTypeCheckNode(
+  public ListingOrMappingTypeCastNode(
       VmLanguage language, FrameDescriptor descriptor, TypeNode typeNode, String qualifiedName) {
     super(language, descriptor);
     this.typeNode = typeNode;
     this.qualifiedName = qualifiedName;
+  }
+
+  public TypeNode getTypeNode() {
+    return typeNode;
   }
 
   @Override

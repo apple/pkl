@@ -4,4 +4,15 @@ listing {
 listing2 {
   1
 }
+listing3 {
+  new {
+    2
+  }
+}
+listing4 {
+  new {
+    2
+  }
+}
 pkl: TRACE: 1 = 1 (file:///$snippetsDir/input/listings/listing7.pkl)
+pkl: TRACE: 2 = 2 (file:///$snippetsDir/input/listings/listing7.pkl)
