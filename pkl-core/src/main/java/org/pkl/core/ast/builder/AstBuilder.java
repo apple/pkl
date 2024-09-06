@@ -450,7 +450,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             ctx.objectBody(),
             new GetParentForTypeNode(
                 createSourceSection(ctx),
-                visitType(typeCtx),
+                parentType,
                 symbolTable.getCurrentScope().getQualifiedName()));
     if (typeCtx instanceof DeclaredTypeContext declaredTypeContext
         && declaredTypeContext.typeArgumentList() != null) {

@@ -47,7 +47,6 @@ public final class TypeCastNode extends ExpressionNode {
       unresolvedTypeNode = null;
     }
 
-    // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
     var value = valueNode.executeGeneric(frame);
     try {
       return typeNode.execute(frame, value);

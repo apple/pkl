@@ -52,6 +52,8 @@ public final class TypeTestNode extends ExpressionNode {
       unresolvedTypeNode = null;
     }
 
+    // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
+    // https://github.com/apple/pkl/issues/639
     Object value = valueNode.executeGeneric(frame);
     try {
       typeNode.executeEagerly(frame, value);

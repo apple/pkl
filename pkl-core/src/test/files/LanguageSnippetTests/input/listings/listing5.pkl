@@ -92,8 +92,8 @@ examples {
         "bar"
       }
     )
+    module.catch(() -> l[0][0])
     module.catch(() -> l[0][1])
-    module.catch(() -> l[0][2])
   }
 
   ["type check: propagate function types"] {

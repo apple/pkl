@@ -46,8 +46,9 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.MutableLong;
+import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.Nonnull;
 import org.pkl.core.util.Nullable;
 
@@ -146,6 +147,10 @@ public abstract class TypeNode extends PklNode {
     throw exceptionBuilder()
         .bug("`%s` must override method `doExport()`.", getClass().getTypeName())
         .build();
+  }
+
+  protected Boolean isParametric() {
+    return false;
   }
 
   public @Nullable VmClass getVmClass() {
@@ -751,44 +756,23 @@ public abstract class TypeNode extends PklNode {
      */
     @TruffleBoundary
     private boolean shouldEagerCheck() {
-      var seenListings = new MutableLong(0);
-      var seenMappings = new MutableLong(0);
-      var seenLists = new MutableLong(0);
-      var seenMaps = new MutableLong(0);
-      var seenSets = new MutableLong(0);
-      var seenPairs = new MutableLong(0);
-      var seenCollections = new MutableLong(0);
+      var seenParameterizedClasses = EconomicSets.<VmClass>create();
+      var ret = new MutableBoolean(false);
       this.acceptTypeNode(
           (typeNode) -> {
-            if (typeNode instanceof ListingTypeNode) {
-              seenListings.getAndIncrement();
-            }
-            if (typeNode instanceof MappingTypeNode) {
-              seenMappings.getAndIncrement();
-            }
-            if (typeNode instanceof ListTypeNode) {
-              seenLists.getAndIncrement();
-            }
-            if (typeNode instanceof MapTypeNode) {
-              seenMaps.getAndIncrement();
-            }
-            if (typeNode instanceof SetTypeNode) {
-              seenSets.getAndIncrement();
-            }
-            if (typeNode instanceof PairTypeNode) {
-              seenPairs.getAndIncrement();
-            }
-            if (typeNode instanceof CollectionTypeNode) {
-              seenCollections.getAndIncrement();
+            if (typeNode.isParametric()) {
+              var typeNodeClass = typeNode.getVmClass();
+              if (typeNodeClass == null) {
+                return;
+              }
+              if (seenParameterizedClasses.contains(typeNodeClass)) {
+                ret.set(true);
+              } else {
+                EconomicSets.add(seenParameterizedClasses, typeNodeClass);
+              }
             }
           });
-      return seenMappings.get() >= 2
-          || seenListings.get() >= 2
-          || seenLists.get() >= 2
-          || seenMaps.get() >= 2
-          || seenSets.get() >= 2
-          || seenPairs.get() >= 2
-          || seenCollections.get() >= 2;
+      return ret.get();
     }
 
     @Fallback
@@ -999,6 +983,11 @@ public abstract class TypeNode extends PklNode {
       LoopNode.reportLoopCount(this, value.getLength());
       return value;
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   public static final class ListTypeNode extends ObjectSlotTypeNode {
@@ -1077,6 +1066,11 @@ public abstract class TypeNode extends PklNode {
       LoopNode.reportLoopCount(this, vmList.getLength());
       return ret;
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   public abstract static class SetTypeNode extends ObjectSlotTypeNode {
@@ -1136,6 +1130,11 @@ public abstract class TypeNode extends PklNode {
     @Fallback
     protected Object fallback(Object value) {
       throw typeMismatch(value, BaseModule.getSetClass());
+    }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
     }
   }
 
@@ -1227,6 +1226,11 @@ public abstract class TypeNode extends PklNode {
       LoopNode.reportLoopCount(this, value.getLength());
       return value;
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   public static final class ListingTypeNode extends ListingOrMappingTypeNode {
@@ -1241,7 +1245,7 @@ public abstract class TypeNode extends PklNode {
       }
       return valueTypeNode.isNoopTypeCheck()
           ? vmListing
-          : vmListing.createSurrogate(getListingOrMappingTypeCheckNode(), frame.materialize());
+          : vmListing.createDelegated(getListingOrMappingTypeCheckNode(), frame.materialize());
     }
 
     @Override
@@ -1290,7 +1294,7 @@ public abstract class TypeNode extends PklNode {
       doEagerCheck(frame, vmMapping, false, true);
       return valueTypeNode.isNoopTypeCheck()
           ? vmMapping
-          : vmMapping.createSurrogate(getListingOrMappingTypeCheckNode(), frame.materialize());
+          : vmMapping.createDelegated(getListingOrMappingTypeCheckNode(), frame.materialize());
     }
 
     @Override
@@ -1501,6 +1505,11 @@ public abstract class TypeNode extends PklNode {
 
       LoopNode.reportLoopCount(this, loopCount);
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   // A type such as `(Int, String) -> Duration`.
@@ -1561,6 +1570,11 @@ public abstract class TypeNode extends PklNode {
     protected VmClass getFunctionNClass() {
       return BaseModule.getFunctionNClass(parameterTypeNodes.length);
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   // A type such as `Function<Duration>` (but not `FunctionN<...>`).
@@ -1601,6 +1615,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
+    }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
     }
   }
 
@@ -1648,6 +1667,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
+    }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
     }
   }
 
@@ -1706,6 +1730,11 @@ public abstract class TypeNode extends PklNode {
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
     }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
+    }
   }
 
   public static class VarArgsTypeNode extends ObjectSlotTypeNode {
@@ -1742,6 +1771,11 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
+    }
+
+    @Override
+    protected Boolean isParametric() {
+      return true;
     }
   }
 
@@ -2119,6 +2153,12 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
       visitor.accept(this);
+      aliasedTypeNode.acceptTypeNode(visitor);
+    }
+
+    @Override
+    protected Boolean isParametric() {
+      return typeArgumentNodes.length > 0;
     }
   }
 
@@ -2197,7 +2237,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected void acceptTypeNode(Consumer<TypeNode> visitor) {
-      visitor.accept(this);
+      childNode.acceptTypeNode(visitor);
     }
 
     public VmTyped getMirror() {

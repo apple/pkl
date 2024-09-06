@@ -28,8 +28,11 @@ import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> extends VmObject {
 
-  /** The original that this listing/mapping is a surrogate of. It might have its own surrogatee. */
-  private final @Nullable SELF surrogatee;
+  /**
+   * The original that this listing/mapping delegates member lookups to. It might have its own
+   * delegate.
+   */
+  private final @Nullable SELF delegate;
 
   private final ListingOrMappingTypeCheckNode typeCheckNode;
   private final MaterializedFrame typeNodeFrame;
@@ -39,11 +42,11 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
-      @Nullable SELF surrogatee,
+      @Nullable SELF delegate,
       @Nullable ListingOrMappingTypeCheckNode typeCheckNode,
       @Nullable MaterializedFrame typeNodeFrame) {
     super(enclosingFrame, parent, members);
-    this.surrogatee = surrogatee;
+    this.delegate = delegate;
     this.typeCheckNode = typeCheckNode;
     this.typeNodeFrame = typeNodeFrame;
   }
@@ -53,8 +56,8 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     if (member != null) {
       return member;
     }
-    if (surrogatee != null) {
-      return surrogatee.findMember(key);
+    if (delegate != null) {
+      return delegate.findMember(key);
     }
     // member is guaranteed to exist; this is only called if `getCachedValue()` returns non-null
     // and `setCachedValue` will record the object member in `cachedMembers`.
@@ -67,14 +70,14 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     EconomicMaps.put(cachedMembers, key, objectMember);
   }
 
-  // If a cached value already exists on the surrogatee, use it, and check its type.
+  // If a cached value already exists on the delegate, use it, and check its type.
   @Override
   public @Nullable Object getCachedValue(Object key) {
     var myCachedValue = super.getCachedValue(key);
-    if (myCachedValue != null || surrogatee == null) {
+    if (myCachedValue != null || delegate == null) {
       return myCachedValue;
     }
-    var memberValue = surrogatee.getCachedValue(key);
+    var memberValue = delegate.getCachedValue(key);
     if (memberValue == null) {
       return null;
     }
@@ -87,8 +90,8 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
 
   @Override
   public Object getExtraStorage() {
-    if (surrogatee != null) {
-      return surrogatee.getExtraStorage();
+    if (delegate != null) {
+      return delegate.getExtraStorage();
     }
     assert extraStorage != null;
     return extraStorage;
@@ -102,8 +105,8 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     }
     assert typeNodeFrame != null;
     var ret = memberValue;
-    if (surrogatee != null) {
-      ret = surrogatee.checkMemberType(member, ret, callNode);
+    if (delegate != null) {
+      ret = delegate.checkMemberType(member, ret, callNode);
     }
     var callTarget = typeCheckNode.getCallTarget();
     try {
@@ -126,6 +129,6 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     }
   }
 
-  public abstract SELF createSurrogate(
+  public abstract SELF createDelegated(
       ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame);
 }

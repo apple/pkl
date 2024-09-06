@@ -39,8 +39,8 @@ examples {
     "Type constraint `this == capitalize()` violated. Value: \"bar\""
   }
   ["type check: propagate from List"] {
+    "Type constraint `length.isOdd` violated. Value: \"Ba\""
     "Type constraint `this == capitalize()` violated. Value: \"bar\""
-    "Element index `2` is out of range `0`..`1`."
   }
   ["type check: propagate function types"] {
     "Type constraint `length.isOdd` violated. Value: \"Ba\""

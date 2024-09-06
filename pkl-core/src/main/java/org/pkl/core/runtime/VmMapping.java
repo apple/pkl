@@ -58,14 +58,14 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
       MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
-      VmMapping surrogatee,
+      VmMapping delegate,
       ListingOrMappingTypeCheckNode typeCheckNode,
       MaterializedFrame typeNodeFrame) {
     super(
         enclosingFrame,
         Objects.requireNonNull(parent),
         members,
-        surrogatee,
+        delegate,
         typeCheckNode,
         typeNodeFrame);
   }
@@ -200,7 +200,7 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
 
   @Override
   @TruffleBoundary
-  public VmMapping createSurrogate(
+  public VmMapping createDelegated(
       ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame) {
     return new VmMapping(
         getEnclosingFrame(),

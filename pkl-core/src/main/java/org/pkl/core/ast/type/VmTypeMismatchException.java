@@ -59,7 +59,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   @TruffleBoundary
   public abstract VmException toVmException();
 
-  protected VmExceptionBuilder baseExceptionBuilder() {
+  protected VmExceptionBuilder exceptionBuilder() {
     var builder = new VmExceptionBuilder();
     if (insertedStackFrames != null) {
       builder.withInsertedStackFrames(insertedStackFrames);
@@ -148,11 +148,12 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       return exceptionBuilder().build();
     }
 
-    private VmExceptionBuilder exceptionBuilder() {
+    @Override
+    protected VmExceptionBuilder exceptionBuilder() {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return baseExceptionBuilder()
+      return super.exceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }
@@ -182,11 +183,12 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       return exceptionBuilder().build();
     }
 
-    private VmExceptionBuilder exceptionBuilder() {
+    @Override
+    protected VmExceptionBuilder exceptionBuilder() {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return baseExceptionBuilder()
+      return super.exceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }
@@ -219,14 +221,15 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       return exceptionBuilder().build();
     }
 
-    private VmExceptionBuilder exceptionBuilder() {
+    @Override
+    protected VmExceptionBuilder exceptionBuilder() {
       var summary = new StringBuilder();
       describeSummary(summary, "");
 
       var details = new StringBuilder();
       describeDetails(details, "");
 
-      return baseExceptionBuilder()
+      return super.exceptionBuilder()
           .adhocEvalError(summary.toString())
           .withSourceSection(sourceSection)
           .withHint(details.toString());
@@ -324,11 +327,12 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       return exceptionBuilder().build();
     }
 
-    private VmExceptionBuilder exceptionBuilder() {
+    @Override
+    protected VmExceptionBuilder exceptionBuilder() {
       var builder = new StringBuilder();
       describe(builder, "");
 
-      return baseExceptionBuilder()
+      return super.exceptionBuilder()
           .adhocEvalError(builder.toString())
           .withSourceSection(sourceSection);
     }

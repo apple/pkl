@@ -108,7 +108,7 @@ class CliTestRunnerTest {
   }
 
   @Test
-  fun `CliTestRunner thrown error in facts`(@TempDir tempDir: Path) {
+  fun `CliTestRunner with thrown error in facts`(@TempDir tempDir: Path) {
     val code =
       """
       amends "pkl:test"
@@ -148,7 +148,7 @@ class CliTestRunnerTest {
   }
 
   @Test
-  fun `CliTestRunner thrown error in examples -- no expected output`(@TempDir tempDir: Path) {
+  fun `CliTestRunner with thrown error in examples -- no expected output`(@TempDir tempDir: Path) {
     val code =
       """
       amends "pkl:test"
@@ -188,7 +188,9 @@ class CliTestRunnerTest {
   }
 
   @Test
-  fun `CliTestRunner thrown error in examples -- existing expected output`(@TempDir tempDir: Path) {
+  fun `CliTestRunner with thrown error in examples -- existing expected output`(
+    @TempDir tempDir: Path
+  ) {
     val code =
       """
       amends "pkl:test"

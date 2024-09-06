@@ -56,14 +56,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length,
-      @Nullable VmListing surrogatee,
+      @Nullable VmListing delegate,
       ListingOrMappingTypeCheckNode typeCheckNode,
       MaterializedFrame typeNodeFrame) {
     super(
         enclosingFrame,
         Objects.requireNonNull(parent),
         members,
-        surrogatee,
+        delegate,
         typeCheckNode,
         typeNodeFrame);
     this.length = length;
@@ -118,7 +118,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   }
 
   @Override
-  public VmListing createSurrogate(
+  public VmListing createDelegated(
       ListingOrMappingTypeCheckNode typeCheckNode, MaterializedFrame typeNodeFrame) {
     return new VmListing(
         getEnclosingFrame(),
