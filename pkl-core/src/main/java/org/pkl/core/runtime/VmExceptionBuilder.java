@@ -15,11 +15,13 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.pkl.core.StackFrame;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.Nullable;
@@ -50,6 +52,7 @@ import org.pkl.core.util.Nullable;
 public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
+  private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
 
   public static class MultilineValue {
     private final Iterable<?> lines;
@@ -329,11 +332,19 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  public VmExceptionBuilder withInsertedStackFrames(
+      Map<CallTarget, StackFrame> insertedStackFrames) {
+    this.insertedStackFrames = insertedStackFrames;
+    return this;
+  }
+
   public VmException build() {
     if (message == null) {
       throw new IllegalStateException("No message set.");
     }
 
+    var effectiveInsertedStackFrames =
+        insertedStackFrames == null ? new HashMap<CallTarget, StackFrame>() : insertedStackFrames;
     return switch (kind) {
       case EVAL_ERROR ->
           new VmEvalException(
@@ -345,7 +356,8 @@ public final class VmExceptionBuilder {
               location,
               sourceSection,
               memberName,
-              hint);
+              hint,
+              effectiveInsertedStackFrames);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
@@ -357,7 +369,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hint,
-              receiver);
+              receiver,
+              effectiveInsertedStackFrames);
       case BUG ->
           new VmBugException(
               message,
@@ -368,7 +381,8 @@ public final class VmExceptionBuilder {
               location,
               sourceSection,
               memberName,
-              hint);
+              hint,
+              effectiveInsertedStackFrames);
     };
   }
 

@@ -20,9 +20,9 @@ examples {
   
   ["listing"] {
     new Listing { 1; 2; 3 } as Listing<Int>
-    module.catch(() -> new Listing { 1; 2; 3 } as Listing<String>)
+    module.catch(() -> (new Listing { 1; 2; 3 } as Listing<String>)[0])
   }
-  
+
   ["mapping"] {
     module.catch(() -> new Listing { 1; 2; 3 } as Mapping<Int, String>)
     new Mapping { ["Pigeon"] = 42; ["Barn Owl"] = 21 } as Mapping<String, Int>
@@ -49,9 +49,9 @@ examples {
   ["function type"] {
     (((x) -> x) as (Int) -> Int).apply(42)
     (((x) -> x) as (String) -> String).apply(42)
-    module.catch(() -> ((x, y) -> x) as (Int) -> Int)
+    module.catch(() -> ((x, _) -> x) as (Int) -> Int)
   }
-  
+
   ["string literal type"] {
     "Pigeon" as "Pigeon"|"Barn Owl"
     module.catch(() -> "Pigeon" as "Piggy"|"Barn Owl")

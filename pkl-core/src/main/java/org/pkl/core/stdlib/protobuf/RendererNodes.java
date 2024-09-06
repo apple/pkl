@@ -42,8 +42,6 @@ import org.pkl.core.ast.type.TypeNode.StringTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeAliasTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionOfStringLiteralsTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
-import org.pkl.core.ast.type.TypeNodeFactory.ListingTypeNodeGen;
-import org.pkl.core.ast.type.TypeNodeFactory.MappingTypeNodeGen;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
@@ -575,7 +573,7 @@ public final class RendererNodes {
         type =
             requiresWrapper()
                 ? null
-                : ListingTypeNodeGen.create(VmUtils.unavailableSourceSection(), valueType);
+                : new ListingTypeNode(VmUtils.unavailableSourceSection(), valueType);
         return type;
       } else if (type instanceof MappingTypeNode mappingType) {
         var keyType = resolveType(mappingType.getKeyTypeNode());
@@ -589,8 +587,7 @@ public final class RendererNodes {
         }
         var valueType = resolveType(mappingType.getValueTypeNode());
         assert valueType != null : "Incomplete or malformed Mapping type";
-        mappingType =
-            MappingTypeNodeGen.create(VmUtils.unavailableSourceSection(), keyType, valueType);
+        mappingType = new MappingTypeNode(VmUtils.unavailableSourceSection(), keyType, valueType);
 
         type = requiresWrapper() ? null : mappingType;
         return type;

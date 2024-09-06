@@ -15,10 +15,13 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
+import org.pkl.core.StackFrame;
 import org.pkl.core.parser.Lexer;
 import org.pkl.core.util.Nullable;
 
@@ -35,7 +38,8 @@ public final class VmUndefinedValueException extends VmEvalException {
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable String hint,
-      @Nullable Object receiver) {
+      @Nullable Object receiver,
+      Map<CallTarget, StackFrame> insertedStackFrames) {
 
     super(
         message,
@@ -46,7 +50,8 @@ public final class VmUndefinedValueException extends VmEvalException {
         location,
         sourceSection,
         memberName,
-        hint);
+        hint,
+        insertedStackFrames);
 
     this.receiver = receiver;
   }

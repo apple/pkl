@@ -33,12 +33,12 @@ local x6: Mapping<String, String(!isEmpty)> = new {
   ["pigeon"] = ""
 }
 
-res1 = test.catch(() -> x1)
-res2 = test.catch(() -> x2)
+res1 = test.catch(() -> x1["barn owl"])
+res2 = test.catch(() -> x2["barney"])
 res3 = test.catch(() -> x3)
 res4 = test.catch(() -> x4)
 res5 = test.catch(() -> x5)
-res6 = test.catch(() -> x6)
+res6 = test.catch(() -> x6["pigeon"])
 
 hidden x7: Mapping = new {
   when (true) {

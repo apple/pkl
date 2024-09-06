@@ -15,9 +15,12 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
+import java.util.Map;
+import org.pkl.core.StackFrame;
 import org.pkl.core.util.Nullable;
 
 public class VmEvalException extends VmException {
@@ -30,7 +33,8 @@ public class VmEvalException extends VmException {
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint) {
+      @Nullable String hint,
+      Map<CallTarget, StackFrame> insertedStackFrames) {
 
     super(
         message,
@@ -41,6 +45,7 @@ public class VmEvalException extends VmException {
         location,
         sourceSection,
         memberName,
-        hint);
+        hint,
+        insertedStackFrames);
   }
 }

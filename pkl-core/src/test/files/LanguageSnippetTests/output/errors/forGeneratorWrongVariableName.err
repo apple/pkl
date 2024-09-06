@@ -5,10 +5,6 @@ x | ["\(idx)_2"] = o // at this point, `o` should be out of scope
                    ^
 at forGeneratorWrongVariableName#res[#2] (file:///$snippetsDir/input/errors/forGeneratorWrongVariableName.pkl)
 
-x | res: Mapping<String, Int> = new {
-                                ^^^^^
-at forGeneratorWrongVariableName#res (file:///$snippetsDir/input/errors/forGeneratorWrongVariableName.pkl)
-
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

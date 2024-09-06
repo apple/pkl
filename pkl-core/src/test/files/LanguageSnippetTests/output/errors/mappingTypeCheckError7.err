@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `length == 5` violated.
+Value: "hi"
+
+x | res = new Mapping<Listing<String(length == 5)>, String> {
+                                     ^^^^^^^^^^^
+at mappingTypeCheckError7#res (file:///$snippetsDir/input/errors/mappingTypeCheckError7.pkl)
+
+x | [new Listing { "hi" }] = "hi"
+     ^^^^^^^^^^^^^^^^^^^^
+at mappingTypeCheckError7#res[#1] (file:///$snippetsDir/input/errors/mappingTypeCheckError7.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

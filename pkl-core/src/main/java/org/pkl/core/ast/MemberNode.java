@@ -22,7 +22,6 @@ import java.util.function.Function;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public abstract class MemberNode extends PklRootNode {
@@ -55,19 +54,6 @@ public abstract class MemberNode extends PklRootNode {
 
   protected final VmExceptionBuilder exceptionBuilder() {
     return new VmExceptionBuilder().withSourceSection(getHeaderSection());
-  }
-
-  /**
-   * If true, the property value computed by this node is not the final value exposed to user code
-   * but will still be amended.
-   *
-   * <p>Used to disable type check for to-be-amended properties. See {@link
-   * org.pkl.core.runtime.VmUtils#SKIP_TYPECHECK_MARKER}. IDEA: might be more appropriate to only
-   * skip constraints check
-   */
-  protected final boolean shouldRunTypeCheck(VirtualFrame frame) {
-    return frame.getArguments().length != 4
-        || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
   }
 
   public boolean isUndefined() {

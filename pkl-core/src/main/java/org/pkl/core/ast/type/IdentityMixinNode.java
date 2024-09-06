@@ -66,7 +66,7 @@ public final class IdentityMixinNode extends PklRootNode {
     try {
       var argument = arguments[2];
       if (argumentTypeNode != null) {
-        argumentTypeNode.execute(frame, argument);
+        return argumentTypeNode.execute(frame, argument);
       }
       return argument;
     } catch (VmTypeMismatchException e) {

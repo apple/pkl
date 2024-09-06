@@ -1,7 +1,104 @@
-res1 = "Expected value of type `String`, but got type `Int`. Value: 42"
-res2 = "Type constraint `length > 3` violated. Value: \"bob\""
-res3 = "Type constraint `!isEmpty` violated. Value: new Listing {}"
-res4 = true
+res1 = "pigeon"
+res2 = "Expected value of type `String`, but got type `Int`. Value: 42"
+res3 = "pigeon"
+res4 = "Type constraint `length > 3` violated. Value: \"bob\""
 res5 = true
 res6 = true
 res7 = true
+res8 = true
+res9 = true
+res10 = false
+res11 = "foo"
+res12 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res13 = "Type constraint `!isEmpty` violated. Value: \"\""
+res14 = "Type constraint `!isEmpty` violated. Value: \"\""
+res15 = "Expected value of type `Listing<String>|Listing<Int>`, but got a different `Listing`. Value: new Listing { \"foo\"; 1 }"
+res16 = "Expected value of type `Listing<String>|Listing<Int>?`, but got a different `Listing`. Value: new Listing { \"foo\"; 1 }"
+res17 = "Expected value of type `Listing<String>|(Listing<Int>|Int)`, but got a different `Listing`. Value: new Listing { \"foo\"; 1 }"
+res18 = 2
+res19 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res20 = 1
+res21 = 1
+res22 = "Expected value of type `String`, but got type `Int`. Value: 5"
+res23 = 3
+res24 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res25 = 1
+res26 = "Expected value of type `String`, but got type `Int`. Value: 15"
+res27 = 3
+res28 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res29 = 3
+res30 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res31 {
+  "hi"
+  "hi"
+}
+res32 {
+  1
+  2
+}
+res33 {
+  "hi"
+  1
+}
+res34 {
+  "hi"
+  1
+  2
+  3
+}
+res35 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res36 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res37 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res38 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res39 = "hello"
+res40 = 1
+res41 = "Expected value of type `Int`, but got type `String`. Value: \"foo\""
+res42 = "goodbye"
+res43 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res45 = "Expected value of type `String|Listing<Int>`, but got a different `Listing`. Value: new Listing { \"foo\" }"
+res46 = "hello"
+res47 = "Expected value of type `List<Listing<Int>>|List<Listing<String>>`, but got a different `List`. Value: List(new Listing { 1; \"hello\" })"
+res48 = 2
+res49 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res50 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res51 = 3
+res52 = 1
+res53 = 2
+res54 = 2
+res55 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res56 = "Expected value of type `String`, but got type `Int`. Value: 2"
+res57 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res58 = 2
+res59 = 1
+res60 = 1
+res61 = "Expected value of type `Int`, but got type `String`. Value: \"hi\""
+res62 = 1
+res63 = 1
+res64 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res65 = "Expected value of type `String`, but got type `Int`. Value: 2"
+res66 = 5
+res67 = 1
+res68 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res69 = 2
+res70 = 1
+res71 = 2
+res73 = "hello"
+res74 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res75 = "Expected value of type `Int|Listing<String>`, but got a different `Listing`. Value: new Listing { \"hello\"; 1 }"
+res76 = "Expected value of type `Collection<Listing<String>>|Collection<Listing<Int>>`, but got a different `List`. Value: List(new Listing { 1; \"hi\" })"
+res77 = 3
+res78 = 1
+res79 = 2
+res80 = "Expected value of type `Int`, but got type `String`. Value: \"hi\""
+res81 = 3
+res82 = 1
+res83 = 2
+res84 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res85 = 1
+res86 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res87 = 1
+res88 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res89 = 1
+res90 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res91 = 1
+res92 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""

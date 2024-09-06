@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import java.util.HashSet;
 import org.pkl.core.ast.lambda.ApplyVmFunction3Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction3NodeGen;
 import org.pkl.core.runtime.*;
@@ -50,9 +51,14 @@ public final class MappingNodes {
     @Specialization
     @TruffleBoundary
     protected long eval(VmMapping self) {
-      MutableLong count = new MutableLong(0);
-      self.iterateMemberValues(
-          (key, member, value) -> {
+      var count = new MutableLong(0);
+      var visited = new HashSet<>();
+      self.iterateMembers(
+          (key, member) -> {
+            var alreadyVisited = !visited.add(key);
+            // important to record hidden member as visited before skipping it
+            // because any overriding member won't carry a `hidden` identifier
+            if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
             count.getAndIncrement();
             return true;
           });

@@ -62,10 +62,9 @@ public final class PropertyTypeNode extends PklRootNode {
   }
 
   @Override
-  public @Nullable Object execute(VirtualFrame frame) {
+  public Object execute(VirtualFrame frame) {
     try {
-      typeNode.execute(frame, frame.getArguments()[2]);
-      return null;
+      return typeNode.execute(frame, frame.getArguments()[2]);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
       throw e.toVmException();

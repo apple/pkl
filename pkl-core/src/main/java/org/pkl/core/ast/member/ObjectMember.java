@@ -134,7 +134,8 @@ public final class ObjectMember extends Member {
     var skip = 0;
     var text = candidate.getCharacters();
     var ch = text.charAt(skip);
-    while (ch == '=' || Character.isWhitespace(ch)) {
+    // body section of entries needs to chomp the ending delimiter too.
+    while ((ch == ']' && isEntry()) || ch == '=' || Character.isWhitespace(ch)) {
       ch = text.charAt(++skip);
     }
     return source.createSection(candidate.getCharIndex() + skip, candidate.getCharLength() - skip);

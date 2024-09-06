@@ -285,7 +285,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   }
 
   @TruffleBoundary
-  protected void elementsEntriesFallback(
+  protected Object elementsEntriesFallback(
       Object parent, @Nullable ObjectMember firstElemOrEntry, boolean isElementsOnly) {
     var parentIsClass = parent instanceof VmClass;
     var parentClass = parentIsClass ? (VmClass) parent : VmUtils.getClass(parent);

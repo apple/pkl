@@ -30,4 +30,9 @@ public final class EconomicSets {
   public static <E> boolean add(EconomicSet<E> self, E element) {
     return self.add(element);
   }
+
+  @TruffleBoundary
+  public static <E> boolean contains(EconomicSet<E> self, E element) {
+    return self.contains(element);
+  }
 }
