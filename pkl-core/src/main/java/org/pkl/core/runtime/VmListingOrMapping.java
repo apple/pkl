@@ -32,8 +32,8 @@ import org.pkl.core.util.Nullable;
 public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> extends VmObject {
 
   /**
-   * The original that this listing/mapping delegates member lookups to. It might have its own
-   * delegate.
+   * A Listing or Mapping typecast creates a new object that contains a new typecheck node, and
+   * delegates member lookups to this delegate.
    */
   private final @Nullable SELF delegate;
 
@@ -84,15 +84,17 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     if (myCachedValue != null || delegate == null) {
       return myCachedValue;
     }
-    if (EconomicSets.contains(checkedMembers, key)) {
-      return delegate.getCachedValue(key);
-    }
-    // If a cached value already exists on the delegate, use it, and check its type.
     var memberValue = delegate.getCachedValue(key);
+    // if this object member appears inside `checkedMembers`, we have already checked its type
+    // and can safely return it.
+    if (EconomicSets.contains(checkedMembers, key)) {
+      return memberValue;
+    }
     if (memberValue == null) {
       return null;
     }
-    // optimization: don't use VmUtils.findMember to avoid iterating over all members
+    // If a cached value already exists on the delegate, run a typecast on it.
+    // optimization: don't use `VmUtils.findMember` to avoid iterating over all members
     var objectMember = findMember(key);
     var ret = typecastObjectMember(objectMember, memberValue, IndirectCallNode.getUncached());
     if (ret != memberValue) {
