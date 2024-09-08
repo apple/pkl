@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
 
-sealed class ServerException(msg: String, cause: Throwable?) : Exception(msg, cause)
+import java.io.IOException;
+import org.pkl.core.util.Nullable;
 
-open class ProtocolException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
-
-class InvalidCommandException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
-
-class DecodeException(msg: String, cause: Throwable? = null) : ProtocolException(msg, cause)
+/** Decodes a stream of messages. */
+public interface MessageDecoder {
+  @Nullable
+  Message decode() throws IOException, DecodeException;
+}

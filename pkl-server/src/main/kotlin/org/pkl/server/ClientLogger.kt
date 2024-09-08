@@ -17,16 +17,18 @@ package org.pkl.server
 
 import org.pkl.core.Logger
 import org.pkl.core.StackFrame
+import org.pkl.core.messaging.Message.LogMessage
+import org.pkl.core.messaging.MessageTransport
 
 internal class ClientLogger(
   private val evaluatorId: Long,
   private val transport: MessageTransport
 ) : Logger {
   override fun trace(message: String, frame: StackFrame) {
-    transport.send(LogMessage(evaluatorId, level = 0, message, frame.moduleUri))
+    transport.send(LogMessage(evaluatorId, 0, message, frame.moduleUri))
   }
 
   override fun warn(message: String, frame: StackFrame) {
-    transport.send(LogMessage(evaluatorId, level = 1, message, frame.moduleUri))
+    transport.send(LogMessage(evaluatorId, 1, message, frame.moduleUri))
   }
 }
