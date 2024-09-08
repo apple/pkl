@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
 
-import java.io.OutputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessagePacker
+import java.io.IOException;
+import org.pkl.core.util.Nullable;
 
-/** Factory methods for creating [MessageEncoder]s. */
-internal object MessageEncoders {
-  fun into(stream: OutputStream): MessageEncoder =
-    MessagePackEncoder(MessagePack.newDefaultPacker(stream))
-
-  fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
+/** Decodes a stream of messages. */
+public interface MessageDecoder {
+  @Nullable
+  Message decode() throws IOException, DecodeException;
 }

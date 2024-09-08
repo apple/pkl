@@ -19,17 +19,23 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.pkl.core.messaging.MessageTransport
+import org.pkl.core.messaging.MessageTransports
+import org.pkl.core.util.Pair
 
 class JvmServerTest : AbstractServerTest() {
   private val transports: Pair<MessageTransport, MessageTransport> = run {
     if (USE_DIRECT_TRANSPORT) {
-      MessageTransports.direct()
+      MessageTransports.direct(::log)
     } else {
       val in1 = PipedInputStream()
       val out1 = PipedOutputStream(in1)
       val in2 = PipedInputStream()
       val out2 = PipedOutputStream(in2)
-      MessageTransports.stream(in1, out2) to MessageTransports.stream(in2, out1)
+      Pair.of(
+        MessageTransports.stream(in1, out2, ::log),
+        MessageTransports.stream(in2, out1, ::log)
+      )
     }
   }
 

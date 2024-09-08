@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 import kotlin.random.Random
 import org.pkl.core.SecurityManager
+import org.pkl.core.messaging.*
+import org.pkl.core.messaging.Message.*
 import org.pkl.core.module.ModuleKey
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.PathElement

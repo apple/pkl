@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
 import kotlin.random.Random
 import org.pkl.core.SecurityManager
+import org.pkl.core.messaging.*
 import org.pkl.core.module.PathElement
 import org.pkl.core.resource.Resource
 import org.pkl.core.resource.ResourceReader
@@ -31,7 +32,7 @@ import org.pkl.core.resource.ResourceReader
 internal class ClientResourceReader(
   private val transport: MessageTransport,
   private val evaluatorId: Long,
-  private val readerSpec: ResourceReaderSpec,
+  private val readerSpec: Message.ResourceReaderSpec,
 ) : ResourceReader {
   private val readResponses: MutableMap<URI, Future<ByteArray>> = ConcurrentHashMap()
 
@@ -64,10 +65,10 @@ internal class ClientResourceReader(
     listResources
       .computeIfAbsent(baseUri) {
         CompletableFuture<List<PathElement>>().apply {
-          val request = ListResourcesRequest(Random.nextLong(), evaluatorId, baseUri)
+          val request = Message.ListResourcesRequest(Random.nextLong(), evaluatorId, baseUri)
           transport.send(request) { response ->
             when (response) {
-              is ListResourcesResponse ->
+              is Message.ListResourcesResponse ->
                 if (response.error != null) {
                   completeExceptionally(IOException(response.error))
                 } else {
@@ -84,14 +85,14 @@ internal class ClientResourceReader(
     readResponses
       .computeIfAbsent(uri) {
         CompletableFuture<ByteArray>().apply {
-          val request = ReadResourceRequest(Random.nextLong(), evaluatorId, uri)
+          val request = Message.ReadResourceRequest(Random.nextLong(), evaluatorId, uri)
           transport.send(request) { response ->
             when (response) {
-              is ReadResourceResponse -> {
+              is Message.ReadResourceResponse -> {
                 if (response.error != null) {
                   completeExceptionally(IOException(response.error))
                 } else {
-                  complete(response.contents ?: ByteArray(0))
+                  complete(response.contents)
                 }
               }
               else -> {

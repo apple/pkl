@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
 
-/** A bidirectional transport for sending and receiving messages. */
-interface MessageTransport : AutoCloseable {
-  fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
+public class ProtocolException extends Exception {
+  public ProtocolException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 
-  fun send(message: OneWayMessage)
-
-  fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
-
-  fun send(message: ResponseMessage)
+  public ProtocolException(String msg) {
+    super(msg);
+  }
 }

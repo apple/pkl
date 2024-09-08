@@ -18,14 +18,13 @@ package org.pkl.cli
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
-import org.pkl.server.MessageTransports
-import org.pkl.server.ProtocolException
+import org.pkl.core.messaging.ProtocolException
 import org.pkl.server.Server
 
 class CliServer(options: CliBaseOptions) : CliCommand(options) {
   override fun doRun() =
     try {
-      val server = Server(MessageTransports.stream(System.`in`, System.out))
+      val server = Server.stream(System.`in`, System.out)
       server.use { it.start() }
     } catch (e: ProtocolException) {
       throw CliException(e.message!!)

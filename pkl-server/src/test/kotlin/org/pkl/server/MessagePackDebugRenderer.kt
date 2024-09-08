@@ -105,6 +105,3 @@ class MessagePackDebugRenderer(bytes: ByteArray) {
     sb.toString().removePrefix("\n")
   }
 }
-
-val ByteArray.debugRendering
-  get() = MessagePackDebugRenderer(this).output
