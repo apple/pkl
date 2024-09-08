@@ -17,7 +17,9 @@ package org.pkl.server
 
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.*
+import org.pkl.core.messaging.Message
+import org.pkl.core.messaging.MessageTransport
 
 class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
   val incomingMessages: BlockingQueue<Message> = ArrayBlockingQueue(10)
@@ -30,15 +32,15 @@ class TestTransport(private val delegate: MessageTransport) : AutoCloseable {
     delegate.close()
   }
 
-  fun send(message: ClientOneWayMessage) {
+  fun send(message: Message.Client.OneWay) {
     delegate.send(message)
   }
 
-  fun send(message: ClientRequestMessage) {
+  fun send(message: Message.Client.Request) {
     delegate.send(message) { incomingMessages.put(it) }
   }
 
-  fun send(message: ClientResponseMessage) {
+  fun send(message: Message.Client.Response) {
     delegate.send(message)
   }
 

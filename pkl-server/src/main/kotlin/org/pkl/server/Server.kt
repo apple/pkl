@@ -15,6 +15,8 @@
  */
 package org.pkl.server
 
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -22,6 +24,8 @@ import java.util.concurrent.Executors
 import kotlin.random.Random
 import org.pkl.core.*
 import org.pkl.core.http.HttpClient
+import org.pkl.core.messaging.*
+import org.pkl.core.messaging.Message.*
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
@@ -36,6 +40,11 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
   // https://github.com/jano7/executor would be the perfect executor here
   private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+
+  companion object {
+    fun stream(inputStream: InputStream, outputStream: OutputStream): Server =
+      Server(MessageTransports.stream(inputStream, outputStream, ::log))
+  }
 
   /** Starts listening to incoming messages */
   fun start() {
@@ -71,39 +80,37 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
   private fun handleCreateEvaluator(message: CreateEvaluatorRequest) {
     val evaluatorId = Random.Default.nextLong()
-    val baseResponse = CreateEvaluatorResponse(message.requestId, evaluatorId = null, error = null)
+    val baseResponse = CreateEvaluatorResponse(message.requestId, null, null)
 
     val evaluator =
       try {
         createEvaluator(message, evaluatorId)
-      } catch (e: ServerException) {
-        transport.send(baseResponse.copy(error = e.message))
+      } catch (e: ProtocolException) {
+        transport.send(baseResponse.withError(e.message ?: ""))
         return
       }
 
     evaluators[evaluatorId] = evaluator
-    transport.send(baseResponse.copy(evaluatorId = evaluatorId))
+    transport.send(baseResponse.withEvaluatorId(evaluatorId))
   }
 
   private fun handleEvaluate(msg: EvaluateRequest) {
-    val baseResponse = EvaluateResponse(msg.requestId, msg.evaluatorId, result = null, error = null)
+    val baseResponse = EvaluateResponse(msg.requestId, msg.evaluatorId, ByteArray(0), null)
 
     val evaluator = evaluators[msg.evaluatorId]
     if (evaluator == null) {
-      transport.send(
-        baseResponse.copy(error = "Evaluator with ID ${msg.evaluatorId} was not found.")
-      )
+      transport.send(baseResponse.withError("Evaluator with ID ${msg.evaluatorId} was not found."))
       return
     }
 
     executor.execute {
       try {
         val resp = evaluator.evaluate(ModuleSource.create(msg.moduleUri, msg.moduleText), msg.expr)
-        transport.send(baseResponse.copy(result = resp))
+        transport.send(baseResponse.withResult(resp))
       } catch (e: PklBugException) {
-        transport.send(baseResponse.copy(error = e.toString()))
+        transport.send(baseResponse.withError(e.toString()))
       } catch (e: PklException) {
-        transport.send(baseResponse.copy(error = e.message))
+        transport.send(baseResponse.withError(e.message ?: ""))
       }
     }
   }
@@ -224,7 +231,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   ): List<ModuleKeyFactory> = buildList {
     // add client-side module key factory first to ensure it wins over builtin ones
     if (message.clientModuleReaders?.isNotEmpty() == true) {
-      add(ClientModuleKeyFactory(message.clientModuleReaders, transport, evaluatorId))
+      add(ClientModuleKeyFactory(message.clientModuleReaders!!, transport, evaluatorId))
     }
     add(ModuleKeyFactories.standardLibrary)
     addAll(ModuleKeyFactories.fromServiceProviders())

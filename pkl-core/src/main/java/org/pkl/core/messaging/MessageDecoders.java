@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
 
-import java.io.OutputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessagePacker
+import java.io.InputStream;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessageUnpacker;
 
-/** Factory methods for creating [MessageEncoder]s. */
-internal object MessageEncoders {
-  fun into(stream: OutputStream): MessageEncoder =
-    MessagePackEncoder(MessagePack.newDefaultPacker(stream))
+/** Factory methods for creating [MessageDecoder]s. */
+public class MessageDecoders {
+  public static MessageDecoder from(InputStream stream) {
+    return new MessagePackDecoder(MessagePack.newDefaultUnpacker(stream));
+  }
 
-  fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
+  public static MessageDecoder from(MessageUnpacker unpacker) {
+    return new MessagePackDecoder(unpacker);
+  }
+
+  public static MessageDecoder from(byte[] array) {
+    return new MessagePackDecoder(MessagePack.newDefaultUnpacker(array));
+  }
 }
