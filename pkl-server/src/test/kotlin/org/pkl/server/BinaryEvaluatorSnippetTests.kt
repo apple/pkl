@@ -66,3 +66,6 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
     return true to bytes.debugRendering.stripFilePaths()
   }
 }
+
+val ByteArray.debugRendering
+  get() = MessagePackDebugRenderer(this).output
