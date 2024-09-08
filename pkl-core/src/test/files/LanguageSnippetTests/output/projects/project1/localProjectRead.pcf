@@ -1,0 +1,75 @@
+res = """
+  import "@burds/Bird.pkl"
+  
+  bird: Bird = new {
+    name = "Penguin"
+    favoriteFruit {
+      name = "Ice Fruit"
+    }
+  }
+  
+  """
+res2 {
+  ["@project2/PklProject"] {
+    uri = "file:/$snippetsDir/input/projects/project2/PklProject"
+    text = """
+      amends "pkl:Project"
+      
+      package {
+        name = "project2"
+        baseUri = "package://localhost:0/project2"
+        version = "1.0.0"
+        packageZipUrl = "https://localhost:0/project2/project2-\\(version).zip"
+      }
+      
+      dependencies {
+        ["burds"] {
+          uri = "package://localhost:0/birds@0.5.0"
+        }
+      }
+      
+      """
+    base64 = "YW1lbmRzICJwa2w6UHJvamVjdCIKCnBhY2thZ2UgewogIG5hbWUgPSAicHJvamVjdDIiCiAgYmFzZVVyaSA9ICJwYWNrYWdlOi8vbG9jYWxob3N0OjAvcHJvamVjdDIiCiAgdmVyc2lvbiA9ICIxLjAuMCIKICBwYWNrYWdlWmlwVXJsID0gImh0dHBzOi8vbG9jYWxob3N0OjAvcHJvamVjdDIvcHJvamVjdDItXCh2ZXJzaW9uKS56aXAiCn0KCmRlcGVuZGVuY2llcyB7CiAgWyJidXJkcyJdIHsKICAgIHVyaSA9ICJwYWNrYWdlOi8vbG9jYWxob3N0OjAvYmlyZHNAMC41LjAiCiAgfQp9Cg=="
+  }
+  ["@project2/PklProject.deps.json"] {
+    uri = "file:/$snippetsDir/input/projects/project2/PklProject.deps.json"
+    text = """
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {
+          "package://localhost:0/birds@0": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:0/birds@0.5.0",
+            "checksums": {
+              "sha256": "$skipChecksumVerification"
+            }
+          },
+          "package://localhost:0/fruit@1": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:0/fruit@1.1.0",
+            "checksums": {
+              "sha256": "$skipChecksumVerification"
+            }
+          }
+        }
+      }
+      
+      """
+    base64 = "ewogICJzY2hlbWFWZXJzaW9uIjogMSwKICAicmVzb2x2ZWREZXBlbmRlbmNpZXMiOiB7CiAgICAicGFja2FnZTovL2xvY2FsaG9zdDowL2JpcmRzQDAiOiB7CiAgICAgICJ0eXBlIjogInJlbW90ZSIsCiAgICAgICJ1cmkiOiAicHJvamVjdHBhY2thZ2U6Ly9sb2NhbGhvc3Q6MC9iaXJkc0AwLjUuMCIsCiAgICAgICJjaGVja3N1bXMiOiB7CiAgICAgICAgInNoYTI1NiI6ICIkc2tpcENoZWNrc3VtVmVyaWZpY2F0aW9uIgogICAgICB9CiAgICB9LAogICAgInBhY2thZ2U6Ly9sb2NhbGhvc3Q6MC9mcnVpdEAxIjogewogICAgICAidHlwZSI6ICJyZW1vdGUiLAogICAgICAidXJpIjogInByb2plY3RwYWNrYWdlOi8vbG9jYWxob3N0OjAvZnJ1aXRAMS4xLjAiLAogICAgICAiY2hlY2tzdW1zIjogewogICAgICAgICJzaGEyNTYiOiAiJHNraXBDaGVja3N1bVZlcmlmaWNhdGlvbiIKICAgICAgfQogICAgfQogIH0KfQo="
+  }
+  ["@project2/penguin.pkl"] {
+    uri = "file:/$snippetsDir/input/projects/project2/penguin.pkl"
+    text = """
+      import "@burds/Bird.pkl"
+      
+      bird: Bird = new {
+        name = "Penguin"
+        favoriteFruit {
+          name = "Ice Fruit"
+        }
+      }
+      
+      """
+    base64 = "aW1wb3J0ICJAYnVyZHMvQmlyZC5wa2wiCgpiaXJkOiBCaXJkID0gbmV3IHsKICBuYW1lID0gIlBlbmd1aW4iCiAgZmF2b3JpdGVGcnVpdCB7CiAgICBuYW1lID0gIkljZSBGcnVpdCIKICB9Cn0K"
+  }
+}
