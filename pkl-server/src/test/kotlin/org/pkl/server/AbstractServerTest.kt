@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
-import org.pkl.core.messaging.Message.*
+import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
 
 abstract class AbstractServerTest {
