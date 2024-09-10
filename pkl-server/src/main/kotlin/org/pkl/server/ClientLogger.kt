@@ -17,7 +17,6 @@ package org.pkl.server
 
 import org.pkl.core.Logger
 import org.pkl.core.StackFrame
-import org.pkl.core.messaging.Message.LogMessage
 import org.pkl.core.messaging.MessageTransport
 
 internal class ClientLogger(
