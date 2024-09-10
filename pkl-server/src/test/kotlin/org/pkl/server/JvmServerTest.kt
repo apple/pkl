@@ -33,8 +33,16 @@ class JvmServerTest : AbstractServerTest() {
       val in2 = PipedInputStream()
       val out2 = PipedOutputStream(in2)
       Pair.of(
-        MessageTransports.stream(in1, out2, ::log),
-        MessageTransports.stream(in2, out1, ::log)
+        MessageTransports.stream(
+          ServerMessagePackDecoder(in1),
+          ServerMessagePackEncoder(out2),
+          ::log
+        ),
+        MessageTransports.stream(
+          ServerMessagePackDecoder(in2),
+          ServerMessagePackEncoder(out1),
+          ::log
+        )
       )
     }
   }

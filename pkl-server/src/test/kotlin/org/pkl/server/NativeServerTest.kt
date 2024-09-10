@@ -29,7 +29,13 @@ class NativeServerTest : AbstractServerTest() {
     val executable = PklExecutablePaths.firstExisting.toString()
     server = ProcessBuilder(executable, "server").start()
     client =
-      TestTransport(MessageTransports.stream(server.inputStream, server.outputStream) { _ -> })
+      TestTransport(
+        MessageTransports.stream(
+          ServerMessagePackDecoder(server.inputStream),
+          ServerMessagePackEncoder(server.outputStream)
+        ) { _ ->
+        }
+      )
     executor.execute { client.start() }
   }
 

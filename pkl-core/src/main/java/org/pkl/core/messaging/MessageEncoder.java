@@ -19,5 +19,5 @@ import java.io.IOException;
 
 /** Encodes a stream of messages. */
 public interface MessageEncoder {
-  void encode(Message msg) throws IOException;
+  void encode(Message msg) throws IOException, ProtocolException;
 }
