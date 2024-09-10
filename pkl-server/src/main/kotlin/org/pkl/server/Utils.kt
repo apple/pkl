@@ -21,7 +21,6 @@ import java.util.concurrent.Future
 import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.pkl.core.messaging.Message
-import org.pkl.core.messaging.MessageEncoders
 
 internal fun log(msg: String) {
   if (System.getenv("PKL_DEBUG") == "1") {
@@ -43,7 +42,7 @@ internal val threadLocalBufferPacker: ThreadLocal<MessageBufferPacker> =
 private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> =
   ThreadLocal.withInitial {
     val packer = threadLocalBufferPacker.get()
-    val encoder = MessageEncoders.into(packer);
+    val encoder = ServerMessagePackEncoder(packer);
     { message: Message ->
       packer.clear()
       encoder.encode(message)
