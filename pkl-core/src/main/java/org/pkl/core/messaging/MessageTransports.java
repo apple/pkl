@@ -16,8 +16,6 @@
 package org.pkl.core.messaging;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,14 +28,14 @@ import org.pkl.core.util.Pair;
 public class MessageTransports {
 
   public interface Logger {
+
     void log(String msg);
   }
 
   /** Creates a message transport that reads from [inputStream] and writes to [outputStream]. */
   public static MessageTransport stream(
-      InputStream inputStream, OutputStream outputStream, Logger logger) {
-    return new EncodingMessageTransport(
-        MessageDecoders.from(inputStream), MessageEncoders.into(outputStream), logger);
+      MessageDecoder decoder, MessageEncoder encoder, Logger logger) {
+    return new EncodingMessageTransport(decoder, encoder, logger);
   }
 
   /** Creates "client" and "server" transports that are directly connected to each other. */
@@ -110,6 +108,7 @@ public class MessageTransports {
 
   // TODO: clean up callbacks if evaluation fails for some reason (ThreadInterrupt, timeout, etc)
   protected abstract static class AbstractMessageTransport implements MessageTransport {
+
     private final Logger logger;
     private MessageTransport.OneWayHandler oneWayHandler;
     private MessageTransport.RequestHandler requestHandler;
