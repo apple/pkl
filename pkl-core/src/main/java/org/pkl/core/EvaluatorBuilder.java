@@ -26,7 +26,8 @@ import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.Project;
-import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaderFactories;
+import org.pkl.core.resource.ResourceReaderFactory;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.LoggerImpl;
 import org.pkl.core.util.IoUtils;
@@ -47,7 +48,7 @@ public final class EvaluatorBuilder {
 
   private final List<ModuleKeyFactory> moduleKeyFactories = new ArrayList<>();
 
-  private final List<ResourceReader> resourceReaders = new ArrayList<>();
+  private final List<ResourceReaderFactory> resourceReaderFactories = new ArrayList<>();
 
   private final Map<String, String> environmentVariables = new HashMap<>();
 
@@ -97,13 +98,13 @@ public final class EvaluatorBuilder {
         .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
         .setAllowedModules(SecurityManagers.defaultAllowedModules)
         .setAllowedResources(SecurityManagers.defaultAllowedResources)
-        .addResourceReader(ResourceReaders.environmentVariable())
-        .addResourceReader(ResourceReaders.externalProperty())
-        .addResourceReader(ResourceReaders.file())
-        .addResourceReader(ResourceReaders.http())
-        .addResourceReader(ResourceReaders.https())
-        .addResourceReader(ResourceReaders.pkg())
-        .addResourceReader(ResourceReaders.projectpackage())
+        .addResourceReaderFactory(ResourceReaderFactories.environmentVariable())
+        .addResourceReaderFactory(ResourceReaderFactories.externalProperty())
+        .addResourceReaderFactory(ResourceReaderFactories.file())
+        .addResourceReaderFactory(ResourceReaderFactories.http())
+        .addResourceReaderFactory(ResourceReaderFactories.https())
+        .addResourceReaderFactory(ResourceReaderFactories.pkg())
+        .addResourceReaderFactory(ResourceReaderFactories.projectpackage())
         .addModuleKeyFactory(ModuleKeyFactories.standardLibrary);
 
     if (!TruffleOptions.AOT) {
@@ -111,7 +112,7 @@ public final class EvaluatorBuilder {
       var classLoader = EvaluatorBuilder.class.getClassLoader();
       builder
           .addModuleKeyFactory(ModuleKeyFactories.classPath(classLoader))
-          .addResourceReader(ResourceReaders.classPath(classLoader));
+          .addResourceReaderFactory(ResourceReaderFactories.classPath(classLoader));
 
       // only add system properties when running on JVM
       addSystemProperties(builder);
@@ -276,24 +277,24 @@ public final class EvaluatorBuilder {
     return moduleKeyFactories;
   }
 
-  public EvaluatorBuilder addResourceReader(ResourceReader reader) {
-    resourceReaders.add(reader);
+  public EvaluatorBuilder addResourceReaderFactory(ResourceReaderFactory reader) {
+    resourceReaderFactories.add(reader);
     return this;
   }
 
-  public EvaluatorBuilder addResourceReaders(Collection<ResourceReader> readers) {
-    resourceReaders.addAll(readers);
+  public EvaluatorBuilder addResourceReaderFactories(Collection<ResourceReaderFactory> readers) {
+    resourceReaderFactories.addAll(readers);
     return this;
   }
 
-  public EvaluatorBuilder setResourceReaders(Collection<ResourceReader> readers) {
-    resourceReaders.clear();
-    return addResourceReaders(readers);
+  public EvaluatorBuilder setResourceReaderFactories(Collection<ResourceReaderFactory> readers) {
+    resourceReaderFactories.clear();
+    return addResourceReaderFactories(readers);
   }
 
   /** Returns the currently set resource readers. */
-  public List<ResourceReader> getResourceReaders() {
-    return resourceReaders;
+  public List<ResourceReaderFactory> getResourceReaderFactories() {
+    return resourceReaderFactories;
   }
 
   /**
@@ -463,7 +464,7 @@ public final class EvaluatorBuilder {
     if (settings.modulePath() != null) {
       // indirectly closed by `ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)`
       var modulePathResolver = new ModulePathResolver(settings.modulePath());
-      addResourceReader(ResourceReaders.modulePath(modulePathResolver));
+      addResourceReaderFactory(ResourceReaderFactories.modulePath(modulePathResolver));
       addModuleKeyFactory(ModuleKeyFactories.modulePath(modulePathResolver));
     }
     if (settings.rootDir() != null) {
@@ -493,7 +494,7 @@ public final class EvaluatorBuilder {
         new LoggerImpl(logger, stackFrameTransformer),
         // copy to shield against subsequent modification through builder
         new ArrayList<>(moduleKeyFactories),
-        new ArrayList<>(resourceReaders),
+        new ArrayList<>(resourceReaderFactories),
         new HashMap<>(environmentVariables),
         new HashMap<>(externalProperties),
         timeout,

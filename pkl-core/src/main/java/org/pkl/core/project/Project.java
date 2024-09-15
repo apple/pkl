@@ -48,7 +48,7 @@ import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
-import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.resource.ResourceReaderFactories;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -82,8 +82,8 @@ public final class Project {
             .setStackFrameTransformer(stackFrameTransformer)
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.file())
+            .addResourceReaderFactory(ResourceReaderFactories.environmentVariable())
+            .addResourceReaderFactory(ResourceReaderFactories.file())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .build()) {
@@ -115,8 +115,8 @@ public final class Project {
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.file())
+            .addResourceReaderFactory(ResourceReaderFactories.environmentVariable())
+            .addResourceReaderFactory(ResourceReaderFactories.file())
             .build()) {
       return load(evaluator, moduleSource);
     }

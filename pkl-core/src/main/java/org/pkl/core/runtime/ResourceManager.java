@@ -20,7 +20,9 @@ import com.oracle.truffle.api.nodes.Node;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -30,23 +32,26 @@ import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaderFactory;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.Nullable;
 
 public final class ResourceManager {
-  private final Map<String, ResourceReader> resourceReaders = new HashMap<>();
+  private final Collection<ResourceReaderFactory> readerFactories;
   private final SecurityManager securityManager;
   private final VmObjectFactory<Resource> resourceFactory;
 
   // cache resources indefinitely to make resource reads deterministic
   private final Map<URI, Optional<Object>> resources = new HashMap<>();
 
-  public ResourceManager(SecurityManager securityManager, Collection<ResourceReader> readers) {
+  public ResourceManager(
+      SecurityManager securityManager, Collection<ResourceReaderFactory> readerFactories) {
     this.securityManager = securityManager;
 
-    for (var reader : readers) {
-      resourceReaders.put(reader.getUriScheme(), reader);
-    }
+    // last specified reader wins
+    var factories = new ArrayList<>(readerFactories);
+    Collections.reverse(factories);
+    this.readerFactories = factories;
 
     resourceFactory =
         new VmObjectFactory<Resource>(BaseModule::getResourceClass)
@@ -57,7 +62,7 @@ public final class ResourceManager {
 
   @TruffleBoundary
   public ResourceReader getReader(URI resourceUri, Node readNode) {
-    var reader = resourceReaders.get(resourceUri.getScheme());
+    var reader = getResourceReader(resourceUri);
     if (reader == null) {
       throw new VmExceptionBuilder()
           .withLocation(readNode)
@@ -128,6 +133,12 @@ public final class ResourceManager {
    * null} if there is none.
    */
   public @Nullable ResourceReader getResourceReader(URI baseUri) {
-    return resourceReaders.get(baseUri.getScheme());
+    for (var factory : readerFactories) {
+      var reader = factory.create(baseUri);
+      if (reader.isPresent()) {
+        return reader.get();
+      }
+    }
+    return null;
   }
 }

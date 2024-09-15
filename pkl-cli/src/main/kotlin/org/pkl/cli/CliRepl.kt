@@ -22,7 +22,7 @@ import org.pkl.core.SecurityManagers
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.repl.ReplServer
-import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.resource.ResourceReaderFactories
 
 internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(options.base) {
   override fun doRun() {
@@ -51,14 +51,14 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
               ModuleKeyFactories.genericUrl
             ),
           listOf(
-            ResourceReaders.environmentVariable(),
-            ResourceReaders.externalProperty(),
-            ResourceReaders.modulePath(modulePathResolver),
-            ResourceReaders.file(),
-            ResourceReaders.http(),
-            ResourceReaders.https(),
-            ResourceReaders.pkg(),
-            ResourceReaders.projectpackage()
+            ResourceReaderFactories.environmentVariable(),
+            ResourceReaderFactories.externalProperty(),
+            ResourceReaderFactories.modulePath(modulePathResolver),
+            ResourceReaderFactories.file(),
+            ResourceReaderFactories.http(),
+            ResourceReaderFactories.https(),
+            ResourceReaderFactories.pkg(),
+            ResourceReaderFactories.projectpackage()
           ),
           environmentVariables,
           externalProperties,

@@ -26,8 +26,8 @@ import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.project.Project
-import org.pkl.core.resource.ResourceReader
-import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.resource.ResourceReaderFactories
+import org.pkl.core.resource.ResourceReaderFactory
 import org.pkl.core.settings.PklSettings
 import org.pkl.core.util.IoUtils
 
@@ -224,16 +224,18 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
   }
 
-  private fun resourceReaders(modulePathResolver: ModulePathResolver): List<ResourceReader> {
+  private fun resourceReaderFactories(
+    modulePathResolver: ModulePathResolver
+  ): List<ResourceReaderFactory> {
     return buildList {
-      add(ResourceReaders.environmentVariable())
-      add(ResourceReaders.externalProperty())
-      add(ResourceReaders.modulePath(modulePathResolver))
-      add(ResourceReaders.pkg())
-      add(ResourceReaders.projectpackage())
-      add(ResourceReaders.file())
-      add(ResourceReaders.http())
-      add(ResourceReaders.https())
+      add(ResourceReaderFactories.environmentVariable())
+      add(ResourceReaderFactories.externalProperty())
+      add(ResourceReaderFactories.modulePath(modulePathResolver))
+      add(ResourceReaderFactories.pkg())
+      add(ResourceReaderFactories.projectpackage())
+      add(ResourceReaderFactories.file())
+      add(ResourceReaderFactories.http())
+      add(ResourceReaderFactories.https())
     }
   }
 
@@ -253,7 +255,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setExternalProperties(externalProperties)
       .setEnvironmentVariables(environmentVariables)
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
-      .addResourceReaders(resourceReaders(modulePathResolver))
+      .addResourceReaderFactories(resourceReaderFactories(modulePathResolver))
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)

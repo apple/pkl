@@ -47,7 +47,7 @@ import org.pkl.core.repl.ReplRequest.Reset;
 import org.pkl.core.repl.ReplResponse.EvalError;
 import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
-import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaderFactory;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
@@ -71,7 +71,7 @@ public class ReplServer implements AutoCloseable {
       HttpClient httpClient,
       Logger logger,
       Collection<ModuleKeyFactory> moduleKeyFactories,
-      Collection<ResourceReader> resourceReaders,
+      Collection<ResourceReaderFactory> resourceReaderFactories,
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       @Nullable Path moduleCacheDir,
@@ -103,7 +103,7 @@ public class ReplServer implements AutoCloseable {
                       securityManager,
                       httpClient,
                       moduleResolver,
-                      new ResourceManager(securityManager, resourceReaders),
+                      new ResourceManager(securityManager, resourceReaderFactories),
                       logger,
                       environmentVariables,
                       externalProperties,

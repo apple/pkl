@@ -32,7 +32,7 @@ import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.project.Project;
-import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.resource.ResourceReaderFactories;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
@@ -94,14 +94,14 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
             .setStackFrameTransformer(transformer)
             .setSecurityManager(securityManager)
             .setHttpClient(getOrCreateHttpClient(options))
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.externalProperty())
-            .addResourceReader(ResourceReaders.modulePath(resolver))
-            .addResourceReader(ResourceReaders.pkg())
-            .addResourceReader(ResourceReaders.projectpackage())
-            .addResourceReader(ResourceReaders.file())
-            .addResourceReader(ResourceReaders.http())
-            .addResourceReader(ResourceReaders.https())
+            .addResourceReaderFactory(ResourceReaderFactories.environmentVariable())
+            .addResourceReaderFactory(ResourceReaderFactories.externalProperty())
+            .addResourceReaderFactory(ResourceReaderFactories.modulePath(resolver))
+            .addResourceReaderFactory(ResourceReaderFactories.pkg())
+            .addResourceReaderFactory(ResourceReaderFactories.projectpackage())
+            .addResourceReaderFactory(ResourceReaderFactories.file())
+            .addResourceReaderFactory(ResourceReaderFactories.http())
+            .addResourceReaderFactory(ResourceReaderFactories.https())
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactories(ModuleKeyFactories.fromServiceProviders())
             .addModuleKeyFactory(ModuleKeyFactories.modulePath(resolver))

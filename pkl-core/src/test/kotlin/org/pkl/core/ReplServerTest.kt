@@ -23,7 +23,7 @@ import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
-import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.resource.ResourceReaderFactories
 
 class ReplServerTest {
   private val server =
@@ -36,7 +36,10 @@ class ReplServerTest {
         ModuleKeyFactories.classPath(this::class.java.classLoader),
         ModuleKeyFactories.file
       ),
-      listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+      listOf(
+        ResourceReaderFactories.environmentVariable(),
+        ResourceReaderFactories.externalProperty()
+      ),
       mapOf("NAME1" to "value1", "NAME2" to "value2"),
       mapOf("name1" to "value1", "name2" to "value2"),
       null,

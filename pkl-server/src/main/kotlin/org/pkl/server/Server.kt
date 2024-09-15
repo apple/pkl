@@ -27,8 +27,8 @@ import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.packages.PackageUri
 import org.pkl.core.project.DeclaredDependencies
-import org.pkl.core.resource.ResourceReader
-import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.resource.ResourceReaderFactories
+import org.pkl.core.resource.ResourceReaderFactory
 import org.pkl.core.util.IoUtils
 
 class Server(private val transport: MessageTransport) : AutoCloseable {
@@ -187,7 +187,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       httpClient,
       ClientLogger(evaluatorId, transport),
       createModuleKeyFactories(message, evaluatorId, resolver),
-      createResourceReaders(message, evaluatorId, resolver),
+      createResourceReaderFactories(message, evaluatorId, resolver),
       env,
       properties,
       timeout,
@@ -197,24 +197,27 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     )
   }
 
-  private fun createResourceReaders(
+  private fun createResourceReaderFactories(
     message: CreateEvaluatorRequest,
     evaluatorId: Long,
     modulePathResolver: ModulePathResolver
-  ): List<ResourceReader> = buildList {
-    add(ResourceReaders.environmentVariable())
-    add(ResourceReaders.externalProperty())
-    add(ResourceReaders.file())
-    add(ResourceReaders.http())
-    add(ResourceReaders.https())
-    add(ResourceReaders.pkg())
-    add(ResourceReaders.projectpackage())
-    add(ResourceReaders.modulePath(modulePathResolver))
+  ): List<ResourceReaderFactory> = buildList {
+    add(ResourceReaderFactories.environmentVariable())
+    add(ResourceReaderFactories.externalProperty())
+    add(ResourceReaderFactories.file())
+    add(ResourceReaderFactories.http())
+    add(ResourceReaderFactories.https())
+    add(ResourceReaderFactories.pkg())
+    add(ResourceReaderFactories.projectpackage())
+    add(ResourceReaderFactories.modulePath(modulePathResolver))
     // add client-side resource readers last to ensure they win over builtin ones
-    for (readerSpec in message.clientResourceReaders ?: emptyList()) {
-      val resourceReader = ClientResourceReader(transport, evaluatorId, readerSpec)
-      add(resourceReader)
-    }
+    add(
+      ClientResourceReaderFactory(
+        message.clientResourceReaders ?: emptyList(),
+        transport,
+        evaluatorId
+      )
+    )
   }
 
   private fun createModuleKeyFactories(

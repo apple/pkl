@@ -23,7 +23,7 @@ import org.pkl.core.ast.member.ObjectMember
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.project.DeclaredDependencies
-import org.pkl.core.resource.ResourceReader
+import org.pkl.core.resource.ResourceReaderFactory
 import org.pkl.core.runtime.*
 
 internal class BinaryEvaluator(
@@ -32,7 +32,7 @@ internal class BinaryEvaluator(
   httpClient: HttpClient,
   logger: Logger,
   factories: Collection<ModuleKeyFactory?>,
-  readers: Collection<ResourceReader?>,
+  readerFactories: Collection<ResourceReaderFactory?>,
   environmentVariables: Map<String, String>,
   externalProperties: Map<String, String>,
   timeout: Duration?,
@@ -46,7 +46,7 @@ internal class BinaryEvaluator(
     httpClient,
     logger,
     factories,
-    readers,
+    readerFactories,
     environmentVariables,
     externalProperties,
     timeout,

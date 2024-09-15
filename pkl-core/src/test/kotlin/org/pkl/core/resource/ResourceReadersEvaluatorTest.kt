@@ -52,9 +52,10 @@ class ResourceReadersEvaluatorTest {
     }
 
     ModulePathResolver(listOf(jarFile)).use { resolver ->
-      val reader = ResourceReaders.modulePath(resolver)
+      val readerFactory = ResourceReaderFactories.modulePath(resolver)
 
-      val evaluator = EvaluatorBuilder.preconfigured().addResourceReader(reader).build()
+      val evaluator =
+        EvaluatorBuilder.preconfigured().addResourceReaderFactory(readerFactory).build()
 
       val module =
         evaluator.evaluate(

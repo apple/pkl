@@ -26,6 +26,7 @@ import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
 import org.antlr.v4.runtime.ParserRuleContext
 import org.pkl.core.http.HttpClient
+import org.pkl.core.resource.ResourceReaderFactories
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
@@ -87,8 +88,8 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         ModuleKeyFactories.file
       ),
       listOf(
-        ResourceReaders.environmentVariable(),
-        ResourceReaders.externalProperty()
+        ResourceReaderFactories.environmentVariable(),
+        ResourceReaderFactories.externalProperty()
       ),
       System.getenv(),
       emptyMap(),

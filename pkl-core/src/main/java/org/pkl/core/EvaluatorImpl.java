@@ -35,7 +35,7 @@ import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.project.DeclaredDependencies;
-import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaderFactory;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleResolver;
@@ -73,7 +73,7 @@ public class EvaluatorImpl implements Evaluator {
       HttpClient httpClient,
       Logger logger,
       Collection<ModuleKeyFactory> factories,
-      Collection<ResourceReader> readers,
+      Collection<ResourceReaderFactory> readerFactories,
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       @Nullable Duration timeout,
@@ -96,7 +96,7 @@ public class EvaluatorImpl implements Evaluator {
                       manager,
                       httpClient,
                       moduleResolver,
-                      new ResourceManager(manager, readers),
+                      new ResourceManager(manager, readerFactories),
                       this.logger,
                       environmentVariables,
                       externalProperties,

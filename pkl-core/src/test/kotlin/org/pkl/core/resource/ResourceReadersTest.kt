@@ -124,11 +124,14 @@ class ResourceReadersTest {
 
   @Test
   fun `via service provider`() {
-    val readers = ResourceReaders.fromServiceProviders()
-    assertThat(readers).hasSize(1)
+    val factory = ResourceReaderFactories.fromServiceProviders()
 
-    val reader = readers.single()
-    val resource = reader.read(URI("test:foo"))
+    val uri = URI("test:foo")
+    val maybeReader = factory.create(uri)
+    assertThat(maybeReader).isNotEmpty
+
+    val reader = maybeReader.get()
+    val resource = reader.read(uri)
 
     assertThat(resource).contains("success")
   }

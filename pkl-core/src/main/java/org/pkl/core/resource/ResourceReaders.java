@@ -23,10 +23,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.FileResolver;
@@ -127,14 +125,6 @@ public final class ResourceReaders {
 
   public static ResourceReader projectpackage() {
     return ProjectPackageResource.INSTANCE;
-  }
-
-  /**
-   * Returns resource readers registered as {@link ServiceLoader service providers} of type {@code
-   * org.pkl.core.resource.ResourceReader}.
-   */
-  public static List<ResourceReader> fromServiceProviders() {
-    return FromServiceProviders.INSTANCE;
   }
 
   private static final class EnvironmentVariable implements ResourceReader {
@@ -581,17 +571,6 @@ public final class ResourceReaders {
       }
       return localDependency.resolveAssetUri(
           getProjectDepsResolver().getProjectBaseUri(), packageAssetUri);
-    }
-  }
-
-  private static class FromServiceProviders {
-    private static final List<ResourceReader> INSTANCE;
-
-    static {
-      var loader = IoUtils.createServiceLoader(ResourceReader.class);
-      var readers = new ArrayList<ResourceReader>();
-      loader.forEach(readers::add);
-      INSTANCE = Collections.unmodifiableList(readers);
     }
   }
 }

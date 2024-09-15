@@ -23,7 +23,7 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.core.*
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
-import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.resource.ResourceReaderFactories
 
 class BinaryEvaluatorTest {
   private val evaluator =
@@ -38,7 +38,10 @@ class BinaryEvaluatorTest {
       HttpClient.dummyClient(),
       Loggers.noop(),
       listOf(ModuleKeyFactories.standardLibrary),
-      listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+      listOf(
+        ResourceReaderFactories.environmentVariable(),
+        ResourceReaderFactories.externalProperty()
+      ),
       mapOf(),
       mapOf(),
       null,

@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import org.pkl.core.*;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
-import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.resource.ResourceReaderFactories;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.IoUtils;
@@ -67,7 +67,7 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http htt
             .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
-            .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReaderFactory(ResourceReaderFactories.environmentVariable())
             .addEnvironmentVariables(System.getenv())
             .build()) {
       var module = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Settings);
