@@ -418,6 +418,8 @@ public final class Project {
               modulePath,
               timeout,
               rootDir,
+              null,
+              null,
               null);
     }
 

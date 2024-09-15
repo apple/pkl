@@ -23,6 +23,9 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.random.Random
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.externalProcess.ExternalProcess
+import org.pkl.core.externalProcess.ExternalProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.*
 import org.pkl.core.messaging.Messages.*
@@ -40,6 +43,10 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
   // https://github.com/jano7/executor would be the perfect executor here
   private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+
+  // ExternalProcess instances with the same ExternalReader spec are shared per evaluator
+  private val externalProcesses: MutableMap<Long, MutableMap<ExternalReader, ExternalProcess>> =
+    ConcurrentHashMap()
 
   companion object {
     fun stream(inputStream: InputStream, outputStream: OutputStream): Server =
@@ -130,6 +137,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       return
     }
     evaluator.close()
+
+    // close any running ExternalProcess instances for the closed evaluator
+    externalProcesses[message.evaluatorId]?.values?.forEach { it.close() }
   }
 
   private fun buildDeclaredDependencies(
@@ -225,10 +235,12 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     add(ResourceReaders.pkg())
     add(ResourceReaders.projectpackage())
     add(ResourceReaders.modulePath(modulePathResolver))
+    for ((scheme, spec) in message.externalResourceReaders ?: emptyMap()) {
+      add(ResourceReaders.external(scheme, getExternalProcess(evaluatorId, spec), evaluatorId))
+    }
     // add client-side resource readers last to ensure they win over builtin ones
     for (readerSpec in message.clientResourceReaders ?: emptyList()) {
-      val resourceReader = ClientResourceReader(transport, evaluatorId, readerSpec)
-      add(resourceReader)
+      add(ResourceReaders.external(readerSpec, transport, evaluatorId))
     }
   }
 
@@ -241,6 +253,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     if (message.clientModuleReaders?.isNotEmpty() == true) {
       add(ClientModuleKeyFactory(message.clientModuleReaders, transport, evaluatorId))
     }
+    for ((scheme, spec) in message.externalModuleReaders ?: emptyMap()) {
+      add(ModuleKeyFactories.external(scheme, getExternalProcess(evaluatorId, spec), evaluatorId))
+    }
     add(ModuleKeyFactories.standardLibrary)
     addAll(ModuleKeyFactories.fromServiceProviders())
     add(ModuleKeyFactories.file)
@@ -250,4 +265,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     add(ModuleKeyFactories.http)
     add(ModuleKeyFactories.genericUrl)
   }
+
+  private fun getExternalProcess(evaluatorId: Long, spec: ExternalReader): ExternalProcess =
+    externalProcesses
+      .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
+      .computeIfAbsent(spec) { ExternalProcessImpl(it) }
 }

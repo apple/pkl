@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
+import org.pkl.core.externalProcess.ExternalProcessImpl;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -477,6 +478,18 @@ public final class EvaluatorBuilder {
       setModuleCacheDir(null);
     } else if (settings.moduleCacheDir() != null) {
       setModuleCacheDir(settings.moduleCacheDir());
+    }
+    if (settings.externalModuleReaders() != null) {
+      for (var entry : settings.externalModuleReaders().entrySet()) {
+        var process = new ExternalProcessImpl(entry.getValue());
+        addModuleKeyFactory(ModuleKeyFactories.external(entry.getKey(), process));
+      }
+    }
+    if (settings.externalResourceReaders() != null) {
+      for (var entry : settings.externalResourceReaders().entrySet()) {
+        var process = new ExternalProcessImpl(entry.getValue());
+        addResourceReader(ResourceReaders.external(entry.getKey(), process));
+      }
     }
     return this;
   }

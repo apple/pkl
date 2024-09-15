@@ -998,7 +998,9 @@ abstract class AbstractServerTest {
         cacheDir,
         null,
         project,
-        http
+        http,
+        null,
+        null
       )
 
     send(message)

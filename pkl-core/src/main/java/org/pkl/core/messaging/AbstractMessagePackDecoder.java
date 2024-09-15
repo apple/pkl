@@ -18,6 +18,7 @@ package org.pkl.core.messaging;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -187,5 +188,33 @@ public abstract class AbstractMessagePackDecoder implements MessageDecoder {
     }
 
     return value.stream().map(mapper).toList();
+  }
+
+  protected static <T> @Nullable List<T> unpackListOrNull(
+      Map<Value, Value> map, String key, Function<Value, T> mapper) {
+    var keys = getNullable(map, key);
+    if (keys == null) {
+      return null;
+    }
+
+    var result = new ArrayList<T>(keys.asArrayValue().size());
+    for (Value value : keys.asArrayValue()) {
+      result.add(mapper.apply(value));
+    }
+    return result;
+  }
+
+  protected static <T> @Nullable Map<String, T> unpackStringMapOrNull(
+      Map<Value, Value> map, String key, Function<Map<Value, Value>, T> mapper) {
+    var value = getNullable(map, key);
+    if (value == null) {
+      return null;
+    }
+
+    return value.asMapValue().entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                (e) -> e.getKey().asStringValue().asString(),
+                (e) -> mapper.apply(e.getValue().asMapValue().map())));
   }
 }

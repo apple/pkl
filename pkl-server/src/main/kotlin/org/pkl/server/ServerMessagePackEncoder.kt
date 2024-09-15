@@ -20,6 +20,7 @@ import java.nio.file.Path
 import kotlin.io.path.pathString
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePacker
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackEncoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
@@ -36,7 +37,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun MessagePacker.packHttp(http: Http) {
-    packMapHeader(1, http.proxy)
+    packMapHeader(if (http.caCertificates.isNotEmpty()) 1 else 0, http.proxy)
     packKeyValue("caCertificates", http.caCertificates)
     http.proxy?.let { proxy ->
       packString("proxy")
@@ -75,6 +76,12 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
     packKeyValue("sha256", checksums.sha256)
   }
 
+  private fun MessagePacker.packExternalReader(spec: ExternalReader) {
+    packMapHeader(2)
+    packKeyValue("executable", spec.executable)
+    packKeyValue("arguments", spec.arguments)
+  }
+
   override fun encodeMessage(msg: Message) {
     when (msg.type) {
       Message.Type.CREATE_EVALUATOR_REQUEST -> {
@@ -93,7 +100,9 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           msg.cacheDir,
           msg.outputFormat,
           msg.project,
-          msg.http
+          msg.http,
+          msg.externalModuleReaders,
+          msg.externalResourceReaders,
         )
         packKeyValue("requestId", msg.requestId)
         packKeyValue("allowedModules", msg.allowedModules?.map { it.toString() })
@@ -126,6 +135,22 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
         if (msg.http != null) {
           packer.packString("http")
           packer.packHttp(msg.http)
+        }
+        if (msg.externalModuleReaders != null) {
+          packer.packString("externalModuleReaders")
+          packer.packMapHeader(msg.externalModuleReaders.size)
+          for ((scheme, spec) in msg.externalModuleReaders) {
+            packer.packString(scheme)
+            packer.packExternalReader(spec)
+          }
+        }
+        if (msg.externalResourceReaders != null) {
+          packer.packString("externalResourceReaders")
+          packer.packMapHeader(msg.externalResourceReaders.size)
+          for ((scheme, spec) in msg.externalResourceReaders) {
+            packer.packString(scheme)
+            packer.packExternalReader(spec)
+          }
         }
         return
       }
