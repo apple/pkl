@@ -87,43 +87,29 @@ public class BaseMessagePackDecoder extends AbstractMessagePackDecoder {
     };
   }
 
-  protected static @Nullable List<ModuleReaderSpec> unpackModuleReaderSpec(Map<Value, Value> map)
+  protected static @Nullable ModuleReaderSpec unpackModuleReaderSpec(@Nullable Value value)
       throws DecodeException {
-    var keys = getNullable(map, "clientModuleReaders");
-    if (keys == null) {
+    if (value == null) {
       return null;
     }
-
-    var result = new ArrayList<ModuleReaderSpec>(keys.asArrayValue().size());
-    for (Value value : keys.asArrayValue()) {
-      var readerMap = value.asMapValue().map();
-      result.add(
-          new ModuleReaderSpec(
-              unpackString(readerMap, "scheme"),
-              unpackBoolean(readerMap, "hasHierarchicalUris"),
-              unpackBoolean(readerMap, "isLocal"),
-              unpackBoolean(readerMap, "isGlobbable")));
-    }
-    return result;
+    var map = value.asMapValue().map();
+    return new ModuleReaderSpec(
+        unpackString(map, "scheme"),
+        unpackBoolean(map, "hasHierarchicalUris"),
+        unpackBoolean(map, "isLocal"),
+        unpackBoolean(map, "isGlobbable"));
   }
 
-  protected static @Nullable List<ResourceReaderSpec> unpackResourceReaderSpec(
-      Map<Value, Value> map) throws DecodeException {
-    var keys = getNullable(map, "clientResourceReaders");
-    if (keys == null) {
+  protected static @Nullable ResourceReaderSpec unpackResourceReaderSpec(@Nullable Value value)
+      throws DecodeException {
+    if (value == null) {
       return null;
     }
-
-    var result = new ArrayList<ResourceReaderSpec>(keys.asArrayValue().size());
-    for (Value value : keys.asArrayValue()) {
-      var readerMap = value.asMapValue().map();
-      result.add(
-          new ResourceReaderSpec(
-              unpackString(readerMap, "scheme"),
-              unpackBoolean(readerMap, "hasHierarchicalUris"),
-              unpackBoolean(readerMap, "isGlobbable")));
-    }
-    return result;
+    var map = value.asMapValue().map();
+    return new ResourceReaderSpec(
+        unpackString(map, "scheme"),
+        unpackBoolean(map, "hasHierarchicalUris"),
+        unpackBoolean(map, "isGlobbable"));
   }
 
   protected static @Nullable List<PathElement> unpackPathElements(Map<Value, Value> map, String key)

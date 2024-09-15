@@ -15,8 +15,6 @@
  */
 package org.pkl.core.messaging;
 
-import java.util.*;
-
 public interface Message {
 
   Type getType();
@@ -35,7 +33,12 @@ public interface Message {
     LIST_RESOURCES_REQUEST(0x2a),
     LIST_RESOURCES_RESPONSE(0x2b),
     LIST_MODULES_REQUEST(0x2c),
-    LIST_MODULES_RESPONSE(0x2d);
+    LIST_MODULES_RESPONSE(0x2d),
+    INITIALIZE_MODULE_READER_REQUEST(0x100),
+    INITIALIZE_MODULE_READER_RESPONSE(0x101),
+    INITIALIZE_RESOURCE_READER_REQUEST(0x102),
+    INITIALIZE_RESOURCE_READER_RESPONSE(0x103),
+    CLOSE_EXTERNAL_PROCESS(0x104);
 
     private final int code;
 
