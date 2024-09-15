@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.Set;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.FileResolver;
@@ -141,8 +142,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new EnvironmentVariable();
 
     @Override
-    public String getUriScheme() {
-      return "env";
+    public Set<String> getUriSchemes() {
+      return Set.of("env");
     }
 
     @Override
@@ -184,8 +185,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new ExternalProperty();
 
     @Override
-    public String getUriScheme() {
-      return "prop";
+    public Set<String> getUriSchemes() {
+      return Set.of("prop");
     }
 
     @Override
@@ -224,8 +225,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new FileResource();
 
     @Override
-    public String getUriScheme() {
-      return "file";
+    public Set<String> getUriSchemes() {
+      return Set.of("file");
     }
 
     @Override
@@ -257,8 +258,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new HttpResource();
 
     @Override
-    public String getUriScheme() {
-      return "http";
+    public Set<String> getUriSchemes() {
+      return Set.of("http");
     }
 
     @Override
@@ -276,8 +277,8 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new HttpsResource();
 
     @Override
-    public String getUriScheme() {
-      return "https";
+    public Set<String> getUriSchemes() {
+      return Set.of("https");
     }
 
     @Override
@@ -320,8 +321,8 @@ public final class ResourceReaders {
     }
 
     @Override
-    public String getUriScheme() {
-      return "modulepath";
+    public Set<String> getUriSchemes() {
+      return Set.of("modulepath");
     }
 
     @Override
@@ -375,8 +376,8 @@ public final class ResourceReaders {
     }
 
     @Override
-    public String getUriScheme() {
-      return "modulepath";
+    public Set<String> getUriSchemes() {
+      return Set.of("modulepath");
     }
 
     @Override
@@ -421,8 +422,8 @@ public final class ResourceReaders {
     static final PackageResource INSTANCE = new PackageResource();
 
     @Override
-    public String getUriScheme() {
-      return "package";
+    public Set<String> getUriSchemes() {
+      return Set.of("package");
     }
 
     @Override
@@ -477,8 +478,8 @@ public final class ResourceReaders {
     static final ProjectPackageResource INSTANCE = new ProjectPackageResource();
 
     @Override
-    public String getUriScheme() {
-      return "projectpackage";
+    public Set<String> getUriSchemes() {
+      return Set.of("projectpackage");
     }
 
     @Override

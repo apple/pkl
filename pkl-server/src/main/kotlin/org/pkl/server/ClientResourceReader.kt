@@ -41,7 +41,7 @@ internal class ClientResourceReader(
 
   override fun isGlobbable(): Boolean = readerSpec.isGlobbable
 
-  override fun getUriScheme() = readerSpec.scheme
+  override fun getUriSchemes() = setOf(readerSpec.scheme)
 
   override fun read(uri: URI): Optional<Any> = Optional.of(Resource(uri, doRead(uri)))
 

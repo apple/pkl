@@ -23,7 +23,7 @@ class TestResourceReader : ResourceReader {
 
   override fun isGlobbable(): Boolean = false
 
-  override fun getUriScheme(): String = "test"
+  override fun getUriSchemes(): Set<String> = setOf("test")
 
   override fun read(uri: URI): Optional<Any> = Optional.of("success")
 }

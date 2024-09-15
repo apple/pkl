@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.Set;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.runtime.ReaderBase;
 
@@ -31,7 +32,7 @@ import org.pkl.core.runtime.ReaderBase;
  */
 public interface ResourceReader extends ReaderBase {
   /** The URI scheme associated with resources read by this resource reader. */
-  String getUriScheme();
+  Set<String> getUriSchemes();
 
   /**
    * Reads the resource with the given URI. Returns {@code Optional.empty()} if a resource with the
