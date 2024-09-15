@@ -91,6 +91,12 @@ rootDir: String?
 /// Configuration of outgoing HTTP requests.
 http: Http?
 
+/// Configuration for external module reader processes.
+externalModuleReaders: Mapping<String, ExternalReader>?
+
+/// Configuration for external resource reader processes.
+externalResourceReaders: Mapping<String, ExternalReader>?
+
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
   /// Configuration of the HTTP proxy to use.
@@ -143,4 +149,19 @@ class Proxy {
   /// }
   /// ```
   noProxy: Listing<String>(isDistinct)
+}
+
+class ExternalReader {
+  /// The external reader executable.
+  /// 
+  /// Will be spawned with the same environment variables and working directory as the Pkl process.
+  /// Executable is resolved according to the operating system's process spawning rules.
+  /// On macOS, Linux, and Windows platforms, this may be:
+  ///   * An absolute path
+  ///   * A relative path (to the currrent working directory)
+  ///   * The name of the executable, to be resolved against the `PATH` environment variable 
+  executable: String
+  
+  /// Additional command line arguments passed to the external reader process.
+  arguments: Listing<String>
 }
