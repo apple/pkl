@@ -38,6 +38,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalProcess.ExternalProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
@@ -317,7 +318,7 @@ public final class IoUtils {
 
   private static URI resolveTripleDotImport(
       SecurityManager securityManager, ModuleKey moduleKey, String tripleDotPath)
-      throws IOException, SecurityManagerException {
+      throws IOException, SecurityManagerException, ExternalProcessException {
     var moduleKeyUri = moduleKey.getUri();
     if (!moduleKey.isLocal() || !moduleKey.hasHierarchicalUris()) {
       throw new VmExceptionBuilder()
@@ -363,7 +364,8 @@ public final class IoUtils {
     return Pair.of(importPath.substring(1, idx), importPath.substring(idx));
   }
 
-  private static URI resolveProjectDependency(ModuleKey moduleKey, String notation) {
+  private static URI resolveProjectDependency(ModuleKey moduleKey, String notation)
+      throws IOException, ExternalProcessException {
     var parsed = parseDependencyNotation(notation);
     var name = parsed.getFirst();
     var path = parsed.getSecond();
@@ -395,7 +397,7 @@ public final class IoUtils {
    * dependency notation ()
    */
   public static URI resolve(SecurityManager securityManager, ModuleKey moduleKey, URI importUri)
-      throws URISyntaxException, IOException, SecurityManagerException {
+      throws URISyntaxException, IOException, SecurityManagerException, ExternalProcessException {
     if (importUri.isAbsolute()) {
       return moduleKey.resolveUri(importUri);
     }

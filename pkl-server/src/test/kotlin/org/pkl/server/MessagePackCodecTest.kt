@@ -25,6 +25,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.msgpack.core.MessagePack
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageDecoder
 import org.pkl.core.messaging.MessageEncoder
@@ -36,7 +37,8 @@ class MessagePackCodecTest {
   private val decoder: MessageDecoder
 
   init {
-    val inputStream = PipedInputStream()
+    val inputStream =
+      PipedInputStream(10240) // use larger pipe size since large messages can be >1024 bytes
     val outputStream = PipedOutputStream(inputStream)
     encoder = ServerMessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
     decoder = ServerMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
@@ -64,66 +66,102 @@ class MessagePackCodecTest {
       )
     val moduleReader1 = ModuleReaderSpec("moduleReader1", true, true, true)
     val moduleReader2 = ModuleReaderSpec("moduleReader2", true, false, false)
+    val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
     roundtrip(
       CreateEvaluatorRequest(
-        123,
-        listOf("pkl", "file", "https").map(Pattern::compile),
-        listOf("pkl", "file", "https", "resourceReader1", "resourceReader2").map(Pattern::compile),
-        listOf(moduleReader1, moduleReader2),
-        listOf(resourceReader1, resourceReader2),
-        listOf(Path.of("some/path.zip"), Path.of("other/path.zip")),
-        mapOf("KEY1" to "VALUE1", "KEY2" to "VALUE2"),
-        mapOf("property1" to "value1", "property2" to "value2"),
-        Duration.ofSeconds(10),
-        Path.of("root/dir"),
-        Path.of("cache/dir"),
-        "pcf",
-        Project(
-          URI("file:///dummy/PklProject"),
-          null,
-          mapOf(
-            "foo" to
-              Project(
-                URI("file:///foo"),
-                URI("package://localhost:0/foo@1.0.0"),
-                mapOf(
-                  "bar" to
-                    Project(URI("file:///bar"), URI("package://localhost:0/bar@1.1.0"), emptyMap())
-                )
-              ),
-            "baz" to RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
-          )
-        ),
-        Http(
-          byteArrayOf(1, 2, 3, 4),
-          PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz"))
-        )
+        requestId = 123,
+        allowedModules = listOf("pkl", "file", "https").map(Pattern::compile),
+        allowedResources =
+          listOf("pkl", "file", "https", "resourceReader1", "resourceReader2")
+            .map(Pattern::compile),
+        clientResourceReaders = listOf(resourceReader1, resourceReader2),
+        clientModuleReaders = listOf(moduleReader1, moduleReader2),
+        modulePaths = listOf(Path.of("some/path.zip"), Path.of("other/path.zip")),
+        env = mapOf("KEY1" to "VALUE1", "KEY2" to "VALUE2"),
+        properties = mapOf("property1" to "value1", "property2" to "value2"),
+        timeout = Duration.ofSeconds(10),
+        rootDir = Path.of("root/dir"),
+        cacheDir = Path.of("cache/dir"),
+        outputFormat = "pcf",
+        project =
+          Project(
+            projectFileUri = URI("file:///dummy/PklProject"),
+            packageUri = null,
+            dependencies =
+              mapOf(
+                "foo" to
+                  Project(
+                    projectFileUri = URI("file:///foo"),
+                    packageUri = URI("package://localhost:0/foo@1.0.0"),
+                    dependencies =
+                      mapOf(
+                        "bar" to
+                          Project(
+                            projectFileUri = URI("file:///bar"),
+                            packageUri = URI("package://localhost:0/bar@1.1.0"),
+                            dependencies = emptyMap()
+                          )
+                      )
+                  ),
+                "baz" to
+                  RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
+              )
+          ),
+        http =
+          Http(
+            proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
+            caCertificates = byteArrayOf(1, 2, 3, 4)
+          ),
+        externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
+        externalResourceReaders = mapOf("external" to externalReader),
       )
     )
   }
 
   @Test
   fun `round-trip CreateEvaluatorResponse`() {
-    roundtrip(CreateEvaluatorResponse(123, 456, null))
+    roundtrip(CreateEvaluatorResponse(requestId = 123, evaluatorId = 456, error = null))
   }
 
   @Test
   fun `round-trip CloseEvaluator`() {
-    roundtrip(CloseEvaluator(123))
+    roundtrip(CloseEvaluator(evaluatorId = 123))
   }
 
   @Test
   fun `round-trip EvaluateRequest`() {
-    roundtrip(EvaluateRequest(123, 456, URI("some/module.pkl"), null, "some + expression"))
+    roundtrip(
+      EvaluateRequest(
+        requestId = 123,
+        evaluatorId = 456,
+        moduleUri = URI("some/module.pkl"),
+        moduleText = null,
+        expr = "some + expression"
+      )
+    )
   }
 
   @Test
   fun `round-trip EvaluateResponse`() {
-    roundtrip(EvaluateResponse(123, 456, byteArrayOf(1, 2, 3, 4, 5), null))
+    roundtrip(
+      EvaluateResponse(
+        requestId = 123,
+        evaluatorId = 456,
+        result = byteArrayOf(1, 2, 3, 4, 5),
+        error = null
+      )
+    )
   }
 
   @Test
   fun `round-trip LogMessage`() {
-    roundtrip(LogMessage(123, 0, "Hello, world!", "file:///some/module.pkl"))
+    roundtrip(
+      LogMessage(
+        evaluatorId = 123,
+        level = 0,
+        message = "Hello, world!",
+        frameUri = "file:///some/module.pkl"
+      )
+    )
   }
 }

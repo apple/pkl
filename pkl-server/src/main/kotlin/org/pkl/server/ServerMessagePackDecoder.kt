@@ -24,6 +24,7 @@ import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackDecoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
@@ -39,8 +40,8 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           get(map, "requestId").asIntegerValue().asLong(),
           unpackStringListOrNull(map, "allowedModules", Pattern::compile),
           unpackStringListOrNull(map, "allowedResources", Pattern::compile),
-          unpackModuleReaderSpec(map),
-          unpackResourceReaderSpec(map),
+          unpackListOrNull(map, "clientModuleReaders") { unpackModuleReaderSpec(it)!! },
+          unpackListOrNull(map, "clientResourceReaders") { unpackResourceReaderSpec(it)!! },
           unpackStringListOrNull(map, "modulePaths", Path::of),
           unpackStringMapOrNull(map, "env"),
           unpackStringMapOrNull(map, "properties"),
@@ -49,7 +50,9 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           unpackStringOrNull(map, "cacheDir", Path::of),
           unpackStringOrNull(map, "outputFormat"),
           map.unpackProject(),
-          map.unpackHttp()
+          map.unpackHttp(),
+          unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
+          unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader)
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(
@@ -126,4 +129,7 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
       dependencyName to Project(URI(projectFileUri), packageUri, dependencies)
     }
   }
+
+  private fun unpackExternalReader(map: Map<Value, Value>): ExternalReader =
+    ExternalReader(unpackString(map, "executable"), unpackStringListOrNull(map, "arguments")!!)
 }

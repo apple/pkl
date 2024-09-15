@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalProcess.ExternalProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -108,7 +109,7 @@ public final class OutputBenchmarkNodes {
     }
 
     @Override
-    public boolean hasHierarchicalUris() {
+    public boolean hasHierarchicalUris() throws IOException, ExternalProcessException {
       return delegate.hasHierarchicalUris();
     }
 
@@ -118,19 +119,19 @@ public final class OutputBenchmarkNodes {
     }
 
     @Override
-    public boolean isGlobbable() {
+    public boolean isGlobbable() throws IOException, ExternalProcessException {
       return delegate.isGlobbable();
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI uri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalProcessException {
       return delegate.hasElement(securityManager, uri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalProcessException {
       return delegate.listElements(securityManager, baseUri);
     }
   }

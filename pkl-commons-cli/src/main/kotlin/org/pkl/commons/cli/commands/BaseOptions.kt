@@ -28,6 +28,8 @@ import java.time.Duration
 import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.shlex
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
@@ -207,6 +209,34 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val externalModuleReaders: Map<String, ExternalReader> by
+    option(
+        names = arrayOf("--external-module"),
+        metavar = "<scheme>='<executable>[ <arguments>]'",
+        help = "External reader registrations for module URI schemes"
+      )
+      .splitPair("=")
+      .convert { // in newer clikt versions this can be done in one call using associateWith
+        val cmd = shlex(it.second)
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+      }
+      .multiple()
+      .toMap()
+
+  val externalResourceReaders: Map<String, ExternalReader> by
+    option(
+        names = arrayOf("--external-resource"),
+        metavar = "<scheme>='<executable>[ <arguments>]'",
+        help = "External reader registrations for resource URI schemes"
+      )
+      .splitPair("=")
+      .convert { // in newer clikt versions this can be done in one call using associateWith
+        val cmd = shlex(it.second)
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+      }
+      .multiple()
+      .toMap()
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -239,7 +269,9 @@ class BaseOptions : OptionGroup() {
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
       httpProxy = proxy,
-      httpNoProxy = noProxy ?: emptyList()
+      httpNoProxy = noProxy ?: emptyList(),
+      externalModuleReaders = externalModuleReaders,
+      externalResourceReaders = externalResourceReaders,
     )
   }
 }

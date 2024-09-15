@@ -28,7 +28,8 @@ class JvmServerTest : AbstractServerTest() {
     if (USE_DIRECT_TRANSPORT) {
       MessageTransports.direct(::log)
     } else {
-      val in1 = PipedInputStream()
+      val in1 =
+        PipedInputStream(10240) // use larger pipe size since large messages can be >1024 bytes
       val out1 = PipedOutputStream(in1)
       val in2 = PipedInputStream()
       val out2 = PipedOutputStream(in2)

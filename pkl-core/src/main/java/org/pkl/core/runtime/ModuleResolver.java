@@ -16,11 +16,13 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.nodes.Node;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import org.pkl.core.ModuleSource;
+import org.pkl.core.externalProcess.ExternalProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;
@@ -81,6 +83,18 @@ public final class ModuleResolver {
             .withOptionalLocation(importNode)
             .evalError("invalidModuleUri", moduleUri)
             .withHint(e.getReason())
+            .build();
+      } catch (ExternalProcessException e) {
+        throw new VmExceptionBuilder()
+            .withOptionalLocation(importNode)
+            .evalError("externalReaderFailure")
+            .withCause(e)
+            .build();
+      } catch (IOException e) {
+        throw new VmExceptionBuilder()
+            .withOptionalLocation(importNode)
+            .evalError("ioErrorLoadingModule")
+            .withCause(e)
             .build();
       }
       if (key.isPresent()) return key.get();

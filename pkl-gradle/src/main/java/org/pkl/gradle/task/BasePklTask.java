@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -170,7 +171,9 @@ public abstract class BasePklTask extends DefaultTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
-              getHttpNoProxy().getOrElse(List.of()));
+              getHttpNoProxy().getOrElse(List.of()),
+              Map.of(),
+              Map.of());
     }
     return cachedOptions;
   }

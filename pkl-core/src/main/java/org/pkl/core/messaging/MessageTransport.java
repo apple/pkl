@@ -20,15 +20,15 @@ import java.io.IOException;
 /** A bidirectional transport for sending and receiving messages. */
 public interface MessageTransport extends AutoCloseable {
   interface OneWayHandler {
-    void handleOneWay(Message.OneWay msg);
+    void handleOneWay(Message.OneWay msg) throws ProtocolException;
   }
 
   interface RequestHandler {
-    void handleRequest(Message.Request msg);
+    void handleRequest(Message.Request msg) throws ProtocolException;
   }
 
   interface ResponseHandler {
-    void handleResponse(Message.Response msg);
+    void handleResponse(Message.Response msg) throws ProtocolException;
   }
 
   void start(OneWayHandler oneWayHandler, RequestHandler requestHandler)
@@ -40,4 +40,7 @@ public interface MessageTransport extends AutoCloseable {
       throws ProtocolException, IOException;
 
   void send(Message.Response message) throws ProtocolException, IOException;
+
+  @Override
+  void close();
 }

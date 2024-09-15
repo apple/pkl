@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import org.pkl.core.messaging.Message.OneWay;
 import org.pkl.core.messaging.Message.Response;
 import org.pkl.core.util.ErrorMessages;
@@ -28,7 +30,6 @@ import org.pkl.core.util.Pair;
 public class MessageTransports {
 
   public interface Logger {
-
     void log(String msg);
   }
 
@@ -45,6 +46,18 @@ public class MessageTransports {
     transport1.setOther(transport2);
     transport2.setOther(transport1);
     return Pair.of(transport1, transport2);
+  }
+
+  public static <T> T resolveFuture(Future<T> future) throws IOException {
+    try {
+      return future.get();
+    } catch (ExecutionException | InterruptedException e) {
+      if (e.getCause() instanceof IOException ioExc) {
+        throw ioExc;
+      } else {
+        throw new IOException("external read failure", e.getCause());
+      }
+    }
   }
 
   protected static class EncodingMessageTransport extends AbstractMessageTransport {
@@ -156,7 +169,7 @@ public class MessageTransports {
     }
 
     @Override
-    public final void close() throws Exception {
+    public final void close() {
       log("Closing transport: {0}", this);
       doClose();
       responseHandlers.clear();

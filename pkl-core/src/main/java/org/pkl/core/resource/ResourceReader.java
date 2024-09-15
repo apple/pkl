@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalProcess.ExternalProcessException;
 import org.pkl.core.runtime.ReaderBase;
 
 /**
@@ -54,5 +55,6 @@ public interface ResourceReader extends ReaderBase {
    *       manager.
    * </ul>
    */
-  Optional<Object> read(URI uri) throws IOException, URISyntaxException, SecurityManagerException;
+  Optional<Object> read(URI uri)
+      throws IOException, URISyntaxException, SecurityManagerException, ExternalProcessException;
 }

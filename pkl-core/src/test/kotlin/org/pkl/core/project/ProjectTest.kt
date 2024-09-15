@@ -70,6 +70,8 @@ class ProjectTest {
         listOf(path.resolve("modulepath1/"), path.resolve("modulepath2/")),
         Duration.ofMinutes(5.0),
         path,
+        null,
+        null,
         null
       )
     val expectedAnnotations =

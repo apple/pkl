@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
+import org.pkl.core.externalProcess.ExternalProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;
@@ -103,6 +104,8 @@ public abstract class ReadGlobNode extends AbstractReadNode {
           .evalError("invalidGlobPattern", globPattern)
           .withHint(e.getMessage())
           .build();
+    } catch (ExternalProcessException e) {
+      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
   }
 }

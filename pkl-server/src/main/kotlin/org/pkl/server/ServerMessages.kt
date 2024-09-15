@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.*
 import java.util.regex.Pattern
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.Proxy
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.Messages.*
@@ -43,7 +44,9 @@ data class CreateEvaluatorRequest(
   val cacheDir: Path?,
   val outputFormat: String?,
   val project: Project?,
-  val http: Http?
+  val http: Http?,
+  val externalModuleReaders: Map<String, ExternalReader>?,
+  val externalResourceReaders: Map<String, ExternalReader>?
 ) : Message.Client.Request {
 
   override fun getType(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
@@ -74,7 +77,9 @@ data class CreateEvaluatorRequest(
       cacheDir.equalsNullable(other.cacheDir) &&
       outputFormat.equalsNullable(other.outputFormat) &&
       project.equalsNullable(other.project) &&
-      http.equalsNullable(other.http)
+      http.equalsNullable(other.http) &&
+      externalModuleReaders.equalsNullable(other.externalModuleReaders) &&
+      externalResourceReaders.equalsNullable(other.externalResourceReaders)
   }
 
   @Suppress("DuplicatedCode") // false duplicate within method
@@ -94,6 +99,8 @@ data class CreateEvaluatorRequest(
     result = 31 * result + project.hashCode()
     result = 31 * result + type.hashCode()
     result = 31 * result + http.hashCode()
+    result = 31 * result + externalModuleReaders.hashCode()
+    result = 31 * result + externalResourceReaders.hashCode()
     return result
   }
 }
