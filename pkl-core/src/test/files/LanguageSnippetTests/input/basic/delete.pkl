@@ -1,0 +1,97 @@
+amends ".../snippetTest.pkl"
+
+facts {
+  ["literal deletion of entries"] {
+    (new Mapping {
+      ["deleteFoo"] = 1
+      ["deleteBar"] = 2
+      ["deleteBaz"] = 3
+      ["deleteQux"] = 4
+    }) {
+      ["deleteBar"] = delete
+      ["deleteBaz"] = 42
+      ["deleteQux"] = delete
+    }.toMap() == Map("deleteFoo", 1, "deleteBaz", 42)
+  }
+
+  ["literal deletion of elements"] {
+    (new Listing {
+      "foo"
+      "bar"
+      "baz"
+    }) {
+      [1] = delete
+    }.toList() == List("foo", "baz")
+  }
+
+  ["member predicate deletion"] {
+    local source = (new Dynamic {
+      "one"
+      "two"
+      "three"
+      "four"
+      "five"
+      ["foo"] = "six"
+      ["bar"] = "seven"
+      ["baz"] = "eight"
+    }) {
+      [[contains("e")]] = delete
+    }
+    source.toList() == List("two", "four")
+    source.toMap() == Map("foo", "six")
+  }
+
+  ["deleted properties are no longer listed in errors"] {
+    local source = (new Dynamic {
+      foo = 1
+      bar = 2
+      baz = 3
+    }) {
+      foo = delete
+    }
+    !module.catch(() -> source.qux).contains("foo")
+  }
+
+  ["element indices are correctly renamed"] {
+    local source = (new Dynamic {
+      "foo"
+      "bar"
+      "baz"
+    }) {
+      [1] = delete
+    }
+    new Dynamic {
+      for (i, v in source) {
+        "\(i) -> \(v)"
+      }
+    }.toList() == List("0 -> foo", "1 -> baz")
+  }
+  
+  ["direct element access after multiple deletes"] {
+    local source = (new Dynamic {
+      "zero"  //  0  0  0
+      "one"   //  1  -  -
+      "two"   //  2  1  -
+      "three" //  3  -  -  
+      "four"  //  4  2  -
+      "five"  //  5  3  1
+      "six"   //  6  -  -
+      "seven" //  7  4  -
+      "eight" //  8  5  2
+    }) {
+      [1] = delete
+      [3] = delete
+      [6] = delete
+    } {
+      [1] = delete
+      [2] = delete
+      [3] = "expected"
+      [4] = delete
+    }
+    local result = source[1]
+    source[1] == "expected"
+    result == "expected"
+    source[2] == "eight"
+  }
+}
+

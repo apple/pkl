@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -142,7 +141,7 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  public boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
+  public boolean iterateMembers(MemberConsumer consumer) {
     return true;
   }
 

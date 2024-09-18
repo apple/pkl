@@ -65,6 +65,11 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
+  public boolean hasElements() {
+    return false;
+  }
+
+  @Override
   public boolean isPrototype() {
     return this == getPrototype();
   }

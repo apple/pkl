@@ -62,7 +62,7 @@ public final class VmDynamic extends VmObject {
     return length;
   }
 
-  /** Tells whether this object has any elements. */
+  @Override
   public boolean hasElements() {
     return length != 0;
   }

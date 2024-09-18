@@ -119,6 +119,10 @@ public abstract class Member {
     return VmModifier.isType(modifiers);
   }
 
+  public final boolean isDelete() {
+    return VmModifier.isDelete(modifiers);
+  }
+
   public final boolean isLocalOrExternalOrHidden() {
     return VmModifier.isLocalOrExternalOrHidden(modifiers);
   }
@@ -127,7 +131,7 @@ public abstract class Member {
     return VmModifier.isConstOrFixed(modifiers);
   }
 
-  public final boolean isLocalOrExternalOrAbstract() {
-    return VmModifier.isLocalOrExternalOrAbstract(modifiers);
+  public final boolean isLocalOrExternalOrAbstractOrDelete() {
+    return VmModifier.isLocalOrExternalOrAbstractOrDelete(modifiers);
   }
 }
