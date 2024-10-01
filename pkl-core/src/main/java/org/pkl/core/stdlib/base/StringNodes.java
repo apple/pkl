@@ -739,6 +739,22 @@ public final class StringNodes {
     }
   }
 
+  public abstract static class splitLimit extends ExternalMethod2Node {
+    @TruffleBoundary
+    @Specialization
+    protected VmList eval(String self, String separator, long limit) {
+      var parts = self.split(Pattern.quote(separator), (int) limit);
+      return VmList.create(parts);
+    }
+
+    @TruffleBoundary
+    @Specialization
+    protected VmList eval(String self, VmRegex separator, long limit) {
+      var parts = separator.getPattern().split(self, (int) limit);
+      return VmList.create(parts);
+    }
+  }
+
   public abstract static class capitalize extends ExternalMethod0Node {
     @TruffleBoundary
     @Specialization

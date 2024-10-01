@@ -1367,6 +1367,12 @@ external class String extends Any {
   /// Splits this string around matches of [pattern].
   external function split(pattern: String|Regex): List<String>
 
+  /// Splits this string matches of [pattern], up to [limit] substrings.
+  /// 
+  /// Returns a [List] with at most [limit] elements.
+  @Since { version = "0.27.0" } 
+  external function splitLimit(pattern: String|Regex, limit: Int(this > 0)): List<String>
+
   /// Converts the first character of this string to title case.
   ///
   /// Facts:
