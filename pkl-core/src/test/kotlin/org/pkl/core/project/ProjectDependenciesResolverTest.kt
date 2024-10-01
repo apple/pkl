@@ -86,6 +86,7 @@ class ProjectDependenciesResolverTest {
           }
         }
       }
+      
     """
           .trimIndent()
       )

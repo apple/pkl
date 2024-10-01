@@ -44,6 +44,7 @@ class ProjectDepsTest {
             }
           }
         }
+        
       """
       .trimIndent()
 
