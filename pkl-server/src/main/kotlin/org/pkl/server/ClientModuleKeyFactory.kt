@@ -74,7 +74,7 @@ internal class ClientModuleKeyFactory(
                     if (response.error != null) {
                       completeExceptionally(IOException(response.error))
                     } else {
-                      complete(response.contents!!)
+                      complete(response.contents ?: "")
                     }
                   }
                   else -> {

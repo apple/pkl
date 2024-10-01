@@ -91,7 +91,7 @@ internal class ClientResourceReader(
                 if (response.error != null) {
                   completeExceptionally(IOException(response.error))
                 } else {
-                  complete(response.contents!!)
+                  complete(response.contents ?: ByteArray(0))
                 }
               }
               else -> {

@@ -414,6 +414,8 @@ The response to <<read-resource-request>>.
 If successful, `contents` is set.
 Otherwise, `error` is set.
 
+If neither is set, `contents` defaults to an empty byte array.
+
 [source,pkl]
 ----
 /// A number identifying this request.
@@ -462,6 +464,8 @@ Type: <<client-message,Client>> <<response-message,Response>>
 The response to <<read-module-request>>.
 If successful, `contents` is set.
 Otherwise, `error` is set.
+
+If neither is set, `contents` defaults to an empty string.
 
 [source,pkl]
 ----
