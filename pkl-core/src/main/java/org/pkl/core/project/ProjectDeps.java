@@ -218,6 +218,7 @@ public final class ProjectDeps {
       }
       jsonWriter.endObject();
       jsonWriter.endObject();
+      jsonWriter.newline();
       jsonWriter.close();
     }
   }
