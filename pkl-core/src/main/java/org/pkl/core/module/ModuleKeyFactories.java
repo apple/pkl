@@ -294,9 +294,10 @@ public final class ModuleKeyFactories {
 
       var spec = process.getModuleReaderSpec(scheme);
       if (spec == null) {
-        throw new ExternalProcessException(ErrorMessages.create("externalReaderDoesNotSupportScheme", "module", scheme));
+        throw new ExternalProcessException(
+            ErrorMessages.create("externalReaderDoesNotSupportScheme", "module", scheme));
       }
-      
+
       return Optional.of(ModuleKeys.external(uri, spec, getResolver()));
     }
 

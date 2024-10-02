@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -37,12 +39,14 @@ import org.pkl.core.util.Nullable;
 
 public class ExternalProcessImpl implements ExternalProcess {
 
+  private static final long CLOSE_TIMEOUT = 3000; // 3 seconds
+
   private final ExternalReader spec;
   private final @Nullable String logPrefix;
   private final Map<String, Future<@Nullable ModuleReaderSpec>> initializeModuleReaderResponses =
       new ConcurrentHashMap<>();
-  private final Map<String, Future<@Nullable ResourceReaderSpec>> initializeResourceReaderResponses =
-      new ConcurrentHashMap<>();
+  private final Map<String, Future<@Nullable ResourceReaderSpec>>
+      initializeResourceReaderResponses = new ConcurrentHashMap<>();
 
   private @GuardedBy("this") boolean closed = false;
 
@@ -127,9 +131,33 @@ public class ExternalProcessImpl implements ExternalProcess {
       return;
     }
 
-    transport.close();
-    process.destroy();
-    process = null;
+    try {
+      getTransport().send(new CloseExternalProcess());
+
+      // forcefully stop the process after the timeout
+      // note that both transport.close() and process.destroy() are safe to call multiple times
+      new Timer()
+          .schedule(
+              new TimerTask() {
+                @Override
+                public void run() {
+                  if (process != null) {
+                    transport.close();
+                    process.destroy();
+                  }
+                }
+              },
+              CLOSE_TIMEOUT);
+
+      // block on process exit
+      process.onExit().get();
+    } catch (Exception e) {
+      transport.close();
+      process.destroy();
+    } finally {
+      process = null;
+      transport = null;
+    }
   }
 
   @Override

@@ -25,7 +25,8 @@ public interface ExternalProcess extends AutoCloseable {
 
   MessageTransport getTransport() throws ExternalProcessException;
 
-  @Nullable ModuleReaderSpec getModuleReaderSpec(String scheme) throws IOException;
+  @Nullable
+  ModuleReaderSpec getModuleReaderSpec(String scheme) throws IOException;
 
   @Nullable
   ResourceReaderSpec getResourceReaderSpec(String scheme) throws IOException;

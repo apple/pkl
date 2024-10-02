@@ -54,6 +54,7 @@ public class ExternalProcessMessagePackDecoder extends BaseMessagePackDecoder {
       case INITIALIZE_RESOURCE_READER_RESPONSE ->
           new InitializeResourceReaderResponse(
               unpackLong(map, "requestId"), unpackResourceReaderSpec(getNullable(map, "spec")));
+      case CLOSE_EXTERNAL_PROCESS -> new CloseExternalProcess();
       default -> super.decodeMessage(msgType, map);
     };
   }

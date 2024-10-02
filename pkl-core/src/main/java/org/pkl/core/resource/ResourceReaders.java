@@ -641,7 +641,8 @@ public final class ResourceReaders {
 
       var spec = process.getResourceReaderSpec(scheme);
       if (spec == null) {
-        throw new ExternalProcessException(ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
+        throw new ExternalProcessException(
+            ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
       }
       delegate = new ExternalDelegate(spec, process.getTransport(), evaluatorId);
       return delegate;

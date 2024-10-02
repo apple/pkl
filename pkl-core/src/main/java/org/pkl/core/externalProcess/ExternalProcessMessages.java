@@ -144,4 +144,18 @@ public class ExternalProcessMessages {
       return result;
     }
   }
+
+  public static class CloseExternalProcess extends Message.Base implements Message.Server.OneWay {
+    public CloseExternalProcess() {
+      super(Type.CLOSE_EXTERNAL_PROCESS);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      return o instanceof CloseExternalProcess;
+    }
+  }
 }

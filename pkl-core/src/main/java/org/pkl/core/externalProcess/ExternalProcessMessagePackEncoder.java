@@ -68,6 +68,10 @@ public class ExternalProcessMessagePackEncoder extends BaseMessagePackEncoder {
           packResourceReaderSpec(m.getSpec());
         }
       }
+      case CLOSE_EXTERNAL_PROCESS -> {
+        var v = (CloseExternalProcess) msg;
+        packer.packMapHeader(0);
+      }
       default -> super.encodeMessage(msg);
     }
   }
