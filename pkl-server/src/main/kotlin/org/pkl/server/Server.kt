@@ -27,8 +27,9 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.externalProcess.ExternalProcess
 import org.pkl.core.externalProcess.ExternalProcessImpl
 import org.pkl.core.http.HttpClient
-import org.pkl.core.messaging.*
-import org.pkl.core.messaging.Messages.*
+import org.pkl.core.messaging.MessageTransport
+import org.pkl.core.messaging.MessageTransports
+import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
@@ -192,8 +193,13 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         message.http?.proxy?.let { proxy ->
           setProxy(proxy.address, proxy.noProxy ?: listOf())
           proxy.address?.let(IoUtils::setSystemProxy)
+          proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
         }
-        message.http?.caCertificates?.let { caCertificates -> addCertificates(caCertificates) }
+        message.http?.caCertificates?.let { caCertificates ->
+          if (caCertificates.isNotEmpty()) {
+            addCertificates(caCertificates)
+          }
+        }
         buildLazily()
       }
     val dependencies =
