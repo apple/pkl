@@ -49,6 +49,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       throw e
     } catch (e: Exception) {
       throw CliBugException(e)
+    } finally {
+      externalProcesses.values.forEach(ExternalProcessImpl::close)
     }
   }
 
@@ -254,9 +256,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   private fun resourceReaders(modulePathResolver: ModulePathResolver): List<ResourceReader> {
     return buildList {
-      externalResourceReaders.forEach { (key, value) ->
-        add(ResourceReaders.external(key, externalProcesses[value]!!))
-      }
       add(ResourceReaders.environmentVariable())
       add(ResourceReaders.externalProperty())
       add(ResourceReaders.modulePath(modulePathResolver))
@@ -265,6 +264,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ResourceReaders.file())
       add(ResourceReaders.http())
       add(ResourceReaders.https())
+      externalResourceReaders.forEach { (key, value) ->
+        add(ResourceReaders.external(key, externalProcesses[value]!!))
+      }
     }
   }
 
