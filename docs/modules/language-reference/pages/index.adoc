@@ -3199,7 +3199,8 @@ This section discusses language features that are generally more relevant to tem
 <<grammar-definition,Grammar Definition>> +
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
-<<projects,Projects>>
+<<projects,Projects>> +
+<<external-readers,External Readers>>
 
 [[meaning-of-new]]
 === Meaning of `new`
@@ -5465,3 +5466,68 @@ It can be imported using dependency notation, i.e. `import "@fruit/Pear.pkl"`.
 At runtime, it will resolve to relative path `../fruit/Pear.pkl`.
 
 When packaging projects with local dependencies, both the project and its dependent project must be passed to the xref:pkl-cli:index.adoc#command-project-package[`pkl project package`] command.
+
+[[external-readers]]
+=== External Readers
+
+External readers are a mechanism to extend the <<modules,module>> and <<resources,resource>> URI schemes that Pkl supports.
+Readers are implemented as ordinary executables and use Pkl's xref:bindings-specification:message-passing-api.adoc[message passing API] to communicate with the hosting Pkl evaluator.
+The xref:swift:ROOT:index.adoc[Swift] and xref:go:ROOT:index.adoc[Go] language binding libraries provide an `ExternalReaderRuntime` type to facilitate implementing external readers.
+
+External readers are configured separately for modules and resources.
+They are registered by mapping their URI scheme to the executable to run and additonal arguments to pass.
+This is done on the command line by passing `--external-resource` and `--external-module` flags, which may both be passed multiple times.
+
+[source,text]
+----
+$ pkl eval <module> --external-resource <scheme>=<executable> --external-module <scheme>='<executable> <argument> <argument>'
+----
+
+External readers may also be configured in a <<projects, Project's>> `PklProject` file.
+[source,{pkl}]
+----
+evaluatorSettings {
+  externalResourceReaders {
+    ["<scheme>"] {
+      executable = "<executable>"
+    }
+  }
+  externalModuleReaders {
+    ["<scheme>"] {
+      executable = "<executable>"
+      arguments { "<arg>"; "<arg>" }
+    }
+  }
+}
+----
+
+Registering an external reader for a scheme automatically adds that scheme to the default allowed modules/resources.
+As with Pkl's built-in module and resource schemes, setting explicit allowed modules or resources overrides this behavior and appropriate patterns must be specified to allow use of external readers.
+
+==== Example
+
+Consider this module:
+
+[source,{pkl}]
+----
+username = "pigeon"
+
+email = read("ldap://ds.example.com:389/dc=example,dc=com?mail?sub?(uid=\(username))").text
+----
+
+Pkl doesn't implement the `ldap:` resource URI scheme natively, but an external reader can provide it.
+Assuming a hypothetical `pkl-ldap` executable implementing the external reader protocol and the `ldap:` scheme is in the `$PATH`, this module can be evaluated as:
+
+[source,text]
+----
+$ pkl eval <module> --external-resource ldap=pkl-ldap
+username = "pigeon"
+email = "pigeon@example.com"
+----
+
+In this example, the external reader may provide both `ldap:` and `ldaps:` schemes.
+To support both schemes during evaluation, both would need to be registered explicitly:
+[source,text]
+----
+$ pkl eval <module> --external-resource ldap=pkl-ldap --external-resource ldaps=pkl-ldap
+----
