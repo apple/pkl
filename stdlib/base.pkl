@@ -1370,6 +1370,15 @@ external class String extends Any {
   /// Splits this string matches of [pattern], up to [limit] substrings.
   /// 
   /// Returns a [List] with at most [limit] elements.
+  /// If the limit has been reached, the last entry will contain the un-split remainder of this string.
+  ///
+  /// Facts:
+  /// ```
+  /// "a.b.c".splitLimit(".", 2) == List("a", "b.c")
+  /// "a.b.c".splitLimit(".", 1) == List("a.b.c")
+  /// "a.b.c".splitLimit(".", 50) == List("a", "b", "c")
+  /// "a.b:c".splitLimit(Regex("[.:]"), 3) == List("a", "b", "c")
+  /// ```
   @Since { version = "0.27.0" } 
   external function splitLimit(pattern: String|Regex, limit: Int(this > 0)): List<String>
 
