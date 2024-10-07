@@ -1899,6 +1899,9 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Tells if this mapping contains [key].
   external function containsKey(key: Any): Boolean
+  
+  /// Tells if this mapping contains an entry with the given [value].
+  external function containsValue(value: Any): Boolean
 
   /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
   ///

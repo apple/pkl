@@ -107,6 +107,18 @@ public final class MappingNodes {
       return false;
     }
   }
+  
+  public abstract static class containsValue extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmMapping self, Object value) {
+      for (var key : self.getAllKeys()) {
+        if (value.equals(VmUtils.readMember(self, key))) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
 
   public abstract static class getOrNull extends ExternalMethod1Node {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
