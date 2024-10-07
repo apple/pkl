@@ -107,6 +107,12 @@ facts {
     base.every((k, v) -> k == "Parrot" || v.age > 30)
     !base.every((k, _) -> k == "Pigeon")
   }
+  
+  ["any()"] {
+    base.any((k, _) -> k.contains("rot"))
+    base.any((_, v) -> v.age > 40)
+    !base.any((k, _) -> k.contains("other"))
+  }
 }
 
 examples {

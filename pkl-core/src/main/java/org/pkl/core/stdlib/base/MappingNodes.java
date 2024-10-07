@@ -170,6 +170,22 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class any extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      var result = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, unforcedValue) -> {
+            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+            result.set(applyLambdaNode.executeBoolean(function, key, value));
+            return !result.get();
+          });
+      return result.get();
+    }
+  }
+
   public abstract static class toMap extends ExternalMethod0Node {
     @Specialization
     protected VmMap eval(VmMapping self) {

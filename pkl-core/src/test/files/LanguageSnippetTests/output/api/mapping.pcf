@@ -53,6 +53,11 @@ facts {
     true
     true
   }
+  ["any()"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["getOrNull()"] {
