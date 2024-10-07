@@ -46,7 +46,7 @@ public abstract class VmValue {
 
   /**
    * Tells if this value is a {@link VmCollection}, {@link VmListing}, or {@link VmDynamic} with
-   * {@link VmDynamic#hasElements() elements}.
+   * {@link VmObject#hasElements() elements}.
    */
   public boolean isSequence() {
     return false;

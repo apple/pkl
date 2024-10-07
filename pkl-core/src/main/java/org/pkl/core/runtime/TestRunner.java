@@ -247,12 +247,13 @@ public final class TestRunner {
             return true;
           }
           if (examples.getCachedValue(groupKey) == null) {
+            var key = String.valueOf(groupKey);
             allGroupsSucceeded.set(false);
             results
-                .newResult(String.valueOf(groupKey))
+                .newResult(key)
                 .addFailure(
                     Failure.buildExamplePropertyMismatchFailure(
-                        getDisplayUri(groupMember), String.valueOf(groupKey), false));
+                        getDisplayUri(groupMember), key, false));
           }
           return true;
         });

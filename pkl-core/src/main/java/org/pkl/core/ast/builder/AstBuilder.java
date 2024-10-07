@@ -651,7 +651,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   private ObjectMember doVisitObjectProperty(ObjectPropertyContext ctx) {
     return doVisitObjectProperty(
-        ctx, ctx.modifier(), ctx.Identifier(), ctx.typeAnnotation(), ctx.expr(), ctx.objectBody());
+        ctx,
+        ctx.modifier(),
+        ctx.Identifier(),
+        ctx.typeAnnotation(),
+        ctx.v,
+        ctx.d,
+        ctx.objectBody());
   }
 
   private ObjectMember doVisitObjectMethod(ObjectMethodContext ctx) {
@@ -720,6 +726,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       TerminalNode propertyName,
       @Nullable TypeAnnotationContext typeAnnCtx,
       @Nullable ExprContext exprCtx,
+      @Nullable Token deleteToken,
       @Nullable List<? extends ObjectBodyContext> bodyCtx) {
 
     return doVisitObjectProperty(
@@ -730,18 +737,21 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         propertyName.getText(),
         typeAnnCtx,
         exprCtx,
+        deleteToken,
         bodyCtx);
   }
 
   private ObjectMember doVisitObjectProperty(
       SourceSection sourceSection,
       SourceSection headerSection,
-      int modifiers,
+      int propertyModifiers,
       String propertyName,
       @Nullable TypeAnnotationContext typeAnnCtx,
       @Nullable ExprContext exprCtx,
+      @Nullable Token deleteToken,
       @Nullable List<? extends ObjectBodyContext> bodyCtx) {
 
+    var modifiers = propertyModifiers | (deleteToken == null ? 0 : VmModifier.DELETE);
     var isLocal = VmModifier.isLocal(modifiers);
     var identifier = Identifier.property(propertyName, isLocal);
 
@@ -783,6 +793,15 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                         // 2. if in a const scope (i.e. `const bar = new { foo { ... } }`),
                         // `super.foo` does not reference something outside the scope.
                         false));
+          } else if (deleteToken != null) {
+            var deleteSourceSection = createSourceSection(deleteToken);
+            if (isLocal) {
+              throw exceptionBuilder()
+                  .evalError("cannotDeleteLocalProperty")
+                  .withSourceSection(deleteSourceSection)
+                  .build();
+            }
+            bodyNode = VmUtils.DELETE_MARKER;
           } else { // foo = ...
             assert exprCtx != null;
             bodyNode = visitExpr(exprCtx);
@@ -1218,7 +1237,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.k));
 
     return symbolTable.enterEntry(
-        keyNode, objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody()));
+        keyNode,
+        objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.d, ctx.objectBody()));
   }
 
   private Pair<ExpressionNode, ObjectMember> doVisitObjectEntry(ObjectEntryContext ctx) {
@@ -1232,20 +1252,22 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var keyNode = visitExpr(ctx.k);
 
     return symbolTable.enterEntry(
-        keyNode, objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody()));
+        keyNode,
+        objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.d, ctx.objectBody()));
   }
 
   private Function<EntryScope, Pair<ExpressionNode, ObjectMember>> objectMemberInserter(
       SourceSection sourceSection,
       ExpressionNode keyNode,
       @Nullable ExprContext valueCtx,
+      @Nullable Token deleteToken,
       List<? extends ObjectBodyContext> objectBodyCtxs) {
     return scope -> {
       var member =
           new ObjectMember(
               sourceSection,
               keyNode.getSourceSection(),
-              VmModifier.ENTRY,
+              VmModifier.ENTRY | (deleteToken == null ? 0 : VmModifier.DELETE),
               null,
               scope.getQualifiedName());
 
@@ -2610,6 +2632,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               ctx.Identifier(),
               ctx.typeAnnotation(),
               ctx.expr(),
+              null,
               ctx.objectBody());
 
       if (moduleInfo.isAmend() && !member.isLocal() && ctx.typeAnnotation() != null) {

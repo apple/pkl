@@ -1,0 +1,23 @@
+facts {
+  ["literal deletion of entries"] {
+    true
+  }
+  ["literal deletion of elements"] {
+    true
+  }
+  ["member predicate deletion"] {
+    true
+    true
+  }
+  ["deleted properties are no longer listed in errors"] {
+    true
+  }
+  ["element indices are correctly renamed"] {
+    true
+  }
+  ["direct element access after multiple deletes"] {
+    true
+    true
+    true
+  }
+}

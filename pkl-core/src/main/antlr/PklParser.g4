@@ -217,14 +217,14 @@ objectBody
   ;
 
 objectMember
-  : modifier* Identifier (typeAnnotation? '=' expr | objectBody+)  # objectProperty
-  | methodHeader '=' expr                                          # objectMethod
-  | t='[[' k=expr err1=']'? err2=']'? ('=' v=expr | objectBody+)   # memberPredicate
-  | t='[' k=expr err1=']'? err2=']'? ('=' v=expr | objectBody+)    # objectEntry
-  | expr                                                           # objectElement
-  | ('...' | '...?') expr                                          # objectSpread
-  | 'when' '(' e=expr err=')'? (b1=objectBody ('else' b2=objectBody)?)   # whenGenerator
-  | 'for' '(' t1=parameter (',' t2=parameter)? 'in' e=expr err=')'? objectBody   # forGenerator
+  : modifier* Identifier (typeAnnotation? '=' (v=expr | d='delete') | objectBody+) # objectProperty
+  | methodHeader '=' expr                                                          # objectMethod
+  | t='[[' k=expr err1=']'? err2=']'? ('=' (v=expr | d='delete') | objectBody+)    # memberPredicate
+  | t='[' k=expr err1=']'? err2=']'? ('=' (v=expr | d='delete') | objectBody+)     # objectEntry
+  | expr                                                                           # objectElement
+  | ('...' | '...?') expr                                                          # objectSpread
+  | 'when' '(' e=expr err=')'? (b1=objectBody ('else' b2=objectBody)?)             # whenGenerator
+  | 'for' '(' t1=parameter (',' t2=parameter)? 'in' e=expr err=')'? objectBody     # forGenerator
   ;
 
 stringConstant
@@ -247,7 +247,6 @@ reservedKeyword
   : 'protected'
   | 'override'
   | 'record'
-  | 'delete'
   | 'case'
   | 'switch'
   | 'vararg'

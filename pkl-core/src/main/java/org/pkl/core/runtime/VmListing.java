@@ -77,6 +77,11 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     return length;
   }
 
+  @Override
+  public boolean hasElements() {
+    return !isEmpty();
+  }
+
   public boolean isEmpty() {
     return length == 0;
   }

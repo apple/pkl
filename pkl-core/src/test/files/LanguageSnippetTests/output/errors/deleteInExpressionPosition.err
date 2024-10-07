@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Keyword `delete` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
+
+x | bar = if (false) 0 else delete
+                            ^^^^^^
+at deleteInExpressionPosition (file:///$snippetsDir/input/errors/deleteInExpressionPosition.pkl)

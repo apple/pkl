@@ -1,0 +1,8 @@
+foo = new Dynamic {
+  bar = 42
+  baz = false
+}
+
+qux = (foo) {
+  bar = if (false) 0 else delete
+}
