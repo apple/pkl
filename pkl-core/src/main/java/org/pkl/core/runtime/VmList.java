@@ -219,6 +219,9 @@ public final class VmList extends VmCollection {
   public VmCollection.Builder<VmList> builder() {
     return new Builder();
   }
+  
+  @TruffleBoundary
+  public static VmCollection.Builder<VmList> newBuilder() { return new Builder(); }
 
   @TruffleBoundary
   public Object getFirst() {

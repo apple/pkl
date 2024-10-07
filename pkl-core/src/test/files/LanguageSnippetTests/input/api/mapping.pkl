@@ -82,6 +82,12 @@ facts {
     base2.keys == Set(empty, base)
     derived2.keys == Set(empty, base, derived)
   }
+  
+  ["values"] {
+    empty.values == List()
+    base.values == base.toMap().values
+    derived.values == derived.toMap().values
+  }
 }
 
 examples {
