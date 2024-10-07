@@ -1910,6 +1910,11 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
+  
+  /// Tells if [predicate] holds for every entry of this mapping.
+  /// 
+  /// Returns [true] for an empty mapping.
+  external function every(predicate: (Key, Value) -> Boolean): Boolean
 
   /// Converts this mapping to a [Map].
   external function toMap(): Map<Key, Value>

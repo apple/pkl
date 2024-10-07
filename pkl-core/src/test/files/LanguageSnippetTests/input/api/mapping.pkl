@@ -101,6 +101,12 @@ facts {
     base.entries == base.toMap().entries
     derived.entries == derived.toMap().entries
   }
+  
+  ["every()"] {
+    empty.every((_, _) -> throw("unreachable code"))
+    base.every((k, v) -> k == "Parrot" || v.age > 30)
+    !base.every((k, _) -> k == "Pigeon")
+  }
 }
 
 examples {
