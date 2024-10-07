@@ -19,12 +19,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmMap;
+import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
 /** Delegates to the equally named key of the map stored in extra storage. */
 public final class DelegateToExtraStorageMapOrParentNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
+    var receiver = (VmObjectLike) VmUtils.getReceiver(frame);
     var owner = VmUtils.getOwner(frame);
     var delegate = (VmMap) owner.getExtraStorage();
     var memberKey = VmUtils.getMemberKey(frame);
@@ -33,6 +35,6 @@ public final class DelegateToExtraStorageMapOrParentNode extends ExpressionNode 
     if (result != null) return result;
     var parent = owner.getParent();
     assert parent != null;
-    return VmUtils.readMember(parent, memberKey);
+    return VmUtils.readMember(receiver, parent, memberKey);
   }
 }
