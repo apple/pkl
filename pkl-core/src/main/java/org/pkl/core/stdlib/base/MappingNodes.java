@@ -19,6 +19,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.HashSet;
+import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction3Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction3NodeGen;
 import org.pkl.core.runtime.*;
@@ -141,6 +143,20 @@ public final class MappingNodes {
             return true;
           });
       return result.get();
+    }
+  }
+  
+  public abstract static class every extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      for (var key : self.getAllKeys()) {
+        if (!applyLambdaNode.executeBoolean(function, key, VmUtils.readMember(self, key))) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 
