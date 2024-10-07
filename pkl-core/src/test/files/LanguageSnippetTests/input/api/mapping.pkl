@@ -88,6 +88,12 @@ facts {
     base.values == base.toMap().values
     derived.values == derived.toMap().values
   }
+  
+  ["entries"] {
+    empty.entries == List()
+    base.entries == base.toMap().entries
+    derived.entries == derived.toMap().entries
+  }
 }
 
 examples {
