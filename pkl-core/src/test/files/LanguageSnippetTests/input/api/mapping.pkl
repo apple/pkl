@@ -58,6 +58,13 @@ facts {
     !empty2.containsKey("Pigeon")
   }
   
+  ["containsValue()"] {
+    !empty.containsValue("Any value")
+    for (_, v in derived) {
+      derived.containsValue(v)
+    }
+  }
+  
   ["length"] {
     empty.length == 0
     base.length == 2

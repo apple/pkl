@@ -18,6 +18,12 @@ facts {
     true
     true
   }
+  ["containsValue()"] {
+    true
+    true
+    true
+    true
+  }
   ["length"] {
     true
     true
