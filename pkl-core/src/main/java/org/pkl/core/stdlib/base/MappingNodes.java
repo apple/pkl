@@ -27,6 +27,7 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableLong;
 import org.pkl.core.util.MutableReference;
 
@@ -109,6 +110,21 @@ public final class MappingNodes {
       }
 
       return false;
+    }
+  }
+
+  public abstract static class containsValue extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmMapping self, Object value) {
+      MutableBoolean foundValue = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, unforcedMemberValue) -> {
+            var memberValue =
+                unforcedMemberValue != null ? unforcedMemberValue : VmUtils.readMember(self, key);
+            foundValue.set(value.equals(memberValue));
+            return !foundValue.get();
+          });
+      return foundValue.get();
     }
   }
 
