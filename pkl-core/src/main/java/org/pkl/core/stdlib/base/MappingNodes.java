@@ -73,6 +73,17 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class values extends ExternalPropertyNode {
+    @Specialization
+    protected VmList eval(VmMapping self) {
+      var builder = VmList.newBuilder();
+      for (var key : self.getAllKeys()) {
+        builder.add(VmUtils.readMember(self, key));
+      }
+      return builder.build();
+    }
+  }
+
   public abstract static class containsKey extends ExternalMethod1Node {
     @Specialization
     protected boolean eval(VmMapping self, Object key) {

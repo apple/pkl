@@ -32,6 +32,11 @@ facts {
     true
     true
   }
+  ["values"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["getOrNull()"] {

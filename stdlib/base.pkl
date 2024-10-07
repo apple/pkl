@@ -1890,6 +1890,9 @@ class Mapping<out Key, out Value> extends Object {
 
   /// The keys contained in this mapping.
   external keys: Set<Key>
+  
+  /// The values contained in this mapping.
+  external values: List<Value>
 
   /// Tells if this mapping contains [key].
   external function containsKey(key: Any): Boolean
