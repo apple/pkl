@@ -1915,6 +1915,11 @@ class Mapping<out Key, out Value> extends Object {
   /// 
   /// Returns [true] for an empty mapping.
   external function every(predicate: (Key, Value) -> Boolean): Boolean
+  
+  /// Tells if [predicate] holds for at least one entry of this mapping.
+  /// 
+  /// Returns [false] for an empty mapping.
+  external function any(predicate: (Key, Value) -> Boolean): Boolean
 
   /// Converts this mapping to a [Map].
   external function toMap(): Map<Key, Value>
