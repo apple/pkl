@@ -37,6 +37,11 @@ facts {
     true
     true
   }
+  ["entries"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["getOrNull()"] {

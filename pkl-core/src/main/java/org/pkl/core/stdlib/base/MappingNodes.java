@@ -86,6 +86,19 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class entries extends ExternalPropertyNode {
+    @Specialization
+    protected VmList eval(VmMapping self) {
+      var builder = VmList.EMPTY.builder();
+      self.forceAndIterateMemberValues(
+          (key, member, value) -> {
+            builder.add(new VmPair(key, value));
+            return true;
+          });
+      return builder.build();
+    }
+  }
+
   public abstract static class containsKey extends ExternalMethod1Node {
     @Specialization
     protected boolean eval(VmMapping self, Object key) {
