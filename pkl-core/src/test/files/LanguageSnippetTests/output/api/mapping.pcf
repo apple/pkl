@@ -48,6 +48,11 @@ facts {
     true
     true
   }
+  ["every()"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["getOrNull()"] {
