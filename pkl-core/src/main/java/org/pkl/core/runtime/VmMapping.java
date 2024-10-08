@@ -127,6 +127,20 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
 
     return properties;
   }
+  
+  public VmDynamic toDynamic() {
+    var keys = getAllKeys();
+    var builder = new VmObjectBuilder(keys.getLength());
+    for (var key: keys) {
+      var member = VmUtils.readMember(this, key);
+      if (key instanceof String) {
+        builder.addProperty(Identifier.get((String) key), member);
+      } else {
+        builder.addEntry(key, member);
+      }
+    }
+    return builder.toDynamic();
+  }
 
   @Override
   public void accept(VmValueVisitor visitor) {
