@@ -113,6 +113,12 @@ facts {
     base.any((_, v) -> v.age > 40)
     !base.any((k, _) -> k.contains("other"))
   }
+  
+  ["toDynamic()"] {
+    empty.toDynamic() == new Dynamic {}
+    base.toDynamic() == base.toMap().toDynamic()
+    derived.toDynamic() == derived.toMap().toDynamic()
+  }
 }
 
 examples {
