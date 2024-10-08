@@ -58,6 +58,14 @@ facts {
     true
     true
   }
+  ["toDynamic()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
 }
 examples {
   ["getOrNull()"] {

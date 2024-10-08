@@ -15,14 +15,20 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.member.DelegateToExtraStorageObjOrParentNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
@@ -126,6 +132,47 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
         });
 
     return properties;
+  }
+
+  public VmDynamic toDynamic() {
+    EconomicMap<Object, ObjectMember> members = EconomicMaps.create(this.members.size());
+    iterateMemberValues(
+        (key, member, value) -> {
+          if (key instanceof String name) {
+            var identifier = Identifier.get(name);
+            if (isDefaultProperty(identifier)) {
+              CompilerDirectives.transferToInterpreter();
+              throw new VmExceptionBuilder().evalError("cannotConvertDefaultProperty").build();
+            }
+            var property =
+                new ObjectMember(
+                    VmUtils.unavailableSourceSection(),
+                    VmUtils.unavailableSourceSection(),
+                    VmModifier.NONE,
+                    identifier,
+                    name);
+            property.initMemberNode(
+                new UntypedObjectMemberNode(
+                    null,
+                    new FrameDescriptor(),
+                    property,
+                    new DelegateToExtraStorageObjOrParentNode(true)));
+            members.put(identifier, property);
+          } else {
+            assert isDefaultProperty(key);
+            members.put(key, member);
+          }
+
+          return true;
+        });
+    var result =
+        new VmDynamic(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getDynamicClass().getPrototype(),
+            members,
+            0);
+    result.setExtraStorage(this);
+    return result;
   }
 
   @Override

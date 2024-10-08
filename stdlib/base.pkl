@@ -1923,6 +1923,11 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Converts this mapping to a [Map].
   external function toMap(): Map<Key, Value>
+  
+  /// Converts this mapping to a [Dynamic] object.
+  /// 
+  /// This conversion explicitly excludes the `default` property.
+  external function toDynamic(): Dynamic
 }
 
 /// Base class for function literals (also known as *lambda expressions*).

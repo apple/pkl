@@ -504,7 +504,7 @@ public final class VmClass extends VmValue {
                         null,
                         new FrameDescriptor(),
                         member,
-                        new DelegateToExtraStorageObjOrParentNode()));
+                        new DelegateToExtraStorageObjOrParentNode(false)));
       }
       return __dynamicToTypedMembers;
     }

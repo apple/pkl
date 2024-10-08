@@ -113,6 +113,15 @@ facts {
     base.any((_, v) -> v.age > 40)
     !base.any((k, _) -> k.contains("other"))
   }
+  
+  ["toDynamic()"] {
+    empty.toDynamic() == new Dynamic {}
+    base.toDynamic() == base.toMap().toDynamic()
+    derived.toDynamic() == derived.toMap().toDynamic()
+    base["Pigeon"] == base.toDynamic().Pigeon
+    (base.toDynamic()) { ["no default"] {} }["no default"] == new Dynamic {}
+    module.catch(() -> (base) { ["default"] {} }.toDynamic()).contains(#"Cannot convert `Mapping` with `"default"` entry key"#)
+  }
 }
 
 examples {

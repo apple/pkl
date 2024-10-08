@@ -17,6 +17,7 @@ package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
@@ -25,11 +26,20 @@ import org.pkl.core.runtime.VmUtils;
  * exists, delegates to its own parent member.
  */
 public final class DelegateToExtraStorageObjOrParentNode extends ExpressionNode {
+  private final boolean propertiesAreEntriesInExtraStorage;
+
+  public DelegateToExtraStorageObjOrParentNode(boolean propertiesAreEntriesInExtraStorage) {
+    this.propertiesAreEntriesInExtraStorage = propertiesAreEntriesInExtraStorage;
+  }
+
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     var owner = VmUtils.getOwner(frame);
     var delegate = (VmObjectLike) owner.getExtraStorage();
     var memberKey = VmUtils.getMemberKey(frame);
+    if (propertiesAreEntriesInExtraStorage && memberKey instanceof Identifier id) {
+      memberKey = id.toString();
+    }
     var result = VmUtils.readMemberOrNull(delegate, memberKey);
     if (result != null) return result;
     var parent = owner.getParent();

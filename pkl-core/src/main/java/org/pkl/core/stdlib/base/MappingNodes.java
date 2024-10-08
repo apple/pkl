@@ -198,4 +198,11 @@ public final class MappingNodes {
       return builder.build();
     }
   }
+
+  public abstract static class toDynamic extends ExternalMethod0Node {
+    @Specialization
+    protected VmDynamic eval(VmMapping self) {
+      return self.toDynamic();
+    }
+  }
 }
