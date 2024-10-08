@@ -130,6 +130,10 @@ examples {
     math.atan(math.tan(-2.34))
   }
 
+  ["atan2"] {
+    math.atan2(4, -3)
+  }
+
   ["gcd"] {
     math.gcd(0, 0)
     math.gcd(4, 6)
