@@ -1863,6 +1863,17 @@ class Listing<out Element> extends Object {
   @AlsoKnownAs { names { "unique" } }
   external distinct: Listing<Element>
 
+  /// The first element in this listing.
+  ///
+  /// Throws if this listing is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.first == 1
+  /// (import "pkl:test").catch(() -> new Listing {}.first)
+  /// ```
+  external first: Element
+
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
   ///
   /// Facts:
