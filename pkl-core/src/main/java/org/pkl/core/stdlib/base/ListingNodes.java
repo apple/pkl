@@ -47,7 +47,7 @@ public final class ListingNodes {
   public abstract static class lastIndex extends ExternalPropertyNode {
     @Specialization
     protected long eval(VmListing self) {
-      return self.getLastIndex();
+      return self.getLength() - 1;
     }
   }
   

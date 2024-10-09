@@ -82,10 +82,6 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     return length == 0;
   }
   
-  public long getLastIndex() {
-    return length - 1;
-  }
-  
   @TruffleBoundary
   public Object getOrNull(long index) {
     if (index < 0 || index >= length) {
