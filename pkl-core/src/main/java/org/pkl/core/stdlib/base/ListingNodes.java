@@ -44,6 +44,13 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class lastIndex extends ExternalPropertyNode {
+    @Specialization
+    protected long eval(VmListing self) {
+      return self.getLength() - 1;
+    }
+  }
+
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary
