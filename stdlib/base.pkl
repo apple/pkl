@@ -1903,6 +1903,9 @@ class Listing<out Element> extends Object {
   /// ```
   external single: Element
 
+  /// Same as [single] but returns [null] if this collection is empty or has more than one element.
+  external singleOrNull: Element?
+
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
   ///
   /// Facts:

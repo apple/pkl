@@ -106,6 +106,12 @@ facts {
     module.catch(() -> base.single) == "Expected a single-element Listing."
     new Listing { 42 }.single == 42
   }
+
+  ["singleOrNull"] {
+    empty.singleOrNull == null
+    base.singleOrNull == null
+    new Listing { 42 }.singleOrNull == 42
+  }
 }
 
 examples {
