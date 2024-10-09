@@ -55,6 +55,11 @@ facts {
     true
     true
   }
+  ["last"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {
