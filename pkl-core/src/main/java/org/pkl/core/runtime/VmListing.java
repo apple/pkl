@@ -80,7 +80,11 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   public boolean isEmpty() {
     return length == 0;
   }
-
+  
+  public long getLastIndex() {
+    return length - 1;
+  }
+  
   @Override
   public boolean isSequence() {
     return true;

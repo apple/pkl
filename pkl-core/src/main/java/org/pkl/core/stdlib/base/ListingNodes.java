@@ -43,6 +43,13 @@ public final class ListingNodes {
       return self.isEmpty();
     }
   }
+  
+  public abstract static class lastIndex extends ExternalPropertyNode {
+    @Specialization
+    protected long eval(VmListing self) {
+      return self.getLastIndex();
+    }
+  }
 
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization
