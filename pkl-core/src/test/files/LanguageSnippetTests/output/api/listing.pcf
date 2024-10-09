@@ -65,6 +65,11 @@ facts {
     true
     true
   }
+  ["single"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {

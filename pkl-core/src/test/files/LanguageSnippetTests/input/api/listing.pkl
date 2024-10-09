@@ -100,6 +100,12 @@ facts {
     base.lastOrNull == base[2]
     derived.lastOrNull == derived[4]
   }
+
+  ["single"] {
+    module.catch(() -> empty.single) == "Expected a single-element Listing."
+    module.catch(() -> base.single) == "Expected a single-element Listing."
+    new Listing { 42 }.single == 42
+  }
 }
 
 examples {
