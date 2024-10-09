@@ -66,6 +66,16 @@ facts {
     !derived.isDistinctBy((it) -> it.getClass())
     !duplicate.isDistinctBy((it) -> it.getClass())
   }
+  
+  ["getOrNull"] {
+    empty.getOrNull(-1) == null
+    empty.getOrNull(0) == null
+    base.getOrNull(-1) == null
+    for (i, v in base) {
+      base.getOrNull(i) == v
+    }
+    base.getOrNull(base.length) == null
+  }
 }
 
 examples {
