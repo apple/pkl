@@ -45,6 +45,11 @@ facts {
     true
     true
   }
+  ["first"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {

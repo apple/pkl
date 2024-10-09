@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
@@ -91,6 +92,12 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       return VmNull.withoutDefault();
     }
     return VmUtils.readMember(this, index);
+  }
+  
+  @TruffleBoundary
+  public Object getFirst() {
+    checkNonEmpty();
+    return VmUtils.readMember(this, 0L);
   }
 
   @Override
@@ -188,5 +195,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
 
     cachedHash = result;
     return result;
+  }
+
+  private void checkNonEmpty() {
+    if (isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedNonEmptyListing")
+        .build();
+    }
   }
 }
