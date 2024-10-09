@@ -111,7 +111,8 @@ public final class ListingNodes {
   public abstract static class first extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmListing self) {
-      return self.getFirstOrNull();
+      checkNonEmpty(self);
+      return VmUtils.readMember(self, 0L);
     }
   }
 
@@ -270,6 +271,16 @@ public final class ListingNodes {
             return true;
           });
       return builder.build();
+    }
+  }
+
+  @TruffleBoundary
+  private static void checkNonEmpty(VmListing self) {
+    if (self.isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedNonEmptyListing")
+        .build();
     }
   }
 }

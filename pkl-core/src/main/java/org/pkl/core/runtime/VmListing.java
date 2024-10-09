@@ -83,12 +83,6 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   }
 
   @TruffleBoundary
-  public Object getFirst() {
-    checkNonEmpty();
-    return VmUtils.readMember(this, 0L);
-  }
-
-  @TruffleBoundary
   public Object getFirstOrNull() {
     if (length == 0) {
       return VmNull.withoutDefault();
