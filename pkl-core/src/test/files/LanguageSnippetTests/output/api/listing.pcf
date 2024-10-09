@@ -50,6 +50,11 @@ facts {
     true
     true
   }
+  ["firstOrNull"] {
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {

@@ -82,6 +82,12 @@ facts {
     base.first == base[0]
     derived.first == base[0]
   }
+  
+  ["firstOrNull"] {
+    empty.firstOrNull == null
+    base.firstOrNull == base[0]
+    derived.firstOrNull == base[0]
+  }
 }
 
 examples {
