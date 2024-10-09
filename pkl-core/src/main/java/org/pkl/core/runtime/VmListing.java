@@ -99,6 +99,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     checkNonEmpty();
     return VmUtils.readMember(this, 0L);
   }
+  
+  @TruffleBoundary
+  public Object getFirstOrNull() {
+    if (length == 0) {
+      return VmNull.withoutDefault();
+    }
+    return VmUtils.readMember(this, 0L);
+  }
 
   @Override
   public boolean isSequence() {
