@@ -36,6 +36,15 @@ facts {
     true
     true
   }
+  ["getOrNull"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {

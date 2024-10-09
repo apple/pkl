@@ -51,6 +51,16 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class getOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmListing self, long index) {
+      if (index < 0 || index >= self.getLength()) {
+        return VmNull.withoutDefault();
+      }
+      return VmUtils.readMember(self, index);
+    }
+  }
+
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary

@@ -1818,6 +1818,21 @@ class Listing<out Element> extends Object {
   /// Returns `-1` for an empty list.
   external lastIndex: Int
 
+  /// Returns the element at [index].
+  ///
+  /// Returns [null] if [index] is outside the bounds of this listing.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(0) == 3
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(1) == 9
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(2) == 6
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(-1) == null
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(3) == null
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(99) == null
+  /// ```
+  external function getOrNull(index: Int): Element?
+
   /// Tells if this listing has no duplicate elements.
   ///
   /// Facts:
