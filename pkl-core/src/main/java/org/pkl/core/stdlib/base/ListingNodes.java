@@ -141,6 +141,14 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class single extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkSingleton(self);
+      return VmUtils.readMember(self, 0L);
+    }
+  }
+
   public abstract static class distinctBy extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
@@ -252,6 +260,14 @@ public final class ListingNodes {
     if (self.isEmpty()) {
       CompilerDirectives.transferToInterpreter();
       throw new VmExceptionBuilder().evalError("expectedNonEmptyListing").build();
+    }
+  }
+
+  @TruffleBoundary
+  private static void checkSingleton(VmListing self) {
+    if (self.getLength() != 1) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder().evalError("expectedSingleElementListing").build();
     }
   }
 }
