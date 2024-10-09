@@ -1877,6 +1877,17 @@ class Listing<out Element> extends Object {
   /// Same as [first] but returns [null] if this listing is empty.
   external firstOrNull: Element?
 
+  /// The last element in this listing.
+  ///
+  /// Throws if this listing is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.last == 3
+  /// (import "pkl:test").catch(() -> new Listing {}.last)
+  /// ```
+  external last: Element
+
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
   ///
   /// Facts:

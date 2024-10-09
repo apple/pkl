@@ -88,6 +88,12 @@ facts {
     base.firstOrNull == base[0]
     derived.firstOrNull == base[0]
   }
+
+  ["last"] {
+    module.catch(() -> empty.last) == "Expected a non-empty Listing."
+    base.last == base[2]
+    derived.last == derived[4]
+  }
 }
 
 examples {
