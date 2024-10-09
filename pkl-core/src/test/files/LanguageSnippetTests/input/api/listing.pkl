@@ -23,6 +23,10 @@ local duplicate: Listing<Person> = (base) {
   new { name = "Elf Owl" }
 }
 
+local altered: Listing<Person> = (base) {
+  [0] { name = "Wood Pigeon" }
+}
+
 facts {
   ["isEmpty"] {
     empty.isEmpty
@@ -111,6 +115,14 @@ facts {
     empty.singleOrNull == null
     base.singleOrNull == null
     new Listing { 42 }.singleOrNull == 42
+  }
+  
+  ["contains"] {
+    !empty.contains(0)
+    base.contains(base[1])
+    derived.contains(base[1])
+    derived.contains(derived[3])
+    !altered.contains(base[0])
   }
 }
 
