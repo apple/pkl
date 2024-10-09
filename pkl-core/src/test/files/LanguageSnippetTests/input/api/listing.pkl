@@ -112,6 +112,13 @@ facts {
     base.singleOrNull == null
     new Listing { 42 }.singleOrNull == 42
   }
+  
+  ["contains"] {
+    !empty.contains(0)
+    base.contains(base[1])
+    derived.contains(base[1])
+    derived.contains(derived[3])
+  }
 }
 
 examples {

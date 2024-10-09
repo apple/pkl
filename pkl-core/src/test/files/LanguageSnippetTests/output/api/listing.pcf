@@ -75,6 +75,12 @@ facts {
     true
     true
   }
+  ["contains"] {
+    true
+    true
+    true
+    true
+  }
 }
 examples {
   ["length"] {
