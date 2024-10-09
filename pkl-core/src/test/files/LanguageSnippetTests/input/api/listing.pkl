@@ -76,6 +76,12 @@ facts {
     }
     base.getOrNull(base.length) == null
   }
+  
+  ["first"] {
+    module.catch(() -> empty.first) == "Expected a non-empty Listing."
+    base.first == base[0]
+    derived.first == base[0]
+  }
 }
 
 examples {

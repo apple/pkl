@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -103,6 +104,14 @@ public final class ListingNodes {
           BaseModule.getListingClass().getPrototype(),
           newMembers,
           newMembers.size());
+    }
+  }
+
+  public abstract static class first extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkNonEmpty(self);
+      return VmUtils.readMember(self, 0L);
     }
   }
 
@@ -209,6 +218,14 @@ public final class ListingNodes {
             return true;
           });
       return builder.build();
+    }
+  }
+
+  @TruffleBoundary
+  private static void checkNonEmpty(VmListing self) {
+    if (self.isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder().evalError("expectedNonEmptyListing").build();
     }
   }
 }
