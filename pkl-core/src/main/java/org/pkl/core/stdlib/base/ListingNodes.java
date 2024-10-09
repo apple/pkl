@@ -50,6 +50,13 @@ public final class ListingNodes {
       return self.getLastIndex();
     }
   }
+  
+  public abstract static class getOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmListing self, long index) {
+      return self.getOrNull(index);
+    }
+  }
 
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization

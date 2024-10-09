@@ -85,6 +85,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     return length - 1;
   }
   
+  @TruffleBoundary
+  public Object getOrNull(long index) {
+    if (index < 0 || index >= length) {
+      return VmNull.withoutDefault();
+    }
+    return VmUtils.readMember(this, index);
+  }
+
   @Override
   public boolean isSequence() {
     return true;
