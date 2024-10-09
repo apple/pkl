@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -54,7 +55,11 @@ public final class ListingNodes {
   public abstract static class getOrNull extends ExternalMethod1Node {
     @Specialization
     protected Object eval(VmListing self, long index) {
-      return self.getOrNull(index);
+      var result = VmUtils.readMemberOrNull(self, index);
+      if (result == null) {
+        return VmNull.withoutDefault();
+      }
+      return result;
     }
   }
 
@@ -106,7 +111,7 @@ public final class ListingNodes {
   public abstract static class first extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmListing self) {
-      return self.getFirst();
+      return self.getFirstOrNull();
     }
   }
 

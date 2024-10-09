@@ -81,21 +81,13 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   public boolean isEmpty() {
     return length == 0;
   }
-  
-  @TruffleBoundary
-  public Object getOrNull(long index) {
-    if (index < 0 || index >= length) {
-      return VmNull.withoutDefault();
-    }
-    return VmUtils.readMember(this, index);
-  }
-  
+
   @TruffleBoundary
   public Object getFirst() {
     checkNonEmpty();
     return VmUtils.readMember(this, 0L);
   }
-  
+
   @TruffleBoundary
   public Object getFirstOrNull() {
     if (length == 0) {
