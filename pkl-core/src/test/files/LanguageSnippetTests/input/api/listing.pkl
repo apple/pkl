@@ -94,6 +94,12 @@ facts {
     base.last == base[2]
     derived.last == derived[4]
   }
+
+  ["lastOrNull"] {
+    empty.lastOrNull == null
+    base.lastOrNull == base[2]
+    derived.lastOrNull == derived[4]
+  }
 }
 
 examples {

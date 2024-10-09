@@ -1888,6 +1888,9 @@ class Listing<out Element> extends Object {
   /// ```
   external last: Element
 
+  /// Same as [last] but returns [null] if this listing is empty.
+  external lastOrNull: Element?
+
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
   ///
   /// Facts:
