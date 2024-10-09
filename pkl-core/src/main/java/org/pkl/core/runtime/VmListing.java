@@ -122,6 +122,17 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     return VmUtils.readMember(this, length - 1L);
   }
 
+  @TruffleBoundary
+  public Object getSingle() {
+    if (length != 1) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedSingleElementListing")
+        .build(); 
+    }
+    return VmUtils.readMember(this, 0L);
+  }
+
   @Override
   public boolean isSequence() {
     return true;

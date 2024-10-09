@@ -131,6 +131,13 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class single extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getSingle();
+    }
+  }
+
   public abstract static class distinctBy extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
