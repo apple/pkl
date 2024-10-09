@@ -186,6 +186,20 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class contains extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmListing self, Object element) {
+      var result = new MutableBoolean(false);
+      self.forceAndIterateMemberValues(
+          (key, member, value) -> {
+            result.set(element.equals(value));
+            return !result.get();
+          });
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result.get();
+    }
+  }
+
   public abstract static class fold extends ExternalMethod2Node {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 

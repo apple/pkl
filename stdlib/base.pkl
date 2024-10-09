@@ -1916,6 +1916,17 @@ class Listing<out Element> extends Object {
   @AlsoKnownAs { names { "uniqueBy" } }
   external function distinctBy(selector: (Element) -> Any): Listing<Element>
 
+  /// Tests if [element] is contained in this listing.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.contains(1)
+  /// new Listing { 1 ; 2 ; 3 }.contains(2)
+  /// new Listing { 1 ; 2 ; 3 }.contains(3)
+  /// !new Listing { 1 ; 2 ; 3 }.contains(4)
+  /// ```
+  external function contains(element: Element): Boolean
+
   /// Folds this listing in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
 
