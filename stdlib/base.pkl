@@ -1813,6 +1813,11 @@ class Listing<out Element> extends Object {
   /// Tells if this listing is empty, that is, has zero elements.
   external isEmpty: Boolean
 
+  /// The index of the last element in this listing (same as `length - 1`).
+  ///
+  /// Returns `-1` for an empty list.
+  external lastIndex: Int
+
   /// Tells if this listing has no duplicate elements.
   ///
   /// Facts:

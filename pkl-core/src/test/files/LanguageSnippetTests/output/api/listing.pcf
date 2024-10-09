@@ -5,6 +5,13 @@ facts {
     true
     true
   }
+  ["lastIndex"] {
+    true
+    true
+    true
+    true
+    true
+  }
   ["isDistinct"] {
     true
     true

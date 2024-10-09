@@ -30,6 +30,14 @@ facts {
     !base.isEmpty
     !derived.isEmpty
   }
+  
+  ["lastIndex"] {
+    empty.lastIndex == -1
+    empty2.lastIndex == -1
+    base.lastIndex == 2
+    derived.lastIndex == 4
+    duplicate.lastIndex == 5
+  }
 
   ["isDistinct"] {
     empty.isDistinct
