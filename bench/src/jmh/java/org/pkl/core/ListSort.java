@@ -28,7 +28,7 @@ import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.repl.ReplRequest;
 import org.pkl.core.repl.ReplResponse;
 import org.pkl.core.repl.ReplServer;
-import org.pkl.core.resource.ResourceReaderFactories;
+import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.util.IoUtils;
 
 @Warmup(iterations = 5, time = 2)
@@ -43,7 +43,7 @@ public class ListSort {
           HttpClient.dummyClient(),
           Loggers.stdErr(),
           List.of(ModuleKeyFactories.standardLibrary),
-          List.of(ResourceReaderFactories.file()),
+          List.of(ResourceReaders.file()),
           Map.of(),
           Map.of(),
           null,

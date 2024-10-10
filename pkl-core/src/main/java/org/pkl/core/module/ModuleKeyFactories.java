@@ -34,7 +34,6 @@ import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using module key factories. */
 public final class ModuleKeyFactories {
-
   private ModuleKeyFactories() {}
 
   /** A factory for standard library module keys. */
@@ -104,7 +103,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class StandardLibrary implements ModuleKeyFactory {
-
     private StandardLibrary() {}
 
     @Override
@@ -115,7 +113,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class ModulePath implements ModuleKeyFactory {
-
     final ModulePathResolver resolver;
 
     public ModulePath(ModulePathResolver resolver) {
@@ -148,7 +145,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class ClassPath implements ModuleKeyFactory {
-
     private final ClassLoader classLoader;
 
     public ClassPath(ClassLoader classLoader) {
@@ -163,7 +159,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class File implements ModuleKeyFactory {
-
     @Override
     public Optional<ModuleKey> create(URI uri) {
       // skip loading providers if the scheme is `file`.
@@ -184,7 +179,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class Http implements ModuleKeyFactory {
-
     private Http() {}
 
     @Override
@@ -198,17 +192,12 @@ public final class ModuleKeyFactories {
   }
 
   private static class GenericUrl implements ModuleKeyFactory {
-
     private GenericUrl() {}
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (!uri.isAbsolute()) {
-        return Optional.empty();
-      }
-      if (uri.isOpaque() && !"jar".equalsIgnoreCase(uri.getScheme())) {
-        return Optional.empty();
-      }
+      if (!uri.isAbsolute()) return Optional.empty();
+      if (uri.isOpaque() && !"jar".equalsIgnoreCase(uri.getScheme())) return Optional.empty();
 
       // Blindly accept this URI, assuming ModuleKeys.genericUrl() can handle it.
       // This means that ModuleKeyFactories.GenericUrl must come last in the handler chain.
@@ -223,7 +212,6 @@ public final class ModuleKeyFactories {
    * optionally, a local project declared as a dependency of the current project.
    */
   private static final class Package implements ModuleKeyFactory {
-
     public Optional<ModuleKey> create(URI uri) throws URISyntaxException {
       if (uri.getScheme().equalsIgnoreCase("package")) {
         return Optional.of(ModuleKeys.pkg(uri));
@@ -239,7 +227,6 @@ public final class ModuleKeyFactories {
    * dependency, or a local dependency
    */
   private static final class ProjectPackage implements ModuleKeyFactory {
-
     public Optional<ModuleKey> create(URI uri) throws URISyntaxException {
       if (uri.getScheme().equalsIgnoreCase("projectpackage")) {
         return Optional.of(ModuleKeys.projectpackage(uri));
@@ -249,7 +236,6 @@ public final class ModuleKeyFactories {
   }
 
   private static class FromServiceProviders {
-
     private static final List<ModuleKeyFactory> INSTANCE;
 
     static {
@@ -284,9 +270,7 @@ public final class ModuleKeyFactories {
 
     public Optional<ModuleKey> create(URI uri)
         throws URISyntaxException, ExternalProcessException, IOException {
-      if (!uri.getScheme().equalsIgnoreCase(scheme)) {
-        return Optional.empty();
-      }
+      if (!scheme.equalsIgnoreCase(uri.getScheme())) return Optional.empty();
 
       var spec = process.getModuleReaderSpec(scheme);
       if (spec == null) {
