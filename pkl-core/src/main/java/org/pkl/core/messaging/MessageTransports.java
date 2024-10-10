@@ -110,7 +110,7 @@ public class MessageTransports {
     protected void doClose() {}
 
     @Override
-    protected void doSend(Message message) throws ProtocolException {
+    protected void doSend(Message message) throws ProtocolException, IOException {
       other.accept(message);
     }
 
@@ -142,7 +142,7 @@ public class MessageTransports {
 
     protected abstract void doSend(Message message) throws ProtocolException, IOException;
 
-    protected void accept(Message message) throws ProtocolException {
+    protected void accept(Message message) throws ProtocolException, IOException {
       log("Received message: {0}", message);
       if (message instanceof Message.OneWay msg) {
         oneWayHandler.handleOneWay(msg);

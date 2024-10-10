@@ -52,7 +52,7 @@ public class ExternalProcessMessagePackEncoder extends BaseMessagePackEncoder {
       }
       case INITIALIZE_MODULE_READER_RESPONSE -> {
         var m = (InitializeModuleReaderResponse) msg;
-        packer.packMapHeader(2);
+        packMapHeader(1, m.getSpec());
         packKeyValue("requestId", m.getRequestId());
         if (m.getSpec() != null) {
           packer.packString("spec");
@@ -61,7 +61,7 @@ public class ExternalProcessMessagePackEncoder extends BaseMessagePackEncoder {
       }
       case INITIALIZE_RESOURCE_READER_RESPONSE -> {
         var m = (InitializeResourceReaderResponse) msg;
-        packer.packMapHeader(2);
+        packMapHeader(1, m.getSpec());
         packKeyValue("requestId", m.getRequestId());
         if (m.getSpec() != null) {
           packer.packString("spec");

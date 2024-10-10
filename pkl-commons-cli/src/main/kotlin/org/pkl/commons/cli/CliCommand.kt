@@ -191,7 +191,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     // the same spec
     // this avoids spawning multiple subprocesses if the same reader implements both reader types
     // and/or multiple schemes
-    (externalModuleReaders + externalResourceReaders).values.associateWith {
+    (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
       ExternalProcessImpl(it)
     }
   }

@@ -179,8 +179,7 @@ abstract class AbstractServerTest {
 
   @Test
   fun `read resource -- null contents and null error`() {
-    val reader =
-      ResourceReaderSpec(scheme = "bahumbug", hasHierarchicalUris = true, isGlobbable = false)
+    val reader = ResourceReaderSpec("bahumbug", true, false)
     val evaluatorId = client.sendCreateEvaluatorRequest(resourceReaders = listOf(reader))
 
     client.send(
@@ -197,14 +196,7 @@ abstract class AbstractServerTest {
     assertThat(readResourceMsg.uri.toString()).isEqualTo("bahumbug:/foo.pkl")
     assertThat(readResourceMsg.evaluatorId).isEqualTo(evaluatorId)
 
-    client.send(
-      ReadResourceResponse(
-        requestId = readResourceMsg.requestId,
-        evaluatorId = evaluatorId,
-        contents = null,
-        error = null
-      )
-    )
+    client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, ByteArray(0), null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
@@ -409,13 +401,7 @@ abstract class AbstractServerTest {
 
   @Test
   fun `read module -- null contents and null error`() {
-    val reader =
-      ModuleReaderSpec(
-        scheme = "bird",
-        hasHierarchicalUris = true,
-        isLocal = true,
-        isGlobbable = false
-      )
+    val reader = ModuleReaderSpec("bird", true, true, false)
     val evaluatorId = client.sendCreateEvaluatorRequest(moduleReaders = listOf(reader))
 
     client.send(
@@ -432,14 +418,7 @@ abstract class AbstractServerTest {
     assertThat(readModuleMsg.uri.toString()).isEqualTo("bird:/pigeon.pkl")
     assertThat(readModuleMsg.evaluatorId).isEqualTo(evaluatorId)
 
-    client.send(
-      ReadModuleResponse(
-        requestId = readModuleMsg.requestId,
-        evaluatorId = evaluatorId,
-        contents = null,
-        error = null
-      )
-    )
+    client.send(ReadModuleResponse(readModuleMsg.requestId, evaluatorId, null, null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
