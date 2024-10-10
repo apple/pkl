@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalProcess;
 
-import java.io.InputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessageUnpacker
+public final class ExternalProcessException extends Exception {
 
-/** Factory methods for creating [MessageDecoder]s. */
-internal object MessageDecoders {
-  fun from(stream: InputStream): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(stream))
+  public ExternalProcessException(String msg) {
+    super(msg);
+  }
 
-  fun from(unpacker: MessageUnpacker): MessageDecoder = MessagePackDecoder(unpacker)
-
-  fun from(array: ByteArray): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(array))
+  public ExternalProcessException(Throwable cause) {
+    super(cause);
+  }
 }

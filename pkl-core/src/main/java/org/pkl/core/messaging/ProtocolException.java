@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
 
-import java.io.OutputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessagePacker
+public class ProtocolException extends Exception {
+  public ProtocolException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 
-/** Factory methods for creating [MessageEncoder]s. */
-internal object MessageEncoders {
-  fun into(stream: OutputStream): MessageEncoder =
-    MessagePackEncoder(MessagePack.newDefaultPacker(stream))
-
-  fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
+  public ProtocolException(String msg) {
+    super(msg);
+  }
 }

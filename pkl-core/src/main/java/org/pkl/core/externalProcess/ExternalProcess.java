@@ -13,9 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalProcess;
 
-/** Decodes a stream of messages. */
-internal interface MessageDecoder {
-  fun decode(): Message?
+import java.io.IOException;
+import org.pkl.core.messaging.MessageTransport;
+import org.pkl.core.messaging.Messages.ModuleReaderSpec;
+import org.pkl.core.messaging.Messages.ResourceReaderSpec;
+import org.pkl.core.util.Nullable;
+
+public interface ExternalProcess extends AutoCloseable {
+
+  MessageTransport getTransport() throws ExternalProcessException;
+
+  @Nullable
+  ModuleReaderSpec getModuleReaderSpec(String scheme) throws IOException;
+
+  @Nullable
+  ResourceReaderSpec getResourceReaderSpec(String scheme) throws IOException;
+
+  @Override
+  void close();
 }
