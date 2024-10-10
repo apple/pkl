@@ -53,7 +53,6 @@ import org.pkl.core.util.Nullable;
 
 /** Utilities for creating and using {@link ModuleKey}s. */
 public final class ModuleKeys {
-
   private ModuleKeys() {}
 
   /**
@@ -154,7 +153,6 @@ public final class ModuleKeys {
   }
 
   private static class CachedModuleKey implements ModuleKey, ResolvedModuleKey {
-
     private final ModuleKey delegate;
     private final String text;
 
@@ -212,7 +210,6 @@ public final class ModuleKeys {
   }
 
   private static class Synthetic implements ModuleKey {
-
     final URI uri;
     final URI importBaseUri;
     final boolean isCached;
@@ -259,7 +256,6 @@ public final class ModuleKeys {
   }
 
   private static class StandardLibrary implements ModuleKey, ResolvedModuleKey {
-
     final URI uri;
 
     StandardLibrary(URI uri) {
@@ -309,7 +305,6 @@ public final class ModuleKeys {
   }
 
   private static class File implements ModuleKey {
-
     final URI uri;
 
     File(URI uri) {
@@ -368,7 +363,6 @@ public final class ModuleKeys {
   }
 
   private static final class ModulePath implements ModuleKey {
-
     final URI uri;
     final ModulePathResolver resolver;
 
@@ -420,7 +414,6 @@ public final class ModuleKeys {
   }
 
   private static final class ClassPath implements ModuleKey {
-
     final URI uri;
 
     final ClassLoader classLoader;
@@ -467,9 +460,7 @@ public final class ModuleKeys {
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
       var url = classLoader.getResource(getResourcePath());
-      if (url == null) {
-        throw new FileNotFoundException();
-      }
+      if (url == null) throw new FileNotFoundException();
       try {
         return ResolvedModuleKeys.url(this, url.toURI(), url);
       } catch (URISyntaxException e) {
@@ -485,7 +476,6 @@ public final class ModuleKeys {
   }
 
   private static class Http implements ModuleKey {
-
     private final URI uri;
 
     Http(URI uri) {
@@ -524,7 +514,6 @@ public final class ModuleKeys {
   }
 
   private static class GenericUrl implements ModuleKey {
-
     final URI uri;
 
     GenericUrl(URI uri) {
@@ -576,7 +565,6 @@ public final class ModuleKeys {
   }
 
   private abstract static class AbstractPackage implements ModuleKey {
-
     protected final PackageAssetUri packageAssetUri;
 
     AbstractPackage(PackageAssetUri packageAssetUri) {
@@ -798,9 +786,7 @@ public final class ModuleKeys {
   }
 
   public static class External implements ModuleKey {
-
     public static class Resolver {
-
       private final MessageTransport transport;
       private final long evaluatorId;
       private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
