@@ -1,0 +1,11 @@
+const baz = 15
+
+foo {
+  const local bar = baz
+    
+  const local function biz() = baz
+
+  qux = bar
+
+  corge = biz()
+}

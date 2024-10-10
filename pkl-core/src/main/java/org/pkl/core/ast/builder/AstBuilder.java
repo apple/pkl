@@ -721,12 +721,22 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable TypeAnnotationContext typeAnnCtx,
       @Nullable ExprContext exprCtx,
       @Nullable List<? extends ObjectBodyContext> bodyCtx) {
-
+    var modifiers =
+        doVisitModifiers(
+            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier");
+    if (VmModifier.isConst(modifiers) && !VmModifier.isLocal(modifiers)) {
+      @SuppressWarnings("OptionalGetWithoutIsPresent")
+      var constModifierCtx =
+          modifierCtxs.stream().filter((it) -> it.CONST() != null).findFirst().get();
+      throw exceptionBuilder()
+          .evalError("invalidConstObjectMemberModifier")
+          .withSourceSection(createSourceSection(constModifierCtx))
+          .build();
+    }
     return doVisitObjectProperty(
         createSourceSection(ctx),
         createSourceSection(propertyName),
-        doVisitModifiers(
-            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier"),
+        modifiers,
         propertyName.getText(),
         typeAnnCtx,
         exprCtx,
