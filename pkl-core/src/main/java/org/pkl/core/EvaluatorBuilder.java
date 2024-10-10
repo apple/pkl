@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
+import org.pkl.core.externalProcess.ExternalProcess;
 import org.pkl.core.externalProcess.ExternalProcessImpl;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -479,16 +481,21 @@ public final class EvaluatorBuilder {
     } else if (settings.moduleCacheDir() != null) {
       setModuleCacheDir(settings.moduleCacheDir());
     }
+
+    // this isn't ideal as project and non-project ExternalProcessImpl instances can be dupes
+    var procs = new HashMap<ExternalReader, ExternalProcess>();
     if (settings.externalModuleReaders() != null) {
       for (var entry : settings.externalModuleReaders().entrySet()) {
-        var process = new ExternalProcessImpl(entry.getValue());
-        addModuleKeyFactory(ModuleKeyFactories.external(entry.getKey(), process));
+        addModuleKeyFactory(
+            ModuleKeyFactories.external(
+                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ExternalProcessImpl::new)));
       }
     }
     if (settings.externalResourceReaders() != null) {
       for (var entry : settings.externalResourceReaders().entrySet()) {
-        var process = new ExternalProcessImpl(entry.getValue());
-        addResourceReader(ResourceReaders.external(entry.getKey(), process));
+        addResourceReader(
+            ResourceReaders.external(
+                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ExternalProcessImpl::new)));
       }
     }
     return this;

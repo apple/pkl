@@ -24,7 +24,7 @@ public interface MessageTransport extends AutoCloseable {
   }
 
   interface RequestHandler {
-    void handleRequest(Message.Request msg) throws ProtocolException;
+    void handleRequest(Message.Request msg) throws ProtocolException, IOException;
   }
 
   interface ResponseHandler {
