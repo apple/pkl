@@ -25,7 +25,7 @@ import org.msgpack.core.MessagePack
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
 
-class MessagePackCodecTest {
+class BaseMessagePackCodecTest {
   private val encoder: MessageEncoder
   private val decoder: MessageDecoder
 
@@ -49,7 +49,7 @@ class MessagePackCodecTest {
 
   @Test
   fun `round-trip ReadResourceResponse`() {
-    roundtrip(ReadResourceResponse(123, 456, byteArrayOf(1, 2, 3, 4, 5), null))
+    roundtrip(ReadResourceResponse(123, 456, Bytes(byteArrayOf(1, 2, 3, 4, 5)), null))
   }
 
   @Test

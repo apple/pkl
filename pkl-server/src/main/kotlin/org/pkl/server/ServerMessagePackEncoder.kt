@@ -37,7 +37,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun MessagePacker.packHttp(http: Http) {
-    packMapHeader(if (http.caCertificates.isNotEmpty()) 1 else 0, http.proxy)
+    packMapHeader(0, http.caCertificates, http.proxy)
     packKeyValue("caCertificates", http.caCertificates)
     http.proxy?.let { proxy ->
       packString("proxy")
@@ -77,9 +77,9 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun MessagePacker.packExternalReader(spec: ExternalReader) {
-    packMapHeader(2)
+    packMapHeader(1, spec.arguments)
     packKeyValue("executable", spec.executable)
-    packKeyValue("arguments", spec.arguments)
+    spec.arguments?.let { packKeyValue("arguments", it) }
   }
 
   override fun encodeMessage(msg: Message) {

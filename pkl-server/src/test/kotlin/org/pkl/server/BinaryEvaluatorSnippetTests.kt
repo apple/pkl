@@ -22,6 +22,7 @@ import org.junit.platform.commons.annotation.Testable
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.core.*
 import org.pkl.core.http.HttpClient
+import org.pkl.core.messaging.Messages
 import org.pkl.core.module.ModuleKeyFactories
 
 @Testable class BinaryEvaluatorSnippetTests
@@ -69,3 +70,6 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
 
 val ByteArray.debugRendering
   get() = MessagePackDebugRenderer(this).output
+
+val Messages.Bytes.debugRendering
+  get() = this.bytes.debugRendering

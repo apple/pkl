@@ -351,14 +351,44 @@ public class Messages {
     }
   }
 
+  /** Java has no boxed byte array type, so we'll bring our own */
+  public static class Bytes {
+    private final byte[] bytes;
+
+    public Bytes(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    public byte[] getBytes() {
+      return bytes;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Bytes bytes1 = (Bytes) o;
+      return Arrays.equals(bytes, bytes1.bytes);
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(bytes);
+    }
+  }
+
   public static final class ReadResourceResponse extends Base.Response implements Client.Response {
 
     private final long evaluatorId;
-    private final byte[] contents;
+    private final @Nullable Bytes contents;
     private final @Nullable String error;
 
     public ReadResourceResponse(
-        long requestId, long evaluatorId, byte[] contents, @Nullable String error) {
+        long requestId, long evaluatorId, @Nullable Bytes contents, @Nullable String error) {
       super(Type.READ_RESOURCE_RESPONSE, requestId);
       this.evaluatorId = evaluatorId;
       this.contents = contents;
@@ -369,7 +399,7 @@ public class Messages {
       return evaluatorId;
     }
 
-    public byte[] getContents() {
+    public @Nullable Bytes getContents() {
       return contents;
     }
 
@@ -387,14 +417,14 @@ public class Messages {
       }
 
       return evaluatorId == that.evaluatorId
-          && Arrays.equals(contents, that.contents)
+          && Objects.equals(contents, that.contents)
           && Objects.equals(error, that.error);
     }
 
     @Override
     public int hashCode() {
       int result = Long.hashCode(evaluatorId);
-      result = 31 * result + Arrays.hashCode(contents);
+      result = 31 * result + Objects.hashCode(contents);
       result = 31 * result + Objects.hashCode(error);
       return result;
     }

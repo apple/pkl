@@ -686,7 +686,7 @@ public final class ResourceReaders {
     private final ResourceReaderSpec readerSpec;
     private final MessageTransport transport;
     private final long evaluatorId;
-    private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
+    private final Map<URI, Future<@Nullable Bytes>> readResponses = new ConcurrentHashMap<>();
     private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
 
     public ExternalDelegate(
@@ -713,7 +713,8 @@ public final class ResourceReaders {
 
     @Override
     public Optional<Object> read(URI uri) throws IOException {
-      return Optional.of(new Resource(uri, doRead(uri)));
+      var result = doRead(uri);
+      return Optional.of(new Resource(uri, result.getBytes()));
     }
 
     @Override
@@ -765,12 +766,12 @@ public final class ResourceReaders {
               }));
     }
 
-    public byte[] doRead(URI baseUri) throws IOException {
+    public Bytes doRead(URI baseUri) throws IOException {
       return MessageTransports.resolveFuture(
           readResponses.computeIfAbsent(
               baseUri,
               (uri) -> {
-                var future = new CompletableFuture<byte[]>();
+                var future = new CompletableFuture<@Nullable Bytes>();
                 var request = new ReadResourceRequest(new Random().nextLong(), evaluatorId, uri);
                 try {
                   transport.send(
@@ -779,8 +780,10 @@ public final class ResourceReaders {
                         if (response instanceof ReadResourceResponse resp) {
                           if (resp.getError() != null) {
                             future.completeExceptionally(new IOException(resp.getError()));
-                          } else {
+                          } else if (resp.getContents() != null) {
                             future.complete(resp.getContents());
+                          } else {
+                            future.complete(new Bytes(new byte[0]));
                           }
                         } else {
                           future.completeExceptionally(
