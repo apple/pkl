@@ -163,5 +163,5 @@ class ExternalReader {
   executable: String
   
   /// Additional command line arguments passed to the external reader process.
-  arguments: Listing<String>
+  arguments: Listing<String>?
 }

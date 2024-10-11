@@ -157,12 +157,12 @@ public record PklEvaluatorSettings(
     }
   }
 
-  public record ExternalReader(String executable, List<String> arguments) {
+  public record ExternalReader(String executable, @Nullable List<String> arguments) {
     @SuppressWarnings("unchecked")
     public static ExternalReader parse(Value input) {
       if (input instanceof PObject externalReader) {
         var executable = (String) externalReader.getProperty("executable");
-        var arguments = (List<String>) externalReader.getProperty("arguments");
+        var arguments = (List<String>) externalReader.get("arguments");
         return new ExternalReader(executable, arguments);
       }
       throw PklBugException.unreachableCode();

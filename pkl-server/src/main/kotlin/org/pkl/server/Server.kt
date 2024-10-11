@@ -29,6 +29,7 @@ import org.pkl.core.externalProcess.ExternalProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
+import org.pkl.core.messaging.Messages
 import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -109,7 +110,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   }
 
   private fun handleEvaluate(msg: EvaluateRequest) {
-    val baseResponse = EvaluateResponse(msg.requestId, msg.evaluatorId, ByteArray(0), null)
+    val baseResponse = EvaluateResponse(msg.requestId, msg.evaluatorId, null, null)
 
     val evaluator = evaluators[msg.evaluatorId]
     if (evaluator == null) {
@@ -122,7 +123,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     executor.execute {
       try {
         val resp = evaluator.evaluate(ModuleSource.create(msg.moduleUri, msg.moduleText), msg.expr)
-        transport.send(baseResponse.copy(result = resp))
+        transport.send(baseResponse.copy(result = Messages.Bytes(resp)))
       } catch (e: PklBugException) {
         transport.send(baseResponse.copy(error = e.toString()))
       } catch (e: PklException) {
@@ -195,11 +196,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
           proxy.address?.let(IoUtils::setSystemProxy)
           proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
         }
-        message.http?.caCertificates?.let { caCertificates ->
-          if (caCertificates.isNotEmpty()) {
-            addCertificates(caCertificates)
-          }
-        }
+        message.http?.caCertificates?.let { addCertificates(it.bytes) }
         buildLazily()
       }
     val dependencies =

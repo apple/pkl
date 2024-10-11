@@ -23,7 +23,7 @@ import org.msgpack.core.MessagePack
 import org.pkl.core.externalProcess.ExternalProcessMessages.*
 import org.pkl.core.messaging.*
 
-class MessagePackCodecTest {
+class ExternalProcessMessagePackCodecTest {
   private val encoder: MessageEncoder
   private val decoder: MessageDecoder
 

@@ -119,12 +119,12 @@ public abstract class AbstractMessagePackDecoder implements MessageDecoder {
     return mapper.apply(value.asStringValue().asString());
   }
 
-  protected static byte[] unpackByteArray(Map<Value, Value> map, String key) {
+  protected static @Nullable Messages.Bytes unpackByteArray(Map<Value, Value> map, String key) {
     var value = getNullable(map, key);
     if (value == null) {
-      return new byte[0];
+      return null;
     }
-    return value.asBinaryValue().asByteArray();
+    return new Messages.Bytes(value.asBinaryValue().asByteArray());
   }
 
   protected static boolean unpackBoolean(Map<Value, Value> map, String key) throws DecodeException {

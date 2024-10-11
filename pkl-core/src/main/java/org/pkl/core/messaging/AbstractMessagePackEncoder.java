@@ -168,13 +168,13 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
     }
   }
 
-  protected void packKeyValue(String name, byte[] value) throws IOException {
-    if (value.length == 0) {
+  protected void packKeyValue(String name, @Nullable Messages.Bytes value) throws IOException {
+    if (value == null) {
       return;
     }
     packer.packString(name);
-    packer.packBinaryHeader(value.length);
-    packer.writePayload(value);
+    packer.packBinaryHeader(value.getBytes().length);
+    packer.writePayload(value.getBytes());
   }
 
   protected void packKeyValue(String name, boolean value) throws IOException {

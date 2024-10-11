@@ -32,7 +32,7 @@ import org.pkl.core.messaging.MessageEncoder
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.packages.Checksums
 
-class MessagePackCodecTest {
+class ServerMessagePackCodecTest {
   private val encoder: MessageEncoder
   private val decoder: MessageDecoder
 
@@ -110,7 +110,7 @@ class MessagePackCodecTest {
         http =
           Http(
             proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
-            caCertificates = byteArrayOf(1, 2, 3, 4)
+            caCertificates = Bytes(byteArrayOf(1, 2, 3, 4))
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),
@@ -147,7 +147,7 @@ class MessagePackCodecTest {
       EvaluateResponse(
         requestId = 123,
         evaluatorId = 456,
-        result = byteArrayOf(1, 2, 3, 4, 5),
+        result = Bytes(byteArrayOf(1, 2, 3, 4, 5)),
         error = null
       )
     )

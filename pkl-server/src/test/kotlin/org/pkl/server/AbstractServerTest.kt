@@ -36,7 +36,7 @@ abstract class AbstractServerTest {
 
   companion object {
     /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
-    const val USE_DIRECT_TRANSPORT = true
+    const val USE_DIRECT_TRANSPORT = false
 
     val executor: ExecutorService =
       if (USE_DIRECT_TRANSPORT) {
@@ -85,7 +85,7 @@ abstract class AbstractServerTest {
     assertThat(response.result).isNotNull
     assertThat(response.requestId).isEqualTo(requestId)
 
-    val unpacker = MessagePack.newDefaultUnpacker(response.result)
+    val unpacker = MessagePack.newDefaultUnpacker(response.result?.bytes)
     val value = unpacker.unpackValue()
     assertThat(value.isArrayValue)
   }
@@ -164,7 +164,7 @@ abstract class AbstractServerTest {
       ReadResourceResponse(
         readResourceMsg.requestId,
         evaluatorId,
-        "my bahumbug".toByteArray(),
+        Bytes("my bahumbug".toByteArray()),
         null
       )
     )
@@ -172,7 +172,7 @@ abstract class AbstractServerTest {
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
 
-    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result?.bytes)
     val value = unpacker.unpackValue()
     assertThat(value.asStringValue().asString()).isEqualTo("my bahumbug")
   }
@@ -196,12 +196,12 @@ abstract class AbstractServerTest {
     assertThat(readResourceMsg.uri.toString()).isEqualTo("bahumbug:/foo.pkl")
     assertThat(readResourceMsg.evaluatorId).isEqualTo(evaluatorId)
 
-    client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, ByteArray(0), null))
+    client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, null, null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
 
-    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result?.bytes)
     val value = unpacker.unpackValue()
     assertThat(value.asStringValue().asString()).isEqualTo("")
   }
@@ -224,12 +224,7 @@ abstract class AbstractServerTest {
     val readResourceMsg = client.receive<ReadResourceRequest>()
 
     client.send(
-      ReadResourceResponse(
-        readResourceMsg.requestId,
-        evaluatorId,
-        ByteArray(0),
-        "cannot read my bahumbug"
-      )
+      ReadResourceResponse(readResourceMsg.requestId, evaluatorId, null, "cannot read my bahumbug")
     )
 
     val evaluateResponse = client.receive<EvaluateResponse>()
@@ -276,7 +271,7 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result.debugYaml)
+    assertThat(evaluateResponse.result?.debugYaml)
       .isEqualTo(
         """
       - 6
@@ -314,7 +309,7 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result.debugYaml)
+    assertThat(evaluateResponse.result?.debugYaml)
       .isEqualTo(
         """
         - 6
@@ -394,7 +389,7 @@ abstract class AbstractServerTest {
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
-    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result?.bytes)
     val value = unpacker.unpackValue()
     assertThat(value.asIntegerValue().asInt()).isEqualTo(5)
   }
@@ -422,7 +417,7 @@ abstract class AbstractServerTest {
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.error).isNull()
-    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result?.bytes)
     val value = unpacker.unpackValue().asArrayValue().list()
     assertThat(value[0].asIntegerValue().asLong()).isEqualTo(0x1)
     assertThat(value[1].asStringValue().asString()).isEqualTo("pigeon")
@@ -516,7 +511,7 @@ abstract class AbstractServerTest {
     )
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result.debugRendering)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
       - 6
@@ -549,7 +544,7 @@ abstract class AbstractServerTest {
     client.send(ListModulesResponse(listModulesMsg.requestId, evaluatorId, null, null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result.debugRendering)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
       - 6
@@ -617,7 +612,7 @@ abstract class AbstractServerTest {
     val response = client.receive<EvaluateResponse>()
     assertThat(response.error).isNull()
     val tripleQuote = "\"\"\""
-    assertThat(response.result.debugYaml)
+    assertThat(response.result?.debugYaml)
       .isEqualTo(
         """
       |
@@ -687,7 +682,7 @@ abstract class AbstractServerTest {
     )
 
     val evaluatorResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluatorResponse.result.debugYaml).isEqualTo("1")
+    assertThat(evaluatorResponse.result?.debugYaml).isEqualTo("1")
   }
 
   @Test
@@ -735,7 +730,7 @@ abstract class AbstractServerTest {
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.result).isNotNull
-    assertThat(evaluateResponse.result.debugYaml)
+    assertThat(evaluateResponse.result?.debugYaml)
       .isEqualTo(
         """
         |
@@ -783,7 +778,7 @@ abstract class AbstractServerTest {
 
     val response12 = client.receive<EvaluateResponse>()
     assertThat(response12.result).isNotNull
-    assertThat(response12.result.debugYaml)
+    assertThat(response12.result?.debugYaml)
       .isEqualTo(
         """
         |
@@ -813,7 +808,7 @@ abstract class AbstractServerTest {
 
     val response22 = client.receive<EvaluateResponse>()
     assertThat(response22.result).isNotNull
-    assertThat(response22.result.debugYaml)
+    assertThat(response22.result?.debugYaml)
       .isEqualTo(
         """
         |
@@ -932,7 +927,7 @@ abstract class AbstractServerTest {
     val resp2 = client.receive<EvaluateResponse>()
     assertThat(resp2.error).isNull()
     assertThat(resp2.result).isNotNull()
-    assertThat(resp2.result.debugRendering.trim())
+    assertThat(resp2.result?.debugRendering?.trim())
       .isEqualTo(
         """
         |
@@ -952,6 +947,9 @@ abstract class AbstractServerTest {
 
   private val ByteArray.debugYaml
     get() = MessagePackDebugRenderer(this).output.trimIndent()
+
+  private val Bytes.debugYaml
+    get() = this.bytes.debugYaml
 
   private fun TestTransport.sendCreateEvaluatorRequest(
     requestId: Long = 123,
