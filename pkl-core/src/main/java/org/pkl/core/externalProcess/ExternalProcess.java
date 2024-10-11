@@ -21,16 +21,26 @@ import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.util.Nullable;
 
+/** An interface for interacting with external module/resource processes. */
 public interface ExternalProcess extends AutoCloseable {
 
+  /** Obtain the process's underlying [MessageTransport] for sending reader-specific message */
   MessageTransport getTransport() throws ExternalProcessException;
 
+  /** Retrieve the spec, if available, of the process's module reader with the given scheme. */
   @Nullable
   ModuleReaderSpec getModuleReaderSpec(String scheme) throws IOException;
 
+  /** Retrieve the spec, if available, of the process's resource reader with the given scheme. */
   @Nullable
   ResourceReaderSpec getResourceReaderSpec(String scheme) throws IOException;
 
+  /**
+   * Close the external process, cleaning up any resources.
+   *
+   * <p>This should be called when the evaluator managing this process is closed. Will close the
+   * underlying transport and terminate any child processes.
+   */
   @Override
   void close();
 }

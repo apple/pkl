@@ -18,6 +18,7 @@ package org.pkl.core.externalProcess;
 import java.net.URI;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 
+/** An external module reader, to be used with [ExternalReaderRuntime]. */
 public interface ExternalModuleReader extends ExternalReaderBase {
   boolean isLocal();
 

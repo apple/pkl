@@ -18,6 +18,7 @@ package org.pkl.core.externalProcess;
 import java.net.URI;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 
+/** An external resource reader, to be used with [ExternalReaderRuntime]. */
 public interface ExternalResourceReader extends ExternalReaderBase {
   byte[] read(URI uri) throws Exception;
 
