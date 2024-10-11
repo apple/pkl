@@ -15,7 +15,6 @@
  */
 package org.pkl.core.project;
 
-import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -64,7 +63,6 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.Pair;
 
 /**
  * Given a list of project directories, prepares artifacts to be published as a package.
@@ -397,8 +395,8 @@ public final class ProjectPackager {
       return;
     }
     for (var importContext : imports) {
-      var importStr = importContext.first;
-      var sourceSection = importContext.second;
+      var importStr = importContext.stringValue();
+      var sourceSection = importContext.sourceSection();
       if (isAbsoluteImport(importStr)) {
         continue;
       }
@@ -440,7 +438,7 @@ public final class ProjectPackager {
     }
   }
 
-  private @Nullable List<Pair<String, SourceSection>> getImportsAndReads(Path pklModulePath) {
+  private @Nullable List<ImportsAndReadsParser.Entry> getImportsAndReads(Path pklModulePath) {
     try {
       var moduleKey = ModuleKeys.file(pklModulePath.toUri());
       var resolvedModuleKey = ResolvedModuleKeys.file(moduleKey, moduleKey.getUri(), pklModulePath);

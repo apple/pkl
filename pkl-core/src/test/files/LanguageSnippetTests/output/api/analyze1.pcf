@@ -1,0 +1,65 @@
+examples {
+  ["basic"] {
+    new {
+      imports {
+        ["file:///$snippetsDir/input-helper/analyze/a.pkl"] {
+          "file:///$snippetsDir/input-helper/analyze/b.pkl"
+        }
+        ["file:///$snippetsDir/input-helper/analyze/b.pkl"] {}
+      }
+      resolvedImports {
+        ["file:///$snippetsDir/input-helper/analyze/a.pkl"] = "file:///$snippetsDir/input-helper/analyze/a.pkl"
+        ["file:///$snippetsDir/input-helper/analyze/b.pkl"] = "file:///$snippetsDir/input-helper/analyze/b.pkl"
+      }
+    }
+  }
+  ["cycles"] {
+    new {
+      imports {
+        ["file:///$snippetsDir/input-helper/analyze/cyclicalA.pkl"] {
+          "file:///$snippetsDir/input-helper/analyze/cyclicalB.pkl"
+        }
+        ["file:///$snippetsDir/input-helper/analyze/cyclicalB.pkl"] {
+          "file:///$snippetsDir/input-helper/analyze/cyclicalA.pkl"
+        }
+      }
+      resolvedImports {
+        ["file:///$snippetsDir/input-helper/analyze/cyclicalA.pkl"] = "file:///$snippetsDir/input-helper/analyze/cyclicalA.pkl"
+        ["file:///$snippetsDir/input-helper/analyze/cyclicalB.pkl"] = "file:///$snippetsDir/input-helper/analyze/cyclicalB.pkl"
+      }
+    }
+  }
+  ["globs"] {
+    new {
+      imports {
+        ["file:///$snippetsDir/input-helper/analyze/a.pkl"] {
+          "file:///$snippetsDir/input-helper/analyze/b.pkl"
+        }
+        ["file:///$snippetsDir/input-helper/analyze/b.pkl"] {}
+        ["file:///$snippetsDir/input-helper/analyze/globImport.pkl"] {
+          "file:///$snippetsDir/input-helper/analyze/a.pkl"
+          "file:///$snippetsDir/input-helper/analyze/b.pkl"
+        }
+      }
+      resolvedImports {
+        ["file:///$snippetsDir/input-helper/analyze/a.pkl"] = "file:///$snippetsDir/input-helper/analyze/a.pkl"
+        ["file:///$snippetsDir/input-helper/analyze/b.pkl"] = "file:///$snippetsDir/input-helper/analyze/b.pkl"
+        ["file:///$snippetsDir/input-helper/analyze/globImport.pkl"] = "file:///$snippetsDir/input-helper/analyze/globImport.pkl"
+      }
+    }
+  }
+  ["packages"] {
+    new {
+      imports {
+        ["package://localhost:0/birds@0.5.0#/Bird.pkl"] {
+          "package://localhost:0/fruit@1.0.5#/Fruit.pkl"
+        }
+        ["package://localhost:0/fruit@1.0.5#/Fruit.pkl"] {}
+      }
+      resolvedImports {
+        ["package://localhost:0/birds@0.5.0#/Bird.pkl"] = "package://localhost:0/birds@0.5.0#/Bird.pkl"
+        ["package://localhost:0/fruit@1.0.5#/Fruit.pkl"] = "package://localhost:0/fruit@1.0.5#/Fruit.pkl"
+      }
+    }
+  }
+}

@@ -433,6 +433,10 @@ public final class EvaluatorBuilder {
     return this;
   }
 
+  public @Nullable DeclaredDependencies getProjectDependencies() {
+    return this.dependencies;
+  }
+
   /**
    * Given a project, sets its dependencies, and also applies any evaluator settings if set.
    *
