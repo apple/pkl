@@ -21,6 +21,8 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.externalProcess.ExternalProcess
 import org.pkl.core.externalProcess.ExternalProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
@@ -40,8 +42,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       IoUtils.setTestMode()
     }
 
+    var externalProcs: Map<ExternalReader, ExternalProcess>? = null
     try {
       proxyAddress?.let(IoUtils::setSystemProxy)
+      externalProcs = externalProcesses
       doRun()
     } catch (e: PklException) {
       throw CliException(e.message!!)
@@ -50,7 +54,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     } catch (e: Exception) {
       throw CliBugException(e)
     } finally {
-      externalProcesses.values.forEach(ExternalProcessImpl::close)
+      // access externalProjects here would cause re-evaluation of the project if project evaluation
+      // failed in the try block
+      // instead, only access externalProjects in the try block and store it in a local var
+      externalProcs?.values?.forEach(ExternalProcess::close)
     }
   }
 

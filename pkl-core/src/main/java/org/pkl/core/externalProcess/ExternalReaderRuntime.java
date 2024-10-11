@@ -204,18 +204,21 @@ public class ExternalReaderRuntime {
                     new ReadResourceResponse(
                         req.getRequestId(),
                         req.getEvaluatorId(),
-                        new byte[0],
+                        null,
                         "No resource reader found for scheme " + req.getUri().getScheme()));
                 return;
               }
               try {
                 transport.send(
                     new ReadResourceResponse(
-                        req.getRequestId(), req.getEvaluatorId(), reader.read(req.getUri()), null));
+                        req.getRequestId(),
+                        req.getEvaluatorId(),
+                        new Bytes(reader.read(req.getUri())),
+                        null));
               } catch (Exception e) {
                 transport.send(
                     new ReadResourceResponse(
-                        req.getRequestId(), req.getEvaluatorId(), new byte[0], e.toString()));
+                        req.getRequestId(), req.getEvaluatorId(), null, e.toString()));
               }
             }
             default -> throw new ProtocolException("Unexpected incoming request message: " + msg);

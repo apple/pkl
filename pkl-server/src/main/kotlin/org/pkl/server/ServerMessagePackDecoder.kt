@@ -27,6 +27,7 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackDecoder
 import org.pkl.core.messaging.Message
+import org.pkl.core.messaging.Messages.Bytes
 import org.pkl.core.packages.Checksums
 
 class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecoder(unpacker) {
@@ -98,7 +99,7 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
     val httpMap = getNullable(this, "http")?.asMapValue()?.map() ?: return null
     val proxy = httpMap.unpackProxy()
     val caCertificates =
-      getNullable(httpMap, "caCertificates")?.asBinaryValue()?.asByteArray() ?: ByteArray(0)
+      getNullable(httpMap, "caCertificates")?.asBinaryValue()?.asByteArray()?.let(::Bytes)
     return Http(caCertificates, proxy)
   }
 
