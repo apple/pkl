@@ -15,6 +15,10 @@ generated/
 !.idea/scopes/
 !.idea/vcs.xml
 
+.vscode/
+
+.pkl-lsp/
+
 # :pkl-core:makeIntelliJAntlrPluginHappy
 gen/
 PklLexer.tokens
