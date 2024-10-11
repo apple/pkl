@@ -444,6 +444,15 @@ Start a REPL session.
 
 This command takes <<common-options, common options>>.
 
+[[command-get-imports]]
+=== `pkl get-imports`
+
+*Synopsis* `pkl get-imports [<options>] [<args>]`
+
+Builds the graph of imports from the given input module(s).
+
+This outputs a JSON object, where each key is a module imported somewhere by the program, and the values are the set of modules imported by the module specified by the key.
+
 [[command-project-package]]
 === `pkl project package`
 
