@@ -16,7 +16,6 @@
 package org.pkl.core.externalProcess;
 
 public final class ExternalProcessException extends Exception {
-
   public ExternalProcessException(String msg) {
     super(msg);
   }

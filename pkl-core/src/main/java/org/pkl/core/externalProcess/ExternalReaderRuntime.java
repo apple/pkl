@@ -29,6 +29,7 @@ import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
 
+/** An implementation of the client side of the external reader flow */
 public class ExternalReaderRuntime {
 
   private final List<ExternalModuleReader> moduleReaders;
@@ -66,6 +67,7 @@ public class ExternalReaderRuntime {
             logFun);
   }
 
+  /** Close the runtime and its transport. */
   public void close() {
     transport.close();
   }
@@ -88,6 +90,11 @@ public class ExternalReaderRuntime {
     return null;
   }
 
+  /**
+   * Start the runtime so it can respond to incoming messages on its transport.
+   *
+   * <p>Blocks until the underlying transport is closed.
+   */
   public void run() throws ProtocolException, IOException {
     transport.start(
         (msg) -> {

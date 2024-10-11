@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.List;
 import org.pkl.core.module.PathElement;
 
+/** Base interface for external module and resource readers. */
 public interface ExternalReaderBase {
   String getScheme();
 

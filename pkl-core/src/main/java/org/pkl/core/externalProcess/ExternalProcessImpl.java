@@ -72,6 +72,12 @@ public class ExternalProcessImpl implements ExternalProcess {
             : null;
   }
 
+  /**
+   * Returns the transport used for communication with the child process.
+   *
+   * <p>If the process is not yet running, it will be spawned. If this instance has already been
+   * closed an exception is thrown.
+   */
   @Override
   public synchronized MessageTransport getTransport() throws ExternalProcessException {
     if (closed) {
@@ -110,6 +116,11 @@ public class ExternalProcessImpl implements ExternalProcess {
     return transport;
   }
 
+  /**
+   * Runs the underlying message transport so it can receive responses from the child process.
+   *
+   * <p>Blocks until the underlying transport is closed.
+   */
   private void runTransport() {
     try {
       transport.start(
@@ -124,6 +135,15 @@ public class ExternalProcessImpl implements ExternalProcess {
     }
   }
 
+  /**
+   * Closes the external process.
+   *
+   * <p>The process asked nicely to exit by sending the [CloseExternalProcess] message. If the
+   * process has not terminated within a timeout of 3 seconds, it is forcefully temrinated. Safe to
+   * call multiple times. A bespoke (empty) message type is used here instead of an OS mechanism
+   * like signals to avoid forcing external reader implementers needing to handle many OS-specific
+   * mechanisms.
+   */
   @Override
   public synchronized void close() {
     closed = true;
