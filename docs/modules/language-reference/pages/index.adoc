@@ -3378,10 +3378,11 @@ Here is an example:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets = List("Seeds", "Berries", "Mice"))
-List(diets[2], diets[0]) // <1>
+birdDiets =
+  let (diets = List("Seeds", "Berries", "Mice"))
+  List(diets[2], diets[0]) // <1>
 ----
-<1> result: `List("Mice", "Seeds")`
+<1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions serve two purposes:
 
@@ -3392,20 +3393,22 @@ List(diets[2], diets[0]) // <1>
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets: List<String> = List("Seeds", "Berries", "Mice"))
-diets[2] + diets[0] // <1>
+birdDiets = 
+  let (diets: List<String> = List("Seeds", "Berries", "Mice"))
+  diets[2] + diets[0] // <1>
 ----
-<1> result: `List("Mice", "Seeds")`
+<1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions can be stacked:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (birds = List("Pigeon", "Barn owl", "Parrot"))
-let (diet = List("Seeds", "Mice", "Berries"))
-birds.zip(diet) // <1>
+birdDiets = 
+  let (birds = List("Pigeon", "Barn owl", "Parrot"))
+  let (diet = List("Seeds", "Mice", "Berries"))
+  birds.zip(diet) // <1>
 ----
-<1> result: `List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
+<1> result: `birdDiets = List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
 
 [[type-tests]]
 === Type Tests
