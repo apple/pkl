@@ -35,28 +35,27 @@ import org.pkl.core.http.HttpClient
 import org.pkl.core.module.PathElement
 
 class PackageResolversTest {
+  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
   abstract class AbstractPackageResolverTest {
-
     abstract val resolver: PackageResolver
 
     private val packageRoot =
       FileTestUtils.rootProjectDir.resolve("pkl-commons-test/src/main/files/packages")
 
-    companion object {
-      private val packageServer = PackageServer()
+    // Each subclass gets its own PackageServer instance (instance property, Lifecycle.PER_CLASS).
+    // This is important because closePackageServer() is called once per subclass.
+    private val packageServer = PackageServer()
 
-      @JvmStatic
-      @AfterAll
-      fun afterAll() {
-        packageServer.close()
-      }
+    val httpClient: HttpClient by lazy {
+      HttpClient.builder()
+        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .setTestPort(packageServer.port)
+        .build()
+    }
 
-      val httpClient: HttpClient by lazy {
-        HttpClient.builder()
-          .addCertificates(FileTestUtils.selfSignedCertificate)
-          .setTestPort(packageServer.port)
-          .build()
-      }
+    @AfterAll
+    fun closePackageServer() {
+      packageServer.close()
     }
 
     // execute test 3 times to check concurrent writes
@@ -217,21 +216,17 @@ class PackageResolversTest {
   }
 
   class DiskCachedPackageResolverTest : AbstractPackageResolverTest() {
-    companion object {
-      private val cacheDir = FileTestUtils.rootProjectDir.resolve("pkl-core/build/test-cache")
+    private val cacheDir = FileTestUtils.rootProjectDir.resolve("pkl-core/build/test-cache")
 
-      @JvmStatic
-      @AfterAll
-      fun afterAll() {
-        assertThat(cacheDir.exists())
-        assertThat(cacheDir.listFilesRecursively()).isNotEmpty
-      }
+    @BeforeAll
+    fun deleteCacheDir() {
+      cacheDir.deleteRecursively()
+    }
 
-      @BeforeAll
-      @JvmStatic
-      fun beforeAll() {
-        cacheDir.deleteRecursively()
-      }
+    @AfterAll
+    fun checkCacheDir() {
+      assertThat(cacheDir.exists())
+      assertThat(cacheDir.listFilesRecursively()).isNotEmpty
     }
 
     override val resolver: PackageResolver =
