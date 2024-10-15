@@ -3,6 +3,7 @@
 :uri-jenv: https://www.jenv.be
 :uri-intellij: https://www.jetbrains.com/idea/download/
 :uri-jdk: https://adoptopenjdk.net/releases.html?variant=openjdk17
+:uri-native-prerequisites: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
 
 == Setup
 
@@ -25,6 +26,12 @@ jenv enable-plugin gradle
 jenv enable-plugin export
 ----
 
+=== Additional Windows Setup
+. (optional) Go to `System->For developers` and enable `Developer Mode`.
+Otherwise, some tests may fail due to insufficient file system privileges.
+. (optional) To build the native executable (`./gradlew buildNative`), 
+install {uri-native-prerequisites}[Prerequisites For Native Image on Windows].
+
 == Common Build Commands
 
 [source,shell]
@@ -38,7 +45,8 @@ gw buildNative   # build native executable(s) for current platform
                  # (Alpine executable is only built if ~/staticdeps/bin/musl-gcc exists)
 
 pkl-cli/build/executable/jpkl                   # run Java executable
-pkl-cli/build/executable/pkl-macos-amd64        # run Mac executable
+pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
+pkl-cli/build/executable/pkl-macos-amd64        # run Intel Mac executable
 pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
 pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
 pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 
