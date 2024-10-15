@@ -160,6 +160,7 @@ tasks.test {
     excludeEngines("LinuxAmd64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAarch64LanguageSnippetTestsEngine")
     excludeEngines("AlpineLanguageSnippetTestsEngine")
+    excludeEngines("WindowsLanguageSnippetTestsEngine")
   }
 }
 
