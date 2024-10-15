@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-import org.pkl.core.externalProcess.ExternalProcessException;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
 
 /** A factory for {@link ModuleKey}s. */
 public interface ModuleKeyFactory extends AutoCloseable {
@@ -38,7 +38,7 @@ public interface ModuleKeyFactory extends AutoCloseable {
    * @return a module key for the given URI
    */
   Optional<ModuleKey> create(URI uri)
-      throws URISyntaxException, ExternalProcessException, IOException;
+      throws URISyntaxException, ExternalReaderProcessException, IOException;
 
   /**
    * Closes this factory, releasing any resources held. See the documentation of factory methods in

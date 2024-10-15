@@ -27,18 +27,11 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalProcess.ExternalProcessException;
-import org.pkl.core.messaging.MessageTransport;
-import org.pkl.core.messaging.MessageTransports;
+import org.pkl.core.externalReader.ExternalModuleResolver;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
 import org.pkl.core.messaging.Messages.*;
-import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -138,9 +131,9 @@ public final class ModuleKeys {
   }
 
   /** Creates a module key for an externally read module. */
-  public static ModuleKey external(URI uri, ModuleReaderSpec spec, External.Resolver resolver)
-      throws URISyntaxException {
-    return new External(uri, spec, resolver);
+  public static ModuleKey messageTransport(
+      URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) throws URISyntaxException {
+    return new MessageTransport(uri, spec, resolver);
   }
 
   /**
@@ -181,7 +174,7 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean hasHierarchicalUris() throws IOException, ExternalProcessException {
+    public boolean hasHierarchicalUris() throws IOException, ExternalReaderProcessException {
       return delegate.hasHierarchicalUris();
     }
 
@@ -191,19 +184,19 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean isGlobbable() throws IOException, ExternalProcessException {
+    public boolean isGlobbable() throws IOException, ExternalReaderProcessException {
       return delegate.isGlobbable();
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI uri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.hasElement(securityManager, uri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.listElements(securityManager, baseUri);
     }
   }
@@ -726,7 +719,7 @@ public final class ModuleKeys {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -747,7 +740,7 @@ public final class ModuleKeys {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -784,108 +777,13 @@ public final class ModuleKeys {
     }
   }
 
-  public static class External implements ModuleKey {
-    public static class Resolver {
-      private final MessageTransport transport;
-      private final long evaluatorId;
-      private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
-      private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
-
-      public Resolver(MessageTransport transport, long evaluatorId) {
-        this.transport = transport;
-        this.evaluatorId = evaluatorId;
-      }
-
-      public List<PathElement> listElements(SecurityManager securityManager, URI uri)
-          throws IOException, SecurityManagerException {
-        securityManager.checkResolveModule(uri);
-        return doListElements(uri);
-      }
-
-      public boolean hasElement(SecurityManager securityManager, URI uri)
-          throws SecurityManagerException {
-        securityManager.checkResolveModule(uri);
-        try {
-          doReadModule(uri);
-          return true;
-        } catch (IOException e) {
-          return false;
-        }
-      }
-
-      public String resolveModule(SecurityManager securityManager, URI uri)
-          throws IOException, SecurityManagerException {
-        securityManager.checkResolveModule(uri);
-        return doReadModule(uri);
-      }
-
-      private String doReadModule(URI moduleUri) throws IOException {
-        return MessageTransports.resolveFuture(
-            readResponses.computeIfAbsent(
-                moduleUri,
-                (uri) -> {
-                  var future = new CompletableFuture<String>();
-                  var request = new ReadModuleRequest(new Random().nextLong(), evaluatorId, uri);
-                  try {
-                    transport.send(
-                        request,
-                        (response) -> {
-                          if (response instanceof ReadModuleResponse resp) {
-                            if (resp.getError() != null) {
-                              future.completeExceptionally(new IOException(resp.getError()));
-                            } else if (resp.getContents() != null) {
-                              future.complete(resp.getContents());
-                            } else {
-                              future.complete("");
-                            }
-                          } else {
-                            future.completeExceptionally(
-                                new ProtocolException("unexpected response"));
-                          }
-                        });
-                  } catch (ProtocolException | IOException e) {
-                    future.completeExceptionally(e);
-                  }
-                  return future;
-                }));
-      }
-
-      private List<PathElement> doListElements(URI baseUri) throws IOException {
-        return MessageTransports.resolveFuture(
-            listResponses.computeIfAbsent(
-                baseUri,
-                (uri) -> {
-                  var future = new CompletableFuture<List<PathElement>>();
-                  var request = new ListModulesRequest(new Random().nextLong(), evaluatorId, uri);
-                  try {
-                    transport.send(
-                        request,
-                        (response) -> {
-                          if (response instanceof ListModulesResponse resp) {
-                            if (resp.getError() != null) {
-                              future.completeExceptionally(new IOException(resp.getError()));
-                            } else {
-                              future.complete(
-                                  Objects.requireNonNullElseGet(resp.getPathElements(), List::of));
-                            }
-                          } else {
-                            future.completeExceptionally(
-                                new ProtocolException("unexpected response"));
-                          }
-                        });
-                  } catch (ProtocolException | IOException e) {
-                    future.completeExceptionally(e);
-                  }
-                  return future;
-                }));
-      }
-    }
+  public static class MessageTransport implements ModuleKey {
 
     private final URI uri;
     private final ModuleReaderSpec spec;
-    private final Resolver resolver;
+    private final ExternalModuleResolver resolver;
 
-    public External(URI uri, ModuleReaderSpec spec, Resolver resolver) {
+    public MessageTransport(URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
       this.uri = uri;
       this.spec = spec;
       this.resolver = resolver;

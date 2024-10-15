@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
 import java.util.Objects;
 import org.pkl.core.messaging.Message;
@@ -21,7 +21,7 @@ import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.util.Nullable;
 
-public class ExternalProcessMessages {
+public class ExternalReaderMessages {
 
   public abstract static class InitializeReaderRequest extends Message.Base.Request
       implements Message.Server.Request {

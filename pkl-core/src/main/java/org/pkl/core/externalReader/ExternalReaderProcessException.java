@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
-public final class ExternalProcessException extends Exception {
-  public ExternalProcessException(String msg) {
+public final class ExternalReaderProcessException extends Exception {
+  public ExternalReaderProcessException(String msg) {
     super(msg);
   }
 
-  public ExternalProcessException(Throwable cause) {
+  public ExternalReaderProcessException(Throwable cause) {
     super(cause);
   }
 }

@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
-import org.pkl.core.externalProcess.ExternalProcessMessages.*;
+import org.pkl.core.externalReader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackEncoder;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
 
-public class ExternalProcessMessagePackEncoder extends BaseMessagePackEncoder {
+public class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
 
-  public ExternalProcessMessagePackEncoder(MessagePacker packer) {
+  public ExternalReaderMessagePackEncoder(MessagePacker packer) {
     super(packer);
   }
 
-  public ExternalProcessMessagePackEncoder(OutputStream outputStream) {
+  public ExternalReaderMessagePackEncoder(OutputStream outputStream) {
     this(MessagePack.newDefaultPacker(outputStream));
   }
 

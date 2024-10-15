@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -21,20 +21,20 @@ import java.util.Map;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.Value;
-import org.pkl.core.externalProcess.ExternalProcessMessages.*;
+import org.pkl.core.externalReader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackDecoder;
 import org.pkl.core.messaging.DecodeException;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.Nullable;
 
-public class ExternalProcessMessagePackDecoder extends BaseMessagePackDecoder {
+public class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
 
-  public ExternalProcessMessagePackDecoder(MessageUnpacker unpacker) {
+  public ExternalReaderMessagePackDecoder(MessageUnpacker unpacker) {
     super(unpacker);
   }
 
-  public ExternalProcessMessagePackDecoder(InputStream inputStream) {
+  public ExternalReaderMessagePackDecoder(InputStream inputStream) {
     this(MessagePack.newDefaultUnpacker(inputStream));
   }
 

@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess
+package org.pkl.core.externalReader
 
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.msgpack.core.MessagePack
-import org.pkl.core.externalProcess.ExternalProcessMessages.*
+import org.pkl.core.externalReader.ExternalReaderMessages.*
 import org.pkl.core.messaging.*
 
-class ExternalProcessMessagePackCodecTest {
+class ExternalReaderMessagePackCodecTest {
   private val encoder: MessageEncoder
   private val decoder: MessageDecoder
 
   init {
     val inputStream = PipedInputStream()
     val outputStream = PipedOutputStream(inputStream)
-    encoder = ExternalProcessMessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
-    decoder = ExternalProcessMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
+    encoder = ExternalReaderMessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
+    decoder = ExternalReaderMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
   }
 
   private fun roundtrip(message: Message) {
