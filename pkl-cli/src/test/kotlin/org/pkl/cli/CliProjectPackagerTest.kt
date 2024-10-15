@@ -339,7 +339,8 @@ class CliProjectPackagerTest {
           "sha256": "e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0"
         },
         "dependencies": {},
-        "authors": []
+        "authors": [],
+        "annotations": []
       }
     """
           .trimIndent()
@@ -348,7 +349,7 @@ class CliProjectPackagerTest {
     assertThat(expectedArchive.zipFilePaths())
       .hasSameElementsAs(listOf("/", "/c", "/c/d", "/c/d/foo.txt", "/a", "/a/b", "/a/b/foo.pkl"))
     assertThat(expectedMetadataChecksum)
-      .hasContent("72ab32b27393bde5f316b00f184faae919378e4d7643872c605f681b14b647bf")
+      .hasContent("c9db1aaa6b8034971660e7c23edfb22cf77511305097b00d6951c57b3e5a18d3")
     assertThat(expectedArchiveChecksum)
       .hasContent("e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0")
     FileSystems.newFileSystem(URI("jar:" + expectedArchive.toUri()), mutableMapOf<String, String>())
@@ -525,11 +526,12 @@ class CliProjectPackagerTest {
           "project2": {
             "uri": "package://localhost:0/project2@5.0.0",
             "checksums": {
-              "sha256": "981787869571330b2f609a94a5912466990ce00e3fa94e7f290c2f99a6d5e5ed"
+              "sha256": "53f7f179b1f19209d937bdb79deec30009bb160150065467a25c1ea4822cbf5c"
             }
           }
         },
-        "authors": []
+        "authors": [],
+        "annotations": []
       }
     """
           .trimIndent()
@@ -548,7 +550,8 @@ class CliProjectPackagerTest {
         "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
       },
       "dependencies": {},
-      "authors": []
+      "authors": [],
+      "annotations": []
     }
     """
           .trimIndent()
@@ -928,7 +931,7 @@ class CliProjectPackagerTest {
         """
       Package `package://localhost:0/birds@0.5.0` was already published with different contents.
       
-      Computed checksum: aa8c883841db22e92794f4708b01dc905b5da77645b7dfb5b22a73da8c347db1
+      Computed checksum: 505f60c08be7eab12e47b9d8ecc29d7cdea47d5b1f9a45f41252302e0c2f168b
       Published checksum: ${PackageServer.BIRDS_SHA}
     """
           .trimIndent()
@@ -975,6 +978,83 @@ class CliProjectPackagerTest {
       .out${sep}mangos@1.0.0${sep}mangos@1.0.0
       .out${sep}mangos@1.0.0${sep}mangos@1.0.0.sha256
 
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `generate annotations`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        """
+        @Unlisted
+        @Deprecated { since = "0.26.1"; message = "do not use" }
+        @ModuleInfo { minPklVersion = "0.26.0" }
+        amends "pkl:Project"
+        
+        package {
+          name = "mypackage"
+          version = "1.0.0"
+          baseUri = "package://example.com/mypackage"
+          packageZipUrl = "https://foo.com"
+        }
+      """
+          .trimIndent()
+      )
+    val packager =
+      CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        consoleWriter = StringWriter()
+      )
+    packager.run()
+    val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
+    assertThat(expectedMetadata).exists()
+    assertThat(expectedMetadata)
+      .hasContent(
+        """
+      {
+        "name": "mypackage",
+        "packageUri": "package://example.com/mypackage@1.0.0",
+        "version": "1.0.0",
+        "packageZipUrl": "https://foo.com",
+        "packageZipChecksums": {
+          "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+        },
+        "dependencies": {},
+        "authors": [],
+        "annotations": [
+          {
+            "moduleName": "pkl.base",
+            "class": "Unlisted",
+            "moduleUri": "pkl:base",
+            "properties": {}
+          },
+          {
+            "moduleName": "pkl.base",
+            "class": "Deprecated",
+            "moduleUri": "pkl:base",
+            "properties": {
+              "since": "0.26.1",
+              "message": "do not use",
+              "replaceWith": null
+            }
+          },
+          {
+            "moduleName": "pkl.base",
+            "class": "ModuleInfo",
+            "moduleUri": "pkl:base",
+            "properties": {
+              "minPklVersion": "0.26.0"
+            }
+          }
+        ]
+      }
     """
           .trimIndent()
       )

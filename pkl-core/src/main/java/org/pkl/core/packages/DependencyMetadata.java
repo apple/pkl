@@ -19,12 +19,19 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+import org.pkl.core.PClassInfo;
+import org.pkl.core.PNull;
+import org.pkl.core.PObject;
+import org.pkl.core.PklException;
 import org.pkl.core.Version;
 import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.util.Nullable;
@@ -63,7 +70,25 @@ import org.pkl.core.util.json.JsonWriter;
  *             "sha256": "abc123"
  *           }
  *         }
- *       }
+ *       },
+ *       "annotations": [
+ *         {
+ *           "moduleName": "pkl.base",
+ *           "class": "Unlisted",
+ *           "moduleUri": "pkl:base",
+ *           "properties": {}
+ *         },
+ *         {
+ *           "moduleName": "pkl.base",
+ *           "class": "Deprecated",
+ *           "moduleUri": "pkl:base",
+ *           "properties": {
+ *             "since": "0.26.1",
+ *             "message": "don't use",
+ *             "replaceWith": null
+ *           }
+ *         }
+ *       ]
  *     }
  *   </code>
  * </pre>
@@ -88,6 +113,8 @@ public final class DependencyMetadata {
     var authors = parsed.getNullable("authors", DependencyMetadata::parseAuthors);
     var issueTracker = parsed.getURIOrNull("issueTracker");
     var description = parsed.getStringOrNull("description");
+    var annotations = parsed.getNullable("annotations", DependencyMetadata::parseAnnotations);
+    if (annotations == null) annotations = List.of();
     return new DependencyMetadata(
         name,
         packageUri,
@@ -102,7 +129,8 @@ public final class DependencyMetadata {
         licenseText,
         authors,
         issueTracker,
-        description);
+        description,
+        annotations);
   }
 
   private static Map<String, RemoteDependency> parseDependencies(Object deps)
@@ -126,6 +154,56 @@ public final class DependencyMetadata {
       ret.put(key, remoteDependency);
     }
     return ret;
+  }
+
+  private static List<PObject> parseAnnotations(Object ann)
+      throws JsonParseException, URISyntaxException {
+    if (!(ann instanceof JsArray arr)) {
+      throw new FormatException("array", ann.getClass());
+    }
+    var annotations = new ArrayList<PObject>(arr.size());
+    for (var annotation : arr) {
+      var obj = parsePObject(annotation);
+      if (!(obj instanceof PObject pObject)) {
+        throw new PklException("Could not read annotation. Invalid object: " + obj);
+      }
+      annotations.add(pObject);
+    }
+    return annotations;
+  }
+
+  private static Object parsePObject(@Nullable Object obj)
+      throws JsonParseException, URISyntaxException {
+    if (obj == null) {
+      return PNull.getInstance();
+    } else if (obj instanceof String s) {
+      return s;
+    } else if (obj instanceof Boolean b) {
+      return b;
+    } else if (obj instanceof Long l) {
+      return l;
+    } else if (obj instanceof Double d) {
+      return d;
+    } else if (obj instanceof JsArray arr) {
+      var list = new ArrayList<>(arr.size());
+      for (var element : arr) {
+        list.add(parsePObject(element));
+      }
+      return list;
+    } else if (obj instanceof JsObject jsObj) {
+      var moduleName = jsObj.getString("moduleName");
+      var className = jsObj.getString("class");
+      var moduleUri = jsObj.getString("moduleUri");
+      var props = jsObj.getObject("properties");
+      var classInfo = PClassInfo.get(moduleName, className, new URI(moduleUri));
+      var properties = new HashMap<String, Object>();
+      for (var kv : props.entrySet()) {
+        properties.put(kv.getKey(), parsePObject(kv.getValue()));
+      }
+      return new PObject(classInfo, properties);
+    }
+    // should never be reached
+    throw new PklException("Could not read annotation. Invalid object: " + obj);
   }
 
   public static Checksums parseChecksums(Object obj) throws JsonParseException {
@@ -164,6 +242,7 @@ public final class DependencyMetadata {
   private final @Nullable List<String> authors;
   private final @Nullable URI issueTracker;
   private final @Nullable String description;
+  private final List<PObject> annotations;
 
   public DependencyMetadata(
       String name,
@@ -179,7 +258,8 @@ public final class DependencyMetadata {
       @Nullable String licenseText,
       @Nullable List<String> authors,
       @Nullable URI issueTracker,
-      @Nullable String description) {
+      @Nullable String description,
+      List<PObject> annotations) {
     this.name = name;
     this.packageUri = packageUri;
     this.version = version;
@@ -194,6 +274,7 @@ public final class DependencyMetadata {
     this.authors = authors;
     this.issueTracker = issueTracker;
     this.description = description;
+    this.annotations = annotations;
   }
 
   public String getName() {
@@ -250,6 +331,10 @@ public final class DependencyMetadata {
     return description;
   }
 
+  public List<PObject> getAnnotations() {
+    return annotations;
+  }
+
   /** Serializes project dependencies to JSON, and writes it to the provided output stream. */
   public void writeTo(OutputStream out) throws IOException {
     new DependencyMetadataWriter(out, this).write();
@@ -277,7 +362,8 @@ public final class DependencyMetadata {
         && Objects.equals(licenseText, that.licenseText)
         && Objects.equals(authors, that.authors)
         && Objects.equals(issueTracker, that.issueTracker)
-        && Objects.equals(description, that.description);
+        && Objects.equals(description, that.description)
+        && Objects.equals(annotations, that.annotations);
   }
 
   @Override
@@ -296,7 +382,8 @@ public final class DependencyMetadata {
         licenseText,
         authors,
         issueTracker,
-        description);
+        description,
+        annotations);
   }
 
   @Override
@@ -339,6 +426,8 @@ public final class DependencyMetadata {
         + '\''
         + ", description="
         + description
+        + ", annotations="
+        + annotations
         + '}';
   }
 
@@ -423,8 +512,84 @@ public final class DependencyMetadata {
       if (dependencyMetadata.description != null) {
         jsonWriter.name("description").value(dependencyMetadata.description);
       }
+      jsonWriter.name("annotations");
+      writeAnnotations();
       jsonWriter.endObject();
       jsonWriter.close();
+    }
+
+    private void writeAnnotations() throws IOException {
+      jsonWriter.beginArray();
+      for (var annotation : dependencyMetadata.annotations) {
+        writePObject(annotation);
+      }
+      jsonWriter.endArray();
+    }
+
+    private void writePObject(PObject object) throws IOException {
+      jsonWriter.beginObject();
+      var clazz = object.getClassInfo();
+      jsonWriter.name("moduleName").value(clazz.getModuleName());
+      jsonWriter.name("class").value(clazz.getDisplayName());
+      jsonWriter.name("moduleUri").value(clazz.getModuleUri().toString());
+      jsonWriter.name("properties");
+      jsonWriter.beginObject();
+      for (var kv : object.getProperties().entrySet()) {
+        jsonWriter.name(kv.getKey());
+        writeGenericObject(kv.getValue());
+      }
+      jsonWriter.endObject();
+      jsonWriter.endObject();
+    }
+
+    private void writeGenericObject(Object value) throws IOException {
+      if (value instanceof PNull) {
+        jsonWriter.nullValue();
+      } else if (value instanceof PObject po) {
+        writePObject(po);
+      } else if (value instanceof String string) {
+        jsonWriter.value(string);
+      } else if (value instanceof Boolean b) {
+        jsonWriter.value(b);
+      } else if (value instanceof Long l) {
+        jsonWriter.value(l);
+      } else if (value instanceof Double d) {
+        jsonWriter.value(d);
+      } else if (value instanceof List<?> list) {
+        jsonWriter.beginArray();
+        for (var v : list) {
+          writeGenericObject(v);
+        }
+        jsonWriter.endArray();
+      } else if (value instanceof Set<?> set) {
+        jsonWriter.beginArray();
+        for (var v : set) {
+          writeGenericObject(v);
+        }
+        jsonWriter.endArray();
+      } else if (value instanceof Map<?, ?> map) {
+        jsonWriter.beginObject();
+        for (var kv : map.entrySet()) {
+          var key = kv.getKey();
+          if (key instanceof String s) {
+            jsonWriter.name(s);
+          } else {
+            throw new PklException(
+                "Error serializing annotation for PklProject:\n"
+                    + "  cannot render map with non-string key: "
+                    + key);
+          }
+          writeGenericObject(kv.getValue());
+        }
+        jsonWriter.endObject();
+      } else if (value instanceof Pattern pattern) {
+        jsonWriter.value(pattern.pattern());
+      } else {
+        throw new PklException(
+            "Error serializing annotation for PklProject:\n:"
+                + "  cannot render value with unexpected type: "
+                + value);
+      }
     }
   }
 }
