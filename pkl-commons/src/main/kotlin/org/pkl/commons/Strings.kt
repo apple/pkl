@@ -45,9 +45,9 @@ fun shlex(input: String): List<String> {
   var inEscape = false
   var quote: Char? = null
   var lastCloseQuoteIndex = Int.MIN_VALUE
-  var current = StringBuilder()
+  val current = StringBuilder()
 
-  for ((idx, char) in input.toCharArray().withIndex()) {
+  for ((idx, char) in input.withIndex()) {
     when {
       // if in an escape always append the next character
       inEscape -> {
@@ -72,7 +72,7 @@ fun shlex(input: String): List<String> {
         // otherwise do nothing, which handles multiple whitespace cases e.g. `abc     123`
         if (current.isNotEmpty() || lastCloseQuoteIndex == (idx - 1)) {
           result.add(current.toString())
-          current = StringBuilder()
+          current.clear()
         }
       }
       // in other cases, append to the current token

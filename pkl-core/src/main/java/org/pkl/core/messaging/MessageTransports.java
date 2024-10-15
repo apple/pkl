@@ -55,7 +55,7 @@ public class MessageTransports {
       if (e.getCause() instanceof IOException ioExc) {
         throw ioExc;
       } else {
-        throw new IOException("external read failure", e.getCause());
+        throw new IOException("external read failure: " + e.getMessage(), e.getCause());
       }
     }
   }

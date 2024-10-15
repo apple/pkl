@@ -76,6 +76,17 @@ class BaseOptions : OptionGroup() {
         .multiple()
         .toMap()
     }
+
+    fun OptionWithValues<String?, String, String>.parseExternalReader(
+      delimiter: String
+    ): OptionWithValues<
+      Pair<String, ExternalReader>?, Pair<String, ExternalReader>, Pair<String, ExternalReader>
+    > {
+      return splitPair(delimiter).convert {
+        val cmd = shlex(it.second)
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+      }
+    }
   }
 
   private val defaults = CliBaseOptions()
@@ -211,29 +222,21 @@ class BaseOptions : OptionGroup() {
 
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
-        names = arrayOf("--external-module"),
+        names = arrayOf("--external-module-reader"),
         metavar = "<scheme>='<executable>[ <arguments>]'",
         help = "External reader registrations for module URI schemes"
       )
-      .splitPair("=")
-      .convert { // in newer clikt versions this can be done in one call using associateWith
-        val cmd = shlex(it.second)
-        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
-      }
+      .parseExternalReader("=")
       .multiple()
       .toMap()
 
   val externalResourceReaders: Map<String, ExternalReader> by
     option(
-        names = arrayOf("--external-resource"),
+        names = arrayOf("--external-resource-reader"),
         metavar = "<scheme>='<executable>[ <arguments>]'",
         help = "External reader registrations for resource URI schemes"
       )
-      .splitPair("=")
-      .convert { // in newer clikt versions this can be done in one call using associateWith
-        val cmd = shlex(it.second)
-        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
-      }
+      .parseExternalReader("=")
       .multiple()
       .toMap()
 

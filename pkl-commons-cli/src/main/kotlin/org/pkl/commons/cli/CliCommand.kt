@@ -21,9 +21,7 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
-import org.pkl.core.externalProcess.ExternalProcess
-import org.pkl.core.externalProcess.ExternalProcessImpl
+import org.pkl.core.externalReader.ExternalReaderProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -42,10 +40,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       IoUtils.setTestMode()
     }
 
-    var externalProcs: Map<ExternalReader, ExternalProcess>? = null
     try {
       proxyAddress?.let(IoUtils::setSystemProxy)
-      externalProcs = externalProcesses
       doRun()
     } catch (e: PklException) {
       throw CliException(e.message!!)
@@ -53,11 +49,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       throw e
     } catch (e: Exception) {
       throw CliBugException(e)
-    } finally {
-      // access externalProjects here would cause re-evaluation of the project if project evaluation
-      // failed in the try block
-      // instead, only access externalProjects in the try block and store it in a local var
-      externalProcs?.values?.forEach(ExternalProcess::close)
     }
   }
 
@@ -199,7 +190,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     // this avoids spawning multiple subprocesses if the same reader implements both reader types
     // and/or multiple schemes
     (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
-      ExternalProcessImpl(it)
+      ExternalReaderProcessImpl(it)
     }
   }
 

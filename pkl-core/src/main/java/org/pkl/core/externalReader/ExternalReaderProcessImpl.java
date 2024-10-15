@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.externalProcess.ExternalProcessMessages.*;
+import org.pkl.core.externalReader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
@@ -37,7 +37,7 @@ import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-public class ExternalProcessImpl implements ExternalProcess {
+public class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
   private static final long CLOSE_TIMEOUT = 3000; // 3 seconds
 
@@ -64,7 +64,7 @@ public class ExternalProcessImpl implements ExternalProcess {
     }
   }
 
-  public ExternalProcessImpl(ExternalReader spec) {
+  public ExternalReaderProcessImpl(ExternalReader spec) {
     this.spec = spec;
     logPrefix =
         Objects.equals(System.getenv("PKL_DEBUG"), "1")
@@ -72,20 +72,14 @@ public class ExternalProcessImpl implements ExternalProcess {
             : null;
   }
 
-  /**
-   * Returns the transport used for communication with the child process.
-   *
-   * <p>If the process is not yet running, it will be spawned. If this instance has already been
-   * closed an exception is thrown.
-   */
   @Override
-  public synchronized MessageTransport getTransport() throws ExternalProcessException {
+  public synchronized MessageTransport getTransport() throws ExternalReaderProcessException {
     if (closed) {
-      throw new ExternalProcessException("ExternalProcessImpl has already been closed");
+      throw new ExternalReaderProcessException("ExternalProcessImpl has already been closed");
     }
     if (process != null) {
       if (!process.isAlive()) {
-        throw new ExternalProcessException("ExternalProcessImpl process is no longer alive");
+        throw new ExternalReaderProcessException("ExternalProcessImpl process is no longer alive");
       }
 
       return transport;
@@ -101,12 +95,12 @@ public class ExternalProcessImpl implements ExternalProcess {
     try {
       process = builder.start();
     } catch (IOException e) {
-      throw new ExternalProcessException(e);
+      throw new ExternalReaderProcessException(e);
     }
     transport =
         MessageTransports.stream(
-            new ExternalProcessMessagePackDecoder(process.getInputStream()),
-            new ExternalProcessMessagePackEncoder(process.getOutputStream()),
+            new ExternalReaderMessagePackDecoder(process.getInputStream()),
+            new ExternalReaderMessagePackEncoder(process.getOutputStream()),
             this::log);
 
     var rxThread = new Thread(this::runTransport, "ExternalProcessImpl rxThread for " + spec);
@@ -135,15 +129,6 @@ public class ExternalProcessImpl implements ExternalProcess {
     }
   }
 
-  /**
-   * Closes the external process.
-   *
-   * <p>The process asked nicely to exit by sending the [CloseExternalProcess] message. If the
-   * process has not terminated within a timeout of 3 seconds, it is forcefully temrinated. Safe to
-   * call multiple times. A bespoke (empty) message type is used here instead of an OS mechanism
-   * like signals to avoid forcing external reader implementers needing to handle many OS-specific
-   * mechanisms.
-   */
   @Override
   public synchronized void close() {
     closed = true;
@@ -163,7 +148,7 @@ public class ExternalProcessImpl implements ExternalProcess {
                 public void run() {
                   if (process != null) {
                     transport.close();
-                    process.destroy();
+                    process.destroyForcibly();
                   }
                 }
               },
@@ -173,7 +158,7 @@ public class ExternalProcessImpl implements ExternalProcess {
       process.onExit().get();
     } catch (Exception e) {
       transport.close();
-      process.destroy();
+      process.destroyForcibly();
     } finally {
       process = null;
       transport = null;
@@ -200,7 +185,7 @@ public class ExternalProcessImpl implements ExternalProcess {
                                 new ProtocolException("unexpected response"));
                           }
                         });
-              } catch (ProtocolException | IOException | ExternalProcessException e) {
+              } catch (ProtocolException | IOException | ExternalReaderProcessException e) {
                 future.completeExceptionally(e);
               }
               return future;
@@ -228,7 +213,7 @@ public class ExternalProcessImpl implements ExternalProcess {
                                 new ProtocolException("unexpected response"));
                           }
                         });
-              } catch (ProtocolException | IOException | ExternalProcessException e) {
+              } catch (ProtocolException | IOException | ExternalReaderProcessException e) {
                 future.completeExceptionally(e);
               }
               return future;

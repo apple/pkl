@@ -24,8 +24,9 @@ import java.util.concurrent.Executors
 import kotlin.random.Random
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
-import org.pkl.core.externalProcess.ExternalProcess
-import org.pkl.core.externalProcess.ExternalProcessImpl
+import org.pkl.core.externalReader.ExternalReaderProcess
+import org.pkl.core.externalReader.ExternalReaderProcessImpl
+import org.pkl.core.externalReader.ExternalResourceResolver
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
@@ -47,7 +48,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private val executor: ExecutorService = Executors.newSingleThreadExecutor()
 
   // ExternalProcess instances with the same ExternalReader spec are shared per evaluator
-  private val externalProcesses: MutableMap<Long, MutableMap<ExternalReader, ExternalProcess>> =
+  private val externalReaderProcesses:
+    MutableMap<Long, MutableMap<ExternalReader, ExternalReaderProcess>> =
     ConcurrentHashMap()
 
   companion object {
@@ -141,7 +143,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     evaluator.close()
 
     // close any running ExternalProcess instances for the closed evaluator
-    externalProcesses[message.evaluatorId]?.values?.forEach { it.close() }
+    externalReaderProcesses[message.evaluatorId]?.values?.forEach { it.close() }
   }
 
   private fun buildDeclaredDependencies(
@@ -243,7 +245,12 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     }
     // add client-side resource readers last to ensure they win over builtin ones
     for (readerSpec in message.clientResourceReaders ?: emptyList()) {
-      add(ResourceReaders.external(readerSpec, transport, evaluatorId))
+      add(
+        ResourceReaders.messageTransport(
+          readerSpec,
+          ExternalResourceResolver(transport, evaluatorId)
+        )
+      )
     }
   }
 
@@ -269,8 +276,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     add(ModuleKeyFactories.genericUrl)
   }
 
-  private fun getExternalProcess(evaluatorId: Long, spec: ExternalReader): ExternalProcess =
-    externalProcesses
+  private fun getExternalProcess(evaluatorId: Long, spec: ExternalReader): ExternalReaderProcess =
+    externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
-      .computeIfAbsent(spec) { ExternalProcessImpl(it) }
+      .computeIfAbsent(spec) { ExternalReaderProcessImpl(it) }
 }

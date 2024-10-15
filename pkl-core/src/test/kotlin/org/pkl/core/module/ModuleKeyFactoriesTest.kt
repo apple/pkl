@@ -26,7 +26,7 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
-import org.pkl.core.externalProcess.*
+import org.pkl.core.externalReader.*
 
 class ModuleKeyFactoriesTest {
   @Test
@@ -131,7 +131,8 @@ class ModuleKeyFactoriesTest {
   @Test
   fun external() {
     val extReader = TestExternalModuleReader()
-    val (proc, runtime) = TestExternalProcess.initializeTestHarness(listOf(extReader), emptyList())
+    val (proc, runtime) =
+      TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
 
     val factory = ModuleKeyFactories.external(extReader.scheme, proc)
 

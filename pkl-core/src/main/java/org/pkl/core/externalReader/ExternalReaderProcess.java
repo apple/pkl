@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.externalReader;
 
 import java.io.IOException;
 import org.pkl.core.messaging.MessageTransport;
@@ -22,10 +22,15 @@ import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.util.Nullable;
 
 /** An interface for interacting with external module/resource processes. */
-public interface ExternalProcess extends AutoCloseable {
+public interface ExternalReaderProcess extends AutoCloseable {
 
-  /** Obtain the process's underlying [MessageTransport] for sending reader-specific message */
-  MessageTransport getTransport() throws ExternalProcessException;
+  /**
+   * Obtain the process's underlying {@link MessageTransport} for sending reader-specific message
+   *
+   * <p>May allocate resources upon first call, including spawning a child process. Must not be
+   * called after {@link ExternalReaderProcess#close} has been called.
+   */
+  MessageTransport getTransport() throws ExternalReaderProcessException;
 
   /** Retrieve the spec, if available, of the process's module reader with the given scheme. */
   @Nullable
@@ -38,8 +43,12 @@ public interface ExternalProcess extends AutoCloseable {
   /**
    * Close the external process, cleaning up any resources.
    *
-   * <p>This should be called when the evaluator managing this process is closed. Will close the
-   * underlying transport and terminate any child processes.
+   * <p>This should be called when the evaluator managing this process is closed. The {@link
+   * MessageTransport} is sent the {@link ExternalReaderMessages.CloseExternalProcess} message to
+   * request a graceful stop. A bespoke (empty) message type is used here instead of an OS mechanism
+   * like signals to avoid forcing external reader implementers needing to handle many OS-specific
+   * mechanisms. Implementations may then forcibly clean up resources after a timeout. Must be safe
+   * to call multiple times.
    */
   @Override
   void close();
