@@ -43,7 +43,6 @@ import org.pkl.core.StackFrame;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
@@ -62,8 +61,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmUtils {
-  /** See {@link MemberNode#shouldRunTypeCheck(VirtualFrame)}. */
-  @SuppressWarnings("JavadocReference")
+  /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
   public static final Object SKIP_TYPECHECK_MARKER = new Object();
 
   public static final String REPL_TEXT = "repl:text";
