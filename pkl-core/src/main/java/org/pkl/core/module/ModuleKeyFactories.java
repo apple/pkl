@@ -87,7 +87,7 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (!uri.getScheme().equals("pkl")) return Optional.empty();
+      if (!uri.getScheme().equalsIgnoreCase("pkl")) return Optional.empty();
       return Optional.of(ModuleKeys.standardLibrary(uri));
     }
   }
@@ -101,10 +101,10 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (uri.getScheme().equals("modulepath")) {
+      if (uri.getScheme().equalsIgnoreCase("modulepath")) {
         return Optional.of(ModuleKeys.modulePath(uri, resolver));
       }
-      if (uri.getScheme().equals("jar")) {
+      if (uri.getScheme().equalsIgnoreCase("jar")) {
         try {
           // modulepaths that resolve to jar-file URIs will register a FileSystemProvider that
           // such that `Paths.get("jar:file")` returns a path.
@@ -133,7 +133,7 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (!uri.getScheme().equals("modulepath")) return Optional.empty();
+      if (!uri.getScheme().equalsIgnoreCase("modulepath")) return Optional.empty();
       return Optional.of(ModuleKeys.classPath(uri, classLoader));
     }
   }
