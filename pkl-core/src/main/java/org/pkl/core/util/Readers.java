@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.core.util;
 
-import java.net.URI;
-import org.pkl.core.messaging.Messages.ResourceReaderSpec;
-
-/** An external resource reader, to be used with [ExternalReaderRuntime]. */
-public interface ExternalResourceReader extends ExternalReaderBase {
-  byte[] read(URI uri) throws Exception;
-
-  default ResourceReaderSpec getSpec() {
-    return new ResourceReaderSpec(getScheme(), hasHierarchicalUris(), isGlobbable());
+public class Readers {
+  /** Closes the given readers, ignoring any exceptions. */
+  public static void closeQuietly(Iterable<? extends AutoCloseable> readers) {
+    for (var reader : readers) {
+      try {
+        reader.close();
+      } catch (Exception ignored) {
+      }
+    }
   }
 }

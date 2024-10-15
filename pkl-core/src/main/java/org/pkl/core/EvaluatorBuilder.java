@@ -21,8 +21,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.externalProcess.ExternalProcess;
-import org.pkl.core.externalProcess.ExternalProcessImpl;
+import org.pkl.core.externalReader.ExternalReaderProcess;
+import org.pkl.core.externalReader.ExternalReaderProcessImpl;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -483,19 +483,21 @@ public final class EvaluatorBuilder {
     }
 
     // this isn't ideal as project and non-project ExternalProcessImpl instances can be dupes
-    var procs = new HashMap<ExternalReader, ExternalProcess>();
+    var procs = new HashMap<ExternalReader, ExternalReaderProcess>();
     if (settings.externalModuleReaders() != null) {
       for (var entry : settings.externalModuleReaders().entrySet()) {
         addModuleKeyFactory(
             ModuleKeyFactories.external(
-                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ExternalProcessImpl::new)));
+                entry.getKey(),
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
       }
     }
     if (settings.externalResourceReaders() != null) {
       for (var entry : settings.externalResourceReaders().entrySet()) {
         addResourceReader(
             ResourceReaders.external(
-                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ExternalProcessImpl::new)));
+                entry.getKey(),
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
       }
     }
     return this;

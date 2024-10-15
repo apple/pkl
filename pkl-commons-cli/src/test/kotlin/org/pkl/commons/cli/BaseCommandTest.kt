@@ -75,16 +75,16 @@ class BaseCommandTest {
   }
 
   @Test
-  fun `--external-resource and --external-module are parsed correctly`() {
+  fun `--external-resource-reader and --external-module-reader are parsed correctly`() {
     cmd.parse(
       arrayOf(
-        "--external-module",
+        "--external-module-reader",
         "scheme3=reader3",
-        "--external-module",
+        "--external-module-reader",
         "scheme4=reader4 with args",
-        "--external-resource",
+        "--external-resource-reader",
         "scheme1=reader1",
-        "--external-resource",
+        "--external-resource-reader",
         "scheme2=reader2 with args"
       )
     )

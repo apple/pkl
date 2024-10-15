@@ -5476,11 +5476,11 @@ The xref:swift:ROOT:index.adoc[Swift] and xref:go:ROOT:index.adoc[Go] language b
 
 External readers are configured separately for modules and resources.
 They are registered by mapping their URI scheme to the executable to run and additonal arguments to pass.
-This is done on the command line by passing `--external-resource` and `--external-module` flags, which may both be passed multiple times.
+This is done on the command line by passing `--external-resource-reader` and `--external-module-reader` flags, which may both be passed multiple times.
 
 [source,text]
 ----
-$ pkl eval <module> --external-resource <scheme>=<executable> --external-module <scheme>='<executable> <argument> <argument>'
+$ pkl eval <module> --external-resource-reader <scheme>=<executable> --external-module-reader <scheme>='<executable> <argument> <argument>'
 ----
 
 External readers may also be configured in a <<projects, Project's>> `PklProject` file.
@@ -5520,7 +5520,7 @@ Assuming a hypothetical `pkl-ldap` executable implementing the external reader p
 
 [source,text]
 ----
-$ pkl eval <module> --external-resource ldap=pkl-ldap
+$ pkl eval <module> --external-resource-reader ldap=pkl-ldap
 username = "pigeon"
 email = "pigeon@example.com"
 ----
@@ -5529,5 +5529,5 @@ In this example, the external reader may provide both `ldap:` and `ldaps:` schem
 To support both schemes during evaluation, both would need to be registered explicitly:
 [source,text]
 ----
-$ pkl eval <module> --external-resource ldap=pkl-ldap --external-resource ldaps=pkl-ldap
+$ pkl eval <module> --external-resource-reader ldap=pkl-ldap --external-resource-reader ldaps=pkl-ldap
 ----

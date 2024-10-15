@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalProcess.ExternalProcessException;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
@@ -76,7 +76,7 @@ public abstract class AbstractReadNode extends UnaryExpressionNode {
           .build();
     } catch (PackageLoadError | SecurityManagerException e) {
       throw exceptionBuilder().withCause(e).build();
-    } catch (ExternalProcessException e) {
+    } catch (ExternalReaderProcessException e) {
       throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
 

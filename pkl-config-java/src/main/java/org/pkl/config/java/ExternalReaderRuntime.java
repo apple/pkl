@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess;
+package org.pkl.config.java;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
-import java.util.Objects;
-import org.msgpack.core.MessagePack;
-import org.pkl.core.externalProcess.ExternalProcessMessages.*;
+import org.pkl.core.externalReader.ExternalModuleReader;
+import org.pkl.core.externalReader.ExternalReaderMessages.*;
+import org.pkl.core.externalReader.ExternalResourceReader;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.messaging.MessageTransport;
-import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
@@ -43,28 +40,6 @@ public class ExternalReaderRuntime {
     this.moduleReaders = moduleReaders;
     this.resourceReaders = resourceReaders;
     this.transport = transport;
-  }
-
-  public ExternalReaderRuntime(
-      List<ExternalModuleReader> moduleReaders,
-      List<ExternalResourceReader> resourceReaders,
-      OutputStream outputStream,
-      InputStream inputStream) {
-    this.moduleReaders = moduleReaders;
-    this.resourceReaders = resourceReaders;
-
-    MessageTransports.Logger logFun =
-        Objects.equals(System.getenv("PKL_DEBUG"), "1")
-            ? (msg) -> {
-              System.err.println("[pkl-core][external-reader-runtime] " + msg);
-            }
-            : (msg) -> {};
-
-    this.transport =
-        MessageTransports.stream(
-            new ExternalProcessMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream)),
-            new ExternalProcessMessagePackEncoder(MessagePack.newDefaultPacker(outputStream)),
-            logFun);
   }
 
   /** Close the runtime and its transport. */

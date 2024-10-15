@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalProcess
+package org.pkl.core.externalReader
 
 import java.io.IOException
 import java.io.PipedInputStream
@@ -23,13 +23,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.core.externalProcess.ExternalProcessMessages.*
+import org.pkl.config.java.ExternalReaderRuntime
+import org.pkl.core.externalReader.ExternalReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
 
-class TestExternalProcess(private val transport: MessageTransport) : ExternalProcess {
+class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
   private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
     ConcurrentHashMap()
   private val initializeResourceReaderResponses: MutableMap<String, Future<ResourceReaderSpec?>> =
@@ -93,26 +94,26 @@ class TestExternalProcess(private val transport: MessageTransport) : ExternalPro
     fun initializeTestHarness(
       moduleReaders: List<ExternalModuleReader>,
       resourceReaders: List<ExternalResourceReader>
-    ): Pair<TestExternalProcess, ExternalReaderRuntime> {
+    ): Pair<TestExternalReaderProcess, ExternalReaderRuntime> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
       val txIn = PipedInputStream(10240)
       val txOut = PipedOutputStream(txIn)
       val serverTransport =
         MessageTransports.stream(
-          ExternalProcessMessagePackDecoder(rxIn),
-          ExternalProcessMessagePackEncoder(txOut),
+          ExternalReaderMessagePackDecoder(rxIn),
+          ExternalReaderMessagePackEncoder(txOut),
           {}
         )
       val clientTransport =
         MessageTransports.stream(
-          ExternalProcessMessagePackDecoder(txIn),
-          ExternalProcessMessagePackEncoder(rxOut),
+          ExternalReaderMessagePackDecoder(txIn),
+          ExternalReaderMessagePackEncoder(rxOut),
           {}
         )
 
       val runtime = ExternalReaderRuntime(moduleReaders, resourceReaders, clientTransport)
-      val proc = TestExternalProcess(serverTransport)
+      val proc = TestExternalReaderProcess(serverTransport)
 
       Thread(runtime::run).start()
       Thread(proc::run).start()

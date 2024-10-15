@@ -20,7 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalProcess.ExternalProcessException;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
 import org.pkl.core.runtime.ReaderBase;
 
 /**
@@ -30,7 +30,7 @@ import org.pkl.core.runtime.ReaderBase;
  *
  * <p>See {@link ResourceReaders} for predefined resource readers.
  */
-public interface ResourceReader extends ReaderBase {
+public interface ResourceReader extends ReaderBase, AutoCloseable {
   /** The URI scheme associated with resources read by this resource reader. */
   String getUriScheme();
 
@@ -56,5 +56,15 @@ public interface ResourceReader extends ReaderBase {
    * </ul>
    */
   Optional<Object> read(URI uri)
-      throws IOException, URISyntaxException, SecurityManagerException, ExternalProcessException;
+      throws IOException,
+          URISyntaxException,
+          SecurityManagerException,
+          ExternalReaderProcessException;
+
+  /**
+   * Closes this reader, releasing any resources held. See the documentation of factory methods in
+   * {@link ResourceReaders} for which factories need to be closed.
+   */
+  @Override
+  default void close() {}
 }

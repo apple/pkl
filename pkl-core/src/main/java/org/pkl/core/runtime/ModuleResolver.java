@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import org.pkl.core.ModuleSource;
-import org.pkl.core.externalProcess.ExternalProcessException;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;
@@ -84,7 +84,7 @@ public final class ModuleResolver {
             .evalError("invalidModuleUri", moduleUri)
             .withHint(e.getReason())
             .build();
-      } catch (ExternalProcessException e) {
+      } catch (ExternalReaderProcessException e) {
         throw new VmExceptionBuilder()
             .withOptionalLocation(importNode)
             .evalError("externalReaderFailure")

@@ -25,22 +25,14 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.ServiceLoader;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalProcess.ExternalProcess;
-import org.pkl.core.externalProcess.ExternalProcessException;
-import org.pkl.core.messaging.MessageTransport;
-import org.pkl.core.messaging.MessageTransports;
+import org.pkl.core.externalReader.ExternalReaderProcess;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalReader.ExternalResourceResolver;
 import org.pkl.core.messaging.Messages.*;
-import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -149,18 +141,19 @@ public final class ResourceReaders {
     return FromServiceProviders.INSTANCE;
   }
 
-  public static ResourceReader external(String scheme, ExternalProcess externalProcess) {
-    return new External(scheme, externalProcess, 0);
+  public static ResourceReader external(
+      String scheme, ExternalReaderProcess externalReaderProcess) {
+    return new External(scheme, externalReaderProcess, 0);
   }
 
   public static ResourceReader external(
-      String scheme, ExternalProcess externalProcess, long evaluatorId) {
-    return new External(scheme, externalProcess, evaluatorId);
+      String scheme, ExternalReaderProcess externalReaderProcess, long evaluatorId) {
+    return new External(scheme, externalReaderProcess, evaluatorId);
   }
 
-  public static ResourceReader external(
-      ResourceReaderSpec spec, MessageTransport transport, long evaluatorId) {
-    return new ExternalDelegate(spec, transport, evaluatorId);
+  public static ResourceReader messageTransport(
+      ResourceReaderSpec spec, ExternalResourceResolver resolver) {
+    return new MessageTransportResource(spec, resolver);
   }
 
   private static final class EnvironmentVariable implements ResourceReader {
@@ -547,7 +540,7 @@ public final class ResourceReaders {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -569,7 +562,7 @@ public final class ResourceReaders {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -624,28 +617,31 @@ public final class ResourceReaders {
 
   private static final class External implements ResourceReader {
     private final String scheme;
-    private final ExternalProcess process;
+    private final ExternalReaderProcess process;
     private final long evaluatorId;
-    private ExternalDelegate delegate;
+    private MessageTransportResource underlying;
 
-    public External(String scheme, ExternalProcess process, long evaluatorId) {
+    public External(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;
     }
 
-    private ExternalDelegate getDelegate() throws ExternalProcessException, IOException {
-      if (delegate != null) {
-        return delegate;
+    private MessageTransportResource getUnderlyingReader()
+        throws ExternalReaderProcessException, IOException {
+      if (underlying != null) {
+        return underlying;
       }
 
       var spec = process.getResourceReaderSpec(scheme);
       if (spec == null) {
-        throw new ExternalProcessException(
+        throw new ExternalReaderProcessException(
             ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
       }
-      delegate = new ExternalDelegate(spec, process.getTransport(), evaluatorId);
-      return delegate;
+      underlying =
+          new MessageTransportResource(
+              spec, new ExternalResourceResolver(process.getTransport(), evaluatorId));
+      return underlying;
     }
 
     @Override
@@ -654,46 +650,46 @@ public final class ResourceReaders {
     }
 
     @Override
-    public boolean hasHierarchicalUris() throws ExternalProcessException, IOException {
-      return getDelegate().hasHierarchicalUris();
+    public boolean hasHierarchicalUris() throws ExternalReaderProcessException, IOException {
+      return getUnderlyingReader().hasHierarchicalUris();
     }
 
     @Override
-    public boolean isGlobbable() throws ExternalProcessException, IOException {
-      return getDelegate().isGlobbable();
+    public boolean isGlobbable() throws ExternalReaderProcessException, IOException {
+      return getUnderlyingReader().isGlobbable();
     }
 
     @Override
-    public Optional<Object> read(URI uri)
-        throws IOException, URISyntaxException, SecurityManagerException, ExternalProcessException {
-      return getDelegate().read(uri);
+    public Optional<Object> read(URI uri) throws IOException, ExternalReaderProcessException {
+      return getUnderlyingReader().read(uri);
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
-      return getDelegate().hasElement(securityManager, elementUri);
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
+      return getUnderlyingReader().hasElement(securityManager, elementUri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ExternalProcessException {
-      return getDelegate().listElements(securityManager, baseUri);
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
+      return getUnderlyingReader().listElements(securityManager, baseUri);
+    }
+
+    @Override
+    public void close() {
+      process.close();
     }
   }
 
-  private static final class ExternalDelegate implements ResourceReader {
+  private static final class MessageTransportResource implements ResourceReader {
     private final ResourceReaderSpec readerSpec;
-    private final MessageTransport transport;
-    private final long evaluatorId;
-    private final Map<URI, Future<@Nullable Bytes>> readResponses = new ConcurrentHashMap<>();
-    private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
+    private final ExternalResourceResolver resolver;
 
-    public ExternalDelegate(
-        ResourceReaderSpec readerSpec, MessageTransport transport, long evaluatorId) {
-      this.transport = transport;
-      this.evaluatorId = evaluatorId;
+    public MessageTransportResource(
+        ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
       this.readerSpec = readerSpec;
+      this.resolver = resolver;
     }
 
     @Override
@@ -713,88 +709,19 @@ public final class ResourceReaders {
 
     @Override
     public Optional<Object> read(URI uri) throws IOException {
-      var result = doRead(uri);
-      return Optional.of(new Resource(uri, result.getBytes()));
+      return resolver.read(uri);
     }
 
     @Override
-    public boolean hasElement(SecurityManager securityManager, URI elementUri)
+    public boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
         throws SecurityManagerException {
-      securityManager.checkResolveResource(elementUri);
-      try {
-        doRead(elementUri);
-        return true;
-      } catch (IOException e) {
-        return false;
-      }
+      return resolver.hasElement(securityManager, elementUri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
         throws IOException, SecurityManagerException {
-      securityManager.checkResolveResource(baseUri);
-      return doListElements(baseUri);
-    }
-
-    public List<PathElement> doListElements(URI baseUri) throws IOException {
-      return MessageTransports.resolveFuture(
-          listResponses.computeIfAbsent(
-              baseUri,
-              (uri) -> {
-                var future = new CompletableFuture<List<PathElement>>();
-                var request = new ListResourcesRequest(new Random().nextLong(), evaluatorId, uri);
-                try {
-                  transport.send(
-                      request,
-                      (response) -> {
-                        if (response instanceof ListResourcesResponse resp) {
-                          if (resp.getError() != null) {
-                            future.completeExceptionally(new IOException(resp.getError()));
-                          } else {
-                            future.complete(
-                                Objects.requireNonNullElseGet(resp.getPathElements(), List::of));
-                          }
-                        } else {
-                          future.completeExceptionally(
-                              new ProtocolException("unexpected response"));
-                        }
-                      });
-                } catch (ProtocolException | IOException e) {
-                  future.completeExceptionally(e);
-                }
-                return future;
-              }));
-    }
-
-    public Bytes doRead(URI baseUri) throws IOException {
-      return MessageTransports.resolveFuture(
-          readResponses.computeIfAbsent(
-              baseUri,
-              (uri) -> {
-                var future = new CompletableFuture<@Nullable Bytes>();
-                var request = new ReadResourceRequest(new Random().nextLong(), evaluatorId, uri);
-                try {
-                  transport.send(
-                      request,
-                      (response) -> {
-                        if (response instanceof ReadResourceResponse resp) {
-                          if (resp.getError() != null) {
-                            future.completeExceptionally(new IOException(resp.getError()));
-                          } else if (resp.getContents() != null) {
-                            future.complete(resp.getContents());
-                          } else {
-                            future.complete(new Bytes(new byte[0]));
-                          }
-                        } else {
-                          future.completeExceptionally(
-                              new ProtocolException("unexpected response"));
-                        }
-                      });
-                } catch (ProtocolException | IOException e) {
-                  future.completeExceptionally(e);
-                }
-                return future;
-              }));
+      return resolver.listElements(securityManager, baseUri);
     }
   }
 }
