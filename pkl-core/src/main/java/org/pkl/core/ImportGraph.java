@@ -39,6 +39,13 @@ import org.pkl.core.util.json.Json.MappingException;
  *     projectpackage:}, and (typically) resolves to a {@code file:} scheme.
  */
 public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImports) {
+  /** Parses the provided JSON into an import graph. */
+  public static ImportGraph parseFromJson(String input) throws JsonParseException {
+    var parsed = Json.parseObject(input);
+    var imports = parseImports(parsed.getObject("imports"));
+    var resolvedImports = parseResolvedImports(parsed.getObject("resolvedImports"));
+    return new ImportGraph(imports, resolvedImports);
+  }
 
   private static Map<URI, Set<URI>> parseImports(Json.JsObject jsObject) throws JsonParseException {
     var ret = new TreeMap<URI, Set<URI>>();
@@ -81,13 +88,5 @@ public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImpo
       }
     }
     return ret;
-  }
-
-  /** Parses the provided JSON into an import graph. */
-  public static ImportGraph parseFromJson(String input) throws JsonParseException {
-    var parsed = Json.parseObject(input);
-    var imports = parseImports(parsed.getObject("imports"));
-    var resolvedImports = parseResolvedImports(parsed.getObject("resolvedImports"));
-    return new ImportGraph(imports, resolvedImports);
   }
 }
