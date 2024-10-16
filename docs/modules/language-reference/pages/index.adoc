@@ -3380,7 +3380,7 @@ Here is an example:
 ----
 birdDiets =
   let (diets = List("Seeds", "Berries", "Mice"))
-  List(diets[2], diets[0]) // <1>
+    List(diets[2], diets[0]) // <1>
 ----
 <1> result: `birdDiets = List("Mice", "Seeds")`
 
@@ -3395,7 +3395,7 @@ birdDiets =
 ----
 birdDiets = 
   let (diets: List<String> = List("Seeds", "Berries", "Mice"))
-  diets[2] + diets[0] // <1>
+    diets[2] + diets[0] // <1>
 ----
 <1> result: `birdDiets = List("Mice", "Seeds")`
 
@@ -3406,7 +3406,7 @@ birdDiets =
 birdDiets = 
   let (birds = List("Pigeon", "Barn owl", "Parrot"))
   let (diet = List("Seeds", "Mice", "Berries"))
-  birds.zip(diet) // <1>
+    birds.zip(diet) // <1>
 ----
 <1> result: `birdDiets = List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
 
