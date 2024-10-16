@@ -31,6 +31,8 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.yaml.ParseException;
 import org.pkl.core.util.yaml.snake.YamlUtils;
 import org.snakeyaml.engine.v2.api.ConstructNode;
 import org.snakeyaml.engine.v2.api.Load;
@@ -116,6 +118,8 @@ public final class ParserNodes {
               .evalError("yamlParseErrorTooManyAliases", getMaxCollectionAliases(self))
               .build();
         }
+        throw exceptionBuilder().evalError("yamlParseError").withHint(e.getMessage()).build();
+      } catch (ParseException e) {
         throw exceptionBuilder().evalError("yamlParseError").withHint(e.getMessage()).build();
       }
 
@@ -484,9 +488,10 @@ public final class ParserNodes {
               convertedKey instanceof String string && !useMapping ? Identifier.get(string) : null;
 
           // https://github.com/apple/pkl/issues/561
-          if (memberName != null && "default".equals(convertedKey)) {
-            throw new YamlEngineException(
-                "Cannot parse object key `default` into a Dynamic value. Node: " + node);
+          if (memberName == Identifier.DEFAULT) {
+            throw new ParseException(
+                ErrorMessages.create("yamlParseErrorDynamicPropertyDefault"),
+                keyNode.getStartMark().isEmpty() ? null : keyNode.getStartMark().get());
           }
 
           var member =
