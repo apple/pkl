@@ -492,7 +492,7 @@ final class PackageResolvers {
       Files.createDirectories(tmpDir);
       var tmpPath =
           Files.createTempFile(
-              tmpDir, IoUtils.encodePath(packageUri.toString().replaceAll("/", "-")), ".json");
+              tmpDir, IoUtils.encodePath(packageUri.toString().replace("/", "-")), ".json");
       try {
         downloadMetadata(packageUri, requestUri, tmpPath, checksums);
         Files.createDirectories(cachePath.getParent());
@@ -544,7 +544,7 @@ final class PackageResolvers {
       Files.createDirectories(tmpDir);
       var tmpPath =
           Files.createTempFile(
-              tmpDir, IoUtils.encodePath(packageUri.toString().replaceAll("/", "-")), ".zip");
+              tmpDir, IoUtils.encodePath(packageUri.toString().replace("/", "-")), ".zip");
       try {
         var checksumBytes =
             downloadUriToPathAndComputeChecksum(dependencyMetadata.getPackageZipUrl(), tmpPath);
