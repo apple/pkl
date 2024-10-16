@@ -1516,7 +1516,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       text = "-" + text;
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Long.parseLong(text, radix);
       return new IntLiteralNode(section, num);
@@ -1550,7 +1550,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           source.createSection(ctx.getStart().getStartIndex() + exponentIdx + 1, 1));
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Double.parseDouble(text);
       return new FloatLiteralNode(section, num);
