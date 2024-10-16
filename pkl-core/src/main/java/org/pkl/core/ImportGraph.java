@@ -16,8 +16,16 @@
 package org.pkl.core;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import org.pkl.core.util.json.Json;
+import org.pkl.core.util.json.Json.FormatException;
+import org.pkl.core.util.json.Json.JsArray;
+import org.pkl.core.util.json.Json.JsonParseException;
+import org.pkl.core.util.json.Json.MappingException;
 
 /**
  * Java representation of {@code pkl.analyze#ImportGraph}.
@@ -30,4 +38,56 @@ import java.util.Set;
  *     <p>For example, a local package dependency is represented with scheme {@code
  *     projectpackage:}, and (typically) resolves to a {@code file:} scheme.
  */
-public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImports) {}
+public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImports) {
+
+  private static Map<URI, Set<URI>> parseImports(Json.JsObject jsObject) throws JsonParseException {
+    var ret = new TreeMap<URI, Set<URI>>();
+    for (var entry : jsObject.entrySet()) {
+      try {
+        var key = new URI(entry.getKey());
+        var value = entry.getValue();
+        var set = new TreeSet<URI>();
+        if (!(value instanceof JsArray array)) {
+          throw new FormatException("array", value.getClass());
+        }
+        for (var elem : array) {
+          if (!(elem instanceof String str)) {
+            throw new FormatException("string", elem.getClass());
+          }
+          set.add(new URI(str));
+        }
+        ret.put(key, set);
+      } catch (URISyntaxException e) {
+        throw new MappingException(entry.getKey(), e);
+      }
+    }
+    return ret;
+  }
+
+  private static Map<URI, URI> parseResolvedImports(Json.JsObject jsObject)
+      throws JsonParseException {
+    var ret = new TreeMap<URI, URI>();
+    for (var entry : jsObject.entrySet()) {
+      try {
+        var key = new URI(entry.getKey());
+        var value = entry.getValue();
+        if (!(value instanceof String str)) {
+          throw new FormatException("string", value.getClass());
+        }
+        var valueUri = new URI(str);
+        ret.put(key, valueUri);
+      } catch (URISyntaxException e) {
+        throw new MappingException(entry.getKey(), e);
+      }
+    }
+    return ret;
+  }
+
+  /** Parses the provided JSON into an import graph. */
+  public static ImportGraph parseFromJson(String input) throws JsonParseException {
+    var parsed = Json.parseObject(input);
+    var imports = parseImports(parsed.getObject("imports"));
+    var resolvedImports = parseResolvedImports(parsed.getObject("resolvedImports"));
+    return new ImportGraph(imports, resolvedImports);
+  }
+}

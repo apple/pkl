@@ -39,6 +39,9 @@ public interface PklExtension {
   @Nested
   PklProjectCommands getProject();
 
+  @Nested
+  PklAnalyzeCommands getAnalyze();
+
   default void evaluators(Action<? super NamedDomainObjectContainer<EvalSpec>> action) {
     action.execute(getEvaluators());
   }
@@ -63,5 +66,9 @@ public interface PklExtension {
 
   default void project(Action<? super PklProjectCommands> action) {
     action.execute(getProject());
+  }
+
+  default void analyze(Action<? super PklAnalyzeCommands> action) {
+    action.execute(getAnalyze());
   }
 }

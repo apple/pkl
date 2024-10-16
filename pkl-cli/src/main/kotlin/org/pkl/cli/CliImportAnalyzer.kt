@@ -22,7 +22,9 @@ import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource
 import org.pkl.core.module.ModuleKeyFactories
 
-class CliImportAnalyzer(
+class CliImportAnalyzer
+@JvmOverloads
+constructor(
   private val options: CliImportAnalyzerOptions,
   private val consoleWriter: Writer = System.out.writer()
 ) : CliCommand(options.base) {
