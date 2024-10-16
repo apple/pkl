@@ -21,7 +21,8 @@ javaPoet = "1.+"
 javaxInject = "1"
 jansi = "2.+"
 jimfs = "1.+"
-# 3.25.1 doesn't work with native image
+# later versions don't work with native image
+# (at least not without additional configuration; tested with 3.25.1 and 3.27.1)
 jline = "3.23.0"
 jmh = "1.+"
 jmhPlugin = "0.6.6"
@@ -38,13 +39,14 @@ ktfmt = "0.44"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
 log4j = "2.17.1"
-msgpack = "0.9.0"
+msgpack = "0.+"
 nexusPublishPlugin = "1.3.0"
 nuValidator = "20.+"
 paguro = "3.+"
 shadowPlugin = "8.1.1"
 slf4j = "1.+"
-# Breaking change in snakeYaml 2.6 (removing DumpSettingsBuilder::setScalarResolver), so pin to 2.5
+# snakeYaml 2.6 removed DumpSettingsBuilder::setScalarResolver,
+# which is used by the external YAML renderer (org.pkl.core.YamlRenderer)
 snakeYaml = "2.5"
 spotlessPlugin = "6.11.0"
 wiremock = "3.+"
