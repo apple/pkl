@@ -172,6 +172,11 @@ public final class ParserNodes {
 
     @Override
     public void startObjectValue(@Nullable EconomicMap<Object, ObjectMember> members, String name) {
+      if (!useMapping && "default".equals(name)) {
+        // https://github.com/apple/pkl/issues/561
+        throw new ParseException(
+            "Cannot parse object key `default` into a `Dynamic` value", getLocation());
+      }
       currPath.push(Identifier.get(name));
     }
 

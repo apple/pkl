@@ -91,3 +91,11 @@ res15 = parser.parseAll("""
   hobby: surfing
   ...
   """)
+
+res16 = test.catch(() -> parser.parse("""
+  {"default": null}
+  """))
+
+res17 = (parser) { useMapping = true }.parse("""
+  default: null
+  """)

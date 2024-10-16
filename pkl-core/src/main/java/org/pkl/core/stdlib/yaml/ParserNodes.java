@@ -483,6 +483,12 @@ public final class ParserNodes {
           var memberName =
               convertedKey instanceof String string && !useMapping ? Identifier.get(string) : null;
 
+          // https://github.com/apple/pkl/issues/561
+          if (memberName != null && "default".equals(convertedKey)) {
+            throw new YamlEngineException(
+                "Cannot parse object key `default` into a Dynamic value. Node: " + node);
+          }
+
           var member =
               new ObjectMember(
                   sourceSection,
