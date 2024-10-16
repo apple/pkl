@@ -444,15 +444,6 @@ Start a REPL session.
 
 This command takes <<common-options, common options>>.
 
-[[command-get-imports]]
-=== `pkl get-imports`
-
-*Synopsis* `pkl get-imports [<options>] [<args>]`
-
-Builds the graph of imports from the given input module(s).
-
-This outputs a JSON object, where each key is a module imported somewhere by the program, and the values are the set of modules imported by the module specified by the key.
-
 [[command-project-package]]
 === `pkl project package`
 
@@ -567,14 +558,40 @@ package already exists in the cache directory, this command is a no-op.
 
 This command accepts <<common-options,common options>>.
 
+[[command-analyze-imports]]
+=== `pkl analyze imports`
+
+*Synopsis*: `pkl analyze imports [<modules>]`
+
+This command builds a graph of imports declared in the provided modules.
+
+<modules>::
+The absolute or relative URIs of the modules to analyze. Relative URIs are resolved against the working directory.
+
+==== Options
+
+.-f, --format
+[%collapsible]
+====
+Same meaning as <<format>> in <<command-eval>>.
+====
+
+.-o, --output-path
+[%collapsible]
+====
+Same meaning as <<output-path>> in <<command-eval>>.
+====
+
+This command also takes <<common-options,common options>>.
+
 [[common-options]]
 === Common options
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, and <<command-download-package>> commands support the following common options:
+The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, <<command-download-package>>, and <<command-analyze-imports>> commands support the following common options:
 
 include::../../pkl-cli/partials/cli-common-options.adoc[]
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, and <<command-download-package>> commands also take the following options:
+The <<command-eval>>, <<command-test>>, <<command-repl>>, and <<command-download-package>>, <<command-analyze-imports>> commands also take the following options:
 
 include::../../pkl-cli/partials/cli-project-options.adoc[]
 

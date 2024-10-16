@@ -502,13 +502,13 @@ public class PklPlugin implements Plugin<Project> {
   }
 
   /**
-   * Implicitly also create a task of type {@link AnalyzeImportsTask}, postfixing the spec name
-   * with {@code "GatherImports"}.
+   * Implicitly also create a task of type {@link AnalyzeImportsTask}, postfixing the spec name with
+   * {@code "GatherImports"}.
    *
-   * The resulting task depends on the analyze task, and configures its own input files based on
+   * <p>The resulting task depends on the analyze task, and configures its own input files based on
    * the result of analysis.
    *
-   * The end result is that the task automatically has correct up-to-date checks without users
+   * <p>The end result is that the task automatically has correct up-to-date checks without users
    * needing to manually provide transitive modules.
    */
   private <T extends ModulesTask> TaskProvider<T> createModulesTask(

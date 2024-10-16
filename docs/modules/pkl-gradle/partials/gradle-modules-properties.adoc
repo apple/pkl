@@ -17,18 +17,6 @@ This property accepts the following types to represent a module:
 * `org.gradle.api.file.FileSystemLocation`
 ====
 
-.transitiveModules: ConfigurableFileCollection
-[%collapsible]
-====
-Default: `files()` (empty collection) +
-Example 1: `transitiveModules.from files("module1.pkl", "module2.pkl")` +
-Example 2: `+transitiveModules.from fileTree("config").include("**/*.pkl")+` +
-File paths of modules that are directly or indirectly used by source modules.
-Setting this option enables correct Gradle up-to-date checks, which ensures that your Pkl tasks are executed if any of the transitive files are modified; it does not affect evaluation otherwise.
-Including source modules in `transitiveModules` is permitted but not required.
-Relative paths are resolved against the project directory.
-====
-
 .projectDir: DirectoryProperty
 [%collapsible]
 ====

@@ -7,7 +7,6 @@ URI patterns that determine which modules can be loaded and evaluated.
 Patterns are matched against the beginning of module URIs.
 (File paths have been converted to `file:` URLs at this stage.)
 At least one pattern needs to match for a module to be loadable.
-Both source modules and transitive modules are subject to this check.
 ====
 
 .allowedResources: ListProperty<String>
