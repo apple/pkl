@@ -79,9 +79,16 @@ public final class GlobResolver {
    * a complex glob pattern can starve CPU/memory on a host.
    *
    * <p>Glob limit value taken from <a
-   * href="https://github.com/openbsd/src/commit/46df4fe576b7">https://github.com/openbsd/src/commit/46df4fe576b7</a>
+   * href="https://github.com/openbsd/src/commit/46df4fe576b7">https://github.com/openbsd/src/commit/46df4fe576b7</a>.
+   *
+   * <p>If test mode is enabled, a smaller value is used. This greatly speeds up the test that
+   * verifies enforcement of the limit (invalidGlobImport6.pkl).
+   *
+   * <p>Not a static field to prevent compile-time evaluation by native-image.
    */
-  private static final int MAX_LIST_ELEMENTS = 16384;
+  private static int maxListElements() {
+    return IoUtils.isTestMode() ? 512 : 16384;
+  }
 
   private static final Map<String, Pattern> patterns =
       Collections.synchronizedMap(new WeakHashMap<>());
@@ -338,7 +345,7 @@ public final class GlobResolver {
       List<ResolvedGlobElement> result)
       throws IOException, SecurityManagerException, InvalidGlobPatternException {
 
-    if (listElementCallCount.getAndIncrement() > MAX_LIST_ELEMENTS) {
+    if (listElementCallCount.getAndIncrement() > maxListElements()) {
       throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobTooComplex"));
     }
     var elements = reader.listElements(securityManager, baseUri);

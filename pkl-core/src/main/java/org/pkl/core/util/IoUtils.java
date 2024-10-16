@@ -531,7 +531,7 @@ public final class IoUtils {
     return ServiceLoader.load(serviceClass, IoUtils.class.getClassLoader());
   }
 
-  // not a static property to avoid compile-time evaluation by native-image
+  // not a static field to avoid compile-time evaluation by native-image
   public static boolean isTestMode() {
     return Boolean.getBoolean("org.pkl.testMode");
   }
