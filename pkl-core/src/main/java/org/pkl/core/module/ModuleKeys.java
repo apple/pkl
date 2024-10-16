@@ -29,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.Dependency;
@@ -325,10 +326,19 @@ public final class ModuleKeys {
       if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
         throw new FileNotFoundException();
       }
-      var realPath = Path.of(uri).toRealPath();
-      var resolvedUri = realPath.toUri();
-      securityManager.checkResolveModule(resolvedUri);
-      return ResolvedModuleKeys.file(this, resolvedUri, realPath);
+
+      // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
+      // ASCII
+      // Unfortunately there's no way to go from URI -> ASCII URI directly
+      // so this must transform URI -> ASCII String -> ASCII URI
+      try {
+        var realPath = Path.of(new URI(uri.toASCIIString())).toRealPath();
+        var resolvedUri = realPath.toUri();
+        securityManager.checkResolveModule(resolvedUri);
+        return ResolvedModuleKeys.file(this, resolvedUri, realPath);
+      } catch (URISyntaxException e) {
+        throw new PklBugException("File module URI could not be normalized to ASCII", e);
+      }
     }
 
     @Override
