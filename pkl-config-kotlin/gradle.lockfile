@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.1=pklCodegenKotlin
-com.github.ajalt.clikt:clikt:3.5.1=pklCodegenKotlin
+com.github.ajalt.clikt:clikt-jvm:3.5.4=pklCodegenKotlin
+com.github.ajalt.clikt:clikt:3.5.4=pklCodegenKotlin
 com.squareup:kotlinpoet:1.6.0=pklCodegenKotlin
 com.tunnelvisionlabs:antlr4-runtime:4.9.0=pklCodegenKotlin,pklConfigJava,runtimeClasspath,testRuntimeClasspath
 io.leangen.geantyref:geantyref:1.3.16=pklConfigJava,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

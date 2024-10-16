@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.github.ajalt.clikt:clikt:3.5.1=apiDependenciesMetadata,compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+com.github.ajalt.clikt:clikt-jvm:3.5.4=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.github.ajalt.clikt:clikt:3.5.4=apiDependenciesMetadata,compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.tunnelvisionlabs:antlr4-runtime:4.9.0=runtimeClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.14.18=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.java.dev.jna:jna:5.6.0=kotlinCompilerClasspath,kotlinKlibCommonizerClasspath

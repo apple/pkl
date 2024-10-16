@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.1=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
-com.github.ajalt.clikt:clikt:3.5.1=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+com.github.ajalt.clikt:clikt-jvm:3.5.4=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+com.github.ajalt.clikt:clikt:3.5.4=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.google.code.findbugs:jsr305:3.0.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.google.errorprone:error_prone_annotations:2.18.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.google.guava:failureaccess:1.0.1=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
