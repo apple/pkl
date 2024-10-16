@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.gradle.spec;
+package org.pkl.gradle;
 
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
+import org.gradle.api.Action;
+import org.gradle.api.NamedDomainObjectContainer;
+import org.pkl.gradle.spec.AnalyzeImportsSpec;
 
-public interface ModulesSpec extends BasePklSpec {
-  ListProperty<Object> getSourceModules();
+public interface PklAnalyzeCommands {
+  NamedDomainObjectContainer<AnalyzeImportsSpec> getImports();
 
-  /** As of Pkl 0.27, this setting is ignored. */
-  @Deprecated(since = "0.27.0", forRemoval = true)
-  ConfigurableFileCollection getTransitiveModules();
-
-  DirectoryProperty getProjectDir();
-
-  Property<Boolean> getOmitProjectSettings();
-
-  Property<Boolean> getNoProject();
+  default void imports(Action<? super NamedDomainObjectContainer<AnalyzeImportsSpec>> action) {
+    action.execute(getImports());
+  }
 }
