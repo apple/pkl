@@ -401,6 +401,13 @@ class IoUtilsTest {
   }
 
   @Test
+  fun `toUrl() throws UnsupportedOperationException for file URIs with remote hostnames`() {
+    val uri = URI("file://example.com/bar/baz.pkl")
+    val exception = assertThrows<UnsupportedOperationException> { IoUtils.toUrl(uri) }
+    assertThat(exception.message).contains("Remote file URIs are not supported")
+  }
+
+  @Test
   fun `encodePath encodes characters reserved on windows`() {
     assertThat(IoUtils.encodePath("foo:bar")).isEqualTo("foo(3a)bar")
     assertThat(IoUtils.encodePath("<>:\"\\|?*")).isEqualTo("(3c)(3e)(3a)(22)(5c)(7c)(3f)(2a)")
