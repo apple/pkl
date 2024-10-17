@@ -8,7 +8,7 @@ readOne = """
   importGlob = import*("./日*.pkl").keys
   
   """
-readGlob = Set("./日本語.pkl")
+readGlob = Set("./日本語.pkl", "./日本語_error.pkl")
 importOne = """
   // covers https://github.com/apple/pkl/issues/653
   日本語 = "Japanese language"
@@ -18,4 +18,4 @@ importOne = """
   importGlob = import*("./日*.pkl").keys
   
   """
-importGlob = Set("./日本語.pkl")
+importGlob = Set("./日本語.pkl", "./日本語_error.pkl")

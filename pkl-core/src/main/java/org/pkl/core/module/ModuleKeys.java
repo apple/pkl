@@ -326,19 +326,10 @@ public final class ModuleKeys {
       if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
         throw new FileNotFoundException();
       }
-
-      // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
-      // ASCII
-      // Unfortunately there's no way to go from URI -> ASCII URI directly
-      // so this must transform URI -> ASCII String -> ASCII URI
-      try {
-        var realPath = Path.of(new URI(uri.toASCIIString())).toRealPath();
-        var resolvedUri = realPath.toUri();
-        securityManager.checkResolveModule(resolvedUri);
-        return ResolvedModuleKeys.file(this, resolvedUri, realPath);
-      } catch (URISyntaxException e) {
-        throw new PklBugException("File module URI could not be normalized to ASCII", e);
-      }
+      var realPath = IoUtils.pathOfURI(uri).toRealPath();
+      var resolvedUri = realPath.toUri();
+      securityManager.checkResolveModule(resolvedUri);
+      return ResolvedModuleKeys.file(this, resolvedUri, realPath);
     }
 
     @Override

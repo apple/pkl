@@ -93,7 +93,7 @@ public final class StackFrameTransformers {
       var uri = frame.getModuleUri();
       if (!uri.startsWith("file:")) return frame;
 
-      return transformUri(frame, Path.of(URI.create(uri)).toString(), scheme);
+      return transformUri(frame, IoUtils.pathOfURI(URI.create(uri)).toString(), scheme);
     };
   }
 
