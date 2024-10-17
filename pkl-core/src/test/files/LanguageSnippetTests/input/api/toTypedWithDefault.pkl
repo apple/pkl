@@ -1,0 +1,25 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["toTyped()"] {
+    pigeonDyn.toTyped(Person)
+    pigeonMap.toTyped(Person)
+  }
+  
+  ["toTyped() and amends"] {
+    (pigeonDyn.toTyped(Person)) { name = "NewPigeon"}
+    (pigeonMap.toTyped(Person)) { name = "NewPigeon"}
+  }
+}
+
+local class Person {
+  name: String = "Default"
+  nick = name
+}
+
+local pigeonDyn = new Dynamic {
+  local n = "Pigeon"
+  name = n
+}
+
+local pigeonMap = Map("name", "Pigeon")
