@@ -21,9 +21,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
+import org.pkl.core.parser.antlr.PklLexer;
 import org.pkl.core.parser.antlr.PklParser.ImportClauseContext;
 import org.pkl.core.parser.antlr.PklParser.ImportExprContext;
 import org.pkl.core.parser.antlr.PklParser.ModuleExtendsOrAmendsClauseContext;
@@ -31,8 +34,8 @@ import org.pkl.core.parser.antlr.PklParser.ReadExprContext;
 import org.pkl.core.parser.antlr.PklParser.SingleLineStringLiteralContext;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.Pair;
 
 /**
  * Collects module uris and resource uris imported within a module.
@@ -46,17 +49,29 @@ import org.pkl.core.util.Pair;
  *   <li>read expressions
  * </ul>
  */
-public final class ImportsAndReadsParser
-    extends AbstractAstBuilder<@Nullable List<Pair<String, SourceSection>>> {
+public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Entry>> {
+
+  public record Entry(
+      boolean isModule,
+      boolean isGlob,
+      boolean isExtends,
+      boolean isAmends,
+      String stringValue,
+      SourceSection sourceSection) {}
 
   /** Parses a module, and collects all imports and reads. */
-  public static @Nullable List<Pair<String, SourceSection>> parse(
+  public static @Nullable List<Entry> parse(
       ModuleKey moduleKey, ResolvedModuleKey resolvedModuleKey) throws IOException {
     var parser = new Parser();
     var text = resolvedModuleKey.loadSource();
     var source = VmUtils.createSource(moduleKey, text);
     var importListParser = new ImportsAndReadsParser(source);
-    return parser.parseModule(text).accept(importListParser);
+    try {
+      return parser.parseModule(text).accept(importListParser);
+    } catch (LexParseException e) {
+      var moduleName = IoUtils.inferModuleName(moduleKey);
+      throw VmUtils.toVmException(e, source, moduleName);
+    }
   }
 
   public ImportsAndReadsParser(Source source) {
@@ -69,29 +84,35 @@ public final class ImportsAndReadsParser
   }
 
   @Override
-  public List<Pair<String, SourceSection>> visitModuleExtendsOrAmendsClause(
+  public @Nullable List<Entry> visitModuleExtendsOrAmendsClause(
       ModuleExtendsOrAmendsClauseContext ctx) {
     var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
     var sourceSection = createSourceSection(ctx.stringConstant());
-    return Collections.singletonList(Pair.of(importStr, sourceSection));
+    return Collections.singletonList(
+        new Entry(
+            true, false, ctx.EXTENDS() != null, ctx.AMENDS() != null, importStr, sourceSection));
   }
 
   @Override
-  public List<Pair<String, SourceSection>> visitImportClause(ImportClauseContext ctx) {
+  public List<Entry> visitImportClause(ImportClauseContext ctx) {
     var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
     var sourceSection = createSourceSection(ctx.stringConstant());
-    return Collections.singletonList(Pair.of(importStr, sourceSection));
+    return Collections.singletonList(
+        new Entry(
+            true, ctx.t.getType() == PklLexer.IMPORT_GLOB, false, false, importStr, sourceSection));
   }
 
   @Override
-  public List<Pair<String, SourceSection>> visitImportExpr(ImportExprContext ctx) {
+  public List<Entry> visitImportExpr(ImportExprContext ctx) {
     var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
     var sourceSection = createSourceSection(ctx.stringConstant());
-    return Collections.singletonList(Pair.of(importStr, sourceSection));
+    return Collections.singletonList(
+        new Entry(
+            true, ctx.t.getType() == PklLexer.IMPORT_GLOB, false, false, importStr, sourceSection));
   }
 
   @Override
-  public List<Pair<String, SourceSection>> visitReadExpr(ReadExprContext ctx) {
+  public List<Entry> visitReadExpr(ReadExprContext ctx) {
     var expr = ctx.expr();
     if (!(expr instanceof SingleLineStringLiteralContext slCtx)) {
       return Collections.emptyList();
@@ -111,20 +132,26 @@ public final class ImportsAndReadsParser
     } else {
       return Collections.emptyList();
     }
-    return Collections.singletonList(Pair.of(importString, createSourceSection(slCtx)));
+    return Collections.singletonList(
+        new Entry(
+            false,
+            ctx.t.getType() == PklLexer.READ_GLOB,
+            false,
+            false,
+            importString,
+            createSourceSection(slCtx)));
   }
 
   @Override
-  protected @Nullable List<Pair<String, SourceSection>> aggregateResult(
-      @Nullable List<Pair<String, SourceSection>> aggregate,
-      @Nullable List<Pair<String, SourceSection>> nextResult) {
+  protected @Nullable List<Entry> aggregateResult(
+      @Nullable List<Entry> aggregate, @Nullable List<Entry> nextResult) {
     if (aggregate == null || aggregate.isEmpty()) {
       return nextResult;
     }
     if (nextResult == null || nextResult.isEmpty()) {
       return aggregate;
     }
-    var ret = new ArrayList<Pair<String, SourceSection>>(aggregate.size() + nextResult.size());
+    var ret = new ArrayList<Entry>(aggregate.size() + nextResult.size());
     ret.addAll(aggregate);
     ret.addAll(nextResult);
     return ret;

@@ -1,0 +1,12 @@
+–– Pkl Error ––
+Module URI `foo <>` has invalid syntax.
+
+x | result = analyze.importGraph(Set("foo <>"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at analyzeInvalidModuleUri#result (file:///$snippetsDir/input/errors/analyzeInvalidModuleUri.pkl)
+
+Illegal character in path at index 3: foo <>
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

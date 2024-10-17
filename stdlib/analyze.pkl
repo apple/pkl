@@ -1,0 +1,44 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A library for statically analyzing Pkl modules.
+///
+/// These tools differentiate from [pkl:reflect][reflect] in that they parse Pkl modules, but do not
+/// execute any code within these modules.
+@Since { version = "0.27.0" }
+@ModuleInfo { minPklVersion = "0.27.0" }
+module pkl.analyze
+
+// used by doc comments
+import "pkl:reflect"
+
+/// Given a set of Pkl module URIs, returns a graph of imports declared by these modules.
+///
+/// The resulting graph includes transitive imports.
+external function importGraph(moduleUris: Set<String>): ImportGraph
+
+class ImportGraph {
+  /// The imports declared within a Pkl program.
+  ///
+  /// Each entry is a module URI, mapped to the set of imports declared in that module.
+  ///
+  /// The set of all modules in the graph can be obtained via its keys.
+  imports: Map<Uri, Set<Uri>>
+
+  /// Mappings of modules from their in-language URI, to the URI that is used to fetch the module's
+  /// contents.
+  resolvedImports: Map<Uri, Uri>(keys == imports.keys)
+}

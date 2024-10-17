@@ -94,6 +94,7 @@ public abstract class VmException extends AbstractTruffleException {
   public enum Kind {
     EVAL_ERROR,
     UNDEFINED_VALUE,
+    WRAPPED,
     BUG
   }
 

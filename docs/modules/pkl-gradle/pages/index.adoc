@@ -102,7 +102,6 @@ pkl {
   evaluators {
     evalPkl {
       sourceModules.add(file("module1.pkl"))
-      transitiveModules.from file("module2.pkl")
       outputFile = layout.buildDirectory.file("module1.yaml")
       outputFormat = "yaml"
     }
@@ -118,7 +117,6 @@ pkl {
   evaluators {
     register("evalPkl") {
       sourceModules.add(file("module1.pkl"))
-      transitiveModules.from(file("module2.pkl"))
       outputFile.set(layout.buildDirectory.file("module1.yaml"))
       outputFormat.set("yaml")
     }
@@ -126,9 +124,6 @@ pkl {
 }
 ----
 ====
-
-To guarantee correct Gradle up-to-date behavior, 
-`transitiveModules` needs to contain all module files transitively referenced by `sourceModules`.
 
 For each declared evaluator, the Pkl plugin creates an equally named task.
 Hence the above evaluator can be run with:
@@ -691,3 +686,26 @@ The project directories to create packages for.
 Common properties:
 
 include::../partials/gradle-common-properties.adoc[]
+
+[[analyze-imports]]
+== Analyze Imports
+
+This feature is the Gradle analogy for the xref:pkl-cli:index.adoc#command-analyze-imports[analyze imports] command in the CLI. It builds a graph of imports of the provided source modules.
+
+=== Configuration Options
+
+.outputFormat: Property<String>
+[%collapsible]
+====
+Same meaning as <<output-format,outputFormat>> in <<module-evaluation>>.
+====
+
+.outputFile: RegularFileProperty<String>
+[%collapsible]
+====
+Same meaning as <<output-file,outputFile>> in <<module-evaluation>>.
+====
+
+Common properties:
+
+include::../partials/gradle-modules-properties.adoc[]

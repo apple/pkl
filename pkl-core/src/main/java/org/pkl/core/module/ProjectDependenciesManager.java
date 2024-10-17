@@ -199,6 +199,10 @@ public final class ProjectDependenciesManager {
     }
   }
 
+  public DeclaredDependencies getDeclaredDependencies() {
+    return declaredDependencies;
+  }
+
   public Dependency getResolvedDependency(PackageUri packageUri) {
     var dep = getProjectDeps().get(CanonicalPackageUri.fromPackageUri(packageUri));
     if (dep == null) {

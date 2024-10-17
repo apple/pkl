@@ -15,21 +15,12 @@
  */
 package org.pkl.gradle.spec;
 
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 
-public interface ModulesSpec extends BasePklSpec {
-  ListProperty<Object> getSourceModules();
+/** Configuration options for import analyzers. Documented in user manual. */
+public interface AnalyzeImportsSpec extends ModulesSpec {
+  RegularFileProperty getOutputFile();
 
-  /** As of Pkl 0.27, this setting is ignored. */
-  @Deprecated(since = "0.27.0", forRemoval = true)
-  ConfigurableFileCollection getTransitiveModules();
-
-  DirectoryProperty getProjectDir();
-
-  Property<Boolean> getOmitProjectSettings();
-
-  Property<Boolean> getNoProject();
+  Property<String> getOutputFormat();
 }

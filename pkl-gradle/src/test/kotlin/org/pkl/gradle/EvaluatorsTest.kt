@@ -839,6 +839,30 @@ class EvaluatorsTest : AbstractTest() {
       )
   }
 
+  @Test
+  fun `implicit dependency tracking for declared imports`() {
+    writePklFile("import \"shared.pkl\"")
+    writeFile("shared.pkl", "foo = 1")
+    writeBuildFile("json")
+    val result1 = runTask("evalTest")
+    assertThat(result1.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // evalTest should be up-to-date now
+    val result2 = runTask("evalTest")
+    assertThat(result2.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    // update transitive module with new contents
+    writeFile("shared.pkl", "foo = 2")
+
+    // evalTest should be out-of-date and need to run again
+    val result3 = runTask("evalTest")
+    assertThat(result3.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // running again should be up-to-date again
+    val result4 = runTask("evalTest")
+    assertThat(result4.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+  }
+
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core

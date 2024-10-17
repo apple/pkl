@@ -13,23 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.gradle.spec;
+package org.pkl.cli
 
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
+import java.nio.file.Path
+import org.pkl.commons.cli.CliBaseOptions
 
-public interface ModulesSpec extends BasePklSpec {
-  ListProperty<Object> getSourceModules();
+data class CliImportAnalyzerOptions(
+  /** Base options shared between CLI commands. */
+  val base: CliBaseOptions,
 
-  /** As of Pkl 0.27, this setting is ignored. */
-  @Deprecated(since = "0.27.0", forRemoval = true)
-  ConfigurableFileCollection getTransitiveModules();
+  /** The file path where the output file is placed. */
+  val outputPath: Path? = null,
 
-  DirectoryProperty getProjectDir();
-
-  Property<Boolean> getOmitProjectSettings();
-
-  Property<Boolean> getNoProject();
-}
+  /**
+   * The output format to generate.
+   *
+   * The default output renderer for a module supports the following formats:
+   * - `"json"`
+   * - `"jsonnet"`
+   * - `"pcf"` (default)
+   * - `"plist"`
+   * - `"properties"`
+   * - `"textproto"`
+   * - `"xml"`
+   * - `"yaml"`
+   */
+  val outputFormat: String? = null,
+)

@@ -85,6 +85,8 @@ public final class ModuleCache {
       // some standard library modules are cached as static singletons
       // and hence aren't parsed/initialized anew for every evaluator
       switch (moduleName) {
+        case "analyze":
+          return AnalyzeModule.getModule();
         case "base":
           // always needed
           return BaseModule.getModule();

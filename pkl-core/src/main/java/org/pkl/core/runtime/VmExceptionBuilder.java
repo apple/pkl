@@ -53,6 +53,7 @@ public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
   private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
+  private VmException wrappedException;
 
   public static class MultilineValue {
     private final Iterable<?> lines;
@@ -332,6 +333,12 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  public VmExceptionBuilder wrapping(VmException nestedException) {
+    this.wrappedException = nestedException;
+    this.kind = VmException.Kind.WRAPPED;
+    return this;
+  }
+
   public VmExceptionBuilder withInsertedStackFrames(
       Map<CallTarget, StackFrame> insertedStackFrames) {
     this.insertedStackFrames = insertedStackFrames;
@@ -383,6 +390,19 @@ public final class VmExceptionBuilder {
               memberName,
               hint,
               effectiveInsertedStackFrames);
+      case WRAPPED ->
+          new VmWrappedEvalException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hint,
+              effectiveInsertedStackFrames,
+              wrappedException);
     };
   }
 
