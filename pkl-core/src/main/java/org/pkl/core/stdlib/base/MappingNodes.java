@@ -19,6 +19,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.HashSet;
+import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction3Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction3NodeGen;
 import org.pkl.core.runtime.*;
@@ -73,6 +75,28 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class values extends ExternalPropertyNode {
+    @Specialization
+    protected VmList eval(VmMapping self) {
+      var builder = VmList.newBuilder();
+      for (var key : self.getAllKeys()) {
+        builder.add(VmUtils.readMember(self, key));
+      }
+      return builder.build();
+    }
+  }
+
+  public abstract static class entries extends ExternalPropertyNode {
+    @Specialization
+    protected VmList eval(VmMapping self) {
+      var builder = VmList.newBuilder();
+      for (var key : self.getAllKeys()) {
+        builder.add(new VmPair(key, VmUtils.readMember(self, key)));
+      }
+      return builder.build();
+    }
+  }
+
   public abstract static class containsKey extends ExternalMethod1Node {
     @Specialization
     protected boolean eval(VmMapping self, Object key) {
@@ -82,6 +106,18 @@ public final class MappingNodes {
         if (curr.hasMember(key)) return true;
       }
 
+      return false;
+    }
+  }
+
+  public abstract static class containsValue extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmMapping self, Object value) {
+      for (var key : self.getAllKeys()) {
+        if (value.equals(VmUtils.readMember(self, key))) {
+          return true;
+        }
+      }
       return false;
     }
   }
@@ -110,6 +146,34 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class every extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      for (var key : self.getAllKeys()) {
+        if (!applyLambdaNode.executeBoolean(function, key, VmUtils.readMember(self, key))) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
+  public abstract static class any extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      for (var key : self.getAllKeys()) {
+        if (applyLambdaNode.executeBoolean(function, key, VmUtils.readMember(self, key))) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
   public abstract static class toMap extends ExternalMethod0Node {
     @Specialization
     protected VmMap eval(VmMapping self) {
@@ -120,6 +184,13 @@ public final class MappingNodes {
             return true;
           });
       return builder.build();
+    }
+  }
+
+  public abstract static class toDynamic extends ExternalMethod0Node {
+    @Specialization
+    protected VmDynamic eval(VmMapping self) {
+      return self.toDynamic();
     }
   }
 }
