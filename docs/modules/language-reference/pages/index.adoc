@@ -3178,6 +3178,7 @@ pkl: TRACE: num1 * num2 = 672 (at file:///some/module.pkl, line 42)
 This section discusses language features that are generally more relevant to template and library authors than template consumers.
 
 <<meaning-of-new,Meaning of `new`>> +
+<<member-deletion,Deleting members with `delete`>> +
 <<let-expressions,Let Expressions>> +
 <<type-tests,Type Tests>> +
 <<type-casts,Type Casts>> +
@@ -3356,6 +3357,45 @@ swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
 <6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
 <7> Admending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
 <8> Error: Cannot tell which parent to amend.
+
+[[member-deletions]]
+=== Deleting members with `delete`
+
+Members can be deleted when amending the object containing them.
+This is done using the `delete` keyword.
+By itself, `delete` is not an expression; it can be used only in specific places, namely in a member
+assignment.
+These are all the positions where `delete` can be used:
+
+[source,pkl]
+----
+foo {
+  bar = delete // <1>
+  ["baz"] = delete // <2>
+  [42] = delete // <3>
+  [[qux == 1337]] = delete // <4>
+}
+----
+<1> Property deletion.
+<2> Entry deletion.
+<3> Element deletion.
+<4> Member predicate deletion (can include both entries and elements).
+
+Properties can only be deleted from `Dynamic`s, because a `Typed` must have precisely the properties defined in its class.
+Since elements are contiguously indices, deleting elements effectively renames other elements.
+This means that the indices used in the definition of an object can differ from those used in subscripting.
+In the following, `result = true`:
+
+[source,pkl]
+----
+result = (new Listing {
+  /* [0] */ "foo"
+  /* [1] */ "bar"
+  /* [2] */ "baz"
+}) {
+  [1] = delete
+}[1] == "baz"
+----
 
 [[let-expressions]]
 === Let Expressions

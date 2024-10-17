@@ -79,6 +79,11 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
     return BaseModule.getMappingClass();
   }
 
+  @Override
+  public boolean hasElements() {
+    return false;
+  }
+
   @TruffleBoundary
   public VmSet getAllKeys() {
     synchronized (this) {

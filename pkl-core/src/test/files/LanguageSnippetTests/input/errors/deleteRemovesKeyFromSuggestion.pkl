@@ -1,0 +1,8 @@
+foo = new Dynamic {
+  bar = 0
+  baz = 1
+  qux = 2
+}
+
+// The error should _not_ suggest `baz`.
+bar = (foo) { baz = delete }.foo
