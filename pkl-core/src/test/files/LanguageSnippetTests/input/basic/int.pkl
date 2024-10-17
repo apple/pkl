@@ -163,6 +163,10 @@ examples {
     -0b11.abs
     local x = 4
     -x.abs
+
+    // https://github.com/apple/pkl/issues/650
+    --1
+    -(-1)
   }
 
   ["power"] {

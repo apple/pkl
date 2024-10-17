@@ -141,6 +141,10 @@ examples {
 
     -1.2.abs
     -x.abs
+
+    // https://github.com/apple/pkl/issues/650
+    --1.0
+    -(-1.0)
   }
 
   ["power"] {

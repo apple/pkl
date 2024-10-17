@@ -1869,12 +1869,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitUnaryMinusExpr(UnaryMinusExprContext ctx) {
-    var childExpr = visitExpr(ctx.expr());
-    if (childExpr instanceof IntLiteralNode || childExpr instanceof FloatLiteralNode) {
-      // negation already handled in child expr (see corresponding code)
+    var childCtx = ctx.expr();
+    var childExpr = visitExpr(childCtx);
+    if (childCtx instanceof IntLiteralContext || childCtx instanceof FloatLiteralContext) {
+      // negation already handled (see visitIntLiteral/visitFloatLiteral)
       return childExpr;
     }
-
     return UnaryMinusNodeGen.create(createSourceSection(ctx), childExpr);
   }
 
