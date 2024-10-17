@@ -4742,7 +4742,7 @@ oldPets {
 }
 
 newPets {
-  ...cast
+  ...oldPets
   ["Pigeon"] = "Toby the Pigeon" // <1>
 }
 ----
