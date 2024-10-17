@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Modifier `const` is not applicable to object members.
+Modifier `const` can only be applied to object members that are also `local`.
 
 x | const foo = 10
     ^^^^^

@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Cannot reference property `bar` from here because it is not `const`.
+
+x | const local function foo() = bar
+                                 ^^^
+at constLocalMethod#obj.foo (file:///$snippetsDir/input/errors/const/constLocalMethod.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to property `bar`
+2. Self-import this module, and reference this property from the import.
+
+x | res = foo()
+          ^^^^^
+at constLocalMethod#obj.res (file:///$snippetsDir/input/errors/const/constLocalMethod.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

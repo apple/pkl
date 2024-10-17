@@ -72,7 +72,7 @@ public final class VmModifier {
   public static final int VALID_PROPERTY_MODIFIERS =
       ABSTRACT | LOCAL | HIDDEN | EXTERNAL | FIXED | CONST;
 
-  public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL;
+  public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL | CONST;
 
   public static final int TYPEALIAS_OBJECT_MEMBER = TYPE_ALIAS | CONST;
 

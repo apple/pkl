@@ -1,0 +1,5 @@
+foo {
+  res1 = 15
+  const local qux = res1
+  res2 = qux
+}
