@@ -1457,6 +1457,58 @@ result = someLib.x
     assertThat(output).isEqualTo("result = 1\n")
   }
 
+  @Test
+  fun `eval file with non-ASCII name`() {
+    val tempDirUri = tempDir.toUri()
+    val dir = tempDir.resolve("🤬").createDirectory()
+    val file =
+      writePklFile(
+        dir.resolve("日本語.pkl").toString(),
+        """
+      日本語 = "Japanese language"
+      readDir = read(".").text
+      readDirFile = read("$tempDirUri🤬").text
+      readOne = read("日本語.pkl").text.split("\n").first
+      readOneFile = read("$tempDirUri🤬/日本語.pkl").text.split("\n").first
+      readGlob = read*("./日*.pkl").keys
+      readGlobFile = read*("$tempDirUri**/*.pkl").keys.map((it) -> it.replaceAll("$tempDirUri".replaceAll("///", "/"), ""))
+      importOne = import("日本語.pkl").readOne
+      importOneFile = import("$tempDirUri🤬/日本語.pkl").日本語
+      importGlob = import*("./日*.pkl").keys
+      importGlobFile = import*("$tempDirUri**/*.pkl").keys.map((it) -> it.replaceAll("$tempDirUri".replaceAll("///", "/"), ""))
+    """
+          .trimIndent()
+      )
+    val output =
+      evalToConsole(
+        CliEvaluatorOptions(
+          CliBaseOptions(sourceModules = listOf(file)),
+        )
+      )
+
+    assertThat(output)
+      .isEqualTo(
+        """日本語 = "Japanese language"
+readDir = ""${'"'}
+  日本語.pkl
+  
+  ""${'"'}
+readDirFile = ""${'"'}
+  日本語.pkl
+  
+  ""${'"'}
+readOne = "日本語 = \"Japanese language\""
+readOneFile = "日本語 = \"Japanese language\""
+readGlob = Set("./日本語.pkl")
+readGlobFile = Set("🤬/日本語.pkl")
+importOne = "日本語 = \"Japanese language\""
+importOneFile = "Japanese language"
+importGlob = Set("./日本語.pkl")
+importGlobFile = Set("🤬/日本語.pkl")
+"""
+      )
+  }
+
   private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {
     val moduleUri =
       writePklFile(
