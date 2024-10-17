@@ -93,6 +93,20 @@ class ProjectDependenciesResolverTest {
   }
 
   @Test
+  fun `fails if project has cyclical dependency`() {
+    val projectPath = javaClass.getResource("projectCycle1/PklProject")!!.toURI().toPath()
+    val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
+    assertThat(e)
+      .hasMessage(
+        """
+        A stack overflow occurred while resolving the project.
+        Verify that your dependencies are not cyclical.
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `fails if project declares a package with an incorrect checksum`() {
     val projectPath = javaClass.getResource("badProjectChecksum/PklProject")!!.toURI().toPath()
     val project = Project.loadFromPath(projectPath)

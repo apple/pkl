@@ -1,0 +1,12 @@
+amends "pkl:Project"
+
+package {
+  name = "projectCycle2"
+  version = "1.0.0"
+  packageZipUrl = "https://bogus.value"
+  baseUri = "package://localhost:0/projectCycle2"
+}
+
+dependencies {
+  ["projectCycle1"] = import("../projectCycle1/PklProject")
+}
