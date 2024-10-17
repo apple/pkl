@@ -39,7 +39,6 @@ import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.module.ModuleKey;
-import org.pkl.core.module.ResolvedModuleKeys;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
 import org.pkl.core.runtime.VmContext;
@@ -89,9 +88,7 @@ public final class IoUtils {
     return new URI(null, null, str, null);
   }
 
-  /**
-   * Converts a URI to a Path, normalizing any non-ASCII characters.
-   */
+  /** Converts a URI to a Path, normalizing any non-ASCII characters. */
   public static Path pathOfURI(URI uri) {
     // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
     // ASCII

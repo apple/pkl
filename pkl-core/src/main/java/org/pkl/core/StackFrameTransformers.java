@@ -18,7 +18,6 @@ package org.pkl.core;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.stream.StreamSupport;
 import org.pkl.core.packages.PackageAssetUri;
 import org.pkl.core.runtime.VmContext;
