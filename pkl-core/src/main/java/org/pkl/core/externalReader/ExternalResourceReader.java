@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalReader;
 
-/** A bidirectional transport for sending and receiving messages. */
-interface MessageTransport : AutoCloseable {
-  fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
+import java.net.URI;
+import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 
-  fun send(message: OneWayMessage)
+/** An external resource reader, to be used with [ExternalReaderRuntime]. */
+public interface ExternalResourceReader extends ExternalReaderBase {
+  byte[] read(URI uri) throws Exception;
 
-  fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
-
-  fun send(message: ResponseMessage)
+  default ResourceReaderSpec getSpec() {
+    return new ResourceReaderSpec(getScheme(), hasHierarchicalUris(), isGlobbable());
+  }
 }

@@ -16,6 +16,7 @@
 package org.pkl.core.packages;
 
 import java.util.Objects;
+import org.pkl.core.util.Nullable;
 
 public final class Checksums {
   private final String sha256;
@@ -34,7 +35,7 @@ public final class Checksums {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

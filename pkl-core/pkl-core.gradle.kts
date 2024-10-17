@@ -57,6 +57,7 @@ dependencies {
   compileOnly(projects.pklExecutor)
 
   implementation(libs.antlrRuntime)
+  implementation(libs.msgpack)
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
 
@@ -65,6 +66,7 @@ dependencies {
   implementation(libs.snakeYaml)
 
   testImplementation(projects.pklCommonsTest)
+  testImplementation(projects.pklConfigJava)
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)

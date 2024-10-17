@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalReader;
 
-sealed class ServerException(msg: String, cause: Throwable?) : Exception(msg, cause)
+import java.net.URI;
+import java.util.List;
+import org.pkl.core.module.PathElement;
 
-open class ProtocolException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
+/** Base interface for external module and resource readers. */
+public interface ExternalReaderBase {
+  String getScheme();
 
-class InvalidCommandException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
+  boolean hasHierarchicalUris();
 
-class DecodeException(msg: String, cause: Throwable? = null) : ProtocolException(msg, cause)
+  boolean isGlobbable();
+
+  List<PathElement> listElements(URI uri) throws Exception;
+}

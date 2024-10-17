@@ -20,9 +20,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
@@ -43,7 +45,9 @@ public record PklEvaluatorSettings(
     @Nullable List<Path> modulePath,
     @Nullable Duration timeout,
     @Nullable Path rootDir,
-    @Nullable Http http) {
+    @Nullable Http http,
+    @Nullable Map<String, ExternalReader> externalModuleReaders,
+    @Nullable Map<String, ExternalReader> externalResourceReaders) {
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -80,6 +84,24 @@ public record PklEvaluatorSettings(
     var rootDirStr = (String) pSettings.get("rootDir");
     var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr, "rootDir");
 
+    var externalModuleReadersRaw = (Map<String, Value>) pSettings.get("externalModuleReaders");
+    var externalModuleReaders =
+        externalModuleReadersRaw == null
+            ? null
+            : externalModuleReadersRaw.entrySet().stream()
+                .collect(
+                    Collectors.toMap(
+                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+
+    var externalResourceReadersRaw = (Map<String, Value>) pSettings.get("externalResourceReaders");
+    var externalResourceReaders =
+        externalResourceReadersRaw == null
+            ? null
+            : externalResourceReadersRaw.entrySet().stream()
+                .collect(
+                    Collectors.toMap(
+                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
         (Map<String, String>) pSettings.get("env"),
@@ -90,7 +112,9 @@ public record PklEvaluatorSettings(
         modulePath,
         (Duration) pSettings.get("timeout"),
         rootDir,
-        Http.parse((Value) pSettings.get("http")));
+        Http.parse((Value) pSettings.get("http")),
+        externalModuleReaders,
+        externalResourceReaders);
   }
 
   public record Http(@Nullable Proxy proxy) {
@@ -130,6 +154,18 @@ public record PklEvaluatorSettings(
       } else {
         throw PklBugException.unreachableCode();
       }
+    }
+  }
+
+  public record ExternalReader(String executable, @Nullable List<String> arguments) {
+    @SuppressWarnings("unchecked")
+    public static ExternalReader parse(Value input) {
+      if (input instanceof PObject externalReader) {
+        var executable = (String) externalReader.getProperty("executable");
+        var arguments = (List<String>) externalReader.get("arguments");
+        return new ExternalReader(executable, arguments);
+      }
+      throw PklBugException.unreachableCode();
     }
   }
 

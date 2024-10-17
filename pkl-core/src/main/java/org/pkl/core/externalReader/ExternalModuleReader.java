@@ -13,9 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalReader;
 
-/** Encodes a stream of messages. */
-internal interface MessageEncoder {
-  fun encode(msg: Message)
+import java.net.URI;
+import org.pkl.core.messaging.Messages.ModuleReaderSpec;
+
+/** An external module reader, to be used with [ExternalReaderRuntime]. */
+public interface ExternalModuleReader extends ExternalReaderBase {
+  boolean isLocal();
+
+  String read(URI uri) throws Exception;
+
+  default ModuleReaderSpec getSpec() {
+    return new ModuleReaderSpec(getScheme(), hasHierarchicalUris(), isLocal(), isGlobbable());
+  }
 }

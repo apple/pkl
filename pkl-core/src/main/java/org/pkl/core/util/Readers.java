@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.util;
 
-/** Decodes a stream of messages. */
-internal interface MessageDecoder {
-  fun decode(): Message?
+public class Readers {
+  /** Closes the given readers, ignoring any exceptions. */
+  public static void closeQuietly(Iterable<? extends AutoCloseable> readers) {
+    for (var reader : readers) {
+      try {
+        reader.close();
+      } catch (Exception ignored) {
+      }
+    }
+  }
 }

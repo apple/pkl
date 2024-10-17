@@ -29,6 +29,10 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalReader.ExternalReaderProcess;
+import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalReader.ExternalResourceResolver;
+import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -135,6 +139,21 @@ public final class ResourceReaders {
    */
   public static List<ResourceReader> fromServiceProviders() {
     return FromServiceProviders.INSTANCE;
+  }
+
+  public static ResourceReader external(
+      String scheme, ExternalReaderProcess externalReaderProcess) {
+    return new External(scheme, externalReaderProcess, 0);
+  }
+
+  public static ResourceReader external(
+      String scheme, ExternalReaderProcess externalReaderProcess, long evaluatorId) {
+    return new External(scheme, externalReaderProcess, evaluatorId);
+  }
+
+  public static ResourceReader messageTransport(
+      ResourceReaderSpec spec, ExternalResourceResolver resolver) {
+    return new MessageTransportResource(spec, resolver);
   }
 
   private static final class EnvironmentVariable implements ResourceReader {
@@ -521,7 +540,7 @@ public final class ResourceReaders {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -543,7 +562,7 @@ public final class ResourceReaders {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -585,6 +604,7 @@ public final class ResourceReaders {
   }
 
   private static class FromServiceProviders {
+
     private static final List<ResourceReader> INSTANCE;
 
     static {
@@ -592,6 +612,116 @@ public final class ResourceReaders {
       var readers = new ArrayList<ResourceReader>();
       loader.forEach(readers::add);
       INSTANCE = Collections.unmodifiableList(readers);
+    }
+  }
+
+  private static final class External implements ResourceReader {
+    private final String scheme;
+    private final ExternalReaderProcess process;
+    private final long evaluatorId;
+    private MessageTransportResource underlying;
+
+    public External(String scheme, ExternalReaderProcess process, long evaluatorId) {
+      this.scheme = scheme;
+      this.process = process;
+      this.evaluatorId = evaluatorId;
+    }
+
+    private MessageTransportResource getUnderlyingReader()
+        throws ExternalReaderProcessException, IOException {
+      if (underlying != null) {
+        return underlying;
+      }
+
+      var spec = process.getResourceReaderSpec(scheme);
+      if (spec == null) {
+        throw new ExternalReaderProcessException(
+            ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
+      }
+      underlying =
+          new MessageTransportResource(
+              spec, new ExternalResourceResolver(process.getTransport(), evaluatorId));
+      return underlying;
+    }
+
+    @Override
+    public String getUriScheme() {
+      return scheme;
+    }
+
+    @Override
+    public boolean hasHierarchicalUris() throws ExternalReaderProcessException, IOException {
+      return getUnderlyingReader().hasHierarchicalUris();
+    }
+
+    @Override
+    public boolean isGlobbable() throws ExternalReaderProcessException, IOException {
+      return getUnderlyingReader().isGlobbable();
+    }
+
+    @Override
+    public Optional<Object> read(URI uri) throws IOException, ExternalReaderProcessException {
+      return getUnderlyingReader().read(uri);
+    }
+
+    @Override
+    public boolean hasElement(SecurityManager securityManager, URI elementUri)
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
+      return getUnderlyingReader().hasElement(securityManager, elementUri);
+    }
+
+    @Override
+    public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
+      return getUnderlyingReader().listElements(securityManager, baseUri);
+    }
+
+    @Override
+    public void close() {
+      process.close();
+    }
+  }
+
+  private static final class MessageTransportResource implements ResourceReader {
+    private final ResourceReaderSpec readerSpec;
+    private final ExternalResourceResolver resolver;
+
+    public MessageTransportResource(
+        ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
+      this.readerSpec = readerSpec;
+      this.resolver = resolver;
+    }
+
+    @Override
+    public boolean hasHierarchicalUris() {
+      return readerSpec.getHasHierarchicalUris();
+    }
+
+    @Override
+    public boolean isGlobbable() {
+      return readerSpec.isGlobbable();
+    }
+
+    @Override
+    public String getUriScheme() {
+      return readerSpec.getScheme();
+    }
+
+    @Override
+    public Optional<Object> read(URI uri) throws IOException {
+      return resolver.read(uri);
+    }
+
+    @Override
+    public boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
+        throws SecurityManagerException {
+      return resolver.hasElement(securityManager, elementUri);
+    }
+
+    @Override
+    public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
+        throws IOException, SecurityManagerException {
+      return resolver.listElements(securityManager, baseUri);
     }
   }
 }
