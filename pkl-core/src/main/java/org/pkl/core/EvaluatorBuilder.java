@@ -487,7 +487,7 @@ public final class EvaluatorBuilder {
     if (settings.externalModuleReaders() != null) {
       for (var entry : settings.externalModuleReaders().entrySet()) {
         addModuleKeyFactory(
-            ModuleKeyFactories.external(
+            ModuleKeyFactories.externalProcess(
                 entry.getKey(),
                 procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
       }
@@ -495,7 +495,7 @@ public final class EvaluatorBuilder {
     if (settings.externalResourceReaders() != null) {
       for (var entry : settings.externalResourceReaders().entrySet()) {
         addResourceReader(
-            ResourceReaders.external(
+            ResourceReaders.externalProcess(
                 entry.getKey(),
                 procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
       }

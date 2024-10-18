@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalreader;
+package org.pkl.core.resource;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,7 +36,6 @@ import org.pkl.core.messaging.Messages.ReadResourceRequest;
 import org.pkl.core.messaging.Messages.ReadResourceResponse;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
-import org.pkl.core.resource.Resource;
 
 public class ExternalResourceResolver {
   private final MessageTransport transport;

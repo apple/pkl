@@ -26,8 +26,8 @@ import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.externalreader.ExternalReaderProcessImpl
-import org.pkl.core.externalreader.ExternalResourceResolver
 import org.pkl.core.http.HttpClient
+import org.pkl.core.resource.ExternalResourceResolver
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.Messages
@@ -241,12 +241,14 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     add(ResourceReaders.projectpackage())
     add(ResourceReaders.modulePath(modulePathResolver))
     for ((scheme, spec) in message.externalResourceReaders ?: emptyMap()) {
-      add(ResourceReaders.external(scheme, getExternalProcess(evaluatorId, spec), evaluatorId))
+      add(
+        ResourceReaders.externalProcess(scheme, getExternalProcess(evaluatorId, spec), evaluatorId)
+      )
     }
     // add client-side resource readers last to ensure they win over builtin ones
     for (readerSpec in message.clientResourceReaders ?: emptyList()) {
       add(
-        ResourceReaders.messageTransport(
+        ResourceReaders.externalResolver(
           readerSpec,
           ExternalResourceResolver(transport, evaluatorId)
         )
@@ -264,7 +266,13 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       add(ClientModuleKeyFactory(message.clientModuleReaders, transport, evaluatorId))
     }
     for ((scheme, spec) in message.externalModuleReaders ?: emptyMap()) {
-      add(ModuleKeyFactories.external(scheme, getExternalProcess(evaluatorId, spec), evaluatorId))
+      add(
+        ModuleKeyFactories.externalProcess(
+          scheme,
+          getExternalProcess(evaluatorId, spec),
+          evaluatorId
+        )
+      )
     }
     add(ModuleKeyFactories.standardLibrary)
     addAll(ModuleKeyFactories.fromServiceProviders())

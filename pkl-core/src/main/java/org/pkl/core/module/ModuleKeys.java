@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.packages.Dependency;
@@ -131,9 +130,9 @@ public final class ModuleKeys {
   }
 
   /** Creates a module key for an externally read module. */
-  public static ModuleKey messageTransport(
+  public static ModuleKey externalResolver(
       URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) throws URISyntaxException {
-    return new MessageTransport(uri, spec, resolver);
+    return new ExternalResolver(uri, spec, resolver);
   }
 
   /**
@@ -777,13 +776,13 @@ public final class ModuleKeys {
     }
   }
 
-  public static class MessageTransport implements ModuleKey {
+  public static class ExternalResolver implements ModuleKey {
 
     private final URI uri;
     private final ModuleReaderSpec spec;
     private final ExternalModuleResolver resolver;
 
-    public MessageTransport(URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
+    public ExternalResolver(URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
       this.uri = uri;
       this.spec = spec;
       this.resolver = resolver;

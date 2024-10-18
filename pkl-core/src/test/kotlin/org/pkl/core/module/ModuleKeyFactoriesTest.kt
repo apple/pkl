@@ -129,12 +129,12 @@ class ModuleKeyFactoriesTest {
   }
 
   @Test
-  fun external() {
+  fun externalProcess() {
     val extReader = TestExternalModuleReader()
     val (proc, runtime) =
       TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
 
-    val factory = ModuleKeyFactories.external(extReader.scheme, proc)
+    val factory = ModuleKeyFactories.externalProcess(extReader.scheme, proc)
 
     val module = factory.create(URI("test:foo"))
     assertThat(module).isPresent
