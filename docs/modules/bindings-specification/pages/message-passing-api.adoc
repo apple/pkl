@@ -601,7 +601,7 @@ class PathElement {
 [[initialize-module-reader-request]]
 === Initialize Module Reader Request
 
-Code: `0x100` +
+Code: `0x2e` +
 Type: <<server-message,Server>> <<request-message,Request>>
 
 Initialize an xref:language-reference:index.adoc#external-readers[External Module Reader].
@@ -619,7 +619,7 @@ scheme: String
 [[initialize-module-reader-response]]
 === Initialize Module Reader Response
 
-Code: `0x101` +
+Code: `0x2f` +
 Type: <<client-message,Client>> <<response-message,Response>>
 
 Return the requested external module reader specification.
@@ -641,7 +641,7 @@ spec: ClientModuleReader?
 [[initialize-resource-reader-request]]
 === Initialize Resource Reader Request
 
-Code: `0x102` +
+Code: `0x30` +
 Type: <<server-message,Server>> <<request-message,Request>>
 
 Initialize an xref:language-reference:index.adoc#external-readers[External Resource Reader].
@@ -659,7 +659,7 @@ scheme: String
 [[initialize-resource-reader-response]]
 === Initialize Resource Reader Response
 
-Code: `0x103` +
+Code: `0x31` +
 Type: <<client-message,Client>> <<response-message,Response>>
 
 Return the requested external resource reader specification.
@@ -681,7 +681,7 @@ spec: ClientResourceReader?
 [[close-external-process]]
 === Close External Process
 
-Code: `0x104` +
+Code: `0x32` +
 Type: <<server-message,Server>> <<one-way-message,One Way>> 
 
 Initiate graceful shutdown of the external reader process.
