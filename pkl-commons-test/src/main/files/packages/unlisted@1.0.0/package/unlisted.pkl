@@ -1,0 +1,5 @@
+/// No docs are actually generated for this module
+module unlisted.unlisted
+
+/// 1
+foo: Int = 1

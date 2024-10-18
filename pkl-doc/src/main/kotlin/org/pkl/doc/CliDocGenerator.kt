@@ -108,7 +108,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
       overview = metadata.description,
       extraAttributes = mapOf("Checksum" to checksum.sha256),
       sourceCode = metadata.sourceCode,
-      sourceCodeUrlScheme = metadata.sourceCodeUrlScheme
+      sourceCodeUrlScheme = metadata.sourceCodeUrlScheme,
+      annotations = metadata.annotations,
     )
   }
 

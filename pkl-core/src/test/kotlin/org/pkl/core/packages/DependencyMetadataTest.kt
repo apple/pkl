@@ -20,6 +20,8 @@ import java.net.URI
 import java.nio.charset.StandardCharsets
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.pkl.core.PClassInfo
+import org.pkl.core.PObject
 import org.pkl.core.Version
 
 class DependencyMetadataTest {
@@ -44,7 +46,11 @@ class DependencyMetadataTest {
       "The MIT License, you know it",
       listOf("birdy@bird.com"),
       URI("https://example.com/issues"),
-      "Some package description"
+      "Some package description",
+      listOf(
+        PObject(PClassInfo.Unlisted, mapOf()),
+        PObject(PClassInfo.Deprecated, mapOf("since" to "0.26.1", "message" to "don't use"))
+      ),
     )
 
   private val dependencyMetadataStr =
@@ -74,7 +80,24 @@ class DependencyMetadataTest {
          "birdy@bird.com"
        ],
        "issueTracker": "https://example.com/issues",
-       "description": "Some package description"
+       "description": "Some package description",
+       "annotations": [
+         {
+           "moduleName": "pkl.base",
+           "class": "Unlisted",
+           "moduleUri": "pkl:base",
+           "properties": {}
+         },
+         {
+           "moduleName": "pkl.base",
+           "class": "Deprecated",
+           "moduleUri": "pkl:base",
+           "properties": {
+             "since": "0.26.1",
+             "message": "don't use"
+           }
+         }
+       ]
      }
     """
       .trimIndent()

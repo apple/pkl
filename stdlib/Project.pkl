@@ -210,6 +210,9 @@ evaluatorSettings: EvaluatorSettingsModule(
 /// dependency.
 projectFileUri: String = reflect.Module(module).uri
 
+@Unlisted
+fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations
+
 /// Instantiates a project definition within the enclosing module.
 ///
 /// This is a convenience method for setting [projectFileUri] to the enclosing module's URI.
