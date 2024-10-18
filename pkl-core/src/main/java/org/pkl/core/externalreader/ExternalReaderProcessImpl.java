@@ -183,7 +183,7 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
                         request,
                         (response) -> {
                           if (response instanceof InitializeModuleReaderResponse resp) {
-                            future.complete(resp.getSpec());
+                            future.complete(resp.spec());
                           } else {
                             future.completeExceptionally(
                                 new ProtocolException("unexpected response"));
@@ -211,7 +211,7 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
                         (response) -> {
                           log(response.toString());
                           if (response instanceof InitializeResourceReaderResponse resp) {
-                            future.complete(resp.getSpec());
+                            future.complete(resp.spec());
                           } else {
                             future.completeExceptionally(
                                 new ProtocolException("unexpected response"));

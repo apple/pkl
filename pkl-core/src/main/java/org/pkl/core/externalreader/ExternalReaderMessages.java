@@ -15,147 +15,44 @@
  */
 package org.pkl.core.externalreader;
 
-import java.util.Objects;
-import org.pkl.core.messaging.Message;
+import org.pkl.core.messaging.Message.*;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.util.Nullable;
 
 public class ExternalReaderMessages {
 
-  public abstract static class InitializeReaderRequest extends Message.Base.Request
-      implements Message.Server.Request {
-    private final String scheme;
-
-    public InitializeReaderRequest(Message.Type type, long requestId, String scheme) {
-      super(type, requestId);
-      this.scheme = scheme;
-    }
-
-    public String getScheme() {
-      return scheme;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof InitializeReaderRequest that)) {
-        return false;
-      }
-      if (!super.equals(o)) {
-        return false;
-      }
-
-      return scheme.equals(that.scheme);
-    }
-
-    @Override
-    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + scheme.hashCode();
-      return result;
+  public record InitializeModuleReaderRequest(long requestId, String scheme)
+      implements Server.Request {
+    public Type type() {
+      return Type.INITIALIZE_MODULE_READER_REQUEST;
     }
   }
 
-  public static class InitializeModuleReaderRequest extends InitializeReaderRequest {
-    public InitializeModuleReaderRequest(long requestId, String scheme) {
-      super(Type.INITIALIZE_MODULE_READER_REQUEST, requestId, scheme);
+  public record InitializeResourceReaderRequest(long requestId, String scheme)
+      implements Server.Request {
+    public Type type() {
+      return Type.INITIALIZE_RESOURCE_READER_REQUEST;
     }
   }
 
-  public static class InitializeResourceReaderRequest extends InitializeReaderRequest {
-    public InitializeResourceReaderRequest(long requestId, String scheme) {
-      super(Type.INITIALIZE_RESOURCE_READER_REQUEST, requestId, scheme);
+  public record InitializeModuleReaderResponse(long requestId, @Nullable ModuleReaderSpec spec)
+      implements Client.Response {
+    public Type type() {
+      return Type.INITIALIZE_MODULE_READER_RESPONSE;
     }
   }
 
-  public static class InitializeModuleReaderResponse extends Message.Base.Response
-      implements Message.Client.Response {
-
-    private final @Nullable ModuleReaderSpec spec;
-
-    public InitializeModuleReaderResponse(long requestId, @Nullable ModuleReaderSpec spec) {
-      super(Type.INITIALIZE_MODULE_READER_RESPONSE, requestId);
-      this.spec = spec;
-    }
-
-    public @Nullable ModuleReaderSpec getSpec() {
-      return spec;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof InitializeModuleReaderResponse that)) {
-        return false;
-      }
-      if (!super.equals(o)) {
-        return false;
-      }
-
-      return Objects.equals(spec, that.spec);
-    }
-
-    @Override
-    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + Objects.hashCode(spec);
-      return result;
+  public record InitializeResourceReaderResponse(long requestId, @Nullable ResourceReaderSpec spec)
+      implements Client.Response {
+    public Type type() {
+      return Type.INITIALIZE_RESOURCE_READER_RESPONSE;
     }
   }
 
-  public static class InitializeResourceReaderResponse extends Message.Base.Response
-      implements Message.Client.Response {
-
-    private final @Nullable ResourceReaderSpec spec;
-
-    public InitializeResourceReaderResponse(long requestId, @Nullable ResourceReaderSpec spec) {
-      super(Type.INITIALIZE_RESOURCE_READER_RESPONSE, requestId);
-      this.spec = spec;
-    }
-
-    public @Nullable ResourceReaderSpec getSpec() {
-      return spec;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof InitializeResourceReaderResponse that)) {
-        return false;
-      }
-      if (!super.equals(o)) {
-        return false;
-      }
-
-      return Objects.equals(spec, that.spec);
-    }
-
-    @Override
-    public int hashCode() {
-      int result = super.hashCode();
-      result = 31 * result + Objects.hashCode(spec);
-      return result;
-    }
-  }
-
-  public static class CloseExternalProcess extends Message.Base implements Message.Server.OneWay {
-    public CloseExternalProcess() {
-      super(Type.CLOSE_EXTERNAL_PROCESS);
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      return o instanceof CloseExternalProcess;
+  public record CloseExternalProcess() implements Server.OneWay {
+    public Type type() {
+      return Type.CLOSE_EXTERNAL_PROCESS;
     }
   }
 }

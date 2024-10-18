@@ -37,41 +37,38 @@ public class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
 
   @Override
   protected @Nullable void encodeMessage(Message msg) throws ProtocolException, IOException {
-    switch (msg.getType()) {
+    switch (msg.type()) {
       case INITIALIZE_MODULE_READER_REQUEST -> {
         var m = (InitializeModuleReaderRequest) msg;
         packer.packMapHeader(2);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("scheme", m.getScheme());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("scheme", m.scheme());
       }
       case INITIALIZE_RESOURCE_READER_REQUEST -> {
         var m = (InitializeResourceReaderRequest) msg;
         packer.packMapHeader(2);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("scheme", m.getScheme());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("scheme", m.scheme());
       }
       case INITIALIZE_MODULE_READER_RESPONSE -> {
         var m = (InitializeModuleReaderResponse) msg;
-        packMapHeader(1, m.getSpec());
-        packKeyValue("requestId", m.getRequestId());
-        if (m.getSpec() != null) {
+        packMapHeader(1, m.spec());
+        packKeyValue("requestId", m.requestId());
+        if (m.spec() != null) {
           packer.packString("spec");
-          packModuleReaderSpec(m.getSpec());
+          packModuleReaderSpec(m.spec());
         }
       }
       case INITIALIZE_RESOURCE_READER_RESPONSE -> {
         var m = (InitializeResourceReaderResponse) msg;
-        packMapHeader(1, m.getSpec());
-        packKeyValue("requestId", m.getRequestId());
-        if (m.getSpec() != null) {
+        packMapHeader(1, m.spec());
+        packKeyValue("requestId", m.requestId());
+        if (m.spec() != null) {
           packer.packString("spec");
-          packResourceReaderSpec(m.getSpec());
+          packResourceReaderSpec(m.spec());
         }
       }
-      case CLOSE_EXTERNAL_PROCESS -> {
-        var v = (CloseExternalProcess) msg;
-        packer.packMapHeader(0);
-      }
+      case CLOSE_EXTERNAL_PROCESS -> packer.packMapHeader(0);
       default -> super.encodeMessage(msg);
     }
   }

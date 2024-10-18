@@ -81,10 +81,10 @@ public class ExternalModuleResolver {
                     request,
                     (response) -> {
                       if (response instanceof ReadModuleResponse resp) {
-                        if (resp.getError() != null) {
-                          future.completeExceptionally(new IOException(resp.getError()));
-                        } else if (resp.getContents() != null) {
-                          future.complete(resp.getContents());
+                        if (resp.error() != null) {
+                          future.completeExceptionally(new IOException(resp.error()));
+                        } else if (resp.contents() != null) {
+                          future.complete(resp.contents());
                         } else {
                           future.complete("");
                         }
@@ -111,11 +111,11 @@ public class ExternalModuleResolver {
                     request,
                     (response) -> {
                       if (response instanceof ListModulesResponse resp) {
-                        if (resp.getError() != null) {
-                          future.completeExceptionally(new IOException(resp.getError()));
+                        if (resp.error() != null) {
+                          future.completeExceptionally(new IOException(resp.error()));
                         } else {
                           future.complete(
-                              Objects.requireNonNullElseGet(resp.getPathElements(), List::of));
+                              Objects.requireNonNullElseGet(resp.pathElements(), List::of));
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));

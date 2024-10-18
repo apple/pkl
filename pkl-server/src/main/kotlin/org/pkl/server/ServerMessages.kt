@@ -49,9 +49,9 @@ data class CreateEvaluatorRequest(
   val externalResourceReaders: Map<String, ExternalReader>?
 ) : Message.Client.Request {
 
-  override fun getType(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
+  override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
 
-  override fun getRequestId(): Long = requestId
+  override fun requestId(): Long = requestId
 
   // need to implement this manually because [Pattern.equals] returns false for two patterns
   // that have the same underlying pattern string.
@@ -97,7 +97,6 @@ data class CreateEvaluatorRequest(
     result = 31 * result + cacheDir.hashCode()
     result = 31 * result + outputFormat.hashCode()
     result = 31 * result + project.hashCode()
-    result = 31 * result + type.hashCode()
     result = 31 * result + http.hashCode()
     result = 31 * result + externalModuleReaders.hashCode()
     result = 31 * result + externalResourceReaders.hashCode()
@@ -139,13 +138,13 @@ data class CreateEvaluatorResponse(
   val evaluatorId: Long?,
   val error: String?,
 ) : Message.Server.Response {
-  override fun getType(): Message.Type = Message.Type.CREATE_EVALUATOR_RESPONSE
+  override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_RESPONSE
 
-  override fun getRequestId(): Long = requestId
+  override fun requestId(): Long = requestId
 }
 
 data class CloseEvaluator(val evaluatorId: Long) : Message.Client.OneWay {
-  override fun getType(): Message.Type = Message.Type.CLOSE_EVALUATOR
+  override fun type(): Message.Type = Message.Type.CLOSE_EVALUATOR
 }
 
 data class EvaluateRequest(
@@ -155,9 +154,9 @@ data class EvaluateRequest(
   val moduleText: String?,
   val expr: String?
 ) : Message.Client.Request {
-  override fun getType(): Message.Type = Message.Type.EVALUATE_REQUEST
+  override fun type(): Message.Type = Message.Type.EVALUATE_REQUEST
 
-  override fun getRequestId(): Long = requestId
+  override fun requestId(): Long = requestId
 }
 
 data class EvaluateResponse(
@@ -166,9 +165,9 @@ data class EvaluateResponse(
   val result: Bytes?,
   val error: String?
 ) : Message.Server.Response {
-  override fun getType(): Message.Type = Message.Type.EVALUATE_RESPONSE
+  override fun type(): Message.Type = Message.Type.EVALUATE_RESPONSE
 
-  override fun getRequestId(): Long = requestId
+  override fun requestId(): Long = requestId
 }
 
 data class LogMessage(
@@ -177,5 +176,5 @@ data class LogMessage(
   val message: String,
   val frameUri: String
 ) : Message.Server.OneWay {
-  override fun getType(): Message.Type = Message.Type.LOG_MESSAGE
+  override fun type(): Message.Type = Message.Type.LOG_MESSAGE
 }

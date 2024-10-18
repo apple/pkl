@@ -97,7 +97,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
   private fun handleCreateEvaluator(message: CreateEvaluatorRequest) {
     val evaluatorId = Random.Default.nextLong()
-    val baseResponse = CreateEvaluatorResponse(message.requestId, null, null)
+    val baseResponse = CreateEvaluatorResponse(message.requestId(), null, null)
 
     val evaluator =
       try {
@@ -112,7 +112,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   }
 
   private fun handleEvaluate(msg: EvaluateRequest) {
-    val baseResponse = EvaluateResponse(msg.requestId, msg.evaluatorId, null, null)
+    val baseResponse = EvaluateResponse(msg.requestId(), msg.evaluatorId, null, null)
 
     val evaluator = evaluators[msg.evaluatorId]
     if (evaluator == null) {

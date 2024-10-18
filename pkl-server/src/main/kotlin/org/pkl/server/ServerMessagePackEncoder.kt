@@ -83,7 +83,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   override fun encodeMessage(msg: Message) {
-    when (msg.type) {
+    when (msg.type()) {
       Message.Type.CREATE_EVALUATOR_REQUEST -> {
         msg as CreateEvaluatorRequest
         packMapHeader(
@@ -104,7 +104,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           msg.externalModuleReaders,
           msg.externalResourceReaders,
         )
-        packKeyValue("requestId", msg.requestId)
+        packKeyValue("requestId", msg.requestId())
         packKeyValue("allowedModules", msg.allowedModules?.map { it.toString() })
         packKeyValue("allowedResources", msg.allowedResources?.map { it.toString() })
         if (msg.clientModuleReaders != null) {
@@ -157,7 +157,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
       Message.Type.CREATE_EVALUATOR_RESPONSE -> {
         msg as CreateEvaluatorResponse
         packMapHeader(1, msg.evaluatorId, msg.error)
-        packKeyValue("requestId", msg.requestId)
+        packKeyValue("requestId", msg.requestId())
         packKeyValue("evaluatorId", msg.evaluatorId)
         packKeyValue("error", msg.error)
       }
@@ -169,7 +169,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
       Message.Type.EVALUATE_REQUEST -> {
         msg as EvaluateRequest
         packMapHeader(3, msg.moduleText, msg.expr)
-        packKeyValue("requestId", msg.requestId)
+        packKeyValue("requestId", msg.requestId())
         packKeyValue("evaluatorId", msg.evaluatorId)
         packKeyValue("moduleUri", msg.moduleUri.toString())
         packKeyValue("moduleText", msg.moduleText)
@@ -178,7 +178,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
       Message.Type.EVALUATE_RESPONSE -> {
         msg as EvaluateResponse
         packMapHeader(2, msg.result, msg.error)
-        packKeyValue("requestId", msg.requestId)
+        packKeyValue("requestId", msg.requestId())
         packKeyValue("evaluatorId", msg.evaluatorId)
         packKeyValue("result", msg.result)
         packKeyValue("error", msg.error)
