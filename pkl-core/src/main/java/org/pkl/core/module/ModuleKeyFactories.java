@@ -26,9 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import org.pkl.core.externalReader.ExternalModuleResolver;
-import org.pkl.core.externalReader.ExternalReaderProcess;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import javax.annotation.concurrent.GuardedBy;
+import org.pkl.core.externalreader.ExternalModuleResolver;
+import org.pkl.core.externalreader.ExternalReaderProcess;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 
@@ -97,7 +98,7 @@ public final class ModuleKeyFactories {
    *
    * @deprecated Replaced by {@link org.pkl.core.util.Readers#closeQuietly}.
    */
-  @Deprecated()
+  @Deprecated(since = "0.27.0", forRemoval = true)
   public static void closeQuietly(Iterable<ModuleKeyFactory> factories) {
     for (ModuleKeyFactory factory : factories) {
       try {
@@ -256,6 +257,8 @@ public final class ModuleKeyFactories {
     private final String scheme;
     private final ExternalReaderProcess process;
     private final long evaluatorId;
+
+    @GuardedBy("this")
     private ExternalModuleResolver resolver;
 
     public External(String scheme, ExternalReaderProcess process, long evaluatorId) {
@@ -264,7 +267,8 @@ public final class ModuleKeyFactories {
       this.evaluatorId = evaluatorId;
     }
 
-    private ExternalModuleResolver getResolver() throws ExternalReaderProcessException {
+    private synchronized ExternalModuleResolver getResolver()
+        throws ExternalReaderProcessException {
       if (resolver != null) {
         return resolver;
       }

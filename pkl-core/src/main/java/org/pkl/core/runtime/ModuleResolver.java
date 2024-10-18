@@ -22,7 +22,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import org.pkl.core.ModuleSource;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;

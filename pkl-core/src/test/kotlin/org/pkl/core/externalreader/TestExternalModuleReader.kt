@@ -13,16 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader
 
-import java.net.URI;
-import org.pkl.core.messaging.Messages.ResourceReaderSpec;
+import java.net.URI
+import org.pkl.core.module.PathElement
 
-/** An external resource reader, to be used with [ExternalReaderRuntime]. */
-public interface ExternalResourceReader extends ExternalReaderBase {
-  byte[] read(URI uri) throws Exception;
+class TestExternalModuleReader : ExternalModuleReader {
+  override val scheme: String = "test"
 
-  default ResourceReaderSpec getSpec() {
-    return new ResourceReaderSpec(getScheme(), hasHierarchicalUris(), isGlobbable());
-  }
+  override val hasHierarchicalUris: Boolean = false
+
+  override val isLocal: Boolean = true
+
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): String =
+    """
+    name = "Pigeon"
+    age = 40
+  """
+      .trimIndent()
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
 }

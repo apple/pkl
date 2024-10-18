@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.List;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.IoUtils;

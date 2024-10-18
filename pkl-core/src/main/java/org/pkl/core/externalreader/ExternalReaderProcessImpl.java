@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
@@ -27,8 +27,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import javax.annotation.concurrent.GuardedBy;
+import org.pkl.core.Duration;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.externalReader.ExternalReaderMessages.*;
+import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
@@ -39,7 +40,7 @@ import org.pkl.core.util.Nullable;
 
 public class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
-  private static final long CLOSE_TIMEOUT = 3000; // 3 seconds
+  private static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(3);
 
   private final ExternalReader spec;
   private final @Nullable String logPrefix;
@@ -137,7 +138,10 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
     }
 
     try {
-      getTransport().send(new CloseExternalProcess());
+      if (transport != null) {
+        transport.send(new CloseExternalProcess());
+        transport.close();
+      }
 
       // forcefully stop the process after the timeout
       // note that both transport.close() and process.destroy() are safe to call multiple times
@@ -152,7 +156,7 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
                   }
                 }
               },
-              CLOSE_TIMEOUT);
+              CLOSE_TIMEOUT.inWholeMillis());
 
       // block on process exit
       process.onExit().get();
