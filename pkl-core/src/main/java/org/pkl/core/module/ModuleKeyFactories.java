@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
@@ -25,6 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import javax.annotation.concurrent.GuardedBy;
+import org.pkl.core.externalreader.ExternalReaderProcess;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using module key factories. */
@@ -72,7 +77,27 @@ public final class ModuleKeyFactories {
     return new ClassPath(classLoader);
   }
 
-  /** Closes the given factories, ignoring any exceptions. */
+  /**
+   * Returns a factory for external reader module keys
+   *
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
+   */
+  public static ModuleKeyFactory externalProcess(String scheme, ExternalReaderProcess process) {
+    return new ExternalProcess(scheme, process, 0);
+  }
+
+  public static ModuleKeyFactory externalProcess(
+      String scheme, ExternalReaderProcess process, long evaluatorId) {
+    return new ExternalProcess(scheme, process, evaluatorId);
+  }
+
+  /**
+   * Closes the given factories, ignoring any exceptions.
+   *
+   * @deprecated Replaced by {@link org.pkl.core.util.Readers#closeQuietly}.
+   */
+  @Deprecated(since = "0.27.0", forRemoval = true)
   public static void closeQuietly(Iterable<ModuleKeyFactory> factories) {
     for (ModuleKeyFactory factory : factories) {
       try {
@@ -223,6 +248,50 @@ public final class ModuleKeyFactories {
       var factories = new ArrayList<ModuleKeyFactory>();
       loader.forEach(factories::add);
       INSTANCE = Collections.unmodifiableList(factories);
+    }
+  }
+
+  /** Represents a module from an external reader process. */
+  private static final class ExternalProcess implements ModuleKeyFactory {
+    private final String scheme;
+    private final ExternalReaderProcess process;
+    private final long evaluatorId;
+
+    @GuardedBy("this")
+    private ExternalModuleResolver resolver;
+
+    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
+      this.scheme = scheme;
+      this.process = process;
+      this.evaluatorId = evaluatorId;
+    }
+
+    private synchronized ExternalModuleResolver getResolver()
+        throws ExternalReaderProcessException {
+      if (resolver != null) {
+        return resolver;
+      }
+
+      resolver = new ExternalModuleResolver(process.getTransport(), evaluatorId);
+      return resolver;
+    }
+
+    public Optional<ModuleKey> create(URI uri)
+        throws URISyntaxException, ExternalReaderProcessException, IOException {
+      if (!scheme.equalsIgnoreCase(uri.getScheme())) return Optional.empty();
+
+      var spec = process.getModuleReaderSpec(scheme);
+      if (spec == null) {
+        throw new ExternalReaderProcessException(
+            ErrorMessages.create("externalReaderDoesNotSupportScheme", "module", scheme));
+      }
+
+      return Optional.of(ModuleKeys.externalResolver(uri, spec, getResolver()));
+    }
+
+    @Override
+    public void close() {
+      process.close();
     }
   }
 }

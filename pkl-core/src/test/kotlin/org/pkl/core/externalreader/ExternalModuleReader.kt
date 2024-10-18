@@ -13,9 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader
 
-/** Decodes a stream of messages. */
-internal interface MessageDecoder {
-  fun decode(): Message?
+import java.net.URI
+import org.pkl.core.messaging.Messages.ModuleReaderSpec
+
+/** An external module reader, to be used with [ExternalReaderRuntime]. */
+interface ExternalModuleReader : ExternalReaderBase {
+  val isLocal: Boolean
+
+  fun read(uri: URI): String
+
+  val spec: ModuleReaderSpec
+    get() = ModuleReaderSpec(scheme, hasHierarchicalUris, isLocal, isGlobbable)
 }

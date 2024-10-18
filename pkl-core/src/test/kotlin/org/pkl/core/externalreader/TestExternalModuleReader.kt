@@ -13,15 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader
 
-/** A bidirectional transport for sending and receiving messages. */
-interface MessageTransport : AutoCloseable {
-  fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
+import java.net.URI
+import org.pkl.core.module.PathElement
 
-  fun send(message: OneWayMessage)
+class TestExternalModuleReader : ExternalModuleReader {
+  override val scheme: String = "test"
 
-  fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
+  override val hasHierarchicalUris: Boolean = false
 
-  fun send(message: ResponseMessage)
+  override val isLocal: Boolean = true
+
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): String =
+    """
+    name = "Pigeon"
+    age = 40
+  """
+      .trimIndent()
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
 }

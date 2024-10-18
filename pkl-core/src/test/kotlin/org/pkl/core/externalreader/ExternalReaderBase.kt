@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader
 
-import java.io.InputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessageUnpacker
+import java.net.URI
+import org.pkl.core.module.PathElement
 
-/** Factory methods for creating [MessageDecoder]s. */
-internal object MessageDecoders {
-  fun from(stream: InputStream): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(stream))
+/** Base interface for external module and resource readers. */
+interface ExternalReaderBase {
+  val scheme: String
 
-  fun from(unpacker: MessageUnpacker): MessageDecoder = MessagePackDecoder(unpacker)
+  val hasHierarchicalUris: Boolean
 
-  fun from(array: ByteArray): MessageDecoder =
-    MessagePackDecoder(MessagePack.newDefaultUnpacker(array))
+  val isGlobbable: Boolean
+
+  fun listElements(uri: URI): List<PathElement>
 }

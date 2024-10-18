@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader;
 
-sealed class ServerException(msg: String, cause: Throwable?) : Exception(msg, cause)
+public final class ExternalReaderProcessException extends Exception {
+  public ExternalReaderProcessException(String msg) {
+    super(msg);
+  }
 
-open class ProtocolException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
-
-class InvalidCommandException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
-
-class DecodeException(msg: String, cause: Throwable? = null) : ProtocolException(msg, cause)
+  public ExternalReaderProcessException(Throwable cause) {
+    super(cause);
+  }
+}

@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader
 
-import java.io.OutputStream
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessagePacker
+import java.net.URI
+import org.pkl.core.module.PathElement
 
-/** Factory methods for creating [MessageEncoder]s. */
-internal object MessageEncoders {
-  fun into(stream: OutputStream): MessageEncoder =
-    MessagePackEncoder(MessagePack.newDefaultPacker(stream))
+class TestExternalResourceReader : ExternalResourceReader {
+  override val scheme: String = "test"
 
-  fun into(packer: MessagePacker): MessageEncoder = MessagePackEncoder(packer)
+  override val hasHierarchicalUris: Boolean = false
+
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
 }
