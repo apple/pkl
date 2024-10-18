@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.GuardedBy;
-import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
@@ -84,13 +83,13 @@ public final class ModuleKeyFactories {
    * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
    * resource leaks.
    */
-  public static ModuleKeyFactory external(String scheme, ExternalReaderProcess process) {
-    return new External(scheme, process, 0);
+  public static ModuleKeyFactory externalProcess(String scheme, ExternalReaderProcess process) {
+    return new ExternalProcess(scheme, process, 0);
   }
 
-  public static ModuleKeyFactory external(
+  public static ModuleKeyFactory externalProcess(
       String scheme, ExternalReaderProcess process, long evaluatorId) {
-    return new External(scheme, process, evaluatorId);
+    return new ExternalProcess(scheme, process, evaluatorId);
   }
 
   /**
@@ -253,7 +252,7 @@ public final class ModuleKeyFactories {
   }
 
   /** Represents a module from an external reader process. */
-  private static final class External implements ModuleKeyFactory {
+  private static final class ExternalProcess implements ModuleKeyFactory {
     private final String scheme;
     private final ExternalReaderProcess process;
     private final long evaluatorId;
@@ -261,7 +260,7 @@ public final class ModuleKeyFactories {
     @GuardedBy("this")
     private ExternalModuleResolver resolver;
 
-    public External(String scheme, ExternalReaderProcess process, long evaluatorId) {
+    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;
@@ -287,7 +286,7 @@ public final class ModuleKeyFactories {
             ErrorMessages.create("externalReaderDoesNotSupportScheme", "module", scheme));
       }
 
-      return Optional.of(ModuleKeys.messageTransport(uri, spec, getResolver()));
+      return Optional.of(ModuleKeys.externalResolver(uri, spec, getResolver()));
     }
 
     @Override

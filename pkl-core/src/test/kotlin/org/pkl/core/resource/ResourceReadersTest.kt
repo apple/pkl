@@ -136,12 +136,12 @@ class ResourceReadersTest {
   }
 
   @Test
-  fun external() {
+  fun externalProcess() {
     val extReader = TestExternalResourceReader()
     val (proc, runtime) =
       TestExternalReaderProcess.initializeTestHarness(emptyList(), listOf(extReader))
 
-    val reader = ResourceReaders.external(extReader.scheme, proc)
+    val reader = ResourceReaders.externalProcess(extReader.scheme, proc)
     val resource = reader.read(URI("test:foo"))
 
     assertThat(resource).isPresent
