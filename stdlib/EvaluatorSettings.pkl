@@ -165,6 +165,7 @@ class ExternalReader {
   ///   * A relative path (to the currrent working directory)
   ///   * The name of the executable, to be resolved against the `PATH` environment variable 
   executable: String
+
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
 }

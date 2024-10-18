@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.externalReader.ExternalReaderProcessImpl
+import org.pkl.core.externalreader.ExternalReaderProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory

@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;

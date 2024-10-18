@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader
 
-public final class ExternalReaderProcessException extends Exception {
-  public ExternalReaderProcessException(String msg) {
-    super(msg);
-  }
+import java.net.URI
+import org.pkl.core.messaging.Messages.ModuleReaderSpec
 
-  public ExternalReaderProcessException(Throwable cause) {
-    super(cause);
-  }
+/** An external module reader, to be used with [ExternalReaderRuntime]. */
+interface ExternalModuleReader : ExternalReaderBase {
+  val isLocal: Boolean
+
+  fun read(uri: URI): String
+
+  val spec: ModuleReaderSpec
+    get() = ModuleReaderSpec(scheme, hasHierarchicalUris, isLocal, isGlobbable)
 }

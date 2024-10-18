@@ -119,7 +119,6 @@ public class MessageTransports {
     }
   }
 
-  // TODO: clean up callbacks if evaluation fails for some reason (ThreadInterrupt, timeout, etc)
   protected abstract static class AbstractMessageTransport implements MessageTransport {
 
     private final Logger logger;

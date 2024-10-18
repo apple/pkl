@@ -55,7 +55,7 @@ import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.*;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;

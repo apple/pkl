@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader
+package org.pkl.core.externalreader
 
 import java.io.IOException
 import java.io.PipedInputStream
@@ -23,8 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.config.java.ExternalReaderRuntime
-import org.pkl.core.externalReader.ExternalReaderMessages.*
+import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.Messages.*

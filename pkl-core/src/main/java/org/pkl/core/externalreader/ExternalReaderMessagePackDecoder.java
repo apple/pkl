@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader;
 
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -21,7 +21,7 @@ import java.util.Map;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.Value;
-import org.pkl.core.externalReader.ExternalReaderMessages.*;
+import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackDecoder;
 import org.pkl.core.messaging.DecodeException;
 import org.pkl.core.messaging.Message;

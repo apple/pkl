@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import org.pkl.core.messaging.MessageTransport;
@@ -43,12 +43,11 @@ public interface ExternalReaderProcess extends AutoCloseable {
   /**
    * Close the external process, cleaning up any resources.
    *
-   * <p>This should be called when the evaluator managing this process is closed. The {@link
-   * MessageTransport} is sent the {@link ExternalReaderMessages.CloseExternalProcess} message to
-   * request a graceful stop. A bespoke (empty) message type is used here instead of an OS mechanism
-   * like signals to avoid forcing external reader implementers needing to handle many OS-specific
-   * mechanisms. Implementations may then forcibly clean up resources after a timeout. Must be safe
-   * to call multiple times.
+   * <p>The {@link MessageTransport} is sent the {@link ExternalReaderMessages.CloseExternalProcess}
+   * message to request a graceful stop. A bespoke (empty) message type is used here instead of an
+   * OS mechanism like signals to avoid forcing external reader implementers needing to handle many
+   * OS-specific mechanisms. Implementations may then forcibly clean up resources after a timeout.
+   * Must be safe to call multiple times.
    */
   @Override
   void close();
