@@ -51,7 +51,7 @@ public class ExternalResourceResolver {
 
   public Optional<Object> read(URI uri) throws IOException {
     var result = doRead(uri);
-    return Optional.of(new Resource(uri, result.getBytes()));
+    return Optional.of(new Resource(uri, result.bytes()));
   }
 
   public boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
@@ -83,11 +83,11 @@ public class ExternalResourceResolver {
                     request,
                     (response) -> {
                       if (response instanceof ListResourcesResponse resp) {
-                        if (resp.getError() != null) {
-                          future.completeExceptionally(new IOException(resp.getError()));
+                        if (resp.error() != null) {
+                          future.completeExceptionally(new IOException(resp.error()));
                         } else {
                           future.complete(
-                              Objects.requireNonNullElseGet(resp.getPathElements(), List::of));
+                              Objects.requireNonNullElseGet(resp.pathElements(), List::of));
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));
@@ -112,10 +112,10 @@ public class ExternalResourceResolver {
                     request,
                     (response) -> {
                       if (response instanceof ReadResourceResponse resp) {
-                        if (resp.getError() != null) {
-                          future.completeExceptionally(new IOException(resp.getError()));
-                        } else if (resp.getContents() != null) {
-                          future.complete(resp.getContents());
+                        if (resp.error() != null) {
+                          future.completeExceptionally(new IOException(resp.error()));
+                        } else if (resp.contents() != null) {
+                          future.complete(resp.contents());
                         } else {
                           future.complete(new Bytes(new byte[0]));
                         }

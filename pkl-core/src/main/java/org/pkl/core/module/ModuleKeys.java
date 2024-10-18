@@ -796,7 +796,7 @@ public final class ModuleKeys {
 
     @Override
     public boolean hasHierarchicalUris() {
-      return spec.getHasHierarchicalUris();
+      return spec.hasHierarchicalUris();
     }
 
     @Override

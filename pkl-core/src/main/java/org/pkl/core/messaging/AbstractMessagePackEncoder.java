@@ -42,7 +42,7 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
   @Override
   public final void encode(Message msg) throws IOException, ProtocolException {
     packer.packArrayHeader(2);
-    packer.packInt(msg.getType().getCode());
+    packer.packInt(msg.type().getCode());
     encodeMessage(msg);
     packer.flush();
   }
@@ -173,8 +173,8 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
       return;
     }
     packer.packString(name);
-    packer.packBinaryHeader(value.getBytes().length);
-    packer.writePayload(value.getBytes());
+    packer.packBinaryHeader(value.bytes().length);
+    packer.writePayload(value.bytes());
   }
 
   protected void packKeyValue(String name, boolean value) throws IOException {

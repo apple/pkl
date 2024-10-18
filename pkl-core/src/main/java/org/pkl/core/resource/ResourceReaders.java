@@ -693,7 +693,7 @@ public final class ResourceReaders {
 
     @Override
     public boolean hasHierarchicalUris() {
-      return readerSpec.getHasHierarchicalUris();
+      return readerSpec.hasHierarchicalUris();
     }
 
     @Override
@@ -703,7 +703,7 @@ public final class ResourceReaders {
 
     @Override
     public String getUriScheme() {
-      return readerSpec.getScheme();
+      return readerSpec.scheme();
     }
 
     @Override

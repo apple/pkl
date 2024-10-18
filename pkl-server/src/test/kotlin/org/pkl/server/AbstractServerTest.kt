@@ -83,7 +83,7 @@ abstract class AbstractServerTest {
     val response = client.receive<EvaluateResponse>()
     assertThat(response.error).isNull()
     assertThat(response.result).isNotNull
-    assertThat(response.requestId).isEqualTo(requestId)
+    assertThat(response.requestId()).isEqualTo(requestId)
 
     val unpacker = MessagePack.newDefaultUnpacker(response.result?.bytes)
     val value = unpacker.unpackValue()
@@ -692,7 +692,7 @@ abstract class AbstractServerTest {
     client.send(EvaluateRequest(1, evaluatorId, URI("repl:text"), """foo = 1""", "foo as String"))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.requestId).isEqualTo(1)
+    assertThat(evaluateResponse.requestId()).isEqualTo(1)
     assertThat(evaluateResponse.error).contains("Expected value of type")
   }
 
@@ -983,7 +983,7 @@ abstract class AbstractServerTest {
     send(message)
 
     val response = receive<CreateEvaluatorResponse>()
-    assertThat(response.requestId).isEqualTo(requestId)
+    assertThat(response.requestId()).isEqualTo(requestId)
     assertThat(response.evaluatorId).isNotNull
     assertThat(response.error).isNull()
 
