@@ -32,13 +32,23 @@ public final class Mod {
     public long getOne() {
       return one;
     }
+  }
+
+  public static class None extends Foo {
+    public None(@Named("one") long one) {
+      super(one);
+    }
+
+    public None withOne(long one) {
+      return new None(one);
+    }
 
     @Override
     public boolean equals(Object obj) {
       if (this == obj) return true;
       if (obj == null) return false;
       if (this.getClass() != obj.getClass()) return false;
-      Foo other = (Foo) obj;
+      None other = (None) obj;
       if (!Objects.equals(this.one, other.one)) return false;
       return true;
     }
@@ -53,20 +63,10 @@ public final class Mod {
     @Override
     public String toString() {
       StringBuilder builder = new StringBuilder(100);
-      builder.append(Foo.class.getSimpleName()).append(" {");
+      builder.append(None.class.getSimpleName()).append(" {");
       appendProperty(builder, "one", this.one);
       builder.append("\n}");
       return builder.toString();
-    }
-  }
-
-  public static class None extends Foo {
-    public None(@Named("one") long one) {
-      super(one);
-    }
-
-    public None withOne(long one) {
-      return new None(one);
     }
   }
 

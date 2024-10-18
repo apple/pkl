@@ -19,6 +19,7 @@ import java.io.*
 import java.nio.file.Path
 import java.util.function.Consumer
 import java.util.regex.Pattern
+import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -26,6 +27,8 @@ import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.pkl.core.*
 import org.pkl.core.ModuleSource.path
 import org.pkl.core.ModuleSource.text
@@ -33,25 +36,25 @@ import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorTest {
   companion object {
-    const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
+    private const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
 
-    private val simpleClass by lazy {
-      compileJavaCode(
-          generateJavaCode(
-            """
-            module my.mod
-
-            class Simple {
-              str: String
-              list: List<Int>
-            }
+    private val simpleClass: Class<*> by lazy {
+      generateJavaCode(
           """
-          )
+        module my.mod
+
+        class Simple {
+          str: String
+          list: List<Int>
+        }
+      """
+            .trimIndent()
         )
+        .compile()
         .getValue("my.Mod\$Simple")
     }
 
-    private val propertyTypesSources by lazy {
+    private val propertyTypesSources: JavaSourceCode by lazy {
       generateJavaCode(
         """
         module my.mod
@@ -95,7 +98,9 @@ class JavaCodeGeneratorTest {
       )
     }
 
-    private val propertyTypesClasses by lazy { compileJavaCode(propertyTypesSources) }
+    private val propertyTypesClasses: Map<String, Class<*>> by lazy {
+      propertyTypesSources.compile()
+    }
 
     private fun generateJavaCode(
       pklCode: String,
@@ -105,7 +110,7 @@ class JavaCodeGeneratorTest {
       nonNullAnnotation: String? = null,
       implementSerializable: Boolean = false,
       renames: Map<String, String> = emptyMap()
-    ): String {
+    ): JavaSourceCode {
       val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
       val generator =
         JavaCodeGenerator(
@@ -119,15 +124,7 @@ class JavaCodeGeneratorTest {
             renames = renames
           )
         )
-      return generator.javaFile
-    }
-
-    private fun compileJavaCode(javaCode: String): Map<String, Class<*>> {
-      return InMemoryJavaCompiler.compile(mapOf("/org/Mod.java" to javaCode))
-    }
-
-    private fun assertCompilesSuccessfully(sourceText: String) {
-      compileJavaCode(sourceText)
+      return JavaSourceCode(generator.javaFile)
     }
   }
 
@@ -141,10 +138,8 @@ class JavaCodeGeneratorTest {
     val instance3 = ctor.newInstance("foo", listOf(1, 3, 2))
     val instance4 = ctor.newInstance("bar", listOf(1, 2, 3))
 
-    assertThat(instance1).isEqualTo(instance1)
-    assertThat(instance1).isEqualTo(instance2)
+    assertThat(instance1).isEqualTo(instance1).isEqualTo(instance2)
     assertThat(instance2).isEqualTo(instance1)
-
     assertThat(instance3).isNotEqualTo(instance1)
     assertThat(instance4).isNotEqualTo(instance1)
   }
@@ -157,9 +152,7 @@ class JavaCodeGeneratorTest {
     val instance3 = ctor.newInstance("foo", listOf(1, 3, 2))
     val instance4 = ctor.newInstance("bar", listOf(1, 2, 3))
 
-    assertThat(instance1.hashCode()).isEqualTo(instance1.hashCode())
-    assertThat(instance1.hashCode()).isEqualTo(instance2.hashCode())
-
+    assertThat(instance1.hashCode()).isEqualTo(instance1.hashCode()).isEqualTo(instance2.hashCode())
     assertThat(instance3.hashCode()).isNotEqualTo(instance1.hashCode())
     assertThat(instance4.hashCode()).isNotEqualTo(instance1.hashCode())
   }
@@ -168,66 +161,67 @@ class JavaCodeGeneratorTest {
   fun testToString() {
     val (_, propertyTypes) = instantiateOtherAndPropertyTypes()
 
-    assertEqualTo(
+    assertThat(propertyTypes.toString())
+      .isEqualTo(
+        """
+        PropertyTypes {
+          _boolean = true
+          _int = 42
+          _float = 42.3
+          string = string
+          duration = 5.min
+          durationUnit = min
+          dataSize = 3.gb
+          dataSizeUnit = gb
+          nullable = idea
+          nullable2 = null
+          pair = Pair(1, 2)
+          pair2 = Pair(pigeon, Other {
+            name = pigeon
+          })
+          coll = [1, 2, 3]
+          coll2 = [Other {
+            name = pigeon
+          }, Other {
+            name = pigeon
+          }]
+          list = [1, 2, 3]
+          list2 = [Other {
+            name = pigeon
+          }, Other {
+            name = pigeon
+          }]
+          set = [1, 2, 3]
+          set2 = [Other {
+            name = pigeon
+          }]
+          map = {1=one, 2=two}
+          map2 = {one=Other {
+            name = pigeon
+          }, two=Other {
+            name = pigeon
+          }}
+          container = {1=one, 2=two}
+          container2 = {one=Other {
+            name = pigeon
+          }, two=Other {
+            name = pigeon
+          }}
+          other = Other {
+            name = pigeon
+          }
+          regex = (i?)\w*
+          any = Other {
+            name = pigeon
+          }
+          nonNull = Other {
+            name = pigeon
+          }
+          _enum = north
+        }
       """
-      PropertyTypes {
-        _boolean = true
-        _int = 42
-        _float = 42.3
-        string = string
-        duration = 5.min
-        durationUnit = min
-        dataSize = 3.gb
-        dataSizeUnit = gb
-        nullable = idea
-        nullable2 = null
-        pair = Pair(1, 2)
-        pair2 = Pair(pigeon, Other {
-          name = pigeon
-        })
-        coll = [1, 2, 3]
-        coll2 = [Other {
-          name = pigeon
-        }, Other {
-          name = pigeon
-        }]
-        list = [1, 2, 3]
-        list2 = [Other {
-          name = pigeon
-        }, Other {
-          name = pigeon
-        }]
-        set = [1, 2, 3]
-        set2 = [Other {
-          name = pigeon
-        }]
-        map = {1=one, 2=two}
-        map2 = {one=Other {
-          name = pigeon
-        }, two=Other {
-          name = pigeon
-        }}
-        container = {1=one, 2=two}
-        container2 = {one=Other {
-          name = pigeon
-        }, two=Other {
-          name = pigeon
-        }}
-        other = Other {
-          name = pigeon
-        }
-        regex = (i?)\w*
-        any = Other {
-          name = pigeon
-        }
-        nonNull = Other {
-          name = pigeon
-        }
-        _enum = north
-      }
-    """,
-      propertyTypes.toString()
-    )
+          .trimIndent()
+      )
   }
 
   @Test
@@ -235,16 +229,17 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-          class ClassWithDeprecatedProperty {
-             @Deprecated { message = "property deprecation message" } 
-             deprecatedProperty: Int = 1337
-          }
-      """
+      class ClassWithDeprecatedProperty {
+         @Deprecated { message = "property deprecation message" } 
+         deprecatedProperty: Int = 1337
+      }
+    """
           .trimIndent(),
         generateJavadoc = true
       )
-    val expectedPropertyDef =
-      """
+    assertThat(javaCode)
+      .contains(
+        """
         |  public static final class ClassWithDeprecatedProperty {
         |    /**
         |     * @deprecated property deprecation message
@@ -252,9 +247,10 @@ class JavaCodeGeneratorTest {
         |    @Deprecated
         |    public final long deprecatedProperty;
       """
-        .trimMargin()
-    val expectedWithMethodDef =
-      """
+          .trimMargin()
+      )
+      .contains(
+        """
         |    /**
         |     * @deprecated property deprecation message
         |     */
@@ -263,8 +259,8 @@ class JavaCodeGeneratorTest {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expectedPropertyDef).contains(expectedWithMethodDef)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -272,23 +268,25 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-          class ClassWithDeprecatedProperty {
-             @Deprecated { message = "property deprecation message" } 
-             deprecatedProperty: Int = 1337
-          }
-      """
+      class ClassWithDeprecatedProperty {
+         @Deprecated { message = "property deprecation message" } 
+         deprecatedProperty: Int = 1337
+      }
+    """
           .trimIndent(),
         generateGetters = true,
         generateJavadoc = true
       )
-    val expectedPropertyDef =
-      """
+    assertThat(javaCode)
+      .contains(
+        """
         |  public static final class ClassWithDeprecatedProperty {
         |    private final long deprecatedProperty;
       """
-        .trimMargin()
-    val expectedGetterDef =
-      """
+          .trimMargin()
+      )
+      .contains(
+        """
         |    /**
         |     * @deprecated property deprecation message
         |     */
@@ -297,9 +295,10 @@ class JavaCodeGeneratorTest {
         |      return deprecatedProperty;
         |    }
       """
-        .trimMargin()
-    val expectedWithMethodDef =
-      """
+          .trimMargin()
+      )
+      .contains(
+        """
         |    /**
         |     * @deprecated property deprecation message
         |     */
@@ -308,11 +307,8 @@ class JavaCodeGeneratorTest {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
       """
-        .trimMargin()
-    assertThat(javaCode)
-      .contains(expectedPropertyDef)
-      .contains(expectedGetterDef)
-      .contains(expectedWithMethodDef)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -320,93 +316,101 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-        @Deprecated { message = "class deprecation message" }
-        class DeprecatedClass {
-          propertyOfDeprecatedClass: Int = 42
-        }
-      """
+      @Deprecated { message = "class deprecation message" }
+      class DeprecatedClass {
+        propertyOfDeprecatedClass: Int = 42
+      }
+    """
           .trimIndent(),
         generateJavadoc = true
       )
-    val expected =
-      """
-        |  /**
-        |   * @deprecated class deprecation message
-        |   */
-        |  @Deprecated
-        |  public static final class DeprecatedClass {
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+    assertThat(javaCode)
+      .contains(
+        """
+      |  /**
+      |   * @deprecated class deprecation message
+      |   */
+      |  @Deprecated
+      |  public static final class DeprecatedClass {
+    """
+          .trimMargin()
+      )
   }
 
-  @Test
-  fun `deprecated module class with message`() {
-    for (generateJavadoc in listOf(false, true)) {
-      val javaCode =
-        generateJavaCode(
-          """
-          @Deprecated{ message = "module class deprecation message" }
-          module DeprecatedModule
-          
-          propertyInDeprecatedModuleClass : Int = 42
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  fun `deprecated module class with message`(generateJavadoc: Boolean) {
+    val javaCode =
+      generateJavaCode(
         """
-            .trimIndent(),
-          generateJavadoc = generateJavadoc
-        )
-      val expectedJavadoc =
-        if (!generateJavadoc) ""
-        else
+      @Deprecated{ message = "module class deprecation message" }
+      module DeprecatedModule
+      
+      propertyInDeprecatedModuleClass : Int = 42
+    """
+          .trimIndent(),
+        generateJavadoc = generateJavadoc
+      )
+
+    assertThat(javaCode)
+      .contains(
+        """
+      |@Deprecated
+      |public final class DeprecatedModule {
+    """
+          .trimMargin()
+      )
+
+    if (generateJavadoc) {
+      assertThat(javaCode)
+        .contains(
           """
-          |/**
-          | * @deprecated module class deprecation message
-          | */
+        |/**
+        | * @deprecated module class deprecation message
+        | */
       """
             .trimMargin()
-      val expected =
-        """
-          |@Deprecated
-          |public final class DeprecatedModule {
-        """
-          .trimMargin()
-      assertThat(javaCode).contains("$expectedJavadoc\n$expected")
+        )
+    } else {
+      assertThat(javaCode).doesNotContain("* @deprecated")
     }
   }
 
-  @Test
-  fun `deprecated property`() {
-    for (generateDoc in listOf(false, true)) {
-      val javaCode =
-        generateJavaCode(
-          """
-            class ClassWithDeprecatedProperty {
-               @Deprecated
-               deprecatedProperty: Int = 1337
-            }
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  fun `deprecated property`(generateJavadoc: Boolean) {
+    val javaCode =
+      generateJavaCode(
         """
-            .trimIndent(),
-          generateJavadoc = generateDoc
-        ) // no message, so no Javadoc, regardless of flag
-      val expectedPropertyDef =
+      class ClassWithDeprecatedProperty {
+         @Deprecated
+         deprecatedProperty: Int = 1337
+      }
+    """
+          .trimIndent(),
+        // no message, so no Javadoc, regardless of flag
+        generateJavadoc = generateJavadoc
+      )
+
+    assertThat(javaCode)
+      .contains(
         """
-          |  public static final class ClassWithDeprecatedProperty {
-          |    @Deprecated
-          |    public final long deprecatedProperty;
-        """
+        |  public static final class ClassWithDeprecatedProperty {
+        |    @Deprecated
+        |    public final long deprecatedProperty;
+      """
           .trimMargin()
-      val expectedWithMethodDef =
+      )
+      .contains(
         """
-          |    @Deprecated
-          |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
-          |      return new ClassWithDeprecatedProperty(deprecatedProperty);
-          |    }
-        """
+        |    @Deprecated
+        |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
+        |      return new ClassWithDeprecatedProperty(deprecatedProperty);
+        |    }
+      """
           .trimMargin()
-      assertThat(javaCode)
-        .contains(expectedPropertyDef)
-        .contains(expectedWithMethodDef)
-        .doesNotContain("* @deprecated")
-    }
+      )
+      .doesNotContain("* @deprecated")
   }
 
   @Test
@@ -414,40 +418,41 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-          class ClassWithDeprecatedProperty {
-             @Deprecated
-             deprecatedProperty: Int = 1337
-          }
+        class ClassWithDeprecatedProperty {
+           @Deprecated
+           deprecatedProperty: Int = 1337
+        }
       """
           .trimIndent(),
-        true
+        generateGetters = true
       )
-    val expectedPropertyDef =
-      """
+
+    assertThat(javaCode)
+      .contains(
+        """
         |  public static final class ClassWithDeprecatedProperty {
         |    private final long deprecatedProperty;
       """
-        .trimMargin()
-    val expectedGetterDef =
-      """
+          .trimMargin()
+      )
+      .contains(
+        """
         |    @Deprecated
         |    public long getDeprecatedProperty() {
         |      return deprecatedProperty;
         |    }
       """
-        .trimMargin()
-    val expectedWithMethodDef =
-      """
+          .trimMargin()
+      )
+      .contains(
+        """
         |    @Deprecated
         |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
       """
-        .trimMargin()
-    assertThat(javaCode)
-      .contains(expectedPropertyDef)
-      .contains(expectedGetterDef)
-      .contains(expectedWithMethodDef)
+          .trimMargin()
+      )
       .doesNotContain("* @deprecated")
   }
 
@@ -456,20 +461,23 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-        @Deprecated
-        class DeprecatedClass {
-          propertyOfDeprecatedClass: Int = 42
-        }
-      """
+      @Deprecated
+      class DeprecatedClass {
+        propertyOfDeprecatedClass: Int = 42
+      }
+    """
           .trimIndent()
       )
-    val expected =
-      """
+
+    assertThat(javaCode)
+      .contains(
+        """
         |  @Deprecated
         |  public static final class DeprecatedClass {
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected).doesNotContain("* @deprecated")
+          .trimMargin()
+      )
+      .doesNotContain("* @deprecated")
   }
 
   @Test
@@ -477,20 +485,23 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-        @Deprecated
-        module DeprecatedModule
-        
-        propertyInDeprecatedModuleClass : Int = 42
-      """
+      @Deprecated
+      module DeprecatedModule
+      
+      propertyInDeprecatedModuleClass : Int = 42
+    """
           .trimIndent()
       )
-    val expected =
-      """
+
+    assertThat(javaCode)
+      .contains(
+        """
         |@Deprecated
         |public final class DeprecatedModule {
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected).doesNotContain("* @deprecated")
+          .trimMargin()
+      )
+      .doesNotContain("* @deprecated")
   }
 
   @Test
@@ -501,22 +512,23 @@ class JavaCodeGeneratorTest {
       /// Documenting deprecatedProperty
       @Deprecated { message = "property is deprecated" }
       deprecatedProperty: Int
-    """
-          .trimIndent(),
+    """,
         generateJavadoc = true
       )
-    val expected =
+
+    assertThat(javaCode)
+      .contains(
+        """
+        |  /**
+        |   * Documenting deprecatedProperty
+        |   *
+        |   * @deprecated property is deprecated
+        |   */
+        |  @Deprecated
+        |  public final long deprecatedProperty;
       """
-      |  /**
-      |   * Documenting deprecatedProperty
-      |   *
-      |   * @deprecated property is deprecated
-      |   */
-      |  @Deprecated
-      |  public final long deprecatedProperty;
-    """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -554,10 +566,7 @@ class JavaCodeGeneratorTest {
 
   @Test
   fun `properties 2`() {
-    assertEqualTo(
-      IoUtils.readClassPathResourceAsString(javaClass, "PropertyTypes.jva"),
-      propertyTypesSources
-    )
+    assertThat(propertyTypesSources).isEqualToResourceFile("PropertyTypes.jva")
   }
 
   @Test
@@ -582,7 +591,7 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val javaClass = compileJavaCode(javaCode).getValue("my.Mod\$MyTypeAlias")
+    val javaClass = javaCode.compile().getValue("my.Mod\$MyTypeAlias")
 
     assertThat(javaClass.enumConstants.size)
       .isEqualTo(cases.size) // make sure zip doesn't drop cases
@@ -610,41 +619,49 @@ class JavaCodeGeneratorTest {
 
   @Test
   fun `conflicting enum constant names`() {
-    val pklCode =
+    val exception =
+      assertThrows<JavaCodeGeneratorException> {
+        generateJavaCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo-bar" | "foo bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo-bar" | "foo bar"
-    """
-        .trimIndent()
+            .trimIndent()
+        )
+      }
 
-    val exception = assertThrows<JavaCodeGeneratorException> { generateJavaCode(pklCode) }
     assertThat(exception)
       .hasMessageContainingAll("both be converted to enum constant name", "FOO_BAR")
   }
 
   @Test
   fun `empty enum constant name`() {
-    val pklCode =
+    val exception =
+      assertThrows<JavaCodeGeneratorException> {
+        generateJavaCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo" | "" | "bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo" | "" | "bar"
-    """
-        .trimIndent()
+            .trimIndent()
+        )
+      }
 
-    val exception = assertThrows<JavaCodeGeneratorException> { generateJavaCode(pklCode) }
     assertThat(exception).hasMessageContaining("cannot be converted")
   }
 
   @Test
   fun `inconvertible enum constant name`() {
-    val pklCode =
+    val exception =
+      assertThrows<JavaCodeGeneratorException> {
+        generateJavaCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo" | "✅" | "bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo" | "✅" | "bar"
-    """
-        .trimIndent()
-
-    val exception = assertThrows<JavaCodeGeneratorException> { generateJavaCode(pklCode) }
+            .trimIndent()
+        )
+      }
     assertThat(exception).hasMessageContainingAll("✅", "cannot be converted")
   }
 
@@ -664,39 +681,39 @@ class JavaCodeGeneratorTest {
         other: String
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final long other;
+        |
+        |    public final @NonNull Bar bar;
+        |
+        |    public Foo(@Named("other") long other, @Named("bar") @NonNull Bar bar) {
+        |      this.other = other;
+        |      this.bar = bar;
+        |    }
       """
-      |  public static final class Foo {
-      |    public final long other;
-      |
-      |    public final @NonNull Bar bar;
-      |
-      |    public Foo(@Named("other") long other, @Named("bar") @NonNull Bar bar) {
-      |      this.other = other;
-      |      this.bar = bar;
-      |    }
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Bar {
+        |    public final @NonNull Foo foo;
+        |
+        |    public final @NonNull String other;
+        |
+        |    public Bar(@Named("foo") @NonNull Foo foo, @Named("other") @NonNull String other) {
+        |      this.foo = foo;
+        |      this.other = other;
+        |    }
       """
-      |  public static final class Bar {
-      |    public final @NonNull Foo foo;
-      |
-      |    public final @NonNull String other;
-      |
-      |    public Bar(@Named("foo") @NonNull Foo foo, @Named("other") @NonNull String other) {
-      |      this.foo = foo;
-      |      this.other = other;
-      |    }
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -716,54 +733,46 @@ class JavaCodeGeneratorTest {
       class Baz extends Bar {
         three: Duration
       }
-    """,
+    """
+          .trimIndent(),
         generateGetters = true
       )
 
-    assertContains(
-      """
-      |  public abstract static class Foo {
-      |    protected final long one;
-      |
-      |    protected Foo(@Named("one") long one) {
-      |      this.one = one;
-      |    }
-    """,
-      javaCode
-    )
-
-    assertContains(
-      """
-      |  public static class None extends Foo {
-      |    public None(@Named("one") long one) {
-      |      super(one);
-      |    }
-    """,
-      javaCode
-    )
-
-    assertContains(
-      """
-      |  public static class Bar extends None {
-      |    protected final String two;
-      |
-      |    public Bar(@Named("one") long one, @Named("two") String two) {
-      |      super(one);
-      |      this.two = two;
-      |    }
-    """,
-      javaCode
-    )
-
     assertThat(javaCode)
-      .isEqualTo(IoUtils.readClassPathResourceAsString(javaClass, "Inheritance.jva"))
-    //
-    //    assertEqualTo(
-    //      IoUtils.readClassPathResourceAsString(javaClass, "Inheritance.jva"),
-    //      javaCode
-    //    )
-
-    assertCompilesSuccessfully(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  public abstract static class Foo {
+        |    protected final long one;
+        |
+        |    protected Foo(@Named("one") long one) {
+        |      this.one = one;
+        |    }
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static class None extends Foo {
+        |    public None(@Named("one") long one) {
+        |      super(one);
+        |    }
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static class Bar extends None {
+        |    protected final String two;
+        |
+        |    public Bar(@Named("one") long one, @Named("two") String two) {
+        |      super(one);
+        |      this.two = two;
+        |    }
+      """
+          .trimMargin()
+      )
+      .isEqualToResourceFile("Inheritance.jva")
   }
 
   @Test
@@ -771,17 +780,17 @@ class JavaCodeGeneratorTest {
     val props = javaReservedWords.joinToString("\n") { "`$it`: Int" }
 
     val fooClass =
-      compileJavaCode(
-          generateJavaCode(
-            """
+      generateJavaCode(
+          """
       module my.mod
 
       class Foo {
         $props
       }
     """
-          )
+            .trimIndent()
         )
+        .compile()
         .getValue("my.Mod\$Foo")
 
     assertThat(fooClass.declaredFields).allSatisfy(Consumer { it.name.startsWith("_") })
@@ -801,13 +810,12 @@ class JavaCodeGeneratorTest {
         ETA: Duration = 3.s
         package: String
       }
-    """,
+    """
+          .trimIndent(),
         generateGetters = true
       )
 
-    assertEqualTo(IoUtils.readClassPathResourceAsString(javaClass, "GenerateGetters.jva"), javaCode)
-
-    assertCompilesSuccessfully(javaCode)
+    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GenerateGetters.jva")
   }
 
   @Test
@@ -826,48 +834,50 @@ class JavaCodeGeneratorTest {
     """
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |    public Bar withX(long x) {
+        |      return new Bar(x, y);
+        |    }
       """
-      |    public Bar withX(long x) {
-      |      return new Bar(x, y);
-      |    }
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |    public Bar withY(@NonNull String y) {
+        |      return new Bar(x, y);
+        |    }
       """
-      |    public Bar withY(@NonNull String y) {
-      |      return new Bar(x, y);
-      |    }
-    """,
-      javaCode
-    )
-
-    assertThat(javaCode).doesNotContain("public Foo withX") // because `Foo` is abstract
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
+      .doesNotContain("public Foo withX") // because `Foo` is abstract
   }
 
   @Test
   fun `module class`() {
     val javaCode =
-      generateJavaCode("""
+      generateJavaCode(
+        """
       module my.mod
-
+      
       pigeon: String
       parrot: String
-    """)
+    """
+          .trimIndent()
+      )
 
-    assertContains(
-      """
+    assertThat(javaCode)
+      .contains(
+        """
       |public final class Mod {
       |  public final @NonNull String pigeon;
       |
       |  public final @NonNull String parrot;
-    """,
-      javaCode
-    )
+    """
+          .trimMargin()
+      )
   }
 
   @Test
@@ -883,6 +893,7 @@ class JavaCodeGeneratorTest {
         parrot2: String
       }
     """
+          .trimIndent()
       )
 
     assertThat(javaCode)
@@ -912,13 +923,12 @@ class JavaCodeGeneratorTest {
         /// *emphasized* `code`.
         name: String
       }
-      """,
+    """
+          .trimIndent(),
         generateJavadoc = true
       )
 
-    assertEqualTo(IoUtils.readClassPathResourceAsString(javaClass, "Javadoc.jva"), javaCode)
-
-    assertCompilesSuccessfully(javaCode)
+    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("Javadoc.jva")
   }
 
   @Test
@@ -937,34 +947,34 @@ class JavaCodeGeneratorTest {
         /// can contain /* and */ characters.
         name: String
       }
-      """,
+    """
+          .trimIndent(),
         generateGetters = true,
         generateJavadoc = true
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  /**
+        |   * module property comment.
+        |   * can contain /* and *&#47; characters.
+        |   */
+        |  public @NonNull Person getPigeon() {
       """
-      |  /**
-      |   * module property comment.
-      |   * can contain /* and *&#47; characters.
-      |   */
-      |  public @NonNull Person getPigeon() {
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |    /**
+        |     * class property comment.
+        |     * can contain /* and *&#47; characters.
+        |     */
+        |    public @NonNull String getName() {
       """
-      |    /**
-      |     * class property comment.
-      |     * can contain /* and *&#47; characters.
-      |     */
-      |    public @NonNull String getName() {
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1003,74 +1013,73 @@ class JavaCodeGeneratorTest {
         list: List<UInt>
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |public final class Mod {
+        |  public final short uint8;
+        |
+        |  public final int uint16;
+        |
+        |  public final long uint32;
+        |
+        |  public final long uint;
+        |
+        |  public final byte int8;
+        |
+        |  public final short int16;
+        |
+        |  public final int int32;
+        |
+        |  public final @NonNull URI uri;
       """
-      |public final class Mod {
-      |  public final short uint8;
-      |
-      |  public final int uint16;
-      |
-      |  public final long uint32;
-      |
-      |  public final long uint;
-      |
-      |  public final byte int8;
-      |
-      |  public final short int16;
-      |
-      |  public final int int32;
-      |
-      |  public final @NonNull URI uri;
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public final @NonNull Pair<@NonNull Short, @NonNull Integer> pair;
+        |
+        |  public final @NonNull List<@NonNull Long> list;
+        |
+        |  public final @NonNull Set<@NonNull Long> set;
+        |
+        |  public final @NonNull Map<@NonNull Byte, @NonNull Short> map;
+        |
+        |  public final @NonNull List<@NonNull Integer> listing;
+        |
+        |  public final @NonNull Map<@NonNull URI, @NonNull Short> mapping;
+        |
+        |  public final Integer nullable;
       """
-      |  public final @NonNull Pair<@NonNull Short, @NonNull Integer> pair;
-      |
-      |  public final @NonNull List<@NonNull Long> list;
-      |
-      |  public final @NonNull Set<@NonNull Long> set;
-      |
-      |  public final @NonNull Map<@NonNull Byte, @NonNull Short> map;
-      |
-      |  public final @NonNull List<@NonNull Integer> listing;
-      |
-      |  public final @NonNull Map<@NonNull URI, @NonNull Short> mapping;
-      |
-      |  public final Integer nullable;
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final short uint8;
+        |
+        |    public final int uint16;
+        |
+        |    public final long uint32;
+        |
+        |    public final long uint;
+        |
+        |    public final byte int8;
+        |
+        |    public final short int16;
+        |
+        |    public final int int32;
+        |
+        |    public final @NonNull URI uri;
+        |
+        |    public final @NonNull List<@NonNull Long> list;
       """
-      |  public static final class Foo {
-      |    public final short uint8;
-      |
-      |    public final int uint16;
-      |
-      |    public final long uint32;
-      |
-      |    public final long uint;
-      |
-      |    public final byte int8;
-      |
-      |    public final short int16;
-      |
-      |    public final int int32;
-      |
-      |    public final @NonNull URI uri;
-      |
-      |    public final @NonNull List<@NonNull Long> list;
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1078,34 +1087,38 @@ class JavaCodeGeneratorTest {
     var javaCode =
       generateJavaCode(
         """
-        module mod
-        
-        foo: String
-      """,
+      module mod
+      
+      foo: String
+    """
+          .trimIndent(),
         nonNullAnnotation = "com.example.Annotations\$NonNull"
       )
 
-    assertContains("import com.example.Annotations;", javaCode)
-    assertContains("public final @Annotations.NonNull String foo;", javaCode)
+    assertThat(javaCode)
+      .contains("import com.example.Annotations;")
+      .contains("public final @Annotations.NonNull String foo;")
 
     javaCode =
       generateJavaCode(
         """
-        module mod
-        
-        foo: Int
-        bar: Int?
-        baz: Any
-        qux: String
-        foo2: List<String>?
-        bar2: List<String?>
-        baz2: List<String>
-        qux2: List<Int>
-      """
+      module mod
+      
+      foo: Int
+      bar: Int?
+      baz: Any
+      qux: String
+      foo2: List<String>?
+      bar2: List<String?>
+      baz2: List<String>
+      qux2: List<Int>
+    """
+          .trimIndent()
       )
 
-    assertContains(
-      """
+    assertThat(javaCode)
+      .contains(
+        """
       |public final class Mod {
       |  public final long foo;
       |
@@ -1122,9 +1135,9 @@ class JavaCodeGeneratorTest {
       |  public final @NonNull List<@NonNull String> baz2;
       |
       |  public final @NonNull List<@NonNull Long> qux2;
-      """,
-      javaCode
-    )
+    """
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1156,39 +1169,38 @@ class JavaCodeGeneratorTest {
     """
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |public final class Mod {
+        |  public final @NonNull String simple;
+        |
+        |  public final @NonNull String constrained;
+        |
+        |  public final @NonNull List<@NonNull Long> parameterized;
+        |
+        |  public final @NonNull List<@NonNull Long> recursive1;
+        |
+        |  public final @NonNull List<@NonNull String> recursive2;
       """
-      |public final class Mod {
-      |  public final @NonNull String simple;
-      |
-      |  public final @NonNull String constrained;
-      |
-      |  public final @NonNull List<@NonNull Long> parameterized;
-      |
-      |  public final @NonNull List<@NonNull Long> recursive1;
-      |
-      |  public final @NonNull List<@NonNull String> recursive2;
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final @NonNull String simple;
+        |
+        |    public final @NonNull String constrained;
+        |
+        |    public final @NonNull List<@NonNull Long> parameterized;
+        |
+        |    public final @NonNull List<@NonNull Long> recursive1;
+        |
+        |    public final @NonNull List<@NonNull String> recursive2;
       """
-      |  public static final class Foo {
-      |    public final @NonNull String simple;
-      |
-      |    public final @NonNull String constrained;
-      |
-      |    public final @NonNull List<@NonNull Long> parameterized;
-      |
-      |    public final @NonNull List<@NonNull Long> recursive1;
-      |
-      |    public final @NonNull List<@NonNull String> recursive2;
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1229,82 +1241,86 @@ class JavaCodeGeneratorTest {
         res9: MMap
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |public final class Mod {
+        |  public final @NonNull List<@NonNull Long> res1;
+        |
+        |  public final @NonNull List<@NonNull List<@NonNull String>> res2;
+        |
+        |  public final @NonNull Map<@NonNull Long, @NonNull String> res3;
+        |
+        |  public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
+        |
+        |  public final @NonNull Map<Person, Person> res5;
+        |
+        |  public final @NonNull List<@NonNull Object> res6;
+        |
+        |  public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
+        |
+        |  public final @NonNull Map<@NonNull String, @NonNull Object> res8;
+        |
+        |  public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
       """
-      |public final class Mod {
-      |  public final @NonNull List<@NonNull Long> res1;
-      |
-      |  public final @NonNull List<@NonNull List<@NonNull String>> res2;
-      |
-      |  public final @NonNull Map<@NonNull Long, @NonNull String> res3;
-      |
-      |  public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
-      |
-      |  public final @NonNull Map<Person, Person> res5;
-      |
-      |  public final @NonNull List<@NonNull Object> res6;
-      |
-      |  public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
-      |
-      |  public final @NonNull Map<@NonNull String, @NonNull Object> res8;
-      |
-      |  public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-    """,
-      javaCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final @NonNull List<@NonNull Long> res1;
+        |
+        |    public final @NonNull List<@NonNull List<@NonNull String>> res2;
+        |
+        |    public final @NonNull Map<@NonNull Long, @NonNull String> res3;
+        |
+        |    public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
+        |
+        |    public final @NonNull Map<Person, Person> res5;
+        |
+        |    public final @NonNull List<@NonNull Object> res6;
+        |
+        |    public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
+        |
+        |    public final @NonNull Map<@NonNull String, @NonNull Object> res8;
+        |
+        |    public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
       """
-      |  public static final class Foo {
-      |    public final @NonNull List<@NonNull Long> res1;
-      |
-      |    public final @NonNull List<@NonNull List<@NonNull String>> res2;
-      |
-      |    public final @NonNull Map<@NonNull Long, @NonNull String> res3;
-      |
-      |    public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
-      |
-      |    public final @NonNull Map<Person, Person> res5;
-      |
-      |    public final @NonNull List<@NonNull Object> res6;
-      |
-      |    public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
-      |
-      |    public final @NonNull Map<@NonNull String, @NonNull Object> res8;
-      |
-      |    public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCode)
+          .trimMargin()
+      )
   }
 
   @Test
   fun `union of string literals`() {
     val javaCode =
-      generateJavaCode("""
+      generateJavaCode(
+        """
       module mod
 
       x: "Pigeon"|"Barn Owl"|"Parrot"
-    """)
+    """
+          .trimIndent()
+      )
 
-    assertContains("public final @NonNull String x;", javaCode)
-
-    assertCompilesSuccessfully(javaCode)
+    assertThat(javaCode).compilesSuccessfully().contains("public final @NonNull String x;")
   }
 
   @Test
   fun `other union type`() {
     val e =
       assertThrows<JavaCodeGeneratorException> {
-        generateJavaCode("""
+        generateJavaCode(
+          """
         module mod
 
         x: "Pigeon"|Int|"Parrot"
-      """)
+      """
+            .trimIndent()
+        )
       }
     assertThat(e).hasMessageContaining("Pkl union types are not supported")
   }
@@ -1325,14 +1341,16 @@ class JavaCodeGeneratorTest {
       
       typealias Version = "RELEASE"|String|"LATEST"
     """
+          .trimIndent()
       )
 
-    assertContains("public final @NonNull String v1;", javaCode)
-    assertContains("public final @NonNull String v2;", javaCode)
-    assertContains("public final @NonNull String v3;", javaCode)
-    assertContains("public final @NonNull String v4;", javaCode)
-    assertContains("public final @NonNull String v5;", javaCode)
-    assertContains("public final @NonNull String v6;", javaCode)
+    assertThat(javaCode)
+      .contains("public final @NonNull String v1;")
+      .contains("public final @NonNull String v2;")
+      .contains("public final @NonNull String v3;")
+      .contains("public final @NonNull String v4;")
+      .contains("public final @NonNull String v5;")
+      .contains("public final @NonNull String v6;")
   }
 
   @Test
@@ -1356,14 +1374,16 @@ class JavaCodeGeneratorTest {
       v5: Version5
       v6: Version6
     """
+          .trimIndent()
       )
 
-    assertContains("public final @NonNull String v1;", javaCode)
-    assertContains("public final @NonNull String v2;", javaCode)
-    assertContains("public final @NonNull String v3;", javaCode)
-    assertContains("public final @NonNull String v4;", javaCode)
-    assertContains("public final @NonNull String v5;", javaCode)
-    assertContains("public final @NonNull String v6;", javaCode)
+    assertThat(javaCode)
+      .contains("public final @NonNull String v1;")
+      .contains("public final @NonNull String v2;")
+      .contains("public final @NonNull String v3;")
+      .contains("public final @NonNull String v4;")
+      .contains("public final @NonNull String v5;")
+      .contains("public final @NonNull String v6;")
   }
 
   @Test
@@ -1371,58 +1391,58 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-        module my.mod
+      module my.mod
 
-        server: Server
+      server: Server
 
-        class Server {
-          port: Int
-          urls: Listing<Uri>
-        }
-      """,
+      class Server {
+        port: Int
+        urls: Listing<Uri>
+      }
+    """
+          .trimIndent(),
         generateSpringBootConfig = true
+      )
+
+    assertThat(javaCode)
+      .contains(
+        """
+        |@ConstructorBinding
+        |@ConfigurationProperties
+        |public final class Mod {
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public final @NonNull Server server;
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  @ConstructorBinding
+        |  @ConfigurationProperties("server")
+        |  public static final class Server {
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |    public final long port;
+        |
+        |    public final @NonNull List<@NonNull URI> urls;
+      """
+          .trimMargin()
       )
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
     val javaCodeWithoutSpringAnnotations =
-      javaCode
-        .lines()
-        .filterNot { it.contains("ConstructorBinding") || it.contains("ConfigurationProperties") }
-        .joinToString("\n")
-
-    assertContains(
-      """
-      |@ConstructorBinding
-      |@ConfigurationProperties
-      |public final class Mod {
-    """,
-      javaCode
-    )
-
-    assertContains("""
-      |  public final @NonNull Server server;
-    """, javaCode)
-
-    assertContains(
-      """
-      |  @ConstructorBinding
-      |  @ConfigurationProperties("server")
-      |  public static final class Server {
-    """,
-      javaCode
-    )
-
-    assertContains(
-      """
-      |    public final long port;
-      |
-      |    public final @NonNull List<@NonNull URI> urls;
-    """,
-      javaCode
-    )
-
-    assertCompilesSuccessfully(javaCodeWithoutSpringAnnotations)
+      javaCode.deleteLines {
+        it.contains("ConstructorBinding") || it.contains("ConfigurationProperties")
+      }
+    assertThat(javaCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 
   @Test
@@ -1431,12 +1451,12 @@ class JavaCodeGeneratorTest {
       PklModule(
         "library",
         """
-      module library
+          module library
 
-      class Person { name: String; age: Int }
-      
-      pigeon: Person
-    """
+          class Person { name: String; age: Int }
+          
+          pigeon: Person
+        """
           .trimIndent()
       )
 
@@ -1444,32 +1464,32 @@ class JavaCodeGeneratorTest {
       PklModule(
         "client",
         """
-      module client
-      
-      import "library.pkl"
-      
-      lib: library
-      
-      parrot: library.Person
-    """
+          module client
+          
+          import "library.pkl"
+          
+          lib: library
+          
+          parrot: library.Person
+        """
           .trimIndent()
       )
 
     val javaSourceFiles = generateFiles(library, client)
+    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+
     val javaClientCode =
       javaSourceFiles.entries.find { (fileName, _) -> fileName.endsWith("Client.java") }!!.value
-
-    assertContains(
+    assertThat(javaClientCode)
+      .contains(
+        """
+        |public final class Client {
+        |  public final @NonNull Library lib;
+        |
+        |  public final Library. @NonNull Person parrot;
       """
-      |public final class Client {
-      |  public final @NonNull Library lib;
-      |
-      |  public final Library. @NonNull Person parrot;
-    """,
-      javaClientCode
-    )
-
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles) }
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1478,12 +1498,12 @@ class JavaCodeGeneratorTest {
       PklModule(
         "base",
         """
-      open module base
-
-      open class Person { name: String }
-
-      pigeon: Person
-    """
+          open module base
+        
+          open class Person { name: String }
+        
+          pigeon: Person
+        """
           .trimIndent()
       )
 
@@ -1491,38 +1511,38 @@ class JavaCodeGeneratorTest {
       PklModule(
         "derived",
         """
-      module derived
-      extends "base.pkl"
-      
-      class Person2 extends Person { age: Int }
-      
-      person1: Person
-      person2: Person2
-    """
+          module derived
+          extends "base.pkl"
+          
+          class Person2 extends Person { age: Int }
+          
+          person1: Person
+          person2: Person2
+        """
           .trimIndent()
       )
 
     val javaSourceFiles = generateFiles(base, derived)
+    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
-
-    assertContains(
+    assertThat(javaDerivedCode)
+      .contains(
+        """
+        |public final class Derived extends Base {
+        |  public final Base. @NonNull Person person1;
+        |
+        |  public final @NonNull Person2 person2;
       """
-      |public final class Derived extends Base {
-      |  public final Base. @NonNull Person person1;
-      |
-      |  public final @NonNull Person2 person2;
-    """,
-      javaDerivedCode
-    )
-
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles) }
+          .trimMargin()
+      )
   }
 
   @Test
   fun `empty module`() {
     val javaCode = generateJavaCode("module mod")
-    assertContains("public final class Mod {", javaCode)
+    assertThat(javaCode).contains("public final class Mod {")
   }
 
   @Test
@@ -1531,10 +1551,10 @@ class JavaCodeGeneratorTest {
       PklModule(
         "base",
         """
-      abstract module base
-
-      typealias Version = "LATEST"|String
-    """
+          abstract module base
+    
+          typealias Version = "LATEST"|String
+        """
           .trimIndent()
       )
 
@@ -1542,28 +1562,28 @@ class JavaCodeGeneratorTest {
       PklModule(
         "derived",
         """
-      module derived
-      
-      extends "base.pkl"
-      
-      v: Version = "1.2.3"
-    """
+          module derived
+          
+          extends "base.pkl"
+          
+          v: Version = "1.2.3"
+        """
           .trimIndent()
       )
 
     val javaSourceFiles = generateFiles(base, derived)
+    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
-
-    assertContains(
+    assertThat(javaDerivedCode)
+      .contains(
+        """
+        |public final class Derived extends Base {
+        |  public final @NonNull String v;
       """
-      |public final class Derived extends Base {
-      |  public final @NonNull String v;
-    """,
-      javaDerivedCode
-    )
-
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles) }
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1572,20 +1592,20 @@ class JavaCodeGeneratorTest {
       PklModule(
         "Mod.pkl",
         """
-      module org.pkl.Mod
-
-      foo: Foo
-
-      bar: Bar
-
-      class Foo {
-        prop: String
-      }
-
-      class Bar {
-        prop: Int
-      }
-    """
+          module org.pkl.Mod
+    
+          foo: Foo
+    
+          bar: Bar
+    
+          class Foo {
+            prop: String
+          }
+    
+          class Bar {
+            prop: Int
+          }
+        """
           .trimIndent()
       )
     val generated = generateFiles(pklModule)
@@ -1595,9 +1615,7 @@ class JavaCodeGeneratorTest {
     val generatedFile = generated[expectedPropertyFile]!!
     assertThat(generatedFile)
       .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod")
-    assertThat(generatedFile)
       .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo")
-    assertThat(generatedFile)
       .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar")
   }
 
@@ -1607,20 +1625,20 @@ class JavaCodeGeneratorTest {
       PklModule(
         "mod.pkl",
         """
-      module my.mod
-
-      foo: Foo
-
-      bar: Bar
-
-      class Foo {
-        prop: String
-      }
-
-      class Bar {
-        prop: Int
-      }
-    """
+          module my.mod
+    
+          foo: Foo
+    
+          bar: Bar
+    
+          class Foo {
+            prop: String
+          }
+    
+          class Bar {
+            prop: Int
+          }
+        """
           .trimIndent()
       )
     val generated = generateFiles(pklModule)
@@ -1628,9 +1646,10 @@ class JavaCodeGeneratorTest {
       "resources/META-INF/org/pkl/config/java/mapper/classes/my.mod.properties"
     assertThat(generated).containsKey(expectedPropertyFile)
     val generatedFile = generated[expectedPropertyFile]!!
-    assertThat(generatedFile).contains("org.pkl.config.java.mapper.my.mod\\#ModuleClass=my.Mod")
-    assertThat(generatedFile).contains("org.pkl.config.java.mapper.my.mod\\#Foo=my.Mod\$Foo")
-    assertThat(generatedFile).contains("org.pkl.config.java.mapper.my.mod\\#Bar=my.Mod\$Bar")
+    assertThat(generatedFile)
+      .contains("org.pkl.config.java.mapper.my.mod\\#ModuleClass=my.Mod")
+      .contains("org.pkl.config.java.mapper.my.mod\\#Foo=my.Mod\$Foo")
+      .contains("org.pkl.config.java.mapper.my.mod\\#Bar=my.Mod\$Bar")
   }
 
   @Test
@@ -1638,46 +1657,48 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-        module mod
-
-        class BigStruct {
-          boolean: Boolean
-          int: Int
-          float: Float
-          string: String
-          duration: Duration
-          dataSize: DataSize
-          pair: Pair
-          pair2: Pair<String, SmallStruct>
-          coll: Collection
-          coll2: Collection<SmallStruct>
-          list: List
-          list2: List<SmallStruct>
-          set: Set
-          set2: Set<SmallStruct>
-          map: Map
-          map2: Map<String, SmallStruct>
-          container: Mapping
-          container2: Mapping<String, SmallStruct>
-          other: SmallStruct
-          regex: Regex
-          nonNull: NonNull
-          enum: Direction
-        }
-
-        class SmallStruct {
-          name: String
-        }
-
-        typealias Direction = "north"|"east"|"south"|"west"
-    """,
+      module mod
+  
+      class BigStruct {
+        boolean: Boolean
+        int: Int
+        float: Float
+        string: String
+        duration: Duration
+        dataSize: DataSize
+        pair: Pair
+        pair2: Pair<String, SmallStruct>
+        coll: Collection
+        coll2: Collection<SmallStruct>
+        list: List
+        list2: List<SmallStruct>
+        set: Set
+        set2: Set<SmallStruct>
+        map: Map
+        map2: Map<String, SmallStruct>
+        container: Mapping
+        container2: Mapping<String, SmallStruct>
+        other: SmallStruct
+        regex: Regex
+        nonNull: NonNull
+        enum: Direction
+      }
+  
+      class SmallStruct {
+        name: String
+      }
+  
+      typealias Direction = "north"|"east"|"south"|"west"
+    """
+          .trimIndent(),
         implementSerializable = true
       )
 
-    assertContains("implements Serializable", javaCode)
-    assertContains("private static final long serialVersionUID = 0L;", javaCode)
+    assertThat(javaCode)
+      .contains("implements Serializable")
+      .contains("private static final long serialVersionUID = 0L;")
 
-    val classes = compileJavaCode(javaCode)
+    val classes = javaCode.compile()
 
     val smallStructCtor = classes.getValue("Mod\$SmallStruct").constructors.first()
     val smallStruct = smallStructCtor.newInstance("pigeon")
@@ -1743,6 +1764,53 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `non-instantiable classes aren't made serializable`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+      abstract class Foo { str: String }
+      class Bar // non-instantiable because no constructor is generated for stateless class
+    """
+          .trimIndent(),
+        implementSerializable = true
+      )
+
+    assertThat(javaCode).doesNotContain("Serializable")
+  }
+
+  @Test
+  fun `generates serializable module classes`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module Person
+      name: String
+      address: Address
+      class Address { city: String }
+    """
+          .trimIndent(),
+        implementSerializable = true
+      )
+
+    assertThat(javaCode)
+      .contains(
+        """
+        |public final class Person implements Serializable {
+        |  private static final long serialVersionUID = 0L;
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Address implements Serializable {
+        |    private static final long serialVersionUID = 0L;
+      """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `override property type`() {
     val javaCode =
       generateJavaCode(
@@ -1765,24 +1833,25 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent()
       )
+
     assertThat(javaCode)
+      .compilesSuccessfully()
       .contains(
         """
-    |  public static final class TheClass extends OpenClass {
-    |    public final @NonNull TheFoo prop;
-    |
-    |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
-    |      super(prop);
-    |      this.prop = prop;
-    |    }
-    |
-    |    public TheClass withProp(@NonNull TheFoo prop) {
-    |      return new TheClass(prop);
-    |    }
-    """
+        |  public static final class TheClass extends OpenClass {
+        |    public final @NonNull TheFoo prop;
+        |
+        |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
+        |      super(prop);
+        |      this.prop = prop;
+        |    }
+        |
+        |    public TheClass withProp(@NonNull TheFoo prop) {
+        |      return new TheClass(prop);
+        |    }
+      """
           .trimMargin()
       )
-    assertCompilesSuccessfully(javaCode)
   }
 
   @Test
@@ -1809,25 +1878,26 @@ class JavaCodeGeneratorTest {
           .trimIndent(),
         generateGetters = true
       )
+
     assertThat(javaCode)
+      .compilesSuccessfully()
       .contains(
         """
-    |  public static final class TheClass extends OpenClass {
-    |    private final @NonNull TheFoo prop;
-    |
-    |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
-    |      super(prop);
-    |      this.prop = prop;
-    |    }
-    |
-    |    @Override
-    |    public @NonNull TheFoo getProp() {
-    |      return prop;
-    |    }
-    """
+        |  public static final class TheClass extends OpenClass {
+        |    private final @NonNull TheFoo prop;
+        |
+        |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
+        |      super(prop);
+        |      this.prop = prop;
+        |    }
+        |
+        |    @Override
+        |    public @NonNull TheFoo getProp() {
+        |      return prop;
+        |    }
+      """
           .trimMargin()
       )
-    assertCompilesSuccessfully(javaCode)
   }
 
   @Test
@@ -2029,6 +2099,48 @@ class JavaCodeGeneratorTest {
     )
   }
 
+  @Test
+  fun `equals,hashCode,toString work correctly for class that doesn't declare properties`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      open class Foo {
+        name: String
+      }
+      
+      class Bar extends Foo {}
+    """
+          .trimIndent()
+      )
+
+    val classes = javaCode.compile()
+    val fooClass = classes.getValue("my.Mod\$Foo")
+    val foo1 = fooClass.getDeclaredConstructor(String::class.java).newInstance("name1")
+    val barClass = classes.getValue("my.Mod\$Bar")
+    val bar1 = barClass.getDeclaredConstructor(String::class.java).newInstance("name1")
+    val anotherBar1 = barClass.getDeclaredConstructor(String::class.java).newInstance("name1")
+    val bar2 = barClass.getDeclaredConstructor(String::class.java).newInstance("name2")
+
+    assertThat(bar1)
+      .isEqualTo(bar1)
+      .isEqualTo(anotherBar1)
+      .isNotEqualTo(bar2)
+      .isNotEqualTo(foo1)
+      .hasSameHashCodeAs(bar1)
+      .hasSameHashCodeAs(anotherBar1)
+    assertThat(bar1.toString())
+      .isEqualTo(
+        """
+        Bar {
+          name = name1
+        }
+      """
+          .trimIndent()
+      )
+  }
+
   private fun Map<String, String>.validateContents(
     vararg assertions: kotlin.Pair<String, List<String>>
   ) {
@@ -2057,8 +2169,8 @@ class JavaCodeGeneratorTest {
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
-  private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =
-    JavaCodegenOptions().generateFiles(*pklModules)
+  private fun generateFiles(vararg pklModules: PklModule): Map<String, JavaSourceCode> =
+    JavaCodegenOptions().generateFiles(*pklModules).mapValues { JavaSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("my.Mod\$Other").constructors.first()
@@ -2103,15 +2215,45 @@ class JavaCodeGeneratorTest {
     return other to propertyTypes
   }
 
-  private fun assertContains(part: String, code: String) {
-    val trimmedPart = part.trim().trimMargin()
-    if (!code.contains(trimmedPart)) {
-      // check for equality to get better error output (ide diff dialog)
-      assertThat(code).isEqualTo(trimmedPart)
-    }
+  private fun assertThat(actual: JavaSourceCode): JavaSourceCodeAssert =
+    JavaSourceCodeAssert(actual)
+
+  private data class JavaSourceCode(val text: String) {
+    fun compile(): Map<String, Class<*>> =
+      InMemoryJavaCompiler.compile(mapOf("/org/Mod.java" to text))
+
+    fun deleteLines(predicate: (String) -> Boolean): JavaSourceCode =
+      JavaSourceCode(text.lines().filterNot(predicate).joinToString("\n"))
   }
 
-  private fun assertEqualTo(expectedCode: String, actualCode: String) {
-    assertThat(actualCode.trim()).isEqualTo(expectedCode.trimIndent().trim())
+  private class JavaSourceCodeAssert(actual: JavaSourceCode) :
+    AbstractAssert<JavaSourceCodeAssert, JavaSourceCode>(actual, JavaSourceCodeAssert::class.java) {
+    fun contains(expected: String): JavaSourceCodeAssert {
+      if (!actual.text.contains(expected)) {
+        // check for equality to get better error output (IDE diff dialog)
+        assertThat(actual.text).isEqualTo(expected)
+      }
+      return this
+    }
+
+    fun doesNotContain(expected: String): JavaSourceCodeAssert {
+      assertThat(actual.text).doesNotContain(expected)
+      return this
+    }
+
+    fun compilesSuccessfully(): JavaSourceCodeAssert {
+      assertThatCode { actual.compile() }.doesNotThrowAnyException()
+      return this
+    }
+
+    fun isEqualTo(expected: String): JavaSourceCodeAssert {
+      assertThat(actual.text).isEqualTo(expected)
+      return this
+    }
+
+    fun isEqualToResourceFile(fileName: String): JavaSourceCodeAssert {
+      isEqualTo(IoUtils.readClassPathResourceAsString(javaClass, fileName))
+      return this
+    }
   }
 }
