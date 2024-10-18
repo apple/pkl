@@ -171,6 +171,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(JavaCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription(TaskConstants.GENERATE_JAVA_DESCRIPTION);
+                    task.setGroup(TaskConstants.TASK_GROUP_CODEGEN);
                     configureCodeGenTask(task, spec);
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
@@ -200,6 +202,8 @@ public class PklPlugin implements Plugin<Project> {
           createModulesTask(KotlinCodeGenTask.class, spec)
               .configure(
                   task -> {
+                    task.setDescription(TaskConstants.GENERATE_KOTLIN_DESCRIPTION);
+                    task.setGroup(TaskConstants.TASK_GROUP_CODEGEN);
                     configureCodeGenTask(task, spec);
                     task.getGenerateKdoc().set(spec.getGenerateKdoc());
                   });
@@ -228,7 +232,12 @@ public class PklPlugin implements Plugin<Project> {
                       .map(it -> it.dir("pkldoc").dir(spec.getName())));
 
           createModulesTask(PkldocTask.class, spec)
-              .configure(task -> task.getOutputDir().set(spec.getOutputDir()));
+              .configure(
+                  task -> {
+                    task.setDescription(TaskConstants.GENERATE_PKLDOC_DESCRIPTION);
+                    task.setGroup(TaskConstants.TASK_GROUP_DOCS);
+                    task.getOutputDir().set(spec.getOutputDir());
+                  });
         });
   }
 
@@ -242,6 +251,8 @@ public class PklPlugin implements Plugin<Project> {
           var testTask = createModulesTask(TestTask.class, spec);
           testTask.configure(
               task -> {
+                task.setDescription(TaskConstants.GENERATE_PKLDOC_DESCRIPTION);
+                task.setGroup(TaskConstants.TASK_GROUP_DOCS);
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
               });
