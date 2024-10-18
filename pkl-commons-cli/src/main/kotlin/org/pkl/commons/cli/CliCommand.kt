@@ -239,7 +239,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {
       externalModuleReaders.forEach { (key, value) ->
-        add(ModuleKeyFactories.external(key, externalProcesses[value]!!))
+        add(ModuleKeyFactories.externalProcess(key, externalProcesses[value]!!))
       }
       add(ModuleKeyFactories.standardLibrary)
       add(ModuleKeyFactories.modulePath(modulePathResolver))
@@ -263,7 +263,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ResourceReaders.http())
       add(ResourceReaders.https())
       externalResourceReaders.forEach { (key, value) ->
-        add(ResourceReaders.external(key, externalProcesses[value]!!))
+        add(ResourceReaders.externalProcess(key, externalProcesses[value]!!))
       }
     }
   }

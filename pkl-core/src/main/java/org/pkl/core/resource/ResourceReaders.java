@@ -31,7 +31,6 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.externalreader.ExternalResourceResolver;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
@@ -141,19 +140,19 @@ public final class ResourceReaders {
     return FromServiceProviders.INSTANCE;
   }
 
-  public static ResourceReader external(
+  public static ResourceReader externalProcess(
       String scheme, ExternalReaderProcess externalReaderProcess) {
-    return new External(scheme, externalReaderProcess, 0);
+    return new ExternalProcess(scheme, externalReaderProcess, 0);
   }
 
-  public static ResourceReader external(
+  public static ResourceReader externalProcess(
       String scheme, ExternalReaderProcess externalReaderProcess, long evaluatorId) {
-    return new External(scheme, externalReaderProcess, evaluatorId);
+    return new ExternalProcess(scheme, externalReaderProcess, evaluatorId);
   }
 
-  public static ResourceReader messageTransport(
+  public static ResourceReader externalResolver(
       ResourceReaderSpec spec, ExternalResourceResolver resolver) {
-    return new MessageTransport(spec, resolver);
+    return new ExternalResolver(spec, resolver);
   }
 
   private static final class EnvironmentVariable implements ResourceReader {
@@ -615,19 +614,19 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class External implements ResourceReader {
+  private static final class ExternalProcess implements ResourceReader {
     private final String scheme;
     private final ExternalReaderProcess process;
     private final long evaluatorId;
-    private MessageTransport underlying;
+    private ExternalResolver underlying;
 
-    public External(String scheme, ExternalReaderProcess process, long evaluatorId) {
+    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;
     }
 
-    private MessageTransport getUnderlyingReader()
+    private ExternalResolver getUnderlyingReader()
         throws ExternalReaderProcessException, IOException {
       if (underlying != null) {
         return underlying;
@@ -639,7 +638,7 @@ public final class ResourceReaders {
             ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
       }
       underlying =
-          new MessageTransport(
+          new ExternalResolver(
               spec, new ExternalResourceResolver(process.getTransport(), evaluatorId));
       return underlying;
     }
@@ -682,11 +681,11 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class MessageTransport implements ResourceReader {
+  private static final class ExternalResolver implements ResourceReader {
     private final ResourceReaderSpec readerSpec;
     private final ExternalResourceResolver resolver;
 
-    public MessageTransport(ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
+    public ExternalResolver(ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
       this.readerSpec = readerSpec;
       this.resolver = resolver;
     }

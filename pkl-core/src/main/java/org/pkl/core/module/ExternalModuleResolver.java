@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalreader;
+package org.pkl.core.module;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,7 +33,6 @@ import org.pkl.core.messaging.Messages.ListModulesResponse;
 import org.pkl.core.messaging.Messages.ReadModuleRequest;
 import org.pkl.core.messaging.Messages.ReadModuleResponse;
 import org.pkl.core.messaging.ProtocolException;
-import org.pkl.core.module.PathElement;
 
 public class ExternalModuleResolver {
   private final MessageTransport transport;
