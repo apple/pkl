@@ -26,7 +26,7 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
-import org.pkl.core.externalReader.*
+import org.pkl.core.externalreader.*
 
 class ModuleKeyFactoriesTest {
   @Test

@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader;
+package org.pkl.core.externalreader;
 
-import java.net.URI;
-import java.util.List;
-import org.pkl.core.module.PathElement;
+public final class ExternalReaderProcessException extends Exception {
+  public ExternalReaderProcessException(String msg) {
+    super(msg);
+  }
 
-/** Base interface for external module and resource readers. */
-public interface ExternalReaderBase {
-  String getScheme();
-
-  boolean hasHierarchicalUris();
-
-  boolean isGlobbable();
-
-  List<PathElement> listElements(URI uri) throws Exception;
+  public ExternalReaderProcessException(Throwable cause) {
+    super(cause);
+  }
 }

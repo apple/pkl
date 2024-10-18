@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 
 /** A factory for {@link ModuleKey}s. */
 public interface ModuleKeyFactory extends AutoCloseable {

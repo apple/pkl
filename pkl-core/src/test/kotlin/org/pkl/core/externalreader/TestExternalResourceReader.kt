@@ -13,26 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalReader
+package org.pkl.core.externalreader
 
 import java.net.URI
 import org.pkl.core.module.PathElement
 
-class TestExternalModuleReader : ExternalModuleReader {
-  override fun getScheme(): String = "test"
+class TestExternalResourceReader : ExternalResourceReader {
+  override val scheme: String = "test"
 
-  override fun hasHierarchicalUris(): Boolean = false
+  override val hasHierarchicalUris: Boolean = false
 
-  override fun isLocal(): Boolean = true
+  override val isGlobbable: Boolean = false
 
-  override fun isGlobbable(): Boolean = false
-
-  override fun read(uri: URI): String =
-    """
-    name = "Pigeon"
-    age = 40
-  """
-      .trimIndent()
+  override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
 
   override fun listElements(uri: URI): List<PathElement> = emptyList()
 }

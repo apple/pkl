@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;

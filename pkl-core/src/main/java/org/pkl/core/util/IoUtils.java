@@ -38,7 +38,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;

@@ -24,9 +24,9 @@ import java.util.concurrent.Executors
 import kotlin.random.Random
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
-import org.pkl.core.externalReader.ExternalReaderProcess
-import org.pkl.core.externalReader.ExternalReaderProcessImpl
-import org.pkl.core.externalReader.ExternalResourceResolver
+import org.pkl.core.externalreader.ExternalReaderProcess
+import org.pkl.core.externalreader.ExternalReaderProcessImpl
+import org.pkl.core.externalreader.ExternalResourceResolver
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports

@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.externalReader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;

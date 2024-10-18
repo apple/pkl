@@ -17,7 +17,7 @@ package org.pkl.server
 
 import java.net.URI
 import java.util.Optional
-import org.pkl.core.externalReader.ExternalModuleResolver
+import org.pkl.core.externalreader.ExternalModuleResolver
 import org.pkl.core.messaging.*
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.*
