@@ -1,0 +1,22 @@
+examples {
+  ["toTyped()"] {
+    new {
+      name = "Pigeon"
+      nick = "Pigeon"
+    }
+    new {
+      name = "Pigeon"
+      nick = "Pigeon"
+    }
+  }
+  ["toTyped() and amends"] {
+    new {
+      name = "NewPigeon"
+      nick = "NewPigeon"
+    }
+    new {
+      name = "NewPigeon"
+      nick = "NewPigeon"
+    }
+  }
+}
