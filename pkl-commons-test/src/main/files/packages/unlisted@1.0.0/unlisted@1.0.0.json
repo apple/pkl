@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "packageUri": "package://localhost:0/unlisted@1.0.0",
+  "name": "unlisted",
+  "version": "1.0.0",
+  "packageZipUrl": "https://localhost:0/unlisted@1.0.0/unlisted@1.0.0.zip",
+  "dependencies": {},
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  },
+  "sourceCode": "https://example.com/unlisted",
+  "documentation": "https://example.com/unlisted-docs",
+  "license": "UNLICENSED",
+  "authors": [
+    "unlisted@example.com"
+  ],
+  "issueTracker": "https://example.com/unlisted/issues",
+  "annotations": [
+    {
+      "moduleName": "pkl.base",
+      "class": "Unlisted",
+      "moduleUri": "pkl:base",
+      "properties": {}
+    }
+  ]
+}
