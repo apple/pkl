@@ -35,16 +35,16 @@ public class BaseMessagePackEncoder extends AbstractMessagePackEncoder {
 
   protected void packModuleReaderSpec(ModuleReaderSpec reader) throws IOException {
     packer.packMapHeader(4);
-    packKeyValue("scheme", reader.getScheme());
-    packKeyValue("hasHierarchicalUris", reader.getHasHierarchicalUris());
+    packKeyValue("scheme", reader.scheme());
+    packKeyValue("hasHierarchicalUris", reader.hasHierarchicalUris());
     packKeyValue("isLocal", reader.isLocal());
     packKeyValue("isGlobbable", reader.isGlobbable());
   }
 
   protected void packResourceReaderSpec(ResourceReaderSpec reader) throws IOException {
     packer.packMapHeader(3);
-    packKeyValue("scheme", reader.getScheme());
-    packKeyValue("hasHierarchicalUris", reader.getHasHierarchicalUris());
+    packKeyValue("scheme", reader.scheme());
+    packKeyValue("hasHierarchicalUris", reader.hasHierarchicalUris());
     packKeyValue("isGlobbable", reader.isGlobbable());
   }
 
@@ -55,82 +55,82 @@ public class BaseMessagePackEncoder extends AbstractMessagePackEncoder {
   }
 
   protected @Nullable void encodeMessage(Message msg) throws ProtocolException, IOException {
-    switch (msg.getType()) {
+    switch (msg.type()) {
       case READ_RESOURCE_REQUEST -> {
         var m = (ReadResourceRequest) msg;
         packer.packMapHeader(3);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("uri", m.getUri().toString());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("uri", m.uri().toString());
       }
       case READ_RESOURCE_RESPONSE -> {
         var m = (ReadResourceResponse) msg;
-        packMapHeader(2, m.getContents(), m.getError());
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("contents", m.getContents());
-        packKeyValue("error", m.getError());
+        packMapHeader(2, m.contents(), m.error());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("contents", m.contents());
+        packKeyValue("error", m.error());
       }
       case READ_MODULE_REQUEST -> {
         var m = (ReadModuleRequest) msg;
         packer.packMapHeader(3);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("uri", m.getUri().toString());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("uri", m.uri().toString());
       }
       case READ_MODULE_RESPONSE -> {
         var m = (ReadModuleResponse) msg;
-        packMapHeader(2, m.getContents(), m.getError());
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("contents", m.getContents());
-        packKeyValue("error", m.getError());
+        packMapHeader(2, m.contents(), m.error());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("contents", m.contents());
+        packKeyValue("error", m.error());
       }
       case LIST_RESOURCES_REQUEST -> {
         var m = (ListResourcesRequest) msg;
         packer.packMapHeader(3);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("uri", m.getUri().toString());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("uri", m.uri().toString());
       }
       case LIST_RESOURCES_RESPONSE -> {
         var m = (ListResourcesResponse) msg;
-        packMapHeader(2, m.getPathElements(), m.getError());
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        if (m.getPathElements() != null) {
+        packMapHeader(2, m.pathElements(), m.error());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        if (m.pathElements() != null) {
           packer.packString("pathElements");
-          packer.packArrayHeader(m.getPathElements().size());
-          for (var pathElement : m.getPathElements()) {
+          packer.packArrayHeader(m.pathElements().size());
+          for (var pathElement : m.pathElements()) {
             packPathElement(pathElement);
           }
         }
-        packKeyValue("error", m.getError());
+        packKeyValue("error", m.error());
       }
       case LIST_MODULES_REQUEST -> {
         var m = (ListModulesRequest) msg;
         packer.packMapHeader(3);
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        packKeyValue("uri", m.getUri().toString());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        packKeyValue("uri", m.uri().toString());
       }
       case LIST_MODULES_RESPONSE -> {
         var m = (ListModulesResponse) msg;
-        packMapHeader(2, m.getPathElements(), m.getError());
-        packKeyValue("requestId", m.getRequestId());
-        packKeyValue("evaluatorId", m.getEvaluatorId());
-        if (m.getPathElements() != null) {
+        packMapHeader(2, m.pathElements(), m.error());
+        packKeyValue("requestId", m.requestId());
+        packKeyValue("evaluatorId", m.evaluatorId());
+        if (m.pathElements() != null) {
           packer.packString("pathElements");
-          packer.packArrayHeader(m.getPathElements().size());
-          for (var pathElement : m.getPathElements()) {
+          packer.packArrayHeader(m.pathElements().size());
+          for (var pathElement : m.pathElements()) {
             packPathElement(pathElement);
           }
         }
-        packKeyValue("error", m.getError());
+        packKeyValue("error", m.error());
       }
       default ->
           throw new ProtocolException(
-              ErrorMessages.create("unhandledMessageType", msg.getType().toString()));
+              ErrorMessages.create("unhandledMessageType", msg.type().toString()));
     }
   }
 }

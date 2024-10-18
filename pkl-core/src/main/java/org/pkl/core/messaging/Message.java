@@ -17,7 +17,7 @@ package org.pkl.core.messaging;
 
 public interface Message {
 
-  Type getType();
+  Type type();
 
   enum Type {
     CREATE_EVALUATOR_REQUEST(0x20),
@@ -64,15 +64,14 @@ public interface Message {
   interface OneWay extends Message {}
 
   interface Request extends Message {
-    long getRequestId();
+    long requestId();
   }
 
   interface Response extends Message {
-    long getRequestId();
+    long requestId();
   }
 
   interface Client extends Message {
-
     interface Request extends Client, Message.Request {}
 
     interface Response extends Client, Message.Response {}
@@ -81,68 +80,10 @@ public interface Message {
   }
 
   interface Server extends Message {
-
     interface Request extends Server, Message.Request {}
 
     interface Response extends Server, Message.Response {}
 
     interface OneWay extends Server, Message.OneWay {}
-  }
-
-  abstract class Base implements Message {
-
-    private final Type type;
-
-    @Override
-    public Type getType() {
-      return type;
-    }
-
-    public Base(Type type) {
-      this.type = type;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof Base base)) {
-        return false;
-      }
-
-      return type == base.type;
-    }
-
-    @Override
-    public int hashCode() {
-      return type.hashCode();
-    }
-
-    private static class TwoWay extends Base {
-
-      private final long requestId;
-
-      public TwoWay(Type type, long requestId) {
-        super(type);
-        this.requestId = requestId;
-      }
-
-      public long getRequestId() {
-        return this.requestId;
-      }
-    }
-
-    public static class Request extends TwoWay implements Message.Request {
-      public Request(Type type, long requestId) {
-        super(type, requestId);
-      }
-    }
-
-    public static class Response extends TwoWay implements Message.Response {
-      public Response(Type type, long requestId) {
-        super(type, requestId);
-      }
-    }
   }
 }

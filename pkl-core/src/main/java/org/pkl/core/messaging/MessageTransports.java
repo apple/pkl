@@ -148,11 +148,11 @@ public class MessageTransports {
       } else if (message instanceof Message.Request msg) {
         requestHandler.handleRequest(msg);
       } else if (message instanceof Message.Response msg) {
-        var handler = responseHandlers.remove(msg.getRequestId());
+        var handler = responseHandlers.remove(msg.requestId());
         if (handler == null) {
           throw new ProtocolException(
               ErrorMessages.create(
-                  "unknownRequestId", message.getClass().getSimpleName(), msg.getRequestId()));
+                  "unknownRequestId", message.getClass().getSimpleName(), msg.requestId()));
         }
         handler.handleResponse(msg);
       }
@@ -184,7 +184,7 @@ public class MessageTransports {
     public void send(Message.Request message, ResponseHandler responseHandler)
         throws ProtocolException, IOException {
       log("Sending message: {0}", message);
-      responseHandlers.put(message.getRequestId(), responseHandler);
+      responseHandlers.put(message.requestId(), responseHandler);
       doSend(message);
     }
 

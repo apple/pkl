@@ -61,14 +61,14 @@ class ExternalReaderRuntime(
   fun run() {
     transport.start(
       { msg: Message.OneWay ->
-        if (msg.type == Message.Type.CLOSE_EXTERNAL_PROCESS) {
+        if (msg.type() == Message.Type.CLOSE_EXTERNAL_PROCESS) {
           close()
         } else {
           throw ProtocolException("Unexpected incoming one-way message: $msg")
         }
       },
       { msg: Message.Request ->
-        when (msg.type) {
+        when (msg.type()) {
           Message.Type.INITIALIZE_MODULE_READER_REQUEST -> {
             val req = msg as InitializeModuleReaderRequest
             val reader = findModuleReader(req.scheme)
