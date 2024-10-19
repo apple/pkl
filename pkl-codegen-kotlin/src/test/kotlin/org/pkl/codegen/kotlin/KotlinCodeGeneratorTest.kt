@@ -663,21 +663,16 @@ class KotlinCodeGeneratorTest {
 
   // https://github.com/apple/pkl/issues/569
   @Test
-  fun abstractClasses() {
+  fun `abstract classes`() {
     val kotlinCode =
       generateKotlinCode(
         """
       module my.mod
 
-      abstract class Foo {
-        one: Int
-      }
-      abstract class Bar extends Foo {
-        two: String
-      }
-      class Baz extends Bar {
-        three: Duration
-      }
+      abstract class Foo { one: Int }
+      abstract class Bar extends Foo { two: String }
+      class Baz extends Bar { three: Duration }
+      class Qux extends Bar {}
       """
       )
 
@@ -719,26 +714,33 @@ class KotlinCodeGeneratorTest {
       kotlinCode
     )
 
+    assertContains(
+      """
+      |  class Qux(
+      |    one: Long,
+      |    two: String
+      |  ) : Bar(one, two) {
+      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
     assertCompilesSuccessfully(kotlinCode)
   }
 
   // https://github.com/apple/pkl/issues/569
   @Test
-  fun abstractClassThatExtendsOpenClass() {
+  fun `abstract class that extends open class`() {
     val kotlinCode =
       generateKotlinCode(
         """
       module my.mod
 
-      open class Foo {
-        one: Int
-      }
-      abstract class Bar extends Foo {
-        two: String
-      }
-      class Baz extends Bar {
-        three: Duration
-      }
+      open class Foo { one: Int }
+      abstract class Bar extends Foo { two: String }
+      class Baz extends Bar { three: Duration }
+      class Qux extends Bar {}
       """
       )
 
@@ -783,26 +785,37 @@ class KotlinCodeGeneratorTest {
       kotlinCode
     )
 
+    assertContains(
+      """
+      |  class Qux(
+      |    one: Long,
+      |    two: String
+      |  ) : Bar(one, two) {
+      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
+      |
+      |    override fun copy(one: Long): Qux = Qux(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
     assertCompilesSuccessfully(kotlinCode)
   }
 
   // https://github.com/apple/pkl/issues/569
   @Test
-  fun abstractClassThatExtendsOpenClassWithoutAddingProperties() {
+  fun `abstract class that extends open class without adding properties`() {
     val kotlinCode =
       generateKotlinCode(
         """
       module my.mod
 
-      open class Foo {
-        one: Int
-      }
+      open class Foo { one: Int }
       abstract class Bar extends Foo {}
-      class Baz extends Bar {}
+      class Baz extends Bar { two: Duration }
+      class Qux extends Bar {}
       """
       )
-
-    println(kotlinCode)
 
     assertContains(
       """
@@ -828,9 +841,23 @@ class KotlinCodeGeneratorTest {
     assertContains(
       """
       |  class Baz(
+      |    one: Long,
+      |    val two: Duration
+      |  ) : Bar(one) {
+      |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
+      |
+      |    override fun copy(one: Long): Baz = Baz(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Qux(
       |    one: Long
       |  ) : Bar(one) {
-      |    override fun copy(one: Long): Baz = Baz(one)
+      |    override fun copy(one: Long): Qux = Qux(one)
       """
         .trimMargin(),
       kotlinCode

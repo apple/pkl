@@ -274,19 +274,12 @@ class KotlinCodeGenerator(
       return methodBuilder.addCode(codeBuilder.build()).build()
     }
 
-    fun nearestNonAbstractAncestorDeclaresCopyMethodWithSameArity(): Boolean {
-      if (properties.isNotEmpty()) {
-        // assertion: pClass declares properties that are generated
-        return false
-      }
-      for (currClass in generateSequence(pClass.superclass) { it.superclass }) {
-        if (!currClass.isAbstract) return true
-        if (currClass.properties.values.any { !it.isHidden }) {
-          // assertion: currClass declares properties that are generated
-          return false
-        }
-      }
-      return false
+    fun inheritsCopyMethodWithSameArity(): Boolean {
+      val nearestNonAbstractAncestor =
+        generateSequence(pClass.superclass) { it.superclass }.firstOrNull { !it.isAbstract }
+          ?: return false
+      return nearestNonAbstractAncestor.allProperties.values.count { !it.isHidden } ==
+        allProperties.size
     }
 
     // besides generating copy method for current class,
@@ -303,8 +296,7 @@ class KotlinCodeGenerator(
 
         // avoid generating multiple methods with same no. of parameters
         if (currParameters.size < prevParameterCount) {
-          val isOverride =
-            currClass !== pClass || nearestNonAbstractAncestorDeclaresCopyMethodWithSameArity()
+          val isOverride = currClass !== pClass || inheritsCopyMethodWithSameArity()
           typeBuilder.addFunction(generateCopyMethod(currParameters, isOverride))
           prevParameterCount = currParameters.size
         }
