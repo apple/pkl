@@ -16,7 +16,6 @@
 package org.pkl.core.module;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -324,7 +323,7 @@ public final class ModuleKeys {
       if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
         throw new FileNotFoundException();
       }
-      var realPath = IoUtils.pathOfURI(uri).toRealPath();
+      var realPath = IoUtils.pathOf(uri).toRealPath();
       var resolvedUri = realPath.toUri();
       securityManager.checkResolveModule(resolvedUri);
       return ResolvedModuleKeys.file(this, resolvedUri, realPath);

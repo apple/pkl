@@ -89,7 +89,7 @@ public final class IoUtils {
   }
 
   /** Converts a URI to a Path, normalizing any non-ASCII characters. */
-  public static Path pathOfURI(URI uri) {
+  public static Path pathOf(URI uri) {
     // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
     // ASCII
     // Unfortunately there's no way to go from URI -> ASCII URI directly

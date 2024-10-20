@@ -30,7 +30,7 @@ public final class FileResolver {
   private FileResolver() {}
 
   public static List<PathElement> listElements(URI baseUri) throws IOException {
-    return listElements(IoUtils.pathOfURI(baseUri));
+    return listElements(IoUtils.pathOf(baseUri));
   }
 
   public static List<PathElement> listElements(Path path) throws IOException {
@@ -50,7 +50,7 @@ public final class FileResolver {
   }
 
   public static boolean hasElement(URI elementUri) {
-    return Files.exists(IoUtils.pathOfURI(elementUri));
+    return Files.exists(IoUtils.pathOf(elementUri));
   }
 
   public static boolean hasElement(Path path) {
