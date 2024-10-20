@@ -159,11 +159,8 @@ public class EvaluatorImpl implements Evaluator {
 
   private VmTyped readModuleOutput(VmTyped module) {
     var value = VmUtils.readMember(module, Identifier.OUTPUT);
-    if (value instanceof VmTyped typedOutput) {
-      if (typedOutput.getVmClass().getPClassInfo() != PClassInfo.ModuleOutput) {
-        throw moduleOutputValueTypeMismatch(
-            module, PClassInfo.ModuleOutput, value, module, Identifier.OUTPUT, "output");
-      }
+    if (value instanceof VmTyped typedOutput
+        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
       return typedOutput;
     }
     throw moduleOutputValueTypeMismatch(
