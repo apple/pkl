@@ -661,6 +661,32 @@ class KotlinCodeGeneratorTest {
     assertCompilesSuccessfully(kotlinCode)
   }
 
+  @Test
+  fun `stateless classes`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Foo
+      abstract class Bar
+      class Baz extends Bar
+    """
+      )
+
+    assertContains(
+      """
+      |  data class Foo
+      |
+      |  abstract class Bar
+      |
+      |  class Baz : Bar() {
+      |    fun copy(): Baz = Baz()
+    """,
+      kotlinCode
+    )
+  }
+
   // https://github.com/apple/pkl/issues/569
   @Test
   fun `abstract classes`() {
@@ -677,21 +703,23 @@ class KotlinCodeGeneratorTest {
       )
 
     assertContains(
+      // missing trailing `{` proves that no methods are generated
       """
       |  abstract class Foo(
       |    open val one: Long
-      |  ) {
+      |  )
       """
         .trimMargin(),
       kotlinCode
     )
 
     assertContains(
+      // missing trailing `{` proves that no methods are generated
       """
       |  abstract class Bar(
       |    one: Long,
       |    open val two: String
-      |  ) : Foo(one) {
+      |  ) : Foo(one)
       """
         .trimMargin(),
       kotlinCode
@@ -756,11 +784,12 @@ class KotlinCodeGeneratorTest {
     )
 
     assertContains(
+      // missing trailing `{` proves that no methods are generated
       """
       |  abstract class Bar(
       |    one: Long,
       |    open val two: String
-      |  ) : Foo(one) {
+      |  ) : Foo(one)
       """
         .trimMargin(),
       kotlinCode
@@ -829,10 +858,11 @@ class KotlinCodeGeneratorTest {
     )
 
     assertContains(
+      // missing trailing `{` proves that no methods are generated
       """
       |  abstract class Bar(
       |    one: Long
-      |  ) : Foo(one) {
+      |  ) : Foo(one)
       """
         .trimMargin(),
       kotlinCode
@@ -1641,12 +1671,15 @@ class KotlinCodeGeneratorTest {
         }
 
         typealias Direction = "north"|"east"|"south"|"west"
+        
+        abstract class NotSerializable
     """,
         implementSerializable = true
       )
 
     assertContains(": Serializable", kotlinCode)
     assertContains("private const val serialVersionUID: Long = 0L", kotlinCode)
+    assertContains("abstract class NotSerializable\n", kotlinCode)
 
     val classes = compileKotlinCode(kotlinCode)
     val enumClass = classes.getValue("Direction")
