@@ -137,7 +137,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           return VmUtils.readTextProperty(output);
         });
   }
@@ -147,7 +147,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           if (value instanceof VmValue vmValue) {
             vmValue.force(false);
@@ -155,6 +155,19 @@ public class EvaluatorImpl implements Evaluator {
           }
           return value;
         });
+  }
+
+  private VmTyped readModuleOutput(VmTyped module) {
+    var value = VmUtils.readMember(module, Identifier.OUTPUT);
+    if (value instanceof VmTyped typedOutput) {
+      if (typedOutput.getVmClass().getPClassInfo() != PClassInfo.ModuleOutput) {
+        throw moduleOutputValueTypeMismatch(
+            module, PClassInfo.ModuleOutput, value, module, Identifier.OUTPUT, "output");
+      }
+      return typedOutput;
+    }
+    throw moduleOutputValueTypeMismatch(
+        module, PClassInfo.ModuleOutput, value, module, Identifier.OUTPUT, "output");
   }
 
   @Override
@@ -243,7 +256,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           var valueClassInfo = VmUtils.getClass(value).getPClassInfo();
           if (valueClassInfo.equals(classInfo)) {
@@ -255,7 +268,8 @@ public class EvaluatorImpl implements Evaluator {
             //noinspection unchecked
             return (T) value;
           }
-          throw moduleOutputValueTypeMismatch(module, classInfo, value, output);
+          throw moduleOutputValueTypeMismatch(
+              module, classInfo, value, output, Identifier.VALUE, "output.value");
         });
   }
 
@@ -366,16 +380,22 @@ public class EvaluatorImpl implements Evaluator {
   }
 
   private VmException moduleOutputValueTypeMismatch(
-      VmTyped module, PClassInfo<?> expectedClassInfo, Object value, VmTyped output) {
+      VmTyped module,
+      PClassInfo<?> expectedClassInfo,
+      Object value,
+      VmTyped container,
+      Identifier propertyIdentifier,
+      String propertyName) {
     var moduleUri = module.getModuleInfo().getModuleKey().getUri();
     var builder =
         new VmExceptionBuilder()
             .evalError(
-                "invalidModuleOutputValue",
+                "invalidModuleOutput",
+                propertyName,
                 expectedClassInfo.getDisplayName(),
                 VmUtils.getClass(value).getPClassInfo().getDisplayName(),
                 moduleUri);
-    var outputValueMember = output.getMember(Identifier.VALUE);
+    var outputValueMember = container.getMember(propertyIdentifier);
     assert outputValueMember != null;
     var uriOfValueMember = outputValueMember.getSourceSection().getSource().getURI();
     // If `value` was explicitly re-assigned, show that in the stack trace.
@@ -383,7 +403,7 @@ public class EvaluatorImpl implements Evaluator {
     if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
       return builder
           .withSourceSection(outputValueMember.getBodySection())
-          .withMemberName("value")
+          .withMemberName(propertyIdentifier.toString())
           .build();
     } else {
       // if the module does not extend or amend anything, suggest amending the module URI

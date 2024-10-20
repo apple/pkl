@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Expected `output` of module `file:///$snippetsDir/input/modules/invalidOutput1.pkl` to be of type `ModuleOutput`, but got type `String`.
+
+x | output: String = "abc"
+                     ^^^^^
+at output (file:///$snippetsDir/input/modules/invalidOutput1.pkl)
