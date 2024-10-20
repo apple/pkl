@@ -661,6 +661,211 @@ class KotlinCodeGeneratorTest {
     assertCompilesSuccessfully(kotlinCode)
   }
 
+  // https://github.com/apple/pkl/issues/569
+  @Test
+  fun `abstract classes`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      abstract class Foo { one: Int }
+      abstract class Bar extends Foo { two: String }
+      class Baz extends Bar { three: Duration }
+      class Qux extends Bar {}
+      """
+      )
+
+    assertContains(
+      """
+      |  abstract class Foo(
+      |    open val one: Long
+      |  ) {
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  abstract class Bar(
+      |    one: Long,
+      |    open val two: String
+      |  ) : Foo(one) {
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Baz(
+      |    one: Long,
+      |    two: String,
+      |    val three: Duration
+      |  ) : Bar(one, two) {
+      |    fun copy(
+      |      one: Long = this.one,
+      |      two: String = this.two,
+      |      three: Duration = this.three
+      |    ): Baz = Baz(one, two, three)
+    """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Qux(
+      |    one: Long,
+      |    two: String
+      |  ) : Bar(one, two) {
+      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertCompilesSuccessfully(kotlinCode)
+  }
+
+  // https://github.com/apple/pkl/issues/569
+  @Test
+  fun `abstract class that extends open class`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      open class Foo { one: Int }
+      abstract class Bar extends Foo { two: String }
+      class Baz extends Bar { three: Duration }
+      class Qux extends Bar {}
+      """
+      )
+
+    assertContains(
+      """
+      |  open class Foo(
+      |    open val one: Long
+      |  ) {
+      |    open fun copy(one: Long = this.one): Foo = Foo(one)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  abstract class Bar(
+      |    one: Long,
+      |    open val two: String
+      |  ) : Foo(one) {
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Baz(
+      |    one: Long,
+      |    two: String,
+      |    val three: Duration
+      |  ) : Bar(one, two) {
+      |    fun copy(
+      |      one: Long = this.one,
+      |      two: String = this.two,
+      |      three: Duration = this.three
+      |    ): Baz = Baz(one, two, three)
+      |
+      |    override fun copy(one: Long): Baz = Baz(one, two, three)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Qux(
+      |    one: Long,
+      |    two: String
+      |  ) : Bar(one, two) {
+      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
+      |
+      |    override fun copy(one: Long): Qux = Qux(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertCompilesSuccessfully(kotlinCode)
+  }
+
+  // https://github.com/apple/pkl/issues/569
+  @Test
+  fun `abstract class that extends open class without adding properties`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      open class Foo { one: Int }
+      abstract class Bar extends Foo {}
+      class Baz extends Bar { two: Duration }
+      class Qux extends Bar {}
+      """
+      )
+
+    assertContains(
+      """
+      |  open class Foo(
+      |    open val one: Long
+      |  ) {
+      |    open fun copy(one: Long = this.one): Foo = Foo(one)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  abstract class Bar(
+      |    one: Long
+      |  ) : Foo(one) {
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Baz(
+      |    one: Long,
+      |    val two: Duration
+      |  ) : Bar(one) {
+      |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
+      |
+      |    override fun copy(one: Long): Baz = Baz(one, two)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertContains(
+      """
+      |  class Qux(
+      |    one: Long
+      |  ) : Bar(one) {
+      |    override fun copy(one: Long): Qux = Qux(one)
+      """
+        .trimMargin(),
+      kotlinCode
+    )
+
+    assertCompilesSuccessfully(kotlinCode)
+  }
+
   @Test
   fun keywords() {
     val props = kotlinKeywords.joinToString("\n") { "`$it`: Int" }
