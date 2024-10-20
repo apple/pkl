@@ -260,7 +260,7 @@ class KotlinCodeGeneratorTest {
 
   @Test
   fun `deprecated property with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         class ClassWithDeprecatedProperty {
@@ -268,7 +268,6 @@ class KotlinCodeGeneratorTest {
            deprecatedProperty: Int = 1337
         }
       """
-          .trimIndent()
       )
     val expectedPropertyDef =
       """
@@ -276,13 +275,12 @@ class KotlinCodeGeneratorTest {
         |    @Deprecated(message = "property deprecation message")
         |    val deprecatedProperty: Long
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expectedPropertyDef)
+    assertContains(expectedPropertyDef, kotlinCode)
   }
 
   @Test
   fun `deprecated class with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         @Deprecated { message = "class deprecation message" }
@@ -290,20 +288,18 @@ class KotlinCodeGeneratorTest {
           propertyOfDeprecatedClass: Int = 42
         }
       """
-          .trimIndent()
       )
     val expected =
       """
         |  @Deprecated(message = "class deprecation message")
         |  data class DeprecatedClass(
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+    assertContains(expected, kotlinCode)
   }
 
   @Test
   fun `deprecated module class with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         @Deprecated{ message = "module class deprecation message" }
@@ -311,20 +307,18 @@ class KotlinCodeGeneratorTest {
         
         propertyInDeprecatedModuleClass : Int = 42
       """
-          .trimIndent()
       )
     val expected =
       """
         |@Deprecated(message = "module class deprecation message")
         |data class DeprecatedModule(
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+    assertContains(expected, kotlinCode)
   }
 
   @Test
   fun `deprecated property`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         class ClassWithDeprecatedProperty {
@@ -332,7 +326,6 @@ class KotlinCodeGeneratorTest {
            deprecatedProperty: Int = 1337
         }
       """
-          .trimIndent()
       )
     val expectedPropertyDef =
       """
@@ -340,13 +333,12 @@ class KotlinCodeGeneratorTest {
         |    @Deprecated
         |    val deprecatedProperty: Long
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expectedPropertyDef)
+    assertContains(expectedPropertyDef, kotlinCode)
   }
 
   @Test
   fun `deprecated class`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         @Deprecated
@@ -354,20 +346,17 @@ class KotlinCodeGeneratorTest {
           propertyOfDeprecatedClass: Int = 42
         }
       """
-          .trimIndent()
       )
-    val expected =
-      """
+    val expected = """
         |  @Deprecated
         |  data class DeprecatedClass(
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+    assertContains(expected, kotlinCode)
   }
 
   @Test
   fun `deprecated module class`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
         @Deprecated
@@ -375,15 +364,12 @@ class KotlinCodeGeneratorTest {
         
         propertyInDeprecatedModuleClass : Int = 42
       """
-          .trimIndent()
       )
-    val expected =
-      """
+    val expected = """
         |@Deprecated
         |data class DeprecatedModule(
       """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+    assertContains(expected, kotlinCode)
   }
 
   @Test
@@ -583,8 +569,7 @@ class KotlinCodeGeneratorTest {
       |    open val other: Long,
       |    open val bar: Bar
       |  )
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -594,8 +579,7 @@ class KotlinCodeGeneratorTest {
       |    open val foo: Foo,
       |    open val other: String
       |  )
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -627,8 +611,7 @@ class KotlinCodeGeneratorTest {
       |  open class Foo(
       |    open val one: Long
       |  )
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -637,8 +620,7 @@ class KotlinCodeGeneratorTest {
       |  open class None(
       |    one: Long
       |  ) : Foo(one)
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -648,8 +630,7 @@ class KotlinCodeGeneratorTest {
       |    one: Long,
       |    open val two: String
       |  ) : None(one)
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -708,8 +689,7 @@ class KotlinCodeGeneratorTest {
       |  abstract class Foo(
       |    open val one: Long
       |  )
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -720,8 +700,7 @@ class KotlinCodeGeneratorTest {
       |    one: Long,
       |    open val two: String
       |  ) : Foo(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -737,8 +716,7 @@ class KotlinCodeGeneratorTest {
       |      two: String = this.two,
       |      three: Duration = this.three
       |    ): Baz = Baz(one, two, three)
-    """
-        .trimMargin(),
+    """,
       kotlinCode
     )
 
@@ -749,8 +727,7 @@ class KotlinCodeGeneratorTest {
       |    two: String
       |  ) : Bar(one, two) {
       |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -778,8 +755,7 @@ class KotlinCodeGeneratorTest {
       |    open val one: Long
       |  ) {
       |    open fun copy(one: Long = this.one): Foo = Foo(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -790,8 +766,7 @@ class KotlinCodeGeneratorTest {
       |    one: Long,
       |    open val two: String
       |  ) : Foo(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -809,8 +784,7 @@ class KotlinCodeGeneratorTest {
       |    ): Baz = Baz(one, two, three)
       |
       |    override fun copy(one: Long): Baz = Baz(one, two, three)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -823,8 +797,7 @@ class KotlinCodeGeneratorTest {
       |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
       |
       |    override fun copy(one: Long): Qux = Qux(one, two)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -852,8 +825,7 @@ class KotlinCodeGeneratorTest {
       |    open val one: Long
       |  ) {
       |    open fun copy(one: Long = this.one): Foo = Foo(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -863,8 +835,7 @@ class KotlinCodeGeneratorTest {
       |  abstract class Bar(
       |    one: Long
       |  ) : Foo(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -877,8 +848,7 @@ class KotlinCodeGeneratorTest {
       |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
       |
       |    override fun copy(one: Long): Baz = Baz(one, two)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -888,8 +858,7 @@ class KotlinCodeGeneratorTest {
       |    one: Long
       |  ) : Bar(one) {
       |    override fun copy(one: Long): Qux = Qux(one)
-      """
-        .trimMargin(),
+      """,
       kotlinCode
     )
 
@@ -1321,15 +1290,11 @@ class KotlinCodeGeneratorTest {
       x: "Pigeon"|"Barn Owl"|"Parrot"
     """)
 
-    assertContains(
-      """
-      data class Mod(
-        val x: String
-      )
-    """
-        .trimIndent(),
-      kotlinCode
-    )
+    assertContains("""
+      |data class Mod(
+      |  val x: String
+      |)
+    """, kotlinCode)
 
     assertCompilesSuccessfully(kotlinCode)
   }
