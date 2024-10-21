@@ -2,10 +2,14 @@ const baz = 15
 
 foo {
   const local bar = baz
-    
+
+  const local bar2 = biz()
+
   const local function biz() = baz
 
   qux = bar
 
   corge = biz()
+
+  corge2 = bar2
 }
