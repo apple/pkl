@@ -19,11 +19,22 @@ package org.pkl.executor;
  * Indicates an {@link Executor} error. {@link #getMessage()} returns a user-facing error message.
  */
 public final class ExecutorException extends RuntimeException {
+  String pklVersion = "unresolved";
+
   public ExecutorException(String message) {
     super(message);
   }
 
   public ExecutorException(String message, Throwable cause) {
     super(message, cause);
+  }
+
+  public ExecutorException(String message, String version, Throwable cause) {
+    super(message, cause);
+    pklVersion = version;
+  }
+
+  public String getPklVersion() {
+    return pklVersion;
   }
 }
