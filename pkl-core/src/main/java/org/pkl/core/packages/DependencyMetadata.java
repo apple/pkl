@@ -512,8 +512,10 @@ public final class DependencyMetadata {
       if (dependencyMetadata.description != null) {
         jsonWriter.name("description").value(dependencyMetadata.description);
       }
-      jsonWriter.name("annotations");
-      writeAnnotations();
+      if (!dependencyMetadata.annotations.isEmpty()) {
+        jsonWriter.name("annotations");
+        writeAnnotations();
+      }
       jsonWriter.endObject();
       jsonWriter.close();
     }
@@ -545,16 +547,16 @@ public final class DependencyMetadata {
     private void writeGenericObject(Object value) throws IOException {
       if (value instanceof PNull) {
         jsonWriter.nullValue();
-      } else if (value instanceof PObject po) {
-        writePObject(po);
+      } else if (value instanceof PObject pObject) {
+        writePObject(pObject);
       } else if (value instanceof String string) {
         jsonWriter.value(string);
-      } else if (value instanceof Boolean b) {
-        jsonWriter.value(b);
-      } else if (value instanceof Long l) {
-        jsonWriter.value(l);
-      } else if (value instanceof Double d) {
-        jsonWriter.value(d);
+      } else if (value instanceof Boolean bool) {
+        jsonWriter.value(bool);
+      } else if (value instanceof Long num) {
+        jsonWriter.value(num);
+      } else if (value instanceof Double num) {
+        jsonWriter.value(num);
       } else if (value instanceof List<?> list) {
         jsonWriter.beginArray();
         for (var v : list) {
