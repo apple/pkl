@@ -23,14 +23,20 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.pkl.core.DataSize;
+import org.pkl.core.DataSizeUnit;
+import org.pkl.core.Duration;
+import org.pkl.core.DurationUnit;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
+import org.pkl.core.Pair;
 import org.pkl.core.PklException;
 import org.pkl.core.Version;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -40,6 +46,7 @@ import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsArray;
 import org.pkl.core.util.json.Json.JsObject;
 import org.pkl.core.util.json.Json.JsonParseException;
+import org.pkl.core.util.json.Json.MissingFieldException;
 import org.pkl.core.util.json.JsonWriter;
 
 /**
@@ -176,34 +183,99 @@ public final class DependencyMetadata {
       throws JsonParseException, URISyntaxException {
     if (obj == null) {
       return PNull.getInstance();
-    } else if (obj instanceof String s) {
-      return s;
-    } else if (obj instanceof Boolean b) {
-      return b;
-    } else if (obj instanceof Long l) {
-      return l;
-    } else if (obj instanceof Double d) {
-      return d;
-    } else if (obj instanceof JsArray arr) {
-      var list = new ArrayList<>(arr.size());
-      for (var element : arr) {
+    } else if (obj instanceof String string) {
+      return string;
+    } else if (obj instanceof Boolean bool) {
+      return bool;
+    } else if (obj instanceof Integer integer) {
+      return integer.longValue();
+    } else if (obj instanceof Long aLong) {
+      return aLong;
+    } else if (obj instanceof Float aFloat) {
+      return aFloat.doubleValue();
+    } else if (obj instanceof Double aDouble) {
+      return aDouble;
+    } else if (obj instanceof JsArray array) {
+      var list = new ArrayList<>(array.size());
+      for (var element : array) {
         list.add(parsePObject(element));
       }
       return list;
     } else if (obj instanceof JsObject jsObj) {
-      var moduleName = jsObj.getString("moduleName");
-      var className = jsObj.getString("class");
-      var moduleUri = jsObj.getString("moduleUri");
-      var props = jsObj.getObject("properties");
-      var classInfo = PClassInfo.get(moduleName, className, new URI(moduleUri));
-      var properties = new HashMap<String, Object>();
-      for (var kv : props.entrySet()) {
-        properties.put(kv.getKey(), parsePObject(kv.getValue()));
+      var type = jsObj.getString("type");
+      switch (type) {
+        case "Set" -> {
+          var value = jsObj.getArray("value");
+          var set = new HashSet<>(value.size());
+          for (var element : value) {
+            set.add(parsePObject(element));
+          }
+          return set;
+        }
+        case "Map" -> {
+          var value = jsObj.getObject("value");
+          var map = new HashMap<>();
+          for (var kv : value.entrySet()) {
+            map.put(kv.getKey(), parsePObject(kv.getValue()));
+          }
+          return map;
+        }
+        case "PObject" -> {
+          var classInfoObj = jsObj.getObject("classInfo");
+          var moduleName = classInfoObj.getString("moduleName");
+          var className = classInfoObj.getString("class");
+          var moduleUri = classInfoObj.getString("moduleUri");
+          var props = jsObj.getObject("properties");
+          var classInfo = PClassInfo.get(moduleName, className, new URI(moduleUri));
+          var properties = new HashMap<String, Object>();
+          for (var kv : props.entrySet()) {
+            properties.put(kv.getKey(), parsePObject(kv.getValue()));
+          }
+          return new PObject(classInfo, properties);
+        }
+        case "Pattern" -> {
+          var value = jsObj.getString("value");
+          return Pattern.compile(value);
+        }
+        case "DataSize" -> {
+          var symbol = jsObj.getString("unit");
+          var value = jsObj.get("value");
+          if (value == null) {
+            throw new MissingFieldException(jsObj, "value");
+          }
+          var unit = DataSizeUnit.parse(symbol);
+          if (unit == null) {
+            throw new PklException("Invalid DataSize unit symbol: " + symbol);
+          }
+          if (!(value instanceof Double num)) {
+            throw new FormatException("double", value.getClass());
+          }
+          return new DataSize(num, unit);
+        }
+        case "Duration" -> {
+          var symbol = jsObj.getString("unit");
+          var value = jsObj.get("value");
+          if (value == null) {
+            throw new MissingFieldException(jsObj, "value");
+          }
+          var unit = DurationUnit.parse(symbol);
+          if (unit == null) {
+            throw new PklException("Invalid Duration unit symbol: " + symbol);
+          }
+          if (!(value instanceof Double num)) {
+            throw new FormatException("double", value.getClass());
+          }
+          return new Duration(num, unit);
+        }
+        case "Pair" -> {
+          var first = parsePObject(jsObj.get("first"));
+          var second = parsePObject(jsObj.get("second"));
+          return new Pair<>(first, second);
+        }
       }
-      return new PObject(classInfo, properties);
     }
     // should never be reached
-    throw new PklException("Could not read annotation. Invalid object: " + obj);
+    throw new PklException("Could not read annotation. Invalid object type: " + obj.getClass());
   }
 
   public static Checksums parseChecksums(Object obj) throws JsonParseException {
@@ -528,12 +600,19 @@ public final class DependencyMetadata {
       jsonWriter.endArray();
     }
 
+    private void writePClassInfo(PClassInfo<?> pClassInfo) throws IOException {
+      jsonWriter.beginObject();
+      jsonWriter.name("moduleName").value(pClassInfo.getModuleName());
+      jsonWriter.name("class").value(pClassInfo.getSimpleName());
+      jsonWriter.name("moduleUri").value(pClassInfo.getModuleUri().toString());
+      jsonWriter.endObject();
+    }
+
     private void writePObject(PObject object) throws IOException {
       jsonWriter.beginObject();
-      var clazz = object.getClassInfo();
-      jsonWriter.name("moduleName").value(clazz.getModuleName());
-      jsonWriter.name("class").value(clazz.getDisplayName());
-      jsonWriter.name("moduleUri").value(clazz.getModuleUri().toString());
+      jsonWriter.name("type").value("PObject");
+      jsonWriter.name("classInfo");
+      writePClassInfo(object.getClassInfo());
       jsonWriter.name("properties");
       jsonWriter.beginObject();
       for (var kv : object.getProperties().entrySet()) {
@@ -553,7 +632,11 @@ public final class DependencyMetadata {
         jsonWriter.value(string);
       } else if (value instanceof Boolean bool) {
         jsonWriter.value(bool);
+      } else if (value instanceof Integer num) {
+        jsonWriter.value(num);
       } else if (value instanceof Long num) {
+        jsonWriter.value(num);
+      } else if (value instanceof Float num) {
         jsonWriter.value(num);
       } else if (value instanceof Double num) {
         jsonWriter.value(num);
@@ -564,12 +647,19 @@ public final class DependencyMetadata {
         }
         jsonWriter.endArray();
       } else if (value instanceof Set<?> set) {
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("Set");
+        jsonWriter.name("value");
         jsonWriter.beginArray();
         for (var v : set) {
           writeGenericObject(v);
         }
         jsonWriter.endArray();
+        jsonWriter.endObject();
       } else if (value instanceof Map<?, ?> map) {
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("Map");
+        jsonWriter.name("value");
         jsonWriter.beginObject();
         for (var kv : map.entrySet()) {
           var key = kv.getKey();
@@ -584,13 +674,38 @@ public final class DependencyMetadata {
           writeGenericObject(kv.getValue());
         }
         jsonWriter.endObject();
+        jsonWriter.endObject();
       } else if (value instanceof Pattern pattern) {
-        jsonWriter.value(pattern.pattern());
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("Pattern");
+        jsonWriter.name("value").value(pattern.pattern());
+        jsonWriter.endObject();
+      } else if (value instanceof DataSize dataSize) {
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("DataSize");
+        jsonWriter.name("unit").value(dataSize.getUnit().getSymbol());
+        jsonWriter.name("value").value(dataSize.getValue());
+        jsonWriter.endObject();
+      } else if (value instanceof Duration duration) {
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("Duration");
+        jsonWriter.name("unit").value(duration.getUnit().getSymbol());
+        jsonWriter.name("value").value(duration.getValue());
+        jsonWriter.endObject();
+      } else if (value instanceof Pair<?, ?> pair) {
+        jsonWriter.beginObject();
+        jsonWriter.name("type").value("Pair");
+        jsonWriter.name("first");
+        writeGenericObject(pair.getFirst());
+        jsonWriter.name("second");
+        writeGenericObject(pair.getSecond());
+        jsonWriter.endObject();
       } else {
+        // PClass and TypeAlias are not supported
         throw new PklException(
             "Error serializing annotation for PklProject:\n:"
                 + "  cannot render value with unexpected type: "
-                + value);
+                + value.getClass());
       }
     }
   }

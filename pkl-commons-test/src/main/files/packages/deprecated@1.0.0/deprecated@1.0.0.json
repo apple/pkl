@@ -17,9 +17,12 @@
   "issueTracker": "https://example.com/deprecated/issues",
   "annotations": [
     {
-      "moduleName": "pkl.base",
-      "class": "Deprecated",
-      "moduleUri": "pkl:base",
+      "type": "PObject",
+      "classInfo": {
+        "moduleName": "pkl.base",
+        "class": "Deprecated",
+        "moduleUri": "pkl:base"
+      },
       "properties": {
         "since": "1.0.0",
         "message": "don't use",

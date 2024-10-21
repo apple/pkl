@@ -1027,15 +1027,21 @@ class CliProjectPackagerTest {
         "authors": [],
         "annotations": [
           {
-            "moduleName": "pkl.base",
-            "class": "Unlisted",
-            "moduleUri": "pkl:base",
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "Unlisted",
+              "moduleUri": "pkl:base"
+            },
             "properties": {}
           },
           {
-            "moduleName": "pkl.base",
-            "class": "Deprecated",
-            "moduleUri": "pkl:base",
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "Deprecated",
+              "moduleUri": "pkl:base"
+            },
             "properties": {
               "since": "0.26.1",
               "message": "do not use",
@@ -1043,9 +1049,12 @@ class CliProjectPackagerTest {
             }
           },
           {
-            "moduleName": "pkl.base",
-            "class": "ModuleInfo",
-            "moduleUri": "pkl:base",
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "ModuleInfo",
+              "moduleUri": "pkl:base"
+            },
             "properties": {
               "minPklVersion": "0.26.0"
             }
