@@ -42,12 +42,12 @@ artifacts {
 spotless {
   java {
     googleJavaFormat(libs.versions.googleJavaFormat.get())
-    targetExclude("**/generated/**", "**/build/**")
+    target("src/*/java/**/*.java")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
   kotlin {
     ktfmt(libs.versions.ktfmt.get()).googleStyle()
-    targetExclude("**/generated/**", "**/build/**")
+    target("src/*/kotlin/**/*.kt")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
 }
