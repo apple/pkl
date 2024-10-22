@@ -170,9 +170,7 @@ public final class Project {
 
   @SuppressWarnings("unchecked")
   private static List<PObject> parseAnnotations(PObject module) {
-    var annotations = getProperty(module, "annotations");
-    if (annotations instanceof List<?> l) return (List<PObject>) l;
-    return List.of();
+    return (List<PObject>) getProperty(module, "annotations");
   }
 
   public static Project parseProject(PObject module) throws URISyntaxException {

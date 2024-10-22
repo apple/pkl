@@ -210,9 +210,6 @@ evaluatorSettings: EvaluatorSettingsModule(
 /// dependency.
 projectFileUri: String = reflect.Module(module).uri
 
-@Unlisted
-fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations
-
 /// Instantiates a project definition within the enclosing module.
 ///
 /// This is a convenience method for setting [projectFileUri] to the enclosing module's URI.
@@ -439,3 +436,7 @@ typealias CommonSpdxLicenseIdentifier =
   |"UPL-1.0"
   |"BSL-1.0"
   |"Unlicense"
+
+@Unlisted
+@Since { version = "0.27.0" }
+fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations
