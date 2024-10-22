@@ -51,10 +51,6 @@ public final class VmNull extends VmValue {
     return defaultValue == null ? VmDynamic.empty() : defaultValue;
   }
 
-  public boolean isMappingDefault() {
-    return defaultValue instanceof VmMapping;
-  }
-
   @Override
   public VmClass getVmClass() {
     return BaseModule.getNullClass();
