@@ -307,7 +307,7 @@ private val windowsExcludedTests
       // error message contains different file path on Windows
       Regex(".*missingProjectDeps/bug\\.pkl"),
       // URIs get rendered slightly differently (percent-encoded vs raw)
-      Regex(".*日本語_error.pkl")
+      Regex(".*日本語_error\\.pkl")
     )
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
