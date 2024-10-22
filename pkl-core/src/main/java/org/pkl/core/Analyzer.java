@@ -106,7 +106,7 @@ public class Analyzer {
                   httpClient,
                   moduleResolver,
                   new ResourceManager(securityManager, List.of()),
-                  Loggers.noop(),
+                  Loggers.stdErr(),
                   Map.of(),
                   Map.of(),
                   moduleCacheDir,
