@@ -226,7 +226,7 @@ final class EmbeddedExecutor implements Executor {
       try {
         return executorSpi.evaluatePath(modulePath, options.toSpiOptions());
       } catch (ExecutorSpiException e) {
-        throw new ExecutorException(e.getMessage(), executorSpi.getPklVersion(), e.getCause());
+        throw new ExecutorException(e.getMessage(), e.getCause(), executorSpi.getPklVersion());
       } finally {
         currentThread.setContextClassLoader(prevContextClassLoader);
       }
