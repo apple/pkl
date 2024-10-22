@@ -35,7 +35,7 @@ external function importGraph(moduleUris: Set<Uri>): ImportGraph
 class ImportGraph {
   /// The imports declared within a Pkl program.
   ///
-  /// Each entry is a module URI, mapped to the set of imports declared in that module.
+  /// Each entry maps a module URI to the set of imports declared in that module.
   ///
   /// The set of all modules in the graph can be obtained via its [keys][Map.keys].
   imports: Map<Uri, Set<Uri>>
