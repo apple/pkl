@@ -1,0 +1,5 @@
+module Birds2
+
+abstract class Bird
+
+bird: Bird
