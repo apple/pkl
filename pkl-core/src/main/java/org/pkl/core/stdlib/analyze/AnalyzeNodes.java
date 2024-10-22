@@ -75,14 +75,12 @@ public final class AnalyzeNodes {
         try {
           uri = new URI((String) moduleUri);
         } catch (URISyntaxException e) {
-          CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()
               .evalError("invalidModuleUri", moduleUri)
               .withHint(e.getMessage())
               .build();
         }
         if (!uri.isAbsolute()) {
-          CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder().evalError("cannotAnalyzeRelativeModuleUri", moduleUri).build();
         }
         uris[idx] = uri;
@@ -93,7 +91,6 @@ public final class AnalyzeNodes {
         var results = VmImportAnalyzer.analyze(uris, context);
         return importGraphFactory.create(results);
       } catch (IOException | URISyntaxException | SecurityManagerException | PackageLoadError e) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw exceptionBuilder().withCause(e).build();
       }
     }
