@@ -591,7 +591,7 @@ The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-reso
 
 include::../../pkl-cli/partials/cli-common-options.adoc[]
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, and <<command-download-package>>, <<command-analyze-imports>> commands also take the following options:
+The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-download-package>>, and <<command-analyze-imports>> commands also take the following options:
 
 include::../../pkl-cli/partials/cli-project-options.adoc[]
 
