@@ -1486,26 +1486,28 @@ result = someLib.x
         )
       )
 
+    val tripleQuote = "\"\"\""
     assertThat(output)
       .isEqualTo(
-        """日本語 = "Japanese language"
-readDir = ""${'"'}
-  日本語.pkl
-  
-  ""${'"'}
-readDirFile = ""${'"'}
-  日本語.pkl
-  
-  ""${'"'}
-readOne = "日本語 = \"Japanese language\""
-readOneFile = "日本語 = \"Japanese language\""
-readGlob = Set("./日本語.pkl")
-readGlobFile = Set("🤬/日本語.pkl")
-importOne = "日本語 = \"Japanese language\""
-importOneFile = "Japanese language"
-importGlob = Set("./日本語.pkl")
-importGlobFile = Set("🤬/日本語.pkl")
-"""
+        """
+        日本語 = "Japanese language"
+        readDir = $tripleQuote
+          日本語.pkl
+          
+          $tripleQuote
+        readDirFile = $tripleQuote
+          日本語.pkl
+          
+          $tripleQuote
+        readOne = "日本語 = \"Japanese language\""
+        readOneFile = "日本語 = \"Japanese language\""
+        readGlob = Set("./日本語.pkl")
+        readGlobFile = Set("🤬/日本語.pkl")
+        importOne = "日本語 = \"Japanese language\""
+        importOneFile = "Japanese language"
+        importGlob = Set("./日本語.pkl")
+        importGlobFile = Set("🤬/日本語.pkl")
+        """
       )
   }
 
