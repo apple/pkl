@@ -28,15 +28,7 @@ data class CliImportAnalyzerOptions(
   /**
    * The output format to generate.
    *
-   * The default output renderer for a module supports the following formats:
-   * - `"json"`
-   * - `"jsonnet"`
-   * - `"pcf"` (default)
-   * - `"plist"`
-   * - `"properties"`
-   * - `"textproto"`
-   * - `"xml"`
-   * - `"yaml"`
+   * These accept the same options as [CliEvaluatorOptions.outputFormat].
    */
   val outputFormat: String? = null,
 )
