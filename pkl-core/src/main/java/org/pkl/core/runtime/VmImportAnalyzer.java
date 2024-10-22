@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import org.pkl.core.ImportGraph;
+import org.pkl.core.ImportGraph.Import;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
@@ -32,23 +34,25 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Pair;
 
 public class VmImportAnalyzer {
   @TruffleBoundary
-  public static Pair<Map<URI, Set<URI>>, Map<URI, URI>> analyze(URI[] moduleUris, VmContext context)
+  public static ImportGraph analyze(URI[] moduleUris, VmContext context)
       throws IOException, URISyntaxException, SecurityManagerException {
-    var imports = new TreeMap<URI, Set<URI>>();
+    var imports = new TreeMap<URI, Set<ImportGraph.Import>>();
     var resolvedImports = new TreeMap<URI, URI>();
     for (var moduleUri : moduleUris) {
       analyzeSingle(moduleUri, context, imports, resolvedImports);
     }
-    return Pair.of(imports, resolvedImports);
+    return new ImportGraph(imports, resolvedImports);
   }
 
   @TruffleBoundary
   private static void analyzeSingle(
-      URI moduleUri, VmContext context, Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImports)
+      URI moduleUri,
+      VmContext context,
+      Map<URI, Set<ImportGraph.Import>> imports,
+      Map<URI, URI> resolvedImports)
       throws IOException, URISyntaxException, SecurityManagerException {
     var moduleResolver = context.getModuleResolver();
     var securityManager = context.getSecurityManager();
@@ -57,15 +61,15 @@ public class VmImportAnalyzer {
     imports.put(moduleUri, importsInModule);
     resolvedImports.put(
         moduleUri, moduleResolver.resolve(moduleUri).resolve(securityManager).getUri());
-    for (var importUri : importsInModule) {
-      if (imports.containsKey(importUri)) {
+    for (var imprt : importsInModule) {
+      if (imports.containsKey(imprt.uri())) {
         continue;
       }
-      analyzeSingle(importUri, context, imports, resolvedImports);
+      analyzeSingle(imprt.uri(), context, imports, resolvedImports);
     }
   }
 
-  private static Set<URI> collectImports(
+  private static Set<ImportGraph.Import> collectImports(
       URI moduleUri, ModuleResolver moduleResolver, SecurityManager securityManager)
       throws IOException, URISyntaxException, SecurityManagerException {
     var moduleKey = moduleResolver.resolve(moduleUri);
@@ -82,7 +86,7 @@ public class VmImportAnalyzer {
     if (importsAndReads == null) {
       return Set.of();
     }
-    var result = new TreeSet<URI>();
+    var result = new TreeSet<ImportGraph.Import>();
     for (var entry : importsAndReads) {
       if (!entry.isModule()) {
         continue;
@@ -98,7 +102,12 @@ public class VmImportAnalyzer {
                   moduleKey,
                   moduleKey.getUri(),
                   entry.stringValue());
-          result.addAll(elements.values().stream().map(ResolvedGlobElement::getUri).toList());
+          var globImports =
+              elements.values().stream()
+                  .map(ResolvedGlobElement::getUri)
+                  .map(ImportGraph.Import::new)
+                  .toList();
+          result.addAll(globImports);
         } catch (InvalidGlobPatternException e) {
           throw new VmExceptionBuilder()
               .evalError("invalidGlobPattern", entry.stringValue())
@@ -108,7 +117,7 @@ public class VmImportAnalyzer {
       } else {
         var resolvedUri =
             IoUtils.resolve(securityManager, moduleKey, IoUtils.toUri(entry.stringValue()));
-        result.add(resolvedUri);
+        result.add(new Import(resolvedUri));
       }
     }
     return result;

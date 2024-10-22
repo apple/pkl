@@ -72,8 +72,7 @@ public class Analyzer {
     try {
       context.enter();
       var vmContext = VmContext.get(null);
-      var results = VmImportAnalyzer.analyze(sources, vmContext);
-      return new ImportGraph(results.first, results.second);
+      return VmImportAnalyzer.analyze(sources, vmContext);
     } catch (SecurityManagerException
         | IOException
         | URISyntaxException

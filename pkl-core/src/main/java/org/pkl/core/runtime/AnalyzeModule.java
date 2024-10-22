@@ -33,8 +33,16 @@ public class AnalyzeModule extends StdLibModule {
     return AnalyzeModule.ImportGraphClass.instance;
   }
 
+  public static VmClass getImportClass() {
+    return AnalyzeModule.ImportClass.instance;
+  }
+
   private static final class ImportGraphClass {
     static final VmClass instance = loadClass("ImportGraph");
+  }
+
+  private static final class ImportClass {
+    static final VmClass instance = loadClass("Import");
   }
 
   @TruffleBoundary

@@ -41,7 +41,9 @@ class CliImportAnalyzerTest {
           imports {
             ["${otherFile.toUri()}"] {}
             ["${file.toUri()}"] {
-              "${otherFile.toUri()}"
+              new {
+                uri = "${otherFile.toUri()}"
+              }
             }
           }
           resolvedImports {
@@ -73,7 +75,9 @@ class CliImportAnalyzerTest {
             "imports": {
               "${otherFile.toUri()}": [],
               "${file.toUri()}": [
-                "${otherFile.toUri()}"
+                {
+                  "uri": "${otherFile.toUri()}"
+                }
               ]
             },
             "resolvedImports": {
@@ -101,7 +105,9 @@ class CliImportAnalyzerTest {
           imports {
             ["${otherFile.toUri()}"] {}
             ["${file.toUri()}"] {
-              "${otherFile.toUri()}"
+              new {
+                uri = "${otherFile.toUri()}"
+              }
             }
           }
           resolvedImports {

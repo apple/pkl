@@ -30,7 +30,7 @@ class AnalyzeImportsTest : AbstractTest() {
         }
 
         pkl {
-          analyze {
+          analyzers {
             imports {
               analyzeMyImports {
                 sourceModules = ["input.pkl"]
@@ -56,7 +56,7 @@ class AnalyzeImportsTest : AbstractTest() {
         }
 
         pkl {
-          analyze {
+          analyzers {
             imports {
               analyzeMyImports {
                 sourceModules = ["input.pkl"]
@@ -83,7 +83,7 @@ class AnalyzeImportsTest : AbstractTest() {
         }
 
         pkl {
-          analyze {
+          analyzers {
             imports {
               analyzeMyImports {
                 sourceModules = ["input.pkl"]

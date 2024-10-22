@@ -565,6 +565,30 @@ This command accepts <<common-options,common options>>.
 
 This command builds a graph of imports declared in the provided modules.
 
+This is a lower level command that is meant to be useful for Pkl-related tooling.
+For example, this command feeds into the xref:pkl-gradle:index.adoc[] to determine if tasks are considered up-to-date or not.
+
+This command produces an object with two properties, `imports` and `resolvedImports`.
+
+The `imports` property is a mapping of a module's absolute URI, to the set of imports declared within that module.
+
+The `resolvedImports` property is a mapping of a module's absolute URI (as stated in `imports`), to the resolved absolute URI that might be useful for fetching the module's contents.
+For example, a xref:language-reference:index.adoc#local-dependencies[local dependency] import will have an in-language URI with scheme `projectpackage:`, and may have resolved URI with scheme `file:` (assuming that the project is file-based).
+
+Examples:
+
+[source,shell]
+----
+# Analyze the imports of a single module
+pkl analyze imports myModule.pkl
+
+# Same as the previous command, but output in JSON.
+pkl analyze imports -f json myModule.pkl
+
+# Analyze imports of all modules declared within src/
+pkl analyze imports src/*.pkl
+----
+
 <modules>::
 The absolute or relative URIs of the modules to analyze. Relative URIs are resolved against the working directory.
 

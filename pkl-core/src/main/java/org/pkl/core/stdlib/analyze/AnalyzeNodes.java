@@ -15,14 +15,13 @@
  */
 package org.pkl.core.stdlib.analyze;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.Set;
+import org.pkl.core.ImportGraph;
+import org.pkl.core.ImportGraph.Import;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.AnalyzeModule;
@@ -33,22 +32,24 @@ import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.util.Pair;
 
 public final class AnalyzeNodes {
   private AnalyzeNodes() {}
 
-  private static VmObjectFactory<Pair<Map<URI, Set<URI>>, Map<URI, URI>>> importGraphFactory =
-      new VmObjectFactory<Pair<Map<URI, Set<URI>>, Map<URI, URI>>>(
-              AnalyzeModule::getImportGraphClass)
+  private static VmObjectFactory<Import> importFactory =
+      new VmObjectFactory<Import>(AnalyzeModule::getImportClass)
+          .addStringProperty("uri", (it) -> it.uri().toString());
+
+  private static VmObjectFactory<ImportGraph> importGraphFactory =
+      new VmObjectFactory<ImportGraph>(AnalyzeModule::getImportGraphClass)
           .addMapProperty(
               "imports",
-              results -> {
+              graph -> {
                 var builder = VmMap.builder();
-                for (var entry : results.getFirst().entrySet()) {
+                for (var entry : graph.imports().entrySet()) {
                   var vmSetBuilder = VmSet.EMPTY.builder();
-                  for (var importUri : entry.getValue()) {
-                    vmSetBuilder.add(importUri.toString());
+                  for (var imprt : entry.getValue()) {
+                    vmSetBuilder.add(importFactory.create(imprt));
                   }
                   builder.add(entry.getKey().toString(), vmSetBuilder.build());
                 }
@@ -56,9 +57,9 @@ public final class AnalyzeNodes {
               })
           .addMapProperty(
               "resolvedImports",
-              results -> {
+              graph -> {
                 var builder = VmMap.builder();
-                for (var entry : results.getSecond().entrySet()) {
+                for (var entry : graph.resolvedImports().entrySet()) {
                   builder.add(entry.getKey().toString(), entry.getValue().toString());
                 }
                 return builder.build();

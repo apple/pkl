@@ -56,7 +56,14 @@ class AnalyzerTest {
         .toUri()
     val result = simpleAnalyzer.importGraph(file)
     assertThat(result.imports)
-      .containsEntry(file, setOf(URI("pkl:base"), URI("pkl:json"), URI("pkl:xml")))
+      .containsEntry(
+        file,
+        setOf(
+          ImportGraph.Import(URI("pkl:base")),
+          ImportGraph.Import(URI("pkl:json")),
+          ImportGraph.Import(URI("pkl:xml"))
+        )
+      )
   }
 
   @Test
@@ -76,7 +83,12 @@ class AnalyzerTest {
     val result = simpleAnalyzer.importGraph(file1)
     assertThat(result.imports)
       .isEqualTo(
-        mapOf(file1 to setOf(file1, file2, file3), file2 to emptySet(), file3 to emptySet()),
+        mapOf(
+          file1 to
+            setOf(ImportGraph.Import(file1), ImportGraph.Import(file2), ImportGraph.Import(file3)),
+          file2 to emptySet(),
+          file3 to emptySet()
+        ),
       )
   }
 
@@ -85,7 +97,10 @@ class AnalyzerTest {
     val file1 = tempDir.resolve("file1.pkl").writeString("import \"file2.pkl\"").toUri()
     val file2 = tempDir.resolve("file2.pkl").writeString("import \"file1.pkl\"").toUri()
     val result = simpleAnalyzer.importGraph(file1)
-    assertThat(result.imports).isEqualTo(mapOf(file1 to setOf(file2), file2 to setOf(file1)))
+    assertThat(result.imports)
+      .isEqualTo(
+        mapOf(file1 to setOf(ImportGraph.Import(file2)), file2 to setOf(ImportGraph.Import(file1)))
+      )
   }
 
   @Test
@@ -109,9 +124,9 @@ class AnalyzerTest {
     assertThat(result.imports)
       .isEqualTo(
         mapOf(
-          file1 to setOf(URI("package://localhost:0/birds@0.5.0#/Bird.pkl")),
+          file1 to setOf(ImportGraph.Import(URI("package://localhost:0/birds@0.5.0#/Bird.pkl"))),
           URI("package://localhost:0/birds@0.5.0#/Bird.pkl") to
-            setOf(URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl")),
+            setOf(ImportGraph.Import(URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl"))),
           URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet()
         )
       )
@@ -188,9 +203,10 @@ class AnalyzerTest {
     assertThat(result.imports)
       .isEqualTo(
         mapOf(
-          file1 to setOf(URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl")),
+          file1 to
+            setOf(ImportGraph.Import(URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl"))),
           URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl") to
-            setOf(URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl")),
+            setOf(ImportGraph.Import(URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl"))),
           URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet()
         )
       )
@@ -288,7 +304,7 @@ class AnalyzerTest {
     val birdUri = URI("projectpackage://localhost:0/birds@1.0.0#/bird.pkl")
     assertThat(result.imports)
       .isEqualTo(
-        mapOf(mainPkl.toUri() to setOf(birdUri), birdUri to emptySet()),
+        mapOf(mainPkl.toUri() to setOf(ImportGraph.Import(birdUri)), birdUri to emptySet()),
       )
     assertThat(result.resolvedImports)
       .isEqualTo(

@@ -19,7 +19,7 @@ import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.pkl.gradle.spec.AnalyzeImportsSpec;
 
-public interface PklAnalyzeCommands {
+public interface PklAnalyzerCommands {
   NamedDomainObjectContainer<AnalyzeImportsSpec> getImports();
 
   default void imports(Action<? super NamedDomainObjectContainer<AnalyzeImportsSpec>> action) {

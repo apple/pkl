@@ -24,6 +24,7 @@ import java.util.TreeSet;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsArray;
+import org.pkl.core.util.json.Json.JsObject;
 import org.pkl.core.util.json.Json.JsonParseException;
 import org.pkl.core.util.json.Json.MappingException;
 
@@ -31,14 +32,26 @@ import org.pkl.core.util.json.Json.MappingException;
  * Java representation of {@code pkl.analyze#ImportGraph}.
  *
  * @param imports The graph of imports declared within the program.
- *     <p>Each key is a module inside the program, and each value is the module URIs decalred as
- *     imports inside that module. The set of all modules initialized within the program is the set
- *     of keys in this map.
+ *     <p>Each key is a module inside the program, and each value is the module URIs declared as
+ *     imports inside that module. The set of all dependent modules within a program is the set of
+ *     keys in this map.
  * @param resolvedImports A mapping of a module's in-language URI, and the URI that it resolves to.
  *     <p>For example, a local package dependency is represented with scheme {@code
  *     projectpackage:}, and (typically) resolves to a {@code file:} scheme.
  */
-public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImports) {
+public record ImportGraph(Map<URI, Set<Import>> imports, Map<URI, URI> resolvedImports) {
+  /**
+   * Java representation of {@code pkl.analyze#Import}.
+   *
+   * @param uri The absolute URI of the import.
+   */
+  public record Import(URI uri) implements Comparable<Import> {
+    @Override
+    public int compareTo(Import o) {
+      return uri.compareTo(o.uri());
+    }
+  }
+
   /** Parses the provided JSON into an import graph. */
   public static ImportGraph parseFromJson(String input) throws JsonParseException {
     var parsed = Json.parseObject(input);
@@ -47,21 +60,22 @@ public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImpo
     return new ImportGraph(imports, resolvedImports);
   }
 
-  private static Map<URI, Set<URI>> parseImports(Json.JsObject jsObject) throws JsonParseException {
-    var ret = new TreeMap<URI, Set<URI>>();
+  private static Map<URI, Set<Import>> parseImports(Json.JsObject jsObject)
+      throws JsonParseException {
+    var ret = new TreeMap<URI, Set<Import>>();
     for (var entry : jsObject.entrySet()) {
       try {
         var key = new URI(entry.getKey());
         var value = entry.getValue();
-        var set = new TreeSet<URI>();
+        var set = new TreeSet<Import>();
         if (!(value instanceof JsArray array)) {
           throw new FormatException("array", value.getClass());
         }
         for (var elem : array) {
-          if (!(elem instanceof String str)) {
-            throw new FormatException("string", elem.getClass());
+          if (!(elem instanceof JsObject importObj)) {
+            throw new FormatException("object", elem.getClass());
           }
-          set.add(new URI(str));
+          set.add(parseImport(importObj));
         }
         ret.put(key, set);
       } catch (URISyntaxException e) {
@@ -69,6 +83,11 @@ public record ImportGraph(Map<URI, Set<URI>> imports, Map<URI, URI> resolvedImpo
       }
     }
     return ret;
+  }
+
+  private static ImportGraph.Import parseImport(Json.JsObject jsObject) throws JsonParseException {
+    var uri = jsObject.getURI("uri");
+    return new Import(uri);
   }
 
   private static Map<URI, URI> parseResolvedImports(Json.JsObject jsObject)

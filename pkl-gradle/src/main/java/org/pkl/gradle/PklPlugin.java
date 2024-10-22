@@ -93,7 +93,7 @@ public class PklPlugin implements Plugin<Project> {
     configureTestTasks(extension.getTests());
     configureProjectPackageTasks(extension.getProject().getPackagers());
     configureProjectResolveTasks(extension.getProject().getResolvers());
-    configureAnalyzeImportsTasks(extension.getAnalyze().getImports());
+    configureAnalyzeImportsTasks(extension.getAnalyzers().getImports());
   }
 
   private void configureProjectPackageTasks(NamedDomainObjectContainer<ProjectPackageSpec> specs) {

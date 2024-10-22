@@ -692,6 +692,41 @@ include::../partials/gradle-common-properties.adoc[]
 
 This feature is the Gradle analogy for the xref:pkl-cli:index.adoc#command-analyze-imports[analyze imports] command in the CLI. It builds a graph of imports of the provided source modules.
 
+=== Usage
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  analyzers {
+    imports {
+      appConfig {
+        sourceModules.add(file("src/main/resources/appConfig.pkl"))
+      }
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  analyzers {
+    imports {
+      register("appConfig") {
+        sourceModules.add(file("src/main/resources/appConfig.pkl"))
+      }
+    }
+  }
+}
+----
+====
+
 === Configuration Options
 
 .outputFormat: Property<String>
