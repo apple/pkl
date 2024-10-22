@@ -35,7 +35,7 @@ internal fun main(args: Array<String>) {
         TestCommand(helpLink),
         ProjectCommand(helpLink),
         DownloadPackageCommand(helpLink),
-        AnalyzeCommand(helpLink)
+        AnalyzeCommand(helpLink),
       )
       .main(args)
   }

@@ -44,20 +44,20 @@ constructor(
   private val sourceModule =
     ModuleSource.text(
       """
-    import "pkl:analyze"
+        import "pkl:analyze"
 
-    local importStrings = read*("prop:pkl.analyzeImports.**").toMap().values.toSet()
+        local importStrings = read*("prop:pkl.analyzeImports.**").toMap().values.toSet()
 
-    output {
-      value = analyze.importGraph(importStrings)
-      renderer {
-        converters {
-          [Map] = (it) -> it.toMapping()
-          [Set] = (it) -> it.toListing()
+        output {
+          value = analyze.importGraph(importStrings)
+          renderer {
+            converters {
+              [Map] = (it) -> it.toMapping()
+              [Set] = (it) -> it.toListing()
+            }
+          }
         }
-      }
-    }
-  """
+      """
         .trimIndent()
     )
 

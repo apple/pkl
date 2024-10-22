@@ -25,20 +25,20 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-      plugins {
-        id "org.pkl-lang"
-      }
+        plugins {
+          id "org.pkl-lang"
+        }
 
-      pkl {
-        analyze {
-          imports {
-            analyzeMyImports {
-              sourceModules = ["input.pkl"]
+        pkl {
+          analyze {
+            imports {
+              analyzeMyImports {
+                sourceModules = ["input.pkl"]
+              }
             }
           }
         }
-      }
-    """
+      """
         .trimIndent()
     )
     val result = runTask("analyzeMyImports")
@@ -51,21 +51,21 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-      plugins {
-        id "org.pkl-lang"
-      }
+        plugins {
+          id "org.pkl-lang"
+        }
 
-      pkl {
-        analyze {
-          imports {
-            analyzeMyImports {
-              sourceModules = ["input.pkl"]
-              outputFile = file("myFile.pcf")
+        pkl {
+          analyze {
+            imports {
+              analyzeMyImports {
+                sourceModules = ["input.pkl"]
+                outputFile = file("myFile.pcf")
+              }
             }
           }
         }
-      }
-    """
+      """
         .trimIndent()
     )
     runTask("analyzeMyImports")
@@ -78,30 +78,30 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-      plugins {
-        id "org.pkl-lang"
-      }
+        plugins {
+          id "org.pkl-lang"
+        }
 
-      pkl {
-        analyze {
-          imports {
-            analyzeMyImports {
-              sourceModules = ["input.pkl"]
-              outputFormat = "json"
+        pkl {
+          analyze {
+            imports {
+              analyzeMyImports {
+                sourceModules = ["input.pkl"]
+                outputFormat = "json"
+              }
             }
           }
         }
-      }
-    """
+      """
         .trimIndent()
     )
     val result = runTask("analyzeMyImports")
     assertThat(result.output)
       .contains(
         """
-      {
-        "imports": {
-    """
+          {
+            "imports": {
+        """
           .trimIndent()
       )
   }

@@ -45,13 +45,13 @@ class AnalyzerTest {
         .resolve("test.pkl")
         .writeString(
           """
-      amends "pkl:base"
+            amends "pkl:base"
 
-      import "pkl:json"
+            import "pkl:json"
 
-      myProp = import("pkl:xml")
-    """
-            .trimIndent()
+            myProp = import("pkl:xml")
+          """
+            .trimIndent()```
         )
         .toUri()
     val result = simpleAnalyzer.importGraph(file)
@@ -66,9 +66,9 @@ class AnalyzerTest {
         .resolve("file1.pkl")
         .writeString(
           """
-      import* "*.pkl"
-    """
-            .trimIndent()
+            import* "*.pkl"
+          """
+            .trimIndent()```
         )
         .toUri()
     val file2 = tempDir.resolve("file2.pkl").writeString("foo = 1").toUri()
@@ -123,12 +123,12 @@ class AnalyzerTest {
       .resolve("PklProject")
       .writeString(
         """
-      amends "pkl:Project"
-      
-      dependencies {
-        ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
-      }
-    """
+          amends "pkl:Project"
+
+          dependencies {
+            ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
+          }
+        """
           .trimIndent()
       )
     val dollar = '$'
@@ -136,26 +136,26 @@ class AnalyzerTest {
       .resolve("PklProject.deps.json")
       .writeString(
         """
-      {
-        "schemaVersion": 1,
-        "resolvedDependencies": {
-          "package://localhost:0/birds@0": {
-            "type": "remote",
-            "uri": "projectpackage://localhost:0/birds@0.5.0",
-            "checksums": {
-              "sha256": "${dollar}skipChecksumVerification"
-            }
-          },
-          "package://localhost:0/fruit@1": {
-            "type": "remote",
-            "uri": "projectpackage://localhost:0/fruit@1.0.5",
-            "checksums": {
-              "sha256": "${dollar}skipChecksumVerification"
+          {
+            "schemaVersion": 1,
+            "resolvedDependencies": {
+              "package://localhost:0/birds@0": {
+                "type": "remote",
+                "uri": "projectpackage://localhost:0/birds@0.5.0",
+                "checksums": {
+                  "sha256": "${dollar}skipChecksumVerification"
+                }
+              },
+              "package://localhost:0/fruit@1": {
+                "type": "remote",
+                "uri": "projectpackage://localhost:0/fruit@1.0.5",
+                "checksums": {
+                  "sha256": "${dollar}skipChecksumVerification"
+                }
+              }
             }
           }
-        }
-      }
-    """
+        """
           .trimIndent()
       )
     val project = Project.loadFromPath(tempDir.resolve("PklProject"))
@@ -179,8 +179,8 @@ class AnalyzerTest {
         .resolve("file1.pkl")
         .writeString(
           """
-      import "@birds/Bird.pkl"
-    """
+            import "@birds/Bird.pkl"
+          """
             .trimIndent()
         )
         .toUri()
@@ -214,12 +214,12 @@ class AnalyzerTest {
         .createParentDirectories()
         .writeString(
           """
-      amends "pkl:Project"
-      
-      dependencies {
-        ["birds"] = import("../birds/PklProject")
-      }
-    """
+            amends "pkl:Project"
+
+            dependencies {
+              ["birds"] = import("../birds/PklProject")
+            }
+          """
             .trimIndent()
         )
 
@@ -228,15 +228,15 @@ class AnalyzerTest {
       .createParentDirectories()
       .writeString(
         """
-      amends "pkl:Project"
-      
-      package {
-        name = "birds"
-        version = "1.0.0"
-        packageZipUrl = "https://localhost:0/foo.zip"
-        baseUri = "package://localhost:0/birds"
-      }
-    """
+          amends "pkl:Project"
+
+          package {
+            name = "birds"
+            version = "1.0.0"
+            packageZipUrl = "https://localhost:0/foo.zip"
+            baseUri = "package://localhost:0/birds"
+          }
+        """
           .trimIndent()
       )
 
@@ -246,17 +246,18 @@ class AnalyzerTest {
       .resolve("PklProject.deps.json")
       .writeString(
         """
-      {
-        "schemaVersion": 1,
-        "resolvedDependencies": {
-          "package://localhost:0/birds@1": {
-            "type": "local",
-            "uri": "projectpackage://localhost:0/birds@1.0.0",
-            "path": "../birds"
+        """
+          {
+            "schemaVersion": 1,
+            "resolvedDependencies": {
+              "package://localhost:0/birds@1": {
+                "type": "local",
+                "uri": "projectpackage://localhost:0/birds@1.0.0",
+                "path": "../birds"
+              }
+            }
           }
-        }
-      }
-    """
+        """
           .trimIndent()
       )
     val mainPkl =
@@ -264,8 +265,8 @@ class AnalyzerTest {
         .resolve("main.pkl")
         .writeString(
           """
-        import "@birds/bird.pkl"
-      """
+            import "@birds/bird.pkl"
+          """
             .trimIndent()
         )
 

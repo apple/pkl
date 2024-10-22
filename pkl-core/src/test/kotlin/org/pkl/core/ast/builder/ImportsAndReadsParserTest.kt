@@ -70,8 +70,8 @@ class ImportsAndReadsParserTest {
   fun `invalid syntax`() {
     val moduleText =
       """
-      not valid Pkl syntax
-    """
+        not valid Pkl syntax
+      """
         .trimIndent()
     val moduleKey = ModuleKeys.synthetic(URI("repl:text"), moduleText)
     val err =
@@ -81,14 +81,14 @@ class ImportsAndReadsParserTest {
     assertThat(err.toPklException(StackFrameTransformers.defaultTransformer))
       .hasMessage(
         """
-      –– Pkl Error ––
-      Mismatched input: `<EOF>`. Expected one of: `{`, `=`, `:`
+          –– Pkl Error ––
+          Mismatched input: `<EOF>`. Expected one of: `{`, `=`, `:`
 
-      1 | not valid Pkl syntax
-                              ^
-      at text (repl:text)
+          1 | not valid Pkl syntax
+                                  ^
+          at text (repl:text)
 
-    """
+        """
           .trimIndent()
       )
   }

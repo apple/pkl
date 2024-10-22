@@ -38,18 +38,18 @@ class CliImportAnalyzerTest {
     assertThat(sb.toString())
       .isEqualTo(
         """
-      imports {
-        ["${otherFile.toUri()}"] {}
-        ["${file.toUri()}"] {
-          "${otherFile.toUri()}"
-        }
-      }
-      resolvedImports {
-        ["${otherFile.toUri()}"] = "${otherFile.toRealPath().toUri()}"
-        ["${file.toUri()}"] = "${file.toRealPath().toUri()}"
-      }
-      
-    """
+          imports {
+            ["${otherFile.toUri()}"] {}
+            ["${file.toUri()}"] {
+              "${otherFile.toUri()}"
+            }
+          }
+          resolvedImports {
+            ["${otherFile.toUri()}"] = "${otherFile.toRealPath().toUri()}"
+            ["${file.toUri()}"] = "${file.toRealPath().toUri()}"
+          }
+
+        """
           .trimIndent()
       )
   }
@@ -69,20 +69,20 @@ class CliImportAnalyzerTest {
     assertThat(sb.toString())
       .isEqualTo(
         """
-      {
-        "imports": {
-          "${otherFile.toUri()}": [],
-          "${file.toUri()}": [
-            "${otherFile.toUri()}"
-          ]
-        },
-        "resolvedImports": {
-          "${otherFile.toUri()}": "${otherFile.toRealPath().toUri()}",
-          "${file.toUri()}": "${file.toRealPath().toUri()}"
-        }
-      }
-      
-    """
+          {
+            "imports": {
+              "${otherFile.toUri()}": [],
+              "${file.toUri()}": [
+                "${otherFile.toUri()}"
+              ]
+            },
+            "resolvedImports": {
+              "${otherFile.toUri()}": "${otherFile.toRealPath().toUri()}",
+              "${file.toUri()}": "${file.toRealPath().toUri()}"
+            }
+          }
+
+        """
           .trimIndent()
       )
   }
@@ -98,18 +98,18 @@ class CliImportAnalyzerTest {
     assertThat(outputPath)
       .hasContent(
         """
-      imports {
-        ["${otherFile.toUri()}"] {}
-        ["${file.toUri()}"] {
-          "${otherFile.toUri()}"
-        }
-      }
-      resolvedImports {
-        ["${otherFile.toUri()}"] = "${otherFile.toRealPath().toUri()}"
-        ["${file.toUri()}"] = "${file.toRealPath().toUri()}"
-      }
-      
-    """
+          imports {
+            ["${otherFile.toUri()}"] {}
+            ["${file.toUri()}"] {
+              "${otherFile.toUri()}"
+            }
+          }
+          resolvedImports {
+            ["${otherFile.toUri()}"] = "${otherFile.toRealPath().toUri()}"
+            ["${file.toUri()}"] = "${file.toRealPath().toUri()}"
+          }
+
+        """
           .trimIndent()
       )
   }
@@ -127,9 +127,9 @@ class CliImportAnalyzerTest {
       }
       .hasMessageContaining(
         """
-        –– Pkl Error ––
-        Found a syntax error when parsing module `${file.toUri()}`.
-      """
+          –– Pkl Error ––
+          Found a syntax error when parsing module `${file.toUri()}`.
+        """
           .trimIndent()
       )
   }
