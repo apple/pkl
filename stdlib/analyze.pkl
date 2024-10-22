@@ -30,14 +30,6 @@ import "pkl:reflect"
 /// The resulting graph includes transitive imports.
 external function importGraph(moduleUris: Set<Uri>): ImportGraph
 
-class Import {
-  /// The absolute (in-language) URI of the import.
-  ///
-  /// Dependency notation URIs (such as `import "@foo/bar"`) are resolved to package URIs with
-  /// scheme `projectpackage:`.
-  uri: Uri
-}
-
 /// The graph of imports declared (directly and transitively) by the modules passed to
 /// [importGraph()].
 class ImportGraph {
@@ -63,4 +55,13 @@ class ImportGraph {
   /// In the case of local project dependenecies, they will be local URIs resolved from the project
   /// file URI (in normal cases, `file:` URIs).
   resolvedImports: Map<Uri, Uri>(keys == imports.keys)
+}
+
+/// An import as declared inside a module.
+class Import {
+  /// The absolute (in-language) URI of the import.
+  ///
+  /// Dependency notation URIs (such as `import "@foo/bar"`) are resolved to package URIs with
+  /// scheme `projectpackage:`.
+  uri: Uri
 }
