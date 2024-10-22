@@ -863,6 +863,38 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result4.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
   }
 
+  @Test
+  fun `explicit dependency tracking using transitive modules`() {
+    writePklFile("import \"shared.pkl\"")
+    writeFile("shared.pkl", "foo = 1")
+    writeFile("shared2.pkl", "foo = 1")
+    // intentionally use wrong transitive module
+    writeBuildFile(
+      "json",
+      additionalContents =
+        """
+      transitiveModules.from(files("shared2.pkl"))
+    """
+          .trimIndent()
+    )
+    val result1 = runTask("evalTest")
+    assertThat(result1.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // evalTest should be up-to-date now
+    val result2 = runTask("evalTest")
+    assertThat(result2.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.UP_TO_DATE)
+
+    // update transitive module with new contents
+    writeFile("shared2.pkl", "foo = 2")
+
+    // evalTest should be out-of-date and need to run again
+    val result5 = runTask("evalTest")
+    assertThat(result5.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+    // the "GatherImports" task did not run
+    assertThat(result5.task(":evalTestGatherImports")).isNull()
+  }
+
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core

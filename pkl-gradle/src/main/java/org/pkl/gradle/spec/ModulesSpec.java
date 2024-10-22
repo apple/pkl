@@ -23,8 +23,6 @@ import org.gradle.api.provider.Property;
 public interface ModulesSpec extends BasePklSpec {
   ListProperty<Object> getSourceModules();
 
-  /** As of Pkl 0.27, this setting is ignored. */
-  @Deprecated(since = "0.27.0", forRemoval = true)
   ConfigurableFileCollection getTransitiveModules();
 
   DirectoryProperty getProjectDir();

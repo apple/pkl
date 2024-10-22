@@ -28,17 +28,31 @@ import "pkl:reflect"
 /// Given a set of Pkl module URIs, returns a graph of imports declared by these modules.
 ///
 /// The resulting graph includes transitive imports.
-external function importGraph(moduleUris: Set<String>): ImportGraph
+external function importGraph(moduleUris: Set<Uri>): ImportGraph
 
+/// The graph of imports declared (directly and transitively) by the modules passed to
+/// [importGraph()].
 class ImportGraph {
   /// The imports declared within a Pkl program.
   ///
   /// Each entry is a module URI, mapped to the set of imports declared in that module.
   ///
-  /// The set of all modules in the graph can be obtained via its keys.
+  /// The set of all modules in the graph can be obtained via its [keys][Map.keys].
   imports: Map<Uri, Set<Uri>>
 
-  /// Mappings of modules from their in-language URI, to the URI that is used to fetch the module's
-  /// contents.
+  /// Mappings of modules from their in-language URI, to their resolved URI.
+  ///
+  /// A module's in-language URI is the form used within Pkl source code.
+  /// For example, modulepath-based modules have form `modulepath:/path/to/my/module.pkl`.
+  ///
+  /// A module's resolved URI is the form used to load the module's contents.
+  /// The same modulepath module might have form
+  /// `jar:file:///path/to/file.zip!/path/to/my/module.pkl` if Pkl run with
+  /// `--module-path /path/to/file.zip`.
+  ///
+  /// Dependency-notation imports, such as `"@myPackage/myModule.pkl"`, are represented as
+  /// in-language URIs with scheme `projectpackage:`.
+  /// In the case of local project dependenecies, they will be local URIs resolved from the project
+  /// file URI (in normal cases, `file:` URIs).
   resolvedImports: Map<Uri, Uri>(keys == imports.keys)
 }

@@ -475,7 +475,9 @@ public class PklPlugin implements Plugin<Project> {
     task.getNoProject().set(spec.getNoProject());
     task.getProjectDir().set(spec.getProjectDir());
     task.getOmitProjectSettings().set(spec.getOmitProjectSettings());
-    if (analyzeImportsTask != null) {
+    if (!spec.getTransitiveModules().isEmpty()) {
+      task.getTransitiveModules().set(spec.getTransitiveModules());
+    } else if (analyzeImportsTask != null) {
       task.dependsOn(analyzeImportsTask);
       task.getTransitiveModules().set(analyzeImportsTask.map(this::getTransitiveModules));
     }
