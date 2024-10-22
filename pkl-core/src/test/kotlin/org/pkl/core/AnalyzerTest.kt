@@ -51,7 +51,7 @@ class AnalyzerTest {
 
             myProp = import("pkl:xml")
           """
-            .trimIndent()```
+            .trimIndent()
         )
         .toUri()
     val result = simpleAnalyzer.importGraph(file)
@@ -68,7 +68,7 @@ class AnalyzerTest {
           """
             import* "*.pkl"
           """
-            .trimIndent()```
+            .trimIndent()
         )
         .toUri()
     val file2 = tempDir.resolve("file2.pkl").writeString("foo = 1").toUri()
@@ -245,7 +245,6 @@ class AnalyzerTest {
     pklProject.parent
       .resolve("PklProject.deps.json")
       .writeString(
-        """
         """
           {
             "schemaVersion": 1,
