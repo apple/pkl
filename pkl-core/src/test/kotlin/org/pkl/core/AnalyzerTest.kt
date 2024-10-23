@@ -146,7 +146,6 @@ class AnalyzerTest {
         """
           .trimIndent()
       )
-    val dollar = '$'
     tempDir
       .resolve("PklProject.deps.json")
       .writeString(
@@ -158,14 +157,14 @@ class AnalyzerTest {
                 "type": "remote",
                 "uri": "projectpackage://localhost:0/birds@0.5.0",
                 "checksums": {
-                  "sha256": "${dollar}skipChecksumVerification"
+                  "sha256": "${'$'}skipChecksumVerification"
                 }
               },
               "package://localhost:0/fruit@1": {
                 "type": "remote",
                 "uri": "projectpackage://localhost:0/fruit@1.0.5",
                 "checksums": {
-                  "sha256": "${dollar}skipChecksumVerification"
+                  "sha256": "${'$'}skipChecksumVerification"
                 }
               }
             }
