@@ -5407,7 +5407,7 @@ package {
   packageZipUrl = "https://example.com/\(name)/\(name)@\(version).zip" // <4>
 }
 ----
-<1> The display name of the package. For display purposes only.
+<1> The display name of the package.For display purposes only.
 <2> The package URI, without the version part.
 <3> The version of the package.
 <4> The URL to download the package's ZIP file.
@@ -5415,8 +5415,9 @@ package {
 The package itself is created by the command xref:pkl-cli:index.adoc#command-project-package[`pkl project package`].
 
 This command only prepares artifacts to be published.
-Once the artifacts are prepared, they are expected to be uploaded to an HTTPS server such that the ZIP asset can be downloaded at path `packageZipUrl`, and the metadata can be downloaded at `+https://<package uri>+`. 
+Once the artifacts are prepared, they are expected to be uploaded to an HTTPS server such that the ZIP asset can be downloaded at path `packageZipUrl`, and the metadata can be downloaded at `+https://<package uri>+`.
 
+[[local-dependencies]]
 ==== Local dependencies
 
 A project can depend on a local project as a dependency.

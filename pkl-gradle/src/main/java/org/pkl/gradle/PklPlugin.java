@@ -17,6 +17,7 @@ package org.pkl.gradle;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -36,8 +37,12 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.gradle.util.GradleVersion;
 import org.pkl.cli.CliEvaluatorOptions;
+import org.pkl.core.ImportGraph;
+import org.pkl.core.OutputFormat;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
+import org.pkl.core.util.Nullable;
+import org.pkl.gradle.spec.AnalyzeImportsSpec;
 import org.pkl.gradle.spec.BasePklSpec;
 import org.pkl.gradle.spec.CodeGenSpec;
 import org.pkl.gradle.spec.EvalSpec;
@@ -48,6 +53,7 @@ import org.pkl.gradle.spec.PkldocSpec;
 import org.pkl.gradle.spec.ProjectPackageSpec;
 import org.pkl.gradle.spec.ProjectResolveSpec;
 import org.pkl.gradle.spec.TestSpec;
+import org.pkl.gradle.task.AnalyzeImportsTask;
 import org.pkl.gradle.task.BasePklTask;
 import org.pkl.gradle.task.CodeGenTask;
 import org.pkl.gradle.task.EvalTask;
@@ -87,6 +93,7 @@ public class PklPlugin implements Plugin<Project> {
     configureTestTasks(extension.getTests());
     configureProjectPackageTasks(extension.getProject().getPackagers());
     configureProjectResolveTasks(extension.getProject().getResolvers());
+    configureAnalyzeImportsTasks(extension.getAnalyzers().getImports());
   }
 
   private void configureProjectPackageTasks(NamedDomainObjectContainer<ProjectPackageSpec> specs) {
@@ -128,6 +135,21 @@ public class PklPlugin implements Plugin<Project> {
         });
   }
 
+  private void configureAnalyzeImportsTasks(NamedDomainObjectContainer<AnalyzeImportsSpec> specs) {
+    specs.all(
+        spec -> {
+          configureBaseSpec(spec);
+          spec.getOutputFormat().convention(OutputFormat.PCF.toString());
+          var analyzeImportsTask = createTask(AnalyzeImportsTask.class, spec);
+          analyzeImportsTask.configure(
+              task -> {
+                task.getOutputFormat().set(spec.getOutputFormat());
+                task.getOutputFile().set(spec.getOutputFile());
+                configureModulesTask(task, spec, null);
+              });
+        });
+  }
+
   private void configureEvalTasks(NamedDomainObjectContainer<EvalSpec> specs) {
     specs.all(
         spec -> {
@@ -141,7 +163,7 @@ public class PklPlugin implements Plugin<Project> {
                       // and the working directory is set to the project directory,
                       // so this path works correctly.
                       .file("%{moduleDir}/%{moduleName}.%{outputFormat}"));
-          spec.getOutputFormat().convention("pcf");
+          spec.getOutputFormat().convention(OutputFormat.PCF.toString());
           spec.getModuleOutputSeparator()
               .convention(CliEvaluatorOptions.Companion.getDefaults().getModuleOutputSeparator());
           spec.getExpression()
@@ -431,20 +453,75 @@ public class PklPlugin implements Plugin<Project> {
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
   }
 
-  private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(T task, S spec) {
+  private List<File> getTransitiveModules(AnalyzeImportsTask analyzeTask) {
+    var outputFile = analyzeTask.getOutputFile().get().getAsFile().toPath();
+    try {
+      var contents = Files.readString(outputFile);
+      ImportGraph importGraph = ImportGraph.parseFromJson(contents);
+      var imports = importGraph.resolvedImports().values();
+      return imports.stream()
+          .filter((it) -> it.getScheme().equalsIgnoreCase("file"))
+          .map(File::new)
+          .toList();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
+      T task, S spec, @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
     configureBaseTask(task, spec);
     task.getSourceModules().set(spec.getSourceModules());
-    task.getTransitiveModules().from(spec.getTransitiveModules());
     task.getNoProject().set(spec.getNoProject());
     task.getProjectDir().set(spec.getProjectDir());
     task.getOmitProjectSettings().set(spec.getOmitProjectSettings());
+    if (!spec.getTransitiveModules().isEmpty()) {
+      task.getTransitiveModules().set(spec.getTransitiveModules());
+    } else if (analyzeImportsTask != null) {
+      task.dependsOn(analyzeImportsTask);
+      task.getTransitiveModules().set(analyzeImportsTask.map(this::getTransitiveModules));
+    }
   }
 
-  private <T extends ModulesTask> TaskProvider<T> createModulesTask(
-      Class<T> taskClass, ModulesSpec spec) {
+  private TaskProvider<AnalyzeImportsTask> createAnalyzeImportsTask(ModulesSpec spec) {
+    var outputFile =
+        project
+            .getLayout()
+            .getBuildDirectory()
+            .file("pkl-gradle/imports/" + spec.getName() + ".json");
     return project
         .getTasks()
-        .register(spec.getName(), taskClass, task -> configureModulesTask(task, spec));
+        .register(
+            spec.getName() + "GatherImports",
+            AnalyzeImportsTask.class,
+            task -> {
+              configureModulesTask(task, spec, null);
+              task.setDescription("Compute the set of imports declared by input modules");
+              task.setGroup("build");
+              task.getOutputFormat().set(OutputFormat.JSON.toString());
+              task.getOutputFile().set(outputFile);
+            });
+  }
+
+  /**
+   * Implicitly also create a task of type {@link AnalyzeImportsTask}, postfixing the spec name with
+   * {@code "GatherImports"}.
+   *
+   * <p>The resulting task depends on the analyze task, and configures its own input files based on
+   * the result of analysis.
+   *
+   * <p>The end result is that the task automatically has correct up-to-date checks without users
+   * needing to manually provide transitive modules.
+   */
+  private <T extends ModulesTask> TaskProvider<T> createModulesTask(
+      Class<T> taskClass, ModulesSpec spec) {
+    var analyzeImportsTask = createAnalyzeImportsTask(spec);
+    return project
+        .getTasks()
+        .register(
+            spec.getName(),
+            taskClass,
+            task -> configureModulesTask(task, spec, analyzeImportsTask));
   }
 
   private <T extends BasePklTask> TaskProvider<T> createTask(Class<T> taskClass, BasePklSpec spec) {

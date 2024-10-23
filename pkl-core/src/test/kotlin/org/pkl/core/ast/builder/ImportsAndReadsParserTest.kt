@@ -18,8 +18,11 @@ package org.pkl.core.ast.builder
 import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.pkl.core.SecurityManagers
+import org.pkl.core.StackFrameTransformers
 import org.pkl.core.module.ModuleKeys
+import org.pkl.core.runtime.VmException
 
 class ImportsAndReadsParserTest {
   @Test
@@ -27,13 +30,13 @@ class ImportsAndReadsParserTest {
     val moduleText =
       """
       amends "foo.pkl"
-      
+
       import "bar.pkl"
       import "bazzy/buz.pkl"
-      
+
       res1 = import("qux.pkl")
       res2 = import*("qux/*.pkl")
-      
+
       class MyClass {
         res3 {
           res4 {
@@ -48,7 +51,7 @@ class ImportsAndReadsParserTest {
     val moduleKey = ModuleKeys.synthetic(URI("repl:text"), moduleText)
     val imports =
       ImportsAndReadsParser.parse(moduleKey, moduleKey.resolve(SecurityManagers.defaultManager))
-    assertThat(imports?.map { it.first })
+    assertThat(imports?.map { it.stringValue })
       .hasSameElementsAs(
         listOf(
           "foo.pkl",
@@ -60,6 +63,33 @@ class ImportsAndReadsParserTest {
           "/some/dir/chowner.txt",
           "/some/dir/*.txt"
         )
+      )
+  }
+
+  @Test
+  fun `invalid syntax`() {
+    val moduleText =
+      """
+        not valid Pkl syntax
+      """
+        .trimIndent()
+    val moduleKey = ModuleKeys.synthetic(URI("repl:text"), moduleText)
+    val err =
+      assertThrows<VmException> {
+        ImportsAndReadsParser.parse(moduleKey, moduleKey.resolve(SecurityManagers.defaultManager))
+      }
+    assertThat(err.toPklException(StackFrameTransformers.defaultTransformer))
+      .hasMessage(
+        """
+          –– Pkl Error ––
+          Mismatched input: `<EOF>`. Expected one of: `{`, `=`, `:`
+
+          1 | not valid Pkl syntax
+                                  ^
+          at text (repl:text)
+
+        """
+          .trimIndent()
       )
   }
 }
