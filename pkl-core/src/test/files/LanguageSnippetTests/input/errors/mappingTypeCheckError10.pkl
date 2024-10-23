@@ -1,0 +1,2 @@
+foo: Mapping = new { ["foo"] = 1; ["bar"] = 2 }
+bar: Mapping<String, String> = (foo) { ["baz"] = "three" }

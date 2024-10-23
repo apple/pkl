@@ -298,6 +298,9 @@ public final class VmUtils {
           }
         }
       } else if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
+        if (owner != receiver && owner instanceof VmListingOrMapping<?> vmListingOrMappingOwner) {
+          ret = vmListingOrMappingOwner.typecastObjectMember(member, ret, callNode);
+        }
         ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
       }
       receiver.setCachedValue(memberKey, ret, member);

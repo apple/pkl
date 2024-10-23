@@ -1,0 +1,2 @@
+foo: Listing = new { 1; 2; 3 }
+bar: Listing<String> = (foo) { "bar" }
