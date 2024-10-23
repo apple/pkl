@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Cannot find property `foo` in object of type `Dynamic`.
+
+x | bar = (foo) { baz = delete }.foo
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+at deleteRemovesKeyFromSuggestion#bar (file:///$snippetsDir/input/errors/deleteRemovesKeyFromSuggestion.pkl)
+
+Available properties:
+bar
+default
+qux
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -37,6 +37,7 @@ import org.graalvm.polyglot.Engine;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrame;
@@ -67,6 +68,14 @@ public final class VmUtils {
   public static final String REPL_TEXT = "repl:text";
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
+
+  public static final ExpressionNode DELETE_MARKER =
+      new ExpressionNode() {
+        @Override
+        public Object executeGeneric(VirtualFrame frame) {
+          throw new PklBugException("Evaluated `delete`");
+        }
+      };
 
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
@@ -238,9 +247,15 @@ public final class VmUtils {
     if (cachedValue != null) return cachedValue;
 
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
-      var member = owner.getMember(memberKey);
-      if (member == null) continue;
-      return doReadMember(receiver, owner, memberKey, member, checkType, callNode);
+      var key = (owner instanceof VmObject obj) ? obj.toDefinitionKey(memberKey) : memberKey;
+      if (key == null) {
+        return null;
+      }
+      var member = owner.getMember(key);
+      if (member != null) {
+        return doReadMember(receiver, owner, key, member, checkType, callNode);
+      }
+      memberKey = key;
     }
 
     return null;

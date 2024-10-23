@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.*;
-import java.util.function.BiFunction;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
@@ -29,6 +28,9 @@ import org.pkl.core.util.Nullable;
 
 /** Corresponds to `pkl.base#Object`. */
 public abstract class VmObject extends VmObjectLike {
+  private static final Object DELETED_ELEMENT_INDICES_KEY = new Object();
+  private static final Object DELETED_ENTRIES_AND_PROPERTIES_KEY = new Object();
+
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
   protected final EconomicMap<Object, Object> cachedValues;
@@ -44,7 +46,8 @@ public abstract class VmObject extends VmObjectLike {
     super(enclosingFrame);
     this.parent = parent;
     this.members = members;
-    this.cachedValues = cachedValues;
+    this.cachedValues =
+        extractDeletions(parent != null && parent.hasElements(), members, cachedValues);
 
     assert parent != this;
   }
@@ -79,6 +82,55 @@ public abstract class VmObject extends VmObjectLike {
   @Override
   public final UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
     return members;
+  }
+
+  @SuppressWarnings("unchecked")
+  public final @Nullable SortedSet<Long> getDeletedIndices() {
+    return (SortedSet<Long>) getCachedValue(DELETED_ELEMENT_INDICES_KEY);
+  }
+
+  @SuppressWarnings("unchecked")
+  public final @Nullable Set<Object> getDeletedKeys() {
+    return (Set<Object>) getCachedValue(DELETED_ENTRIES_AND_PROPERTIES_KEY);
+  }
+
+  /** Tells whether this object has any elements. */
+  public abstract boolean hasElements();
+
+  /**
+   * Members in this {@code VmObject} are subscripted with their {@code referenceKey}. Given that
+   * the definition of this object may contain use of {@code delete}, the keys used in said
+   * definition are different from the {@code referenceKey}. In case of element deletions, the
+   * definition key may be higher {@code long} than the {@code referenceKey}. In case of entry or
+   * property deletions, the key is no longer valid for this object.
+   *
+   * @param referenceKey The key used from outside of this object to dereference a member.
+   * @return {@code null} if the key is deleted on this object, an offset {@code Long} in case of an
+   *     element index with earlier elements being deleted in this object, or the original input.
+   */
+  public @Nullable Object toDefinitionKey(Object referenceKey) {
+    if (!(referenceKey instanceof Long index) || !hasElements()) {
+      var member = getMember(referenceKey);
+      if (member != null && member.isDelete()) {
+        return null;
+      }
+      return referenceKey;
+    }
+
+    var deletedIndices = getDeletedIndices();
+    if (deletedIndices == null) {
+      return referenceKey;
+    }
+
+    var lowerBound = 0L;
+    var add = 0L;
+    do {
+      add = deletedIndices.subSet(lowerBound, index + 1L).size();
+      lowerBound = index + 1L;
+      index += add;
+    } while (add > 0L);
+
+    return index;
   }
 
   @Override
@@ -135,19 +187,70 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   @TruffleBoundary
-  public final boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
-    var parent = getParent();
-    if (parent != null) {
-      var completed = parent.iterateMembers(consumer);
-      if (!completed) return false;
+  public final boolean iterateMembers(MemberConsumer consumer) {
+    var ancestors = new ArrayDeque<VmObject>();
+    var deletedKeys = new HashMap<Object, Integer>();
+    var deletedIndices = new ArrayDeque<SortedSet<Long>>();
+
+    for (var owner = this; owner != null; owner = owner.getParent()) {
+      ancestors.addFirst(owner);
+      var keysDeletedHere = owner.getDeletedKeys();
+      for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+        deletedKeys.compute(key, (k, v) -> v == null ? 1 : v + 1);
+      }
+      var indicesDeletedHere = owner.getDeletedIndices();
+      if (indicesDeletedHere != null) {
+        deletedIndices.push(indicesDeletedHere);
+      }
     }
-    var entries = members.getEntries();
-    while (entries.advance()) {
-      var member = entries.getValue();
-      if (member.isLocal()) continue;
-      if (!consumer.apply(entries.getKey(), member)) return false;
+
+    while (!ancestors.isEmpty()) {
+      var current = ancestors.peek();
+
+      var entries = current.members.getEntries();
+      while (entries.advance()) {
+        var definitionKey = entries.getKey();
+        var referenceKey = toReferenceKey(definitionKey, deletedKeys, deletedIndices);
+
+        var member = entries.getValue();
+        if (member.isLocal() || referenceKey == null) continue;
+
+        if (!consumer.accept(referenceKey, member)) return false;
+      }
+
+      ancestors.pop();
+
+      var keysDeletedHere = current.getDeletedKeys();
+      for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+        deletedKeys.compute(key, (k, v) -> Objects.requireNonNull(v) == 1 ? null : v - 1);
+      }
+      if (current.getDeletedIndices() != null) {
+        deletedIndices.pop();
+      }
     }
+    assert deletedKeys.isEmpty() && deletedIndices.isEmpty();
     return true;
+  }
+
+  private @Nullable Object toReferenceKey(
+      Object definitionKey,
+      Map<Object, Integer> deletedKeys,
+      Collection<SortedSet<Long>> deletedIndices) {
+    if (deletedKeys.containsKey(definitionKey)) {
+      return null;
+    }
+    if (!(definitionKey instanceof Long index) || !hasElements()) {
+      return definitionKey;
+    }
+
+    for (var indicesDeletedHere : deletedIndices) {
+      if (indicesDeletedHere.contains(index)) {
+        return null;
+      }
+      index -= indicesDeletedHere.subSet(0L, index).size();
+    }
+
+    return index;
   }
 
   /** Evaluates this object's members. Skips local, hidden, and external members. */
@@ -158,23 +261,39 @@ public abstract class VmObject extends VmObjectLike {
 
     if (recurse) forced = true;
 
+    var deletedKeys = new HashMap<Object, Integer>();
+    var deletedIndices = new ArrayDeque<SortedSet<Long>>();
+
     try {
-      for (VmObjectLike owner = this; owner != null; owner = owner.getParent()) {
-        var cursor = EconomicMaps.getEntries(owner.getMembers());
+      for (var owner = this; owner != null; owner = owner.getParent()) {
+
+        var indicesDeletedHere = owner.getDeletedIndices();
+        if (indicesDeletedHere != null) {
+          deletedIndices.push(indicesDeletedHere);
+        }
+        var keysDeletedHere = owner.getDeletedKeys();
+        for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+          deletedKeys.compute(key, (k, v) -> v == null ? 1 : v + 1);
+        }
+
+        var cursor = owner.members.getEntries();
         var clazz = owner.getVmClass();
         while (cursor.advance()) {
-          var memberKey = cursor.getKey();
+          var referenceKey = toReferenceKey(cursor.getKey(), deletedKeys, deletedIndices);
           var member = cursor.getValue();
+
           // isAbstract() can occur when VmAbstractObject.toString() is called
           // on a prototype of an abstract class (e.g., in the Java debugger)
-          if (member.isLocalOrExternalOrAbstract() || clazz.isHiddenProperty(memberKey)) {
+          if (referenceKey == null
+              || member.isLocalOrExternalOrAbstractOrDelete()
+              || clazz.isHiddenProperty(referenceKey)) {
             continue;
           }
 
-          var memberValue = getCachedValue(memberKey);
+          var memberValue = getCachedValue(referenceKey);
           if (memberValue == null) {
             try {
-              memberValue = VmUtils.doReadMember(this, owner, memberKey, member);
+              memberValue = VmUtils.doReadMember(this, owner, referenceKey, member);
             } catch (VmUndefinedValueException e) {
               if (!allowUndefinedValues) throw e;
               continue;
@@ -219,5 +338,37 @@ public abstract class VmObject extends VmObjectLike {
         });
 
     return result;
+  }
+
+  private static EconomicMap<Object, Object> extractDeletions(
+      boolean hasElements,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues) {
+
+    var elementDeletions = new TreeSet<Long>();
+    var otherDeletions = new HashSet<>();
+    for (var member : members.getValues()) {
+      if (hasElements) {
+        break;
+      }
+      hasElements = member.isElement();
+    }
+    for (var memberKey : members.getKeys()) {
+      if (!members.get(memberKey).isDelete()) {
+        continue;
+      }
+      if (memberKey instanceof Long key && hasElements) {
+        elementDeletions.add(key);
+      } else {
+        otherDeletions.add(memberKey);
+      }
+    }
+    if (!elementDeletions.isEmpty()) {
+      EconomicMaps.put(cachedValues, DELETED_ELEMENT_INDICES_KEY, elementDeletions);
+    }
+    if (!otherDeletions.isEmpty()) {
+      EconomicMaps.put(cachedValues, DELETED_ENTRIES_AND_PROPERTIES_KEY, otherDeletions);
+    }
+    return cachedValues;
   }
 }

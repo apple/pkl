@@ -17,7 +17,6 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.Nullable;
@@ -135,7 +134,7 @@ public abstract class VmObjectLike extends VmValue {
    * members are not visited, and `false` is returned. Otherwise, all members are visited, and
    * `true` is returned.
    */
-  public abstract boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer);
+  public abstract boolean iterateMembers(MemberConsumer consumer);
 
   /** Forces shallow or recursive (deep) evaluation of this object. */
   public abstract void force(boolean allowUndefinedValues, boolean recurse);
@@ -162,5 +161,10 @@ public abstract class VmObjectLike extends VmValue {
      * the remaining members, and false otherwise.
      */
     boolean accept(Object key, ObjectMember member, Object value);
+  }
+
+  @FunctionalInterface
+  public interface MemberConsumer {
+    boolean accept(Object key, ObjectMember member);
   }
 }
