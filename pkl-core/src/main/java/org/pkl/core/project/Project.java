@@ -126,6 +126,11 @@ public final class Project {
     try {
       var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
       return Project.parseProject(output);
+    } catch (StackOverflowError e) {
+      // this is most probably a cycle between dependencies
+      var cycleChecker = new DependencyCycleChecker(moduleSource);
+      cycleChecker.checkCycles();
+      throw e;
     } catch (URISyntaxException e) {
       throw new PklException(e.getMessage(), e);
     }
@@ -280,7 +285,7 @@ public final class Project {
     var sourceCodeUrlScheme = (String) getNullableProperty(pObj, "sourceCodeUrlScheme");
     var license = (String) getNullableProperty(pObj, "license");
     var licenseText = (String) getNullableProperty(pObj, "licenseText");
-    var issueTracker = (URI) getNullableURI(pObj, "issueTracker");
+    var issueTracker = getNullableURI(pObj, "issueTracker");
     var apiTestStrs = (List<String>) getProperty(pObj, "apiTests");
     var apiTests = apiTestStrs.stream().map(Path::of).collect(Collectors.toList());
     var exclude = (List<String>) getProperty(pObj, "exclude");

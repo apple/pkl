@@ -93,6 +93,23 @@ class ProjectDependenciesResolverTest {
   }
 
   @Test
+  fun `fails if project has cyclical dependencies`() {
+    val projectPath = javaClass.getResource("projectCycle1/PklProject")!!.toURI().toPath()
+    val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
+    val cleanMsg = e.message!!.replace(Regex(".*/resources/test"), "file://")
+    assertThat(cleanMsg)
+      .isEqualTo(
+        """
+      A stack overflow occurred.
+      This is most probably a cycle between dependencies:
+      file:///org/pkl/core/project/projectCycle1/PklProject
+      file:///org/pkl/core/project/projectCycle2/PklProject
+      """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `fails if project declares a package with an incorrect checksum`() {
     val projectPath = javaClass.getResource("badProjectChecksum/PklProject")!!.toURI().toPath()
     val project = Project.loadFromPath(projectPath)
