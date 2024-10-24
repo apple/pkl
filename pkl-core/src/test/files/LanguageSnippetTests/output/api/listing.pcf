@@ -5,6 +5,13 @@ facts {
     true
     true
   }
+  ["lastIndex"] {
+    true
+    true
+    true
+    true
+    true
+  }
   ["isDistinct"] {
     true
     true
@@ -24,6 +31,51 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+  }
+  ["getOrNull"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["first"] {
+    true
+    true
+    true
+  }
+  ["firstOrNull"] {
+    true
+    true
+    true
+  }
+  ["last"] {
+    true
+    true
+    true
+  }
+  ["lastOrNull"] {
+    true
+    true
+    true
+  }
+  ["single"] {
+    true
+    true
+    true
+  }
+  ["singleOrNull"] {
+    true
+    true
+    true
+  }
+  ["contains"] {
     true
     true
     true

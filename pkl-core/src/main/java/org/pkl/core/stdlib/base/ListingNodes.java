@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -41,6 +42,24 @@ public final class ListingNodes {
     @Specialization
     protected boolean eval(VmListing self) {
       return self.isEmpty();
+    }
+  }
+  
+  public abstract static class lastIndex extends ExternalPropertyNode {
+    @Specialization
+    protected long eval(VmListing self) {
+      return self.getLength() - 1;
+    }
+  }
+  
+  public abstract static class getOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmListing self, long index) {
+      var result = VmUtils.readMemberOrNull(self, index);
+      if (result == null) {
+        return VmNull.withoutDefault();
+      }
+      return result;
     }
   }
 
@@ -88,6 +107,49 @@ public final class ListingNodes {
           newMembers.size());
     }
   }
+  
+  public abstract static class first extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkNonEmpty(self);
+      return VmUtils.readMember(self, 0L);
+    }
+  }
+
+  public abstract static class firstOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getFirstOrNull();
+    }
+  }
+
+  public abstract static class last extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getLast();
+    }
+  }
+
+  public abstract static class lastOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getLastOrNull();
+    }
+  }
+
+  public abstract static class single extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getSingle();
+    }
+  }
+
+  public abstract static class singleOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      return self.getSingleOrNull();
+    }
+  }
 
   public abstract static class distinctBy extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
@@ -113,6 +175,23 @@ public final class ListingNodes {
           BaseModule.getListingClass().getPrototype(),
           newMembers,
           newMembers.size());
+    }
+  }
+  
+  public abstract static class contains extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmListing self, Object element) {
+      var result = new MutableBoolean(false);
+      self.forceAndIterateMemberValues(
+        (key, member, value) -> {
+          if (element.equals(value)) {
+            result.set(true);
+            return false;
+          }
+          return true;
+        });
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result.get();
     }
   }
 
@@ -192,6 +271,16 @@ public final class ListingNodes {
             return true;
           });
       return builder.build();
+    }
+  }
+
+  @TruffleBoundary
+  private static void checkNonEmpty(VmListing self) {
+    if (self.isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedNonEmptyListing")
+        .build();
     }
   }
 }

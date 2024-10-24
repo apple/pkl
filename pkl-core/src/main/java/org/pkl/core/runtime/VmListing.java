@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
@@ -79,6 +80,47 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
 
   public boolean isEmpty() {
     return length == 0;
+  }
+
+  @TruffleBoundary
+  public Object getFirstOrNull() {
+    if (length == 0) {
+      return VmNull.withoutDefault();
+    }
+    return VmUtils.readMember(this, 0L);
+  }
+  
+  @TruffleBoundary
+  public Object getLast() {
+    checkNonEmpty();
+    return VmUtils.readMember(this, length - 1L);
+  }
+
+  @TruffleBoundary
+  public Object getLastOrNull() {
+    if (length == 0) {
+      return VmNull.withoutDefault();
+    }
+    return VmUtils.readMember(this, length - 1L);
+  }
+
+  @TruffleBoundary
+  public Object getSingle() {
+    if (length != 1) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedSingleElementListing")
+        .build(); 
+    }
+    return VmUtils.readMember(this, 0L);
+  }
+
+  @TruffleBoundary
+  public Object getSingleOrNull() {
+    if (length != 1) {
+      return VmNull.withoutDefault();
+    }
+    return VmUtils.readMember(this, 0L);
   }
 
   @Override
@@ -176,5 +218,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
 
     cachedHash = result;
     return result;
+  }
+
+  private void checkNonEmpty() {
+    if (isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+        .evalError("expectedNonEmptyListing")
+        .build();
+    }
   }
 }
