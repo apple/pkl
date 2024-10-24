@@ -27,6 +27,7 @@ import org.pkl.core.runtime.VmUtils;
 public final class DelegateToExtraStorageObjOrParentNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
+    var receiver = (VmObjectLike) VmUtils.getReceiver(frame);
     var owner = VmUtils.getOwner(frame);
     var delegate = (VmObjectLike) owner.getExtraStorage();
     var memberKey = VmUtils.getMemberKey(frame);
@@ -34,6 +35,6 @@ public final class DelegateToExtraStorageObjOrParentNode extends ExpressionNode 
     if (result != null) return result;
     var parent = owner.getParent();
     assert parent != null;
-    return VmUtils.readMember(parent, memberKey);
+    return VmUtils.readMember(receiver, parent, memberKey);
   }
 }
