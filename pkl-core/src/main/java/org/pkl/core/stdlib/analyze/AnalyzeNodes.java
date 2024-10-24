@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import org.pkl.core.ImportGraph;
 import org.pkl.core.ImportGraph.Import;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.AnalyzeModule;
 import org.pkl.core.runtime.VmContext;
@@ -91,7 +92,11 @@ public final class AnalyzeNodes {
       try {
         var results = VmImportAnalyzer.analyze(uris, context);
         return importGraphFactory.create(results);
-      } catch (IOException | URISyntaxException | SecurityManagerException | PackageLoadError e) {
+      } catch (IOException
+          | URISyntaxException
+          | SecurityManagerException
+          | PackageLoadError
+          | ExternalReaderProcessException e) {
         throw exceptionBuilder().withCause(e).build();
       }
     }

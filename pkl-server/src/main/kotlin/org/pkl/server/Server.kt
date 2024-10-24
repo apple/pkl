@@ -27,7 +27,6 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.externalreader.ExternalReaderProcessImpl
 import org.pkl.core.http.HttpClient
-import org.pkl.core.resource.ExternalResourceResolver
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.Messages
@@ -37,6 +36,7 @@ import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.packages.PackageUri
 import org.pkl.core.project.DeclaredDependencies
+import org.pkl.core.resource.ExternalResourceResolver
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
