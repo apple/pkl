@@ -60,13 +60,16 @@ constructor(
     evaluator.use {
       var failed = false
       val moduleNames = mutableSetOf<String>()
-      for (moduleUri in sources) {
+      for ((idx, moduleUri) in sources.withIndex()) {
         try {
           val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
           if (!failed) {
             failed = results.failed()
           }
           SimpleReport().report(results, consoleWriter)
+          if (sources.size > 1 && idx != sources.size - 1) {
+            consoleWriter.append('\n')
+          }
           consoleWriter.flush()
           val junitDir = testOptions.junitDir
           if (junitDir != null) {

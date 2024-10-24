@@ -63,8 +63,10 @@ class CliTestRunnerTest {
       .isEqualTo(
         """
       module test
-        succeed ✅
-      
+        facts
+          ✅ succeed
+      ✅ 100.0% tests pass [1 passed], 100.0% asserts pass [2 passed]
+
     """
           .trimIndent()
       )
@@ -80,7 +82,7 @@ class CliTestRunnerTest {
       facts {
         ["fail"] {
           4 == 9
-          "foo" == "bar"
+          "foo" != "bar"
         }
       }
     """
@@ -97,10 +99,11 @@ class CliTestRunnerTest {
       .isEqualTo(
         """
       module test
-        fail ❌
-          4 == 9 ❌
-          "foo" == "bar" ❌
-      
+        facts
+          ❌ fail
+             4 == 9
+      ❌ 0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
+
     """
           .trimIndent()
       )
@@ -132,14 +135,15 @@ class CliTestRunnerTest {
       .isEqualToNormalizingNewlines(
         """
       module test
-        fail ❌
-          Error:
-              –– Pkl Error ––
-              uh oh
-              
-              5 | throw("uh oh")
-                  ^^^^^^^^^^^^^^
-              at test#facts["fail"][#1]
+        facts
+          ❌ fail
+             –– Pkl Error ––
+             uh oh
+
+             5 | throw("uh oh")
+                 ^^^^^^^^^^^^^^
+             at test#facts["fail"][#1]
+      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -172,14 +176,15 @@ class CliTestRunnerTest {
       .isEqualTo(
         """
       module test
-        fail ❌
-          Error:
-              –– Pkl Error ––
-              uh oh
-              
-              5 | throw("uh oh")
-                  ^^^^^^^^^^^^^^
-              at test#examples["fail"][#1]
+        examples
+          ❌ fail
+             –– Pkl Error ––
+             uh oh
+
+             5 | throw("uh oh")
+                 ^^^^^^^^^^^^^^
+             at test#examples["fail"][#1]
+      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -226,14 +231,15 @@ class CliTestRunnerTest {
       .isEqualToNormalizingNewlines(
         """
       module test
-        fail ❌
-          Error:
-              –– Pkl Error ––
-              uh oh
-              
-              5 | throw("uh oh")
-                  ^^^^^^^^^^^^^^
-              at test#examples["fail"][#1]
+        examples
+          ❌ fail
+             –– Pkl Error ––
+             uh oh
+
+             5 | throw("uh oh")
+                 ^^^^^^^^^^^^^^
+             at test#examples["fail"][#1]
+      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -252,7 +258,8 @@ class CliTestRunnerTest {
           9 == trace(9)
           "foo" == "foo"
         }
-        ["fail"] {
+        ["bar"] {
+          "foo" == "foo"
           5 == 9
         }
       }
@@ -270,9 +277,9 @@ class CliTestRunnerTest {
         """
       <?xml version="1.0" encoding="UTF-8"?>
       <testsuite name="test" tests="2" failures="1">
-          <testcase classname="test" name="foo"></testcase>
-          <testcase classname="test" name="fail">
-              <failure message="Fact Failure">5 == 9 ❌</failure>
+          <testcase classname="test.facts" name="foo"></testcase>
+          <testcase classname="test.facts" name="bar">
+              <failure message="Fact Failure">5 == 9</failure>
           </testcase>
           <system-err><![CDATA[9 = 9
       ]]></system-err>
@@ -311,9 +318,9 @@ class CliTestRunnerTest {
       .isEqualTo(
         """
       <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="2" failures="0">
-          <testcase classname="test" name="foo"></testcase>
-          <testcase classname="test" name="fail">
+      <testsuite name="test" tests="2" failures="1">
+          <testcase classname="test.facts" name="foo"></testcase>
+          <testcase classname="test.facts" name="fail">
               <error message="uh oh">–– Pkl Error ––
       uh oh
       
