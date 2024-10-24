@@ -20,7 +20,7 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource
-import org.pkl.core.module.ModuleKeyFactories
+import org.pkl.core.util.Readers
 
 class CliImportAnalyzer
 @JvmOverloads
@@ -73,7 +73,8 @@ constructor(
         .build()
         .use { it.evaluateOutputText(sourceModule) }
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.resourceReaders)
     }
   }
 }
