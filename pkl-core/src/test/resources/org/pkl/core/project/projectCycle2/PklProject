@@ -8,5 +8,5 @@ package {
 }
 
 dependencies {
-  ["projectCycle1"] = import("../projectCycle1/PklProject")
+  ["projectCycle3"] = import("../projectCycle3/PklProject")
 }

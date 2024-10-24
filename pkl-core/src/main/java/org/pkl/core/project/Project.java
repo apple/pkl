@@ -19,6 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.pkl.core.Analyzer;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
+import org.pkl.core.ImportGraph;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PNull;
@@ -49,6 +52,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -108,16 +112,7 @@ public final class Project {
 
   /** Loads a project from the given source. */
   public static Project load(ModuleSource moduleSource) {
-    try (var evaluator =
-        EvaluatorBuilder.unconfigured()
-            .setSecurityManager(SecurityManagers.defaultManager)
-            .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
-            .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
-            .addModuleKeyFactory(ModuleKeyFactories.file)
-            .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.file())
-            .build()) {
+    try (var evaluator = evaluatorBuilder().build()) {
       return load(evaluator, moduleSource);
     }
   }
@@ -127,13 +122,85 @@ public final class Project {
       var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
       return Project.parseProject(output);
     } catch (StackOverflowError e) {
-      // this is most probably a cycle between dependencies
-      var cycleChecker = new DependencyCycleChecker(moduleSource);
-      cycleChecker.checkCycles();
+      var cycle = findImportCycle(moduleSource);
+      if (cycle != null) {
+        throw new PklException(ErrorMessages.create("dependencyCycle", renderCycle(cycle)));
+      }
       throw e;
     } catch (URISyntaxException e) {
       throw new PklException(e.getMessage(), e);
     }
+  }
+
+  private static String renderCycle(List<URI> cycle) {
+    var sb = new StringBuilder();
+    sb.append("┌─>");
+    var isFirst = true;
+    for (URI uri : cycle) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        sb.append("\n│");
+      }
+      sb.append("\n│  ");
+      sb.append(uri.toString());
+    }
+    sb.append("\n└─ ");
+    return sb.toString();
+  }
+
+  private static @Nullable List<URI> findImportCycle(ModuleSource moduleSource) {
+    var builder = evaluatorBuilder();
+    var analyzer =
+        new Analyzer(
+            StackFrameTransformers.defaultTransformer,
+            SecurityManagers.defaultManager,
+            builder.getModuleKeyFactories(),
+            builder.getModuleCacheDir(),
+            builder.getProjectDependencies(),
+            builder.getHttpClient());
+    var graph = analyzer.importGraph(moduleSource.getUri());
+    for (var uri : graph.imports().keySet()) {
+      var cycle = doFindCycle(uri, graph, new ArrayList<>(List.of(uri)));
+      if (cycle != null) {
+        return cycle;
+      }
+    }
+    return null;
+  }
+
+  private static @Nullable List<URI> doFindCycle(
+      URI currentUri, ImportGraph importGraph, List<URI> path) {
+    var imports = importGraph.imports().get(currentUri);
+    var startingUri = path.get(0);
+    for (var imprt : imports) {
+      var uri = imprt.uri();
+      if (uri.equals(startingUri)) {
+        return path;
+      }
+      if (path.contains(uri)) {
+        // there is a cycle, but it doesn't start at `startUri`
+        return null;
+      }
+      path.add(uri);
+      var cycle = doFindCycle(uri, importGraph, path);
+      if (cycle != null) {
+        return cycle;
+      }
+      path.remove(path.size() - 1);
+    }
+    return null;
+  }
+
+  private static EvaluatorBuilder evaluatorBuilder() {
+    return EvaluatorBuilder.unconfigured()
+        .setSecurityManager(SecurityManagers.defaultManager)
+        .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+        .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
+        .addModuleKeyFactory(ModuleKeyFactories.file)
+        .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
+        .addResourceReader(ResourceReaders.environmentVariable())
+        .addResourceReader(ResourceReaders.file());
   }
 
   private static DeclaredDependencies parseDependencies(
