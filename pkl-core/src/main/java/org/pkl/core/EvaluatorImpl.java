@@ -157,22 +157,12 @@ public class EvaluatorImpl implements Evaluator {
         });
   }
 
-  private VmTyped readModuleOutput(VmTyped module) {
-    var value = VmUtils.readMember(module, Identifier.OUTPUT);
-    if (value instanceof VmTyped typedOutput
-        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
-      return typedOutput;
-    }
-    throw moduleOutputValueTypeMismatch(
-        module, PClassInfo.ModuleOutput, value, module, Identifier.OUTPUT, "output");
-  }
-
   @Override
   public Map<String, FileOutput> evaluateOutputFiles(ModuleSource moduleSource) {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var filesOrNull = VmUtils.readMember(output, Identifier.FILES);
           if (filesOrNull instanceof VmNull) {
             return Map.of();
@@ -265,8 +255,7 @@ public class EvaluatorImpl implements Evaluator {
             //noinspection unchecked
             return (T) value;
           }
-          throw moduleOutputValueTypeMismatch(
-              module, classInfo, value, output, Identifier.VALUE, "output.value");
+          throw moduleOutputValueTypeMismatch(module, classInfo, value, output);
         });
   }
 
@@ -376,23 +365,44 @@ public class EvaluatorImpl implements Evaluator {
             "evaluationTimedOut", (timeout.getSeconds() + timeout.getNano() / 1_000_000_000d)));
   }
 
-  private VmException moduleOutputValueTypeMismatch(
-      VmTyped module,
-      PClassInfo<?> expectedClassInfo,
-      Object value,
-      VmTyped container,
-      Identifier propertyIdentifier,
-      String propertyName) {
+  private VmTyped readModuleOutput(VmTyped module) {
+    var value = VmUtils.readMember(module, Identifier.OUTPUT);
+    if (value instanceof VmTyped typedOutput
+        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
+      return typedOutput;
+    }
+
     var moduleUri = module.getModuleInfo().getModuleKey().getUri();
     var builder =
         new VmExceptionBuilder()
             .evalError(
                 "invalidModuleOutput",
-                propertyName,
+                "output",
+                PClassInfo.ModuleOutput.getDisplayName(),
+                VmUtils.getClass(value).getPClassInfo().getDisplayName(),
+                moduleUri);
+    var outputMember = module.getMember(Identifier.OUTPUT);
+    assert outputMember != null;
+    var uriOfValueMember = outputMember.getSourceSection().getSource().getURI();
+    // If `output` was explicitly re-assigned, show that in the stack trace.
+    if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
+      builder.withSourceSection(outputMember.getBodySection()).withMemberName("output");
+    }
+    throw builder.build();
+  }
+
+  private VmException moduleOutputValueTypeMismatch(
+      VmTyped module, PClassInfo<?> expectedClassInfo, Object value, VmTyped output) {
+    var moduleUri = module.getModuleInfo().getModuleKey().getUri();
+    var builder =
+        new VmExceptionBuilder()
+            .evalError(
+                "invalidModuleOutput",
+                "output.value",
                 expectedClassInfo.getDisplayName(),
                 VmUtils.getClass(value).getPClassInfo().getDisplayName(),
                 moduleUri);
-    var outputValueMember = container.getMember(propertyIdentifier);
+    var outputValueMember = output.getMember(Identifier.VALUE);
     assert outputValueMember != null;
     var uriOfValueMember = outputValueMember.getSourceSection().getSource().getURI();
     // If `value` was explicitly re-assigned, show that in the stack trace.
@@ -400,7 +410,7 @@ public class EvaluatorImpl implements Evaluator {
     if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
       return builder
           .withSourceSection(outputValueMember.getBodySection())
-          .withMemberName(propertyIdentifier.toString())
+          .withMemberName("value")
           .build();
     } else {
       // if the module does not extend or amend anything, suggest amending the module URI
