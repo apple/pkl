@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.pkl.core.Analyzer;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
@@ -49,6 +50,9 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.runtime.VmException;
+import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.ImportGraphUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -108,16 +112,7 @@ public final class Project {
 
   /** Loads a project from the given source. */
   public static Project load(ModuleSource moduleSource) {
-    try (var evaluator =
-        EvaluatorBuilder.unconfigured()
-            .setSecurityManager(SecurityManagers.defaultManager)
-            .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
-            .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
-            .addModuleKeyFactory(ModuleKeyFactories.file)
-            .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.file())
-            .build()) {
+    try (var evaluator = evaluatorBuilder().build()) {
       return load(evaluator, moduleSource);
     }
   }
@@ -126,9 +121,103 @@ public final class Project {
     try {
       var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
       return Project.parseProject(output);
+    } catch (StackOverflowError e) {
+      var cycles = findImportCycle(moduleSource);
+      VmException vmException;
+      if (!cycles.isEmpty()) {
+        if (cycles.size() == 1) {
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError(
+                      "cannotHaveCircularProjectDependenciesSingle",
+                      renderCycle(cycles.stream().toList().get(0)))
+                  .withCause(e)
+                  .build();
+        } else {
+          var renderedCycles = renderMultipleCycles(cycles);
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError("cannotHaveCircularProjectDependenciesMultiple", renderedCycles)
+                  .withCause(e)
+                  .build();
+        }
+        // stack frame transformer never used; this exception has no stack frames.
+        throw vmException.toPklException(StackFrameTransformers.defaultTransformer);
+      }
+      throw e;
     } catch (URISyntaxException e) {
       throw new PklException(e.getMessage(), e);
     }
+  }
+
+  private static String renderMultipleCycles(List<List<URI>> cycles) {
+    var sb = new StringBuilder();
+    var i = 0;
+    for (var cycle : cycles) {
+      if (i > 0) {
+        sb.append('\n');
+      }
+      sb.append("Cycle ").append(i + 1).append(":\n");
+      renderCycle(sb, cycle);
+      sb.append('\n');
+      i++;
+    }
+    return sb.toString();
+  }
+
+  private static void renderCycle(StringBuilder sb, List<URI> cycle) {
+    sb.append("┌─>");
+    var isFirst = true;
+    for (URI uri : cycle) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        sb.append("\n│");
+      }
+      sb.append("\n│  ");
+      sb.append(uri.toString());
+    }
+    sb.append("\n└─");
+  }
+
+  private static String renderCycle(List<URI> cycle) {
+    var sb = new StringBuilder();
+    renderCycle(sb, cycle);
+    return sb.toString();
+  }
+
+  private static List<List<URI>> findImportCycle(ModuleSource moduleSource) {
+    var builder = evaluatorBuilder();
+    var analyzer =
+        new Analyzer(
+            StackFrameTransformers.defaultTransformer,
+            SecurityManagers.defaultManager,
+            builder.getModuleKeyFactories(),
+            builder.getModuleCacheDir(),
+            builder.getProjectDependencies(),
+            builder.getHttpClient());
+    var importGraph = analyzer.importGraph(moduleSource.getUri());
+    var ret = ImportGraphUtils.findImportCycles(importGraph);
+    // we only care about cycles in the same scheme as `moduleSource`
+    return ret.stream()
+        .filter(
+            (cycle) ->
+                cycle.stream()
+                    .anyMatch(
+                        (uri) ->
+                            uri.getScheme().equalsIgnoreCase(moduleSource.getUri().getScheme())))
+        .collect(Collectors.toList());
+  }
+
+  private static EvaluatorBuilder evaluatorBuilder() {
+    return EvaluatorBuilder.unconfigured()
+        .setSecurityManager(SecurityManagers.defaultManager)
+        .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+        .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
+        .addModuleKeyFactory(ModuleKeyFactories.file)
+        .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
+        .addResourceReader(ResourceReaders.environmentVariable())
+        .addResourceReader(ResourceReaders.file());
   }
 
   private static DeclaredDependencies parseDependencies(
@@ -280,7 +369,7 @@ public final class Project {
     var sourceCodeUrlScheme = (String) getNullableProperty(pObj, "sourceCodeUrlScheme");
     var license = (String) getNullableProperty(pObj, "license");
     var licenseText = (String) getNullableProperty(pObj, "licenseText");
-    var issueTracker = (URI) getNullableURI(pObj, "issueTracker");
+    var issueTracker = getNullableURI(pObj, "issueTracker");
     var apiTestStrs = (List<String>) getProperty(pObj, "apiTests");
     var apiTests = apiTestStrs.stream().map(Path::of).collect(Collectors.toList());
     var exclude = (List<String>) getProperty(pObj, "exclude");

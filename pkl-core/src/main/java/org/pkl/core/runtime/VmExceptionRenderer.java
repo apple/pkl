@@ -136,6 +136,10 @@ public final class VmExceptionRenderer {
       if (!frames.isEmpty()) {
         builder.append('\n');
         stackTraceRenderer.render(frames, hint, builder);
+      } else if (hint != null) {
+        // render hint if there are no stack frames
+        builder.append('\n');
+        builder.append(hint);
       }
     }
   }
