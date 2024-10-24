@@ -58,6 +58,13 @@ facts {
     !empty2.containsKey("Pigeon")
   }
   
+  ["containsValue()"] {
+    !empty.containsValue("Any value")
+    for (_, v in derived) {
+      derived.containsValue(v)
+    }
+  }
+  
   ["length"] {
     empty.length == 0
     base.length == 2
@@ -81,6 +88,36 @@ facts {
 
     base2.keys == Set(empty, base)
     derived2.keys == Set(empty, base, derived)
+  }
+  
+  ["values"] {
+    empty.values == List()
+    base.values == base.toMap().values
+    derived.values == derived.toMap().values
+  }
+  
+  ["entries"] {
+    empty.entries == List()
+    base.entries == base.toMap().entries
+    derived.entries == derived.toMap().entries
+  }
+  
+  ["every()"] {
+    empty.every((_, _) -> throw("unreachable code"))
+    base.every((k, v) -> k == "Parrot" || v.age > 30)
+    !base.every((k, _) -> k == "Pigeon")
+  }
+  
+  ["any()"] {
+    base.any((k, _) -> k.contains("rot"))
+    base.any((_, v) -> v.age > 40)
+    !base.any((k, _) -> k.contains("other"))
+  }
+  
+  ["toDynamic()"] {
+    empty.toDynamic() == new Dynamic {}
+    base.toDynamic() == base.toMap().toDynamic()
+    derived.toDynamic() == derived.toMap().toDynamic()
   }
 }
 

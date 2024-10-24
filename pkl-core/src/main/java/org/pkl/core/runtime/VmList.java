@@ -221,6 +221,11 @@ public final class VmList extends VmCollection {
   }
 
   @TruffleBoundary
+  public static VmCollection.Builder<VmList> newBuilder() {
+    return new Builder();
+  }
+
+  @TruffleBoundary
   public Object getFirst() {
     checkNonEmpty();
     return rrbt.get(0);

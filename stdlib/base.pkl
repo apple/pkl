@@ -1813,6 +1813,26 @@ class Listing<out Element> extends Object {
   /// Tells if this listing is empty, that is, has zero elements.
   external isEmpty: Boolean
 
+  /// The index of the last element in this listing (same as `length - 1`).
+  ///
+  /// Returns `-1` for an empty list.
+  external lastIndex: Int
+
+  /// Returns the element at [index].
+  ///
+  /// Returns [null] if [index] is outside the bounds of this listing.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(0) == 3
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(1) == 9
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(2) == 6
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(-1) == null
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(3) == null
+  /// new Listing { 3 ; 9 ; 6 }.getOrNull(99) == null
+  /// ```
+  external function getOrNull(index: Int): Element?
+
   /// Tells if this listing has no duplicate elements.
   ///
   /// Facts:
@@ -1843,6 +1863,49 @@ class Listing<out Element> extends Object {
   @AlsoKnownAs { names { "unique" } }
   external distinct: Listing<Element>
 
+  /// The first element in this listing.
+  ///
+  /// Throws if this listing is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.first == 1
+  /// (import "pkl:test").catch(() -> new Listing {}.first)
+  /// ```
+  external first: Element
+
+  /// Same as [first] but returns [null] if this listing is empty.
+  external firstOrNull: Element?
+
+  /// The last element in this listing.
+  ///
+  /// Throws if this listing is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.last == 3
+  /// (import "pkl:test").catch(() -> new Listing {}.last)
+  /// ```
+  external last: Element
+
+  /// Same as [last] but returns [null] if this listing is empty.
+  external lastOrNull: Element?
+
+  /// The single element in this listing.
+  ///
+  /// Throws if this listing has zero or more than one element.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 }.single == 1
+  /// (import "pkl:test").catch(() -> new Listing {}.single)
+  /// (import "pkl:test").catch(() -> new Listing { 1 ; 2 ; 3 }.single)
+  /// ```
+  external single: Element
+
+  /// Same as [single] but returns [null] if this collection is empty or has more than one element.
+  external singleOrNull: Element?
+
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
   ///
   /// Facts:
@@ -1852,6 +1915,17 @@ class Listing<out Element> extends Object {
   /// ```
   @AlsoKnownAs { names { "uniqueBy" } }
   external function distinctBy(selector: (Element) -> Any): Listing<Element>
+
+  /// Tests if [element] is contained in this listing.
+  ///
+  /// Facts:
+  /// ```
+  /// new Listing { 1 ; 2 ; 3 }.contains(1)
+  /// new Listing { 1 ; 2 ; 3 }.contains(2)
+  /// new Listing { 1 ; 2 ; 3 }.contains(3)
+  /// !new Listing { 1 ; 2 ; 3 }.contains(4)
+  /// ```
+  external function contains(element: Element): Boolean
 
   /// Folds this listing in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
@@ -1890,9 +1964,18 @@ class Mapping<out Key, out Value> extends Object {
 
   /// The keys contained in this mapping.
   external keys: Set<Key>
+  
+  /// The values contained in this mapping.
+  external values: List<Value>
+  
+  /// The entries contained in this mapping.
+  external entries: List<Pair<Key, Value>>
 
   /// Tells if this mapping contains [key].
   external function containsKey(key: Any): Boolean
+  
+  /// Tells if this mapping contains an entry with the given [value].
+  external function containsValue(value: Any): Boolean
 
   /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
   ///
@@ -1901,9 +1984,22 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
+  
+  /// Tells if [predicate] holds for every entry of this mapping.
+  /// 
+  /// Returns [true] for an empty mapping.
+  external function every(predicate: (Key, Value) -> Boolean): Boolean
+  
+  /// Tells if [predicate] holds for at least one entry of this mapping.
+  /// 
+  /// Returns [false] for an empty mapping.
+  external function any(predicate: (Key, Value) -> Boolean): Boolean
 
   /// Converts this mapping to a [Map].
   external function toMap(): Map<Key, Value>
+  
+  /// Converts this mapping to a [Dynamic] object.
+  external function toDynamic(): Dynamic
 }
 
 /// Base class for function literals (also known as *lambda expressions*).
