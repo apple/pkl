@@ -59,7 +59,7 @@ class DependencyMetadataTest {
             "null" to PNull.getInstance(),
             "list" to listOf("a", "b"),
             "set" to setOf("a", "b"),
-            "map" to mapOf("a" to "b", "c" to "d"),
+            "map" to mapOf(true to "t", false to "f"),
             "dataSize" to DataSize(1.5, DataSizeUnit.GIGABYTES),
             "duration" to Duration(2.9, DurationUnit.HOURS),
             "pair" to Pair(1L, "1")
@@ -143,10 +143,16 @@ class DependencyMetadataTest {
              },
              "map": {
                "type": "Map",
-               "value": {
-                 "a": "b",
-                 "c": "d"
-               }
+               "value": [
+                 {
+                   "key": true,
+                   "value": "t"
+                 },
+                 {
+                   "key": false,
+                   "value": "f"
+                 }
+               ]
              },
              "dataSize": {
                "type": "DataSize",

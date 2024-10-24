@@ -213,10 +213,11 @@ public final class DependencyMetadata {
           return set;
         }
         case "Map" -> {
-          var value = jsObj.getObject("value");
+          var value = jsObj.getArray("value");
           var map = new HashMap<>();
-          for (var kv : value.entrySet()) {
-            map.put(kv.getKey(), parsePObject(kv.getValue()));
+          for (var kv : value) {
+            var kvObj = (JsObject) kv;
+            map.put(parsePObject(kvObj.get("key")), parsePObject(kvObj.get("value")));
           }
           return map;
         }
@@ -660,20 +661,16 @@ public final class DependencyMetadata {
         jsonWriter.beginObject();
         jsonWriter.name("type").value("Map");
         jsonWriter.name("value");
-        jsonWriter.beginObject();
+        jsonWriter.beginArray();
         for (var kv : map.entrySet()) {
-          var key = kv.getKey();
-          if (key instanceof String s) {
-            jsonWriter.name(s);
-          } else {
-            throw new PklException(
-                "Error serializing annotation for PklProject:\n"
-                    + "  cannot render map with non-string key: "
-                    + key);
-          }
+          jsonWriter.beginObject();
+          jsonWriter.name("key");
+          writeGenericObject(kv.getKey());
+          jsonWriter.name("value");
           writeGenericObject(kv.getValue());
+          jsonWriter.endObject();
         }
-        jsonWriter.endObject();
+        jsonWriter.endArray();
         jsonWriter.endObject();
       } else if (value instanceof Pattern pattern) {
         jsonWriter.beginObject();
