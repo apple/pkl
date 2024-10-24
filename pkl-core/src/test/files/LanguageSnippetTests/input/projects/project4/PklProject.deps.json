@@ -5,7 +5,7 @@
       "type": "remote",
       "uri": "projectpackage://localhost:0/fruit@1.0.5",
       "checksums": {
-        "sha256": "34a15b02346e6acb85da5bd71d8b0738a79008b38a7fc805e5869d9129ad27d2"
+        "sha256": "8ff80e5ac882650e817f261c8af024bf0db9b07888c9d18c20017457e04ffe06"
       }
     }
   }
