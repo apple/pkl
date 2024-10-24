@@ -485,12 +485,13 @@ class KotlinCodeGenerator(
         builder.addProperty(generateProperty(name, property))
       }
 
-      generateCopyMethods(builder)
-
-      builder
-        .addFunction(generateEqualsMethod())
-        .addFunction(generateHashCodeMethod())
-        .addFunction(generateToStringMethod())
+      if (!pClass.isAbstract) {
+        generateCopyMethods(builder)
+        builder
+          .addFunction(generateEqualsMethod())
+          .addFunction(generateHashCodeMethod())
+          .addFunction(generateToStringMethod())
+      }
 
       return builder
     }
@@ -530,7 +531,7 @@ class KotlinCodeGenerator(
   }
 
   private fun TypeSpec.Builder.ensureSerializable(): TypeSpec.Builder {
-    if (!options.implementSerializable) {
+    if (!options.implementSerializable || modifiers.contains(KModifier.ABSTRACT)) {
       return this
     }
 

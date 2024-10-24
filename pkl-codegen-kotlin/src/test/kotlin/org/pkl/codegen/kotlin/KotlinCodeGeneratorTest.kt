@@ -20,6 +20,7 @@ import java.nio.file.Path
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.memberProperties
+import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -32,12 +33,12 @@ import org.pkl.core.util.IoUtils
 
 class KotlinCodeGeneratorTest {
   companion object {
-    const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
+    private const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
 
     // according to:
     // https://github.com/JetBrains/kotlin/blob/master/core/descriptors/
     // src/org/jetbrains/kotlin/renderer/KeywordStringsGenerated.java
-    internal val kotlinKeywords =
+    private val kotlinKeywords =
       setOf(
         "package",
         "as",
@@ -69,23 +70,23 @@ class KotlinCodeGeneratorTest {
         "typeof"
       )
 
-    private val simpleClass by lazy {
-      compileKotlinCode(
-          generateKotlinCode(
-            """
-            module my.mod
-
-            open class Simple {
-              str: String
-              list: List<Int>
-            }
+    private val simpleClass: KClass<*> by lazy {
+      generateKotlinCode(
           """
-          )
+        module my.mod
+
+        open class Simple {
+          str: String
+          list: List<Int>
+        }
+      """
+            .trimIndent()
         )
+        .compile()
         .getValue("Simple")
     }
 
-    private val propertyTypesKotlinCode by lazy {
+    private val propertyTypesKotlinCode: KotlinSourceCode by lazy {
       generateKotlinCode(
         """
         module my.mod
@@ -126,17 +127,20 @@ class KotlinCodeGeneratorTest {
 
         typealias Direction = "north"|"east"|"south"|"west"
       """
+          .trimIndent()
       )
     }
 
-    private val propertyTypesClasses by lazy { compileKotlinCode(propertyTypesKotlinCode) }
+    private val propertyTypesClasses: Map<String, KClass<*>> by lazy {
+      propertyTypesKotlinCode.compile()
+    }
 
     private fun generateKotlinCode(
       pklCode: String,
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
       implementSerializable: Boolean = false
-    ): String {
+    ): KotlinSourceCode {
 
       val module = Evaluator.preconfigured().evaluateSchema(ModuleSource.text(pklCode))
 
@@ -149,14 +153,7 @@ class KotlinCodeGeneratorTest {
             implementSerializable = implementSerializable
           )
         )
-      return generator.kotlinFile
-    }
-
-    private fun compileKotlinCode(kotlinCode: String): Map<String, KClass<*>> =
-      InMemoryKotlinCompiler.compile(mapOf("my/Mod.kt" to kotlinCode))
-
-    private fun assertCompilesSuccessfully(sourceText: String) {
-      assertThatCode { compileKotlinCode(sourceText) }.doesNotThrowAnyException()
+      return KotlinSourceCode(generator.kotlinFile)
     }
   }
 
@@ -196,194 +193,207 @@ class KotlinCodeGeneratorTest {
   fun testToString() {
     val (_, propertyTypes) = instantiateOtherAndPropertyTypes()
 
-    assertEqualTo(
+    assertThat(propertyTypes.toString())
+      .isEqualTo(
+        """
+        PropertyTypes {
+          boolean = true
+          int = 42
+          float = 42.3
+          string = string
+          duration = 5.min
+          durationUnit = min
+          dataSize = 3.gb
+          dataSizeUnit = gb
+          nullable = idea
+          nullable2 = null
+          pair = (1, 2)
+          pair2 = (pigeon, Other {
+            name = pigeon
+          })
+          coll = [1, 2]
+          coll2 = [Other {
+            name = pigeon
+          }, Other {
+            name = pigeon
+          }]
+          list = [1, 2]
+          list2 = [Other {
+            name = pigeon
+          }, Other {
+            name = pigeon
+          }]
+          set = [1, 2]
+          set2 = [Other {
+            name = pigeon
+          }]
+          map = {1=one, 2=two}
+          map2 = {one=Other {
+            name = pigeon
+          }, two=Other {
+            name = pigeon
+          }}
+          container = {1=one, 2=two}
+          container2 = {one=Other {
+            name = pigeon
+          }, two=Other {
+            name = pigeon
+          }}
+          other = Other {
+            name = pigeon
+          }
+          regex = (i?)\w*
+          any = Other {
+            name = pigeon
+          }
+          nonNull = Other {
+            name = pigeon
+          }
+          enum = north
+        }
       """
-      PropertyTypes {
-        boolean = true
-        int = 42
-        float = 42.3
-        string = string
-        duration = 5.min
-        durationUnit = min
-        dataSize = 3.gb
-        dataSizeUnit = gb
-        nullable = idea
-        nullable2 = null
-        pair = (1, 2)
-        pair2 = (pigeon, Other {
-          name = pigeon
-        })
-        coll = [1, 2]
-        coll2 = [Other {
-          name = pigeon
-        }, Other {
-          name = pigeon
-        }]
-        list = [1, 2]
-        list2 = [Other {
-          name = pigeon
-        }, Other {
-          name = pigeon
-        }]
-        set = [1, 2]
-        set2 = [Other {
-          name = pigeon
-        }]
-        map = {1=one, 2=two}
-        map2 = {one=Other {
-          name = pigeon
-        }, two=Other {
-          name = pigeon
-        }}
-        container = {1=one, 2=two}
-        container2 = {one=Other {
-          name = pigeon
-        }, two=Other {
-          name = pigeon
-        }}
-        other = Other {
-          name = pigeon
-        }
-        regex = (i?)\w*
-        any = Other {
-          name = pigeon
-        }
-        nonNull = Other {
-          name = pigeon
-        }
-        enum = north
-      }
-    """,
-      propertyTypes.toString()
-    )
+          .trimIndent()
+      )
   }
 
   @Test
   fun `deprecated property with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        class ClassWithDeprecatedProperty {
-           @Deprecated { message = "property deprecation message" } 
-           deprecatedProperty: Int = 1337
-        }
-      """
+      class ClassWithDeprecatedProperty {
+        @Deprecated { message = "property deprecation message" } 
+        deprecatedProperty: Int = 1337
+      }
+    """
           .trimIndent()
       )
-    val expectedPropertyDef =
-      """
-        |  data class ClassWithDeprecatedProperty(
-        |    @Deprecated(message = "property deprecation message")
-        |    val deprecatedProperty: Long
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expectedPropertyDef)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |  data class ClassWithDeprecatedProperty(
+      |    @Deprecated(message = "property deprecation message")
+      |    val deprecatedProperty: Long
+    """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `deprecated class with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        @Deprecated { message = "class deprecation message" }
-        class DeprecatedClass {
-          propertyOfDeprecatedClass: Int = 42
-        }
-      """
+      @Deprecated { message = "class deprecation message" }
+      class DeprecatedClass {
+        propertyOfDeprecatedClass: Int = 42
+      }
+    """
           .trimIndent()
       )
-    val expected =
-      """
-        |  @Deprecated(message = "class deprecation message")
-        |  data class DeprecatedClass(
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |  @Deprecated(message = "class deprecation message")
+      |  data class DeprecatedClass(
+    """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `deprecated module class with message`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        @Deprecated{ message = "module class deprecation message" }
-        module DeprecatedModule
-        
-        propertyInDeprecatedModuleClass : Int = 42
-      """
+      @Deprecated{ message = "module class deprecation message" }
+      module DeprecatedModule
+      
+      propertyInDeprecatedModuleClass : Int = 42
+    """
           .trimIndent()
       )
-    val expected =
-      """
-        |@Deprecated(message = "module class deprecation message")
-        |data class DeprecatedModule(
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |@Deprecated(message = "module class deprecation message")
+      |data class DeprecatedModule(
+    """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `deprecated property`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        class ClassWithDeprecatedProperty {
-           @Deprecated
-           deprecatedProperty: Int = 1337
-        }
-      """
+      class ClassWithDeprecatedProperty {
+         @Deprecated
+         deprecatedProperty: Int = 1337
+      }
+    """
           .trimIndent()
       )
-    val expectedPropertyDef =
-      """
-        |  data class ClassWithDeprecatedProperty(
-        |    @Deprecated
-        |    val deprecatedProperty: Long
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expectedPropertyDef)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |  data class ClassWithDeprecatedProperty(
+      |    @Deprecated
+      |    val deprecatedProperty: Long
+    """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `deprecated class`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        @Deprecated
-        class DeprecatedClass {
-          propertyOfDeprecatedClass: Int = 42
-        }
-      """
+      @Deprecated
+      class DeprecatedClass {
+        propertyOfDeprecatedClass: Int = 42
+      }
+    """
           .trimIndent()
       )
-    val expected =
-      """
-        |  @Deprecated
-        |  data class DeprecatedClass(
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |  @Deprecated
+      |  data class DeprecatedClass(
+    """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `deprecated module class`() {
-    val javaCode =
+    val kotlinCode =
       generateKotlinCode(
         """
-        @Deprecated
-        module DeprecatedModule
-        
-        propertyInDeprecatedModuleClass : Int = 42
-      """
+      @Deprecated
+      module DeprecatedModule
+      
+      propertyInDeprecatedModuleClass : Int = 42
+    """
           .trimIndent()
       )
-    val expected =
-      """
-        |@Deprecated
-        |data class DeprecatedModule(
-      """
-        .trimMargin()
-    assertThat(javaCode).contains(expected)
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |@Deprecated
+      |data class DeprecatedModule(
+    """
+          .trimMargin()
+      )
   }
 
   @Test
@@ -423,10 +433,7 @@ class KotlinCodeGeneratorTest {
 
   @Test
   fun `properties 2`() {
-    assertEqualTo(
-      IoUtils.readClassPathResourceAsString(javaClass, "PropertyTypes.kotlin"),
-      propertyTypesKotlinCode
-    )
+    assertThat(propertyTypesKotlinCode).isEqualToResourceFile("PropertyTypes.kotlin")
   }
 
   @Test
@@ -451,7 +458,7 @@ class KotlinCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val kotlinClass = compileKotlinCode(kotlinCode).getValue("MyTypeAlias").java
+    val kotlinClass = kotlinCode.compile().getValue("MyTypeAlias").java
 
     assertThat(kotlinClass.enumConstants.size)
       .isEqualTo(cases.size) // make sure zip doesn't drop cases
@@ -479,41 +486,47 @@ class KotlinCodeGeneratorTest {
 
   @Test
   fun `conflicting enum constant names`() {
-    val pklCode =
+    val exception =
+      assertThrows<KotlinCodeGeneratorException> {
+        generateKotlinCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo-bar" | "foo bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo-bar" | "foo bar"
-    """
-        .trimIndent()
-
-    val exception = assertThrows<KotlinCodeGeneratorException> { generateKotlinCode(pklCode) }
+            .trimIndent()
+        )
+      }
     assertThat(exception)
       .hasMessageContainingAll("both be converted to enum constant name", "FOO_BAR")
   }
 
   @Test
   fun `empty enum constant name`() {
-    val pklCode =
+    val exception =
+      assertThrows<KotlinCodeGeneratorException> {
+        generateKotlinCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo" | "" | "bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo" | "" | "bar"
-    """
-        .trimIndent()
-
-    val exception = assertThrows<KotlinCodeGeneratorException> { generateKotlinCode(pklCode) }
+            .trimIndent()
+        )
+      }
     assertThat(exception).hasMessageContaining("cannot be converted")
   }
 
   @Test
   fun `inconvertible enum constant name`() {
-    val pklCode =
+    val exception =
+      assertThrows<KotlinCodeGeneratorException> {
+        generateKotlinCode(
+          """
+        module my.mod
+        typealias MyTypeAlias = "foo" | "✅" | "bar"
       """
-      module my.mod
-      typealias MyTypeAlias = "foo" | "✅" | "bar"
-    """
-        .trimIndent()
-
-    val exception = assertThrows<KotlinCodeGeneratorException> { generateKotlinCode(pklCode) }
+            .trimIndent()
+        )
+      }
     assertThat(exception).hasMessageContainingAll("✅", "cannot be converted")
   }
 
@@ -532,31 +545,33 @@ class KotlinCodeGeneratorTest {
         sibling: Person?
       }
     """
+          .trimIndent()
       )
 
-    assertEqualTo(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        package my
+  
+        import kotlin.Long
+        import kotlin.String
+        import kotlin.collections.List
+        import kotlin.collections.Map
+  
+        object Mod {
+          data class Person(
+            val name: String,
+            val age: Long,
+            val hobbies: List<String>,
+            val friends: Map<String, Person>,
+            val sibling: Person?
+          )
+        }
+        
       """
-      package my
-
-      import kotlin.Long
-      import kotlin.String
-      import kotlin.collections.List
-      import kotlin.collections.Map
-
-      object Mod {
-        data class Person(
-          val name: String,
-          val age: Long,
-          val hobbies: List<String>,
-          val friends: Map<String, Person>,
-          val sibling: Person?
-        )
-      }
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimIndent()
+      )
   }
 
   @Test
@@ -575,31 +590,29 @@ class KotlinCodeGeneratorTest {
         other: String
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class Foo(
+        |    open val other: Long,
+        |    open val bar: Bar
+        |  )
       """
-      |  open class Foo(
-      |    open val other: Long,
-      |    open val bar: Bar
-      |  )
-    """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  open class Bar(
+        |    open val foo: Foo,
+        |    open val other: String
+        |  )
       """
-      |  open class Bar(
-      |    open val foo: Foo,
-      |    open val other: String
-      |  )
-    """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -620,45 +633,65 @@ class KotlinCodeGeneratorTest {
         three: Duration
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class Foo(
+        |    open val one: Long
+        |  )
       """
-      |  open class Foo(
-      |    open val one: Long
-      |  )
-    """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  open class None(
+        |    one: Long
+        |  ) : Foo(one)
       """
-      |  open class None(
-      |    one: Long
-      |  ) : Foo(one)
-    """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  open class Bar(
+        |    one: Long,
+        |    open val two: String
+        |  ) : None(one)
       """
-      |  open class Bar(
-      |    one: Long,
-      |    open val two: String
-      |  ) : None(one)
+          .trimMargin()
+      )
+      .isEqualToResourceFile("Inheritance.kotlin")
+  }
+
+  @Test
+  fun `stateless classes`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Foo
+      abstract class Bar
+      class Baz extends Bar
     """
-        .trimMargin(),
-      kotlinCode
-    )
+          .trimIndent()
+      )
 
-    assertEqualTo(
-      IoUtils.readClassPathResourceAsString(javaClass, "Inheritance.kotlin"),
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |  data class Foo
+      |
+      |  abstract class Bar
+      |
+      |  class Baz : Bar() {
+      |    fun copy(): Baz = Baz()
+    """
+          .trimMargin()
+      )
   }
 
   // https://github.com/apple/pkl/issues/569
@@ -673,60 +706,56 @@ class KotlinCodeGeneratorTest {
       abstract class Bar extends Foo { two: String }
       class Baz extends Bar { three: Duration }
       class Qux extends Bar {}
-      """
+    """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      // missing trailing `{` proves that no methods are generated
+      .contains(
+        """
+        |  abstract class Foo(
+        |    open val one: Long
+        |  )
       """
-      |  abstract class Foo(
-      |    open val one: Long
-      |  ) {
+          .trimMargin()
+      )
+      // missing trailing `{` proves that no methods are generated
+      .contains(
+        """
+        |  abstract class Bar(
+        |    one: Long,
+        |    open val two: String
+        |  ) : Foo(one)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Baz(
+        |    one: Long,
+        |    two: String,
+        |    val three: Duration
+        |  ) : Bar(one, two) {
+        |    fun copy(
+        |      one: Long = this.one,
+        |      two: String = this.two,
+        |      three: Duration = this.three
+        |    ): Baz = Baz(one, two, three)
       """
-      |  abstract class Bar(
-      |    one: Long,
-      |    open val two: String
-      |  ) : Foo(one) {
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Qux(
+        |    one: Long,
+        |    two: String
+        |  ) : Bar(one, two) {
+        |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Baz(
-      |    one: Long,
-      |    two: String,
-      |    val three: Duration
-      |  ) : Bar(one, two) {
-      |    fun copy(
-      |      one: Long = this.one,
-      |      two: String = this.two,
-      |      three: Duration = this.three
-      |    ): Baz = Baz(one, two, three)
-    """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Qux(
-      |    one: Long,
-      |    two: String
-      |  ) : Bar(one, two) {
-      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
-      """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimMargin()
+      )
   }
 
   // https://github.com/apple/pkl/issues/569
@@ -741,65 +770,60 @@ class KotlinCodeGeneratorTest {
       abstract class Bar extends Foo { two: String }
       class Baz extends Bar { three: Duration }
       class Qux extends Bar {}
-      """
+    """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class Foo(
+        |    open val one: Long
+        |  ) {
+        |    open fun copy(one: Long = this.one): Foo = Foo(one)
       """
-      |  open class Foo(
-      |    open val one: Long
-      |  ) {
-      |    open fun copy(one: Long = this.one): Foo = Foo(one)
+          .trimMargin()
+      )
+      // missing trailing `{` proves that no methods are generated
+      .contains(
+        """
+        |  abstract class Bar(
+        |    one: Long,
+        |    open val two: String
+        |  ) : Foo(one)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Baz(
+        |    one: Long,
+        |    two: String,
+        |    val three: Duration
+        |  ) : Bar(one, two) {
+        |    fun copy(
+        |      one: Long = this.one,
+        |      two: String = this.two,
+        |      three: Duration = this.three
+        |    ): Baz = Baz(one, two, three)
+        |
+        |    override fun copy(one: Long): Baz = Baz(one, two, three)
       """
-      |  abstract class Bar(
-      |    one: Long,
-      |    open val two: String
-      |  ) : Foo(one) {
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Qux(
+        |    one: Long,
+        |    two: String
+        |  ) : Bar(one, two) {
+        |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
+        |
+        |    override fun copy(one: Long): Qux = Qux(one, two)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Baz(
-      |    one: Long,
-      |    two: String,
-      |    val three: Duration
-      |  ) : Bar(one, two) {
-      |    fun copy(
-      |      one: Long = this.one,
-      |      two: String = this.two,
-      |      three: Duration = this.three
-      |    ): Baz = Baz(one, two, three)
-      |
-      |    override fun copy(one: Long): Baz = Baz(one, two, three)
-      """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Qux(
-      |    one: Long,
-      |    two: String
-      |  ) : Bar(one, two) {
-      |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
-      |
-      |    override fun copy(one: Long): Qux = Qux(one, two)
-      """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimMargin()
+      )
   }
 
   // https://github.com/apple/pkl/issues/569
@@ -814,56 +838,51 @@ class KotlinCodeGeneratorTest {
       abstract class Bar extends Foo {}
       class Baz extends Bar { two: Duration }
       class Qux extends Bar {}
-      """
+    """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class Foo(
+        |    open val one: Long
+        |  ) {
+        |    open fun copy(one: Long = this.one): Foo = Foo(one)
       """
-      |  open class Foo(
-      |    open val one: Long
-      |  ) {
-      |    open fun copy(one: Long = this.one): Foo = Foo(one)
+          .trimMargin()
+      )
+      // missing trailing `{` proves that no methods are generated
+      .contains(
+        """
+        |  abstract class Bar(
+        |    one: Long
+        |  ) : Foo(one)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Baz(
+        |    one: Long,
+        |    val two: Duration
+        |  ) : Bar(one) {
+        |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
+        |
+        |    override fun copy(one: Long): Baz = Baz(one, two)
       """
-      |  abstract class Bar(
-      |    one: Long
-      |  ) : Foo(one) {
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Qux(
+        |    one: Long
+        |  ) : Bar(one) {
+        |    override fun copy(one: Long): Qux = Qux(one)
       """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Baz(
-      |    one: Long,
-      |    val two: Duration
-      |  ) : Bar(one) {
-      |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
-      |
-      |    override fun copy(one: Long): Baz = Baz(one, two)
-      """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  class Qux(
-      |    one: Long
-      |  ) : Bar(one) {
-      |    override fun copy(one: Long): Qux = Qux(one)
-      """
-        .trimMargin(),
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimMargin()
+      )
   }
 
   @Test
@@ -871,17 +890,17 @@ class KotlinCodeGeneratorTest {
     val props = kotlinKeywords.joinToString("\n") { "`$it`: Int" }
 
     val fooClass =
-      compileKotlinCode(
-          generateKotlinCode(
-            """
-          module my.mod
+      generateKotlinCode(
+          """
+      module my.mod
 
-          class Foo {
-            $props
-          }
-        """
-          )
+      class Foo {
+        $props
+      }
+    """
+            .trimIndent()
         )
+        .compile()
         .getValue("Foo")
 
     assertThat(fooClass.declaredMemberProperties.map { it.name }).hasSameElementsAs(kotlinKeywords)
@@ -901,27 +920,29 @@ class KotlinCodeGeneratorTest {
         name: String
       }
     """
+          .trimIndent()
       )
 
-    assertEqualTo(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        package my
+
+        import kotlin.String
+  
+        data class Mod(
+          val pigeon: Person,
+          val parrot: Person
+        ) {
+          data class Person(
+            val name: String
+          )
+        }
+        
       """
-      package my
-
-      import kotlin.String
-
-      data class Mod(
-        val pigeon: Person,
-        val parrot: Person
-      ) {
-        data class Person(
-          val name: String
-        )
-      }
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimIndent()
+      )
   }
 
   @Test
@@ -938,25 +959,27 @@ class KotlinCodeGeneratorTest {
         name: String
       }
     """
+          .trimIndent()
       )
 
-    assertEqualTo(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        import kotlin.String
+
+        data class Mod(
+          val pigeon: Person,
+          val parrot: Person
+        ) {
+          data class Person(
+            val name: String
+          )
+        }
+        
       """
-      import kotlin.String
-
-      data class Mod(
-        val pigeon: Person,
-        val parrot: Person
-      ) {
-        data class Person(
-          val name: String
-        )
-      }
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimIndent()
+      )
   }
 
   @Test
@@ -973,7 +996,8 @@ class KotlinCodeGeneratorTest {
         hidden pigeon2: String
         parrot2: String
       }
-      """
+    """
+          .trimIndent()
       )
 
     assertThat(kotlinCode)
@@ -1015,13 +1039,12 @@ class KotlinCodeGeneratorTest {
       /// type alias comment.
       /// *emphasized* `code`.
       typealias Email = String(contains("@"))
-      """,
+    """
+          .trimIndent(),
         generateKdoc = true
       )
 
-    assertEqualTo(IoUtils.readClassPathResourceAsString(javaClass, "Kdoc.kotlin"), kotlinCode)
-
-    assertCompilesSuccessfully(kotlinCode)
+    assertThat(kotlinCode).compilesSuccessfully().isEqualToResourceFile("Kdoc.kotlin")
   }
 
   @Test
@@ -1034,12 +1057,14 @@ class KotlinCodeGeneratorTest {
       module my.mod
 
       class Product
-      """,
+    """
+          .trimIndent(),
         generateKdoc = true
       )
 
-    assertEqualTo(
-      """
+    assertThat(kotlinCode)
+      .isEqualTo(
+        """
       package my
 
       /**
@@ -1049,9 +1074,10 @@ class KotlinCodeGeneratorTest {
       object Mod {
         data class Product
       }
-    """,
-      kotlinCode
-    )
+      
+    """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -1090,38 +1116,24 @@ class KotlinCodeGeneratorTest {
         list: List<UInt>
       }
     """
+          .trimIndent()
       )
 
-    assertEqualTo(
-      """
-      import java.net.URI
-      import kotlin.Byte
-      import kotlin.Int
-      import kotlin.Long
-      import kotlin.Pair
-      import kotlin.Short
-      import kotlin.collections.List
-      import kotlin.collections.Map
-      import kotlin.collections.Set
-
-      data class Mod(
-        val uint8: Short,
-        val uint16: Int,
-        val uint32: Long,
-        val uint: Long,
-        val int8: Byte,
-        val int16: Short,
-        val int32: Int,
-        val uri: URI,
-        val pair: Pair<Short, Int>,
-        val list: List<Long>,
-        val set: Set<Long>,
-        val map: Map<Byte, Short>,
-        val listing: List<Int>,
-        val mapping: Map<URI, Short>,
-        val nullable: Int?
-      ) {
-        data class Foo(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        import java.net.URI
+        import kotlin.Byte
+        import kotlin.Int
+        import kotlin.Long
+        import kotlin.Pair
+        import kotlin.Short
+        import kotlin.collections.List
+        import kotlin.collections.Map
+        import kotlin.collections.Set
+  
+        data class Mod(
           val uint8: Short,
           val uint16: Int,
           val uint32: Long,
@@ -1130,14 +1142,30 @@ class KotlinCodeGeneratorTest {
           val int16: Short,
           val int32: Int,
           val uri: URI,
-          val list: List<Long>
-        )
-      }
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          val pair: Pair<Short, Int>,
+          val list: List<Long>,
+          val set: Set<Long>,
+          val map: Map<Byte, Short>,
+          val listing: List<Int>,
+          val mapping: Map<URI, Short>,
+          val nullable: Int?
+        ) {
+          data class Foo(
+            val uint8: Short,
+            val uint16: Int,
+            val uint32: Long,
+            val uint: Long,
+            val int8: Byte,
+            val int16: Short,
+            val int32: Int,
+            val uri: URI,
+            val list: List<Long>
+          )
+        }
+        
+      """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -1167,44 +1195,46 @@ class KotlinCodeGeneratorTest {
         recursive2: Recursive2
       }
     """
+          .trimIndent()
       )
 
-    assertEqualTo(
-      """
-      import kotlin.Long
-      import kotlin.String
-      import kotlin.collections.List
-
-      typealias Simple = String
-
-      typealias Constrained = String
-
-      typealias Parameterized = List<Long>
-
-      typealias Recursive1 = Parameterized
-
-      typealias Recursive2 = List<Constrained>
-
-      data class Mod(
-        val simple: Simple,
-        val constrained: Constrained,
-        val parameterized: Parameterized,
-        val recursive1: Recursive1,
-        val recursive2: Recursive2
-      ) {
-        data class Foo(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        import kotlin.Long
+        import kotlin.String
+        import kotlin.collections.List
+  
+        typealias Simple = String
+  
+        typealias Constrained = String
+  
+        typealias Parameterized = List<Long>
+  
+        typealias Recursive1 = Parameterized
+  
+        typealias Recursive2 = List<Constrained>
+  
+        data class Mod(
           val simple: Simple,
           val constrained: Constrained,
           val parameterized: Parameterized,
           val recursive1: Recursive1,
           val recursive2: Recursive2
-        )
-      }
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+        ) {
+          data class Foo(
+            val simple: Simple,
+            val constrained: Constrained,
+            val parameterized: Parameterized,
+            val recursive1: Recursive1,
+            val recursive2: Recursive2
+          )
+        }
+        
+      """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -1245,74 +1275,79 @@ class KotlinCodeGeneratorTest {
         res9: MMap
       }
     """
+          .trimIndent()
       )
 
-    assertContains(
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |data class Mod(
+        |  val res1: List2<Long>,
+        |  val res2: List2<List2<String>>,
+        |  val res3: Map2<String, Long>,
+        |  val res4: StringMap<Duration>,
+        |  val res5: MMap<Person?>,
+        |  val res6: List2<Any?>,
+        |  val res7: Map2<Any?, Any?>,
+        |  val res8: StringMap<Any?>,
+        |  val res9: MMap<Any?>
       """
-      |data class Mod(
-      |  val res1: List2<Long>,
-      |  val res2: List2<List2<String>>,
-      |  val res3: Map2<String, Long>,
-      |  val res4: StringMap<Duration>,
-      |  val res5: MMap<Person?>,
-      |  val res6: List2<Any?>,
-      |  val res7: Map2<Any?, Any?>,
-      |  val res8: StringMap<Any?>,
-      |  val res9: MMap<Any?>
-    """,
-      kotlinCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  data class Foo(
+        |    val res1: List2<Long>,
+        |    val res2: List2<List2<String>>,
+        |    val res3: Map2<String, Long>,
+        |    val res4: StringMap<Duration>,
+        |    val res5: MMap<Person?>,
+        |    val res6: List2<Any?>,
+        |    val res7: Map2<Any?, Any?>,
+        |    val res8: StringMap<Any?>,
+        |    val res9: MMap<Any?>
       """
-      |  data class Foo(
-      |    val res1: List2<Long>,
-      |    val res2: List2<List2<String>>,
-      |    val res3: Map2<String, Long>,
-      |    val res4: StringMap<Duration>,
-      |    val res5: MMap<Person?>,
-      |    val res6: List2<Any?>,
-      |    val res7: Map2<Any?, Any?>,
-      |    val res8: StringMap<Any?>,
-      |    val res9: MMap<Any?>
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCode)
+          .trimMargin()
+      )
   }
 
   @Test
   fun `union of string literals`() {
     val kotlinCode =
-      generateKotlinCode("""
+      generateKotlinCode(
+        """
       module mod
 
       x: "Pigeon"|"Barn Owl"|"Parrot"
-    """)
-
-    assertContains(
-      """
-      data class Mod(
-        val x: String
-      )
     """
-        .trimIndent(),
-      kotlinCode
-    )
+          .trimIndent()
+      )
 
-    assertCompilesSuccessfully(kotlinCode)
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |data class Mod(
+        |  val x: String
+        |)
+      """
+          .trimMargin()
+      )
   }
 
   @Test
   fun `other union type`() {
     val e =
       assertThrows<KotlinCodeGeneratorException> {
-        generateKotlinCode("""
-        module mod
-
-        x: "Pigeon"|Int|"Parrot"
-      """)
+        generateKotlinCode(
+          """
+          module mod
+  
+          x: "Pigeon"|Int|"Parrot"
+        """
+            .trimIndent()
+        )
       }
     assertThat(e).hasMessageContaining("Pkl union types are not supported")
   }
@@ -1333,14 +1368,16 @@ class KotlinCodeGeneratorTest {
       
       typealias Version = "RELEASE"|String|"LATEST"
     """
+          .trimIndent()
       )
 
-    assertContains("v1: String", kotlinCode)
-    assertContains("v2: String", kotlinCode)
-    assertContains("v3: String", kotlinCode)
-    assertContains("v4: String", kotlinCode)
-    assertContains("v5: String", kotlinCode)
-    assertContains("v6: String", kotlinCode)
+    assertThat(kotlinCode)
+      .contains("v1: String")
+      .contains("v2: String")
+      .contains("v3: String")
+      .contains("v4: String")
+      .contains("v5: String")
+      .contains("v6: String")
   }
 
   @Test
@@ -1357,14 +1394,16 @@ class KotlinCodeGeneratorTest {
       typealias Version5 = (Version4|String)|("LATEST"|String)
       typealias Version6 = Version5 // not inlined
     """
+          .trimIndent()
       )
 
-    assertContains("typealias Version1 = String", kotlinCode)
-    assertContains("typealias Version2 = String", kotlinCode)
-    assertContains("typealias Version3 = String", kotlinCode)
-    assertContains("typealias Version4 = String", kotlinCode)
-    assertContains("typealias Version5 = String", kotlinCode)
-    assertContains("typealias Version6 = Version5", kotlinCode)
+    assertThat(kotlinCode)
+      .contains("typealias Version1 = String")
+      .contains("typealias Version2 = String")
+      .contains("typealias Version3 = String")
+      .contains("typealias Version4 = String")
+      .contains("typealias Version5 = String")
+      .contains("typealias Version6 = Version5")
   }
 
   @Test
@@ -1372,48 +1411,47 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-        module my.mod
+      module my.mod
 
-        server: Server
+      server: Server
 
-        class Server {
-          port: Int
-          urls: Listing<Uri>
-        }
-      """,
+      class Server {
+        port: Int
+        urls: Listing<Uri>
+      }
+    """
+          .trimIndent(),
         generateSpringBootConfig = true
+      )
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+        |@ConstructorBinding
+        |@ConfigurationProperties
+        |data class Mod(
+        |  val server: Server
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  @ConstructorBinding
+        |  @ConfigurationProperties("server")
+        |  data class Server(
+        |    val port: Long,
+        |    val urls: List<URI>
+      """
+          .trimMargin()
       )
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
     val kotlinCodeWithoutSpringAnnotations =
-      kotlinCode
-        .lines()
-        .filterNot { it.contains("ConstructorBinding") || it.contains("ConfigurationProperties") }
-        .joinToString("\n")
-
-    assertContains(
-      """
-      |@ConstructorBinding
-      |@ConfigurationProperties
-      |data class Mod(
-      |  val server: Server
-    """,
-      kotlinCode
-    )
-
-    assertContains(
-      """
-      |  @ConstructorBinding
-      |  @ConfigurationProperties("server")
-      |  data class Server(
-      |    val port: Long,
-      |    val urls: List<URI>
-    """,
-      kotlinCode
-    )
-
-    assertCompilesSuccessfully(kotlinCodeWithoutSpringAnnotations)
+      kotlinCode.deleteLines {
+        it.contains("ConstructorBinding") || it.contains("ConfigurationProperties")
+      }
+    assertThat(kotlinCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 
   @Test
@@ -1422,12 +1460,12 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "library",
         """
-      module library
-
-      class Person { name: String; age: Int }
-      
-      pigeon: Person
-    """
+          module library
+    
+          class Person { name: String; age: Int }
+          
+          pigeon: Person
+        """
           .trimIndent()
       )
 
@@ -1435,32 +1473,35 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "client",
         """
-      module client
-      
-      import "library.pkl"
-      
-      lib: library
-      
-      parrot: library.Person
-    """
+          module client
+          
+          import "library.pkl"
+          
+          lib: library
+          
+          parrot: library.Person
+        """
           .trimIndent()
       )
 
     val kotlinSourceFiles = generateFiles(library, client)
+    assertDoesNotThrow {
+      InMemoryKotlinCompiler.compile(kotlinSourceFiles.mapValues { it.value.text })
+    }
+
     val kotlinClientCode =
       kotlinSourceFiles.entries.find { (fileName, _) -> fileName.endsWith("Client.kt") }!!.value
 
-    assertContains(
+    assertThat(kotlinClientCode)
+      .contains(
+        """
+        |data class Client(
+        |  val lib: Library,
+        |  val parrot: Library.Person
+        |)
       """
-      |data class Client(
-      |  val lib: Library,
-      |  val parrot: Library.Person
-      |)
-    """,
-      kotlinClientCode
-    )
-
-    assertDoesNotThrow { InMemoryKotlinCompiler.compile(kotlinSourceFiles) }
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1469,12 +1510,12 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "base",
         """
-      open module base
-
-      open class Person { name: String }
-
-      pigeon: Person
-    """
+          open module base
+    
+          open class Person { name: String }
+    
+          pigeon: Person
+        """
           .trimIndent()
       )
 
@@ -1482,49 +1523,51 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "derived",
         """
-      module derived
-      extends "base.pkl"
-      
-      class Person2 extends Person { age: Int }
-      
-      person1: Person
-      person2: Person2
-    """
+          module derived
+          extends "base.pkl"
+          
+          class Person2 extends Person { age: Int }
+          
+          person1: Person
+          person2: Person2
+        """
           .trimIndent()
       )
 
     val kotlinSourceFiles = generateFiles(base, derived)
+    assertDoesNotThrow {
+      InMemoryKotlinCompiler.compile(kotlinSourceFiles.mapValues { it.value.text })
+    }
+
     val kotlinDerivedCode =
       kotlinSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.kt") }!!.value
 
-    assertContains(
+    assertThat(kotlinDerivedCode)
+      .contains(
+        """
+        |class Derived(
+        |  pigeon: Base.Person,
+        |  val person1: Base.Person,
+        |  val person2: Person2
+        |) : Base(pigeon)
       """
-      |class Derived(
-      |  pigeon: Base.Person,
-      |  val person1: Base.Person,
-      |  val person2: Person2
-      |) : Base(pigeon)
-    """,
-      kotlinDerivedCode
-    )
-
-    assertContains(
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  class Person2(
+        |    name: String,
+        |    val age: Long
+        |  ) : Base.Person(name)
       """
-      |  class Person2(
-      |    name: String,
-      |    val age: Long
-      |  ) : Base.Person(name)
-    """,
-      kotlinDerivedCode
-    )
-
-    assertDoesNotThrow { InMemoryKotlinCompiler.compile(kotlinSourceFiles) }
+          .trimMargin()
+      )
   }
 
   @Test
   fun `empty module`() {
     val kotlinCode = generateKotlinCode("module mod")
-    assertEqualTo("object Mod", kotlinCode)
+    assertThat(kotlinCode).isEqualTo("object Mod\n")
   }
 
   @Test
@@ -1533,10 +1576,10 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "base",
         """
-      abstract module base
-
-      typealias Version = "LATEST"|String
-    """
+          abstract module base
+    
+          typealias Version = "LATEST"|String
+        """
           .trimIndent()
       )
 
@@ -1544,29 +1587,31 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "derived",
         """
-      module derived
-      
-      extends "base.pkl"
-      
-      v: Version = "1.2.3"
-    """
+          module derived
+          
+          extends "base.pkl"
+          
+          v: Version = "1.2.3"
+        """
           .trimIndent()
       )
 
     val kotlinSourceFiles = generateFiles(moduleOne, moduleTwo)
+    assertDoesNotThrow {
+      InMemoryKotlinCompiler.compile(kotlinSourceFiles.mapValues { it.value.text })
+    }
+
     val kotlinDerivedCode =
       kotlinSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.kt") }!!.value
-
-    assertContains(
-      """
+    assertThat(kotlinDerivedCode)
+      .contains(
+        """
       |class Derived(
       |  val v: Version
       |) : Base()
-    """,
-      kotlinDerivedCode
-    )
-
-    assertDoesNotThrow { InMemoryKotlinCompiler.compile(kotlinSourceFiles) }
+    """
+          .trimMargin()
+      )
   }
 
   @Test
@@ -1575,20 +1620,20 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "Mod.pkl",
         """
-      module org.pkl.Mod
-
-      foo: Foo
-
-      bar: Bar
-
-      class Foo {
-        prop: String
-      }
-
-      class Bar {
-        prop: Int
-      }
-    """
+          module org.pkl.Mod
+    
+          foo: Foo
+    
+          bar: Bar
+    
+          class Foo {
+            prop: String
+          }
+    
+          class Bar {
+            prop: Int
+          }
+        """
           .trimIndent()
       )
     val generated = generateFiles(pklModule)
@@ -1597,11 +1642,9 @@ class KotlinCodeGeneratorTest {
     assertThat(generated).containsKey(expectedPropertyFile)
     val propertyFileContents = generated[expectedPropertyFile]!!
     assertThat(propertyFileContents)
-      .contains(
-        "org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod",
-        "org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo",
-        "org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar"
-      )
+      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#ModuleClass=org.pkl.Mod")
+      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Foo=org.pkl.Mod\$Foo")
+      .contains("org.pkl.config.java.mapper.org.pkl.Mod\\#Bar=org.pkl.Mod\$Bar")
   }
 
   @Test
@@ -1609,46 +1652,51 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-        module mod
+      module mod
 
-        class BigStruct {
-          boolean: Boolean
-          int: Int
-          float: Float
-          string: String
-          duration: Duration
-          dataSize: DataSize
-          pair: Pair
-          pair2: Pair<String, SmallStruct>
-          coll: Collection
-          coll2: Collection<SmallStruct>
-          list: List
-          list2: List<SmallStruct>
-          set: Set
-          set2: Set<SmallStruct>
-          map: Map
-          map2: Map<String, SmallStruct>
-          container: Mapping
-          container2: Mapping<String, SmallStruct>
-          other: SmallStruct
-          regex: Regex
-          nonNull: NonNull
-          enum: Direction
-        }
+      class BigStruct {
+        boolean: Boolean
+        int: Int
+        float: Float
+        string: String
+        duration: Duration
+        dataSize: DataSize
+        pair: Pair
+        pair2: Pair<String, SmallStruct>
+        coll: Collection
+        coll2: Collection<SmallStruct>
+        list: List
+        list2: List<SmallStruct>
+        set: Set
+        set2: Set<SmallStruct>
+        map: Map
+        map2: Map<String, SmallStruct>
+        container: Mapping
+        container2: Mapping<String, SmallStruct>
+        other: SmallStruct
+        regex: Regex
+        nonNull: NonNull
+        enum: Direction
+      }
 
-        class SmallStruct {
-          name: String
-        }
+      class SmallStruct {
+        name: String
+      }
 
-        typealias Direction = "north"|"east"|"south"|"west"
-    """,
+      typealias Direction = "north"|"east"|"south"|"west"
+      
+      abstract class NotSerializable
+    """
+          .trimIndent(),
         implementSerializable = true
       )
 
-    assertContains(": Serializable", kotlinCode)
-    assertContains("private const val serialVersionUID: Long = 0L", kotlinCode)
+    assertThat(kotlinCode)
+      .contains(": Serializable")
+      .contains("private const val serialVersionUID: Long = 0L")
+      .contains("abstract class NotSerializable\n")
 
-    val classes = compileKotlinCode(kotlinCode)
+    val classes = kotlinCode.compile()
     val enumClass = classes.getValue("Direction")
     val enumValue = enumClass.java.enumConstants.first()
 
@@ -1957,8 +2005,8 @@ class KotlinCodeGeneratorTest {
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
-  private fun generateFiles(vararg pklModules: PklModule): Map<String, String> =
-    KotlinCodegenOptions().generateFiles(*pklModules)
+  private fun generateFiles(vararg pklModules: PklModule): Map<String, KotlinSourceCode> =
+    KotlinCodegenOptions().generateFiles(*pklModules).mapValues { KotlinSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("Other").constructors.first()
@@ -2002,15 +2050,48 @@ class KotlinCodeGeneratorTest {
     return other to propertyTypes
   }
 
-  private fun assertContains(part: String, code: String) {
-    val trimmedPart = part.trim().trimMargin()
-    if (!code.contains(trimmedPart)) {
-      // check for equality to get better error output (ide diff dialog)
-      assertThat(code).isEqualTo(trimmedPart)
+  private fun assertThat(actual: KotlinSourceCode): KotlinSourceCodeAssert =
+    KotlinSourceCodeAssert(actual)
+
+  private class KotlinSourceCodeAssert(actual: KotlinSourceCode) :
+    AbstractAssert<KotlinSourceCodeAssert, KotlinSourceCode>(
+      actual,
+      KotlinSourceCodeAssert::class.java
+    ) {
+    fun contains(expected: String): KotlinSourceCodeAssert {
+      if (!actual.text.contains(expected)) {
+        // check for equality to get better error output (IDE diff dialog)
+        assertThat(actual.text).isEqualTo(expected)
+      }
+      return this
+    }
+
+    fun doesNotContain(expected: String): KotlinSourceCodeAssert {
+      assertThat(actual.text).doesNotContain(expected)
+      return this
+    }
+
+    fun compilesSuccessfully(): KotlinSourceCodeAssert {
+      assertThatCode { actual.compile() }.doesNotThrowAnyException()
+      return this
+    }
+
+    fun isEqualTo(expected: String): KotlinSourceCodeAssert {
+      assertThat(actual.text).isEqualTo(expected)
+      return this
+    }
+
+    fun isEqualToResourceFile(fileName: String): KotlinSourceCodeAssert {
+      isEqualTo(IoUtils.readClassPathResourceAsString(javaClass, fileName))
+      return this
     }
   }
 
-  private fun assertEqualTo(expectedCode: String, actualCode: String) {
-    assertThat(actualCode.trim()).isEqualTo(expectedCode.trimIndent().trim())
+  data class KotlinSourceCode(val text: String) {
+    fun compile(): Map<String, KClass<*>> =
+      InMemoryKotlinCompiler.compile(mapOf("my/Mod.kt" to text))
+
+    fun deleteLines(predicate: (String) -> Boolean): KotlinSourceCode =
+      KotlinSourceCode(text.lines().filterNot(predicate).joinToString("\n"))
   }
 }
