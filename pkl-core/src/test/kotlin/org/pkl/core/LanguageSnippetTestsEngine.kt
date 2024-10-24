@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -199,6 +199,8 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       // executable)
       // on the other hand, don't exclude /native/
       Regex(".*/import1b\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl")
     )
 
   /** Avoid running tests for native binaries when those native binaries have not been built. */
@@ -301,9 +303,14 @@ class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngin
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
 }
 
-// error message contains different file path on Windows
 private val windowsExcludedTests
-  get() = listOf(Regex(".*missingProjectDeps/bug\\.pkl"))
+  get() =
+    listOf(
+      // error message contains different file path on Windows
+      Regex(".*missingProjectDeps/bug\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl")
+    )
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64

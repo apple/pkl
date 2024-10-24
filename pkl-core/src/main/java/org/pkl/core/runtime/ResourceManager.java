@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,43 +67,46 @@ public final class ResourceManager {
     return reader;
   }
 
+  public Optional<Object> doRead(ResourceReader reader, URI uri, @Nullable Node readNode) {
+    Optional<Object> resource;
+    try {
+      resource = reader.read(uri);
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorReadingResource", uri)
+          .withCause(e)
+          .withOptionalLocation(readNode)
+          .build();
+    } catch (URISyntaxException e) {
+      throw new VmExceptionBuilder()
+          .evalError("invalidResourceUri", uri)
+          .withHint(e.getReason())
+          .withOptionalLocation(readNode)
+          .build();
+    } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
+      throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
+    }
+    return resource;
+  }
+
   @TruffleBoundary
   public Optional<Object> read(URI resourceUri, @Nullable Node readNode) {
     return resources.computeIfAbsent(
         resourceUri.normalize(),
-        uri -> {
+        (uri) -> {
           try {
             securityManager.checkReadResource(uri);
           } catch (SecurityManagerException e) {
             throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
           }
-
-          var reader = resourceReaders.get(uri.getScheme());
+          var reader = getResourceReader(uri);
           if (reader == null) {
             throw new VmExceptionBuilder()
                 .withOptionalLocation(readNode)
-                .evalError("noResourceReaderRegistered", resourceUri.getScheme())
+                .evalError("noResourceReaderRegistered", uri.getScheme())
                 .build();
           }
-
-          Optional<Object> resource;
-          try {
-            resource = reader.read(uri);
-          } catch (IOException e) {
-            throw new VmExceptionBuilder()
-                .evalError("ioErrorReadingResource", uri)
-                .withCause(e)
-                .withOptionalLocation(readNode)
-                .build();
-          } catch (URISyntaxException e) {
-            throw new VmExceptionBuilder()
-                .evalError("invalidResourceUri", resourceUri)
-                .withHint(e.getReason())
-                .withOptionalLocation(readNode)
-                .build();
-          } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
-            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
-          }
+          var resource = doRead(reader, uri, readNode);
           if (resource.isEmpty()) return resource;
 
           var res = resource.get();

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,22 @@
  */
 package org.pkl.core.runtime;
 
+import java.util.HashMap;
 import java.util.List;
 
 public final class VmStackOverflowException extends VmException {
 
   public VmStackOverflowException(StackOverflowError e) {
-    super("stackOverflow", e, true, new Object[0], List.of(), null, null, null, null);
+    super(
+        "stackOverflow",
+        e,
+        true,
+        new Object[0],
+        List.of(),
+        null,
+        null,
+        null,
+        null,
+        new HashMap<>());
   }
 }

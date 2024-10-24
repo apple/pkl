@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -184,12 +184,12 @@ public final class ResolveVariableNode extends ExpressionNode {
       if (member != null) {
         var constantValue = member.getConstantValue();
         if (constantValue != null) {
-          baseModule.setCachedValue(variableName, constantValue);
+          baseModule.setCachedValue(variableName, constantValue, member);
           return new ConstantValueNode(sourceSection, constantValue);
         }
 
         var computedValue = member.getCallTarget().call(baseModule, baseModule);
-        baseModule.setCachedValue(variableName, computedValue);
+        baseModule.setCachedValue(variableName, computedValue, member);
         return new ConstantValueNode(sourceSection, computedValue);
       }
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,10 +62,9 @@ public final class PropertyTypeNode extends PklRootNode {
   }
 
   @Override
-  public @Nullable Object execute(VirtualFrame frame) {
+  public Object execute(VirtualFrame frame) {
     try {
-      typeNode.execute(frame, frame.getArguments()[2]);
-      return null;
+      return typeNode.execute(frame, frame.getArguments()[2]);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
       throw e.toVmException();

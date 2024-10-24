@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,9 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.TestResults;
-import org.pkl.core.runtime.TestResults.TestResult;
+import org.pkl.core.runtime.TestResults.TestSectionResults;
+import org.pkl.core.runtime.TestResults.TestSectionResults.Error;
+import org.pkl.core.runtime.TestResults.TestSectionResults.TestResult;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
@@ -41,25 +43,45 @@ public final class JUnitReport implements TestReport {
     writer.append(renderXML("    ", "1.0", buildSuite(results)));
   }
 
-  private VmDynamic buildSuite(TestResults res) {
-    var testCases = testCases(res);
-    if (!res.getErr().isBlank()) {
+  private VmDynamic buildSuite(TestResults results) {
+    var testCases = testCases(results.moduleName, results.facts);
+    testCases.addAll(testCases(results.moduleName, results.examples));
+
+    if (!results.getErr().isBlank()) {
       var err =
           buildXmlElement(
               "system-err",
               VmMapping.empty(),
-              members -> members.put("body", syntheticElement(makeCdata(res.getErr()))));
+              members -> members.put("body", syntheticElement(makeCdata(results.getErr()))));
       testCases.add(err);
     }
-    return buildXmlElement(
-        "testsuite", buildRootAttributes(res), testCases.toArray(new VmDynamic[0]));
+
+    var attrs =
+        buildAttributes(
+            "name", results.moduleName,
+            "tests", (long) results.totalTests(),
+            "failures", (long) results.totalFailures());
+
+    return buildXmlElement("testsuite", attrs, testCases.toArray(new VmDynamic[0]));
   }
 
-  private ArrayList<VmDynamic> testCases(TestResults results) {
-    var className = results.getModuleName();
-    var elements = new ArrayList<VmDynamic>(results.totalTests());
-    for (var res : results.getResults()) {
-      var attrs = buildAttributes("classname", className, "name", res.getName());
+  private ArrayList<VmDynamic> testCases(String moduleName, TestSectionResults testSectionResults) {
+    var elements = new ArrayList<VmDynamic>(testSectionResults.totalTests());
+
+    if (testSectionResults.hasError()) {
+      var error = error(testSectionResults.getError());
+
+      var attrs =
+          buildAttributes("classname", moduleName + "." + testSectionResults.name, "name", "error");
+      var element = buildXmlElement("testcase", attrs, error.toArray(new VmDynamic[0]));
+
+      elements.add(element);
+    }
+
+    for (var res : testSectionResults.getResults()) {
+      var attrs =
+          buildAttributes(
+              "classname", moduleName + "." + testSectionResults.name, "name", res.name);
       var failures = failures(res);
       failures.addAll(errors(res));
       var element = buildXmlElement("testcase", attrs, failures.toArray(new VmDynamic[0]));
@@ -99,6 +121,17 @@ public final class JUnitReport implements TestReport {
     return list;
   }
 
+  private ArrayList<VmDynamic> error(Error error) {
+    var list = new ArrayList<VmDynamic>();
+    var attrs = buildAttributes("message", error.getMessage());
+    list.add(
+        buildXmlElement(
+            "error",
+            attrs,
+            members -> members.put(1, syntheticElement("\n" + error.getRendered()))));
+    return list;
+  }
+
   private VmDynamic buildXmlElement(String name, VmMapping attributes, VmDynamic... elements) {
     return buildXmlElement(
         name,
@@ -128,16 +161,6 @@ public final class JUnitReport implements TestReport {
         BaseModule.getDynamicClass().getPrototype(),
         members,
         members.size() - 4);
-  }
-
-  private VmMapping buildRootAttributes(TestResults results) {
-    return buildAttributes(
-        "name",
-        results.getModuleName(),
-        "tests",
-        (long) results.totalTests(),
-        "failures",
-        (long) results.totalFailures());
   }
 
   private VmMapping buildAttributes(Object... attributes) {

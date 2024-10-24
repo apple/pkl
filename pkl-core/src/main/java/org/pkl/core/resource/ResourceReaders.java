@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -488,7 +488,16 @@ public final class ResourceReaders {
       var dependency = getProjectDepsResolver().getResolvedDependency(assetUri.getPackageUri());
       var local = getLocalUri(dependency, assetUri);
       if (local != null) {
-        return VmContext.get(null).getResourceManager().read(local, null);
+        var resourceManager = VmContext.get(null).getResourceManager();
+        var securityManager = VmContext.get(null).getSecurityManager();
+        securityManager.checkReadResource(local);
+        var reader = resourceManager.getResourceReader(local);
+        if (reader == null) {
+          throw new VmExceptionBuilder()
+              .evalError("noResourceReaderRegistered", uri.getScheme())
+              .build();
+        }
+        return resourceManager.doRead(reader, local, null);
       }
       var remoteDep = (Dependency.RemoteDependency) dependency;
       var bytes = getPackageResolver().getBytes(assetUri, true, remoteDep.getChecksums());

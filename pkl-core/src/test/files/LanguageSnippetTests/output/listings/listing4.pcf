@@ -1,0 +1,12 @@
+examples {
+  ["listings are lazy"] {
+    "foo"
+    "uh oh"
+  }
+  ["listings are lazy with generator entries"] {
+    "foo"
+  }
+  ["nested listings are also lazy"] {
+    "bar"
+  }
+}

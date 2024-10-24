@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,7 +52,7 @@ public abstract class VmObjectLike extends VmValue {
     return extraStorage != null;
   }
 
-  public final Object getExtraStorage() {
+  public Object getExtraStorage() {
     assert extraStorage != null;
     return extraStorage;
   }
@@ -96,7 +96,7 @@ public abstract class VmObjectLike extends VmValue {
    * receiver.
    */
   @TruffleBoundary
-  public abstract void setCachedValue(Object key, Object value);
+  public abstract void setCachedValue(Object key, Object value, ObjectMember objectMember);
 
   /**
    * Prefer this method over {@link #getCachedValue} if the value is not required. (There is no

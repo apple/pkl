@@ -109,6 +109,16 @@ examples {
     List("aa", "caa", "c")
     List("aabb", "aabb")
   }
+  ["splitLimit()"] {
+    List("aabbccaabbccaabbccaabbcc")
+    List("aa", "caabbccaabbccaabbcc")
+    List("aa", "caa", "caa", "caabbcc")
+    List("aabbccaabbccaabbccaabbcc")
+    List("aabb", "aabbccaabbccaabbcc")
+    List("aabb", "aabb", "aabb", "aabbcc")
+    "Type constraint `this > 0` violated. Value: 0"
+    "Type constraint `this > 0` violated. Value: -1"
+  }
   ["replaceAll()"] {
     "xxbbccxxbbcc"
     "aa(bbc|bb)caa(bbc|bb)c"

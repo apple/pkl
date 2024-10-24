@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -150,8 +150,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @Fallback
   @TruffleBoundary
-  protected void fallback(Object parent) {
-    elementsEntriesFallback(parent, values[0], false);
+  protected Object fallback(Object parent) {
+    return elementsEntriesFallback(parent, values[0], false);
   }
 
   @ExplodeLoop

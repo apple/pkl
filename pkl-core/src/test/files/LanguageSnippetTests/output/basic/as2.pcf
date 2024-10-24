@@ -21,6 +21,16 @@ examples {
     }
     "Expected value of type `String`, but got type `Int`. Value: 1"
   }
+  ["cast Listing<UInt32> to other integer types"] {
+    9999999
+    9999999
+    9999999
+    9999999
+    "Type constraint `isBetween(-32768, 32767)` violated. Value: 9999999"
+    "Type constraint `isBetween(0, 65535)` violated. Value: 9999999"
+    "Type constraint `isBetween(-128, 127)` violated. Value: 9999999"
+    "Type constraint `isBetween(0, 255)` violated. Value: 9999999"
+  }
   ["mapping"] {
     "Expected value of type `Mapping`, but got type `Listing`. Value: new Listing { ?; ?; ? }"
     new {
@@ -28,6 +38,16 @@ examples {
       ["Barn Owl"] = 21
     }
     "Expected value of type `Int`, but got type `String`. Value: \"Pigeon\""
+  }
+  ["cast Mapping<, UInt> to other integer types"] {
+    9999
+    9999
+    9999
+    9999
+    9999
+    9999
+    "Type constraint `isBetween(-128, 127)` violated. Value: 9999"
+    "Type constraint `isBetween(0, 255)` violated. Value: 9999"
   }
   ["union type"] {
     42

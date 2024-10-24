@@ -138,6 +138,19 @@ examples {
     str4.split("cc")
   }
 
+  local str7 = "aabbccaabbccaabbccaabbcc"
+
+  ["splitLimit()"] {
+    str7.splitLimit(Regex("b+c"), 1)
+    str7.splitLimit(Regex("b+c"), 2)
+    str7.splitLimit(Regex("b+c"), 4)
+    str7.splitLimit("cc", 1)
+    str7.splitLimit("cc", 2)
+    str7.splitLimit("cc", 4)
+    module.catch(() -> str7.splitLimit(Regex("b+c"), 0))
+    module.catch(() -> str7.splitLimit(Regex("b+c"), -1))
+  }
+
   ["replaceAll()"] {
     str4.replaceAll("aa", "xx")
     str4.replaceAll(Regex("(b+)c"), "($0|$1)")

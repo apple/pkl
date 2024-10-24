@@ -1,41 +1,367 @@
 import "pkl:test"
 
-hidden x1: Listing<String> = new {
+local x1: Listing<String> = new {
   "pigeon"
   42
   "barn owl"
 }
 
-hidden x2: Listing<String(length > 3)> = new {
+local x2: Listing<String(length > 3)> = new {
   "pigeon"
   "bob"
 }
 
-hidden x3: Listing<String>(!isEmpty)
+res1 = x1[0]
+res2 = test.catchOrNull(() -> x1[1])
+res3 = x2[0]
+res4 = test.catchOrNull(() -> x2[1])
 
-res1 = test.catch(() -> x1)
-res2 = test.catch(() -> x2)
-res3 = test.catch(() -> x3)
-
-hidden x4: Listing = new {
+local x4: Listing = new {
   throw("element unnecessarily evaluated")
 }
 
-hidden x5: Listing<Any> = new {
+local x5: Listing<Any> = new {
   throw("element unnecessarily evaluated")
 }
 
-hidden x6: Listing<unknown> = new {
+local x6: Listing<unknown> = new {
   throw("element unnecessarily evaluated")
 }
 
-hidden x7 = new Listing {
+local x7 = new Listing {
   throw("element unnecessarily evaluated")
   42
   throw("element unnecessarily evaluated")
 }
 
-res4 = x4.length == 1
-res5 = x5.length == 1
-res6 = x6.length == 1
-res7 = x7[1] == 42
+local x8 = new Listing<String> {
+  throw("element unneccessarily evaluated")
+}
+
+res5 = x4.length == 1
+res6 = x5.length == 1
+res7 = x6.length == 1
+res8 = x7[1] == 42
+res9 = x8.length == 1
+
+local x9 = new Listing {
+  "foo"
+  1
+}
+local x10 = x9 as Listing<String>
+
+res10 = x9 is Listing<String>
+res11 = x10[0]
+res12 = test.catch(() -> x10[1])
+
+local x11: Listing<String(!isEmpty)> = new Listing<String> {
+  ""
+}
+
+res13 = test.catch(() -> x11[0])
+
+local x12: Listing<String> = new Listing<String(!isEmpty)> {
+  ""
+}
+
+res14 = test.catch(() -> x12[0])
+
+local l = new Listing { "foo"; 1 }
+
+local x13: (Listing<String>|Listing<Int>) = l
+
+local x14: Listing<String>|Listing<Int>? = l
+
+local x15: Listing<String>|(Listing<Int>|Int) = l
+
+local x16: Listing<String>|Int = l
+
+res15 = test.catch(() -> x13)
+res16 = test.catch(() -> x14)
+res17 = test.catch(() -> x15)
+// just accessing x16 doesn't throw because only one Listing in the union type
+res18 = x16.length
+// noinspection TypeMismatch
+res19 = test.catch(() -> x16[1])
+
+local x17: Listing<Listing<String>> = new {
+  new {
+    5
+  }
+}
+
+res20 = x17.length
+res21 = x17[0].length
+res22 = test.catch(() -> x17[0][0])
+
+local x18 = new Listing { 1; 2; 3 } as Listing<String>
+
+res23 = x18.length
+res24 = test.catch(() -> x18[0])
+
+local x19 = new Listing<String> {
+  when (true) {
+    15
+  }
+}
+
+res25 = x19.length
+res26 = test.catch(() -> x19[0])
+
+local x20 = new Listing<String> {
+  ...List(1, 2, 3)
+}
+
+res27 = x20.length
+res28 = test.catch(() -> x20[0])
+
+local x21 = new Listing<String> {
+  for (elem in List(1, 2, 3)) {
+    elem
+  }
+}
+
+res29 = x21.length
+res30 = test.catch(() -> x21[0])
+
+local x22: Listing<String> = new {
+  "hi"
+}
+
+// typechecks not required when amending
+// ElementsLiteralNode
+res31 = (x22) {
+  "hi"
+}
+
+// ElementsEntriesLiteralNode
+res32 = (x22) {
+  [0] = 1
+  2
+}
+
+// GeneratorObjectLiteralNode
+res33 = (x22) {
+  when (false) {
+    "hi"
+  }
+  1
+}
+
+// GeneratorSpreadNode
+res34 = (x22) {
+  ...List(1, 2, 3)
+}
+
+local x23: Listing<Listing<String(length.isOdd)>> =
+  new Listing<Listing<String(this == capitalize())>> {
+    new {
+      "Ba"
+      "bar"
+    }
+  }
+
+res35 = test.catch(() -> x23[0][0])
+res36 = test.catch(() -> x23[0][1])
+
+// check listings from inside a list
+local x24: List<Listing<String(length.isOdd)>> = List(
+  new Listing<String(this == capitalize())> {
+    "Ba"
+    "bar"
+  }
+)
+
+res37 = test.catch(() -> x24[0][0])
+res38 = test.catch(() -> x24[0][1])
+
+local x25: List<String|Listing<Int>> = List(
+  "hello",
+  new Listing {
+    "foo"
+  },
+  "goodbye"
+)
+
+res39 = x25[0]
+// retain lazy typecheck of listing.
+res40 = x25[1].length
+res41 = test.catch(() -> x25[1][0])
+res42 = x25[2]
+
+// check listings from inside a set
+local x26: Set<Listing<String(length.isOdd)>> = Set(
+  new Listing<String(this == capitalize())> {
+    "Ba"
+    "bar"
+  }
+)
+
+res43 = test.catch(() -> x26[0][0])
+
+local x27: Set<String|Listing<Int>> = Set(
+  "hello",
+  new Listing {
+    "foo"
+  },
+  "goodbye"
+)
+
+// sets are eagerly checked (need to compute hash code, therefore need to deep force)
+res45 = test.catch(() -> x27)
+
+local x28: List<Listing<Int>>|List<Listing<String>> = List(
+  new Listing { "hello" }
+)
+
+res46 = x28[0][0]
+
+local x29: List<Listing<Int>>|List<Listing<String>> = List(
+  new Listing { 1; "hello" }
+)
+
+res47 = test.catch(() -> x29)
+
+// check listings from inside a map
+local x30: Map<String, Listing<String(length.isOdd)>> = Map(
+  "hello",
+  new Listing<String(this == capitalize())> {
+    "Ba"
+    "bar"
+  }
+)
+
+res48 = x30["hello"].length
+res49 = test.catch(() -> x30["hello"][0])
+res50 = test.catch(() -> x30["hello"][1])
+
+local x31: Map<String, Int|Listing<String>> = Map(
+  "hello", 1,
+  "thelisting", new Listing {
+    1
+    2
+  },
+  "goodbye", 2
+)
+
+res51 = x31.length
+res52 = x31["hello"]
+res53 = x31["goodbye"]
+res54 = x31["thelisting"].length
+res55 = test.catch(() -> x31["thelisting"][0])
+res56 = test.catch(() -> x31["thelisting"][1])
+
+local x32: Map<Listing<String>, Int> = Map(
+  new Listing { 1; 2 },
+  1
+)
+
+res57 = test.catch(() -> x32)
+
+local x33: Map<String, Listing<Int>|Int> = Map(
+  "first", 1,
+  "second", new Listing { "hi" }
+)
+
+res58 = x33.length
+res59 = x33["first"]
+res60 = x33["second"].length
+res61 = test.catch(() -> x33["second"][0])
+
+local x34: Pair<Listing<String>, Listing<String>> = Pair(
+  new Listing { 1 },
+  new Listing { 2 }
+)
+
+res62 = x34.first.length
+res63 = x34.second.length
+
+res64 = test.catch(() -> x34.first[0])
+res65 = test.catch(() -> x34.second[0])
+
+local x35: Pair<Int, Listing<String>> = Pair(
+  5,
+  new Listing { 1 }
+)
+
+res66 = x35.first
+res67 = x35.second.length
+res68 = test.catch(() -> x35.second[0])
+
+local x36: Collection<Int|Listing<String>> = List(
+  1,
+  new Listing { "hello"; 1 }
+)
+
+res69 = x36.length
+res70 = x36.first
+res71 = x36[1].length
+res73 = x36[1][0]
+res74 = test.catch(() -> x36[1][1])
+
+local x37: Collection<Int|Listing<String>> = Set(
+  1,
+  new Listing {
+    "hello"
+    1
+  }
+)
+
+res75 = test.catch(() -> x37)
+
+local x38: Collection<Listing<String>>|Collection<Listing<Int>> =
+  List(new Listing {
+    1
+    "hi"
+  })
+
+res76 = test.catch(() -> x38)
+
+local class Person {
+  prop1 = 1
+  prop2 = 2
+  prop3 = "hi"
+}
+
+local x39: Listing<Int> = new Person {}.toMap().values.toListing()
+
+res77 = x39.length
+res78 = x39[0]
+res79 = x39[1]
+res80 = test.catch(() -> x39[2])
+
+local x40: Listing<Int> = new {
+  ...List(1, 2, "hello")
+}
+
+res81 = x40.length
+res82 = x40[0]
+res83 = x40[1]
+res84 = test.catch(() -> x40[2])
+
+// returns a new listing
+function myFunction(elem: Listing<Int>) = elem
+
+local x41 = myFunction(new Listing { "hello" })
+
+res85 = x41.length
+res86 = test.catch(() -> x41[0])
+
+function myFunction2(elem): Listing<Int> = elem
+
+local x42 = myFunction(new Listing { "hello" })
+
+res87 = x42.length
+res88 = test.catch(() -> x42[0])
+
+local x43 = (it: Listing<Int>) -> it
+local x44 = x43.apply(new Listing { "hello" })
+
+res89 = x44.length
+res90 = test.catch(() -> x44[0])
+
+function myFunction3(elem: Listing<Int>): Listing<Int> = elem
+local x45 = myFunction3(new Listing { "hello" })
+
+res91 = x45.length
+res92 = test.catch(() -> x45[0])

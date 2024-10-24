@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -178,6 +178,43 @@ abstract class AbstractServerTest {
     val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
     val value = unpacker.unpackValue()
     assertThat(value.asStringValue().asString()).isEqualTo("my bahumbug")
+  }
+
+  @Test
+  fun `read resource -- null contents and null error`() {
+    val reader =
+      ResourceReaderSpec(scheme = "bahumbug", hasHierarchicalUris = true, isGlobbable = false)
+    val evaluatorId = client.sendCreateEvaluatorRequest(resourceReaders = listOf(reader))
+
+    client.send(
+      EvaluateRequest(
+        requestId = 1,
+        evaluatorId = evaluatorId,
+        moduleUri = URI("repl:text"),
+        moduleText = """res = read("bahumbug:/foo.pkl").text""",
+        expr = "res"
+      )
+    )
+
+    val readResourceMsg = client.receive<ReadResourceRequest>()
+    assertThat(readResourceMsg.uri.toString()).isEqualTo("bahumbug:/foo.pkl")
+    assertThat(readResourceMsg.evaluatorId).isEqualTo(evaluatorId)
+
+    client.send(
+      ReadResourceResponse(
+        requestId = readResourceMsg.requestId,
+        evaluatorId = evaluatorId,
+        contents = null,
+        error = null
+      )
+    )
+
+    val evaluateResponse = client.receive<EvaluateResponse>()
+    assertThat(evaluateResponse.error).isNull()
+
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val value = unpacker.unpackValue()
+    assertThat(value.asStringValue().asString()).isEqualTo("")
   }
 
   @Test
@@ -389,6 +426,49 @@ abstract class AbstractServerTest {
     val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
     val value = unpacker.unpackValue()
     assertThat(value.asIntegerValue().asInt()).isEqualTo(5)
+  }
+
+  @Test
+  fun `read module -- null contents and null error`() {
+    val reader =
+      ModuleReaderSpec(
+        scheme = "bird",
+        hasHierarchicalUris = true,
+        isLocal = true,
+        isGlobbable = false
+      )
+    val evaluatorId = client.sendCreateEvaluatorRequest(moduleReaders = listOf(reader))
+
+    client.send(
+      EvaluateRequest(
+        requestId = 1,
+        evaluatorId = evaluatorId,
+        moduleUri = URI("repl:text"),
+        moduleText = """res = import("bird:/pigeon.pkl")""",
+        expr = "res"
+      )
+    )
+
+    val readModuleMsg = client.receive<ReadModuleRequest>()
+    assertThat(readModuleMsg.uri.toString()).isEqualTo("bird:/pigeon.pkl")
+    assertThat(readModuleMsg.evaluatorId).isEqualTo(evaluatorId)
+
+    client.send(
+      ReadModuleResponse(
+        requestId = readModuleMsg.requestId,
+        evaluatorId = evaluatorId,
+        contents = null,
+        error = null
+      )
+    )
+
+    val evaluateResponse = client.receive<EvaluateResponse>()
+    assertThat(evaluateResponse.error).isNull()
+    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
+    val value = unpacker.unpackValue().asArrayValue().list()
+    assertThat(value[0].asIntegerValue().asLong()).isEqualTo(0x1)
+    assertThat(value[1].asStringValue().asString()).isEqualTo("pigeon")
+    assertThat(value[3].asArrayValue().list()).isEmpty()
   }
 
   @Test

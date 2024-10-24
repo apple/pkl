@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,6 +61,8 @@ public final class PClassInfo<T> implements Serializable {
   public static final PClassInfo<LinkedHashMap> Mapping =
       pklBaseClassInfo("Mapping", LinkedHashMap.class);
   public static final PClassInfo<PModule> Module = pklBaseClassInfo("Module", PModule.class);
+  public static final PClassInfo<PObject> ModuleOutput =
+      pklBaseClassInfo("ModuleOutput", PObject.class);
   public static final PClassInfo<PClass> Class = pklBaseClassInfo("Class", PClass.class);
   public static final PClassInfo<TypeAlias> TypeAlias =
       pklBaseClassInfo("TypeAlias", TypeAlias.class);
@@ -216,6 +218,7 @@ public final class PClassInfo<T> implements Serializable {
           entry(Listing.className, Listing),
           entry(Mapping.className, Mapping),
           entry(Module.className, Module),
+          entry(ModuleOutput.className, ModuleOutput),
           entry(Class.className, Class),
           entry(TypeAlias.className, TypeAlias),
           entry(Regex.className, Regex),

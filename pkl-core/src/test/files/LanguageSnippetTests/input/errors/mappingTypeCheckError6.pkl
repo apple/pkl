@@ -1,0 +1,11 @@
+a = new Listing { "hi" }
+
+b = (a) {
+  "hihih"
+}
+
+bar = new Mapping {
+  [b] = "foo"
+}
+
+res: Mapping<Listing<String(length == 5)>, String> = bar

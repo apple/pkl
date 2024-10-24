@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -431,6 +431,10 @@ public final class EvaluatorBuilder {
   public EvaluatorBuilder setProjectDependencies(DeclaredDependencies dependencies) {
     this.dependencies = dependencies;
     return this;
+  }
+
+  public @Nullable DeclaredDependencies getProjectDependencies() {
+    return this.dependencies;
   }
 
   /**

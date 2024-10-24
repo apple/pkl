@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,7 +72,7 @@ public final class VmModifier {
   public static final int VALID_PROPERTY_MODIFIERS =
       ABSTRACT | LOCAL | HIDDEN | EXTERNAL | FIXED | CONST;
 
-  public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL;
+  public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL | CONST;
 
   public static final int TYPEALIAS_OBJECT_MEMBER = TYPE_ALIAS | CONST;
 

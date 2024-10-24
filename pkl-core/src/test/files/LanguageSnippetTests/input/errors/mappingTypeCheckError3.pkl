@@ -1,0 +1,4 @@
+// ConstantEntriesLiteralNode
+res: Mapping<String, String> = new {
+  [1] = "foo"
+}

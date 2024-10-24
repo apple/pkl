@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,7 @@ public final class IdentityMixinNode extends PklRootNode {
     try {
       var argument = arguments[2];
       if (argumentTypeNode != null) {
-        argumentTypeNode.execute(frame, argument);
+        return argumentTypeNode.execute(frame, argument);
       }
       return argument;
     } catch (VmTypeMismatchException e) {

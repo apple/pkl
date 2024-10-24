@@ -3,11 +3,12 @@
 :uri-jenv: https://www.jenv.be
 :uri-intellij: https://www.jetbrains.com/idea/download/
 :uri-jdk: https://adoptopenjdk.net/releases.html?variant=openjdk17
+:uri-native-prerequisites: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
 
 == Setup
 
 . (mandatory) Install {uri-jdk}[OpenJDK 17] or higher
-. (recommended) Install {uri-intellij}[IntelliJ IDEA 2023.x] +
+. (recommended) Install {uri-intellij}[IntelliJ IDEA] +
 To import the project into IntelliJ, go to File->Open and select the project's root directory.
 If the project is opened but not imported, look for a popup in the lower right corner
 and click its "Import Gradle Project" link.
@@ -25,6 +26,12 @@ jenv enable-plugin gradle
 jenv enable-plugin export
 ----
 
+=== Additional Windows Setup
+. (optional) Go to `System->For developers` and enable `Developer Mode`.
+Otherwise, some tests may fail due to insufficient file system privileges.
+. (optional) To build the native executable (`./gradlew buildNative`), 
+install {uri-native-prerequisites}[Prerequisites For Native Image on Windows].
+
 == Common Build Commands
 
 [source,shell]
@@ -34,12 +41,12 @@ gw test          # run all tests except native executable tests
 gw testNative    # run native executable tests
 gw spotlessApply # fix code formatting
 gw build         # build everything except native executables
-gw buildNative   # build macOS executable on macOS,
-                 # Linux and Alpine executables on Linux
+gw buildNative   # build native executable(s) for current platform
                  # (Alpine executable is only built if ~/staticdeps/bin/musl-gcc exists)
 
 pkl-cli/build/executable/jpkl                   # run Java executable
-pkl-cli/build/executable/pkl-macos-amd64        # run Mac executable
+pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
+pkl-cli/build/executable/pkl-macos-amd64        # run Intel Mac executable
 pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
 pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
 pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 

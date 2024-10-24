@@ -1,10 +1,102 @@
-res1 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res1 = 2
 res2 = "Expected value of type `List`, but got type `Int`. Value: 42"
-res3 = "Expected value of type `List`, but got type `Int`. Value: 42"
-res4 = "Expected value of type `List`, but got type `Int`. Value: 42"
-res5 = "Type constraint `!isEmpty` violated. Value: \"\""
-res6 = "Type constraint `!isEmpty` violated. Value: \"\""
-res7 = true
-res8 = true
-res9 = true
-res10 = true
+res3 = 2
+res4 = List(1, 2, 3)
+res5 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res6 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res7 = "Expected value of type `List`, but got type `Int`. Value: 42"
+res8 = "Type constraint `!isEmpty` violated. Value: \"\""
+res9 = 1
+res10 = "Type constraint `!isEmpty` violated. Value: \"\""
+res11 = 1
+res12 = 1
+res13 = 1
+res14 = 3
+res15 = 42
+res16 = 1
+res17 = "Type constraint `!isEmpty` violated. Value: \"\""
+res18 = 1
+res19 = "Type constraint `!isEmpty` violated. Value: \"\""
+res20 = "Expected value of type `Mapping<String, String>|Mapping<String, Int>`, but got a different `Mapping`. Value: new Mapping { [\"one\"] = 1; [\"two\"] = \"two\" }"
+res21 = "Expected value of type `Mapping<String, String>|Mapping<String, Int>?`, but got a different `Mapping`. Value: new Mapping { [\"one\"] = 1; [\"two\"] = \"two\" }"
+res22 = "Expected value of type `Mapping<String, String>|(Mapping<String, Int>|Int)`, but got a different `Mapping`. Value: new Mapping { [\"one\"] = 1; [\"two\"] = \"two\" }"
+res23 = 2
+res24 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res25 = 1
+res26 = 1
+res27 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res28 = 1
+res29 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res30 = 1
+res31 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res32 = 1
+res33 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res34 = 1
+res35 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res36 {
+  ["hi"] = "hi"
+  ["hi2"] = 1
+}
+res37 {
+  ["hi"] = "hi"
+  ["hi2"] = 1
+}
+res38 {
+  ["hi"] = "hi"
+  ["hi2"] = 1
+}
+res39 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res40 = "Cannot find key `\"\"`."
+res41 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res42 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res43 = "hello"
+res44 = 1
+res45 = "Expected value of type `Int`, but got type `String`. Value: \"foo\""
+res46 = "goodbye"
+res47 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res48 = 1
+res49 = "Expected value of type `List<Mapping<String, Int>>|List<Mapping<String, String>>`, but got a different `List`. Value: List(new Mapping { [\"foo\"] = 1; [\"bar\"] = \"hi\" })"
+res50 = 2
+res51 = "Type constraint `length.isOdd` violated. Value: \"Ba\""
+res52 = "Type constraint `this == capitalize()` violated. Value: \"bar\""
+res53 = 3
+res54 = 1
+res55 = 2
+res56 = 2
+res57 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res58 = "Expected value of type `String`, but got type `Int`. Value: 2"
+res59 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res60 = 2
+res61 = 1
+res62 = 1
+res63 = "Expected value of type `Int`, but got type `String`. Value: \"hi\""
+res64 = 1
+res65 = 1
+res66 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res67 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res68 = 5
+res69 = 1
+res70 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res71 = 2
+res72 = 1
+res73 = 2
+res74 = "hello"
+res75 = "Expected value of type `String`, but got type `Int`. Value: 1"
+res77 = "Expected value of type `Int|Mapping<String, String>`, but got a different `Mapping`. Value: new Mapping { [\"one\"] = \"hello\"; [\"two\"] = 1 }"
+res78 = "Expected value of type `Collection<Mapping<String, String>>|Collection<Mapping<String, Int>>`, but got a different `List`. Value: List(new Mapping { [\"one\"] = \"hello\"; [\"two\"] = 1 })"
+res79 = 3
+res80 = 1
+res81 = 2
+res82 = "Expected value of type `Int`, but got type `String`. Value: \"hi\""
+res83 = 3
+res84 = 1
+res85 = 2
+res86 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res87 = 1
+res88 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res89 = 1
+res90 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res91 = 1
+res92 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""
+res93 = 1
+res94 = "Expected value of type `Int`, but got type `String`. Value: \"hello\""

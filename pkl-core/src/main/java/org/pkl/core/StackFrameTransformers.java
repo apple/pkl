@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@ package org.pkl.core;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.stream.StreamSupport;
 import org.pkl.core.packages.PackageAssetUri;
 import org.pkl.core.runtime.VmContext;
@@ -93,7 +92,7 @@ public final class StackFrameTransformers {
       var uri = frame.getModuleUri();
       if (!uri.startsWith("file:")) return frame;
 
-      return transformUri(frame, Path.of(URI.create(uri)).toString(), scheme);
+      return transformUri(frame, IoUtils.pathOf(URI.create(uri)).toString(), scheme);
     };
   }
 

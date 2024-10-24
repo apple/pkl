@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -285,7 +285,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   }
 
   @TruffleBoundary
-  protected void elementsEntriesFallback(
+  protected Object elementsEntriesFallback(
       Object parent, @Nullable ObjectMember firstElemOrEntry, boolean isElementsOnly) {
     var parentIsClass = parent instanceof VmClass;
     var parentClass = parentIsClass ? (VmClass) parent : VmUtils.getClass(parent);

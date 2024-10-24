@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -103,7 +103,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
             var callTarget = member.getCallTarget();
             value = callTarget.call(parent, owner, key);
           }
-          owner.setCachedValue(key, value);
+          owner.setCachedValue(key, value, member);
         }
 
         frame.setAuxiliarySlot(customThisSlot, value);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -49,7 +48,7 @@ public abstract class ModulesTask extends BasePklTask {
   public abstract ListProperty<Object> getSourceModules();
 
   @InputFiles
-  public abstract ConfigurableFileCollection getTransitiveModules();
+  public abstract ListProperty<File> getTransitiveModules();
 
   private final Map<List<Object>, Pair<List<File>, List<URI>>> parsedSourceModulesCache =
       new HashMap<>();

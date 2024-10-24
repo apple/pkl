@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -237,15 +237,14 @@ class JavaCodeGenerator(
       )
     }
 
-    fun generateConstructor(): MethodSpec {
+    fun generateConstructor(isInstantiable: Boolean): MethodSpec {
       val builder =
         MethodSpec.constructorBuilder()
           // choose most restrictive access modifier possible
           .addModifiers(
             when {
-              pClass.isAbstract -> Modifier.PROTECTED
-              allProperties.isNotEmpty() -> Modifier.PUBLIC // if `false`, has no state
-              pClass.isOpen -> Modifier.PROTECTED
+              isInstantiable -> Modifier.PUBLIC
+              pClass.isAbstract || pClass.isOpen -> Modifier.PROTECTED
               else -> Modifier.PRIVATE
             }
           )
@@ -542,7 +541,11 @@ class JavaCodeGenerator(
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
 
-      if (codegenOptions.implementSerializable && !isModuleClass) {
+      // stateless final module classes are non-instantiable by choice
+      val isInstantiable =
+        !(pClass.isAbstract || (isModuleClass && !pClass.isOpen && allProperties.isEmpty()))
+
+      if (codegenOptions.implementSerializable && isInstantiable) {
         builder.addSuperinterface(java.io.Serializable::class.java)
         builder.addField(generateSerialVersionUIDField())
       }
@@ -574,7 +577,7 @@ class JavaCodeGenerator(
         generateSpringBootAnnotations(builder)
       }
 
-      builder.addMethod(generateConstructor())
+      builder.addMethod(generateConstructor(isInstantiable))
 
       superclass?.let { builder.superclass(it.toJavaPoetName()) }
 
@@ -590,12 +593,12 @@ class JavaCodeGenerator(
             builder.addMethod(generateGetter(name, property, isOverridden))
           }
         }
-        if (!pClass.isAbstract) {
+        if (isInstantiable) {
           builder.addMethod(generateWithMethod(name, property))
         }
       }
 
-      if (properties.isNotEmpty()) {
+      if (isInstantiable) {
         builder
           .addMethod(generateEqualsMethod())
           .addMethod(generateHashCodeMethod())

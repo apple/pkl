@@ -1,0 +1,6 @@
+baz = 15
+foo {
+  qux = 15
+  corge = 15
+  corge2 = 15
+}

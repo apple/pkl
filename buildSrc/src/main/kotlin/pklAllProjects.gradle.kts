@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,7 +129,6 @@ private val licenseHeaderFile by lazy {
 
 private fun KotlinGradleExtension.configureFormatter() {
   ktfmt(libs.versions.ktfmt.get()).googleStyle()
-  targetExclude("**/generated/**", "**/build/**")
   licenseHeaderFile(licenseHeaderFile, "([a-zA-Z]|@file|//)")
 }
 
@@ -140,15 +139,17 @@ spotless {
   if (project === rootProject) {
     kotlinGradle {
       configureFormatter()
-      target("*.kts", "buildSrc/**/*.kts")
+      target("*.kts", "buildSrc/*.kts", "buildSrc/src/*/kotlin/**/*.kts")
     }
     kotlin {
       ktfmt(libs.versions.ktfmt.get()).googleStyle()
-      targetExclude("**/generated/**", "**/build/**")
-      target("buildSrc/**/*.kt")
+      target("buildSrc/src/*/kotlin/**/*.kt")
       licenseHeaderFile(licenseHeaderFile)
     }
   } else {
-    kotlinGradle { configureFormatter() }
+    kotlinGradle {
+      configureFormatter()
+      target("*.kts")
+    }
   }
 }

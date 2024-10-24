@@ -1,0 +1,5 @@
+one = 1
+
+res = new Listing<String> {
+  one
+}

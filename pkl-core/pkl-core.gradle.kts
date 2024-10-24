@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -160,6 +160,7 @@ tasks.test {
     excludeEngines("LinuxAmd64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAarch64LanguageSnippetTestsEngine")
     excludeEngines("AlpineLanguageSnippetTestsEngine")
+    excludeEngines("WindowsLanguageSnippetTestsEngine")
   }
 }
 

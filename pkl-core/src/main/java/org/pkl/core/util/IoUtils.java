@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,6 +88,20 @@ public final class IoUtils {
       return new URI(str);
     }
     return new URI(null, null, str, null);
+  }
+
+  /** Converts a URI to a Path, normalizing any non-ASCII characters. */
+  public static Path pathOf(URI uri) {
+    // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
+    // ASCII
+    // Unfortunately there's no way to go from URI -> ASCII URI directly
+    // so this must transform URI -> ASCII String -> ASCII URI
+    try {
+      return Path.of(new URI(uri.toASCIIString()));
+    } catch (URISyntaxException e) {
+      // impossible to get here; we started from a valid URI to begin with
+      throw PklBugException.unreachableCode();
+    }
   }
 
   /** Like {@link #toUri(String)}, except without checked exceptions. */
@@ -537,7 +551,7 @@ public final class IoUtils {
     return ServiceLoader.load(serviceClass, IoUtils.class.getClassLoader());
   }
 
-  // not a static property to avoid compile-time evaluation by native-image
+  // not a static field to avoid compile-time evaluation by native-image
   public static boolean isTestMode() {
     return Boolean.getBoolean("org.pkl.testMode");
   }

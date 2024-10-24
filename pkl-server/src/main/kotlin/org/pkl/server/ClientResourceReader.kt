@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,7 +91,7 @@ internal class ClientResourceReader(
                 if (response.error != null) {
                   completeExceptionally(IOException(response.error))
                 } else {
-                  complete(response.contents!!)
+                  complete(response.contents ?: ByteArray(0))
                 }
               }
               else -> {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -442,13 +442,21 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         : doVisitNewExprWithInferredParent(ctx);
   }
 
+  // `new Listing<Person> {}` is sugar for: `new Listing<Person> {} as Listing<Person>`
   private Object doVisitNewExprWithExplicitParent(NewExprContext ctx, TypeContext typeCtx) {
-    return doVisitObjectBody(
-        ctx.objectBody(),
-        new GetParentForTypeNode(
-            createSourceSection(ctx),
-            visitType(typeCtx),
-            symbolTable.getCurrentScope().getQualifiedName()));
+    var parentType = visitType(typeCtx);
+    var expr =
+        doVisitObjectBody(
+            ctx.objectBody(),
+            new GetParentForTypeNode(
+                createSourceSection(ctx),
+                parentType,
+                symbolTable.getCurrentScope().getQualifiedName()));
+    if (typeCtx instanceof DeclaredTypeContext declaredTypeContext
+        && declaredTypeContext.typeArgumentList() != null) {
+      return new TypeCastNode(parentType.getSourceSection(), expr, parentType);
+    }
+    return expr;
   }
 
   private Object doVisitNewExprWithInferredParent(NewExprContext ctx) {
@@ -713,12 +721,22 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable TypeAnnotationContext typeAnnCtx,
       @Nullable ExprContext exprCtx,
       @Nullable List<? extends ObjectBodyContext> bodyCtx) {
-
+    var modifiers =
+        doVisitModifiers(
+            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier");
+    if (VmModifier.isConst(modifiers) && !VmModifier.isLocal(modifiers)) {
+      @SuppressWarnings("OptionalGetWithoutIsPresent")
+      var constModifierCtx =
+          modifierCtxs.stream().filter((it) -> it.CONST() != null).findFirst().get();
+      throw exceptionBuilder()
+          .evalError("invalidConstObjectMemberModifier")
+          .withSourceSection(createSourceSection(constModifierCtx))
+          .build();
+    }
     return doVisitObjectProperty(
         createSourceSection(ctx),
         createSourceSection(propertyName),
-        doVisitModifiers(
-            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier"),
+        modifiers,
         propertyName.getText(),
         typeAnnCtx,
         exprCtx,
@@ -1508,7 +1526,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       text = "-" + text;
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Long.parseLong(text, radix);
       return new IntLiteralNode(section, num);
@@ -1542,7 +1560,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           source.createSection(ctx.getStart().getStartIndex() + exponentIdx + 1, 1));
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Double.parseDouble(text);
       return new FloatLiteralNode(section, num);
@@ -1861,12 +1879,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitUnaryMinusExpr(UnaryMinusExprContext ctx) {
-    var childExpr = visitExpr(ctx.expr());
-    if (childExpr instanceof IntLiteralNode || childExpr instanceof FloatLiteralNode) {
-      // negation already handled in child expr (see corresponding code)
+    var childCtx = ctx.expr();
+    var childExpr = visitExpr(childCtx);
+    if (childCtx instanceof IntLiteralContext || childCtx instanceof FloatLiteralContext) {
+      // negation already handled (see visitIntLiteral/visitFloatLiteral)
       return childExpr;
     }
-
     return UnaryMinusNodeGen.create(createSourceSection(ctx), childExpr);
   }
 

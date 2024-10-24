@@ -2006,7 +2006,8 @@ pigeon: ParentBird = new {
 [[methods]]
 == Methods
 
-Modules and classes can define methods.
+Pkl methods can be defined on classes and modules using the `function` keyword.
+Methods may access properties of their containing type.
 Submodules and subclasses can override them.
 
 Like Java and most other object-oriented languages, Pkl uses _single dispatch_ -- methods are dynamically dispatched based on the receiver's runtime type.
@@ -3176,6 +3177,7 @@ pkl: TRACE: num1 * num2 = 672 (at file:///some/module.pkl, line 42)
 
 This section discusses language features that are generally more relevant to template and library authors than template consumers.
 
+<<meaning-of-new,Meaning of `new`>> +
 <<let-expressions,Let Expressions>> +
 <<type-tests,Type Tests>> +
 <<type-casts,Type Casts>> +
@@ -3199,6 +3201,162 @@ This section discusses language features that are generally more relevant to tem
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>>
 
+[[meaning-of-new]]
+=== Meaning of `new`
+
+Objects in Pkl always <<amending-objects, amends>> _some_ value.
+The `new` keyword is a special case of amending where a contextual value is amended.
+In Pkl, there are two forms of `new` objects:
+
+* `new` with explicit type information, for example, `new Foo {}`.
+* `new` without type information, for example, `new {}`.
+
+==== Type defaults
+
+To understand instantiation cases without explicit parent or type information, it's important to first understand implicit default values.
+When a property is declared in a module or class but is not provided an explicit default value, the property's default value becomes the type's default value.
+Similarly, when `Listing` and `Mapping` types are declared with explicit type arguments for their element or value, their `default` property amends that declared type.
+When `Listing` and `Mapping` types are declared without type arguments, their `default` property amends an empty `Dynamic` object.
+Some types, including `Pair` and primitives like `String`, `Number`, and `Boolean` have no default value; attempting to render such a property results in the error "Tried to read property `<name>` but its value is undefined".
+
+[source,{pkl}]
+----
+class Bird {
+  name: String = "polly"
+}
+
+bird: Bird // <1>
+birdListing: Listing<Bird> // <2>
+birdMapping: Mapping<String, Bird> // <3> 
+----
+<1> Without an explicit default value, this property has default value `new Bird { name = "polly" }`
+<2> With an explicit element type argument, this property's default value is equivalent to `new Listing<Bird> { default = (_) -> new Bird { name = "polly" } }`
+<3> With an explicit value type argument, this property's default value is equivalent to `new Mapping<String, Bird> { default = (_) -> new Bird { name = "polly" } }`
+
+==== Explicitly Typed `new`
+
+Instantiating an object with `new <type>` results in a value that amends the specified type's default value.
+Notably, creating a `Listing` element or assigning a `Mapping` entry value with an explicitly typed `new` ignores the object's `default` value.
+
+[source,{pkl}]
+----
+class Bird {
+  /// The name of the bird
+  name: String
+
+  /// Whether this is a bird of prey or not.
+  isPredatory: Boolean?
+}
+
+newProperty = new Bird { // <1>
+  name = "Warbler"
+}
+
+someListing = new Listing<Bird> {
+  default {
+    isPredatory = true
+  }
+  new Bird { // <2>
+    name = "Sand Piper"
+  }
+}
+
+someMapping = new Mapping<String, Bird> {
+  default {
+    isPredatory = true
+  }
+  ["Penguin"] = new Bird { // <3>
+    name = "Penguin"
+  }
+}
+----
+<1> Assigning a `new` explicitly-typed value to a property.
+<2> Adding an `new` explicitly-typed `Listing` element.
+The value will not have property `isPredatory = true` as the `default` property of the `Listing` is not used.
+<3> Assigning a `new` explicitly-typed value to a `Mapping` entry.
+The value will not have property `isPredatory = true` as the `default` property of the `Mapping` is not used.
+
+==== Implicitly Typed `new`
+
+When using the implicitly typed `new` invocation, there is no explicit parent value to amend.
+In these cases, Pkl infers the amend operation's parent value based on context:
+
+* When assigning to a declared property, the property's default value is amended (<<amend-null, including `null`>>).
+If there is no type associated with the property, an empty `Dynamic` object is amended.
+* When assigning to an entry (e.g. a `Mapping` member) or element (e.g. a `Listing` member), the enclosing object's `default` property is applied to the corresponding index or key, respectively, to produce the value to be amended.
+* In other cases, evaluation fails with the error message "Cannot tell which parent to amend".
+
+The type annotation of a <<methods,method>> parameter is not used for inference.
+In this case, the argument's type should be specified explicitly.
+
+[source,{pkl}]
+----
+class Bird {
+  name: String
+
+  function listHatchlings(items: Listing<String>): Listing<String> = new {
+    for (item in items) {
+      "\(name):\(item)"
+    }
+  }
+}
+
+typedProperty: Bird = new { // <1>
+  name = "Swift"
+}
+
+untypedProperty = new { // <2>
+  hello = "world"
+}
+
+typedListing: Listing<Bird> = new {
+  new { // <3>
+    name = "Kite"
+  }
+}
+
+untypedListing: Listing = new {
+  new { // <4>
+    hello = "there"
+  }
+}
+
+typedMapping: Mapping<String, Bird> = new {
+  default { entryKey ->
+    name = entryKey
+  }
+  ["Saltmarsh Sparrow"] = new { // <5>
+    name = "Sharp-tailed Sparrow"
+  }
+}
+
+amendedMapping = (typedMapping) {
+  ["Saltmarsh Sparrow"] = new {} // <6>
+}
+
+class Aviary {
+  birds: Listing<Bird> = new {
+    new { name = "Osprey" }
+  }
+}
+
+aviary: Aviary = new {
+  birds = new { // <7>
+    new { name = "Kiwi" }
+  }
+}
+
+swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
+----
+<1> Assignment to a property with an explicitly declared type, amending `new Bird {}`.
+<2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
+<3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
+<4> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
+<5> `Mapping` value assignment, amdending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<7> Admending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
+<8> Error: Cannot tell which parent to amend.
+
 [[let-expressions]]
 === Let Expressions
 
@@ -3220,10 +3378,11 @@ Here is an example:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets = List("Seeds", "Berries", "Mice"))
-List(diets[2], diets[0]) // <1>
+birdDiets =
+  let (diets = List("Seeds", "Berries", "Mice"))
+    List(diets[2], diets[0]) // <1>
 ----
-<1> result: `List("Mice", "Seeds")`
+<1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions serve two purposes:
 
@@ -3234,20 +3393,22 @@ List(diets[2], diets[0]) // <1>
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (diets: List<String> = List("Seeds", "Berries", "Mice"))
-diets[2] + diets[0] // <1>
+birdDiets = 
+  let (diets: List<String> = List("Seeds", "Berries", "Mice"))
+    diets[2] + diets[0] // <1>
 ----
-<1> result: `List("Mice", "Seeds")`
+<1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions can be stacked:
 
 [source%tested,{pkl}]
 ----
-birdDiets = let (birds = List("Pigeon", "Barn owl", "Parrot"))
-let (diet = List("Seeds", "Mice", "Berries"))
-birds.zip(diet) // <1>
+birdDiets = 
+  let (birds = List("Pigeon", "Barn owl", "Parrot"))
+  let (diet = List("Seeds", "Mice", "Berries"))
+    birds.zip(diet) // <1>
 ----
-<1> result: `List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
+<1> result: `birdDiets = List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
 
 [[type-tests]]
 === Type Tests
@@ -4581,7 +4742,7 @@ oldPets {
 }
 
 newPets {
-  ...cast
+  ...oldPets
   ["Pigeon"] = "Toby the Pigeon" // <1>
 }
 ----
@@ -5246,7 +5407,7 @@ package {
   packageZipUrl = "https://example.com/\(name)/\(name)@\(version).zip" // <4>
 }
 ----
-<1> The display name of the package. For display purposes only.
+<1> The display name of the package.For display purposes only.
 <2> The package URI, without the version part.
 <3> The version of the package.
 <4> The URL to download the package's ZIP file.
@@ -5254,8 +5415,9 @@ package {
 The package itself is created by the command xref:pkl-cli:index.adoc#command-project-package[`pkl project package`].
 
 This command only prepares artifacts to be published.
-Once the artifacts are prepared, they are expected to be uploaded to an HTTPS server such that the ZIP asset can be downloaded at path `packageZipUrl`, and the metadata can be downloaded at `+https://<package uri>+`. 
+Once the artifacts are prepared, they are expected to be uploaded to an HTTPS server such that the ZIP asset can be downloaded at path `packageZipUrl`, and the metadata can be downloaded at `+https://<package uri>+`.
 
+[[local-dependencies]]
 ==== Local dependencies
 
 A project can depend on a local project as a dependency.

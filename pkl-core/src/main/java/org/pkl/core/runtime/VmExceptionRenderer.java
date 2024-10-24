@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import org.pkl.core.Release;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
@@ -46,7 +47,7 @@ public final class VmExceptionRenderer {
     if (exception instanceof VmBugException bugException) {
       renderBugException(bugException, builder);
     } else {
-      renderException(exception, builder);
+      renderException(exception, builder, true);
     }
   }
 
@@ -66,13 +67,13 @@ public final class VmExceptionRenderer {
             .replaceAll("\\+", "%20"));
 
     builder.append("\n\n");
-    renderException(exception, builder);
+    renderException(exception, builder, true);
     builder.append('\n').append(Release.current().versionInfo()).append("\n\n");
 
     exceptionToReport.printStackTrace(new PrintWriter(new StringBuilderWriter(builder)));
   }
 
-  private void renderException(VmException exception, StringBuilder builder) {
+  private void renderException(VmException exception, StringBuilder builder, boolean withHeader) {
     var header = "–– Pkl Error ––";
 
     String message;
@@ -94,7 +95,16 @@ public final class VmExceptionRenderer {
       message = exception.getMessage();
     }
 
-    builder.append(header).append('\n').append(message).append('\n');
+    if (withHeader) {
+      builder.append(header).append('\n');
+    }
+    builder.append(message).append('\n');
+
+    if (exception instanceof VmWrappedEvalException vmWrappedEvalException) {
+      var sb = new StringBuilder();
+      renderException(vmWrappedEvalException.getWrappedException(), sb, false);
+      hint = sb.toString().lines().map((it) -> ">\t" + it).collect(Collectors.joining("\n"));
+    }
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -126,6 +136,10 @@ public final class VmExceptionRenderer {
       if (!frames.isEmpty()) {
         builder.append('\n');
         stackTraceRenderer.render(frames, hint, builder);
+      } else if (hint != null) {
+        // render hint if there are no stack frames
+        builder.append('\n');
+        builder.append(hint);
       }
     }
   }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -226,7 +226,7 @@ final class EmbeddedExecutor implements Executor {
       try {
         return executorSpi.evaluatePath(modulePath, options.toSpiOptions());
       } catch (ExecutorSpiException e) {
-        throw new ExecutorException(e.getMessage(), e.getCause());
+        throw new ExecutorException(e.getMessage(), e.getCause(), executorSpi.getPklVersion());
       } finally {
         currentThread.setContextClassLoader(prevContextClassLoader);
       }

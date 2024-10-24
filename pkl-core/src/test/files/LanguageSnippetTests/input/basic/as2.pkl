@@ -20,13 +20,37 @@ examples {
   
   ["listing"] {
     new Listing { 1; 2; 3 } as Listing<Int>
-    module.catch(() -> new Listing { 1; 2; 3 } as Listing<String>)
+    module.catch(() -> (new Listing { 1; 2; 3 } as Listing<String>)[0])
   }
   
+  ["cast Listing<UInt32> to other integer types"] {
+    local l = new Listing<UInt32> { 9999999 }
+    (l as Listing<Int>)[0]
+    (l as Listing<UInt>)[0]
+    (l as Listing<Int32>)[0]
+    (l as Listing<UInt32>)[0]
+    module.catch(() -> (l as Listing<Int16>)[0])
+    module.catch(() -> (l as Listing<UInt16>)[0])
+    module.catch(() -> (l as Listing<Int8>)[0])
+    module.catch(() -> (l as Listing<UInt8>)[0])
+  }
+
   ["mapping"] {
     module.catch(() -> new Listing { 1; 2; 3 } as Mapping<Int, String>)
     new Mapping { ["Pigeon"] = 42; ["Barn Owl"] = 21 } as Mapping<String, Int>
     module.catch(() -> new Mapping { ["Pigeon"] = 42; ["Barn Owl"] = 21 } as Mapping<Int, String>)
+  }
+  
+  ["cast Mapping<, UInt> to other integer types"] {
+    local m = new Mapping<String, UInt> { ["x"] = 9999 }
+    (m as Mapping<String, Int>)["x"]
+    (m as Mapping<String, UInt>)["x"]
+    (m as Mapping<String, Int32>)["x"]
+    (m as Mapping<String, UInt32>)["x"]
+    (m as Mapping<String, Int16>)["x"]
+    (m as Mapping<String, UInt16>)["x"]
+    module.catch(() -> (m as Mapping<String, Int8>)["x"])
+    module.catch(() -> (m as Mapping<String, UInt8>)["x"])
   }
   
   ["union type"] {
@@ -49,9 +73,9 @@ examples {
   ["function type"] {
     (((x) -> x) as (Int) -> Int).apply(42)
     (((x) -> x) as (String) -> String).apply(42)
-    module.catch(() -> ((x, y) -> x) as (Int) -> Int)
+    module.catch(() -> ((x, _) -> x) as (Int) -> Int)
   }
-  
+
   ["string literal type"] {
     "Pigeon" as "Pigeon"|"Barn Owl"
     module.catch(() -> "Pigeon" as "Piggy"|"Barn Owl")

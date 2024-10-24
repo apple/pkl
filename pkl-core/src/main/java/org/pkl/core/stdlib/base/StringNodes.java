@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -736,6 +736,22 @@ public final class StringNodes {
     @Specialization
     protected VmList eval(String self, VmRegex separator) {
       return VmList.create(separator.getPattern().split(self));
+    }
+  }
+
+  public abstract static class splitLimit extends ExternalMethod2Node {
+    @TruffleBoundary
+    @Specialization
+    protected VmList eval(String self, String separator, long limit) {
+      var parts = self.split(Pattern.quote(separator), (int) limit);
+      return VmList.create(parts);
+    }
+
+    @TruffleBoundary
+    @Specialization
+    protected VmList eval(String self, VmRegex separator, long limit) {
+      var parts = separator.getPattern().split(self, (int) limit);
+      return VmList.create(parts);
     }
   }
 

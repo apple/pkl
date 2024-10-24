@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,6 @@ import org.pkl.core.StackFrame;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
@@ -62,8 +61,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmUtils {
-  /** See {@link MemberNode#shouldRunTypeCheck(VirtualFrame)}. */
-  @SuppressWarnings("JavadocReference")
+  /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
   public static final Object SKIP_TYPECHECK_MARKER = new Object();
 
   public static final String REPL_TEXT = "repl:text";
@@ -263,6 +261,7 @@ public final class VmUtils {
 
     final var constantValue = member.getConstantValue();
     if (constantValue != null) {
+      var ret = constantValue;
       // for a property, do a type check
       if (member.isProp()) {
         var property = receiver.getVmClass().getProperty(member.getName());
@@ -270,10 +269,15 @@ public final class VmUtils {
           var callTarget = property.getTypeNode().getCallTarget();
           try {
             if (checkType) {
-              callNode.call(callTarget, receiver, property.getOwner(), constantValue);
+              ret = callNode.call(callTarget, receiver, property.getOwner(), constantValue);
             } else {
-              callNode.call(
-                  callTarget, receiver, property.getOwner(), constantValue, SKIP_TYPECHECK_MARKER);
+              ret =
+                  callNode.call(
+                      callTarget,
+                      receiver,
+                      property.getOwner(),
+                      constantValue,
+                      VmUtils.SKIP_TYPECHECK_MARKER);
             }
           } catch (VmException e) {
             CompilerDirectives.transferToInterpreter();
@@ -293,21 +297,28 @@ public final class VmUtils {
             throw e;
           }
         }
+      } else if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
+        if (owner != receiver && owner instanceof VmListingOrMapping<?> vmListingOrMappingOwner) {
+          ret = vmListingOrMappingOwner.typecastObjectMember(member, ret, callNode);
+        }
+        ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
       }
-
-      receiver.setCachedValue(memberKey, constantValue);
-      return constantValue;
+      receiver.setCachedValue(memberKey, ret, member);
+      return ret;
     }
 
     var callTarget = member.getCallTarget();
-    Object computedValue;
+    Object ret;
     if (checkType) {
-      computedValue = callNode.call(callTarget, receiver, owner, memberKey);
+      ret = callNode.call(callTarget, receiver, owner, memberKey);
     } else {
-      computedValue = callNode.call(callTarget, receiver, owner, memberKey, SKIP_TYPECHECK_MARKER);
+      ret = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
     }
-    receiver.setCachedValue(memberKey, computedValue);
-    return computedValue;
+    if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
+      ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
+    }
+    receiver.setCachedValue(memberKey, ret, member);
+    return ret;
   }
 
   public static @Nullable ObjectMember findMember(VmObjectLike receiver, Object memberKey) {
@@ -848,5 +859,18 @@ public final class VmUtils {
   @TruffleBoundary
   public static <K, V> V getMapValue(Map<K, V> map, K key) {
     return map.get(key);
+  }
+
+  /**
+   * If true, the value computed by this node is not the final value exposed to user code but will
+   * still be amended.
+   *
+   * <p>Used to disable type check for to-be-amended properties. See {@link
+   * org.pkl.core.runtime.VmUtils#SKIP_TYPECHECK_MARKER}. IDEA: might be more appropriate to only
+   * skip constraints check
+   */
+  public static boolean shouldRunTypeCheck(VirtualFrame frame) {
+    return frame.getArguments().length != 4
+        || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
   }
 }

@@ -27,12 +27,16 @@ local x6: Mapping<String, String(!isEmpty)> = new {
   ["pigeon"] = ""
 }
 
-res1 = test.catch(() -> x1)
-res2 = test.catch(() -> x2)
-res3 = test.catch(() -> x3)
-res4 = test.catch(() -> x4)
-res5 = test.catch(() -> x5)
-res6 = test.catch(() -> x6)
+res1 = x1.length
+res2 = test.catch(() -> x1["barn owl"])
+res3 = x2.length
+res4 = x2["fred"]
+res5 = test.catch(() -> x2["barney"])
+res6 = test.catch(() -> x3)
+res7 = test.catch(() -> x4)
+res8 = test.catch(() -> x5)
+res9 = x6.length
+res10 = test.catch(() -> x6["pigeon"])
 
 hidden x7: Mapping = new {
   ["first"] = throw("value unnecessarily evaluated")
@@ -52,7 +56,312 @@ hidden x10 = new Mapping {
   ["third"] = throw("value unnecessarily evaluated")
 }
 
-res7 = !x7.isEmpty
-res8 = !x8.isEmpty
-res9 = !x9.isEmpty
-res10 = x10["second"] == 42
+res11 = x7.length
+res12 = x8.length
+res13 = x9.length
+res14 = x10.length
+res15 = x10["second"]
+
+local x11: Mapping<String, String(!isEmpty)> = new Mapping<String, String> {
+  ["foo"] = ""
+}
+
+res16 = x11.length
+res17 = test.catch(() -> x11["foo"])
+
+local x12: Mapping<String, String> = new Mapping<String, String(!isEmpty)> {
+  ["foo"] = ""
+}
+
+res18 = x12.length
+res19 = test.catch(() -> x12["foo"])
+
+local m = new Mapping {
+  ["one"] = 1
+  ["two"] = "two"
+}
+
+local x13: Mapping<String, String>|Mapping<String, Int> = m
+local x14: Mapping<String, String>|Mapping<String, Int>? = m
+local x15: Mapping<String, String>|(Mapping<String, Int>|Int) = m
+local x16: Mapping<String, String>|Int = m
+
+res20 = test.catch(() -> x13)
+res21 = test.catch(() -> x14)
+res22 = test.catch(() -> x15)
+res23 = x16.length
+res24 = test.catch(() -> x16["one"])
+
+local x17: Mapping<String, Mapping<String, String>> = new {
+  ["foo"] {
+    ["bar"] = 1
+  }
+}
+
+res25 = x17.length
+res26 = x17["foo"].length
+res27 = test.catch(() -> x17["foo"]["bar"])
+
+local x18 = new Mapping { ["foo"] = 1 } as Mapping<String, String>
+
+res28 = x18.length
+res29 = test.catch(() -> x18["foo"])
+
+local x19 = new Mapping<String, String> {
+  when (true) {
+    ["foo"] = 1
+  }
+}
+
+res30 = x19.length
+res31 = test.catch(() -> x19["foo"])
+
+local x20 = new Mapping<String, String> {
+  ...Map("foo", 1)
+}
+
+res32 = x20.length
+res33 = test.catch(() -> x20["foo"])
+
+local x21 = new Mapping<String, String> {
+  for (k, v in Map("foo", 1)) {
+    [k] = v
+  }
+}
+
+res34 = x21.length
+res35 = test.catch(() -> x21["foo"])
+
+local x22: Mapping<String, String> = new {
+  ["hi"] = "hi"
+}
+
+// typechecks not required when amending
+// ElementsEntriesLiteralNode
+res36 = (x22) {
+  ["hi2"] = 1
+}
+
+// GeneratorObjectLiteralNode
+res37 = (x22) {
+  when (true) {
+    ["hi2"] = 1
+  }
+}
+
+// GeneratorSpreadNode
+res38 = (x22) {
+  ...Map("hi2", 1)
+}
+
+local x23: Mapping<String, Mapping<String, String(length.isOdd)>> = new Mapping<String, Mapping<String, String(this == capitalize())>> {
+  ["foo"] {
+    ["first"] = "Ba"
+    ["second"] = "bar"
+  }
+}
+
+res39 = test.catch(() -> x23["foo"]["first"])
+res40 = test.catch(() -> x23[""])
+
+// check mappings from inside a list
+local x24: List<Mapping<String, String(length.isOdd)>> = List(
+  new Mapping<String, String(this == capitalize())> {
+    ["first"] = "Ba"
+    ["second"] = "bar"
+  }
+)
+
+res41 = test.catch(() -> x24[0]["first"])
+res42 = test.catch(() -> x24[0]["second"])
+
+local x25: List<String|Mapping<String, Int>> = List(
+  "hello",
+  new Mapping {
+    ["foo"] = "foo"
+  },
+  "goodbye"
+)
+
+res43 = x25[0]
+// retain lazy typecheck of mapping.
+res44 = x25[1].length
+res45 = test.catch(() -> x25[1]["foo"])
+res46 = x25[2]
+
+// check mappings from inside a set
+local x26: Set<Mapping<String, String(length.isOdd)>> = Set(
+  new Mapping<String, String(this == capitalize())> {
+    ["first"] = "Ba"
+    ["second"] = "bar"
+  }
+)
+
+// sets are eagerly checked (need to compute hash code, therefore need to deep force)
+res47 = test.catch(() -> x26)
+
+local x28: List<Mapping<String, Int>>|List<Mapping<String, String>> = List(
+  new Mapping { ["foo"] = 1 }
+)
+
+res48 = x28[0]["foo"]
+
+local x29: List<Mapping<String, Int>>|List<Mapping<String, String>> = List(
+  new Mapping {
+    ["foo"] = 1
+    ["bar"] = "hi"
+  }
+)
+
+res49 = test.catch(() -> x29)
+
+// check mappings from inside a map
+local x30: Map<String, Mapping<String, String(length.isOdd)>> = Map(
+  "hello",
+  new Mapping<String, String(this == capitalize())> {
+    ["first"] = "Ba"
+    ["second"] = "bar"
+  }
+)
+
+res50 = x30["hello"].length
+res51 = test.catch(() -> x30["hello"]["first"])
+res52 = test.catch(() -> x30["hello"]["second"])
+
+local x31: Map<String, Int|Mapping<String, String>> = Map(
+  "hello", 1,
+  "themapping", new Mapping {
+    ["one"] = 1
+    ["two"] = 2
+  },
+  "goodbye", 2
+)
+
+res53 = x31.length
+res54 = x31["hello"]
+res55 = x31["goodbye"]
+res56 = x31["themapping"].length
+res57 = test.catch(() -> x31["themapping"]["one"])
+res58 = test.catch(() -> x31["themapping"]["two"])
+
+local x32: Map<Mapping<String, String>, Int> = Map(
+  new Mapping { ["one"] = 1 },
+  1
+)
+
+res59 = test.catch(() -> x32)
+
+local x33: Map<String, Mapping<String, Int>|Int> = Map(
+  "first", 1,
+  "second", new Mapping { ["hi"] = "hi" }
+)
+
+res60 = x33.length
+res61 = x33["first"]
+res62 = x33["second"].length
+res63 = test.catch(() -> x33["second"]["hi"])
+
+local x34: Pair<Mapping<String, String>, Mapping<String, String>> = Pair(
+  new Mapping { ["one"] = 1 },
+  new Mapping { ["one"] = 1 }
+)
+
+res64 = x34.first.length
+res65 = x34.second.length
+
+res66 = test.catch(() -> x34.first["one"])
+res67 = test.catch(() -> x34.second["one"])
+
+local x35: Pair<Int, Mapping<String, String>> = Pair(
+  5,
+  new Mapping { ["one"] = 1 }
+)
+
+res68 = x35.first
+res69 = x35.second.length
+res70 = test.catch(() -> x35.second["one"])
+
+local x36: Collection<Int|Mapping<String, String>> = List(
+  1,
+  new Mapping {
+    ["one"] = "hello"
+    ["two"] = 1
+  }
+)
+
+
+res71 = x36.length
+res72 = x36.first
+res73 = x36[1].length
+res74 = x36[1]["one"]
+res75 = test.catch(() -> x36[1]["two"])
+
+local x37: Collection<Int|Mapping<String, String>> = Set(
+  1,
+  new Mapping {
+    ["one"] = "hello"
+    ["two"] = 1
+  }
+)
+
+res77 = test.catch(() -> x37)
+
+local x38: Collection<Mapping<String, String>>|Collection<Mapping<String, Int>> =
+  List(new Mapping {
+    ["one"] = "hello"
+    ["two"] = 1
+  })
+
+res78 = test.catch(() -> x38)
+
+local class Person {
+  prop1 = 1
+  prop2 = 2
+  prop3 = "hi"
+}
+
+local x39: Mapping<String, Int> = new Person {}
+  .toMap()
+  .toMapping()
+
+
+res79 = x39.length
+res80 = x39["prop1"]
+res81 = x39["prop2"]
+res82 = test.catch(() -> x39["prop3"])
+
+local x40: Mapping<String, Int> = new {
+  ...Map("one", 1, "two", 2, "three", "hello")
+}
+
+res83 = x40.length
+res84 = x40["one"]
+res85 = x40["two"]
+res86 = test.catch(() -> x40["three"])
+
+// returns a new mapping
+function myFunction(elem: Mapping<String, Int>) = elem
+
+local x41 = myFunction(new Mapping { ["hello"] = "hello" })
+
+res87 = x41.length
+res88 = test.catch(() -> x41["hello"])
+
+function myFunction2(elem): Mapping<String, Int> = elem
+
+local x42 = myFunction(new Mapping { ["hello"] = "hello" })
+
+res89 = x42.length
+res90 = test.catch(() -> x42["hello"])
+
+local x43 = (it: Mapping<String, Int>) -> it
+local x44 = x43.apply(new Mapping { ["hello"] = "hello" })
+
+res91 = x44.length
+res92 = test.catch(() -> x44["hello"])
+
+function myFunction3(elem: Mapping<String, Int>): Mapping<String, Int> = elem
+local x45 = myFunction3(new Mapping { ["hello"] = "hello" })
+
+res93 = x45.length
+res94 = test.catch(() -> x45["hello"])

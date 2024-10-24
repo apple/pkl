@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@ import org.commonmark.node.Text
 import org.commonmark.parser.InlineParser
 import org.commonmark.parser.InlineParserContext
 import org.commonmark.parser.InlineParserFactory
+import org.commonmark.parser.beta.InlineContentParserFactory
+import org.commonmark.parser.beta.LinkProcessor
 import org.commonmark.parser.delimiter.DelimiterProcessor
 import org.commonmark.renderer.html.CoreHtmlNodeRenderer
 import org.commonmark.renderer.html.HtmlNodeRendererContext
@@ -51,6 +53,14 @@ internal class MarkdownParserContext(
     return delegate.customDelimiterProcessors
   }
 
+  override fun <D : Any> getDefinition(type: Class<D>, label: String): D? {
+    @Suppress("UNCHECKED_CAST", "DEPRECATION")
+    return when (type) {
+      LinkReferenceDefinition::class.java -> getLinkReferenceDefinition(label) as D
+      else -> null
+    }
+  }
+
   /**
    * This method communicates with [MarkdownNodeRenderer] through the method's return value:
    * * `title = "pkldoc:1:$label"` -> replace link with `Code(label)`
@@ -60,6 +70,7 @@ internal class MarkdownParserContext(
    * tell whether it's resolving a short or full reference link, PklNodeRenderer can, by comparing
    * the link text to the passed through label.
    */
+  @Suppress("OVERRIDE_DEPRECATION")
   override fun getLinkReferenceDefinition(label: String): LinkReferenceDefinition {
     if (label in keywords) {
       return LinkReferenceDefinition(label, label, "pkldoc:1:$label")
@@ -85,6 +96,13 @@ internal class MarkdownParserContext(
 
     return LinkReferenceDefinition(label, destination, "pkldoc:$command:$label")
   }
+
+  override fun getCustomInlineContentParserFactories(): MutableList<InlineContentParserFactory> =
+    mutableListOf()
+
+  override fun getCustomLinkProcessors(): MutableList<LinkProcessor> = mutableListOf()
+
+  override fun getCustomLinkMarkers(): MutableSet<Char> = mutableSetOf()
 }
 
 internal class MarkdownNodeRenderer(context: HtmlNodeRendererContext) :

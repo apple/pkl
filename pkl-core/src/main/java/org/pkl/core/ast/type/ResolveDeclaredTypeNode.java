@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,7 +73,7 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     var result = module.getCachedValue(importName);
     if (result == null) {
       result = callNode.call(member.getCallTarget(), module, module, importName);
-      module.setCachedValue(importName, result);
+      module.setCachedValue(importName, result, member);
     }
     return (VmTyped) result;
   }
@@ -94,7 +94,7 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     var result = module.getCachedValue(typeName);
     if (result == null) {
       result = callNode.call(member.getCallTarget(), module, module, typeName);
-      module.setCachedValue(typeName, result);
+      module.setCachedValue(typeName, result, member);
     }
     return result;
   }

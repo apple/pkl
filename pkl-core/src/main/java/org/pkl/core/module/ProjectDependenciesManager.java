@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -197,6 +197,10 @@ public final class ProjectDependenciesManager {
       }
       return packageDependencies.get(packageUri);
     }
+  }
+
+  public DeclaredDependencies getDeclaredDependencies() {
+    return declaredDependencies;
   }
 
   public Dependency getResolvedDependency(PackageUri packageUri) {

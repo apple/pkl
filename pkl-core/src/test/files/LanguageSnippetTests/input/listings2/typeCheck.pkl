@@ -15,9 +15,9 @@ hidden x2: Listing<String(length > 3)> = new {
 
 hidden x3: Listing<String>(!isEmpty)
 
-res1 = test.catch(() -> x1)
-res2 = test.catch(() -> x2)
-res3 = test.catch(() -> x3)
+res1 = test.catch(() -> x1.toList())
+res2 = test.catch(() -> x2.toList())
+res3 = test.catch(() -> x3.toList())
 
 hidden x4: Listing = new {
   when (true) {
