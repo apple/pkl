@@ -112,6 +112,8 @@ class TestsTest : AbstractTest() {
     assertThat(output.trimStart())
       .startsWith(
         """
+      > Task :evalTestGatherImports
+
       > Task :evalTest FAILED
       pkl: TRACE: 8 = 8 (file:///file, line x)
       module test
@@ -181,6 +183,8 @@ class TestsTest : AbstractTest() {
     assertThat(output.trimStart())
       .startsWith(
         """
+      > Task :evalTestGatherImports
+
       > Task :evalTest FAILED
       module test
         facts
