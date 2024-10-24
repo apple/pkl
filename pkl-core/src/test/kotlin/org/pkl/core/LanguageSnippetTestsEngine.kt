@@ -199,6 +199,8 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       // executable)
       // on the other hand, don't exclude /native/
       Regex(".*/import1b\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl")
     )
 
   /** Avoid running tests for native binaries when those native binaries have not been built. */
