@@ -199,9 +199,10 @@ class ProjectTest {
     assertThat(cleanMsg)
       .isEqualTo(
         """
+        –– Pkl Error ––
         Local project dependencies cannot be circular.
-  
-        Cycle:
+        
+        Cycles:
         ┌─>
         file:///org/pkl/core/project/projectCycle2/PklProject
         │

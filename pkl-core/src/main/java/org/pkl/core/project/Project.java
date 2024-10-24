@@ -21,9 +21,12 @@ import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -52,7 +55,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
-import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -122,9 +125,14 @@ public final class Project {
       var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
       return Project.parseProject(output);
     } catch (StackOverflowError e) {
-      var cycle = findImportCycle(moduleSource);
-      if (cycle != null) {
-        throw new PklException(ErrorMessages.create("dependencyCycle", renderCycle(cycle)));
+      var cycles = findImportCycle(moduleSource);
+      if (!cycles.isEmpty()) {
+        var cycle = cycles.stream().map(Project::renderCycle).collect(Collectors.joining("\n"));
+        throw new VmExceptionBuilder()
+            .evalError("cannotHaveCircularProjectDependencies", cycle)
+            .withCause(e)
+            .build()
+            .toPklException(evaluatorBuilder().getStackFrameTransformer());
       }
       throw e;
     } catch (URISyntaxException e) {
@@ -132,7 +140,7 @@ public final class Project {
     }
   }
 
-  private static String renderCycle(List<URI> cycle) {
+  private static String renderCycle(Set<URI> cycle) {
     var sb = new StringBuilder();
     sb.append("┌─>");
     var isFirst = true;
@@ -149,7 +157,7 @@ public final class Project {
     return sb.toString();
   }
 
-  private static @Nullable List<URI> findImportCycle(ModuleSource moduleSource) {
+  private static Set<Set<URI>> findImportCycle(ModuleSource moduleSource) {
     var builder = evaluatorBuilder();
     var analyzer =
         new Analyzer(
@@ -160,13 +168,17 @@ public final class Project {
             builder.getProjectDependencies(),
             builder.getHttpClient());
     var graph = analyzer.importGraph(moduleSource.getUri());
+    var res = new HashSet<Set<URI>>();
     for (var uri : graph.imports().keySet()) {
+      if ("pkl".equals(uri.getScheme())) {
+        continue;
+      }
       var cycle = doFindCycle(uri, graph, new ArrayList<>(List.of(uri)));
       if (cycle != null) {
-        return cycle;
+        res.add(new TreeSet<>(cycle));
       }
     }
-    return null;
+    return res;
   }
 
   private static @Nullable List<URI> doFindCycle(
