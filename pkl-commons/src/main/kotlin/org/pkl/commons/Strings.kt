@@ -41,7 +41,7 @@ fun String.toUri(): URI {
 
 /** Lex a string into tokens similar to how a shell would */
 fun shlex(input: String): List<String> {
-  val result = ArrayList<String>()
+  val result = mutableListOf<String>()
   var inEscape = false
   var quote: Char? = null
   var lastCloseQuoteIndex = Int.MIN_VALUE
