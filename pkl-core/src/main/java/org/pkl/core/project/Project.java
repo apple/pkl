@@ -151,7 +151,7 @@ public final class Project {
     }
   }
 
-  private static String renderMultipleCycles(Set<Set<URI>> cycles) {
+  private static String renderMultipleCycles(List<Set<URI>> cycles) {
     var sb = new StringBuilder();
     var i = 0;
     for (var cycle : cycles) {
@@ -187,7 +187,7 @@ public final class Project {
     return sb.toString();
   }
 
-  private static Set<Set<URI>> findImportCycle(ModuleSource moduleSource) {
+  private static List<Set<URI>> findImportCycle(ModuleSource moduleSource) {
     var builder = evaluatorBuilder();
     var analyzer =
         new Analyzer(
@@ -207,7 +207,7 @@ public final class Project {
                     .anyMatch(
                         (uri) ->
                             uri.getScheme().equalsIgnoreCase(moduleSource.getUri().getScheme())))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toList());
   }
 
   private static EvaluatorBuilder evaluatorBuilder() {
