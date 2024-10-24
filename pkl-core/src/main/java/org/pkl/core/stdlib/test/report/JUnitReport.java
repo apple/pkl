@@ -20,13 +20,13 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 import org.graalvm.collections.EconomicMap;
+import org.pkl.core.TestResults;
+import org.pkl.core.TestResults.Error;
+import org.pkl.core.TestResults.TestResult;
+import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.TestResults;
-import org.pkl.core.runtime.TestResults.TestSectionResults;
-import org.pkl.core.runtime.TestResults.TestSectionResults.Error;
-import org.pkl.core.runtime.TestResults.TestSectionResults.TestResult;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
@@ -44,44 +44,51 @@ public final class JUnitReport implements TestReport {
   }
 
   private VmDynamic buildSuite(TestResults results) {
-    var testCases = testCases(results.moduleName, results.facts);
-    testCases.addAll(testCases(results.moduleName, results.examples));
+    if (results.error() != null) {
+      var testCase = rootTestCase(results, results.error());
+      var attrs =
+          buildAttributes(
+              "name", results.moduleName(),
+              "tests", 1,
+              "failures", 1);
+      return buildXmlElement("testsuite", attrs, testCase);
+    }
 
-    if (!results.getErr().isBlank()) {
+    var testCases = testCases(results.moduleName(), results.facts());
+    testCases.addAll(testCases(results.moduleName(), results.examples()));
+
+    if (!results.stdErr().isBlank()) {
       var err =
           buildXmlElement(
               "system-err",
               VmMapping.empty(),
-              members -> members.put("body", syntheticElement(makeCdata(results.getErr()))));
+              members -> members.put("body", syntheticElement(makeCdata(results.stdErr()))));
       testCases.add(err);
     }
 
     var attrs =
         buildAttributes(
-            "name", results.moduleName,
+            "name", results.moduleName(),
             "tests", (long) results.totalTests(),
             "failures", (long) results.totalFailures());
 
     return buildXmlElement("testsuite", attrs, testCases.toArray(new VmDynamic[0]));
   }
 
+  private VmDynamic rootTestCase(TestResults results, TestResults.Error error) {
+    var testCaseAttrs =
+        buildAttributes("classname", results.moduleName(), "name", results.moduleName());
+    var err = error(error);
+    return buildXmlElement("testcase", testCaseAttrs, err.toArray(new VmDynamic[0]));
+  }
+
   private ArrayList<VmDynamic> testCases(String moduleName, TestSectionResults testSectionResults) {
     var elements = new ArrayList<VmDynamic>(testSectionResults.totalTests());
 
-    if (testSectionResults.hasError()) {
-      var error = error(testSectionResults.getError());
-
-      var attrs =
-          buildAttributes("classname", moduleName + "." + testSectionResults.name, "name", "error");
-      var element = buildXmlElement("testcase", attrs, error.toArray(new VmDynamic[0]));
-
-      elements.add(element);
-    }
-
-    for (var res : testSectionResults.getResults()) {
+    for (var res : testSectionResults.results()) {
       var attrs =
           buildAttributes(
-              "classname", moduleName + "." + testSectionResults.name, "name", res.name);
+              "classname", moduleName + "." + testSectionResults.name(), "name", res.name());
       var failures = failures(res);
       failures.addAll(errors(res));
       var element = buildXmlElement("testcase", attrs, failures.toArray(new VmDynamic[0]));
@@ -93,14 +100,12 @@ public final class JUnitReport implements TestReport {
   private ArrayList<VmDynamic> failures(TestResult res) {
     var list = new ArrayList<VmDynamic>();
     long i = 0;
-    for (var fail : res.getFailures()) {
-      var attrs = buildAttributes("message", fail.getKind());
+    for (var fail : res.failures()) {
+      var attrs = buildAttributes("message", fail.kind());
       long element = i++;
       list.add(
           buildXmlElement(
-              "failure",
-              attrs,
-              members -> members.put(element, syntheticElement(fail.getRendered()))));
+              "failure", attrs, members -> members.put(element, syntheticElement(fail.render()))));
     }
     return list;
   }
@@ -108,27 +113,24 @@ public final class JUnitReport implements TestReport {
   private ArrayList<VmDynamic> errors(TestResult res) {
     var list = new ArrayList<VmDynamic>();
     long i = 0;
-    for (var error : res.getErrors()) {
-      var attrs = buildAttributes("message", error.getMessage());
+    for (var error : res.errors()) {
+      var attrs = buildAttributes("message", error.message());
       long element = i++;
       list.add(
           buildXmlElement(
               "error",
               attrs,
-              members ->
-                  members.put(element, syntheticElement(error.getException().getMessage()))));
+              members -> members.put(element, syntheticElement(error.exception().getMessage()))));
     }
     return list;
   }
 
   private ArrayList<VmDynamic> error(Error error) {
     var list = new ArrayList<VmDynamic>();
-    var attrs = buildAttributes("message", error.getMessage());
+    var attrs = buildAttributes("message", error.message());
     list.add(
         buildXmlElement(
-            "error",
-            attrs,
-            members -> members.put(1, syntheticElement("\n" + error.getRendered()))));
+            "error", attrs, members -> members.put(1, syntheticElement("\n" + error.render()))));
     return list;
   }
 

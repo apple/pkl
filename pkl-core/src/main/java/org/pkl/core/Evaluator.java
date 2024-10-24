@@ -16,7 +16,6 @@
 package org.pkl.core;
 
 import java.util.Map;
-import org.pkl.core.runtime.TestResults;
 import org.pkl.core.runtime.VmEvalException;
 
 /**

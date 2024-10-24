@@ -112,34 +112,33 @@ class TestsTest : AbstractTest() {
     assertThat(output.trimStart())
       .startsWith(
         """
-      > Task :evalTestGatherImports
+        > Task :evalTestGatherImports
 
-      > Task :evalTest FAILED
-      pkl: TRACE: 8 = 8 (file:///file, line x)
-      module test
-        facts
-          ✅ sum numbers
-          ✅ divide numbers
-          ❌ fail
-             4 == 9 (file:///file, line x)
-             "foo" == "bar" (file:///file, line x)
-        examples
-          ✅ user 0
-          ✅ user 1 #0
-          ❌ user 1 #1
-             (file:///file, line x)
-             Expected: (file:///file, line x)
-             new {
-               name = "Parrot"
-               age = 35
-             }
-             Actual: (file:///file, line x)
-             new {
-               name = "Welma"
-               age = 35
-             }
-      ❌ 66.7% tests pass [2/6 failed], 66.7% asserts pass [3/9 failed]
-    """
+        > Task :evalTest FAILED
+        pkl: TRACE: 8 = 8 (file:///file, line x)
+        module test
+          facts
+            ✅ sum numbers
+            ✅ divide numbers
+            ❌ fail
+               4 == 9 (file:///file, line x)
+               "foo" == "bar" (file:///file, line x)
+          examples
+            ✅ user 0
+            ❌ user 1
+               (file:///file, line x)
+               Expected: (file:///file, line x)
+               new {
+                 name = "Parrot"
+                 age = 35
+               }
+               Actual: (file:///file, line x)
+               new {
+                 name = "Welma"
+                 age = 35
+               }
+        ❌ 60.0% tests pass [2/5 failed], 66.7% asserts pass [3/9 failed]
+        """
           .trimIndent()
       )
   }
@@ -183,36 +182,35 @@ class TestsTest : AbstractTest() {
     assertThat(output.trimStart())
       .startsWith(
         """
-      > Task :evalTestGatherImports
+        > Task :evalTestGatherImports
 
-      > Task :evalTest FAILED
-      module test
-        facts
-          ✅ should pass
-          ❌ error
-             –– Pkl Error ––
-             exception
-
-             9 | throw("exception")
-                 ^^^^^^^^^^^^^^^^^^
-             at test#facts["error"][#1] (file:///file, line x)
-        examples
-          ✅ user 0
-          ✅ user 1 #0
-          ❌ user 1 #1
-             (file:///file, line x)
-             Expected: (file:///file, line x)
-             new {
-               name = "Parrot"
-               age = 35
-             }
-             Actual: (file:///file, line x)
-             new {
-               name = "Welma"
-               age = 35
-             }
-      ❌ 60.0% tests pass [2/5 failed], 66.7% asserts pass [2/6 failed]
-    """
+        > Task :evalTest FAILED
+        module test
+          facts
+            ✅ should pass
+            ❌ error
+               –– Pkl Error ––
+               exception
+        
+               9 | throw("exception")
+                   ^^^^^^^^^^^^^^^^^^
+               at test#facts["error"][#1] (file:///file, line x)
+          examples
+            ✅ user 0
+            ❌ user 1
+               (file:///file, line x)
+               Expected: (file:///file, line x)
+               new {
+                 name = "Parrot"
+                 age = 35
+               }
+               Actual: (file:///file, line x)
+               new {
+                 name = "Welma"
+                 age = 35
+               }
+        ❌ 50.0% tests pass [2/4 failed], 66.7% asserts pass [2/6 failed]
+        """
           .trimIndent()
       )
   }
@@ -232,34 +230,33 @@ class TestsTest : AbstractTest() {
     assertThat(report)
       .isEqualTo(
         """
-      <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="6" failures="2">
-          <testcase classname="test.facts" name="sum numbers"></testcase>
-          <testcase classname="test.facts" name="divide numbers"></testcase>
-          <testcase classname="test.facts" name="fail">
-              <failure message="Fact Failure">4 == 9 (file:///file, line x)</failure>
-              <failure message="Fact Failure">&quot;foo&quot; == &quot;bar&quot; (file:///file, line x)</failure>
-          </testcase>
-          <testcase classname="test.examples" name="user 0"></testcase>
-          <testcase classname="test.examples" name="user 1 #0"></testcase>
-          <testcase classname="test.examples" name="user 1 #1">
-              <failure message="Example Failure">(file:///file, line x)
-      Expected: (file:///file, line x)
-      new {
-        name = &quot;Parrot&quot;
-        age = 35
-      }
-      Actual: (file:///file, line x)
-      new {
-        name = &quot;Welma&quot;
-        age = 35
-      }</failure>
-          </testcase>
-          <system-err><![CDATA[8 = 8
-      ]]></system-err>
-      </testsuite>
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuite name="test" tests="5" failures="2">
+            <testcase classname="test.facts" name="sum numbers"></testcase>
+            <testcase classname="test.facts" name="divide numbers"></testcase>
+            <testcase classname="test.facts" name="fail">
+                <failure message="Fact Failure">4 == 9 (file:///file, line x)</failure>
+                <failure message="Fact Failure">&quot;foo&quot; == &quot;bar&quot; (file:///file, line x)</failure>
+            </testcase>
+            <testcase classname="test.examples" name="user 0"></testcase>
+            <testcase classname="test.examples" name="user 1">
+                <failure message="Example Failure">(file:///file, line x)
+        Expected: (file:///file, line x)
+        new {
+          name = &quot;Parrot&quot;
+          age = 35
+        }
+        Actual: (file:///file, line x)
+        new {
+          name = &quot;Welma&quot;
+          age = 35
+        }</failure>
+            </testcase>
+            <system-err><![CDATA[8 = 8
+        ]]></system-err>
+        </testsuite>
 
-    """
+        """
           .trimIndent()
       )
   }
@@ -289,36 +286,35 @@ class TestsTest : AbstractTest() {
     assertThat(report)
       .isEqualTo(
         """
-      <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="5" failures="2">
-          <testcase classname="test.facts" name="should pass"></testcase>
-          <testcase classname="test.facts" name="error">
-              <error message="exception">–– Pkl Error ––
-      exception
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuite name="test" tests="4" failures="2">
+            <testcase classname="test.facts" name="should pass"></testcase>
+            <testcase classname="test.facts" name="error">
+                <error message="exception">–– Pkl Error ––
+        exception
 
-      9 | throw(&quot;exception&quot;)
-          ^^^^^^^^^^^^^^^^^^
-      at test#facts[&quot;error&quot;][#1] (file:///file, line x)
-      </error>
-          </testcase>
-          <testcase classname="test.examples" name="user 0"></testcase>
-          <testcase classname="test.examples" name="user 1 #0"></testcase>
-          <testcase classname="test.examples" name="user 1 #1">
-              <failure message="Example Failure">(file:///file, line x)
-      Expected: (file:///file, line x)
-      new {
-        name = &quot;Parrot&quot;
-        age = 35
-      }
-      Actual: (file:///file, line x)
-      new {
-        name = &quot;Welma&quot;
-        age = 35
-      }</failure>
-          </testcase>
-      </testsuite>
+        9 | throw(&quot;exception&quot;)
+            ^^^^^^^^^^^^^^^^^^
+        at test#facts[&quot;error&quot;][#1] (file:///file, line x)
+        </error>
+            </testcase>
+            <testcase classname="test.examples" name="user 0"></testcase>
+            <testcase classname="test.examples" name="user 1">
+                <failure message="Example Failure">(file:///file, line x)
+        Expected: (file:///file, line x)
+        new {
+          name = &quot;Parrot&quot;
+          age = 35
+        }
+        Actual: (file:///file, line x)
+        new {
+          name = &quot;Welma&quot;
+          age = 35
+        }</failure>
+            </testcase>
+        </testsuite>
 
-    """
+        """
           .trimIndent()
       )
   }
