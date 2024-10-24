@@ -541,8 +541,9 @@ class JavaCodeGenerator(
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
 
-      // stateless classes aren't instantiable by choice, i.e., no public ctor is generated
-      val isInstantiable = !pClass.isAbstract && allProperties.isNotEmpty()
+      // stateless final module classes are non-instantiable by choice
+      val isInstantiable =
+        !(pClass.isAbstract || (isModuleClass && !pClass.isOpen && allProperties.isEmpty()))
 
       if (codegenOptions.implementSerializable && isInstantiable) {
         builder.addSuperinterface(java.io.Serializable::class.java)
