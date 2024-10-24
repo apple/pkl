@@ -195,19 +195,51 @@ class ProjectTest {
   fun `fails if project has cyclical dependencies`() {
     val projectPath = javaClass.getResource("projectCycle1/PklProject")!!.toURI().toPath()
     val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
-    val cleanMsg = e.message!!.replace(Regex(".*/resources/test"), "file://")
+    val cleanMsg = e.message!!.replace(Regex("file:///.*/resources/test"), "file://")
     assertThat(cleanMsg)
       .isEqualTo(
         """
         –– Pkl Error ––
         Local project dependencies cannot be circular.
         
-        Cycles:
+        Cycle:
         ┌─>
-        file:///org/pkl/core/project/projectCycle2/PklProject
+        │  file:///org/pkl/core/project/projectCycle2/PklProject
         │
-        file:///org/pkl/core/project/projectCycle3/PklProject
-        └─ 
+        │  file:///org/pkl/core/project/projectCycle3/PklProject
+        └─
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `fails if a project has cyclical dependencies -- multiple cycles found`() {
+    val projectPath = javaClass.getResource("projectCycle4/PklProject")!!.toURI().toPath()
+    val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
+    val cleanMsg = e.message!!.replace(Regex("file://.*/resources/test"), "file://")
+    assertThat(cleanMsg)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        Local project dependencies cannot be circular.
+        
+        The following circular imports were found.
+        Not all of them are necessarily problematic.
+        The problematic cycles are those declared as local dependencies.
+        
+        Cycle 1:
+        ┌─>
+        │  file:///org/pkl/core/project/projectCycle2/PklProject
+        │
+        │  file:///org/pkl/core/project/projectCycle3/PklProject
+        └─
+        
+        Cycle 2:
+        ┌─>
+        │  file:///org/pkl/core/project/projectCycle4/PklProject
+        └─
+        
         """
           .trimIndent()
       )

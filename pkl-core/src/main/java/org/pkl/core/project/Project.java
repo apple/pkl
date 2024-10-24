@@ -19,14 +19,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +32,6 @@ import org.pkl.core.Composite;
 import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
-import org.pkl.core.ImportGraph;
 import org.pkl.core.ModuleSource;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PNull;
@@ -55,7 +51,9 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.ImportGraphUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -126,13 +124,26 @@ public final class Project {
       return Project.parseProject(output);
     } catch (StackOverflowError e) {
       var cycles = findImportCycle(moduleSource);
+      VmException vmException;
       if (!cycles.isEmpty()) {
-        var cycle = cycles.stream().map(Project::renderCycle).collect(Collectors.joining("\n"));
-        throw new VmExceptionBuilder()
-            .evalError("cannotHaveCircularProjectDependencies", cycle)
-            .withCause(e)
-            .build()
-            .toPklException(evaluatorBuilder().getStackFrameTransformer());
+        if (cycles.size() == 1) {
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError(
+                      "cannotHaveCircularProjectDependenciesSingle",
+                      renderCycle(cycles.stream().toList().get(0)))
+                  .withCause(e)
+                  .build();
+        } else {
+          var renderedCycles = renderMultipleCycles(cycles);
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError("cannotHaveCircularProjectDependenciesMultiple", renderedCycles)
+                  .withCause(e)
+                  .build();
+        }
+        // stack frame transformer never used; this exception has no stack frames.
+        throw vmException.toPklException(StackFrameTransformers.defaultTransformer);
       }
       throw e;
     } catch (URISyntaxException e) {
@@ -140,8 +151,22 @@ public final class Project {
     }
   }
 
-  private static String renderCycle(Set<URI> cycle) {
+  private static String renderMultipleCycles(Set<Set<URI>> cycles) {
     var sb = new StringBuilder();
+    var i = 0;
+    for (var cycle : cycles) {
+      if (i > 0) {
+        sb.append('\n');
+      }
+      sb.append("Cycle ").append(i + 1).append(":\n");
+      renderCycle(sb, cycle);
+      sb.append('\n');
+      i++;
+    }
+    return sb.toString();
+  }
+
+  private static void renderCycle(StringBuilder sb, Set<URI> cycle) {
     sb.append("┌─>");
     var isFirst = true;
     for (URI uri : cycle) {
@@ -153,7 +178,12 @@ public final class Project {
       sb.append("\n│  ");
       sb.append(uri.toString());
     }
-    sb.append("\n└─ ");
+    sb.append("\n└─");
+  }
+
+  private static String renderCycle(Set<URI> cycle) {
+    var sb = new StringBuilder();
+    renderCycle(sb, cycle);
     return sb.toString();
   }
 
@@ -167,41 +197,17 @@ public final class Project {
             builder.getModuleCacheDir(),
             builder.getProjectDependencies(),
             builder.getHttpClient());
-    var graph = analyzer.importGraph(moduleSource.getUri());
-    var res = new HashSet<Set<URI>>();
-    for (var uri : graph.imports().keySet()) {
-      if ("pkl".equals(uri.getScheme())) {
-        continue;
-      }
-      var cycle = doFindCycle(uri, graph, new ArrayList<>(List.of(uri)));
-      if (cycle != null) {
-        res.add(new TreeSet<>(cycle));
-      }
-    }
-    return res;
-  }
-
-  private static @Nullable List<URI> doFindCycle(
-      URI currentUri, ImportGraph importGraph, List<URI> path) {
-    var imports = importGraph.imports().get(currentUri);
-    var startingUri = path.get(0);
-    for (var imprt : imports) {
-      var uri = imprt.uri();
-      if (uri.equals(startingUri)) {
-        return path;
-      }
-      if (path.contains(uri)) {
-        // there is a cycle, but it doesn't start at `startUri`
-        return null;
-      }
-      path.add(uri);
-      var cycle = doFindCycle(uri, importGraph, path);
-      if (cycle != null) {
-        return cycle;
-      }
-      path.remove(path.size() - 1);
-    }
-    return null;
+    var importGraph = analyzer.importGraph(moduleSource.getUri());
+    var ret = ImportGraphUtils.findImportCycles(importGraph);
+    // we only care about cycles in the same scheme as `moduleSource`
+    return ret.stream()
+        .filter(
+            (cycle) ->
+                cycle.stream()
+                    .anyMatch(
+                        (uri) ->
+                            uri.getScheme().equalsIgnoreCase(moduleSource.getUri().getScheme())))
+        .collect(Collectors.toSet());
   }
 
   private static EvaluatorBuilder evaluatorBuilder() {
