@@ -1507,7 +1507,9 @@ result = someLib.x
         importOneFile = "Japanese language"
         importGlob = Set("./日本語.pkl")
         importGlobFile = Set("🤬/日本語.pkl")
+        
         """
+          .trimIndent()
       )
   }
 
