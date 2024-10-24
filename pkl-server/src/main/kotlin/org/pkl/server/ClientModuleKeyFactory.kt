@@ -18,9 +18,9 @@ package org.pkl.server
 import java.net.URI
 import java.util.Optional
 import org.pkl.core.messaging.*
-import org.pkl.core.module.ExternalModuleResolver
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.*
+import org.pkl.core.module.ExternalModuleResolver
 
 internal class ClientModuleKeyFactory(
   private val readerSpecs: Collection<ModuleReaderSpec>,
@@ -29,8 +29,7 @@ internal class ClientModuleKeyFactory(
 ) : ModuleKeyFactory {
   private val schemes = readerSpecs.map { it.scheme }
 
-  private val resolver: ExternalModuleResolver =
-    ExternalModuleResolver(transport, evaluatorId)
+  private val resolver: ExternalModuleResolver = ExternalModuleResolver(transport, evaluatorId)
 
   override fun create(uri: URI): Optional<ModuleKey> =
     when (uri.scheme) {
