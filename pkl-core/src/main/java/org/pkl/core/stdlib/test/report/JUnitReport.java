@@ -57,12 +57,12 @@ public final class JUnitReport implements TestReport {
     var testCases = testCases(results.moduleName(), results.facts());
     testCases.addAll(testCases(results.moduleName(), results.examples()));
 
-    if (!results.stdErr().isBlank()) {
+    if (!results.logs().isBlank()) {
       var err =
           buildXmlElement(
               "system-err",
               VmMapping.empty(),
-              members -> members.put("body", syntheticElement(makeCdata(results.stdErr()))));
+              members -> members.put("body", syntheticElement(makeCdata(results.logs()))));
       testCases.add(err);
     }
 

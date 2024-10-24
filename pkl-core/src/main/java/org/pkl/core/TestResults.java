@@ -33,7 +33,7 @@ import org.pkl.core.util.Nullable;
  * @param displayUri A location URI formatted to be displayed.
  * @param facts The result of testing facts.
  * @param examples The result of testing examples.
- * @param stdErr The log output resulting from running the test.
+ * @param logs The log output resulting from running the test.
  * @param error An error that arose from evaluating the test module itself.
  *     <p>If non-null, {@code facts} and {@code examples} are guaranteed to have 0 results.
  */
@@ -43,7 +43,7 @@ public record TestResults(
     String displayUri,
     TestSectionResults facts,
     TestSectionResults examples,
-    String stdErr,
+    String logs,
     @Nullable Error error) {
 
   /** The total number of tests between facts and examples. */

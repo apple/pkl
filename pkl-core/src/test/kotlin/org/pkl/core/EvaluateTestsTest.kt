@@ -55,7 +55,7 @@ class EvaluateTestsTest {
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.failed()).isFalse
     assertThat(results.facts().results[0].name).isEqualTo("should pass")
-    assertThat(results.stdErr().isBlank()).isTrue
+    assertThat(results.logs().isBlank()).isTrue
   }
 
   @Test
