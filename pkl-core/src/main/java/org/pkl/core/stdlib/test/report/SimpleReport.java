@@ -70,7 +70,7 @@ public final class SimpleReport implements TestReport {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
-      builder.append(result.name()).append(" ✍️");
+      builder.append("✍️ ").append(result.name());
     } else {
       builder.append(result.isFailure() ? "❌ " : "✅ ").append(result.name());
 
@@ -103,9 +103,9 @@ public final class SimpleReport implements TestReport {
 
   private String makeStatsLine(String kind, int total, int failed, boolean isFailed) {
     var passed = total - failed;
-    var pct_passed = total > 0 ? 100.0 * passed / total : 0.0;
+    var passRate = total > 0 ? 100.0 * passed / total : 0.0;
 
-    String line = String.format("%.1f%% %s pass", pct_passed, kind);
+    String line = String.format("%.1f%% %s pass", passRate, kind);
 
     if (isFailed) {
       line += String.format(" [%d/%d failed]", failed, total);

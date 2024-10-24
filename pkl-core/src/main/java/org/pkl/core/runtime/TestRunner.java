@@ -180,6 +180,7 @@ public final class TestRunner {
           if (expectedGroup == null) {
             testResultBuilder.addFailure(
                 examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, true));
+            testResults.add(testResultBuilder.build());
             return true;
           }
 
@@ -190,6 +191,7 @@ public final class TestRunner {
                     testName,
                     expectedGroup.getLength(),
                     group.getLength()));
+            testResults.add(testResultBuilder.build());
             return true;
           }
 
@@ -298,7 +300,6 @@ public final class TestRunner {
                 }
                 try {
                   VmUtils.readMember(listing, idx);
-                  testResultBuilder.addSuccess();
                   return true;
                 } catch (VmException err) {
                   testResultBuilder.addError(
@@ -310,7 +311,10 @@ public final class TestRunner {
                 }
               });
           if (success.get()) {
+            // treat writing an example as a failure
             testResultBuilder.setExampleWritten(true);
+            testResultBuilder.addFailure(
+                writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
           }
           testResults.add(testResultBuilder.build());
           return true;
@@ -447,5 +451,10 @@ public final class TestRunner {
             + actualValue;
 
     return new Failure("Example Failure", err, location);
+  }
+
+  private static Failure writtenExampleOutputFailure(String testName, String location) {
+    return new Failure(
+        "Example Output Written", "Wrote expected output for test " + testName, location);
   }
 }

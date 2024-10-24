@@ -150,10 +150,10 @@ class TestsTest : AbstractTest() {
 
     writeBuildFile("overwrite = true")
 
-    val output = runTask("evalTest").output
+    val output = runTask("evalTest", expectFailure = true).output
 
-    assertThat(output).contains("user 0 ✍️")
-    assertThat(output).contains("user 1 ✍️")
+    assertThat(output).contains("✍️ user 0")
+    assertThat(output).contains("✍️ user 1")
   }
 
   @Test
