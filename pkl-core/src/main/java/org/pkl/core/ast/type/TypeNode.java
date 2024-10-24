@@ -2153,7 +2153,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isEquivalentTo(TypeNode other) {
-      return other instanceof UIntTypeAliasTypeNode;
+      return other instanceof UIntTypeAliasTypeNode aliasTypeNode && mask == aliasTypeNode.mask;
     }
 
     @Override
