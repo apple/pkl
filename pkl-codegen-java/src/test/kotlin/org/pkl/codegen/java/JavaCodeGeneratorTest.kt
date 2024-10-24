@@ -776,6 +776,83 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `stateless classes`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      class Foo
+      abstract class Bar
+      class Baz extends Bar
+    """
+          .trimIndent()
+      )
+
+    assertThat(javaCode)
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public Foo() {
+        |    }
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public abstract static class Bar {
+        |    protected Bar() {
+        |    }
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Baz extends Bar {
+        |    public Baz() {
+        |    }
+      """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `stateless module classes`() {
+    var javaCode = generateJavaCode("module my.mod")
+    assertThat(javaCode)
+      .contains(
+        """
+        |public final class Mod {
+        |  private Mod() {
+        |  }
+      """
+          .trimMargin()
+      )
+
+    javaCode = generateJavaCode("abstract module my.mod")
+    assertThat(javaCode)
+      .contains(
+        """
+      |public abstract class Mod {
+      |  protected Mod() {
+      |  }
+    """
+          .trimMargin()
+      )
+
+    javaCode = generateJavaCode("open module my.mod")
+    assertThat(javaCode)
+      .contains(
+        """
+      |public class Mod {
+      |  public Mod() {
+      |  }
+    """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `reserved words`() {
     val props = javaReservedWords.joinToString("\n") { "`$it`: Int" }
 
@@ -1765,12 +1842,22 @@ class JavaCodeGeneratorTest {
 
   @Test
   fun `non-instantiable classes aren't made serializable`() {
-    val javaCode =
+    var javaCode =
       generateJavaCode(
         """
       module my.mod
       abstract class Foo { str: String }
-      class Bar // non-instantiable because no constructor is generated for stateless class
+    """
+          .trimIndent(),
+        implementSerializable = true
+      )
+
+    assertThat(javaCode).doesNotContain("Serializable")
+
+    javaCode =
+      generateJavaCode(
+        """
+      module my.mod
     """
           .trimIndent(),
         implementSerializable = true
