@@ -493,10 +493,6 @@ class JavaCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      builder.addAnnotation(
-        ClassName.get("org.springframework.boot.context.properties", "ConstructorBinding")
-      )
-
       if (isModuleClass) {
         builder.addAnnotation(
           ClassName.get("org.springframework.boot.context.properties", "ConfigurationProperties")
