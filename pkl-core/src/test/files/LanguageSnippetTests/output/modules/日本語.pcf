@@ -1,0 +1,21 @@
+日本語 = "Japanese language"
+readOne = """
+  // covers https://github.com/apple/pkl/issues/653
+  日本語 = "Japanese language"
+  readOne = read("日本語.pkl").text
+  readGlob = read*("./日*.pkl").keys
+  importOne = import("日本語.pkl").readOne
+  importGlob = import*("./日*.pkl").keys
+  
+  """
+readGlob = Set("./日本語.pkl", "./日本語_error.pkl")
+importOne = """
+  // covers https://github.com/apple/pkl/issues/653
+  日本語 = "Japanese language"
+  readOne = read("日本語.pkl").text
+  readGlob = read*("./日*.pkl").keys
+  importOne = import("日本語.pkl").readOne
+  importGlob = import*("./日*.pkl").keys
+  
+  """
+importGlob = Set("./日本語.pkl", "./日本語_error.pkl")

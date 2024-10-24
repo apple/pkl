@@ -301,9 +301,14 @@ class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngin
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
 }
 
-// error message contains different file path on Windows
 private val windowsExcludedTests
-  get() = listOf(Regex(".*missingProjectDeps/bug\\.pkl"))
+  get() =
+    listOf(
+      // error message contains different file path on Windows
+      Regex(".*missingProjectDeps/bug\\.pkl"),
+      // URIs get rendered slightly differently (percent-encoded vs raw)
+      Regex(".*日本語_error\\.pkl")
+    )
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
