@@ -17,10 +17,7 @@ package org.pkl.core.util;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import org.pkl.core.ImportGraph;
 
 public class ImportGraphUtils {
@@ -28,12 +25,15 @@ public class ImportGraphUtils {
   private ImportGraphUtils() {}
 
   /** Find import cycles inside the graph. */
-  public static Set<Set<URI>> findImportCycles(ImportGraph importGraph) {
-    var res = new HashSet<Set<URI>>();
+  public static List<List<URI>> findImportCycles(ImportGraph importGraph) {
+    var res = new ArrayList<List<URI>>();
     for (var uri : importGraph.imports().keySet()) {
+      if (res.stream().anyMatch((it) -> it.contains(uri))) {
+        continue;
+      }
       var cycle = doFindCycle(uri, importGraph, new ArrayList<>(List.of(uri)));
       if (cycle != null) {
-        res.add(new TreeSet<>(cycle));
+        res.add(cycle);
       }
     }
     return res;

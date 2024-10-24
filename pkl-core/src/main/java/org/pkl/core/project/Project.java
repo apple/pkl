@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -151,7 +150,7 @@ public final class Project {
     }
   }
 
-  private static String renderMultipleCycles(List<Set<URI>> cycles) {
+  private static String renderMultipleCycles(List<List<URI>> cycles) {
     var sb = new StringBuilder();
     var i = 0;
     for (var cycle : cycles) {
@@ -166,7 +165,7 @@ public final class Project {
     return sb.toString();
   }
 
-  private static void renderCycle(StringBuilder sb, Set<URI> cycle) {
+  private static void renderCycle(StringBuilder sb, List<URI> cycle) {
     sb.append("┌─>");
     var isFirst = true;
     for (URI uri : cycle) {
@@ -181,13 +180,13 @@ public final class Project {
     sb.append("\n└─");
   }
 
-  private static String renderCycle(Set<URI> cycle) {
+  private static String renderCycle(List<URI> cycle) {
     var sb = new StringBuilder();
     renderCycle(sb, cycle);
     return sb.toString();
   }
 
-  private static List<Set<URI>> findImportCycle(ModuleSource moduleSource) {
+  private static List<List<URI>> findImportCycle(ModuleSource moduleSource) {
     var builder = evaluatorBuilder();
     var analyzer =
         new Analyzer(

@@ -35,7 +35,7 @@ class ImportGraphUtilsTest {
         mapOf()
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
-    assertThat(cycles).isEqualTo(setOf(setOf(fooUri, barUri)))
+    assertThat(cycles).isEqualTo(listOf(listOf(fooUri, barUri)))
   }
 
   @Test
@@ -56,7 +56,7 @@ class ImportGraphUtilsTest {
         mapOf()
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
-    assertThat(cycles).isEqualTo(setOf(setOf(fooUri, barUri), setOf(bizUri, quxUri)))
+    assertThat(cycles).isEqualTo(listOf(listOf(fooUri, barUri), listOf(bizUri, quxUri)))
   }
 
   @Test
@@ -90,6 +90,6 @@ class ImportGraphUtilsTest {
         mapOf()
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
-    assertThat(cycles).isEqualTo(setOf(setOf(fooUri)))
+    assertThat(cycles).isEqualTo(listOf(listOf(fooUri)))
   }
 }
