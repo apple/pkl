@@ -12,6 +12,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -88,6 +89,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -108,6 +110,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
@@ -168,6 +171,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
@@ -245,6 +249,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -265,6 +270,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+          chcp 65001
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DreleaseBuild=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
         name: gradle buildNative
         shell: bash.exe
@@ -288,6 +294,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -364,6 +371,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -384,6 +392,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
@@ -444,6 +453,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
         name: gradle buildNative
     - persist_to_workspace:
@@ -521,6 +531,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
         name: gradle buildNative
     - persist_to_workspace:
@@ -541,6 +552,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
+          chcp 65001
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
         name: gradle buildNative
         shell: bash.exe
@@ -703,13 +715,7 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - gradle-check-jdk17:
-        requires:
-        - hold
-    - gradle-check-jdk21:
-        requires:
-        - hold
-    - gradle-check-jdk17-windows:
+    - pkl-cli-windows-amd64-snapshot:
         requires:
         - hold
     when:
@@ -718,9 +724,7 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - gradle-check-jdk17
-    - gradle-check-jdk21
-    - gradle-check-jdk17-windows
+    - pkl-cli-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -731,9 +735,7 @@ workflows:
     - pkl-cli-windows-amd64-snapshot
     - deploy-snapshot:
         requires:
-        - gradle-check-jdk17
-        - gradle-check-jdk21
-        - gradle-check-jdk17-windows
+        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -754,19 +756,7 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - gradle-check-jdk21:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - gradle-check-jdk17-windows:
+    - pkl-cli-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -822,9 +812,7 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - gradle-check-jdk17
-        - gradle-check-jdk21
-        - gradle-check-jdk17-windows
+        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -860,9 +848,7 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
   release-branch:
     jobs:
-    - gradle-check-jdk17
-    - gradle-check-jdk21
-    - gradle-check-jdk17-windows
+    - pkl-cli-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release

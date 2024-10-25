@@ -21,7 +21,11 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
+local prbJobs: Listing<String> = new {
+  "pkl-cli-windows-amd64-snapshot"
+}
+// local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
+// }
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
