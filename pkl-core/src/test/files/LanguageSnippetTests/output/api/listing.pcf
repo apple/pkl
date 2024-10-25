@@ -75,6 +75,11 @@ facts {
     true
     true
   }
+  ["any"] {
+    true
+    true
+    true
+  }
   ["contains"] {
     true
     true

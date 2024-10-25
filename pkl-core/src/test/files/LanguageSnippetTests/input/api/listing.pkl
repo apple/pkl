@@ -116,7 +116,13 @@ facts {
     base.singleOrNull == null
     new Listing { 42 }.singleOrNull == 42
   }
-  
+
+  ["any"] {
+    base.any((it) -> it.name.contains("rot"))
+    !base.any((it) -> it.name.contains("inch"))
+    ((base) { new { name = "EEEEE" } }).any((it) -> it.name.contains("rot"))
+  }
+
   ["contains"] {
     !empty.contains(0)
     base.contains(base[1])
