@@ -24,8 +24,8 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.toPath
 import org.pkl.core.*
-import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.packages.*
+import org.pkl.core.util.Readers
 
 /**
  * Entry point for the high-level Pkldoc API.
@@ -250,7 +250,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
         importedModules[pklBaseUri] = evaluator.evaluateSchema(ModuleSource.uri(pklBaseUri))
       }
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.resourceReaders)
     }
 
     val versions = mutableMapOf<String, Version>()

@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader;
 
-/** A bidirectional transport for sending and receiving messages. */
-interface MessageTransport : AutoCloseable {
-  fun start(oneWayHandler: (OneWayMessage) -> Unit, requestHandler: (RequestMessage) -> Unit)
+public final class ExternalReaderProcessException extends Exception {
+  public ExternalReaderProcessException(String msg) {
+    super(msg);
+  }
 
-  fun send(message: OneWayMessage)
-
-  fun send(message: RequestMessage, responseHandler: (ResponseMessage) -> Unit)
-
-  fun send(message: ResponseMessage)
+  public ExternalReaderProcessException(Throwable cause) {
+    super(cause);
+  }
 }

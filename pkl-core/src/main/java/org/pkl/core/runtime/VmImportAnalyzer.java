@@ -30,6 +30,7 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
@@ -38,7 +39,10 @@ import org.pkl.core.util.IoUtils;
 public class VmImportAnalyzer {
   @TruffleBoundary
   public static ImportGraph analyze(URI[] moduleUris, VmContext context)
-      throws IOException, URISyntaxException, SecurityManagerException {
+      throws IOException,
+          URISyntaxException,
+          SecurityManagerException,
+          ExternalReaderProcessException {
     var imports = new TreeMap<URI, Set<ImportGraph.Import>>();
     var resolvedImports = new TreeMap<URI, URI>();
     for (var moduleUri : moduleUris) {
@@ -53,7 +57,10 @@ public class VmImportAnalyzer {
       VmContext context,
       Map<URI, Set<ImportGraph.Import>> imports,
       Map<URI, URI> resolvedImports)
-      throws IOException, URISyntaxException, SecurityManagerException {
+      throws IOException,
+          URISyntaxException,
+          SecurityManagerException,
+          ExternalReaderProcessException {
     var moduleResolver = context.getModuleResolver();
     var securityManager = context.getSecurityManager();
     var importsInModule = collectImports(moduleUri, moduleResolver, securityManager);
@@ -71,7 +78,10 @@ public class VmImportAnalyzer {
 
   private static Set<ImportGraph.Import> collectImports(
       URI moduleUri, ModuleResolver moduleResolver, SecurityManager securityManager)
-      throws IOException, URISyntaxException, SecurityManagerException {
+      throws IOException,
+          URISyntaxException,
+          SecurityManagerException,
+          ExternalReaderProcessException {
     var moduleKey = moduleResolver.resolve(moduleUri);
     var resolvedModuleKey = moduleKey.resolve(securityManager);
     List<Entry> importsAndReads;

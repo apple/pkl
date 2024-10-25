@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.messaging;
+
+import java.io.IOException;
 
 /** Encodes a stream of messages. */
-internal interface MessageEncoder {
-  fun encode(msg: Message)
+public interface MessageEncoder {
+  void encode(Message msg) throws IOException, ProtocolException;
 }

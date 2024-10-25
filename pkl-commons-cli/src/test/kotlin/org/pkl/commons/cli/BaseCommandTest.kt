@@ -24,6 +24,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 
 class BaseCommandTest {
 
@@ -71,5 +72,35 @@ class BaseCommandTest {
     assertThat(cmd.baseOptions.allowedModules).isEmpty()
 
     assertThat(cmd.baseOptions.allowedResources).isEmpty()
+  }
+
+  @Test
+  fun `--external-resource-reader and --external-module-reader are parsed correctly`() {
+    cmd.parse(
+      arrayOf(
+        "--external-module-reader",
+        "scheme3=reader3",
+        "--external-module-reader",
+        "scheme4=reader4 with args",
+        "--external-resource-reader",
+        "scheme1=reader1",
+        "--external-resource-reader",
+        "scheme2=reader2 with args"
+      )
+    )
+    assertThat(cmd.baseOptions.externalModuleReaders)
+      .isEqualTo(
+        mapOf(
+          "scheme3" to ExternalReader("reader3", emptyList()),
+          "scheme4" to ExternalReader("reader4", listOf("with", "args"))
+        )
+      )
+    assertThat(cmd.baseOptions.externalResourceReaders)
+      .isEqualTo(
+        mapOf(
+          "scheme1" to ExternalReader("reader1", emptyList()),
+          "scheme2" to ExternalReader("reader2", listOf("with", "args"))
+        )
+      )
   }
 }
