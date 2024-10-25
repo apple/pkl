@@ -209,12 +209,11 @@ public final class ListingNodes {
     protected boolean eval(VmListing self, VmFunction predicate) {
       var result = new MutableBoolean(false);
       self.iterateMemberValues(
-        (key, member, unforcedValue) -> {
-          var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
-          result.set(applyNode.executeBoolean(predicate, value));
-          return !result.get();
-        }
-      );
+          (key, member, unforcedValue) -> {
+            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+            result.set(applyNode.executeBoolean(predicate, value));
+            return !result.get();
+          });
       return result.get();
     }
   }
