@@ -75,6 +75,11 @@ facts {
     true
     true
   }
+  ["every"] {
+    true
+    true
+    true
+  }
   ["any"] {
     true
     true

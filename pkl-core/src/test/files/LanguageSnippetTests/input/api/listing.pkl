@@ -117,6 +117,12 @@ facts {
     new Listing { 42 }.singleOrNull == 42
   }
 
+  ["every"] {
+    !base.every((it) -> it.name.contains("rot"))
+    base.every((it) -> !it.name.isBlank)
+    !((base) { new { name = "EEEEE" } }).every((it) -> it.name.contains("rot"))
+  }
+  
   ["any"] {
     base.any((it) -> it.name.contains("rot"))
     !base.any((it) -> it.name.contains("inch"))

@@ -186,6 +186,22 @@ public final class ListingNodes {
     }
   }
 
+  public abstract static class every extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected boolean eval(VmListing self, VmFunction predicate) {
+      var result = new MutableBoolean(true);
+      self.iterateMemberValues(
+          (key, member, unforcedValue) -> {
+            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+            result.set(applyNode.executeBoolean(predicate, value));
+            return result.get();
+          });
+      return result.get();
+    }
+  }
+
   public abstract static class any extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 

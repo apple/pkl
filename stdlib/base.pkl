@@ -1916,6 +1916,11 @@ class Listing<out Element> extends Object {
   @AlsoKnownAs { names { "uniqueBy" } }
   external function distinctBy(selector: (Element) -> Any): Listing<Element>
 
+  /// Tells if [predicate] holds for every element of this listing.
+  /// 
+  /// Returns [true] for an empty listing.
+  external function every(predicate: (Element) -> Boolean): Boolean
+
   /// Tells if [predicate] holds for at least one element of this listing.
   /// 
   /// Returns [false] for an empty listing.
