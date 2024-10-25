@@ -65,6 +65,7 @@ public final class Project {
   private final URI projectBaseUri;
   private final List<URI> tests;
   private final Map<String, Project> localProjectDependencies;
+  private final List<PObject> annotations;
 
   /**
    * Loads Project data from the given {@link Path}.
@@ -256,6 +257,11 @@ public final class Project {
     return new RemoteDependency(packageUri, checksums);
   }
 
+  @SuppressWarnings("unchecked")
+  private static List<PObject> parseAnnotations(PObject module) {
+    return (List<PObject>) getProperty(module, "annotations");
+  }
+
   public static Project parseProject(PObject module) throws URISyntaxException {
     var pkgObj = getNullableProperty(module, "package");
     var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
@@ -279,6 +285,7 @@ public final class Project {
             .map((it) -> projectBaseUri.resolve(it).normalize())
             .collect(Collectors.toList());
     var localProjectDependencies = parseLocalProjectDependencies(module);
+    var annotations = parseAnnotations(module);
     return new Project(
         pkg,
         dependencies,
@@ -286,7 +293,8 @@ public final class Project {
         projectFileUri,
         projectBaseUri,
         tests,
-        localProjectDependencies);
+        localProjectDependencies,
+        annotations);
   }
 
   private static Map<String, Project> parseLocalProjectDependencies(PObject module)
@@ -399,7 +407,8 @@ public final class Project {
       URI projectFileUri,
       URI projectBaseUri,
       List<URI> tests,
-      Map<String, Project> localProjectDependencies) {
+      Map<String, Project> localProjectDependencies,
+      List<PObject> annotations) {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
@@ -407,6 +416,7 @@ public final class Project {
     this.projectBaseUri = projectBaseUri;
     this.tests = tests;
     this.localProjectDependencies = localProjectDependencies;
+    this.annotations = annotations;
   }
 
   public @Nullable Package getPackage() {
@@ -453,12 +463,13 @@ public final class Project {
         && dependencies.equals(project.dependencies)
         && evaluatorSettings.equals(project.evaluatorSettings)
         && projectFileUri.equals(project.projectFileUri)
-        && tests.equals(project.tests);
+        && tests.equals(project.tests)
+        && annotations.equals(project.annotations);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pkg, dependencies, evaluatorSettings, projectFileUri, tests);
+    return Objects.hash(pkg, dependencies, evaluatorSettings, projectFileUri, tests, annotations);
   }
 
   public DeclaredDependencies getDependencies() {
@@ -476,6 +487,10 @@ public final class Project {
   public Path getProjectDir() {
     assert projectBaseUri.getScheme().equalsIgnoreCase("file");
     return Path.of(projectBaseUri);
+  }
+
+  public List<PObject> getAnnotations() {
+    return annotations;
   }
 
   @Deprecated(forRemoval = true)

@@ -288,7 +288,8 @@ public final class ProjectPackager {
         pkg.getLicenseText(),
         pkg.getAuthors(),
         pkg.getIssueTracker(),
-        pkg.getDescription());
+        pkg.getDescription(),
+        project.getAnnotations());
   }
 
   private DigestOutputStream newDigestOutputStream(OutputStream outputStream) {

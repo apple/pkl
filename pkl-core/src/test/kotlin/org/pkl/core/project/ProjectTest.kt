@@ -72,8 +72,20 @@ class ProjectTest {
         path,
         null
       )
+    val expectedAnnotations =
+      listOf(
+        PObject(
+          PClassInfo.Deprecated,
+          mapOf("since" to "1.2", "message" to "do not use", "replaceWith" to "somethingElse")
+        ),
+        PObject(PClassInfo.Unlisted, mapOf()),
+        PObject(PClassInfo.ModuleInfo, mapOf("minPklVersion" to "0.26.0")),
+      )
     projectPath.writeString(
       """
+      @Deprecated { since = "1.2"; message = "do not use"; replaceWith = "somethingElse" }
+      @Unlisted
+      @ModuleInfo { minPklVersion = "0.26.0" }
       amends "pkl:Project"
 
       evaluatorSettings {
@@ -138,6 +150,7 @@ class ProjectTest {
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
     assertThat(project.evaluatorSettings).isEqualTo(expectedSettings)
+    assertThat(project.annotations).isEqualTo(expectedAnnotations)
     assertThat(project.tests)
       .isEqualTo(listOf(path.resolve("test1.pkl"), path.resolve("test2.pkl")))
   }

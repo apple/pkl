@@ -123,7 +123,9 @@ class CliDocGeneratorTest {
                   package1PackageModule,
                   package2PackageModule,
                   URI("package://localhost:0/birds@0.5.0"),
-                  URI("package://localhost:0/fruit@1.1.0")
+                  URI("package://localhost:0/fruit@1.1.0"),
+                  URI("package://localhost:0/unlisted@1.0.0"),
+                  URI("package://localhost:0/deprecated@1.0.0"),
                 ) + package1InputModules + package2InputModules,
               moduleCacheDir = cacheDir
             ),

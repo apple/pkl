@@ -980,6 +980,92 @@ class CliProjectPackagerTest {
       )
   }
 
+  @Test
+  fun `generate annotations`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        """
+        @Unlisted
+        @Deprecated { since = "0.26.1"; message = "do not use" }
+        @ModuleInfo { minPklVersion = "0.26.0" }
+        amends "pkl:Project"
+        
+        package {
+          name = "mypackage"
+          version = "1.0.0"
+          baseUri = "package://example.com/mypackage"
+          packageZipUrl = "https://foo.com"
+        }
+      """
+          .trimIndent()
+      )
+    val packager =
+      CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        consoleWriter = StringWriter()
+      )
+    packager.run()
+    val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
+    assertThat(expectedMetadata).exists()
+    assertThat(expectedMetadata)
+      .hasContent(
+        """
+      {
+        "name": "mypackage",
+        "packageUri": "package://example.com/mypackage@1.0.0",
+        "version": "1.0.0",
+        "packageZipUrl": "https://foo.com",
+        "packageZipChecksums": {
+          "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+        },
+        "dependencies": {},
+        "authors": [],
+        "annotations": [
+          {
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "Unlisted",
+              "moduleUri": "pkl:base"
+            },
+            "properties": {}
+          },
+          {
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "Deprecated",
+              "moduleUri": "pkl:base"
+            },
+            "properties": {
+              "since": "0.26.1",
+              "message": "do not use",
+              "replaceWith": null
+            }
+          },
+          {
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "pkl.base",
+              "class": "ModuleInfo",
+              "moduleUri": "pkl:base"
+            },
+            "properties": {
+              "minPklVersion": "0.26.0"
+            }
+          }
+        ]
+      }
+    """
+          .trimIndent()
+      )
+  }
+
   private fun Path.zipFilePaths(): List<String> {
     return FileSystems.newFileSystem(URI("jar:${toUri()}"), emptyMap<String, String>()).use { fs ->
       Files.walk(fs.getPath("/")).map(IoUtils::toNormalizedPathString).collect(Collectors.toList())

@@ -436,3 +436,7 @@ typealias CommonSpdxLicenseIdentifier =
   |"UPL-1.0"
   |"BSL-1.0"
   |"Unlicense"
+
+@Unlisted
+@Since { version = "0.27.0" }
+fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations

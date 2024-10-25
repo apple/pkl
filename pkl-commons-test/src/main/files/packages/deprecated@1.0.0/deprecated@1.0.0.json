@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "packageUri": "package://localhost:0/deprecated@1.0.0",
+  "name": "deprecated",
+  "version": "1.0.0",
+  "packageZipUrl": "https://localhost:0/deprecated@1.0.0/deprecated@1.0.0.zip",
+  "dependencies": {},
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  },
+  "sourceCode": "https://example.com/deprecated",
+  "documentation": "https://example.com/deprecated-docs",
+  "license": "UNLICENSED",
+  "authors": [
+    "deprecated@example.com"
+  ],
+  "issueTracker": "https://example.com/deprecated/issues",
+  "annotations": [
+    {
+      "type": "PObject",
+      "classInfo": {
+        "moduleName": "pkl.base",
+        "class": "Deprecated",
+        "moduleUri": "pkl:base"
+      },
+      "properties": {
+        "since": "1.0.0",
+        "message": "don't use",
+        "replaceWith": null
+      }
+    }
+  ]
+}
