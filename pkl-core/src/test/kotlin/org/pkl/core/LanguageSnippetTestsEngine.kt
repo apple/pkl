@@ -309,12 +309,20 @@ private val windowsExcludedTests
       // error message contains different file path on Windows
       Regex(".*missingProjectDeps/bug\\.pkl"),
       // URIs get rendered slightly differently (percent-encoded vs raw)
-      Regex(".*日本語_error\\.pkl")
+      Regex(".*日本語_error\\.pkl"),
+    )
+
+private val windowsNativeExcludedTests
+  get() =
+    listOf(
+      // CLI args on Windows turn into `?` when in native image
+      // https://github.com/oracle/graal/issues/8593
+      Regex(".*日本語\\.pkl")
     )
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
   override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
   override val excludedTests: List<Regex>
-    get() = super.excludedTests + windowsExcludedTests
+    get() = super.excludedTests + windowsNativeExcludedTests + windowsExcludedTests
 }
