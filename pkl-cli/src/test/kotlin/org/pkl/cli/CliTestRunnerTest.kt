@@ -392,6 +392,55 @@ class CliTestRunnerTest {
     assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
   }
 
+  @Test
+  fun `example length mismatch`(@TempDir tempDir: Path) {
+    val code =
+      """
+      amends "pkl:test"
+
+      examples {
+        ["nums"] {
+          1
+          2
+        }
+      }
+    """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    tempDir
+      .resolve("test.pkl-expected.pcf")
+      .writeString(
+        """
+      examples {
+        ["nums"] {
+          1
+        }
+      }
+    """
+          .trimIndent()
+      )
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    assertThatCode { runner.run() }.hasMessage("Tests failed.")
+
+    assertThat(out.toString().stripFileAndLines(tempDir))
+      .isEqualToNormalizingNewlines(
+        """
+      module test
+        examples
+          ❌ nums
+            
+             Output mismatch: Expected "nums" to contain 1 examples, but found 2
+      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+    """
+          .trimIndent()
+      )
+  }
+
   private fun String.stripFileAndLines(tmpDir: Path) =
     replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex(""" \(.*, line \d+\)"""), "")
 }

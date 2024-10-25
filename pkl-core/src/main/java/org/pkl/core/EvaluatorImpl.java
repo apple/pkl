@@ -40,7 +40,6 @@ import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.ResourceManager;
-import org.pkl.core.runtime.TestResults;
 import org.pkl.core.runtime.TestRunner;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
