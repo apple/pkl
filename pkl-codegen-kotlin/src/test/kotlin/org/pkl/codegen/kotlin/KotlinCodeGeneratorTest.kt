@@ -1427,7 +1427,6 @@ class KotlinCodeGeneratorTest {
     assertThat(kotlinCode)
       .contains(
         """
-        |@ConstructorBinding
         |@ConfigurationProperties
         |data class Mod(
         |  val server: Server
@@ -1436,7 +1435,6 @@ class KotlinCodeGeneratorTest {
       )
       .contains(
         """
-        |  @ConstructorBinding
         |  @ConfigurationProperties("server")
         |  data class Server(
         |    val port: Long,
@@ -1444,13 +1442,12 @@ class KotlinCodeGeneratorTest {
       """
           .trimMargin()
       )
+      .doesNotContain("@ConstructorBinding")
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
     val kotlinCodeWithoutSpringAnnotations =
-      kotlinCode.deleteLines {
-        it.contains("ConstructorBinding") || it.contains("ConfigurationProperties")
-      }
+      kotlinCode.deleteLines { it.contains("ConfigurationProperties") }
     assertThat(kotlinCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 

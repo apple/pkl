@@ -1484,7 +1484,6 @@ class JavaCodeGeneratorTest {
     assertThat(javaCode)
       .contains(
         """
-        |@ConstructorBinding
         |@ConfigurationProperties
         |public final class Mod {
       """
@@ -1498,7 +1497,6 @@ class JavaCodeGeneratorTest {
       )
       .contains(
         """
-        |  @ConstructorBinding
         |  @ConfigurationProperties("server")
         |  public static final class Server {
       """
@@ -1512,13 +1510,12 @@ class JavaCodeGeneratorTest {
       """
           .trimMargin()
       )
+      .doesNotContain("@ConstructorBinding")
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
     val javaCodeWithoutSpringAnnotations =
-      javaCode.deleteLines {
-        it.contains("ConstructorBinding") || it.contains("ConfigurationProperties")
-      }
+      javaCode.deleteLines { it.contains("ConfigurationProperties") }
     assertThat(javaCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 
