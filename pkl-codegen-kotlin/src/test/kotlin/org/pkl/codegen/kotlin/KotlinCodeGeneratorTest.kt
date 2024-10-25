@@ -1761,6 +1761,45 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `generates serializable module classes`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module Person
+        
+        address: Address
+        
+        class Address {
+          street: String
+        }
+      """,
+        implementSerializable = true
+      )
+
+    assertThat(kotlinCode)
+      .contains(
+        """
+      |data class Person(
+      |  val address: Address
+      |) : Serializable {
+      |  data class Address(
+      |    val street: String
+      |  ) : Serializable {
+      |    companion object {
+      |      private const val serialVersionUID: Long = 0L
+      |    }
+      |  }
+      |
+      |  companion object {
+      |    private const val serialVersionUID: Long = 0L
+      |  }
+      |}
+    """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `encoded file paths`() {
     val kotlinCode =
       generateFiles(

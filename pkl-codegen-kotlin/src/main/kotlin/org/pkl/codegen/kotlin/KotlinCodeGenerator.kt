@@ -138,50 +138,86 @@ class KotlinCodeGenerator(
 
       val pModuleClass = moduleSchema.moduleClass
 
-      val hasProperties = pModuleClass.properties.any { !it.value.isHidden }
-      val isGenerateClass = hasProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+      val hasModuleProperties = pModuleClass.properties.any { !it.value.isHidden }
+      val isGenerateModuleClass =
+        hasModuleProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+
+      fun generateCompanionRelatedCode(
+        builder: TypeSpec.Builder,
+        isModuleType: Boolean = false
+      ): TypeSpec.Builder {
+        // ensure that at most one companion object is generated for this type
+        val companionObjectBuilder: Lazy<TypeSpec.Builder> = lazy {
+          TypeSpec.companionObjectBuilder()
+        }
+
+        // generate append method for module classes w/o parent class;
+        // reuse in subclasses and nested classes
+        val isGenerateAppendPropertyMethod =
+          isModuleType &&
+            // check if we inherit another module's append method
+            pModuleClass.superclass!!.info == PClassInfo.Module &&
+            // check if anyone is (potentially) going to use our append method
+            (pModuleClass.isOpen ||
+              pModuleClass.isAbstract ||
+              (isGenerateModuleClass && !builder.modifiers.contains(KModifier.DATA)) ||
+              builder.typeSpecs.any { !it.modifiers.contains(KModifier.DATA) })
+
+        if (isGenerateAppendPropertyMethod) {
+          val appendPropertyMethodModifier =
+            if (pModuleClass.isOpen || pModuleClass.isAbstract) {
+              // alternative is `@JvmStatic protected`
+              // (`protected` alone isn't sufficient as of Kotlin 1.6)
+              KModifier.PUBLIC
+            } else KModifier.PRIVATE
+          if (isGenerateModuleClass) {
+            companionObjectBuilder.value.addFunction(
+              appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
+            )
+          } else { // kotlin object
+            builder.addFunction(
+              appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
+            )
+          }
+        }
+
+        // generate serialization code
+        if (
+          options.implementSerializable &&
+            (!isModuleType || isGenerateModuleClass) &&
+            !builder.modifiers.contains(KModifier.ABSTRACT)
+        ) {
+          builder.addSuperinterface(java.io.Serializable::class.java)
+          companionObjectBuilder.value.addProperty(
+            PropertySpec.builder(
+                "serialVersionUID",
+                Long::class.java,
+                KModifier.PRIVATE,
+                KModifier.CONST
+              )
+              .initializer("0L")
+              .build()
+          )
+        }
+
+        if (companionObjectBuilder.isInitialized()) {
+          builder.addType(companionObjectBuilder.value.build())
+        }
+
+        return builder
+      }
+
       val moduleType =
-        if (isGenerateClass) {
+        if (isGenerateModuleClass) {
           generateTypeSpec(pModuleClass, moduleSchema)
         } else {
           generateObjectSpec(pModuleClass)
         }
 
       for (pClass in moduleSchema.classes.values) {
-        moduleType.addType(generateTypeSpec(pClass, moduleSchema).ensureSerializable().build())
-      }
-
-      // generate append method for module classes w/o parent class; reuse in subclasses and nested
-      // classes
-      val isGenerateAppendPropertyMethod =
-        // check if we can inherit someone else's append method
-        pModuleClass.superclass!!.info == PClassInfo.Module &&
-          // check if anyone is (potentially) going to use our append method
-          (pModuleClass.isOpen ||
-            pModuleClass.isAbstract ||
-            (hasProperties && !moduleType.modifiers.contains(KModifier.DATA)) ||
-            moduleType.typeSpecs.any { !it.modifiers.contains(KModifier.DATA) })
-
-      if (isGenerateAppendPropertyMethod) {
-        val appendPropertyMethodModifier =
-          if (pModuleClass.isOpen || pModuleClass.isAbstract) {
-            // alternative is `@JvmStatic protected`
-            // (`protected` alone isn't sufficient as of Kotlin 1.6)
-            KModifier.PUBLIC
-          } else KModifier.PRIVATE
-        if (isGenerateClass) {
-          moduleType.addType(
-            TypeSpec.companionObjectBuilder()
-              .addFunction(
-                appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-              )
-              .build()
-          )
-        } else { // kotlin object
-          moduleType.addFunction(
-            appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-          )
-        }
+        moduleType.addType(
+          generateCompanionRelatedCode(generateTypeSpec(pClass, moduleSchema)).build()
+        )
       }
 
       val moduleName = moduleSchema.moduleName
@@ -206,7 +242,7 @@ class KotlinCodeGenerator(
         }
       }
 
-      fileSpec.addType(moduleType.build())
+      fileSpec.addType(generateCompanionRelatedCode(moduleType, isModuleType = true).build())
       return fileSpec.build().toString()
     }
 
@@ -528,44 +564,6 @@ class KotlinCodeGenerator(
 
     return if (superclass == null && !pClass.isAbstract && !pClass.isOpen) generateDataClass()
     else generateRegularClass()
-  }
-
-  private fun TypeSpec.Builder.ensureSerializable(): TypeSpec.Builder {
-    if (!options.implementSerializable || modifiers.contains(KModifier.ABSTRACT)) {
-      return this
-    }
-
-    if (!this.superinterfaces.containsKey(java.io.Serializable::class.java.asTypeName())) {
-      this.addSuperinterface(java.io.Serializable::class.java)
-    }
-
-    var useExistingCompanionBuilder = false
-    val companionBuilder =
-      this.typeSpecs
-        .find { it.isCompanion }
-        ?.let {
-          useExistingCompanionBuilder = true
-          it.toBuilder(TypeSpec.Kind.OBJECT)
-        }
-        ?: TypeSpec.companionObjectBuilder()
-
-    if (!companionBuilder.propertySpecs.any { it.name == "serialVersionUID" })
-      companionBuilder.addProperty(
-        PropertySpec.builder(
-            "serialVersionUID",
-            Long::class.java,
-            KModifier.PRIVATE,
-            KModifier.CONST
-          )
-          .initializer("0L")
-          .build()
-      )
-
-    if (!useExistingCompanionBuilder) {
-      this.addType(companionBuilder.build())
-    }
-
-    return this
   }
 
   private fun generateEnumTypeSpec(
