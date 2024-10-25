@@ -90,11 +90,14 @@ public final class IoUtils {
 
   /** Converts a URI to a Path, normalizing any non-ASCII characters. */
   public static Path pathOf(URI uri) {
-    // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
-    // ASCII
+    // Path.of(URI) on unix throws on non-ASCII characters so the module URI here must be normalized
+    // to ASCII.
     // Unfortunately there's no way to go from URI -> ASCII URI directly
     // so this must transform URI -> ASCII String -> ASCII URI
     try {
+      if (IoUtils.isWindows()) {
+        return Path.of(uri);
+      }
       return Path.of(new URI(uri.toASCIIString()));
     } catch (URISyntaxException e) {
       // impossible to get here; we started from a valid URI to begin with
