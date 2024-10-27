@@ -269,6 +269,11 @@ class KotlinCodeGenerator(
 
     val containRegexProperty = properties.values.any { it.isRegex() }
 
+    fun PClass.Property.isBase64(): Boolean =
+      (this.type as? PType.Class)?.pClass?.info == PClassInfo.Base64
+
+    val containBase64Property = properties.values.any { it.isBase64() }
+
     fun generateConstructor(): FunSpec {
       val builder = FunSpec.constructorBuilder()
       for ((name, property) in allProperties) {

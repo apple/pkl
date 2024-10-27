@@ -1123,6 +1123,9 @@ external class String extends Any {
   /// Tells if this string is a valid regular expression according to [Regex].
   external isRegex: Boolean
 
+  /// Tells if this string is a valid base64 string according to [Base64].
+  external isBase64: Boolean
+
   /// The [MD5](https://en.wikipedia.org/wiki/MD5)
   /// hash of this string's UTF-8 byte sequence
   /// as hexadecimal string.
@@ -1368,7 +1371,7 @@ external class String extends Any {
   external function split(pattern: String|Regex): List<String>
 
   /// Splits this string matches of [pattern], up to [limit] substrings.
-  /// 
+  ///
   /// Returns a [List] with at most [limit] elements.
   /// If the limit has been reached, the last entry will contain the un-split remainder of this string.
   ///
@@ -1379,7 +1382,7 @@ external class String extends Any {
   /// "a.b.c".splitLimit(".", 50) == List("a", "b", "c")
   /// "a.b:c".splitLimit(Regex("[.:]"), 3) == List("a", "b", "c")
   /// ```
-  @Since { version = "0.27.0" } 
+  @Since { version = "0.27.0" }
   external function splitLimit(pattern: String|Regex, limit: Int(this > 0)): List<String>
 
   /// Converts the first character of this string to title case.
@@ -3047,7 +3050,7 @@ external class Set<out Element> extends Collection<Element> {
 
   /// The intersection of this set and [other].
   external function intersect(other: Set): Set<Element>
-  
+
   /// The difference of this set and [other].
   external function difference(other: Set): Set<Element>
 }

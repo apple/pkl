@@ -57,6 +57,10 @@ facts {
     !str1.endsWith("efx")
   }
 
+  ["isBase64"] {
+    quickBrownFox.base64.isBase64
+  }
+
   ["isRegex"] {
     str1.isRegex
     #"\w*[0-9]"#.isRegex
