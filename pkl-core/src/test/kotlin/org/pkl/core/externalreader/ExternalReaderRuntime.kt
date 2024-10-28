@@ -175,7 +175,7 @@ class ExternalReaderRuntime(
                 ReadResourceResponse(
                   req.requestId,
                   req.evaluatorId,
-                  null,
+                  byteArrayOf(),
                   "No resource reader found for scheme " + req.uri.scheme
                 )
               )
@@ -183,16 +183,11 @@ class ExternalReaderRuntime(
             }
             try {
               transport.send(
-                ReadResourceResponse(
-                  req.requestId,
-                  req.evaluatorId,
-                  Bytes(reader.read(req.uri)),
-                  null
-                )
+                ReadResourceResponse(req.requestId, req.evaluatorId, reader.read(req.uri), null)
               )
             } catch (e: Exception) {
               transport.send(
-                ReadResourceResponse(req.requestId, req.evaluatorId, null, e.toString())
+                ReadResourceResponse(req.requestId, req.evaluatorId, byteArrayOf(), e.toString())
               )
             }
           }

@@ -38,7 +38,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
 
   private fun MessagePacker.packHttp(http: Http) {
     packMapHeader(0, http.caCertificates, http.proxy)
-    packKeyValue("caCertificates", http.caCertificates)
+    http.caCertificates?.let { packKeyValue("caCertificates", it) }
     http.proxy?.let { proxy ->
       packString("proxy")
       packMapHeader(0, proxy.address, proxy.noProxy)
@@ -180,7 +180,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
         packMapHeader(2, msg.result, msg.error)
         packKeyValue("requestId", msg.requestId())
         packKeyValue("evaluatorId", msg.evaluatorId)
-        packKeyValue("result", msg.result)
+        msg.result?.let { packKeyValue("result", it) }
         packKeyValue("error", msg.error)
       }
       Message.Type.LOG_MESSAGE -> {

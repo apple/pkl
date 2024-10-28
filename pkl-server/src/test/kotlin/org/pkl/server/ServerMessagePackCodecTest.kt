@@ -110,7 +110,7 @@ class ServerMessagePackCodecTest {
         http =
           Http(
             proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
-            caCertificates = Bytes(byteArrayOf(1, 2, 3, 4))
+            caCertificates = byteArrayOf(1, 2, 3, 4)
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),
@@ -147,7 +147,7 @@ class ServerMessagePackCodecTest {
       EvaluateResponse(
         requestId = 123,
         evaluatorId = 456,
-        result = Bytes(byteArrayOf(1, 2, 3, 4, 5)),
+        result = byteArrayOf(1, 2, 3, 4, 5),
         error = null
       )
     )

@@ -18,31 +18,12 @@ package org.pkl.core.messaging;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.messaging.Message.*;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.Nullable;
 
 public class Messages {
-
-  /** Java has no boxed byte array type, so we'll bring our own */
-  public record Bytes(byte[] bytes) {
-    @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Bytes bytes1 = (Bytes) o;
-      return Arrays.equals(bytes, bytes1.bytes);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(bytes);
-    }
-  }
 
   public record ModuleReaderSpec(
       String scheme, boolean hasHierarchicalUris, boolean isLocal, boolean isGlobbable) {}
@@ -94,10 +75,37 @@ public class Messages {
   }
 
   public record ReadResourceResponse(
-      long requestId, long evaluatorId, @Nullable Bytes contents, @Nullable String error)
+      long requestId, long evaluatorId, byte @Nullable [] contents, @Nullable String error)
       implements Client.Response {
+
+    // workaround for kotlin bridging issue where `byte @Nullable [] contents` isn't detected as
+    // nullable
+    //    public ReadResourceResponse(long requestId, long evaluatorId, @Nullable String error) {
+    //      this(requestId, evaluatorId, null, error);
+    //    }
+
     public Type type() {
       return Type.READ_RESOURCE_RESPONSE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ReadResourceResponse that = (ReadResourceResponse) o;
+      return requestId == that.requestId
+          && evaluatorId == that.evaluatorId
+          && Objects.equals(error, that.error)
+          && Arrays.equals(contents, that.contents);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(requestId, evaluatorId, Arrays.hashCode(contents), error);
     }
   }
 

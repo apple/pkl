@@ -106,10 +106,27 @@ data class CreateEvaluatorRequest(
 
 data class Http(
   /** PEM-format CA certificates as raw bytes. */
-  val caCertificates: Bytes?,
+  val caCertificates: ByteArray?,
   /** Proxy settings */
   val proxy: Proxy?
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Http) return false
+
+    if (caCertificates != null) {
+      if (other.caCertificates == null) return false
+      if (!caCertificates.contentEquals(other.caCertificates)) return false
+    } else if (other.caCertificates != null) return false
+    return Objects.equals(proxy, other.proxy)
+  }
+
+  override fun hashCode(): Int {
+    var result = caCertificates?.contentHashCode() ?: 0
+    result = 31 * result + (proxy?.hashCode() ?: 0)
+    return result
+  }
+}
 
 enum class DependencyType(val value: String) {
   LOCAL("local"),
@@ -162,12 +179,33 @@ data class EvaluateRequest(
 data class EvaluateResponse(
   private val requestId: Long,
   val evaluatorId: Long,
-  val result: Bytes?,
+  val result: ByteArray?,
   val error: String?
 ) : Message.Server.Response {
   override fun type(): Message.Type = Message.Type.EVALUATE_RESPONSE
 
   override fun requestId(): Long = requestId
+
+  // override to use [ByteArray.contentEquals]
+  @Suppress("DuplicatedCode")
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is EvaluateResponse) return false
+
+    return requestId == other.requestId &&
+      evaluatorId == other.evaluatorId &&
+      result.contentEquals(other.result) &&
+      error == other.error
+  }
+
+  // override to use [ByteArray.contentHashCode]
+  override fun hashCode(): Int {
+    var result1 = requestId.hashCode()
+    result1 = 31 * result1 + evaluatorId.hashCode()
+    result1 = 31 * result1 + result.contentHashCode()
+    result1 = 31 * result1 + error.hashCode()
+    return result1
+  }
 }
 
 data class LogMessage(

@@ -49,7 +49,7 @@ class BaseMessagePackCodecTest {
 
   @Test
   fun `round-trip ReadResourceResponse`() {
-    roundtrip(ReadResourceResponse(123, 456, Bytes(byteArrayOf(1, 2, 3, 4, 5)), null))
+    roundtrip(ReadResourceResponse(123, 456, byteArrayOf(1, 2, 3, 4, 5), null))
   }
 
   @Test

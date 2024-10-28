@@ -29,18 +29,14 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
-import org.pkl.core.messaging.Messages.Bytes;
-import org.pkl.core.messaging.Messages.ListResourcesRequest;
-import org.pkl.core.messaging.Messages.ListResourcesResponse;
-import org.pkl.core.messaging.Messages.ReadResourceRequest;
-import org.pkl.core.messaging.Messages.ReadResourceResponse;
+import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 
 public class ExternalResourceResolver {
   private final MessageTransport transport;
   private final long evaluatorId;
-  private final Map<URI, Future<Bytes>> readResponses = new ConcurrentHashMap<>();
+  private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
 
   public ExternalResourceResolver(MessageTransport transport, long evaluatorId) {
@@ -50,7 +46,7 @@ public class ExternalResourceResolver {
 
   public Optional<Object> read(URI uri) throws IOException {
     var result = doRead(uri);
-    return Optional.of(new Resource(uri, result.bytes()));
+    return Optional.of(new Resource(uri, result));
   }
 
   public boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
@@ -99,12 +95,12 @@ public class ExternalResourceResolver {
             }));
   }
 
-  public Bytes doRead(URI baseUri) throws IOException {
+  public byte[] doRead(URI baseUri) throws IOException {
     return MessageTransports.resolveFuture(
         readResponses.computeIfAbsent(
             baseUri,
             (uri) -> {
-              var future = new CompletableFuture<Bytes>();
+              var future = new CompletableFuture<byte[]>();
               var request = new ReadResourceRequest(new Random().nextLong(), evaluatorId, uri);
               try {
                 transport.send(
@@ -116,7 +112,7 @@ public class ExternalResourceResolver {
                         } else if (resp.contents() != null) {
                           future.complete(resp.contents());
                         } else {
-                          future.complete(new Bytes(new byte[0]));
+                          future.complete(new byte[0]);
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));
