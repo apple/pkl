@@ -98,13 +98,13 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      module test
-        facts
-          ❌ fail
-             4 == 9
-      ❌ 0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
+        module test
+          facts
+            ❌ fail
+               4 == 9
+        ❌ 0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
 
-    """
+        """
           .trimIndent()
       )
     assertThat(err.toString()).isEqualTo("")
@@ -429,18 +429,55 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualToNormalizingNewlines(
         """
-      module test
-        examples
-          ❌ nums
-            
-             Output mismatch: Expected "nums" to contain 1 examples, but found 2
-      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+        module test
+          examples
+            ❌ nums
+              
+               Output mismatch: Expected "nums" to contain 1 examples, but found 2
+        ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `only written examples`(@TempDir tempDir: Path) {
+
+    val code =
+      """
+      amends "pkl:test"
+
+      examples {
+        ["nums"] {
+          1
+          2
+        }
+      }
     """
+        .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    val exception = assertThrows<CliException> { runner.run() }
+    assertThat(exception.exitCode).isEqualTo(2)
+    assertThat(out.toString())
+      .isEqualTo(
+        """
+          module test
+            examples
+              ✍️ nums
+          1 examples written
+          
+          """
           .trimIndent()
       )
   }
 
   private fun String.stripFileAndLines(tmpDir: Path) =
-    replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex(""" \(.*, line \d+\)"""), "")
+    replace(tmpDir.toUri().toString(), "/tempDir/")
+      .replace(Regex("""\s?\(.*, line \d+\)(:\n\s.)?"""), "")
 }

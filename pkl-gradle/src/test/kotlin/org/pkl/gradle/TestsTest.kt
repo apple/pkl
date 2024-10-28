@@ -126,17 +126,17 @@ class TestsTest : AbstractTest() {
           examples
             ✅ user 0
             ❌ user 1
-               (file:///file, line x)
-               Expected: (file:///file, line x)
-               new {
-                 name = "Parrot"
-                 age = 35
-               }
-               Actual: (file:///file, line x)
-               new {
-                 name = "Welma"
-                 age = 35
-               }
+               #1 (file:///file, line x):
+                 Expected: (file:///file, line x)
+                 new {
+                   name = "Parrot"
+                   age = 35
+                 }
+                 Actual: (file:///file, line x)
+                 new {
+                   name = "Welma"
+                   age = 35
+                 }
         ❌ 60.0% tests pass [2/5 failed], 66.7% asserts pass [3/9 failed]
         """
           .trimIndent()
@@ -183,7 +183,7 @@ class TestsTest : AbstractTest() {
       .startsWith(
         """
         > Task :evalTestGatherImports
-
+        
         > Task :evalTest FAILED
         module test
           facts
@@ -198,18 +198,19 @@ class TestsTest : AbstractTest() {
           examples
             ✅ user 0
             ❌ user 1
-               (file:///file, line x)
-               Expected: (file:///file, line x)
-               new {
-                 name = "Parrot"
-                 age = 35
-               }
-               Actual: (file:///file, line x)
-               new {
-                 name = "Welma"
-                 age = 35
-               }
+               #1 (file:///file, line x):
+                 Expected: (file:///file, line x)
+                 new {
+                   name = "Parrot"
+                   age = 35
+                 }
+                 Actual: (file:///file, line x)
+                 new {
+                   name = "Welma"
+                   age = 35
+                 }
         ❌ 50.0% tests pass [2/4 failed], 66.7% asserts pass [2/6 failed]
+
         """
           .trimIndent()
       )
@@ -240,22 +241,22 @@ class TestsTest : AbstractTest() {
             </testcase>
             <testcase classname="test.examples" name="user 0"></testcase>
             <testcase classname="test.examples" name="user 1">
-                <failure message="Example Failure">(file:///file, line x)
-        Expected: (file:///file, line x)
-        new {
-          name = &quot;Parrot&quot;
-          age = 35
-        }
-        Actual: (file:///file, line x)
-        new {
-          name = &quot;Welma&quot;
-          age = 35
-        }</failure>
+                <failure message="Example Failure">#1 (file:///file, line x):
+          Expected: (file:///file, line x)
+          new {
+            name = &quot;Parrot&quot;
+            age = 35
+          }
+          Actual: (file:///file, line x)
+          new {
+            name = &quot;Welma&quot;
+            age = 35
+          }</failure>
             </testcase>
             <system-err><![CDATA[8 = 8
         ]]></system-err>
         </testsuite>
-
+        
         """
           .trimIndent()
       )
@@ -292,7 +293,7 @@ class TestsTest : AbstractTest() {
             <testcase classname="test.facts" name="error">
                 <error message="exception">–– Pkl Error ––
         exception
-
+        
         9 | throw(&quot;exception&quot;)
             ^^^^^^^^^^^^^^^^^^
         at test#facts[&quot;error&quot;][#1] (file:///file, line x)
@@ -300,17 +301,17 @@ class TestsTest : AbstractTest() {
             </testcase>
             <testcase classname="test.examples" name="user 0"></testcase>
             <testcase classname="test.examples" name="user 1">
-                <failure message="Example Failure">(file:///file, line x)
-        Expected: (file:///file, line x)
-        new {
-          name = &quot;Parrot&quot;
-          age = 35
-        }
-        Actual: (file:///file, line x)
-        new {
-          name = &quot;Welma&quot;
-          age = 35
-        }</failure>
+                <failure message="Example Failure">#1 (file:///file, line x):
+          Expected: (file:///file, line x)
+          new {
+            name = &quot;Parrot&quot;
+            age = 35
+          }
+          Actual: (file:///file, line x)
+          new {
+            name = &quot;Welma&quot;
+            age = 35
+          }</failure>
             </testcase>
         </testsuite>
 

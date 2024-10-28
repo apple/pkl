@@ -246,7 +246,8 @@ public final class TestRunner {
                           getDisplayUri(expectedMember),
                           expectedValuePcf,
                           getDisplayUri(actualMember),
-                          exampleValuePcf));
+                          exampleValuePcf,
+                          testResultBuilder.getCount()));
                 } else {
                   testResultBuilder.addSuccess();
                 }
@@ -311,7 +312,7 @@ public final class TestRunner {
                 }
               });
           if (success.get()) {
-            // treat writing an example as a failure
+            // treat writing an example as a message
             testResultBuilder.setExampleWritten(true);
             testResultBuilder.addFailure(
                 writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
@@ -387,46 +388,51 @@ public final class TestRunner {
   }
 
   private static Failure factFailure(SourceSection sourceSection, String location) {
-    return new Failure("Fact Failure", sourceSection.getCharacters().toString(), location);
+    String message = sourceSection.getCharacters().toString() + " " + renderLocation(location);
+    return new Failure("Fact Failure", message);
   }
 
   private static Failure exampleLengthMismatchFailure(
       String location, String property, int expectedLength, int actualLength) {
     String msg =
-        "Output mismatch: Expected \""
+        renderLocation(location)
+            + "\n"
+            + "Output mismatch: Expected \""
             + property
             + "\" to contain "
             + expectedLength
             + " examples, but found "
             + actualLength;
 
-    return new Failure("Output Mismatch (Length)", msg, location);
+    return new Failure("Output Mismatch (Length)", msg);
   }
 
   private static Failure examplePropertyMismatchFailure(
       String location, String property, boolean isMissingInExpected) {
 
-    String exists_in;
-    String missing_in;
+    String existsIn;
+    String missingIn;
 
     if (isMissingInExpected) {
-      exists_in = "actual";
-      missing_in = "expected";
+      existsIn = "actual";
+      missingIn = "expected";
     } else {
-      exists_in = "expected";
-      missing_in = "actual";
+      existsIn = "expected";
+      missingIn = "actual";
     }
 
-    String err =
-        "Output mismatch: \""
+    String message =
+        renderLocation(location)
+            + "\n"
+            + "Output mismatch: \""
             + property
             + "\" exists in "
-            + exists_in
+            + existsIn
             + " but not in "
-            + missing_in
+            + missingIn
             + " output";
 
-    return new Failure("Output Mismatch", err, location);
+    return new Failure("Output Mismatch", message);
   }
 
   private static Failure exampleFailure(
@@ -434,27 +440,33 @@ public final class TestRunner {
       String expectedLocation,
       String expectedValue,
       String actualLocation,
-      String actualValue) {
+      String actualValue,
+      int exampleNumber) {
     String err =
-        "Expected: "
-            + "("
-            + expectedLocation
-            + ")"
-            + "\n"
-            + expectedValue
-            + "\n"
+        "#"
+            + exampleNumber
+            + " "
+            + renderLocation(location)
+            + ":\n  "
+            + "Expected: "
+            + renderLocation(expectedLocation)
+            + "\n  "
+            + expectedValue.replaceAll("\n", "\n  ")
+            + "\n  "
             + "Actual: "
-            + "("
-            + actualLocation
-            + ")"
-            + "\n"
-            + actualValue;
+            + renderLocation(actualLocation)
+            + "\n  "
+            + actualValue.replaceAll("\n", "\n  ");
 
-    return new Failure("Example Failure", err, location);
+    return new Failure("Example Failure", err);
+  }
+
+  private static String renderLocation(String location) {
+    return "(" + location + ")";
   }
 
   private static Failure writtenExampleOutputFailure(String testName, String location) {
-    return new Failure(
-        "Example Output Written", "Wrote expected output for test " + testName, location);
+    var message = renderLocation(location) + "\n" + "Wrote expected output for test " + testName;
+    return new Failure("Example Output Written", message);
   }
 }

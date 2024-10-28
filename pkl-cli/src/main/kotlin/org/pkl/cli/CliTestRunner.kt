@@ -59,12 +59,14 @@ constructor(
     val evaluator = builder.build()
     evaluator.use {
       var failed = false
+      var isExampleWrittenFailure = true
       val moduleNames = mutableSetOf<String>()
       for ((idx, moduleUri) in sources.withIndex()) {
         try {
           val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
           if (!failed) {
             failed = results.failed()
+            isExampleWrittenFailure = results.isExampleWrittenFailure.and(isExampleWrittenFailure)
           }
           SimpleReport().report(results, consoleWriter)
           if (sources.size > 1 && idx != sources.size - 1) {
@@ -100,7 +102,8 @@ constructor(
         }
       }
       if (failed) {
-        throw CliTestException(ErrorMessages.create("testsFailed"))
+        val exitCode = if (isExampleWrittenFailure) 2 else 1
+        throw CliTestException(ErrorMessages.create("testsFailed"), exitCode)
       }
     }
   }

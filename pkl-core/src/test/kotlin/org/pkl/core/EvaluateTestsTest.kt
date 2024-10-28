@@ -88,10 +88,10 @@ class EvaluateTestsTest {
     assertThat(res.failures.size).isEqualTo(2)
 
     val fail1 = res.failures[0]
-    assertThat(fail1.render()).isEqualTo("1 == 2 (repl:text)")
+    assertThat(fail1.message).isEqualTo("1 == 2 (repl:text)")
 
     val fail2 = res.failures[1]
-    assertThat(fail2.render()).isEqualTo(""""foo" == "bar" (repl:text)""")
+    assertThat(fail2.message).isEqualTo(""""foo" == "bar" (repl:text)""")
   }
 
   @Test
@@ -344,21 +344,21 @@ class EvaluateTestsTest {
     assertFalse(results.examples().hasError())
 
     val fail1 = res.failures[0]
-    assertThat(fail1.render().stripFileAndLines(tempDir))
+    assertThat(fail1.message.stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      (/tempDir/example.pkl)
-      Expected: (/tempDir/example.pkl-expected.pcf)
-      new {
-        name = "Alice"
-        age = 45
-      }
-      Actual: (/tempDir/example.pkl-actual.pcf)
-      new {
-        name = "Bob"
-        age = 33
-      }
-    """
+        #0 (/tempDir/example.pkl):
+          Expected: (/tempDir/example.pkl-expected.pcf)
+          new {
+            name = "Alice"
+            age = 45
+          }
+          Actual: (/tempDir/example.pkl-actual.pcf)
+          new {
+            name = "Bob"
+            age = 33
+          }
+        """
           .trimIndent()
       )
   }

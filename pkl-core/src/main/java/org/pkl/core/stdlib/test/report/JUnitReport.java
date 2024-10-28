@@ -105,7 +105,7 @@ public final class JUnitReport implements TestReport {
       long element = i++;
       list.add(
           buildXmlElement(
-              "failure", attrs, members -> members.put(element, syntheticElement(fail.render()))));
+              "failure", attrs, members -> members.put(element, syntheticElement(fail.message()))));
     }
     return list;
   }
@@ -130,7 +130,9 @@ public final class JUnitReport implements TestReport {
     var attrs = buildAttributes("message", error.message());
     list.add(
         buildXmlElement(
-            "error", attrs, members -> members.put(1, syntheticElement("\n" + error.render()))));
+            "error",
+            attrs,
+            members -> members.put(1, syntheticElement("\n" + error.exception().getMessage()))));
     return list;
   }
 

@@ -72,7 +72,7 @@ public record TestResults(
    * <p>A single test can have multiple failed assertions.
    */
   public int totalAssertsFailed() {
-    return facts.totalAssertsFailed() + examples.totalAssertsFailed();
+    return facts.totalAssertsFailedOrErrored() + examples.totalAssertsFailedOrErrored();
   }
 
   /**
@@ -83,6 +83,22 @@ public record TestResults(
    */
   public boolean failed() {
     return error != null || facts.failed() || examples.failed();
+  }
+
+  /**
+   * Whether the test result has failed due to examples being written.
+   *
+   * <p>Returns {@code true} if and only if there are failures, and all failures are due to examples
+   * being written.
+   */
+  public boolean isExampleWrittenFailure() {
+    if (!failed() || !examples.failed()) return false;
+    for (var testResult : examples.results) {
+      if (!testResult.isExampleWritten) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public static class Builder {
@@ -163,10 +179,10 @@ public record TestResults(
       return total;
     }
 
-    public int totalAssertsFailed() {
+    public int totalAssertsFailedOrErrored() {
       var total = 0;
       for (var res : results) {
-        total += res.totalAssertsFailed();
+        total += res.totalAssertsFailedOrErrored();
       }
       return total;
     }
@@ -192,7 +208,7 @@ public record TestResults(
 
     public boolean hasError() {
       for (var res : results) {
-        if (!res.errors().isEmpty()) {
+        if (res.hasErrors()) {
           return true;
         }
       }
@@ -218,12 +234,21 @@ public record TestResults(
       List<Failure> failures,
       List<Error> errors,
       boolean isExampleWritten) {
-    public int totalAssertsFailed() {
-      return failures.size() + errors.size();
+
+    public int totalAssertsFailedOrErrored() {
+      return failures().size() + errors.size();
     }
 
     public boolean isFailure() {
-      return totalAssertsFailed() > 0;
+      return totalAssertsFailedOrErrored() > 0;
+    }
+
+    public boolean hasErrors() {
+      return !errors().isEmpty();
+    }
+
+    public boolean hasFailures() {
+      return !failures.isEmpty();
     }
 
     public static class Builder {
@@ -231,25 +256,31 @@ public record TestResults(
       private final String name;
       private final List<Failure> failures = new ArrayList<>();
       private final List<Error> errors = new ArrayList<>();
-      private int successes = 0;
       private boolean isExampleWritten;
+      private int count = 0;
 
       public Builder(String name) {
         this.name = name;
       }
 
       public Builder addSuccess() {
-        this.successes++;
+        count++;
         return this;
+      }
+
+      public int getCount() {
+        return count;
       }
 
       public Builder addFailure(Failure failure) {
         this.failures.add(failure);
+        count++;
         return this;
       }
 
       public Builder addError(Error error) {
         this.errors.add(error);
+        count++;
         return this;
       }
 
@@ -259,30 +290,12 @@ public record TestResults(
       }
 
       public TestResult build() {
-        return new TestResult(
-            name, failures.size() + errors.size() + successes, failures, errors, isExampleWritten);
+        return new TestResult(name, count, failures, errors, isExampleWritten);
       }
     }
   }
 
-  public record Error(String message, PklException exception) {
-    public String render() {
-      return exception.getMessage();
-    }
-  }
+  public record Error(String message, PklException exception) {}
 
-  public record Failure(String kind, String failure, String location) {
-
-    public String render() {
-      if (kind.equals("Fact Failure")) {
-        return failure + " " + renderLocation(location);
-      } else {
-        return renderLocation(location) + "\n" + failure;
-      }
-    }
-
-    private static String renderLocation(String location) {
-      return "(" + location + ")";
-    }
-  }
+  public record Failure(String kind, String message) {}
 }

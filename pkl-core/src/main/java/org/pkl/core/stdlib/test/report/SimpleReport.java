@@ -32,12 +32,18 @@ public final class SimpleReport implements TestReport {
     builder.append("module ").append(results.moduleName()).append("\n");
 
     if (results.error() != null) {
-      var rendered = results.error().render();
+      var rendered = results.error().exception().getMessage();
       appendPadded(builder, rendered, "  ");
       builder.append('\n');
     } else {
       reportResults(results.facts(), builder);
       reportResults(results.examples(), builder);
+    }
+
+    if (results.isExampleWrittenFailure()) {
+      builder.append(results.examples().totalFailures()).append(" examples written\n");
+      writer.append(builder);
+      return;
     }
 
     builder.append(results.failed() ? "❌ " : "✅ ");
@@ -73,7 +79,6 @@ public final class SimpleReport implements TestReport {
       builder.append("✍️ ").append(result.name());
     } else {
       builder.append(result.isFailure() ? "❌ " : "✅ ").append(result.name());
-
       if (result.isFailure()) {
         var failurePadding = "       ";
         builder.append("\n");
@@ -81,7 +86,7 @@ public final class SimpleReport implements TestReport {
             builder,
             result.failures(),
             "\n",
-            failure -> appendPadded(builder, failure.render(), failurePadding));
+            failure -> appendPadded(builder, failure.message(), failurePadding));
         StringUtils.joinToStringBuilder(
             builder,
             result.errors(),
