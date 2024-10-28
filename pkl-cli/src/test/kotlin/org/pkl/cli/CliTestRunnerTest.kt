@@ -18,6 +18,7 @@ package org.pkl.cli
 import com.github.ajalt.clikt.core.MissingArgument
 import com.github.ajalt.clikt.core.subcommands
 import java.io.StringWriter
+import java.io.Writer
 import java.net.URI
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
@@ -101,7 +102,7 @@ class CliTestRunnerTest {
         module test
           facts
             ❌ fail
-               4 == 9
+               4 == 9 (/tempDir/test.pkl, line xx)
         ❌ 0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
 
         """
@@ -142,7 +143,7 @@ class CliTestRunnerTest {
 
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
-             at test#facts["fail"][#1]
+             at test#facts["fail"][#1] (/tempDir/test.pkl, line xx)
       ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
@@ -183,7 +184,7 @@ class CliTestRunnerTest {
 
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
-             at test#examples["fail"][#1]
+             at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
       ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
@@ -235,10 +236,10 @@ class CliTestRunnerTest {
           ❌ fail
              –– Pkl Error ––
              uh oh
-
+      
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
-             at test#examples["fail"][#1]
+             at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
       ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
@@ -266,9 +267,10 @@ class CliTestRunnerTest {
     """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val noopWriter = noopWriter()
     val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
     val testOpts = CliTestOptions(junitDir = tempDir)
-    val runner = CliTestRunner(opts, testOpts)
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
 
     val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
@@ -279,7 +281,7 @@ class CliTestRunnerTest {
       <testsuite name="test" tests="2" failures="1">
           <testcase classname="test.facts" name="foo"></testcase>
           <testcase classname="test.facts" name="bar">
-              <failure message="Fact Failure">5 == 9</failure>
+              <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)</failure>
           </testcase>
           <system-err><![CDATA[9 = 9
       ]]></system-err>
@@ -308,9 +310,10 @@ class CliTestRunnerTest {
     """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val noopWriter = noopWriter()
     val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
     val testOpts = CliTestOptions(junitDir = tempDir)
-    val runner = CliTestRunner(opts, testOpts)
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
 
     val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
@@ -326,7 +329,7 @@ class CliTestRunnerTest {
       
       9 | throw(&quot;uh oh&quot;)
           ^^^^^^^^^^^^^^
-      at test#facts[&quot;fail&quot;][#1]
+      at test#facts[&quot;fail&quot;][#1] (/tempDir/test.pkl, line xx)
       </error>
           </testcase>
           <system-err><![CDATA[9 = 9
@@ -369,13 +372,14 @@ class CliTestRunnerTest {
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(foo).toString()
     val input2 = tempDir.resolve("test.pkl").writeString(bar).toString()
+    val noopWriter = noopWriter()
     val opts =
       CliBaseOptions(
         sourceModules = listOf(input.toUri(), input2.toUri()),
         settings = URI("pkl:settings")
       )
     val testOpts = CliTestOptions(junitDir = tempDir)
-    val runner = CliTestRunner(opts, testOpts)
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
   }
 
@@ -432,7 +436,7 @@ class CliTestRunnerTest {
         module test
           examples
             ❌ nums
-              
+               (/tempDir/test.pkl, line xx)
                Output mismatch: Expected "nums" to contain 1 examples, but found 2
         ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
@@ -478,6 +482,14 @@ class CliTestRunnerTest {
   }
 
   private fun String.stripFileAndLines(tmpDir: Path) =
-    replace(tmpDir.toUri().toString(), "/tempDir/")
-      .replace(Regex("""\s?\(.*, line \d+\)(:\n\s.)?"""), "")
+    replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex("line \\d+"), "line xx")
+
+  private fun noopWriter(): Writer =
+    object : Writer() {
+      override fun close() {}
+
+      override fun flush() {}
+
+      override fun write(cbuf: CharArray, off: Int, len: Int) {}
+    }
 }
