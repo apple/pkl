@@ -62,6 +62,8 @@ public final class EvaluatorBuilder {
 
   private @Nullable String outputFormat;
 
+  private Boolean color = false;
+
   private @Nullable StackFrameTransformer stackFrameTransformer;
 
   private @Nullable DeclaredDependencies dependencies;
@@ -143,6 +145,17 @@ public final class EvaluatorBuilder {
    */
   public static EvaluatorBuilder unconfigured() {
     return new EvaluatorBuilder();
+  }
+
+  /** Sets the option to render errors in ANSI color. */
+  public EvaluatorBuilder setColor(Boolean color) {
+    this.color = color;
+    return this;
+  }
+
+  /** Returns the current setting of the option to render errors in ANSI color. */
+  public boolean getColor() {
+    return color;
   }
 
   /** Sets the given stack frame transformer, replacing any previously set transformer. */
@@ -476,6 +489,9 @@ public final class EvaluatorBuilder {
     if (settings.rootDir() != null) {
       setRootDir(settings.rootDir());
     }
+    if (Boolean.TRUE.equals(settings.color())) {
+      setColor(true);
+    }
     if (Boolean.TRUE.equals(settings.noCache())) {
       setModuleCacheDir(null);
     } else if (settings.moduleCacheDir() != null) {
@@ -514,6 +530,7 @@ public final class EvaluatorBuilder {
 
     return new EvaluatorImpl(
         stackFrameTransformer,
+        OutputFormatter.create(color),
         securityManager,
         httpClient,
         new LoggerImpl(logger, stackFrameTransformer),

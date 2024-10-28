@@ -101,6 +101,9 @@ data class CliBaseOptions(
   /** The cache directory for storing packages. */
   private val moduleCacheDir: Path? = null,
 
+  /** Whether to render errors in ANSI color. */
+  val color: Boolean = false,
+
   /** Whether to disable the module cache. */
   val noCache: Boolean = false,
 

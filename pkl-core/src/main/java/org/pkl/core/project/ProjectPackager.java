@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.graalvm.collections.EconomicMap;
+import org.pkl.core.OutputFormatter;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.SecurityManager;
@@ -98,6 +99,7 @@ public final class ProjectPackager {
   private final Path workingDir;
   private final String outputPathPattern;
   private final StackFrameTransformer stackFrameTransformer;
+  private final OutputFormatter<?> outputFormatter;
   private final SecurityManager securityManager;
   private final PackageResolver packageResolver;
   private final boolean skipPublishCheck;
@@ -108,6 +110,7 @@ public final class ProjectPackager {
       Path workingDir,
       String outputPathPattern,
       StackFrameTransformer stackFrameTransformer,
+      OutputFormatter<?> outputFormatter,
       SecurityManager securityManager,
       HttpClient httpClient,
       boolean skipPublishCheck,
@@ -116,6 +119,7 @@ public final class ProjectPackager {
     this.workingDir = workingDir;
     this.outputPathPattern = outputPathPattern;
     this.stackFrameTransformer = stackFrameTransformer;
+    this.outputFormatter = outputFormatter;
     this.securityManager = securityManager;
     // intentionally use InMemoryPackageResolver
     this.packageResolver = PackageResolver.getInstance(securityManager, httpClient, null);
@@ -409,14 +413,14 @@ public final class ProjectPackager {
             .evalError("invalidModuleUri", importStr)
             .withSourceSection(sourceSection)
             .build()
-            .toPklException(stackFrameTransformer);
+            .toPklException(stackFrameTransformer, outputFormatter);
       }
       if (importStr.startsWith("/") && !project.getProjectDir().toString().equals("/")) {
         throw new VmExceptionBuilder()
             .evalError("invalidRelativeProjectImport", importStr)
             .withSourceSection(sourceSection)
             .build()
-            .toPklException(stackFrameTransformer);
+            .toPklException(stackFrameTransformer, outputFormatter);
       }
       var currentPath = pklModulePath.getParent();
       var importPath = Path.of(importUri.getPath());
@@ -433,7 +437,7 @@ public final class ProjectPackager {
               .evalError("invalidRelativeProjectImport", importStr)
               .withSourceSection(sourceSection)
               .build()
-              .toPklException(stackFrameTransformer);
+              .toPklException(stackFrameTransformer, outputFormatter);
         }
       }
     }

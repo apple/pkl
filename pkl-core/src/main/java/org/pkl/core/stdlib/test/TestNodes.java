@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.util.stream.Collectors;
+import org.pkl.core.OutputFormatter;
 import org.pkl.core.ast.lambda.ApplyVmFunction0Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction0NodeGen;
 import org.pkl.core.runtime.*;
@@ -28,7 +29,7 @@ import org.pkl.core.stdlib.PklName;
 
 public final class TestNodes {
   private static final VmExceptionRenderer noStackTraceExceptionRenderer =
-      new VmExceptionRenderer(null);
+      new VmExceptionRenderer(null, OutputFormatter.create(false));
 
   private TestNodes() {}
 

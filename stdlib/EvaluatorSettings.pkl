@@ -67,6 +67,9 @@ allowedModules: Listing<String(isRegex)>?
 /// ```
 allowedResources: Listing<String(isRegex)>?
 
+/// Whether errors should be formatted with ANSI color.
+color: ("never"|*"auto"|"always")?
+
 /// Disables the file system cache for `package:` modules.
 ///
 /// When caching is disabled, packages are loaded over the network and stored in memory.

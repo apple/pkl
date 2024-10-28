@@ -83,7 +83,9 @@ public class ReplServer implements AutoCloseable {
     this.workingDir = workingDir;
     this.securityManager = securityManager;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
-    this.errorRenderer = new VmExceptionRenderer(new StackTraceRenderer(frameTransformer));
+    this.errorRenderer =
+        new VmExceptionRenderer(
+            new StackTraceRenderer(frameTransformer), OutputFormatter.create(false));
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);

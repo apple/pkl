@@ -445,6 +445,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getModulePath().from(spec.getModulePath());
     task.getSettingsModule().set(spec.getSettingsModule());
     task.getEvalRootDir().set(spec.getEvalRootDir());
+    task.getColor().set(spec.getColor());
     task.getNoCache().set(spec.getNoCache());
     task.getModuleCacheDir().set(spec.getModuleCacheDir());
     task.getEvalTimeout().set(spec.getEvalTimeout());

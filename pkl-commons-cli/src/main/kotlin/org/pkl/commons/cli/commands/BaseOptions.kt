@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
@@ -140,6 +141,16 @@ class BaseOptions : OptionGroup() {
         help = "External property to set (repeatable)."
       )
       .associateProps()
+
+  val color: Color? by
+    option(
+        names = arrayOf("--color"),
+        metavar = "<when>",
+        help =
+          "Whether to format error messages in ANSI color. Possible values of <when> are \"never\", \"auto\", and \"always\"."
+      )
+      .enum<Color> { it.value }
+      .single()
 
   val noCache: Boolean by
     option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
@@ -265,6 +276,7 @@ class BaseOptions : OptionGroup() {
       projectDir = projectOptions?.projectDir,
       timeout = timeout,
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
+      color = (color ?: Color.AUTO).hasColor,
       noCache = noCache,
       testMode = testMode,
       testPort = testPort,
@@ -276,5 +288,19 @@ class BaseOptions : OptionGroup() {
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
     )
+  }
+}
+
+enum class Color(val value: String) {
+  NEVER("never"),
+  AUTO("auto"),
+  ALWAYS("always");
+
+  val hasColor: Boolean by lazy {
+    when (this) {
+      NEVER -> false
+      ALWAYS -> true
+      AUTO -> System.console() != null
+    }
   }
 }

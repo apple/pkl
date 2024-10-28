@@ -19,6 +19,7 @@ evaluatorSettings {
     ["two"] = "2"
   }
   moduleCacheDir = "my-cache-dir/"
+  color = "always"
   noCache = false
   rootDir = "my-root-dir/"
   timeout = 5.min

@@ -30,6 +30,7 @@ import org.pkl.commons.currentWorkingDir
 import org.pkl.commons.writeString
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
+import org.pkl.core.OutputFormatter
 import org.pkl.core.PklException
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
@@ -120,7 +121,7 @@ constructor(
         try {
           moduleResolver.resolve(uri)
         } catch (e: VmException) {
-          throw e.toPklException(stackFrameTransformer)
+          throw e.toPklException(stackFrameTransformer, OutputFormatter.create(options.base.color))
         }
       val substituted =
         pathStr

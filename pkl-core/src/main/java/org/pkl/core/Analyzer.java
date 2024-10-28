@@ -41,6 +41,7 @@ import org.pkl.core.util.Nullable;
 /** Utility library for static analysis of Pkl programs. */
 public class Analyzer {
   private final StackFrameTransformer transformer;
+  private final OutputFormatter<?> outputFormatter;
   private final SecurityManager securityManager;
   private final @Nullable Path moduleCacheDir;
   private final @Nullable DeclaredDependencies projectDependencies;
@@ -49,12 +50,14 @@ public class Analyzer {
 
   public Analyzer(
       StackFrameTransformer transformer,
+      OutputFormatter<?> outputFormatter,
       SecurityManager securityManager,
       Collection<ModuleKeyFactory> moduleKeyFactories,
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       HttpClient httpClient) {
     this.transformer = transformer;
+    this.outputFormatter = outputFormatter;
     this.securityManager = securityManager;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDependencies = projectDependencies;
@@ -82,7 +85,7 @@ public class Analyzer {
     } catch (PklException err) {
       throw err;
     } catch (VmException err) {
-      throw err.toPklException(transformer);
+      throw err.toPklException(transformer, outputFormatter);
     } catch (Exception e) {
       throw new PklBugException(e);
     } finally {

@@ -175,6 +175,7 @@ public abstract class ModulesTask extends BasePklTask {
               getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getColor().getOrElse(false),
               getNoCache().getOrElse(false),
               getOmitProjectSettings().getOrElse(false),
               getNoProject().getOrElse(false),

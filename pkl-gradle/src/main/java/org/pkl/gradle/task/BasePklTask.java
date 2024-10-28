@@ -119,6 +119,10 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract Property<Boolean> getColor();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getNoCache();
 
   @Input
@@ -164,6 +168,7 @@ public abstract class BasePklTask extends DefaultTask {
               null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getColor().getOrElse(false),
               getNoCache().getOrElse(false),
               false,
               false,

@@ -40,6 +40,7 @@ public record PklEvaluatorSettings(
     @Nullable Map<String, String> env,
     @Nullable List<Pattern> allowedModules,
     @Nullable List<Pattern> allowedResources,
+    @Nullable Boolean color,
     @Nullable Boolean noCache,
     @Nullable Path moduleCacheDir,
     @Nullable List<Path> modulePath,
@@ -102,11 +103,17 @@ public record PklEvaluatorSettings(
                     Collectors.toMap(
                         Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
+    var color = pSettings.get("color");
+    var useColor =
+        color != null
+            && (color.equals("always") || color.equals("auto") && System.console() != null);
+
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
         (Map<String, String>) pSettings.get("env"),
         allowedModules,
         allowedResources,
+        useColor,
         (Boolean) pSettings.get("noCache"),
         moduleCacheDir,
         modulePath,
@@ -198,6 +205,7 @@ public record PklEvaluatorSettings(
         && Objects.equals(env, that.env)
         && arePatternsEqual(allowedModules, that.allowedModules)
         && arePatternsEqual(allowedResources, that.allowedResources)
+        && Objects.equals(color, that.color)
         && Objects.equals(noCache, that.noCache)
         && Objects.equals(moduleCacheDir, that.moduleCacheDir)
         && Objects.equals(timeout, that.timeout)
@@ -219,7 +227,8 @@ public record PklEvaluatorSettings(
   @Override
   public int hashCode() {
     var result =
-        Objects.hash(externalProperties, env, noCache, moduleCacheDir, timeout, rootDir, http);
+        Objects.hash(
+            externalProperties, env, color, noCache, moduleCacheDir, timeout, rootDir, http);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;

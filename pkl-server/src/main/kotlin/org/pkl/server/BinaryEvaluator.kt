@@ -42,6 +42,7 @@ internal class BinaryEvaluator(
 ) :
   EvaluatorImpl(
     transformer,
+    OutputFormatter.create(false),
     manager,
     httpClient,
     logger,

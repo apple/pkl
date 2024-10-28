@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.pkl.core.BufferedLogger;
+import org.pkl.core.OutputFormatter;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Failure;
@@ -41,6 +42,7 @@ import org.pkl.core.util.MutableReference;
 /** Runs test results examples and facts. */
 public final class TestRunner {
   private static final PklConverter converter = new PklConverter(VmMapping.empty());
+  private static final OutputFormatter<?> outputFormatter = OutputFormatter.create(false);
   private final boolean overwrite;
   private final StackFrameTransformer stackFrameTransformer;
   private final BufferedLogger logger;
@@ -59,7 +61,9 @@ public final class TestRunner {
     try {
       checkAmendsPklTest(testModule);
     } catch (VmException v) {
-      var error = new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer));
+      var error =
+          new TestResults.Error(
+              v.getMessage(), v.toPklException(stackFrameTransformer, outputFormatter));
       return resultsBuilder.setError(error).build();
     }
 
@@ -108,7 +112,8 @@ public final class TestRunner {
                 } catch (VmException err) {
                   var error =
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer));
+                          err.getMessage(),
+                          err.toPklException(stackFrameTransformer, outputFormatter));
                   resultBuilder.addError(error);
                 }
                 return true;
@@ -208,7 +213,8 @@ public final class TestRunner {
                   errored.set(true);
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer)));
+                          err.getMessage(),
+                          err.toPklException(stackFrameTransformer, outputFormatter)));
                   return true;
                 }
                 var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
@@ -305,7 +311,8 @@ public final class TestRunner {
                 } catch (VmException err) {
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer)));
+                          err.getMessage(),
+                          err.toPklException(stackFrameTransformer, outputFormatter)));
                   allSucceeded.set(false);
                   success.set(false);
                   return true;

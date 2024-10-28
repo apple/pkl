@@ -19,6 +19,7 @@ import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pkl.core.OutputFormatter
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
 import org.pkl.core.module.ModuleKeys
@@ -78,7 +79,9 @@ class ImportsAndReadsParserTest {
       assertThrows<VmException> {
         ImportsAndReadsParser.parse(moduleKey, moduleKey.resolve(SecurityManagers.defaultManager))
       }
-    assertThat(err.toPklException(StackFrameTransformers.defaultTransformer))
+    assertThat(
+        err.toPklException(StackFrameTransformers.defaultTransformer, OutputFormatter.create(false))
+      )
       .hasMessage(
         """
           –– Pkl Error ––

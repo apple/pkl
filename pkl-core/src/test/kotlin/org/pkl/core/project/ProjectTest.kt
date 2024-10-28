@@ -66,6 +66,7 @@ class ProjectTest {
         listOf("foo:", "bar:").map(Pattern::compile),
         listOf("baz:", "biz:").map(Pattern::compile),
         false,
+        false,
         path.resolve("cache/"),
         listOf(path.resolve("modulepath1/"), path.resolve("modulepath2/")),
         Duration.ofMinutes(5.0),
