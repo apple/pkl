@@ -18,209 +18,145 @@ package org.pkl.core.project;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.Version;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.util.Nullable;
 
 /** Java representation of class {@code pkl.Project#Package} */
 @SuppressWarnings("unused")
-public final class Package {
-
-  private final String name;
-  private final PackageUri uri;
-  private final Version version;
-  private final URI packageZipUrl;
-  private final @Nullable String description;
-  private final List<String> authors;
-  private final @Nullable URI website;
-  private final @Nullable URI documentation;
-  private final @Nullable URI sourceCode;
-  private final @Nullable String sourceCodeUrlScheme;
-  private final @Nullable String license;
-  private final @Nullable String licenseText;
-  private final @Nullable URI issueTracker;
-  private final List<Path> apiTests;
-  private final List<String> exclude;
-
-  public Package(
-      String name,
-      PackageUri uri,
-      Version version,
-      URI packageZipUrl,
-      @Nullable String description,
-      List<String> authors,
-      @Nullable URI website,
-      @Nullable URI documentation,
-      @Nullable URI sourceCode,
-      @Nullable String sourceCodeUrlScheme,
-      @Nullable String license,
-      @Nullable String licenseText,
-      @Nullable URI issueTracker,
-      List<Path> apiTests,
-      List<String> exclude) {
-    this.name = name;
-    this.uri = uri;
-    this.version = version;
-    this.packageZipUrl = packageZipUrl;
-    this.description = description;
-    this.authors = authors;
-    this.website = website;
-    this.documentation = documentation;
-    this.sourceCode = sourceCode;
-    this.sourceCodeUrlScheme = sourceCodeUrlScheme;
-    this.license = license;
-    this.licenseText = licenseText;
-    this.issueTracker = issueTracker;
-    this.apiTests = apiTests;
-    this.exclude = exclude;
-  }
-
+public record Package(
+    String name,
+    PackageUri uri,
+    Version version,
+    URI packageZipUrl,
+    @Nullable String description,
+    List<String> authors,
+    @Nullable URI website,
+    @Nullable URI documentation,
+    @Nullable URI sourceCode,
+    @Nullable String sourceCodeUrlScheme,
+    @Nullable String license,
+    @Nullable String licenseText,
+    @Nullable URI issueTracker,
+    List<Path> apiTests,
+    List<String> exclude) {
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #name()}.
+   */
+  @Deprecated(forRemoval = true)
   public String getName() {
     return name;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #uri()}.
+   */
+  @Deprecated(forRemoval = true)
   public PackageUri getUri() {
     return uri;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #version()}.
+   */
+  @Deprecated(forRemoval = true)
   public Version getVersion() {
     return version;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #packageZipUrl()}.
+   */
+  @Deprecated(forRemoval = true)
   public URI getPackageZipUrl() {
     return packageZipUrl;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #description()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable String getDescription() {
     return description;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #authors()}.
+   */
+  @Deprecated(forRemoval = true)
   public List<String> getAuthors() {
     return authors;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #website()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable URI getWebsite() {
     return website;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #documentation()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable URI getDocumentation() {
     return documentation;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #sourceCode()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable URI getSourceCode() {
     return sourceCode;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #sourceCodeUrlScheme()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable String getSourceCodeUrlScheme() {
     return sourceCodeUrlScheme;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #licenseText()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable String getLicenseText() {
     return licenseText;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #license()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable String getLicense() {
     return license;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #issueTracker()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable URI getIssueTracker() {
     return issueTracker;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #apiTests()}.
+   */
+  @Deprecated(forRemoval = true)
   public List<Path> getApiTests() {
     return apiTests;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #exclude()}.
+   */
+  @Deprecated(forRemoval = true)
   public List<String> getExclude() {
     return exclude;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Package aPackage = (Package) o;
-    return name.equals(aPackage.name)
-        && uri.equals(aPackage.uri)
-        && version.equals(aPackage.version)
-        && Objects.equals(description, aPackage.description)
-        && authors.equals(aPackage.authors)
-        && Objects.equals(website, aPackage.website)
-        && Objects.equals(documentation, aPackage.documentation)
-        && Objects.equals(sourceCode, aPackage.sourceCode)
-        && Objects.equals(sourceCodeUrlScheme, aPackage.sourceCodeUrlScheme)
-        && Objects.equals(license, aPackage.license)
-        && Objects.equals(licenseText, aPackage.licenseText)
-        && Objects.equals(issueTracker, aPackage.issueTracker)
-        && Objects.equals(apiTests, aPackage.apiTests)
-        && exclude.equals(aPackage.exclude);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        name,
-        uri,
-        version,
-        description,
-        authors,
-        website,
-        documentation,
-        sourceCode,
-        sourceCodeUrlScheme,
-        license,
-        licenseText,
-        issueTracker,
-        apiTests,
-        exclude);
-  }
-
-  @Override
-  public String toString() {
-    return "Package{"
-        + "name="
-        + name
-        + ", uri="
-        + uri
-        + ", version='"
-        + version
-        + '\''
-        + ", description='"
-        + description
-        + '\''
-        + ", authors="
-        + authors
-        + ", website='"
-        + website
-        + ", documentation='"
-        + documentation
-        + '\''
-        + ", sourceCode='"
-        + sourceCode
-        + '\''
-        + ", sourceCodeUrlScheme='"
-        + sourceCodeUrlScheme
-        + '\''
-        + ", license='"
-        + license
-        + '\''
-        + ", licenseText='"
-        + licenseText
-        + '\''
-        + ", issueTracker='"
-        + issueTracker
-        + '\''
-        + ", apiTests='"
-        + apiTests
-        + '\''
-        + ", exclude='"
-        + exclude
-        + '\''
-        + '}';
   }
 }
