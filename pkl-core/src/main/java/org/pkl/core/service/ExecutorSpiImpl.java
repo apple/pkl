@@ -116,13 +116,22 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
             .setTimeout(options.getTimeout())
             .setOutputFormat(options.getOutputFormat())
             .setModuleCacheDir(options.getModuleCacheDir());
-    if (options.getProjectDir() != null) {
-      var project = Project.loadFromPath(options.getProjectDir().resolve(PKL_PROJECT_FILENAME));
-      builder.setProjectDependencies(project.getDependencies());
-    }
 
-    try (var evaluator = builder.build()) {
-      return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+    try {
+      if (options.getProjectDir() != null) {
+        var project =
+            Project.loadFromPath(
+                options.getProjectDir().resolve(PKL_PROJECT_FILENAME),
+                SecurityManagers.defaultManager,
+                null,
+                transformer,
+                System.getenv());
+        builder.setProjectDependencies(project.getDependencies());
+      }
+
+      try (var evaluator = builder.build()) {
+        return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+      }
     } catch (PklException e) {
       throw new ExecutorSpiException(e.getMessage(), e.getCause());
     } finally {

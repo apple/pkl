@@ -227,6 +227,13 @@ final class EmbeddedExecutor implements Executor {
         return executorSpi.evaluatePath(modulePath, options.toSpiOptions());
       } catch (ExecutorSpiException e) {
         throw new ExecutorException(e.getMessage(), e.getCause(), executorSpi.getPklVersion());
+      } catch (RuntimeException e) {
+        // This branch would ideally never be hit, but older Pkl releases (<0.27) may trigger this
+        // by bubbling PklException up to this point in cases where project evaluation fails.
+        // This catch-all ensures the API contract of Executor is upheld.
+        // Unfortunately the PklException thrown by the ExecutorSpi is from a different class loader
+        // so the host program cannot directly catch PklException specifically
+        throw new ExecutorException(e.getMessage(), e.getCause());
       } finally {
         currentThread.setContextClassLoader(prevContextClassLoader);
       }

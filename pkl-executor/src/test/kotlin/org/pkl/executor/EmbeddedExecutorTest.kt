@@ -70,6 +70,11 @@ class EmbeddedExecutorTest {
       )
     }
 
+    @JvmStatic
+    private val allTestExecutorsWithoutDistribution1: List<TestExecutor> by lazy {
+      allTestExecutors.filter { !it.toString().contains("Distribution1") }
+    }
+
     private val currentExecutor: TestExecutor by lazy {
       TestExecutor(executor2_2.value, -1, "currentExecutor")
     }
@@ -413,6 +418,60 @@ class EmbeddedExecutorTest {
       // ensure module file paths are relativized
       .contains("at test#foo (test.pkl)")
       .doesNotContain(tempDir.toString())
+  }
+
+  @ParameterizedTest
+  @MethodSource("getAllTestExecutors")
+  fun `evaluate a module whose project evaluation fails`(
+    executor: TestExecutor,
+    @TempDir tempDir: Path
+  ) {
+    tempDir
+      .resolve("PklProject")
+      .toFile()
+      .writeText(
+        """
+      amends "pkl:Project"
+      dependencies {
+        ["myDep"] = import("../nonexistent/PklProject")
+      }
+    """
+          .trimIndent()
+      )
+
+    val pklFile = tempDir.resolve("test.pkl")
+    pklFile
+      .toFile()
+      .writeText(
+        """
+      @ModuleInfo { minPklVersion = "0.11.0" }
+      module test
+
+      foo = "bar"
+    """
+          .trimIndent()
+      )
+
+    val e =
+      assertThrows<ExecutorException> {
+        executor.evaluatePath(pklFile) {
+          allowedModules("file:")
+          allowedResources("prop:")
+          projectDir(tempDir)
+          rootDir(tempDir)
+        }
+      }
+
+    assertThat(e.message)
+      .contains("Cannot find module")
+      // ensure module file paths are relativized
+      .contains("/nonexistent/PklProject")
+
+    // legacy distribution does not handle these errors with the correct stack frame transformer
+    // only assert on this for newer distributions
+    if (!executor.toString().contains("Distribution1")) {
+      assertThat(e.message).doesNotContain(tempDir.toString())
+    }
   }
 
   @ParameterizedTest
