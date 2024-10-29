@@ -54,8 +54,8 @@ class EvaluateTestsTest {
     assertThat(results.displayUri).isEqualTo("repl:text")
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.failed()).isFalse
-    assertThat(results.facts.results[0].name).isEqualTo("should pass")
-    assertThat(results.err.isBlank()).isTrue
+    assertThat(results.facts().results[0].name).isEqualTo("should pass")
+    assertThat(results.logs().isBlank()).isTrue
   }
 
   @Test
@@ -82,16 +82,16 @@ class EvaluateTestsTest {
     assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    val res = results.facts.results[0]
+    val res = results.facts().results[0]
     assertThat(res.name).isEqualTo("should fail")
-    assertThat(results.facts.hasError()).isFalse
+    assertThat(results.facts().hasError()).isFalse
     assertThat(res.failures.size).isEqualTo(2)
 
     val fail1 = res.failures[0]
-    assertThat(fail1.rendered).isEqualTo("1 == 2 (repl:text)")
+    assertThat(fail1.message).isEqualTo("1 == 2 (repl:text)")
 
     val fail2 = res.failures[1]
-    assertThat(fail2.rendered).isEqualTo(""""foo" == "bar" (repl:text)""")
+    assertThat(fail2.message).isEqualTo(""""foo" == "bar" (repl:text)""")
   }
 
   @Test
@@ -118,7 +118,7 @@ class EvaluateTestsTest {
     assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    val res = results.facts.results[0]
+    val res = results.facts().results[0]
     assertThat(res.name).isEqualTo("should fail")
     assertThat(res.failures).hasSize(1)
     assertThat(res.errors).hasSize(1)
@@ -180,7 +180,7 @@ class EvaluateTestsTest {
     assertThat(results.displayUri).startsWith("file:///").endsWith(".pkl")
     assertThat(results.totalTests()).isEqualTo(1)
     assertThat(results.failed()).isFalse
-    assertThat(results.examples.results[0].name).isEqualTo("user")
+    assertThat(results.examples().results[0].name).isEqualTo("user")
   }
 
   @Test
@@ -232,9 +232,9 @@ class EvaluateTestsTest {
     assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    assertThat(results.facts.results[0].name).isEqualTo("should fail")
-    assertThat(results.facts.results[0].failures.size).isEqualTo(2)
-    assertThat(results.examples.results[0].name).isEqualTo("user")
+    assertThat(results.facts().results[0].name).isEqualTo("should fail")
+    assertThat(results.facts().results[0].failures.size).isEqualTo(2)
+    assertThat(results.examples().results[0].name).isEqualTo("user")
   }
 
   @Test
@@ -286,7 +286,7 @@ class EvaluateTestsTest {
     assertThat(results.totalFailures()).isEqualTo(1)
     assertThat(results.failed()).isTrue
 
-    val res = results.facts.results[0]
+    val res = results.facts().results[0]
     assertThat(res.name).isEqualTo("should fail")
     assertThat(res.failures).hasSize(0)
     assertThat(res.errors).hasSize(1)
@@ -294,7 +294,7 @@ class EvaluateTestsTest {
     val error = res.errors[0]
     assertThat(error.message).isEqualTo("exception")
 
-    assertThat(results.examples.results[0].name).isEqualTo("user")
+    assertThat(results.examples().results[0].name).isEqualTo("user")
   }
 
   @Test
@@ -339,26 +339,26 @@ class EvaluateTestsTest {
     assertThat(results.failed()).isTrue
     assertThat(results.totalFailures()).isEqualTo(1)
 
-    val res = results.examples.results[0]
+    val res = results.examples().results[0]
     assertThat(res.name).isEqualTo("user")
-    assertFalse(results.examples.hasError())
+    assertFalse(results.examples().hasError())
 
     val fail1 = res.failures[0]
-    assertThat(fail1.rendered.stripFileAndLines(tempDir))
+    assertThat(fail1.message.stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      (/tempDir/example.pkl)
-      Expected: (/tempDir/example.pkl-expected.pcf)
-      new {
-        name = "Alice"
-        age = 45
-      }
-      Actual: (/tempDir/example.pkl-actual.pcf)
-      new {
-        name = "Bob"
-        age = 33
-      }
-    """
+        #0 (/tempDir/example.pkl):
+          Expected: (/tempDir/example.pkl-expected.pcf)
+          new {
+            name = "Alice"
+            age = 45
+          }
+          Actual: (/tempDir/example.pkl-actual.pcf)
+          new {
+            name = "Bob"
+            age = 33
+          }
+        """
           .trimIndent()
       )
   }

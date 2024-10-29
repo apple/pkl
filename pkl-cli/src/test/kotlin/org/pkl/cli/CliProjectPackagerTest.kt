@@ -213,6 +213,24 @@ class CliProjectPackagerTest {
           .trimIndent()
       )
     projectDir
+      .resolve("myTest.pkl-expected.pcf")
+      .writeString(
+        """
+        examples {
+          ["Bird"] {
+            new {
+              name = "Finch"
+              favoriteFruit {
+                name = "Tangerine"
+              }
+            }
+          }
+        }
+        
+      """
+          .trimIndent()
+      )
+    projectDir
       .resolve("PklProject")
       .writeString(
         """

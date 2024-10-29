@@ -16,7 +16,6 @@
 package org.pkl.core;
 
 import java.util.Map;
-import org.pkl.core.runtime.TestResults;
 import org.pkl.core.runtime.VmEvalException;
 
 /**
@@ -194,9 +193,9 @@ public interface Evaluator extends AutoCloseable {
    * <p>This requires that the target module be a test module; it must either amend or extend module
    * {@code "pkl:test"}. Otherwise, a type mismatch error is thrown.
    *
-   * <p>This method will write possibly {@code pcf-expected.pkl} and {@code pcf-actual.pcf} files as
+   * <p>This method will write possibly {@code pkl-expected.pcf} and {@code pkl-actual.pcf} files as
    * a sibling of the test module. The {@code overwrite} parameter causes the evaluator to overwrite
-   * {@code pcf-expected.pkl} files if they currently exist.
+   * {@code pkl-expected.pkl} files if they currently exist.
    *
    * @throws PklException if an error occurs during evaluation
    * @throws IllegalStateException if this evaluator has already been closed

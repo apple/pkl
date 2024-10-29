@@ -15,4 +15,4 @@
  */
 package org.pkl.commons.cli
 
-class CliTestException(msg: String) : CliException(msg, 1)
+class CliTestException(msg: String, exitCode: Int) : CliException(msg, exitCode)
