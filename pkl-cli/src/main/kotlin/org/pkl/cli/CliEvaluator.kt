@@ -31,12 +31,12 @@ import org.pkl.commons.writeString
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
-import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
+import org.pkl.core.util.Readers
 
 private data class OutputFile(val pathSpec: String, val moduleUri: URI)
 
@@ -100,7 +100,8 @@ constructor(
         writeOutput(builder)
       }
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.moduleKeyFactories)
+      Readers.closeQuietly(builder.resourceReaders)
     }
   }
 

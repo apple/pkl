@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.core.externalreader
 
-sealed class ServerException(msg: String, cause: Throwable?) : Exception(msg, cause)
+import java.net.URI
+import org.pkl.core.module.PathElement
 
-open class ProtocolException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
+class TestExternalResourceReader : ExternalResourceReader {
+  override val scheme: String = "test"
 
-class InvalidCommandException(msg: String, cause: Throwable? = null) : ServerException(msg, cause)
+  override val hasHierarchicalUris: Boolean = false
 
-class DecodeException(msg: String, cause: Throwable? = null) : ProtocolException(msg, cause)
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
+}

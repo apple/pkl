@@ -182,7 +182,9 @@ public abstract class ModulesTask extends BasePklTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               null,
-              List.of());
+              List.of(),
+              Map.of(),
+              Map.of());
     }
     return cachedOptions;
   }

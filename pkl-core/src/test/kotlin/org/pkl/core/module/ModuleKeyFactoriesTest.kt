@@ -26,6 +26,7 @@ import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
+import org.pkl.core.externalreader.*
 
 class ModuleKeyFactoriesTest {
   @Test
@@ -125,5 +126,24 @@ class ModuleKeyFactoriesTest {
 
     val module2 = factory.create(URI("other"))
     assertThat(module2).isNotPresent
+  }
+
+  @Test
+  fun externalProcess() {
+    val extReader = TestExternalModuleReader()
+    val (proc, runtime) =
+      TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
+
+    val factory = ModuleKeyFactories.externalProcess(extReader.scheme, proc)
+
+    val module = factory.create(URI("test:foo"))
+    assertThat(module).isPresent
+    assertThat(module.get().uri.scheme).isEqualTo("test")
+
+    val module2 = factory.create(URI("other"))
+    assertThat(module2).isNotPresent
+
+    proc.close()
+    runtime.close()
   }
 }

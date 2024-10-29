@@ -71,8 +71,10 @@ class EvaluatorBuilderTest {
   fun `sets evaluator settings from project`() {
     val projectPath = Path.of(javaClass.getResource("project/project1/PklProject")!!.toURI())
     val project = Project.loadFromPath(projectPath, SecurityManagers.defaultManager, null)
-    val projectDir = Path.of(javaClass.getResource("project/project1/PklProject")!!.toURI()).parent
-    val builder = EvaluatorBuilder.unconfigured().applyFromProject(project)
+    val projectDir = projectPath.parent
+    val builder = EvaluatorBuilder.unconfigured()
+    val moduleKeyFactoryCount = builder.moduleKeyFactories.size
+    builder.applyFromProject(project)
     assertThat(builder.allowedResources.map { it.pattern() }).isEqualTo(listOf("foo:", "bar:"))
     assertThat(builder.allowedModules.map { it.pattern() }).isEqualTo(listOf("baz:", "biz:"))
     assertThat(builder.externalProperties).isEqualTo(mapOf("one" to "1"))
@@ -80,5 +82,9 @@ class EvaluatorBuilderTest {
     assertThat(builder.moduleCacheDir).isEqualTo(projectDir.resolve("my-cache-dir/"))
     assertThat(builder.rootDir).isEqualTo(projectDir.resolve("my-root-dir/"))
     assertThat(builder.timeout).isEqualTo(Duration.ofMinutes(5L))
+    assertThat(builder.moduleKeyFactories.size - moduleKeyFactoryCount)
+      .isEqualTo(3) // two external readers, one module path
+    assertThat(builder.resourceReaders.find { it.uriScheme == "scheme3" }).isNotNull
+    assertThat(builder.resourceReaders.find { it.uriScheme == "scheme4" }).isNotNull
   }
 }

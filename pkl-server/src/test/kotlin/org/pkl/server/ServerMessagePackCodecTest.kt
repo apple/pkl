@@ -23,21 +23,25 @@ import java.time.Duration
 import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.msgpack.core.MessagePack
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.module.PathElement
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.messaging.Message
+import org.pkl.core.messaging.MessageDecoder
+import org.pkl.core.messaging.MessageEncoder
+import org.pkl.core.messaging.Messages.*
 import org.pkl.core.packages.Checksums
 
-class MessagePackCodecTest {
+class ServerMessagePackCodecTest {
   private val encoder: MessageEncoder
   private val decoder: MessageDecoder
 
   init {
-    val inputStream = PipedInputStream()
+    val inputStream =
+      PipedInputStream(10240) // use larger pipe size since large messages can be >1024 bytes
     val outputStream = PipedOutputStream(inputStream)
-    encoder = MessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
-    decoder = MessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
+    encoder = ServerMessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
+    decoder = ServerMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
   }
 
   private fun roundtrip(message: Message) {
@@ -50,31 +54,19 @@ class MessagePackCodecTest {
   fun `round-trip CreateEvaluatorRequest`() {
     val resourceReader1 =
       ResourceReaderSpec(
-        scheme = "resourceReader1",
-        hasHierarchicalUris = true,
-        isGlobbable = true,
+        "resourceReader1",
+        true,
+        true,
       )
     val resourceReader2 =
       ResourceReaderSpec(
-        scheme = "resourceReader2",
-        hasHierarchicalUris = true,
-        isGlobbable = false,
+        "resourceReader2",
+        true,
+        false,
       )
-    val moduleReader1 =
-      ModuleReaderSpec(
-        scheme = "moduleReader1",
-        hasHierarchicalUris = true,
-        isGlobbable = true,
-        isLocal = true
-      )
-    val moduleReader2 =
-      ModuleReaderSpec(
-        scheme = "moduleReader2",
-        hasHierarchicalUris = true,
-        isGlobbable = false,
-        isLocal = false
-      )
-    @Suppress("HttpUrlsUsage")
+    val moduleReader1 = ModuleReaderSpec("moduleReader1", true, true, true)
+    val moduleReader2 = ModuleReaderSpec("moduleReader2", true, false, false)
+    val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
     roundtrip(
       CreateEvaluatorRequest(
         requestId = 123,
@@ -119,7 +111,9 @@ class MessagePackCodecTest {
           Http(
             proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
             caCertificates = byteArrayOf(1, 2, 3, 4)
-          )
+          ),
+        externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
+        externalResourceReaders = mapOf("external" to externalReader),
       )
     )
   }
@@ -169,114 +163,5 @@ class MessagePackCodecTest {
         frameUri = "file:///some/module.pkl"
       )
     )
-  }
-
-  @Test
-  fun `round-trip ReadResourceRequest`() {
-    roundtrip(
-      ReadResourceRequest(requestId = 123, evaluatorId = 456, uri = URI("some/resource.json"))
-    )
-  }
-
-  @Test
-  fun `round-trip ReadResourceResponse`() {
-    roundtrip(
-      ReadResourceResponse(
-        requestId = 123,
-        evaluatorId = 456,
-        contents = byteArrayOf(1, 2, 3, 4, 5),
-        error = null
-      )
-    )
-  }
-
-  @Test
-  fun `round-trip ReadModuleRequest`() {
-    roundtrip(ReadModuleRequest(requestId = 123, evaluatorId = 456, uri = URI("some/module.pkl")))
-  }
-
-  @Test
-  fun `round-trip ReadModuleResponse`() {
-    roundtrip(
-      ReadModuleResponse(requestId = 123, evaluatorId = 456, contents = "x = 42", error = null)
-    )
-  }
-
-  @Test
-  fun `round-trip ListModulesRequest`() {
-    roundtrip(ListModulesRequest(requestId = 135, evaluatorId = 246, uri = URI("foo:/bar/baz/biz")))
-  }
-
-  @Test
-  fun `round-trip ListModulesResponse`() {
-    roundtrip(
-      ListModulesResponse(
-        requestId = 123,
-        evaluatorId = 234,
-        pathElements = listOf(PathElement("foo", true), PathElement("bar", false)),
-        error = null
-      )
-    )
-    roundtrip(
-      ListModulesResponse(
-        requestId = 123,
-        evaluatorId = 234,
-        pathElements = null,
-        error = "Something dun went wrong"
-      )
-    )
-  }
-
-  @Test
-  fun `round-trip ListResourcesRequest`() {
-    roundtrip(ListResourcesRequest(requestId = 987, evaluatorId = 1359, uri = URI("bar:/bazzy")))
-  }
-
-  @Test
-  fun `round-trip ListResourcesResponse`() {
-    roundtrip(
-      ListResourcesResponse(
-        requestId = 3851,
-        evaluatorId = 3019,
-        pathElements = listOf(PathElement("foo", true), PathElement("bar", false)),
-        error = null
-      )
-    )
-    roundtrip(
-      ListResourcesResponse(
-        requestId = 3851,
-        evaluatorId = 3019,
-        pathElements = null,
-        error = "something went wrong"
-      )
-    )
-  }
-
-  @Test
-  fun `decode request with missing request ID`() {
-    val bytes =
-      MessagePack.newDefaultBufferPacker()
-        .apply {
-          packArrayHeader(2)
-          packInt(MessageType.CREATE_EVALUATOR_REQUEST.code)
-          packMapHeader(1)
-          packString("clientResourceSchemes")
-          packArrayHeader(0)
-        }
-        .toByteArray()
-
-    val decoder = MessagePackDecoder(MessagePack.newDefaultUnpacker(bytes))
-    val exception = assertThrows<DecodeException> { decoder.decode() }
-    assertThat(exception.message).contains("requestId")
-  }
-
-  @Test
-  fun `decode invalid message header`() {
-    val bytes = MessagePack.newDefaultBufferPacker().apply { packInt(2) }.toByteArray()
-
-    val decoder = MessagePackDecoder(MessagePack.newDefaultUnpacker(bytes))
-    val exception = assertThrows<DecodeException> { decoder.decode() }
-    assertThat(exception).hasMessage("Malformed message header.")
-    assertThat(exception).hasRootCauseMessage("Expected Array, but got Integer (02)")
   }
 }

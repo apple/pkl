@@ -57,6 +57,7 @@ dependencies {
   compileOnly(projects.pklExecutor)
 
   implementation(libs.antlrRuntime)
+  implementation(libs.msgpack)
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
 
