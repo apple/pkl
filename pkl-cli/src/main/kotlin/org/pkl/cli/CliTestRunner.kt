@@ -102,7 +102,7 @@ constructor(
         }
       }
       if (failed) {
-        val exitCode = if (isExampleWrittenFailure) 2 else 1
+        val exitCode = if (isExampleWrittenFailure) 10 else 1
         throw CliTestException(ErrorMessages.create("testsFailed"), exitCode)
       }
     }

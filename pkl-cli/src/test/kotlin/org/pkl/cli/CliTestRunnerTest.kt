@@ -467,7 +467,7 @@ class CliTestRunnerTest {
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     val exception = assertThrows<CliException> { runner.run() }
-    assertThat(exception.exitCode).isEqualTo(2)
+    assertThat(exception.exitCode).isEqualTo(10)
     assertThat(out.toString())
       .isEqualTo(
         """
@@ -481,8 +481,13 @@ class CliTestRunnerTest {
       )
   }
 
-  private fun String.stripFileAndLines(tmpDir: Path) =
-    replace(tmpDir.toUri().toString(), "/tempDir/").replace(Regex("line \\d+"), "line xx")
+  private fun String.stripFileAndLines(tmpDir: Path): String {
+    // handle platform differences in handling of file URIs
+    // (file:/// on *nix vs. file:/ on Windows)
+    return replace(tmpDir.toFile().toURI().toString(), "/tempDir/")
+      .replace(tmpDir.toUri().toString(), "/tempDir/")
+      .replace(Regex("line \\d+"), "line xx")
+  }
 
   private fun noopWriter(): Writer =
     object : Writer() {

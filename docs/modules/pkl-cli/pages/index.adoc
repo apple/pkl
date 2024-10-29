@@ -410,7 +410,7 @@ Evaluate the given `<modules>` as _tests_, producing a test report and appropria
 Renderers defined in test files will be ignored by the `test` command.
 
 Tests that result in writing `pkl-expected.pcf` files are considered failing tests.
-If these are the only failures, the command exits with exit code 2.
+If these are the only failures, the command exits with exit code 10.
 Otherwise, failures result in exit code 1.
 
 <modules>::
