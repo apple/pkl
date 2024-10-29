@@ -41,7 +41,7 @@ public class ReadGlobMemberBodyNode extends ExpressionNode {
   private Object readResource(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")
     var globElements = (Map<String, ResolvedGlobElement>) mapping.getExtraStorage();
-    var resourceUri = VmUtils.getMapValue(globElements, path).getUri();
+    var resourceUri = VmUtils.getMapValue(globElements, path).uri();
     var resource = VmContext.get(this).getResourceManager().read(resourceUri, this).orElse(null);
     if (resource == null) {
       CompilerDirectives.transferToInterpreter();
