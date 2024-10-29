@@ -32,6 +32,7 @@ import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.ResourceManager;
+import org.pkl.core.runtime.TextFormatter;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmImportAnalyzer;
@@ -41,7 +42,7 @@ import org.pkl.core.util.Nullable;
 /** Utility library for static analysis of Pkl programs. */
 public class Analyzer {
   private final StackFrameTransformer transformer;
-  private final OutputFormatter<?> outputFormatter;
+  private final TextFormatter<?> textFormatter;
   private final SecurityManager securityManager;
   private final @Nullable Path moduleCacheDir;
   private final @Nullable DeclaredDependencies projectDependencies;
@@ -50,14 +51,14 @@ public class Analyzer {
 
   public Analyzer(
       StackFrameTransformer transformer,
-      OutputFormatter<?> outputFormatter,
+      TextFormatter<?> textFormatter,
       SecurityManager securityManager,
       Collection<ModuleKeyFactory> moduleKeyFactories,
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       HttpClient httpClient) {
     this.transformer = transformer;
-    this.outputFormatter = outputFormatter;
+    this.textFormatter = textFormatter;
     this.securityManager = securityManager;
     this.moduleCacheDir = moduleCacheDir;
     this.projectDependencies = projectDependencies;
@@ -85,7 +86,7 @@ public class Analyzer {
     } catch (PklException err) {
       throw err;
     } catch (VmException err) {
-      throw err.toPklException(transformer, outputFormatter);
+      throw err.toPklException(transformer, textFormatter);
     } catch (Exception e) {
       throw new PklBugException(e);
     } finally {

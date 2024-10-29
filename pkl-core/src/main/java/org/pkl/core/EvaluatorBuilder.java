@@ -489,8 +489,8 @@ public final class EvaluatorBuilder {
     if (settings.rootDir() != null) {
       setRootDir(settings.rootDir());
     }
-    if (Boolean.TRUE.equals(settings.color())) {
-      setColor(true);
+    if (settings.color() != null) {
+      setColor(settings.color().hasColor());
     }
     if (Boolean.TRUE.equals(settings.noCache())) {
       setModuleCacheDir(null);
@@ -530,7 +530,7 @@ public final class EvaluatorBuilder {
 
     return new EvaluatorImpl(
         stackFrameTransformer,
-        OutputFormatter.create(color),
+        color,
         securityManager,
         httpClient,
         new LoggerImpl(logger, stackFrameTransformer),

@@ -32,7 +32,6 @@ import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.ModuleSource;
-import org.pkl.core.OutputFormatter;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
@@ -43,6 +42,7 @@ import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Value;
 import org.pkl.core.Version;
+import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
@@ -51,6 +51,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.runtime.TextFormatter;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ImportGraphUtils;
@@ -145,7 +146,7 @@ public final class Project {
         }
         // stack frame transformer never used; this exception has no stack frames.
         throw vmException.toPklException(
-            StackFrameTransformers.defaultTransformer, OutputFormatter.create(false));
+            StackFrameTransformers.defaultTransformer, TextFormatter.create(false));
       }
       throw e;
     } catch (URISyntaxException e) {
@@ -194,7 +195,7 @@ public final class Project {
     var analyzer =
         new Analyzer(
             StackFrameTransformers.defaultTransformer,
-            OutputFormatter.create(false),
+            TextFormatter.create(false),
             SecurityManagers.defaultManager,
             builder.getModuleKeyFactories(),
             builder.getModuleCacheDir(),
@@ -509,7 +510,6 @@ public final class Project {
         @Nullable Map<String, String> env,
         @Nullable List<Pattern> allowedModules,
         @Nullable List<Pattern> allowedResources,
-        @Nullable Boolean color,
         @Nullable Boolean noCache,
         @Nullable Path moduleCacheDir,
         @Nullable List<Path> modulePath,
@@ -521,7 +521,7 @@ public final class Project {
               env,
               allowedModules,
               allowedResources,
-              color,
+              Color.AUTO,
               noCache,
               moduleCacheDir,
               modulePath,
@@ -603,8 +603,6 @@ public final class Project {
           + delegate.allowedModules()
           + ", allowedResources="
           + delegate.allowedResources()
-          + ", color="
-          + delegate.color()
           + ", noCache="
           + delegate.noCache()
           + ", moduleCacheDir="

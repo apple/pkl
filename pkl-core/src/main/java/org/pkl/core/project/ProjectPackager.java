@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.graalvm.collections.EconomicMap;
-import org.pkl.core.OutputFormatter;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.SecurityManager;
@@ -57,6 +56,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.runtime.ModuleResolver;
+import org.pkl.core.runtime.TextFormatter;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.ErrorMessages;
@@ -99,7 +99,7 @@ public final class ProjectPackager {
   private final Path workingDir;
   private final String outputPathPattern;
   private final StackFrameTransformer stackFrameTransformer;
-  private final OutputFormatter<?> outputFormatter;
+  private final TextFormatter<?> textFormatter;
   private final SecurityManager securityManager;
   private final PackageResolver packageResolver;
   private final boolean skipPublishCheck;
@@ -110,7 +110,7 @@ public final class ProjectPackager {
       Path workingDir,
       String outputPathPattern,
       StackFrameTransformer stackFrameTransformer,
-      OutputFormatter<?> outputFormatter,
+      TextFormatter<?> textFormatter,
       SecurityManager securityManager,
       HttpClient httpClient,
       boolean skipPublishCheck,
@@ -119,7 +119,7 @@ public final class ProjectPackager {
     this.workingDir = workingDir;
     this.outputPathPattern = outputPathPattern;
     this.stackFrameTransformer = stackFrameTransformer;
-    this.outputFormatter = outputFormatter;
+    this.textFormatter = textFormatter;
     this.securityManager = securityManager;
     // intentionally use InMemoryPackageResolver
     this.packageResolver = PackageResolver.getInstance(securityManager, httpClient, null);
@@ -413,14 +413,14 @@ public final class ProjectPackager {
             .evalError("invalidModuleUri", importStr)
             .withSourceSection(sourceSection)
             .build()
-            .toPklException(stackFrameTransformer, outputFormatter);
+            .toPklException(stackFrameTransformer, textFormatter);
       }
       if (importStr.startsWith("/") && !project.getProjectDir().toString().equals("/")) {
         throw new VmExceptionBuilder()
             .evalError("invalidRelativeProjectImport", importStr)
             .withSourceSection(sourceSection)
             .build()
-            .toPklException(stackFrameTransformer, outputFormatter);
+            .toPklException(stackFrameTransformer, textFormatter);
       }
       var currentPath = pklModulePath.getParent();
       var importPath = Path.of(importUri.getPath());
@@ -437,7 +437,7 @@ public final class ProjectPackager {
               .evalError("invalidRelativeProjectImport", importStr)
               .withSourceSection(sourceSection)
               .build()
-              .toPklException(stackFrameTransformer, outputFormatter);
+              .toPklException(stackFrameTransformer, textFormatter);
         }
       }
     }

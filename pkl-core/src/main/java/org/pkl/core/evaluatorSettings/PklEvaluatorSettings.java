@@ -40,7 +40,7 @@ public record PklEvaluatorSettings(
     @Nullable Map<String, String> env,
     @Nullable List<Pattern> allowedModules,
     @Nullable List<Pattern> allowedResources,
-    @Nullable Boolean color,
+    @Nullable Color color,
     @Nullable Boolean noCache,
     @Nullable Path moduleCacheDir,
     @Nullable List<Path> modulePath,
@@ -103,17 +103,14 @@ public record PklEvaluatorSettings(
                     Collectors.toMap(
                         Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
-    var color = pSettings.get("color");
-    var useColor =
-        color != null
-            && (color.equals("always") || color.equals("auto") && System.console() != null);
+    var color = (String) pSettings.get("color");
 
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
         (Map<String, String>) pSettings.get("env"),
         allowedModules,
         allowedResources,
-        useColor,
+        color == null ? Color.AUTO : Color.valueOf(color.toUpperCase()),
         (Boolean) pSettings.get("noCache"),
         moduleCacheDir,
         modulePath,

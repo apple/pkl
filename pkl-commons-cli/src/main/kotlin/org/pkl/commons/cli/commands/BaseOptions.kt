@@ -30,6 +30,7 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
@@ -149,7 +150,7 @@ class BaseOptions : OptionGroup() {
         help =
           "Whether to format messages in ANSI color. Possible values of <when> are \"never\", \"auto\", and \"always\"."
       )
-      .enum<Color> { it.value }
+      .enum<Color> { it.name.lowercase() }
       .single()
       .default(Color.AUTO)
 
@@ -277,7 +278,7 @@ class BaseOptions : OptionGroup() {
       projectDir = projectOptions?.projectDir,
       timeout = timeout,
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
-      color = (color ?: Color.AUTO).hasColor,
+      color = color.hasColor(),
       noCache = noCache,
       testMode = testMode,
       testPort = testPort,
@@ -289,19 +290,5 @@ class BaseOptions : OptionGroup() {
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
     )
-  }
-}
-
-enum class Color(val value: String) {
-  NEVER("never"),
-  AUTO("auto"),
-  ALWAYS("always");
-
-  val hasColor: Boolean by lazy {
-    when (this) {
-      NEVER -> false
-      ALWAYS -> true
-      AUTO -> System.console() != null
-    }
   }
 }

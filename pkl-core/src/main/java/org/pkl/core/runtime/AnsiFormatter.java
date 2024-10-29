@@ -15,137 +15,98 @@
  */
 package org.pkl.core.runtime;
 
-import java.io.PrintWriter;
-import org.pkl.core.OutputFormatter;
-import org.pkl.core.util.StringBuilderWriter;
-
-public class OutputFormatterColor extends OutputFormatter<OutputFormatterColor> {
+/*
+   TODO:
+     * Manage "active state" to reduce "escape code spew" in output
+*/
+public class AnsiFormatter extends TextFormatter<AnsiFormatter> {
   private static final Color frameColor = Color.YELLOW;
   private static final Color lineNumColor = Color.BLUE;
   private static final Color repetitionColor = Color.MAGENTA;
 
-  private final StringBuilder builder = new StringBuilder();
-
   @Override
-  public OutputFormatterColor createBlank() {
-    return new OutputFormatterColor();
+  public AnsiFormatter newInstance() {
+    return new AnsiFormatter();
   }
 
   @Override
-  public OutputFormatterColor margin(String marginMatter) {
+  public AnsiFormatter margin(String marginMatter) {
     return fgBright(frameColor).a(marginMatter).reset();
   }
 
   @Override
-  public OutputFormatterColor hint(String hint) {
+  public AnsiFormatter hint(String hint) {
     return fgBright(frameColor).bold().a(hint).reset();
   }
 
   @Override
-  public OutputFormatterColor repetitions(int counter) {
+  public AnsiFormatter stackOverflowLoopCount(int counter) {
     return bold().fg(repetitionColor).a(Integer.toString(counter)).reset();
   }
 
   @Override
-  public OutputFormatterColor text(String text) {
+  public AnsiFormatter text(String text) {
     return a(text);
   }
 
   @Override
-  public OutputFormatterColor errorHeader() {
-    return fg(Color.RED).a("–– Pkl Error ––").newline();
+  public AnsiFormatter errorHeader(String header) {
+    return fg(Color.RED).a(header).reset();
   }
 
   @Override
-  public OutputFormatterColor error(String message) {
+  public AnsiFormatter error(String message) {
     return fgBright(Color.RED).a(message).reset();
   }
 
   @Override
-  public OutputFormatterColor lineNumber(String line) {
+  public AnsiFormatter lineNumber(String line) {
     return fgBright(lineNumColor).a(line).reset();
   }
 
   @Override
-  public OutputFormatterColor repeat(int width, char ch) {
-    for (var i = 0; i < width; i++) {
-      a(ch);
-    }
-    return this;
-  }
-
-  @Override
-  public OutputFormatterColor repeatError(int width, char ch) {
+  public AnsiFormatter repeatError(int width, char ch) {
     return fg(Color.RED).repeat(width, ch).reset();
   }
 
   @Override
-  public OutputFormatterColor newline() {
+  public AnsiFormatter newline() {
     return a('\n');
   }
 
   @Override
-  public OutputFormatterColor append(String s) {
-    return a(s);
+  public AnsiFormatter newlines(int count) {
+    return repeat(count, '\n');
   }
 
   @Override
-  public OutputFormatterColor append(char ch) {
-    return a(ch);
-  }
-
-  @Override
-  public OutputFormatterColor append(Object obj) {
+  public AnsiFormatter object(Object obj) {
     return a(obj);
   }
 
   @Override
-  public PrintWriter toPrintWriter() {
-    return new PrintWriter(new StringBuilderWriter(builder));
+  protected AnsiFormatter self() {
+    return this;
   }
 
-  @Override
-  public String toString() {
-    return builder.toString();
-  }
-
-  private OutputFormatterColor fgBright(Color color) {
+  private AnsiFormatter fgBright(Color color) {
     return escape(color.fgBrightCode());
   }
 
-  private OutputFormatterColor fg(Color color) {
+  private AnsiFormatter fg(Color color) {
     return escape(color.fgCode());
   }
 
-  private OutputFormatterColor a(String s) {
-    builder.append(s);
-    return this;
-  }
-
-  private OutputFormatterColor a(char ch) {
-    builder.append(ch);
-    return this;
-  }
-
-  private OutputFormatterColor a(Object obj) {
-    builder.append(obj);
-    return this;
-  }
-
-  private OutputFormatterColor bold() {
+  private AnsiFormatter bold() {
     return escape(22);
   }
 
-  private OutputFormatterColor reset() {
+  private AnsiFormatter reset() {
     return escape(0);
   }
 
-  private OutputFormatterColor escape(int i) {
+  private AnsiFormatter escape(int i) {
     return a('\033').a('[').a(i).a('m');
-  }
-
-  private OutputFormatterColor escape(String s) {
-    return a('\033').a('[').a(s).a('m');
   }
 
   enum Color {

@@ -28,6 +28,7 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
 import org.pkl.core.packages.PackageUri
@@ -65,7 +66,7 @@ class ProjectTest {
         mapOf("one" to "1"),
         listOf("foo:", "bar:").map(Pattern::compile),
         listOf("baz:", "biz:").map(Pattern::compile),
-        false,
+        Color.AUTO,
         false,
         path.resolve("cache/"),
         listOf(path.resolve("modulepath1/"), path.resolve("modulepath2/")),
