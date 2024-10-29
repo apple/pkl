@@ -51,7 +51,7 @@ public final class ResourceManager {
 
     resourceFactory =
         new VmObjectFactory<Resource>(BaseModule::getResourceClass)
-            .addProperty("uri", resource -> resource.getUri().toString())
+            .addProperty("uri", resource -> resource.uri().toString())
             .addProperty("text", Resource::getText)
             .addProperty("base64", Resource::getBase64);
   }
