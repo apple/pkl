@@ -62,7 +62,7 @@ public final class EvaluatorBuilder {
 
   private @Nullable String outputFormat;
 
-  private Boolean color = false;
+  private boolean color = false;
 
   private @Nullable StackFrameTransformer stackFrameTransformer;
 
@@ -148,7 +148,7 @@ public final class EvaluatorBuilder {
   }
 
   /** Sets the option to render errors in ANSI color. */
-  public EvaluatorBuilder setColor(Boolean color) {
+  public EvaluatorBuilder setColor(boolean color) {
     this.color = color;
     return this;
   }

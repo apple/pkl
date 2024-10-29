@@ -71,7 +71,7 @@ If `null`, defaults to `~/.pkl/cache`.
 [%collapsible]
 ====
 Default: `false` +
-Format errors using ANSI color.
+Format messages using ANSI color.
 ====
 
 .noCache: Property<Boolean>

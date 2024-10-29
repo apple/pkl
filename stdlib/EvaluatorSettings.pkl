@@ -67,8 +67,15 @@ allowedModules: Listing<String(isRegex)>?
 /// ```
 allowedResources: Listing<String(isRegex)>?
 
-/// Whether errors should be formatted with ANSI color.
-color: ("never"|*"auto"|"always")?
+/// When to format messages with ANSI color codes.
+///
+/// Possible values:
+///
+/// - `"never"`: Never format 
+/// - `"auto"`: Format if the process' stdin, stdout, or stderr are connected to a console.
+/// - `"always"`: Always format
+@Since { version = "0.27.0" }
+color: ("never"|"auto"|"always")?
 
 /// Disables the file system cache for `package:` modules.
 ///

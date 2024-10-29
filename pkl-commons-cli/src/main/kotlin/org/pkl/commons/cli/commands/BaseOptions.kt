@@ -142,15 +142,16 @@ class BaseOptions : OptionGroup() {
       )
       .associateProps()
 
-  val color: Color? by
+  val color: Color by
     option(
         names = arrayOf("--color"),
         metavar = "<when>",
         help =
-          "Whether to format error messages in ANSI color. Possible values of <when> are \"never\", \"auto\", and \"always\"."
+          "Whether to format messages in ANSI color. Possible values of <when> are \"never\", \"auto\", and \"always\"."
       )
       .enum<Color> { it.value }
       .single()
+      .default(Color.AUTO)
 
   val noCache: Boolean by
     option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
