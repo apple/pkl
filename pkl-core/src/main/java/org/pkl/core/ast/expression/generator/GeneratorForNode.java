@@ -23,7 +23,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
-import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
@@ -32,10 +31,9 @@ import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
-public abstract class GeneratorForNode extends GeneratorMemberNode {
+public abstract class GeneratorForNode extends GeneratorIteratingNode {
   private final int keySlot;
   private final int valueSlot;
-  @Child private ExpressionNode iterableNode;
   @Child private @Nullable UnresolvedTypeNode unresolvedKeyTypeNode;
   @Child private @Nullable UnresolvedTypeNode unresolvedValueTypeNode;
   @Children private final GeneratorMemberNode[] childNodes;
@@ -46,14 +44,14 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
       SourceSection sourceSection,
       int keySlot,
       int valueSlot,
-      ExpressionNode iterableNode,
+      GeneratorIterableNode iterableNode,
       @Nullable UnresolvedTypeNode unresolvedKeyTypeNode,
       @Nullable UnresolvedTypeNode unresolvedValueTypeNode,
       GeneratorMemberNode[] childNodes,
       boolean hasKeyIdentifier,
       boolean hasValueIdentifier) {
 
-    super(sourceSection);
+    super(sourceSection, iterableNode);
     this.keySlot = keySlot;
     this.valueSlot = valueSlot;
     this.iterableNode = iterableNode;
@@ -79,7 +77,7 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
 
   @Override
   public final void execute(VirtualFrame frame, Object parent, ObjectData data) {
-    executeWithIterable(frame, parent, data, iterableNode.executeGeneric(frame));
+    executeWithIterable(frame, parent, data, evalIterable(frame, data));
   }
 
   @Specialization

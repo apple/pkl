@@ -96,6 +96,10 @@ public abstract class GeneratorMemberNode extends PklNode {
 
     private Object @Nullable [] currentForBindings;
 
+    public Object @Nullable [] getCurrentForBindings() {
+      return currentForBindings;
+    }
+
     @TruffleBoundary
     Object @Nullable [] addForBinding(Object value) {
       var result = currentForBindings;

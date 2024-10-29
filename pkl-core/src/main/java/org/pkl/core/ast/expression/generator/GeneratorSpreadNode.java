@@ -25,7 +25,6 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -45,14 +44,12 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableLong;
 
 @ImportStatic(BaseModule.class)
-public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
-  @Child private ExpressionNode iterableNode;
+public abstract class GeneratorSpreadNode extends GeneratorIteratingNode {
   private final boolean nullable;
 
   public GeneratorSpreadNode(
-      SourceSection sourceSection, ExpressionNode iterableNode, boolean nullable) {
-    super(sourceSection);
-    this.iterableNode = iterableNode;
+      SourceSection sourceSection, GeneratorIterableNode iterableNode, boolean nullable) {
+    super(sourceSection, iterableNode);
     this.nullable = nullable;
   }
 
@@ -61,7 +58,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   @Override
   public final void execute(VirtualFrame frame, Object parent, ObjectData data) {
-    executeWithIterable(frame, parent, data, iterableNode.executeGeneric(frame));
+    executeWithIterable(frame, parent, data, evalIterable(frame, data));
   }
 
   @Specialization

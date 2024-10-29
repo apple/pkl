@@ -900,7 +900,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpreadContext ctx) {
     return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx), visitExpr(ctx.expr()), ctx.QSPREAD() != null);
+        createSourceSection(ctx), visitGeneratorIterable(ctx.expr()), ctx.QSPREAD() != null);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
@@ -964,6 +964,26 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     return param != null && param.UNDERSCORE() != null;
   }
 
+  private GeneratorIterableNode visitGeneratorIterable(ExprContext ctx) {
+    var enclosingForGeneratorVariables = symbolTable.getCurrentScope().getForGeneratorVariables();
+    var frameDescriptor = symbolTable.getCurrentScope().buildFrameDescriptor();
+    var auxiliarySlots = new int[enclosingForGeneratorVariables.size()];
+    var i = 0;
+    for (var forGeneratorVariable : enclosingForGeneratorVariables) {
+      var auxiliarySlot = frameDescriptor.findOrAddAuxiliarySlot(forGeneratorVariable);
+      auxiliarySlots[i] = auxiliarySlot;
+      i++;
+    }
+    var expr = visitExpr(ctx);
+    return new GeneratorIterableNode(
+        language,
+        frameDescriptor,
+        auxiliarySlots,
+        createSourceSection(ctx),
+        symbolTable.getCurrentScope().getQualifiedName(),
+        expr);
+  }
+
   @Override
   public GeneratorForNode visitForGenerator(ForGeneratorContext ctx) {
     checkClosingDelimiter(ctx.err, ")", ctx.e.stop);
@@ -976,6 +996,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var ignoreT1 = isIgnored(ctx.t1);
     var ignoreT2 = ctx.t2 == null ? ignoreT1 : isIgnored(ctx.t2);
 
+    var iterableNode = visitGeneratorIterable(ctx.e);
     if (ctx.t2 != null) {
       keyVariableSlot = ignoreT1 ? -1 : pushForGeneratorVariableContext(ctx.t1);
       valueVariableSlot = ignoreT2 ? -1 : pushForGeneratorVariableContext(ctx.t2);
@@ -991,7 +1012,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
     }
 
-    var iterableNode = visitExpr(ctx.e);
     var memberNodes = doVisitForWhenBody(ctx.objectBody());
     if (keyVariableSlot != -1) {
       currentScope.popForGeneratorVariable();

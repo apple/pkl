@@ -1,0 +1,31 @@
+res1 {
+  for (i in IntSeq(1, 1)) {
+    for (j in new Dynamic { res { new { i } } }.res) {
+      j
+    }
+  }
+}
+
+res2 {
+  for (i in new Listing { 1 }) {
+    for (j in new Dynamic { res { new { i } } }.res) {
+      j
+    }
+  }
+}
+
+res3 {
+  for (i in new Mapping { ["hi"] = 1 }) {
+    for (j in new Dynamic { res { new { i } } }.res) {
+      j
+    }
+  }
+}
+
+res4 {
+  for (i in List(1)) {
+    for (j in new Dynamic { res { new { i } } }.res) {
+      j
+    }
+  }
+}

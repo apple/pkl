@@ -1,0 +1,57 @@
+res1 {
+  for (i in List(1)) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}
+
+res2 {
+  for (i in IntSeq(1, 1)) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}
+
+res3 {
+  for (i in new Listing { 1 }) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}
+
+res4 {
+  for (i in new Mapping { ["one"] = 1 }) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}
+
+res5 {
+  for (i in List(1)) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+
+  for (i in List(3)) {
+    ...new Dynamic {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}

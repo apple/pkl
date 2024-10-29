@@ -1,0 +1,28 @@
+res1 {
+  new {
+    1
+  }
+}
+res2 {
+  new {
+    1
+  }
+}
+res3 {
+  new {
+    1
+  }
+}
+res4 {
+  new {
+    1
+  }
+}
+res5 {
+  new {
+    1
+  }
+  new {
+    3
+  }
+}
