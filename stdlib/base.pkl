@@ -1816,6 +1816,7 @@ class Listing<out Element> extends Object {
   /// The index of the last element in this listing (same as `length - 1`).
   ///
   /// Returns `-1` for an empty list.
+  @Since { version = "0.27.0" }
   external lastIndex: Int
 
   /// Returns the element at [index].
@@ -1831,6 +1832,7 @@ class Listing<out Element> extends Object {
   /// new Listing { 3 ; 9 ; 6 }.getOrNull(3) == null
   /// new Listing { 3 ; 9 ; 6 }.getOrNull(99) == null
   /// ```
+  @Since { version = "0.27.0" }
   external function getOrNull(index: Int): Element?
 
   /// Tells if this listing has no duplicate elements.
@@ -1872,9 +1874,11 @@ class Listing<out Element> extends Object {
   /// new Listing { 1 ; 2 ; 3 }.first == 1
   /// (import "pkl:test").catch(() -> new Listing {}.first)
   /// ```
+  @Since { version = "0.27.0" }
   external first: Element
 
   /// Same as [first] but returns [null] if this listing is empty.
+  @Since { version = "0.27.0" }
   external firstOrNull: Element?
 
   /// The last element in this listing.
@@ -1886,9 +1890,11 @@ class Listing<out Element> extends Object {
   /// new Listing { 1 ; 2 ; 3 }.last == 3
   /// (import "pkl:test").catch(() -> new Listing {}.last)
   /// ```
+  @Since { version = "0.27.0" }
   external last: Element
 
   /// Same as [last] but returns [null] if this listing is empty.
+  @Since { version = "0.27.0" }
   external lastOrNull: Element?
 
   /// The single element in this listing.
@@ -1901,9 +1907,11 @@ class Listing<out Element> extends Object {
   /// (import "pkl:test").catch(() -> new Listing {}.single)
   /// (import "pkl:test").catch(() -> new Listing { 1 ; 2 ; 3 }.single)
   /// ```
+  @Since { version = "0.27.0" }
   external single: Element
 
   /// Same as [single] but returns [null] if this collection is empty or has more than one element.
+  @Since { version = "0.27.0" }
   external singleOrNull: Element?
 
   /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
@@ -1919,11 +1927,13 @@ class Listing<out Element> extends Object {
   /// Tells if [predicate] holds for every element of this listing.
   /// 
   /// Returns [true] for an empty listing.
+  @Since { version = "0.27.0" }
   external function every(predicate: (Element) -> Boolean): Boolean
 
   /// Tells if [predicate] holds for at least one element of this listing.
   /// 
   /// Returns [false] for an empty listing.
+  @Since { version = "0.27.0" }
   external function any(predicate: (Element) -> Boolean): Boolean
 
   /// Tests if [element] is contained in this listing.
@@ -1935,6 +1945,7 @@ class Listing<out Element> extends Object {
   /// new Listing { 1 ; 2 ; 3 }.contains(3)
   /// !new Listing { 1 ; 2 ; 3 }.contains(4)
   /// ```
+  @Since { version = "0.27.0" }
   external function contains(element: Element): Boolean
 
   /// Folds this listing in iteration order using [operator], starting with [initial].
@@ -1979,6 +1990,7 @@ class Mapping<out Key, out Value> extends Object {
   external function containsKey(key: Any): Boolean
   
   /// Tells if this mapping contains an entry with the given [value].
+  @Since { version = "0.27.0" } 
   external function containsValue(value: Any): Boolean
 
   /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
@@ -1992,11 +2004,13 @@ class Mapping<out Key, out Value> extends Object {
   /// Tells if [predicate] holds for every entry of this mapping.
   /// 
   /// Returns [true] for an empty mapping.
+  @Since { version = "0.27.0" }
   external function every(predicate: (Key, Value) -> Boolean): Boolean
   
   /// Tells if [predicate] holds for at least one entry of this mapping.
   /// 
   /// Returns [false] for an empty mapping.
+  @Since { version = "0.27.0" }
   external function any(predicate: (Key, Value) -> Boolean): Boolean
 
   /// Converts this mapping to a [Map].
