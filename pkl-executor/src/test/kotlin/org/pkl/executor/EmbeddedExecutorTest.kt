@@ -417,6 +417,64 @@ class EmbeddedExecutorTest {
 
   @ParameterizedTest
   @MethodSource("getAllTestExecutors")
+  fun `evaluate a module whose project evaluation fails`(
+    executor: TestExecutor,
+    @TempDir tempDir: Path
+  ) {
+    // the toRealPath is important here or the failure reason can change
+    // this happens on macOS where /tmp is a symlink to /private/tmp
+    // it's related to how SecurityManagers.Standard handles canonicalizing paths that don't exist
+    val rootDir = tempDir.toRealPath()
+
+    val innerDir = rootDir.resolve("inner").createDirectories()
+    innerDir
+      .resolve("PklProject")
+      .toFile()
+      .writeText(
+        """
+      amends "pkl:Project"
+      dependencies {
+        ["myDep"] = import("../nonexistent/PklProject")
+      }
+    """
+          .trimIndent()
+      )
+
+    val pklFile = innerDir.resolve("test.pkl")
+    pklFile
+      .toFile()
+      .writeText(
+        """
+      @ModuleInfo { minPklVersion = "0.11.0" }
+      module test
+
+      foo = "bar"
+    """
+          .trimIndent()
+      )
+
+    val e =
+      assertThrows<ExecutorException> {
+        executor.evaluatePath(pklFile) {
+          allowedModules("file:", "pkl:")
+          allowedResources("prop:")
+          projectDir(innerDir)
+          rootDir(rootDir)
+        }
+      }
+
+    assertThat(e.message).contains("Cannot find module").contains("/nonexistent/PklProject")
+
+    // ensure module file paths are relativized
+    // legacy distribution does not handle these errors with the correct stack frame transformer
+    // only assert on this for newer distributions
+    if (!executor.toString().contains("Distribution1")) {
+      assertThat(e.message).doesNotContain(innerDir.toString())
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("getAllTestExecutors")
   fun `time out a module`(executor: TestExecutor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
@@ -556,7 +614,7 @@ class EmbeddedExecutorTest {
       )
     val result =
       executor.evaluatePath(pklFile) {
-        allowedModules("file:", "package:", "projectpackage:", "https:")
+        allowedModules("file:", "package:", "projectpackage:", "https:", "pkl:")
         allowedResources("file:", "prop:", "package:", "projectpackage:", "https:")
         moduleCacheDir(cacheDir)
         projectDir(projectDir)
