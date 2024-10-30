@@ -426,7 +426,13 @@ class EmbeddedExecutorTest {
     executor: TestExecutor,
     @TempDir tempDir: Path
   ) {
-    tempDir
+    // the toRealPath is important here or the failure reason can change
+    // this happens on macOS where /tmp is a symlink to /private/tmp
+    // it's related to how SecurityManagers.Standard handles canonicalizing paths that don't exist
+    val rootDir = tempDir.toRealPath()
+
+    val innerDir = rootDir.resolve("inner").createDirectories()
+    innerDir
       .resolve("PklProject")
       .toFile()
       .writeText(
@@ -439,7 +445,7 @@ class EmbeddedExecutorTest {
           .trimIndent()
       )
 
-    val pklFile = tempDir.resolve("test.pkl")
+    val pklFile = innerDir.resolve("test.pkl")
     pklFile
       .toFile()
       .writeText(
@@ -455,22 +461,20 @@ class EmbeddedExecutorTest {
     val e =
       assertThrows<ExecutorException> {
         executor.evaluatePath(pklFile) {
-          allowedModules("file:")
+          allowedModules("file:", "pkl:")
           allowedResources("prop:")
-          projectDir(tempDir)
-          rootDir(tempDir)
+          projectDir(innerDir)
+          rootDir(rootDir)
         }
       }
 
-    assertThat(e.message)
-      .contains("Cannot find module")
-      // ensure module file paths are relativized
-      .contains("/nonexistent/PklProject")
+    assertThat(e.message).contains("Cannot find module").contains("/nonexistent/PklProject")
 
+    // ensure module file paths are relativized
     // legacy distribution does not handle these errors with the correct stack frame transformer
     // only assert on this for newer distributions
     if (!executor.toString().contains("Distribution1")) {
-      assertThat(e.message).doesNotContain(tempDir.toString())
+      assertThat(e.message).doesNotContain(innerDir.toString())
     }
   }
 
@@ -615,7 +619,7 @@ class EmbeddedExecutorTest {
       )
     val result =
       executor.evaluatePath(pklFile) {
-        allowedModules("file:", "package:", "projectpackage:", "https:")
+        allowedModules("file:", "package:", "projectpackage:", "https:", "pkl:")
         allowedResources("file:", "prop:", "package:", "projectpackage:", "https:")
         moduleCacheDir(cacheDir)
         projectDir(projectDir)

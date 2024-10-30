@@ -122,7 +122,7 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
         var project =
             Project.loadFromPath(
                 options.getProjectDir().resolve(PKL_PROJECT_FILENAME),
-                SecurityManagers.defaultManager,
+                securityManager,
                 null,
                 transformer,
                 System.getenv());
