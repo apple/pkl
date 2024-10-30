@@ -38,11 +38,6 @@ facts {
     true
     true
   }
-  ["values"] {
-    true
-    true
-    true
-  }
   ["entries"] {
     true
     true

@@ -1975,9 +1975,6 @@ class Mapping<out Key, out Value> extends Object {
   /// The keys contained in this mapping.
   external keys: Set<Key>
   
-  /// The values contained in this mapping.
-  external values: List<Value>
-  
   /// The entries contained in this mapping.
   external entries: List<Pair<Key, Value>>
 
