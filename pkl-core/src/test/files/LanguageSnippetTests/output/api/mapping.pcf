@@ -38,11 +38,6 @@ facts {
     true
     true
   }
-  ["entries"] {
-    true
-    true
-    true
-  }
   ["every()"] {
     true
     true
