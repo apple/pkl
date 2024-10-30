@@ -323,9 +323,9 @@ public final class ListingNodes {
     if (self.isEmpty()) {
       CompilerDirectives.transferToInterpreter();
       throw new VmExceptionBuilder()
-        .evalError("expectedNonEmptyListing")
-        .withLocation(node)
-        .build();
+          .evalError("expectedNonEmptyListing")
+          .withLocation(node)
+          .build();
     }
   }
 
@@ -333,9 +333,9 @@ public final class ListingNodes {
     if (self.getLength() != 1) {
       CompilerDirectives.transferToInterpreter();
       throw new VmExceptionBuilder()
-        .evalError("expectedSingleElementListing")
-        .withLocation(node)
-        .build();
+          .evalError("expectedSingleElementListing")
+          .withLocation(node)
+          .build();
     }
   }
 }
