@@ -70,11 +70,6 @@ class EmbeddedExecutorTest {
       )
     }
 
-    @JvmStatic
-    private val allTestExecutorsWithoutDistribution1: List<TestExecutor> by lazy {
-      allTestExecutors.filter { !it.toString().contains("Distribution1") }
-    }
-
     private val currentExecutor: TestExecutor by lazy {
       TestExecutor(executor2_2.value, -1, "currentExecutor")
     }
