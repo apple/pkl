@@ -194,8 +194,10 @@ public final class ListingNodes {
     protected boolean eval(VmListing self, VmFunction predicate) {
       var result = new MutableBoolean(true);
       self.iterateMemberValues(
-          (key, member, unforcedValue) -> {
-            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
             result.set(applyNode.executeBoolean(predicate, value));
             return result.get();
           });
@@ -210,8 +212,10 @@ public final class ListingNodes {
     protected boolean eval(VmListing self, VmFunction predicate) {
       var result = new MutableBoolean(false);
       self.iterateMemberValues(
-          (key, member, unforcedValue) -> {
-            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
             result.set(applyNode.executeBoolean(predicate, value));
             return !result.get();
           });
@@ -223,8 +227,11 @@ public final class ListingNodes {
     @Specialization
     protected boolean eval(VmListing self, Object element) {
       var result = new MutableBoolean(false);
-      self.forceAndIterateMemberValues(
+      self.iterateMemberValues(
           (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
             result.set(element.equals(value));
             return !result.get();
           });
