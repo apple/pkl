@@ -48,12 +48,17 @@ import org.pkl.core.util.MutableLong;
 public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
   @Child private ExpressionNode iterableNode;
   private final boolean nullable;
+  private final boolean isInIterable;
 
   public GeneratorSpreadNode(
-      SourceSection sourceSection, ExpressionNode iterableNode, boolean nullable) {
+      SourceSection sourceSection,
+      ExpressionNode iterableNode,
+      boolean nullable,
+      boolean isInIterable) {
     super(sourceSection);
     this.iterableNode = iterableNode;
     this.nullable = nullable;
+    this.isInIterable = isInIterable;
   }
 
   protected abstract void executeWithIterable(
@@ -326,7 +331,8 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
             prototype.getHeaderSection(),
             prototype.getModifiers(),
             prototype.getNameOrNull(),
-            prototype.getQualifiedName());
+            prototype.getQualifiedName(),
+            isInIterable);
     result.initConstantValue(value);
     return result;
   }

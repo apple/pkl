@@ -171,6 +171,7 @@ public final class SymbolTable {
     private int entryCount = 0;
     private final FrameDescriptor.Builder frameDescriptorBuilder;
     private final ConstLevel constLevel;
+    private boolean isVisitingIterable;
 
     private Scope(
         @Nullable Scope parent,
@@ -187,6 +188,7 @@ public final class SymbolTable {
           parent != null && parent.constLevel.biggerOrEquals(constLevel)
               ? parent.constLevel
               : constLevel;
+      this.isVisitingIterable = parent != null && parent.isVisitingIterable;
     }
 
     public final @Nullable Scope getParent() {
@@ -336,6 +338,14 @@ public final class SymbolTable {
 
     public ConstLevel getConstLevel() {
       return constLevel;
+    }
+
+    public void setVisitingIterable(boolean isVisitingIterable) {
+      this.isVisitingIterable = isVisitingIterable;
+    }
+
+    public boolean isVisitingIterable() {
+      return isVisitingIterable;
     }
   }
 

@@ -31,6 +31,8 @@ import org.pkl.core.util.Nullable;
 public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
   @Child @Executed protected ExpressionNode ownerNode = new GetOwnerNode();
 
+  private final ObjectMember member;
+
   protected TypeCheckedPropertyNode(
       @Nullable VmLanguage language,
       FrameDescriptor descriptor,
@@ -40,6 +42,7 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
     super(language, descriptor, member, bodyNode);
 
     assert member.isProp();
+    this.member = member;
   }
 
   @SuppressWarnings("unused")
@@ -55,7 +58,8 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
 
     // TODO: propagate SUPER_CALL_MARKER to disable constraint (but not type) check
     if (callNode != null && VmUtils.shouldRunTypeCheck(frame)) {
-      return callNode.call(VmUtils.getReceiverOrNull(frame), property.getOwner(), result);
+      return callNode.call(
+          VmUtils.getReceiverOrNull(frame), property.getOwner(), result, member.isInIterable());
     }
 
     return result;
@@ -75,7 +79,8 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
             typeAnnNode.getCallTarget(),
             VmUtils.getReceiverOrNull(frame),
             property.getOwner(),
-            result);
+            result,
+            member.isInIterable());
       }
     }
 

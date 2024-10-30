@@ -1,0 +1,33 @@
+class Aviary {
+  birds: Listing<Bird>
+}
+
+class Bird {
+  age: Int
+}
+
+function Bird(_age: Int) = new Bird { age = _age }
+
+res1 {
+  for (i in IntSeq(1, 1)) {
+    for (j in 
+      new Aviary {
+        birds {
+          Bird(i)
+        }
+      }.birds
+    ) {
+      j
+    }
+  }
+}
+
+res2 {
+  for (i in IntSeq(1, 1)) {
+    ...new Aviary {
+      birds {
+        Bird(i)
+      }
+    }.birds
+  }
+}

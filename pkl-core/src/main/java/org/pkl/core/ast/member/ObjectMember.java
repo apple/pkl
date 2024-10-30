@@ -27,6 +27,9 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public final class ObjectMember extends Member {
+
+  private final boolean isInIterable;
+
   @CompilationFinal private @Nullable Object constantValue;
   @CompilationFinal private @Nullable MemberNode memberNode;
 
@@ -35,9 +38,11 @@ public final class ObjectMember extends Member {
       SourceSection headerSection,
       int modifiers,
       @Nullable Identifier name,
-      String qualifiedName) {
+      String qualifiedName,
+      boolean isInIterable) {
 
     super(sourceSection, headerSection, modifiers, name, qualifiedName);
+    this.isInIterable = isInIterable;
   }
 
   public void initConstantValue(ConstantNode node) {
@@ -151,5 +156,22 @@ public final class ObjectMember extends Member {
   @Override
   public int hashCode() {
     return System.identityHashCode(this);
+  }
+
+  /**
+   * Tells if this member is declared inside the iterable of a for-generator, or an object spread.
+   *
+   * This is <p>{@code true} for {@code new {}} within:
+   *
+   * <pre>
+   * {@code
+   * for (x in new Listing { new {} }) {
+   *                         ^^^^^^
+   *   // etc
+   * }
+   * </pre>
+   */
+  public boolean isInIterable() {
+    return isInIterable;
   }
 }

@@ -355,7 +355,12 @@ public final class ParserNodes {
           var sourceSection = createSourceSection(childNode.getStartMark(), childNode.getEndMark());
           var member =
               new ObjectMember(
-                  sourceSection, sourceSection, VmModifier.ELEMENT, null, String.valueOf(index));
+                  sourceSection,
+                  sourceSection,
+                  VmModifier.ELEMENT,
+                  null,
+                  String.valueOf(index),
+                  false);
           member.initConstantValue(converter.convert(constructObject(childNode), currPath));
           EconomicMaps.put(members, index++, member);
         }
@@ -403,7 +408,12 @@ public final class ParserNodes {
           var sourceSection = createSourceSection(keyNode.getStartMark(), keyNode.getEndMark());
           var member =
               new ObjectMember(
-                  sourceSection, sourceSection, VmModifier.ELEMENT, null, String.valueOf(index));
+                  sourceSection,
+                  sourceSection,
+                  VmModifier.ELEMENT,
+                  null,
+                  String.valueOf(index),
+                  false);
           member.initConstantValue(converter.convert(constructObject(keyNode), currPath));
           EconomicMaps.put(members, index++, member);
         }
@@ -475,7 +485,8 @@ public final class ParserNodes {
                   headerSection,
                   memberName == null ? VmModifier.ENTRY : VmModifier.NONE,
                   memberName,
-                  "generated");
+                  "generated",
+                  false);
 
           currPath.push(
               key instanceof String string

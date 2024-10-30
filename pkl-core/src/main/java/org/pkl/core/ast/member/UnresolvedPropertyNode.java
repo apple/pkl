@@ -187,7 +187,8 @@ public final class UnresolvedPropertyNode extends UnresolvedClassMemberNode {
             descriptor,
             modifiers,
             effectiveBodyNode,
-            typeNode);
+            typeNode,
+            false);
 
     return new ClassProperty(
         sourceSection,

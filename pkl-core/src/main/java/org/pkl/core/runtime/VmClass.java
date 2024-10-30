@@ -544,7 +544,8 @@ public final class VmClass extends VmValue {
               VmUtils.unavailableSourceSection(),
               VmModifier.NONE,
               name,
-              name.toString());
+              name.toString(),
+              false);
       member.initMemberNode(memberNodeFactory.apply(member));
       result.put(name, member);
     }

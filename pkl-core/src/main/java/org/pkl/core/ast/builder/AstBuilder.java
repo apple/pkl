@@ -313,7 +313,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   headerSection,
                   isLocal ? VmModifier.LOCAL_CLASS_OBJECT_MEMBER : VmModifier.CLASS_OBJECT_MEMBER,
                   scope.getName(),
-                  scope.getQualifiedName());
+                  scope.getQualifiedName(),
+                  false);
 
           result.initMemberNode(
               new UntypedObjectMemberNode(
@@ -366,7 +367,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                       ? VmModifier.LOCAL_TYPEALIAS_OBJECT_MEMBER
                       : VmModifier.TYPEALIAS_OBJECT_MEMBER,
                   scopeName,
-                  scope.getQualifiedName());
+                  scope.getQualifiedName(),
+                  false);
 
           result.initMemberNode(
               new UntypedObjectMemberNode(
@@ -697,7 +699,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   createSourceSection(headerCtx),
                   modifiers,
                   scope.getName(),
-                  scope.getQualifiedName());
+                  scope.getQualifiedName(),
+                  false);
           var body = visitExpr(exprCtx);
           var node =
               new ObjectMethodNode(
@@ -808,7 +811,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  visitTypeAnnotation(typeAnnCtx))
+                  visitTypeAnnotation(typeAnnCtx),
+                  scope.isVisitingIterable())
               : VmUtils.createObjectProperty(
                   language,
                   sourceSection,
@@ -818,7 +822,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  null);
+                  null,
+                  scope.isVisitingIterable());
         });
   }
 
@@ -899,8 +904,16 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpreadContext ctx) {
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
+    var expr = visitExpr(ctx.expr());
+    scope.setVisitingIterable(visitingIterable);
     return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx), visitExpr(ctx.expr()), ctx.QSPREAD() != null);
+        createSourceSection(ctx),
+        expr,
+        ctx.QSPREAD() != null,
+        symbolTable.getCurrentScope().isVisitingIterable());
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
@@ -991,7 +1004,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
     }
 
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
     var iterableNode = visitExpr(ctx.e);
+    scope.setVisitingIterable(visitingIterable);
     var memberNodes = doVisitForWhenBody(ctx.objectBody());
     if (keyVariableSlot != -1) {
       currentScope.popForGeneratorVariable();
@@ -1202,7 +1219,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   elementNode.getSourceSection(),
                   VmModifier.ELEMENT,
                   null,
-                  scope.getQualifiedName());
+                  scope.getQualifiedName(),
+                  scope.isVisitingIterable());
 
           if (elementNode instanceof ConstantNode constantNode) {
             member.initConstantValue(constantNode);
@@ -1257,7 +1275,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               keyNode.getSourceSection(),
               VmModifier.ENTRY,
               null,
-              scope.getQualifiedName());
+              scope.getQualifiedName(),
+              scope.isVisitingIterable());
 
       if (valueCtx != null) { // ["key"] = value
         var valueNode = visitExpr(valueCtx);
@@ -1786,7 +1805,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   importNode.getSourceSection(),
                   modifiers,
                   scope.getName(),
-                  scope.getQualifiedName());
+                  scope.getQualifiedName(),
+                  false);
 
           result.initMemberNode(
               new UntypedObjectMemberNode(

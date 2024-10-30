@@ -141,7 +141,8 @@ public final class ParserNodes {
               VmUtils.unavailableSourceSection(),
               VmModifier.ELEMENT,
               null,
-              String.valueOf(size));
+              String.valueOf(size),
+              false);
       member.initConstantValue(converter.convert(value, currPath));
       EconomicMaps.put(members, (long) size, member);
     }
@@ -185,7 +186,8 @@ public final class ParserNodes {
               VmUtils.unavailableSourceSection(),
               useMapping ? VmModifier.ENTRY : VmModifier.NONE,
               useMapping ? null : (Identifier) memberName,
-              "generated");
+              "generated",
+              false);
       member.initConstantValue(converter.convert(value, currPath));
       EconomicMaps.put(members, memberName, member);
       currPath.pop();

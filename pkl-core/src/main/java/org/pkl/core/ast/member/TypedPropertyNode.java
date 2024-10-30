@@ -26,6 +26,7 @@ import org.pkl.core.runtime.VmUtils;
 /** A property definition that has a type annotation. */
 public final class TypedPropertyNode extends RegularMemberNode {
   @Child private DirectCallNode typeCheckCallNode;
+  private final ObjectMember member;
 
   @TruffleBoundary
   public TypedPropertyNode(
@@ -38,6 +39,7 @@ public final class TypedPropertyNode extends RegularMemberNode {
     super(language, descriptor, member, bodyNode);
 
     assert member.isProp();
+    this.member = member;
 
     typeCheckCallNode = DirectCallNode.create(typeNode.getCallTarget());
   }
@@ -47,7 +49,10 @@ public final class TypedPropertyNode extends RegularMemberNode {
     var propertyValue = executeBody(frame);
     if (VmUtils.shouldRunTypeCheck(frame)) {
       return typeCheckCallNode.call(
-          VmUtils.getReceiver(frame), VmUtils.getOwner(frame), propertyValue);
+          VmUtils.getReceiver(frame),
+          VmUtils.getOwner(frame),
+          propertyValue,
+          member.isInIterable());
     }
     return propertyValue;
   }
