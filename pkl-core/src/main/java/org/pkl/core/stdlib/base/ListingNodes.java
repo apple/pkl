@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
@@ -110,7 +111,7 @@ public final class ListingNodes {
   public abstract static class first extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmListing self) {
-      checkNonEmpty(self);
+      checkNonEmpty(self, this);
       return VmUtils.readMember(self, 0L);
     }
   }
@@ -128,7 +129,7 @@ public final class ListingNodes {
   public abstract static class last extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmListing self) {
-      checkNonEmpty(self);
+      checkNonEmpty(self, this);
       return VmUtils.readMember(self, self.getLength() - 1L);
     }
   }
@@ -144,7 +145,7 @@ public final class ListingNodes {
   public abstract static class single extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmListing self) {
-      checkSingleton(self);
+      checkSingleton(self, this);
       return VmUtils.readMember(self, 0L);
     }
   }
@@ -311,19 +312,23 @@ public final class ListingNodes {
     }
   }
 
-  @TruffleBoundary
-  private static void checkNonEmpty(VmListing self) {
+  private static void checkNonEmpty(VmListing self, PklNode node) {
     if (self.isEmpty()) {
       CompilerDirectives.transferToInterpreter();
-      throw new VmExceptionBuilder().evalError("expectedNonEmptyListing").build();
+      throw new VmExceptionBuilder()
+        .evalError("expectedNonEmptyListing")
+        .withLocation(node)
+        .build();
     }
   }
 
-  @TruffleBoundary
-  private static void checkSingleton(VmListing self) {
+  private static void checkSingleton(VmListing self, PklNode node) {
     if (self.getLength() != 1) {
       CompilerDirectives.transferToInterpreter();
-      throw new VmExceptionBuilder().evalError("expectedSingleElementListing").build();
+      throw new VmExceptionBuilder()
+        .evalError("expectedSingleElementListing")
+        .withLocation(node)
+        .build();
     }
   }
 }
