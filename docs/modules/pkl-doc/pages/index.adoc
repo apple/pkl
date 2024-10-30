@@ -162,7 +162,7 @@ We recommend to provision it with a Maven compatible build tool as shown in <<in
 The Pkldoc tool is offered as Gradle plugin, Java library, and CLI.
 It can generate documentation either for modules directly, or generate documentation for _package uris_.
 
-The tool requires an argument of a module named `_docsite-info.pkl`, that amends link:{uri-DocsiteInfo}[pkl.DocsiteInfo].
+The tool requires an argument of a module named _docsite-info.pkl_, that amends link:{uri-DocsiteInfo}[pkl.DocsiteInfo].
 
 [discrete]
 ==== Generating documentation for modules directly
