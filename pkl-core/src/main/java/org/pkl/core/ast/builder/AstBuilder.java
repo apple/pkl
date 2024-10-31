@@ -900,8 +900,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpreadContext ctx) {
-    return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx), visitExpr(ctx.expr()), ctx.QSPREAD() != null);
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
+    var expr = visitExpr(ctx.expr());
+    scope.setVisitingIterable(visitingIterable);
+    return GeneratorSpreadNodeGen.create(createSourceSection(ctx), expr, ctx.QSPREAD() != null);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
@@ -992,7 +996,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
     }
 
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
     var iterableNode = visitExpr(ctx.e);
+    scope.setVisitingIterable(visitingIterable);
     var memberNodes = doVisitForWhenBody(ctx.objectBody());
     if (keyVariableSlot != -1) {
       currentScope.popForGeneratorVariable();
@@ -1197,11 +1205,15 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         scope -> {
           var elementNode = visitExpr(ctx.expr());
 
+          var modifier =
+              scope.isVisitingIterable()
+                  ? VmModifier.ELEMENT | VmModifier.IS_IN_ITERABLE
+                  : VmModifier.ELEMENT;
           var member =
               new ObjectMember(
                   createSourceSection(ctx),
                   elementNode.getSourceSection(),
-                  VmModifier.ELEMENT,
+                  modifier,
                   null,
                   scope.getQualifiedName());
 
@@ -1252,13 +1264,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable ExprContext valueCtx,
       List<? extends ObjectBodyContext> objectBodyCtxs) {
     return scope -> {
+      var modifier =
+          scope.isVisitingIterable()
+              ? VmModifier.ENTRY | VmModifier.IS_IN_ITERABLE
+              : VmModifier.ENTRY;
       var member =
           new ObjectMember(
-              sourceSection,
-              keyNode.getSourceSection(),
-              VmModifier.ENTRY,
-              null,
-              scope.getQualifiedName());
+              sourceSection, keyNode.getSourceSection(), modifier, null, scope.getQualifiedName());
 
       if (valueCtx != null) { // ["key"] = value
         var valueNode = visitExpr(valueCtx);
@@ -1336,6 +1348,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
       result += modifier;
+    }
+
+    if (symbolTable.getCurrentScope().isVisitingIterable()) {
+      result += VmModifier.IS_IN_ITERABLE;
     }
 
     // flag modifier combinations that are never valid right away

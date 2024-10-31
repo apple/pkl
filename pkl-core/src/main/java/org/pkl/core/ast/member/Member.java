@@ -130,4 +130,21 @@ public abstract class Member {
   public final boolean isLocalOrExternalOrAbstract() {
     return VmModifier.isLocalOrExternalOrAbstract(modifiers);
   }
+
+  /**
+   * Tells if this member is declared inside the iterable of a for-generator, or an object spread.
+   * <p>
+   * This is {@code true} for {@code new {}} within:
+   *
+   * <pre>
+   * {@code
+   * for (x in new Listing { new {} }) {
+   *                         ^^^^^^
+   *   // etc
+   * }
+   * </pre>
+   */
+  public boolean isInIterable() {
+    return VmModifier.isInIterable(modifiers);
+  }
 }

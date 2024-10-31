@@ -1,0 +1,10 @@
+res1 {
+  new {
+    age = 1
+  }
+}
+res2 {
+  new {
+    age = 1
+  }
+}

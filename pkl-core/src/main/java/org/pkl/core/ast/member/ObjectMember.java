@@ -27,6 +27,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public final class ObjectMember extends Member {
+
   @CompilationFinal private @Nullable Object constantValue;
   @CompilationFinal private @Nullable MemberNode memberNode;
 
