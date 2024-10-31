@@ -905,10 +905,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var expr = visitExpr(ctx.expr());
     scope.setVisitingIterable(visitingIterable);
     return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx),
-        expr,
-        ctx.QSPREAD() != null,
-        visitingIterable);
+        createSourceSection(ctx), expr, ctx.QSPREAD() != null, visitingIterable);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
