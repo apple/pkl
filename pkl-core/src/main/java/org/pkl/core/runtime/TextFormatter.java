@@ -39,7 +39,7 @@ public final class TextFormatter {
   static {
     THEME_ANSI =
         Map.of(
-            Element.MARGIN, new Styling(Color.YELLOW, false, false),
+            Element.MARGIN, new Styling(Color.YELLOW, true, false),
             Element.HINT, new Styling(Color.YELLOW, true, true),
             Element.STACK_OVERFLOW_LOOP_COUNT, new Styling(Color.MAGENTA, false, false),
             Element.LINE_NUMBER, new Styling(Color.BLUE, false, false),
@@ -82,7 +82,7 @@ public final class TextFormatter {
   }
 
   public TextFormatter margin(String marginMatter) {
-    return append(marginMatter);
+    return style(Element.MARGIN).append(marginMatter);
   }
 
   public TextFormatter style(Element element) {
