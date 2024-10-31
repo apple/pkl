@@ -26,17 +26,7 @@ import org.pkl.core.util.Nullable;
 
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
-  private final TextFormatter textFormatter;
-
-  /**
-   * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
-   * {@code null}, stack traces will not be included in error output.
-   */
-  public VmExceptionRenderer(
-      @Nullable StackTraceRenderer stackTraceRenderer, TextFormatter textFormatter) {
-    this.stackTraceRenderer = stackTraceRenderer;
-    this.textFormatter = textFormatter;
-  }
+  private final boolean color;
 
   /**
    * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
@@ -44,12 +34,12 @@ public final class VmExceptionRenderer {
    */
   public VmExceptionRenderer(@Nullable StackTraceRenderer stackTraceRenderer, boolean color) {
     this.stackTraceRenderer = stackTraceRenderer;
-    this.textFormatter = TextFormatter.create(color);
+    this.color = color;
   }
 
   @TruffleBoundary
   public String render(VmException exception) {
-    var formatter = textFormatter.newInstance();
+    var formatter = TextFormatter.create(color);
     render(exception, formatter);
     return formatter.toString();
   }

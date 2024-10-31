@@ -42,7 +42,6 @@ import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Value;
 import org.pkl.core.Version;
-import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
@@ -519,7 +518,7 @@ public final class Project {
               env,
               allowedModules,
               allowedResources,
-              Color.AUTO,
+              null,
               noCache,
               moduleCacheDir,
               modulePath,

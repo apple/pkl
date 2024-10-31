@@ -96,7 +96,8 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
       null,
       null,
       IoUtils.getCurrentWorkingDir(),
-      StackFrameTransformers.defaultTransformer
+      StackFrameTransformers.defaultTransformer,
+      false,
     )
     return ExecutionContext(replServer)
   }

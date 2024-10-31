@@ -50,7 +50,8 @@ public class ListSort {
           null,
           null,
           IoUtils.getCurrentWorkingDir(),
-          StackFrameTransformers.defaultTransformer);
+          StackFrameTransformers.defaultTransformer,
+          false);
   private static final List<Object> list = new ArrayList<>(100000);
 
   static {
