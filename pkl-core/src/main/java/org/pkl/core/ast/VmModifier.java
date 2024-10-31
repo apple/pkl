@@ -55,7 +55,7 @@ public final class VmModifier {
 
   public static final int GLOB = 0x1000;
 
-  // Remove when https://github.com/apple/pkl/issues/741 is fixed
+  // To be removed when https://github.com/apple/pkl/issues/741 is fixed
   public static final int ITERABLE_MEMBER = 0x100000;
 
   // modifier sets

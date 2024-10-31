@@ -908,7 +908,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         createSourceSection(ctx),
         expr,
         ctx.QSPREAD() != null,
-        symbolTable.getCurrentScope().isVisitingIterable());
+        visitingIterable);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
