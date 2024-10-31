@@ -21,7 +21,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.*;
-import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -87,24 +86,17 @@ public final class ListingNodes {
     @Specialization
     protected VmListing eval(VmListing self) {
       var visitedValues = CollectionUtils.newHashSet();
-      var newMembers = EconomicMaps.<Object, ObjectMember>create();
-      var index = new MutableLong(0);
+      var builder = new VmObjectBuilder();
 
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             if (visitedValues.add(value)) {
-              newMembers.put(
-                  index.getAndIncrement(),
-                  VmUtils.createSyntheticObjectElement(member.getQualifiedName(), value));
+              builder.addElement(value);
             }
             return true;
           });
 
-      return new VmListing(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getListingClass().getPrototype(),
-          newMembers,
-          newMembers.size());
+      return builder.toListing();
     }
   }
 
@@ -166,24 +158,17 @@ public final class ListingNodes {
     @Specialization
     protected VmListing eval(VmListing self, VmFunction selector) {
       var visitedValues = CollectionUtils.newHashSet();
-      var newMembers = EconomicMaps.<Object, ObjectMember>create();
-      var index = new MutableLong(0);
+      var builder = new VmObjectBuilder();
 
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             if (visitedValues.add(applyNode.execute(selector, value))) {
-              newMembers.put(
-                  index.getAndIncrement(),
-                  VmUtils.createSyntheticObjectElement(member.getQualifiedName(), value));
+              builder.addElement(value);
             }
             return true;
           });
 
-      return new VmListing(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getListingClass().getPrototype(),
-          newMembers,
-          newMembers.size());
+      return builder.toListing();
     }
   }
 

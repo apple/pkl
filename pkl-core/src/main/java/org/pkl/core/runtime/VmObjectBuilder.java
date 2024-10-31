@@ -26,6 +26,10 @@ public final class VmObjectBuilder {
   private final EconomicMap<Object, ObjectMember> members;
   private int elementCount = 0;
 
+  public VmObjectBuilder() {
+    members = EconomicMaps.create();
+  }
+
   public VmObjectBuilder(int initialSize) {
     members = EconomicMaps.create(initialSize);
   }
