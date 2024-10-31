@@ -23,7 +23,8 @@ import org.pkl.core.messaging.Message.*;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.Nullable;
 
-public class Messages {
+public final class Messages {
+  private Messages() {}
 
   public record ModuleReaderSpec(
       String scheme, boolean hasHierarchicalUris, boolean isLocal, boolean isGlobbable) {}
@@ -77,12 +78,6 @@ public class Messages {
   public record ReadResourceResponse(
       long requestId, long evaluatorId, byte @Nullable [] contents, @Nullable String error)
       implements Client.Response {
-
-    // workaround for kotlin bridging issue where `byte @Nullable [] contents` isn't detected as
-    // nullable
-    //    public ReadResourceResponse(long requestId, long evaluatorId, @Nullable String error) {
-    //      this(requestId, evaluatorId, null, error);
-    //    }
 
     public Type type() {
       return Type.READ_RESOURCE_RESPONSE;

@@ -49,7 +49,7 @@ public class ExternalResourceResolver {
     return Optional.of(new Resource(uri, result));
   }
 
-  public boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
+  public boolean hasElement(SecurityManager securityManager, URI elementUri)
       throws SecurityManagerException {
     securityManager.checkResolveResource(elementUri);
     try {

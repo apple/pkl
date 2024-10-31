@@ -38,7 +38,7 @@ import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-public class ExternalReaderProcessImpl implements ExternalReaderProcess {
+final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
   private static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(3);
 
@@ -49,14 +49,15 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
   private final Map<String, Future<@Nullable ResourceReaderSpec>>
       initializeResourceReaderResponses = new ConcurrentHashMap<>();
 
-  private @GuardedBy("this") boolean closed = false;
+  private final Object lock = new Object();
+  private @GuardedBy("lock") boolean closed = false;
 
   @LateInit
-  @GuardedBy("this")
+  @GuardedBy("lock")
   private Process process;
 
   @LateInit
-  @GuardedBy("this")
+  @GuardedBy("lock")
   private MessageTransport transport;
 
   private void log(String msg) {
@@ -65,7 +66,7 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
     }
   }
 
-  public ExternalReaderProcessImpl(ExternalReader spec) {
+  ExternalReaderProcessImpl(ExternalReader spec) {
     this.spec = spec;
     logPrefix =
         Objects.equals(System.getenv("PKL_DEBUG"), "1")
@@ -74,16 +75,19 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public synchronized MessageTransport getTransport() throws ExternalReaderProcessException {
-    if (closed) {
-      throw new ExternalReaderProcessException("ExternalProcessImpl has already been closed");
-    }
-    if (process != null) {
-      if (!process.isAlive()) {
-        throw new ExternalReaderProcessException("ExternalProcessImpl process is no longer alive");
+  public MessageTransport getTransport() throws ExternalReaderProcessException {
+    synchronized (lock) {
+      if (closed) {
+        throw new IllegalStateException("External reader process has already been closed.");
       }
+      if (process != null) {
+        if (!process.isAlive()) {
+          throw new ExternalReaderProcessException(
+              "External reader process has already terminated.");
+        }
 
-      return transport;
+        return transport;
+      }
     }
 
     // This relies on Java/OS behavior around PATH resolution, absolute/relative paths, etc.
@@ -104,7 +108,7 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
             new ExternalReaderMessagePackEncoder(process.getOutputStream()),
             this::log);
 
-    var rxThread = new Thread(this::runTransport, "ExternalProcessImpl rxThread for " + spec);
+    var rxThread = new Thread(this::runTransport, "ExternalReaderProcessImpl rxThread for " + spec);
     rxThread.setDaemon(true);
     rxThread.start();
 
@@ -131,41 +135,43 @@ public class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public synchronized void close() {
-    closed = true;
-    if (process == null || !process.isAlive()) {
-      return;
-    }
-
-    try {
-      if (transport != null) {
-        transport.send(new CloseExternalProcess());
-        transport.close();
+  public void close() {
+    synchronized (lock) {
+      closed = true;
+      if (process == null || !process.isAlive()) {
+        return;
       }
 
-      // forcefully stop the process after the timeout
-      // note that both transport.close() and process.destroy() are safe to call multiple times
-      new Timer()
-          .schedule(
-              new TimerTask() {
-                @Override
-                public void run() {
-                  if (process != null) {
-                    transport.close();
-                    process.destroyForcibly();
-                  }
-                }
-              },
-              CLOSE_TIMEOUT.inWholeMillis());
+      try {
+        if (transport != null) {
+          transport.send(new CloseExternalProcess());
+          transport.close();
+        }
 
-      // block on process exit
-      process.onExit().get();
-    } catch (Exception e) {
-      transport.close();
-      process.destroyForcibly();
-    } finally {
-      process = null;
-      transport = null;
+        // forcefully stop the process after the timeout
+        // note that both transport.close() and process.destroy() are safe to call multiple times
+        new Timer()
+            .schedule(
+                new TimerTask() {
+                  @Override
+                  public void run() {
+                    if (process != null) {
+                      transport.close();
+                      process.destroyForcibly();
+                    }
+                  }
+                },
+                CLOSE_TIMEOUT.inWholeMillis());
+
+        // block on process exit
+        process.onExit().get();
+      } catch (Exception e) {
+        transport.close();
+        process.destroyForcibly();
+      } finally {
+        process = null;
+        transport = null;
+      }
     }
   }
 

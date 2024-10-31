@@ -28,7 +28,7 @@ import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.Nullable;
 
-public class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
+final class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
 
   public ExternalReaderMessagePackDecoder(MessageUnpacker unpacker) {
     super(unpacker);
