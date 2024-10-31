@@ -313,8 +313,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   headerSection,
                   isLocal ? VmModifier.LOCAL_CLASS_OBJECT_MEMBER : VmModifier.CLASS_OBJECT_MEMBER,
                   scope.getName(),
-                  scope.getQualifiedName(),
-                  false);
+                  scope.getQualifiedName());
 
           result.initMemberNode(
               new UntypedObjectMemberNode(
@@ -367,8 +366,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                       ? VmModifier.LOCAL_TYPEALIAS_OBJECT_MEMBER
                       : VmModifier.TYPEALIAS_OBJECT_MEMBER,
                   scopeName,
-                  scope.getQualifiedName(),
-                  false);
+                  scope.getQualifiedName());
 
           result.initMemberNode(
               new UntypedObjectMemberNode(
@@ -699,8 +697,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   createSourceSection(headerCtx),
                   modifiers,
                   scope.getName(),
-                  scope.getQualifiedName(),
-                  false);
+                  scope.getQualifiedName());
           var body = visitExpr(exprCtx);
           var node =
               new ObjectMethodNode(
@@ -811,8 +808,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  visitTypeAnnotation(typeAnnCtx),
-                  scope.isVisitingIterable())
+                  visitTypeAnnotation(typeAnnCtx))
               : VmUtils.createObjectProperty(
                   language,
                   sourceSection,
@@ -822,8 +818,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  null,
-                  scope.isVisitingIterable());
+                  null);
         });
   }
 
@@ -1213,14 +1208,17 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         scope -> {
           var elementNode = visitExpr(ctx.expr());
 
+          var modifier =
+              scope.isVisitingIterable()
+                  ? VmModifier.ELEMENT | VmModifier.ITERABLE_MEMBER
+                  : VmModifier.ELEMENT;
           var member =
               new ObjectMember(
                   createSourceSection(ctx),
                   elementNode.getSourceSection(),
-                  VmModifier.ELEMENT,
+                  modifier,
                   null,
-                  scope.getQualifiedName(),
-                  scope.isVisitingIterable());
+                  scope.getQualifiedName());
 
           if (elementNode instanceof ConstantNode constantNode) {
             member.initConstantValue(constantNode);
@@ -1269,14 +1267,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable ExprContext valueCtx,
       List<? extends ObjectBodyContext> objectBodyCtxs) {
     return scope -> {
+      var modifier =
+          scope.isVisitingIterable()
+              ? VmModifier.ENTRY | VmModifier.ITERABLE_MEMBER
+              : VmModifier.ENTRY;
       var member =
           new ObjectMember(
-              sourceSection,
-              keyNode.getSourceSection(),
-              VmModifier.ENTRY,
-              null,
-              scope.getQualifiedName(),
-              scope.isVisitingIterable());
+              sourceSection, keyNode.getSourceSection(), modifier, null, scope.getQualifiedName());
 
       if (valueCtx != null) { // ["key"] = value
         var valueNode = visitExpr(valueCtx);
@@ -1354,6 +1351,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
       result += modifier;
+    }
+
+    if (symbolTable.getCurrentScope().isVisitingIterable()) {
+      result += VmModifier.ITERABLE_MEMBER;
     }
 
     // flag modifier combinations that are never valid right away
@@ -1805,8 +1806,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   importNode.getSourceSection(),
                   modifiers,
                   scope.getName(),
-                  scope.getQualifiedName(),
-                  false);
+                  scope.getQualifiedName());
 
           result.initMemberNode(
               new UntypedObjectMemberNode(

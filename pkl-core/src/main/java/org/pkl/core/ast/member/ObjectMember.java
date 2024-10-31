@@ -28,8 +28,6 @@ import org.pkl.core.util.Nullable;
 
 public final class ObjectMember extends Member {
 
-  private final boolean isInIterable;
-
   @CompilationFinal private @Nullable Object constantValue;
   @CompilationFinal private @Nullable MemberNode memberNode;
 
@@ -38,11 +36,9 @@ public final class ObjectMember extends Member {
       SourceSection headerSection,
       int modifiers,
       @Nullable Identifier name,
-      String qualifiedName,
-      boolean isInIterable) {
+      String qualifiedName) {
 
     super(sourceSection, headerSection, modifiers, name, qualifiedName);
-    this.isInIterable = isInIterable;
   }
 
   public void initConstantValue(ConstantNode node) {
@@ -172,6 +168,6 @@ public final class ObjectMember extends Member {
    * </pre>
    */
   public boolean isInIterable() {
-    return isInIterable;
+    return VmModifier.isInIterable(modifiers);
   }
 }

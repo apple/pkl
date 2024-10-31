@@ -586,8 +586,7 @@ public final class VmUtils {
             unavailableSourceSection(),
             VmModifier.NONE,
             identifier,
-            qualifiedName,
-            false);
+            qualifiedName);
     member.initConstantValue(constantValue);
     return member;
   }
@@ -601,8 +600,7 @@ public final class VmUtils {
             unavailableSourceSection(),
             VmModifier.ENTRY,
             null,
-            qualifiedName,
-            false);
+            qualifiedName);
     member.initConstantValue(constantValue);
     return member;
   }
@@ -616,8 +614,7 @@ public final class VmUtils {
             unavailableSourceSection(),
             VmModifier.ELEMENT,
             null,
-            qualifiedName,
-            false);
+            qualifiedName);
     member.initConstantValue(constantValue);
     return member;
   }
@@ -632,12 +629,10 @@ public final class VmUtils {
       FrameDescriptor descriptor,
       int modifiers,
       ExpressionNode bodyNode,
-      @Nullable PropertyTypeNode typeNode,
-      boolean isInIterable) {
+      @Nullable PropertyTypeNode typeNode) {
 
     var property =
-        new ObjectMember(
-            sourceSection, headerSection, modifiers, propertyName, qualifiedName, isInIterable);
+        new ObjectMember(sourceSection, headerSection, modifiers, propertyName, qualifiedName);
 
     // can't use ConstantNode for a local typed property
     // because constant type check wouldn't find the property (type)
@@ -668,12 +663,10 @@ public final class VmUtils {
       FrameDescriptor descriptor,
       int modifiers,
       ExpressionNode bodyNode,
-      @Nullable UnresolvedTypeNode typeNode,
-      boolean isInIterable) {
+      @Nullable UnresolvedTypeNode typeNode) {
 
     var property =
-        new ObjectMember(
-            sourceSection, headerSection, modifiers, propertyName, qualifiedName, isInIterable);
+        new ObjectMember(sourceSection, headerSection, modifiers, propertyName, qualifiedName);
 
     // can't use ConstantNode for a local typed property
     // because constant type check wouldn't find the property (type)

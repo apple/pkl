@@ -49,12 +49,7 @@ public final class VmObjectBuilder {
   public VmObjectBuilder addEntry(Object key, SharedMemberNode valueNode) {
     var entry =
         new ObjectMember(
-            valueNode.getSourceSection(),
-            valueNode.getHeaderSection(),
-            VmModifier.ENTRY,
-            null,
-            "",
-            false);
+            valueNode.getSourceSection(), valueNode.getHeaderSection(), VmModifier.ENTRY, null, "");
     entry.initMemberNode(valueNode);
     EconomicMaps.put(members, key, entry);
     return this;

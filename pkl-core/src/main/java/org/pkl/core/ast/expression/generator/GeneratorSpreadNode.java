@@ -26,6 +26,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -325,14 +326,17 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     if (prototype.getConstantValue() == value) {
       return prototype;
     }
+    var modifiers =
+        isInIterable
+            ? prototype.getModifiers() | VmModifier.ITERABLE_MEMBER
+            : prototype.getModifiers();
     var result =
         new ObjectMember(
             prototype.getSourceSection(),
             prototype.getHeaderSection(),
-            prototype.getModifiers(),
+            modifiers,
             prototype.getNameOrNull(),
-            prototype.getQualifiedName(),
-            isInIterable);
+            prototype.getQualifiedName());
     result.initConstantValue(value);
     return result;
   }

@@ -1571,8 +1571,7 @@ public abstract class TypeNode extends PklNode {
               headerSection,
               VmModifier.HIDDEN,
               Identifier.DEFAULT,
-              qualifiedName + ".default",
-              false);
+              qualifiedName + ".default");
 
       var defaultMemberValue =
           valueTypeNode.createDefaultValue(language, headerSection, qualifiedName);

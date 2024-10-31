@@ -88,7 +88,7 @@ public final class VmObjectFactory<E> {
   private VmObjectFactory<E> doAddProperty(String name, ExpressionNode bodyNode) {
     var section = VmUtils.unavailableSourceSection();
     var identifier = Identifier.get(name);
-    var member = new ObjectMember(section, section, VmModifier.NONE, identifier, name, false);
+    var member = new ObjectMember(section, section, VmModifier.NONE, identifier, name);
     var node =
         isPropertyTypeChecked
             ? TypeCheckedPropertyNodeGen.create(null, new FrameDescriptor(), member, bodyNode)
