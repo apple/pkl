@@ -28,6 +28,8 @@ import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
+import org.pkl.core.module.ExternalModuleResolver
+import org.pkl.core.resource.ExternalResourceResolver
 
 class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
   private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
@@ -40,7 +42,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     transport.close()
   }
 
-  override fun getTransport(): MessageTransport = transport
+  override fun getModuleResolver(evaluatorId: Long): ExternalModuleResolver =
+    ExternalModuleResolver(transport, evaluatorId)
+
+  override fun getResourceResolver(evaluatorId: Long): ExternalResourceResolver =
+    ExternalResourceResolver(transport, evaluatorId)
 
   fun run() {
     try {

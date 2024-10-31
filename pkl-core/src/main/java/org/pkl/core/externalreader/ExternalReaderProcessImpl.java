@@ -35,6 +35,9 @@ import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.messaging.ProtocolException;
+import org.pkl.core.module.ExternalModuleResolver;
+import org.pkl.core.resource.ExternalResourceResolver;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
@@ -48,6 +51,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
       new ConcurrentHashMap<>();
   private final Map<String, Future<@Nullable ResourceReaderSpec>>
       initializeResourceReaderResponses = new ConcurrentHashMap<>();
+  private final Random requestIdGenerator = new Random();
 
   private final Object lock = new Object();
   private @GuardedBy("lock") boolean closed = false;
@@ -75,7 +79,18 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public MessageTransport getTransport() throws ExternalReaderProcessException {
+  public ExternalModuleResolver getModuleResolver(long evaluatorId)
+      throws ExternalReaderProcessException {
+    return new ExternalModuleResolver(getTransport(), evaluatorId);
+  }
+
+  @Override
+  public ExternalResourceResolver getResourceResolver(long evaluatorId)
+      throws ExternalReaderProcessException {
+    return new ExternalResourceResolver(getTransport(), evaluatorId);
+  }
+
+  private MessageTransport getTransport() throws ExternalReaderProcessException {
     synchronized (lock) {
       if (closed) {
         throw new IllegalStateException("External reader process has already been closed.");
@@ -83,7 +98,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
       if (process != null) {
         if (!process.isAlive()) {
           throw new ExternalReaderProcessException(
-              "External reader process has already terminated.");
+              ErrorMessages.create("externalReaderAlreadyTerminated"));
         }
 
         return transport;
@@ -182,7 +197,8 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
             uriScheme,
             (scheme) -> {
               var future = new CompletableFuture<@Nullable ModuleReaderSpec>();
-              var request = new InitializeModuleReaderRequest(new Random().nextLong(), scheme);
+              var request =
+                  new InitializeModuleReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {
                 getTransport()
                     .send(
@@ -209,7 +225,8 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
             uriScheme,
             (scheme) -> {
               var future = new CompletableFuture<@Nullable ResourceReaderSpec>();
-              var request = new InitializeResourceReaderRequest(new Random().nextLong(), scheme);
+              var request =
+                  new InitializeResourceReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {
                 getTransport()
                     .send(

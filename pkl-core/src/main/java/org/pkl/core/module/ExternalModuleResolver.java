@@ -39,6 +39,7 @@ public class ExternalModuleResolver {
   private final long evaluatorId;
   private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
+  private final Random requestIdGenerator = new Random();
 
   public ExternalModuleResolver(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
@@ -74,7 +75,7 @@ public class ExternalModuleResolver {
             moduleUri,
             (uri) -> {
               var future = new CompletableFuture<String>();
-              var request = new ReadModuleRequest(new Random().nextLong(), evaluatorId, uri);
+              var request = new ReadModuleRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,
@@ -104,7 +105,7 @@ public class ExternalModuleResolver {
             baseUri,
             (uri) -> {
               var future = new CompletableFuture<List<PathElement>>();
-              var request = new ListModulesRequest(new Random().nextLong(), evaluatorId, uri);
+              var request = new ListModulesRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,

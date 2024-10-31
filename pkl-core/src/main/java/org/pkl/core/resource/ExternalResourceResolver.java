@@ -38,6 +38,7 @@ public class ExternalResourceResolver {
   private final long evaluatorId;
   private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
+  private final Random requestIdGenerator = new Random();
 
   public ExternalResourceResolver(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
@@ -72,7 +73,8 @@ public class ExternalResourceResolver {
             baseUri,
             (uri) -> {
               var future = new CompletableFuture<List<PathElement>>();
-              var request = new ListResourcesRequest(new Random().nextLong(), evaluatorId, uri);
+              var request =
+                  new ListResourcesRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,
@@ -101,7 +103,8 @@ public class ExternalResourceResolver {
             baseUri,
             (uri) -> {
               var future = new CompletableFuture<byte[]>();
-              var request = new ReadResourceRequest(new Random().nextLong(), evaluatorId, uri);
+              var request =
+                  new ReadResourceRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,

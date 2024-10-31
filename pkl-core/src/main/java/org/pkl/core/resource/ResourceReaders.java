@@ -140,16 +140,28 @@ public final class ResourceReaders {
     return FromServiceProviders.INSTANCE;
   }
 
-  public static ResourceReader externalProcess(
-      String scheme, ExternalReaderProcess externalReaderProcess) {
-    return new ExternalProcess(scheme, externalReaderProcess, 0);
+  /**
+   * Returns a reader for external reader resources.
+   *
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
+   */
+  public static ResourceReader externalProcess(String scheme, ExternalReaderProcess process) {
+    return new ExternalProcess(scheme, process, 0);
   }
 
+  /**
+   * Returns a reader for external reader resources.
+   *
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
+   */
   public static ResourceReader externalProcess(
-      String scheme, ExternalReaderProcess externalReaderProcess, long evaluatorId) {
-    return new ExternalProcess(scheme, externalReaderProcess, evaluatorId);
+      String scheme, ExternalReaderProcess process, long evaluatorId) {
+    return new ExternalProcess(scheme, process, evaluatorId);
   }
 
+  /** Returns a reader for external and client reader resources. */
   public static ResourceReader externalResolver(
       ResourceReaderSpec spec, ExternalResourceResolver resolver) {
     return new ExternalResolver(spec, resolver);
@@ -637,9 +649,7 @@ public final class ResourceReaders {
         throw new ExternalReaderProcessException(
             ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
       }
-      underlying =
-          new ExternalResolver(
-              spec, new ExternalResourceResolver(process.getTransport(), evaluatorId));
+      underlying = new ExternalResolver(spec, process.getResourceResolver(evaluatorId));
       return underlying;
     }
 

@@ -19,10 +19,10 @@ import java.io.Writer
 import org.pkl.commons.cli.*
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
+import org.pkl.core.Readers
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
 import org.pkl.core.util.ErrorMessages
-import org.pkl.core.util.Readers
 
 class CliTestRunner
 @JvmOverloads

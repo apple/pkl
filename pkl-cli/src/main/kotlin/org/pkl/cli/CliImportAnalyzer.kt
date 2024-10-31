@@ -20,7 +20,7 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource
-import org.pkl.core.util.Readers
+import org.pkl.core.Readers
 
 class CliImportAnalyzer
 @JvmOverloads
