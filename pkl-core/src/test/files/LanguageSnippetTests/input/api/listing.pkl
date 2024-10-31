@@ -23,12 +23,24 @@ local duplicate: Listing<Person> = (base) {
   new { name = "Elf Owl" }
 }
 
+local altered: Listing<Person> = (base) {
+  [0] { name = "Wood Pigeon" }
+}
+
 facts {
   ["isEmpty"] {
     empty.isEmpty
     empty2.isEmpty
     !base.isEmpty
     !derived.isEmpty
+  }
+  
+  ["lastIndex"] {
+    empty.lastIndex == -1
+    empty2.lastIndex == -1
+    base.lastIndex == 2
+    derived.lastIndex == 4
+    duplicate.lastIndex == 5
   }
 
   ["isDistinct"] {
@@ -57,6 +69,72 @@ facts {
     !base.isDistinctBy((it) -> it.getClass())
     !derived.isDistinctBy((it) -> it.getClass())
     !duplicate.isDistinctBy((it) -> it.getClass())
+  }
+  
+  ["getOrNull"] {
+    empty.getOrNull(-1) == null
+    empty.getOrNull(0) == null
+    base.getOrNull(-1) == null
+    for (i, v in base) {
+      base.getOrNull(i) == v
+    }
+    base.getOrNull(base.length) == null
+  }
+  
+  ["first"] {
+    module.catch(() -> empty.first) == "Expected a non-empty Listing."
+    base.first == base[0]
+    derived.first == base[0]
+  }
+  
+  ["firstOrNull"] {
+    empty.firstOrNull == null
+    base.firstOrNull == base[0]
+    derived.firstOrNull == base[0]
+  }
+
+  ["last"] {
+    module.catch(() -> empty.last) == "Expected a non-empty Listing."
+    base.last == base[2]
+    derived.last == derived[4]
+  }
+
+  ["lastOrNull"] {
+    empty.lastOrNull == null
+    base.lastOrNull == base[2]
+    derived.lastOrNull == derived[4]
+  }
+
+  ["single"] {
+    module.catch(() -> empty.single) == "Expected a single-element Listing."
+    module.catch(() -> base.single) == "Expected a single-element Listing."
+    new Listing { 42 }.single == 42
+  }
+
+  ["singleOrNull"] {
+    empty.singleOrNull == null
+    base.singleOrNull == null
+    new Listing { 42 }.singleOrNull == 42
+  }
+
+  ["every"] {
+    !base.every((it) -> it.name.contains("rot"))
+    base.every((it) -> !it.name.isBlank)
+    !((base) { new { name = "EEEEE" } }).every((it) -> it.name.contains("rot"))
+  }
+  
+  ["any"] {
+    base.any((it) -> it.name.contains("rot"))
+    !base.any((it) -> it.name.contains("inch"))
+    ((base) { new { name = "EEEEE" } }).any((it) -> it.name.contains("rot"))
+  }
+
+  ["contains"] {
+    !empty.contains(0)
+    base.contains(base[1])
+    derived.contains(base[1])
+    derived.contains(derived[3])
+    !altered.contains(base[0])
   }
 }
 

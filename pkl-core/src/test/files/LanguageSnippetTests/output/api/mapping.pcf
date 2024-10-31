@@ -18,6 +18,12 @@ facts {
     true
     true
   }
+  ["containsValue()"] {
+    true
+    true
+    true
+    true
+  }
   ["length"] {
     true
     true
@@ -29,6 +35,16 @@ facts {
     true
   }
   ["keys (of type object)"] {
+    true
+    true
+  }
+  ["every()"] {
+    true
+    true
+    true
+  }
+  ["any()"] {
+    true
     true
     true
   }

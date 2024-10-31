@@ -19,6 +19,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.HashSet;
+import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction3Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction3NodeGen;
 import org.pkl.core.runtime.*;
@@ -27,6 +29,7 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableLong;
 import org.pkl.core.util.MutableReference;
 
@@ -86,6 +89,22 @@ public final class MappingNodes {
     }
   }
 
+  public abstract static class containsValue extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmMapping self, Object value) {
+      var foundValue = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, memberValue) -> {
+            if (memberValue == null) {
+              memberValue = VmUtils.readMember(self, key);
+            }
+            foundValue.set(value.equals(memberValue));
+            return !foundValue.get();
+          });
+      return foundValue.get();
+    }
+  }
+
   public abstract static class getOrNull extends ExternalMethod1Node {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
@@ -105,6 +124,42 @@ public final class MappingNodes {
           (key, def, value) -> {
             result.set(applyLambdaNode.execute(function, result.get(), key, value));
             return true;
+          });
+      return result.get();
+    }
+  }
+
+  public abstract static class every extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      var result = new MutableBoolean(true);
+      self.iterateMemberValues(
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
+            result.set(applyLambdaNode.executeBoolean(function, key, value));
+            return result.get();
+          });
+      return result.get();
+    }
+  }
+
+  public abstract static class any extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected boolean eval(VmMapping self, VmFunction function) {
+      var result = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
+            result.set(applyLambdaNode.executeBoolean(function, key, value));
+            return !result.get();
           });
       return result.get();
     }
