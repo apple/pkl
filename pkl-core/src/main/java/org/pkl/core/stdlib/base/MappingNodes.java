@@ -92,11 +92,12 @@ public final class MappingNodes {
   public abstract static class containsValue extends ExternalMethod1Node {
     @Specialization
     protected boolean eval(VmMapping self, Object value) {
-      MutableBoolean foundValue = new MutableBoolean(false);
+      var foundValue = new MutableBoolean(false);
       self.iterateMemberValues(
-          (key, member, unforcedMemberValue) -> {
-            var memberValue =
-                unforcedMemberValue != null ? unforcedMemberValue : VmUtils.readMember(self, key);
+          (key, member, memberValue) -> {
+            if (memberValue == null) {
+              memberValue = VmUtils.readMember(self, key);
+            }
             foundValue.set(value.equals(memberValue));
             return !foundValue.get();
           });
@@ -135,8 +136,10 @@ public final class MappingNodes {
     protected boolean eval(VmMapping self, VmFunction function) {
       var result = new MutableBoolean(true);
       self.iterateMemberValues(
-          (key, member, unforcedValue) -> {
-            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
             result.set(applyLambdaNode.executeBoolean(function, key, value));
             return result.get();
           });
@@ -151,8 +154,10 @@ public final class MappingNodes {
     protected boolean eval(VmMapping self, VmFunction function) {
       var result = new MutableBoolean(false);
       self.iterateMemberValues(
-          (key, member, unforcedValue) -> {
-            var value = unforcedValue != null ? unforcedValue : VmUtils.readMember(self, key);
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
             result.set(applyLambdaNode.executeBoolean(function, key, value));
             return !result.get();
           });
