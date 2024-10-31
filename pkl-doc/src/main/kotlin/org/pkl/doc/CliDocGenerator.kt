@@ -24,8 +24,8 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.toPath
 import org.pkl.core.*
+import org.pkl.core.Readers
 import org.pkl.core.packages.*
-import org.pkl.core.util.Readers
 
 /**
  * Entry point for the high-level Pkldoc API.

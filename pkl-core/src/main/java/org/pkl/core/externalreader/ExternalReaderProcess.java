@@ -17,9 +17,10 @@ package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
+import org.pkl.core.module.ExternalModuleResolver;
+import org.pkl.core.resource.ExternalResourceResolver;
 import org.pkl.core.util.Nullable;
 
 /** An external process that reads Pkl modules and resources. */
@@ -33,13 +34,23 @@ public interface ExternalReaderProcess extends AutoCloseable {
   }
 
   /**
-   * Returns a message transport for communicating with this process.
+   * Returns a resolver for modules provided via this reader.
    *
    * <p>Upon first call, this method may allocate resources, including spawning a child process.
    *
    * @throws IllegalStateException if this process has already been closed
    */
-  MessageTransport getTransport() throws ExternalReaderProcessException;
+  ExternalModuleResolver getModuleResolver(long evaluatorId) throws ExternalReaderProcessException;
+
+  /**
+   * Returns a resolver for resources provided via this reader.
+   *
+   * <p>Upon first call, this method may allocate resources, including spawning a child process.
+   *
+   * @throws IllegalStateException if this process has already been closed
+   */
+  ExternalResourceResolver getResourceResolver(long evaluatorId)
+      throws ExternalReaderProcessException;
 
   /**
    * Returns the spec, if available, of this process's module reader with the given scheme.

@@ -21,7 +21,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource
-import org.pkl.core.util.Readers
+import org.pkl.core.Readers
 
 /** API for the Kotlin code generator CLI. */
 class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions) :
