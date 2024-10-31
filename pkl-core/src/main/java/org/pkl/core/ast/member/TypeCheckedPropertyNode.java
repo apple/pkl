@@ -31,8 +31,6 @@ import org.pkl.core.util.Nullable;
 public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
   @Child @Executed protected ExpressionNode ownerNode = new GetOwnerNode();
 
-  private final ObjectMember member;
-
   protected TypeCheckedPropertyNode(
       @Nullable VmLanguage language,
       FrameDescriptor descriptor,
@@ -42,7 +40,6 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
     super(language, descriptor, member, bodyNode);
 
     assert member.isProp();
-    this.member = member;
   }
 
   @SuppressWarnings("unused")
