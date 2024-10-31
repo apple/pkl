@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderProcess;
-import org.pkl.core.externalreader.ExternalReaderProcessImpl;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -482,14 +481,14 @@ public final class EvaluatorBuilder {
       setModuleCacheDir(settings.moduleCacheDir());
     }
 
-    // this isn't ideal as project and non-project ExternalProcessImpl instances can be dupes
+    // this isn't ideal as project and non-project ExternalReaderProcess instances can be dupes
     var procs = new HashMap<ExternalReader, ExternalReaderProcess>();
     if (settings.externalModuleReaders() != null) {
       for (var entry : settings.externalModuleReaders().entrySet()) {
         addModuleKeyFactory(
             ModuleKeyFactories.externalProcess(
                 entry.getKey(),
-                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
     if (settings.externalResourceReaders() != null) {
@@ -497,7 +496,7 @@ public final class EvaluatorBuilder {
         addResourceReader(
             ResourceReaders.externalProcess(
                 entry.getKey(),
-                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcessImpl::new)));
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
     return this;

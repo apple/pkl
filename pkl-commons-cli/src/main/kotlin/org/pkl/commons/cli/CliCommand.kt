@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.externalreader.ExternalReaderProcessImpl
+import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -185,12 +185,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val externalProcesses by lazy {
-    // share ExternalProcessImpl instances between configured external resource/module readers with
-    // the same spec
-    // this avoids spawning multiple subprocesses if the same reader implements both reader types
-    // and/or multiple schemes
+    // Share ExternalReaderProcess instances between configured external resource/module readers
+    // with the same spec. This avoids spawning multiple subprocesses if the same reader implements
+    // both reader types and/or multiple schemes.
     (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
-      ExternalReaderProcessImpl(it)
+      ExternalReaderProcess.of(it)
     }
   }
 

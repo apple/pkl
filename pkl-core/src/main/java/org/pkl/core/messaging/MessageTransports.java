@@ -27,7 +27,8 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Pair;
 
 /** Factory methods for creating [MessageTransport]s. */
-public class MessageTransports {
+public final class MessageTransports {
+  private MessageTransports() {}
 
   public interface Logger {
     void log(String msg);

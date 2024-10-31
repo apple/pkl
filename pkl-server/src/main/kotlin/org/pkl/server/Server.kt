@@ -25,7 +25,6 @@ import kotlin.random.Random
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.externalreader.ExternalReaderProcess
-import org.pkl.core.externalreader.ExternalReaderProcessImpl
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
@@ -286,5 +285,5 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private fun getExternalProcess(evaluatorId: Long, spec: ExternalReader): ExternalReaderProcess =
     externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
-      .computeIfAbsent(spec) { ExternalReaderProcessImpl(it) }
+      .computeIfAbsent(spec) { ExternalReaderProcess.of(it) }
 }

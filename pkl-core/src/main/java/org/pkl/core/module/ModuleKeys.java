@@ -30,7 +30,7 @@ import java.util.Map;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.messaging.Messages.*;
+import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -131,7 +131,7 @@ public final class ModuleKeys {
 
   /** Creates a module key for an externally read module. */
   public static ModuleKey externalResolver(
-      URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) throws URISyntaxException {
+      URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
     return new ExternalResolver(uri, spec, resolver);
   }
 

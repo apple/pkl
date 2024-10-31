@@ -25,7 +25,7 @@ import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
 
-public class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
+final class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
 
   public ExternalReaderMessagePackEncoder(MessagePacker packer) {
     super(packer);
