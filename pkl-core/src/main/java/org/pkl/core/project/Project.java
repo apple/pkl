@@ -51,7 +51,6 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
-import org.pkl.core.runtime.TextFormatter;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ImportGraphUtils;
@@ -145,8 +144,7 @@ public final class Project {
                   .build();
         }
         // stack frame transformer never used; this exception has no stack frames.
-        throw vmException.toPklException(
-            StackFrameTransformers.defaultTransformer, TextFormatter.create(false));
+        throw vmException.toPklException(StackFrameTransformers.defaultTransformer, false);
       }
       throw e;
     } catch (URISyntaxException e) {
@@ -195,7 +193,7 @@ public final class Project {
     var analyzer =
         new Analyzer(
             StackFrameTransformers.defaultTransformer,
-            TextFormatter.create(false),
+            builder.getColor(),
             SecurityManagers.defaultManager,
             builder.getModuleKeyFactories(),
             builder.getModuleCacheDir(),

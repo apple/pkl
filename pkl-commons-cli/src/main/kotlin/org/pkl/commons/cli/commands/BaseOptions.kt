@@ -278,7 +278,7 @@ class BaseOptions : OptionGroup() {
       projectDir = projectOptions?.projectDir,
       timeout = timeout,
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
-      color = color.hasColor(),
+      color = color,
       noCache = noCache,
       testMode = testMode,
       testPort = testPort,

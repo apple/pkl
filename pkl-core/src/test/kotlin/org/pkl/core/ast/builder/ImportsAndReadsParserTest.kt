@@ -22,7 +22,6 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
 import org.pkl.core.module.ModuleKeys
-import org.pkl.core.runtime.TextFormatter
 import org.pkl.core.runtime.VmException
 
 class ImportsAndReadsParserTest {
@@ -79,9 +78,7 @@ class ImportsAndReadsParserTest {
       assertThrows<VmException> {
         ImportsAndReadsParser.parse(moduleKey, moduleKey.resolve(SecurityManagers.defaultManager))
       }
-    assertThat(
-        err.toPklException(StackFrameTransformers.defaultTransformer, TextFormatter.create(false))
-      )
+    assertThat(err.toPklException(StackFrameTransformers.defaultTransformer, false))
       .hasMessage(
         """
           –– Pkl Error ––

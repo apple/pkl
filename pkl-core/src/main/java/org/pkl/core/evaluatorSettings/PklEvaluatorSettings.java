@@ -110,7 +110,7 @@ public record PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("env"),
         allowedModules,
         allowedResources,
-        color == null ? Color.AUTO : Color.valueOf(color.toUpperCase()),
+        color == null ? null : Color.valueOf(color.toUpperCase()),
         (Boolean) pSettings.get("noCache"),
         moduleCacheDir,
         modulePath,

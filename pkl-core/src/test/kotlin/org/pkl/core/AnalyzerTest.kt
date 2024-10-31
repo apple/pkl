@@ -26,13 +26,12 @@ import org.pkl.commons.writeString
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.project.Project
-import org.pkl.core.runtime.TextFormatter
 
 class AnalyzerTest {
   private val simpleAnalyzer =
     Analyzer(
       StackFrameTransformers.defaultTransformer,
-      TextFormatter.create(false),
+      false,
       SecurityManagers.defaultManager,
       listOf(ModuleKeyFactories.file, ModuleKeyFactories.standardLibrary, ModuleKeyFactories.pkg),
       null,
@@ -110,7 +109,7 @@ class AnalyzerTest {
     val analyzer =
       Analyzer(
         StackFrameTransformers.defaultTransformer,
-        TextFormatter.create(false),
+        false,
         SecurityManagers.defaultManager,
         listOf(ModuleKeyFactories.file, ModuleKeyFactories.standardLibrary, ModuleKeyFactories.pkg),
         tempDir.resolve("packages"),
@@ -180,7 +179,7 @@ class AnalyzerTest {
     val analyzer =
       Analyzer(
         StackFrameTransformers.defaultTransformer,
-        TextFormatter.create(false),
+        false,
         SecurityManagers.defaultManager,
         listOf(
           ModuleKeyFactories.file,
@@ -292,7 +291,7 @@ class AnalyzerTest {
     val analyzer =
       Analyzer(
         StackFrameTransformers.defaultTransformer,
-        TextFormatter.create(false),
+        false,
         SecurityManagers.defaultManager,
         listOf(
           ModuleKeyFactories.file,

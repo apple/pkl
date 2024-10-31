@@ -36,6 +36,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 
@@ -175,7 +176,7 @@ public abstract class ModulesTask extends BasePklTask {
               getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
-              getColor().getOrElse(false),
+              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
               getNoCache().getOrElse(false),
               getOmitProjectSettings().getOrElse(false),
               getNoProject().getOrElse(false),

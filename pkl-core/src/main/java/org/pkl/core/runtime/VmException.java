@@ -117,14 +117,6 @@ public abstract class VmException extends AbstractTruffleException {
   }
 
   @TruffleBoundary
-  public PklException toPklException(
-      StackFrameTransformer transformer, TextFormatter<?> formatter) {
-    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), formatter);
-    var rendered = renderer.render(this);
-    return new PklException(rendered);
-  }
-
-  @TruffleBoundary
   public PklException toPklException(StackFrameTransformer transformer, boolean color) {
     var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color);
     var rendered = renderer.render(this);

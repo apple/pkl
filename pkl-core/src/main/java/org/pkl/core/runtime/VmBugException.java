@@ -58,9 +58,8 @@ public final class VmBugException extends VmException {
 
   @Override
   @TruffleBoundary
-  public PklException toPklException(
-      StackFrameTransformer transformer, TextFormatter<?> formatter) {
-    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), formatter);
+  public PklException toPklException(StackFrameTransformer transformer, boolean color) {
+    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color);
     var rendered = renderer.render(this);
     return new PklBugException(rendered, this);
   }

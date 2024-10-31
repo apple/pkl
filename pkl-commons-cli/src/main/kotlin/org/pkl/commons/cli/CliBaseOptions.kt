@@ -20,6 +20,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
+import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
@@ -102,7 +103,7 @@ data class CliBaseOptions(
   private val moduleCacheDir: Path? = null,
 
   /** Whether to render errors in ANSI color. */
-  val color: Boolean = false,
+  val color: Color? = null,
 
   /** Whether to disable the module cache. */
   val noCache: Boolean = false,

@@ -23,7 +23,6 @@ import org.pkl.commons.cli.CliTestException
 import org.pkl.commons.cli.CliTestOptions
 import org.pkl.core.project.Project
 import org.pkl.core.project.ProjectPackager
-import org.pkl.core.runtime.TextFormatter
 import org.pkl.core.util.ErrorMessages
 
 class CliProjectPackager(
@@ -82,7 +81,7 @@ class CliProjectPackager(
         cliOptions.normalizedWorkingDir,
         outputPath,
         stackFrameTransformer,
-        TextFormatter.create(cliOptions.color),
+        cliOptions.color?.hasColor() ?: false,
         securityManager,
         httpClient,
         skipPublishCheck,

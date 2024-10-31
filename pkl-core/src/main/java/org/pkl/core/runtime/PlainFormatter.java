@@ -48,7 +48,7 @@ public class PlainFormatter extends TextFormatter<PlainFormatter> {
 
   @Override
   public PlainFormatter stackOverflowLoopCount(int counter) {
-    return object(counter);
+    return a(String.valueOf(counter));
   }
 
   @Override
