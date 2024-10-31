@@ -28,7 +28,7 @@ When to format messages with ANSI color codes.
 Possible values:
 
 - `"never"`: Never format
-- `"auto"`: Format if the process' `stdin`, `stdout`, or `stderr` are connected to a console.
+- `"auto"`: Format if `stdin`, `stdout`, or `stderr` are connected to a console.
 - `"always"`: Always format
 ====
 

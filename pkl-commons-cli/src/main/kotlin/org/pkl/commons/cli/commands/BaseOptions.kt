@@ -148,7 +148,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("--color"),
         metavar = "<when>",
         help =
-          "Whether to format messages in ANSI color. Possible values of <when> are \"never\", \"auto\", and \"always\"."
+          "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'."
       )
       .enum<Color> { it.name.lowercase() }
       .single()
