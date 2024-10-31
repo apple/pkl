@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
+import org.pkl.core.runtime.TextFormatter.Element;
 import org.pkl.core.util.Nullable;
 
 public final class StackTraceRenderer {
@@ -28,7 +29,7 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(List<StackFrame> frames, @Nullable String hint, TextFormatter<?> out) {
+  public void render(List<StackFrame> frames, @Nullable String hint, TextFormatter out) {
     var compressed = compressFrames(frames);
     doRender(compressed, hint, out, "", true);
   }
@@ -37,7 +38,7 @@ public final class StackTraceRenderer {
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
-      TextFormatter<?> out,
+      TextFormatter out,
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
@@ -51,8 +52,10 @@ public final class StackTraceRenderer {
           }
           out.margin(leftMargin)
               .margin("┌─ ")
-              .stackOverflowLoopCount(loop.count)
-              .text(" repetitions of:\n");
+              .style(Element.STACK_OVERFLOW_LOOP_COUNT)
+              .append(loop.count)
+              .style(Element.TEXT)
+              .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
           doRender(loop.frames, null, out, newLeftMargin, isFirstElement);
           if (isFirstElement) {
@@ -75,19 +78,19 @@ public final class StackTraceRenderer {
     }
   }
 
-  private void renderFrame(StackFrame frame, TextFormatter<?> out, String leftMargin) {
+  private void renderFrame(StackFrame frame, TextFormatter out, String leftMargin) {
     var transformed = frameTransformer.apply(frame);
     renderSourceLine(transformed, out, leftMargin);
     renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(@Nullable String hint, TextFormatter<?> out, String leftMargin) {
+  private void renderHint(@Nullable String hint, TextFormatter out, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
 
-    out.newline().margin(leftMargin).hint(hint).newline();
+    out.newline().margin(leftMargin).style(Element.HINT).append(hint).newline();
   }
 
-  private void renderSourceLine(StackFrame frame, TextFormatter<?> out, String leftMargin) {
+  private void renderSourceLine(StackFrame frame, TextFormatter out, String leftMargin) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -99,22 +102,26 @@ public final class StackTraceRenderer {
 
     var prefix = frame.getStartLine() + " | ";
     out.margin(leftMargin)
-        .lineNumber(prefix)
-        .text(sourceLine)
+        .style(Element.LINE_NUMBER)
+        .append(prefix)
+        .style(Element.TEXT)
+        .append(sourceLine)
         .newline()
         .margin(leftMargin)
         .repeat(prefix.length() + startColumn - 1, ' ')
-        .repeatError(endColumn - startColumn + 1, '^')
+        .style(Element.ERROR)
+        .repeat(endColumn - startColumn + 1, '^')
         .newline();
   }
 
-  private void renderSourceLocation(StackFrame frame, TextFormatter<?> out, String leftMargin) {
+  private void renderSourceLocation(StackFrame frame, TextFormatter out, String leftMargin) {
     out.margin(leftMargin)
-        .text("at ")
-        .text(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
-        .text(" (")
-        .text(frame.getModuleUri())
-        .text(")")
+        .style(Element.TEXT)
+        .append("at ")
+        .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
+        .append(" (")
+        .append(frame.getModuleUri())
+        .append(")")
         .newline();
   }
 

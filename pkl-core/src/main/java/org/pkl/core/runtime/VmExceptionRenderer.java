@@ -20,19 +20,20 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.pkl.core.Release;
+import org.pkl.core.runtime.TextFormatter.Element;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
-  private final TextFormatter<?> textFormatter;
+  private final TextFormatter textFormatter;
 
   /**
    * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
    * {@code null}, stack traces will not be included in error output.
    */
   public VmExceptionRenderer(
-      @Nullable StackTraceRenderer stackTraceRenderer, TextFormatter<?> textFormatter) {
+      @Nullable StackTraceRenderer stackTraceRenderer, TextFormatter textFormatter) {
     this.stackTraceRenderer = stackTraceRenderer;
     this.textFormatter = textFormatter;
   }
@@ -53,7 +54,7 @@ public final class VmExceptionRenderer {
     return formatter.toString();
   }
 
-  private void render(VmException exception, TextFormatter<?> out) {
+  private void render(VmException exception, TextFormatter out) {
     if (exception instanceof VmBugException bugException) {
       renderBugException(bugException, out);
     } else {
@@ -61,30 +62,31 @@ public final class VmExceptionRenderer {
     }
   }
 
-  private void renderBugException(VmBugException exception, TextFormatter<?> out) {
+  private void renderBugException(VmBugException exception, TextFormatter out) {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
     var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
 
-    out.text("An unexpected error has occurred. Would you mind filing a bug report?")
+    out.style(Element.TEXT)
+        .append("An unexpected error has occurred. Would you mind filing a bug report?")
         .newline()
-        .text("Cmd+Double-click the link below to open an issue.")
+        .append("Cmd+Double-click the link below to open an issue.")
         .newline()
-        .text("Please copy and paste the entire error output into the issue's description.")
+        .append("Please copy and paste the entire error output into the issue's description.")
         .newlines(2)
-        .text("https://github.com/apple/pkl/issues/new")
+        .append("https://github.com/apple/pkl/issues/new")
         .newlines(2)
-        .text(exceptionUrl.replaceAll("\\+", "%20"))
+        .append(exceptionUrl.replaceAll("\\+", "%20"))
         .newlines(2);
 
     renderException(exception, out, true);
 
-    out.newline().text(Release.current().versionInfo()).newlines(2);
+    out.newline().style(Element.TEXT).append(Release.current().versionInfo()).newlines(2);
 
     exceptionToReport.printStackTrace(out.toPrintWriter());
   }
 
-  private void renderException(VmException exception, TextFormatter<?> out, boolean withHeader) {
+  private void renderException(VmException exception, TextFormatter out, boolean withHeader) {
     String message;
     var hint = exception.getHint();
     if (exception.isExternalMessage()) {
@@ -105,9 +107,9 @@ public final class VmExceptionRenderer {
     }
 
     if (withHeader) {
-      out.errorHeader("–– Pkl Error ––").newline();
+      out.style(Element.ERROR_HEADER).append("–– Pkl Error ––").newline();
     }
-    out.error(message).newline();
+    out.style(Element.ERROR).append(message).newline();
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -115,7 +117,11 @@ public final class VmExceptionRenderer {
       var causeMessage = cause.getMessage();
       // null for Truffle's LazyStackTrace
       if (causeMessage != null && !causeMessage.equals(message)) {
-        out.text(cause.getClass().getSimpleName()).text(": ").text(causeMessage).newline();
+        out.style(Element.TEXT)
+            .append(cause.getClass().getSimpleName())
+            .append(": ")
+            .append(causeMessage)
+            .newline();
       }
     }
 
@@ -123,10 +129,11 @@ public final class VmExceptionRenderer {
         exception.getProgramValues().stream().mapToInt(v -> v.name.length()).max().orElse(0);
 
     for (var value : exception.getProgramValues()) {
-      out.text(value.name)
+      out.style(Element.TEXT)
+          .append(value.name)
           .repeat(Math.max(0, maxNameLength - value.name.length()), ' ')
-          .text(": ")
-          .object(value)
+          .append(": ")
+          .append(value)
           .newline();
     }
 
@@ -143,7 +150,7 @@ public final class VmExceptionRenderer {
         stackTraceRenderer.render(frames, hint, out.newline());
       } else if (hint != null) {
         // render hint if there are no stack frames
-        out.newline().hint(hint);
+        out.newline().style(Element.HINT).append(hint);
       }
     }
   }

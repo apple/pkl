@@ -16,24 +16,50 @@
 package org.pkl.core.runtime;
 
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+import org.pkl.core.util.Nullable;
 import org.pkl.core.util.StringBuilderWriter;
 
 /*
    TODO:
      * Make "margin matter" a facility of the formatter, managing margins in e.g. `newline()`.
       - `pushMargin(String matter)` / `popMargin()`
-     * Replace implementation methods `repeat()` and `repeatError()` with more semantic equivalents.
+     * Replace implementation methods `repeat()` with more semantic equivalents.
       - `underline(int startColumn, int endColumn)`
      * Replace `newInstance()` with an alternative that doesn't require instance management,
        i.e. better composition (currently only used for pre-rendering `hint`s).
-     * Assert assumed invariants (e.g. `text(String text)` checking there are no newlines).
+     * Assert assumed invariants (e.g. `append(String text)` checking there are no newlines).
+     * Replace `THEME_ANSI` with one read from `pkl:settings`.
 */
-public abstract class TextFormatter<SELF extends TextFormatter<SELF>> {
-  public static TextFormatter<?> create(boolean usingColor) {
-    return usingColor ? new AnsiFormatter() : new PlainFormatter();
+public final class TextFormatter {
+  public static final Map<Element, @Nullable Styling> THEME_PLAIN = new HashMap<>();
+  public static final Map<Element, @Nullable Styling> THEME_ANSI;
+
+  static {
+    THEME_ANSI =
+        Map.of(
+            Element.MARGIN, new Styling(Color.YELLOW, false, false),
+            Element.HINT, new Styling(Color.YELLOW, true, true),
+            Element.STACK_OVERFLOW_LOOP_COUNT, new Styling(Color.MAGENTA, false, false),
+            Element.LINE_NUMBER, new Styling(Color.BLUE, false, false),
+            Element.ERROR_HEADER, new Styling(Color.RED, false, false),
+            Element.ERROR, new Styling(Color.RED, false, true));
   }
 
-  protected final StringBuilder builder = new StringBuilder();
+  private final Map<Element, @Nullable Styling> theme;
+  private final StringBuilder builder = new StringBuilder();
+
+  private @Nullable Styling currentStyle;
+
+  private TextFormatter(Map<Element, Styling> theme) {
+    this.theme = theme;
+    this.currentStyle = theme.getOrDefault(Element.PLAIN, null);
+  }
+
+  public static TextFormatter create(boolean usingColor) {
+    return new TextFormatter(usingColor ? THEME_ANSI : THEME_PLAIN);
+  }
 
   public PrintWriter toPrintWriter() {
     return new PrintWriter(new StringBuilderWriter(builder));
@@ -43,61 +69,117 @@ public abstract class TextFormatter<SELF extends TextFormatter<SELF>> {
     return builder.toString();
   }
 
-  public SELF newline() {
+  public TextFormatter newline() {
     return newlines(1);
   }
 
-  public abstract SELF newInstance();
+  public TextFormatter newInstance() {
+    return new TextFormatter(theme);
+  }
 
-  public abstract SELF newlines(int count);
+  public TextFormatter newlines(int count) {
+    return repeat(count, '\n');
+  }
 
-  // ---- Styling methods:
+  public TextFormatter margin(String marginMatter) {
+    return append(marginMatter);
+  }
 
-  public abstract SELF margin(String marginMatter);
-
-  public abstract SELF hint(String hint);
-
-  public abstract SELF stackOverflowLoopCount(int counter);
-
-  public abstract SELF lineNumber(String line);
-
-  public abstract SELF text(String text);
-
-  public abstract SELF object(Object obj);
-
-  public abstract SELF errorHeader(String header);
-
-  public abstract SELF error(String message);
-
-  // ---- Implementation methods for not-yet-covered semantic message parts (TODO: replace)
-
-  public SELF repeat(int width, char ch) {
-    for (var i = 0; i < width; i++) {
-      a(ch);
+  public TextFormatter style(Element element) {
+    var style = theme.getOrDefault(element, null);
+    if (currentStyle == style) {
+      return this;
     }
-    return self();
+    if (style == null) {
+      append("\033[0m");
+      currentStyle = style;
+      return this;
+    }
+    var colorCode =
+        style.bright() ? style.foreground().fgBrightCode() : style.foreground().fgCode();
+    append('\033');
+    append('[');
+    append(colorCode);
+    if (style.bold() && (currentStyle == null || !currentStyle.bold())) {
+      append(";1");
+    } else if (!style.bold() && currentStyle != null && currentStyle.bold()) {
+      append(";22");
+    }
+    append('m');
+    currentStyle = style;
+    return this;
   }
 
-  public SELF repeatError(int width, char ch) {
-    return repeat(width, ch);
+  public TextFormatter repeat(int width, char ch) {
+    for (var i = 0; i < width; i++) {
+      append(ch);
+    }
+    return this;
   }
 
-  // ---- Implementation methods for TextFormatter children:
-
-  protected abstract SELF self();
-
-  protected SELF a(String s) {
+  public TextFormatter append(String s) {
     builder.append(s);
-    return self();
+    return this;
   }
 
-  protected SELF a(char ch) {
+  public TextFormatter append(char ch) {
     builder.append(ch);
-    return self();
+    return this;
   }
 
-  protected SELF a(Object obj) {
+  public TextFormatter append(int i) {
+    builder.append(i);
+    return this;
+  }
+
+  public TextFormatter append(Object obj) {
     builder.append(obj);
-    return self();
+    return this;
+  }
+
+  public enum Element {
+    PLAIN,
+    MARGIN,
+    HINT,
+    STACK_OVERFLOW_LOOP_COUNT,
+    LINE_NUMBER,
+    TEXT,
+    ERROR_HEADER,
+    ERROR
+  }
+
+  public record Styling(Color foreground, boolean bold, boolean bright) {}
+
+  public enum Color {
+    BLACK(30),
+    RED(31),
+    GREEN(32),
+    YELLOW(33),
+    BLUE(34),
+    MAGENTA(35),
+    CYAN(36),
+    WHITE(37);
+
+    private final int code;
+
+    Color(int code) {
+      this.code = code;
+    }
+
+    public int fgCode() {
+      return code;
+    }
+
+    public int bgCode() {
+      return code + 10;
+    }
+
+    public int fgBrightCode() {
+      return code + 60;
+    }
+
+    public int bgBrightCode() {
+      return code + 70;
+    }
   }
 }
