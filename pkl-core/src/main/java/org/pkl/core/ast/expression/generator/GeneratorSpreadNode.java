@@ -26,7 +26,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -49,17 +48,12 @@ import org.pkl.core.util.MutableLong;
 public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
   @Child private ExpressionNode iterableNode;
   private final boolean nullable;
-  private final boolean isInIterable;
 
   public GeneratorSpreadNode(
-      SourceSection sourceSection,
-      ExpressionNode iterableNode,
-      boolean nullable,
-      boolean isInIterable) {
+      SourceSection sourceSection, ExpressionNode iterableNode, boolean nullable) {
     super(sourceSection);
     this.iterableNode = iterableNode;
     this.nullable = nullable;
-    this.isInIterable = isInIterable;
   }
 
   protected abstract void executeWithIterable(
@@ -326,15 +320,11 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     if (prototype.getConstantValue() == value) {
       return prototype;
     }
-    var modifiers =
-        isInIterable
-            ? prototype.getModifiers() | VmModifier.ITERABLE_MEMBER
-            : prototype.getModifiers();
     var result =
         new ObjectMember(
             prototype.getSourceSection(),
             prototype.getHeaderSection(),
-            modifiers,
+            prototype.getModifiers(),
             prototype.getNameOrNull(),
             prototype.getQualifiedName());
     result.initConstantValue(value);

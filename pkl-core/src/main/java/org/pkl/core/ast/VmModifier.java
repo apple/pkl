@@ -56,7 +56,7 @@ public final class VmModifier {
   public static final int GLOB = 0x1000;
 
   // To be removed when https://github.com/apple/pkl/issues/741 is fixed
-  public static final int ITERABLE_MEMBER = 0x100000;
+  public static final int IS_IN_ITERABLE = 0x100000;
 
   // modifier sets
 
@@ -138,7 +138,7 @@ public final class VmModifier {
   }
 
   public static boolean isInIterable(int modifiers) {
-    return (modifiers & ITERABLE_MEMBER) != 0;
+    return (modifiers & IS_IN_ITERABLE) != 0;
   }
 
   public static boolean isType(int modifiers) {

@@ -904,8 +904,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     scope.setVisitingIterable(true);
     var expr = visitExpr(ctx.expr());
     scope.setVisitingIterable(visitingIterable);
-    return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx), expr, ctx.QSPREAD() != null, visitingIterable);
+    return GeneratorSpreadNodeGen.create(createSourceSection(ctx), expr, ctx.QSPREAD() != null);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
@@ -1207,7 +1206,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
           var modifier =
               scope.isVisitingIterable()
-                  ? VmModifier.ELEMENT | VmModifier.ITERABLE_MEMBER
+                  ? VmModifier.ELEMENT | VmModifier.IS_IN_ITERABLE
                   : VmModifier.ELEMENT;
           var member =
               new ObjectMember(
@@ -1266,7 +1265,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     return scope -> {
       var modifier =
           scope.isVisitingIterable()
-              ? VmModifier.ENTRY | VmModifier.ITERABLE_MEMBER
+              ? VmModifier.ENTRY | VmModifier.IS_IN_ITERABLE
               : VmModifier.ENTRY;
       var member =
           new ObjectMember(
@@ -1351,7 +1350,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     if (symbolTable.getCurrentScope().isVisitingIterable()) {
-      result += VmModifier.ITERABLE_MEMBER;
+      result += VmModifier.IS_IN_ITERABLE;
     }
 
     // flag modifier combinations that are never valid right away
