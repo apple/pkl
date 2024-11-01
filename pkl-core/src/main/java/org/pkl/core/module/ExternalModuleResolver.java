@@ -35,6 +35,17 @@ import org.pkl.core.messaging.Messages.ReadModuleResponse;
 import org.pkl.core.messaging.ProtocolException;
 
 public class ExternalModuleResolver {
+
+  public interface Spec {
+    boolean hasHierarchicalUris();
+
+    boolean isGlobbable();
+
+    boolean isLocal();
+
+    String scheme();
+  }
+
   private final MessageTransport transport;
   private final long evaluatorId;
   private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();

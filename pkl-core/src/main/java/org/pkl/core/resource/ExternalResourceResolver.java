@@ -34,6 +34,15 @@ import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 
 public class ExternalResourceResolver {
+
+  public interface Spec {
+    boolean hasHierarchicalUris();
+
+    boolean isGlobbable();
+
+    String scheme();
+  }
+
   private final MessageTransport transport;
   private final long evaluatorId;
   private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();

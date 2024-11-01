@@ -30,7 +30,6 @@ import java.util.Map;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -131,7 +130,7 @@ public final class ModuleKeys {
 
   /** Creates a module key for an externally read module. */
   public static ModuleKey externalResolver(
-      URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
+      URI uri, ExternalModuleResolver.Spec spec, ExternalModuleResolver resolver) {
     return new ExternalResolver(uri, spec, resolver);
   }
 
@@ -779,10 +778,10 @@ public final class ModuleKeys {
   public static class ExternalResolver implements ModuleKey {
 
     private final URI uri;
-    private final ModuleReaderSpec spec;
+    private final ExternalModuleResolver.Spec spec;
     private final ExternalModuleResolver resolver;
 
-    public ExternalResolver(URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
+    ExternalResolver(URI uri, ExternalModuleResolver.Spec spec, ExternalModuleResolver resolver) {
       this.uri = uri;
       this.spec = spec;
       this.resolver = resolver;

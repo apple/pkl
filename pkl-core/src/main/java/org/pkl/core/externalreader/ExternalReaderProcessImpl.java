@@ -32,8 +32,6 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
-import org.pkl.core.messaging.Messages.ModuleReaderSpec;
-import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.ExternalModuleResolver;
 import org.pkl.core.resource.ExternalResourceResolver;
@@ -47,9 +45,9 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
   private final ExternalReader spec;
   private final @Nullable String logPrefix;
-  private final Map<String, Future<@Nullable ModuleReaderSpec>> initializeModuleReaderResponses =
-      new ConcurrentHashMap<>();
-  private final Map<String, Future<@Nullable ResourceReaderSpec>>
+  private final Map<String, Future<ExternalModuleResolver.@Nullable Spec>>
+      initializeModuleReaderResponses = new ConcurrentHashMap<>();
+  private final Map<String, Future<ExternalResourceResolver.@Nullable Spec>>
       initializeResourceReaderResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
@@ -191,12 +189,13 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public @Nullable ModuleReaderSpec getModuleReaderSpec(String uriScheme) throws IOException {
+  public ExternalModuleResolver.@Nullable Spec getModuleReaderSpec(String uriScheme)
+      throws IOException {
     return MessageTransports.resolveFuture(
         initializeModuleReaderResponses.computeIfAbsent(
             uriScheme,
             (scheme) -> {
-              var future = new CompletableFuture<@Nullable ModuleReaderSpec>();
+              var future = new CompletableFuture<ExternalModuleResolver.@Nullable Spec>();
               var request =
                   new InitializeModuleReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {
@@ -219,12 +218,13 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public @Nullable ResourceReaderSpec getResourceReaderSpec(String uriScheme) throws IOException {
+  public ExternalResourceResolver.@Nullable Spec getResourceReaderSpec(String uriScheme)
+      throws IOException {
     return MessageTransports.resolveFuture(
         initializeResourceReaderResponses.computeIfAbsent(
             uriScheme,
             (scheme) -> {
-              var future = new CompletableFuture<@Nullable ResourceReaderSpec>();
+              var future = new CompletableFuture<ExternalResourceResolver.@Nullable Spec>();
               var request =
                   new InitializeResourceReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {

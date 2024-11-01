@@ -20,8 +20,8 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
+import org.pkl.core.Closeables
 import org.pkl.core.ModuleSource
-import org.pkl.core.Readers
 
 /** API for the Java code generator CLI. */
 class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
@@ -49,8 +49,8 @@ class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
         }
       }
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 }

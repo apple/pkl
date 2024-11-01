@@ -19,8 +19,8 @@ import java.io.Writer
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
+import org.pkl.core.Closeables
 import org.pkl.core.ModuleSource
-import org.pkl.core.Readers
 
 class CliImportAnalyzer
 @JvmOverloads
@@ -73,8 +73,8 @@ constructor(
         .build()
         .use { it.evaluateOutputText(sourceModule) }
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 }
