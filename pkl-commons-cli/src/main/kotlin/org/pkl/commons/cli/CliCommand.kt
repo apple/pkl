@@ -164,6 +164,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
+  protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
+
   private val proxyAddress by lazy {
     cliOptions.httpProxy
       ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
@@ -284,7 +286,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setEnvironmentVariables(environmentVariables)
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
       .addResourceReaders(resourceReaders(modulePathResolver))
-      .setColor(cliOptions.color?.hasColor() ?: false)
+      .setColor(useColor)
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)

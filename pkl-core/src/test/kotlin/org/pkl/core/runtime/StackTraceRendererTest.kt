@@ -190,7 +190,7 @@ class StackTraceRendererTest {
     }
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
     val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
-    val formatter = TextFormatter.create(false)
+    val formatter = TextFormattingStringBuilder(false)
     renderer.doRender(frames, null, formatter, "", true)
     val renderedFrames = formatter.toString()
     assertThat(renderedFrames)

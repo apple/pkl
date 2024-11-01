@@ -30,7 +30,7 @@ class TestsTest : AbstractTest() {
     writePklFile()
 
     val res = runTask("evalTest")
-    assertThat(res.output).contains("✅ should pass")
+    assertThat(res.output).contains("✔ should pass")
   }
 
   @Test
@@ -49,7 +49,7 @@ class TestsTest : AbstractTest() {
     )
 
     val res = runTask("evalTest", expectFailure = true)
-    assertThat(res.output).contains("❌ should fail")
+    assertThat(res.output).contains("✘ should fail")
     assertThat(res.output).contains("1 == 3")
     assertThat(res.output).contains(""""foo" == "bar"""")
   }
@@ -81,15 +81,16 @@ class TestsTest : AbstractTest() {
       > Task :evalTest FAILED
       module test
         facts
-          ✅ should pass
-          ❌ error
+          ✔ should pass
+          ✘ error
              –– Pkl Error ––
              exception
 
              9 | throw("exception")
                  ^^^^^^^^^^^^^^^^^^
              at test#facts["error"][#1] (file:///file, line x)
-      ❌ 50.0% tests pass [1/2 failed], 66.7% asserts pass [1/3 failed]
+
+      50.0% tests pass [1/2 failed], 66.7% asserts pass [1/3 failed]
       """
           .trimIndent()
       )
@@ -118,15 +119,15 @@ class TestsTest : AbstractTest() {
         pkl: TRACE: 8 = 8 (file:///file, line x)
         module test
           facts
-            ✅ sum numbers
-            ✅ divide numbers
-            ❌ fail
+            ✔ sum numbers
+            ✔ divide numbers
+            ✘ fail
                4 == 9 (file:///file, line x)
                "foo" == "bar" (file:///file, line x)
           examples
-            ✅ user 0
-            ❌ user 1
-               #1 (file:///file, line x):
+            ✔ user 0
+            ✘ user 1
+               #1: (file:///file, line x)
                  Expected: (file:///file, line x)
                  new {
                    name = "Parrot"
@@ -137,7 +138,8 @@ class TestsTest : AbstractTest() {
                    name = "Welma"
                    age = 35
                  }
-        ❌ 60.0% tests pass [2/5 failed], 66.7% asserts pass [3/9 failed]
+
+        60.0% tests pass [2/5 failed], 66.7% asserts pass [3/9 failed]
         """
           .trimIndent()
       )
@@ -187,8 +189,8 @@ class TestsTest : AbstractTest() {
         > Task :evalTest FAILED
         module test
           facts
-            ✅ should pass
-            ❌ error
+            ✔ should pass
+            ✘ error
                –– Pkl Error ––
                exception
         
@@ -196,9 +198,9 @@ class TestsTest : AbstractTest() {
                    ^^^^^^^^^^^^^^^^^^
                at test#facts["error"][#1] (file:///file, line x)
           examples
-            ✅ user 0
-            ❌ user 1
-               #1 (file:///file, line x):
+            ✔ user 0
+            ✘ user 1
+               #1: (file:///file, line x)
                  Expected: (file:///file, line x)
                  new {
                    name = "Parrot"
@@ -209,7 +211,8 @@ class TestsTest : AbstractTest() {
                    name = "Welma"
                    age = 35
                  }
-        ❌ 50.0% tests pass [2/4 failed], 66.7% asserts pass [2/6 failed]
+
+        50.0% tests pass [2/4 failed], 66.7% asserts pass [2/6 failed]
 
         """
           .trimIndent()
@@ -241,7 +244,7 @@ class TestsTest : AbstractTest() {
             </testcase>
             <testcase classname="test.examples" name="user 0"></testcase>
             <testcase classname="test.examples" name="user 1">
-                <failure message="Example Failure">#1 (file:///file, line x):
+                <failure message="Example Failure">#1: (file:///file, line x)
           Expected: (file:///file, line x)
           new {
             name = &quot;Parrot&quot;
@@ -301,7 +304,7 @@ class TestsTest : AbstractTest() {
             </testcase>
             <testcase classname="test.examples" name="user 0"></testcase>
             <testcase classname="test.examples" name="user 1">
-                <failure message="Example Failure">#1 (file:///file, line x):
+                <failure message="Example Failure">#1: (file:///file, line x)
           Expected: (file:///file, line x)
           new {
             name = &quot;Parrot&quot;

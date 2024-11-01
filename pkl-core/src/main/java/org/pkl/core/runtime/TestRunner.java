@@ -34,6 +34,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
+import org.pkl.core.util.ColorTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
@@ -41,15 +42,20 @@ import org.pkl.core.util.MutableReference;
 /** Runs test results examples and facts. */
 public final class TestRunner {
   private static final PklConverter converter = new PklConverter(VmMapping.empty());
-  private final boolean overwrite;
-  private final StackFrameTransformer stackFrameTransformer;
   private final BufferedLogger logger;
+  private final StackFrameTransformer stackFrameTransformer;
+  private final boolean overwrite;
+  private final boolean useColor;
 
   public TestRunner(
-      BufferedLogger logger, StackFrameTransformer stackFrameTransformer, boolean overwrite) {
+      BufferedLogger logger,
+      StackFrameTransformer stackFrameTransformer,
+      boolean overwrite,
+      boolean useColor) {
     this.logger = logger;
     this.stackFrameTransformer = stackFrameTransformer;
     this.overwrite = overwrite;
+    this.useColor = useColor;
   }
 
   public TestResults run(VmTyped testModule) {
@@ -60,7 +66,7 @@ public final class TestRunner {
       checkAmendsPklTest(testModule);
     } catch (VmException v) {
       var error =
-          new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, false));
+          new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, useColor));
       return resultsBuilder.setError(error).build();
     }
 
@@ -109,7 +115,7 @@ public final class TestRunner {
                 } catch (VmException err) {
                   var error =
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, false));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor));
                   resultBuilder.addError(error);
                 }
                 return true;
@@ -209,7 +215,7 @@ public final class TestRunner {
                   errored.set(true);
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, false)));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
                   return true;
                 }
                 var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
@@ -306,7 +312,7 @@ public final class TestRunner {
                 } catch (VmException err) {
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, false)));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
                   allSucceeded.set(false);
                   success.set(false);
                   return true;
@@ -388,27 +394,31 @@ public final class TestRunner {
         moduleInfo.getModuleKey().getUri(), VmContext.get(null).getFrameTransformer());
   }
 
-  private static Failure factFailure(SourceSection sourceSection, String location) {
-    String message = sourceSection.getCharacters().toString() + " " + renderLocation(location);
-    return new Failure("Fact Failure", message);
+  private Failure factFailure(SourceSection sourceSection, String location) {
+    var sb = new TextFormattingStringBuilder(useColor);
+    sb.append(ColorTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
+    appendLocation(sb, location);
+    return new Failure("Fact Failure", sb.toString());
   }
 
-  private static Failure exampleLengthMismatchFailure(
+  private Failure exampleLengthMismatchFailure(
       String location, String property, int expectedLength, int actualLength) {
-    String msg =
-        renderLocation(location)
-            + "\n"
-            + "Output mismatch: Expected \""
+    var sb = new TextFormattingStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    var message =
+        "Output mismatch: Expected \""
             + property
             + "\" to contain "
             + expectedLength
             + " examples, but found "
             + actualLength;
 
-    return new Failure("Output Mismatch (Length)", msg);
+    sb.appendLine().append(ColorTheme.TEST_FAILURE_MESSAGE, message);
+    return new Failure("Output Mismatch (Length)", sb.toString());
   }
 
-  private static Failure examplePropertyMismatchFailure(
+  private Failure examplePropertyMismatchFailure(
       String location, String property, boolean isMissingInExpected) {
 
     String existsIn;
@@ -422,10 +432,11 @@ public final class TestRunner {
       missingIn = "actual";
     }
 
-    String message =
-        renderLocation(location)
-            + "\n"
-            + "Output mismatch: \""
+    var sb = new TextFormattingStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    var message =
+        "Output mismatch: \""
             + property
             + "\" exists in "
             + existsIn
@@ -433,41 +444,45 @@ public final class TestRunner {
             + missingIn
             + " output";
 
-    return new Failure("Output Mismatch", message);
+    sb.appendLine().append(ColorTheme.TEST_FAILURE_MESSAGE, message);
+    return new Failure("Output Mismatch", sb.toString());
   }
 
-  private static Failure exampleFailure(
+  private Failure exampleFailure(
       String location,
       String expectedLocation,
       String expectedValue,
       String actualLocation,
       String actualValue,
       int exampleNumber) {
-    String err =
-        "#"
-            + exampleNumber
-            + " "
-            + renderLocation(location)
-            + ":\n  "
-            + "Expected: "
-            + renderLocation(expectedLocation)
-            + "\n  "
-            + expectedValue.replaceAll("\n", "\n  ")
-            + "\n  "
-            + "Actual: "
-            + renderLocation(actualLocation)
-            + "\n  "
-            + actualValue.replaceAll("\n", "\n  ");
-
-    return new Failure("Example Failure", err);
+    var sb = new TextFormattingStringBuilder(useColor);
+    sb.append(ColorTheme.TEST_NAME, "#" + exampleNumber + ": ");
+    sb.append(
+        ColorTheme.TEST_FAILURE_MESSAGE,
+        () -> {
+          appendLocation(sb, location);
+          sb.append("\n  Expected: ");
+          appendLocation(sb, expectedLocation);
+          sb.append("\n  ");
+          sb.append(ColorTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replaceAll("\n", "\n  "));
+          sb.append("\n  Actual: ");
+          appendLocation(sb, actualLocation);
+          sb.append("\n  ");
+          sb.append(ColorTheme.TEST_EXAMPLE_OUTPUT, actualValue.replaceAll("\n", "\n  "));
+        });
+    return new Failure("Example Failure", sb.toString());
   }
 
-  private static String renderLocation(String location) {
-    return "(" + location + ")";
+  private void appendLocation(TextFormattingStringBuilder stringBuilder, String location) {
+    stringBuilder.append(
+        ColorTheme.STACK_FRAME,
+        () -> stringBuilder.append("(").appendUntrusted(location).append(")"));
   }
 
-  private static Failure writtenExampleOutputFailure(String testName, String location) {
-    var message = renderLocation(location) + "\n" + "Wrote expected output for test " + testName;
-    return new Failure("Example Output Written", message);
+  private Failure writtenExampleOutputFailure(String testName, String location) {
+    var sb = new TextFormattingStringBuilder(useColor);
+    appendLocation(sb, location);
+    sb.append(ColorTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test " + testName);
+    return new Failure("Example Output Written", sb.toString());
   }
 }

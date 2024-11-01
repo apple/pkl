@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
-import org.pkl.core.runtime.TextFormatter.Element;
+import org.pkl.core.util.ColorTheme;
 import org.pkl.core.util.Nullable;
 
 public final class StackTraceRenderer {
@@ -29,7 +29,8 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(List<StackFrame> frames, @Nullable String hint, TextFormatter out) {
+  public void render(
+      List<StackFrame> frames, @Nullable String hint, TextFormattingStringBuilder out) {
     var compressed = compressFrames(frames);
     doRender(compressed, hint, out, "", true);
   }
@@ -38,7 +39,7 @@ public final class StackTraceRenderer {
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
-      TextFormatter out,
+      TextFormattingStringBuilder out,
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
@@ -48,13 +49,11 @@ public final class StackTraceRenderer {
           doRender(loop.frames, null, out, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
-            out.margin(leftMargin).newline();
+            out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).appendLine();
           }
-          out.margin(leftMargin)
-              .margin("┌─ ")
-              .style(Element.STACK_OVERFLOW_LOOP_COUNT)
-              .append(loop.count)
-              .style(Element.TEXT)
+          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+              .append(ColorTheme.STACK_TRACE_MARGIN, "┌─ ")
+              .append(ColorTheme.STACK_TRACE_LOOP_COUNT, loop.count)
               .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
           doRender(loop.frames, null, out, newLeftMargin, isFirstElement);
@@ -62,11 +61,11 @@ public final class StackTraceRenderer {
             renderHint(hint, out, newLeftMargin);
             isFirstElement = false;
           }
-          out.margin(leftMargin).margin("└─").newline();
+          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin + "└─").appendLine();
         }
       } else {
         if (!isFirstElement) {
-          out.margin(leftMargin).newline();
+          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).appendLine();
         }
         renderFrame((StackFrame) frame, out, leftMargin);
       }
@@ -78,19 +77,24 @@ public final class StackTraceRenderer {
     }
   }
 
-  private void renderFrame(StackFrame frame, TextFormatter out, String leftMargin) {
+  private void renderFrame(StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
     var transformed = frameTransformer.apply(frame);
     renderSourceLine(transformed, out, leftMargin);
     renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(@Nullable String hint, TextFormatter out, String leftMargin) {
+  private void renderHint(
+      @Nullable String hint, TextFormattingStringBuilder out, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
 
-    out.newline().margin(leftMargin).style(Element.HINT).append(hint).newline();
+    out.appendLine()
+        .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(ColorTheme.ERROR_MESSAGE_HINT, hint)
+        .appendLine();
   }
 
-  private void renderSourceLine(StackFrame frame, TextFormatter out, String leftMargin) {
+  private void renderSourceLine(
+      StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -101,28 +105,28 @@ public final class StackTraceRenderer {
             : sourceLine.length();
 
     var prefix = frame.getStartLine() + " | ";
-    out.margin(leftMargin)
-        .style(Element.LINE_NUMBER)
-        .append(prefix)
-        .style(Element.TEXT)
+    out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(ColorTheme.STACK_TRACE_LINE_NUMBER, prefix)
         .append(sourceLine)
-        .newline()
-        .margin(leftMargin)
-        .repeat(prefix.length() + startColumn - 1, ' ')
-        .style(Element.ERROR)
-        .repeat(endColumn - startColumn + 1, '^')
-        .newline();
+        .appendLine()
+        .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(" ".repeat(prefix.length() + startColumn - 1))
+        .append(ColorTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
+        .appendLine();
   }
 
-  private void renderSourceLocation(StackFrame frame, TextFormatter out, String leftMargin) {
-    out.margin(leftMargin)
-        .style(Element.TEXT)
-        .append("at ")
-        .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
-        .append(" (")
-        .append(frame.getModuleUri())
-        .append(")")
-        .newline();
+  private void renderSourceLocation(
+      StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
+    out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(
+            ColorTheme.STACK_FRAME,
+            () ->
+                out.append("at ")
+                    .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
+                    .append(" (")
+                    .appendUntrusted(frame.getModuleUri())
+                    .append(")")
+                    .appendLine());
   }
 
   /**

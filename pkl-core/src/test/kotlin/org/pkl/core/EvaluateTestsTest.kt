@@ -125,7 +125,7 @@ class EvaluateTestsTest {
 
     val error = res.errors[0]
     assertThat(error.message).isEqualTo("got an error")
-    assertThat(error.exception.message)
+    assertThat(error.exception().message)
       .isEqualTo(
         """
       –– Pkl Error ––
@@ -347,7 +347,7 @@ class EvaluateTestsTest {
     assertThat(fail1.message.stripFileAndLines(tempDir))
       .isEqualTo(
         """
-        #0 (/tempDir/example.pkl):
+        #0: (/tempDir/example.pkl)
           Expected: (/tempDir/example.pkl-expected.pcf)
           new {
             name = "Alice"
