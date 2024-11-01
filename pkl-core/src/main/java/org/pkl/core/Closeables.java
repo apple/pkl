@@ -15,8 +15,8 @@
  */
 package org.pkl.core;
 
-public final class Readers {
-  private Readers() {}
+public final class Closeables {
+  private Closeables() {}
 
   /** Closes the given readers, ignoring any exceptions. */
   public static void closeQuietly(Iterable<? extends AutoCloseable> readers) {

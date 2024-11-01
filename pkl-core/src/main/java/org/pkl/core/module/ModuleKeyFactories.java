@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.GuardedBy;
-import org.pkl.core.Readers;
+import org.pkl.core.Closeables;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
@@ -102,7 +102,7 @@ public final class ModuleKeyFactories {
   /**
    * Closes the given factories, ignoring any exceptions.
    *
-   * @deprecated Replaced by {@link Readers#closeQuietly}.
+   * @deprecated Replaced by {@link Closeables#closeQuietly}.
    */
   @Deprecated(since = "0.27.0", forRemoval = true)
   public static void closeQuietly(Iterable<ModuleKeyFactory> factories) {

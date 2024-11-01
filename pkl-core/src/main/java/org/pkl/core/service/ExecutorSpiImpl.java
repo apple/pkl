@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.*;
-import org.pkl.core.Readers;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModulePathResolver;
@@ -135,8 +134,8 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
     } catch (PklException e) {
       throw new ExecutorSpiException(e.getMessage(), e.getCause());
     } finally {
-      Readers.closeQuietly(builder.getModuleKeyFactories());
-      Readers.closeQuietly(builder.getResourceReaders());
+      Closeables.closeQuietly(builder.getModuleKeyFactories());
+      Closeables.closeQuietly(builder.getResourceReaders());
     }
   }
 

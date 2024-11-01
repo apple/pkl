@@ -21,7 +21,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.ModuleSource
-import org.pkl.core.Readers
+import org.pkl.core.Closeables
 
 /** API for the Kotlin code generator CLI. */
 class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions) :
@@ -50,8 +50,8 @@ class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions)
         }
       }
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 }

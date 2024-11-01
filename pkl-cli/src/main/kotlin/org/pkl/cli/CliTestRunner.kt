@@ -19,7 +19,7 @@ import java.io.Writer
 import org.pkl.commons.cli.*
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
-import org.pkl.core.Readers
+import org.pkl.core.Closeables
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
 import org.pkl.core.util.ErrorMessages
@@ -38,8 +38,8 @@ constructor(
     try {
       evalTest(builder)
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 

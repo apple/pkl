@@ -31,7 +31,7 @@ import org.pkl.commons.writeString
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
-import org.pkl.core.Readers
+import org.pkl.core.Closeables
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
@@ -100,8 +100,8 @@ constructor(
         writeOutput(builder)
       }
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 

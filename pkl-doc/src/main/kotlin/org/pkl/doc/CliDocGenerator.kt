@@ -24,7 +24,6 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.toPath
 import org.pkl.core.*
-import org.pkl.core.Readers
 import org.pkl.core.packages.*
 
 /**
@@ -250,8 +249,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
         importedModules[pklBaseUri] = evaluator.evaluateSchema(ModuleSource.uri(pklBaseUri))
       }
     } finally {
-      Readers.closeQuietly(builder.moduleKeyFactories)
-      Readers.closeQuietly(builder.resourceReaders)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
 
     val versions = mutableMapOf<String, Version>()
