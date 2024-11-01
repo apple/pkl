@@ -20,14 +20,14 @@ import java.net.URI
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessageUnpacker
-import org.msgpack.value.Value
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackDecoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
+import org.pkl.core.util.msgpack.core.MessagePack
+import org.pkl.core.util.msgpack.core.MessageUnpacker
+import org.pkl.core.util.msgpack.value.Value
 
 class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecoder(unpacker) {
 

@@ -18,9 +18,9 @@ package org.pkl.server
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
-import org.msgpack.core.MessageBufferPacker
-import org.msgpack.core.MessagePack
 import org.pkl.core.messaging.Message
+import org.pkl.core.util.msgpack.core.MessageBufferPacker
+import org.pkl.core.util.msgpack.core.MessagePack
 
 internal fun log(msg: String) {
   if (System.getenv("PKL_DEBUG") == "1") {

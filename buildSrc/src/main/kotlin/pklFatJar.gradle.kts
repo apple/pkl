@@ -44,7 +44,6 @@ val relocations =
     "org.graalvm." to "org.pkl.thirdparty.graalvm.",
     "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
     "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
-    "org.msgpack." to "org.pkl.thirdparty.msgpack.",
     "org.w3c.dom." to "org.pkl.thirdparty.w3c.dom",
     "com.oracle.svm.core." to "org.pkl.thirdparty.svm.",
 

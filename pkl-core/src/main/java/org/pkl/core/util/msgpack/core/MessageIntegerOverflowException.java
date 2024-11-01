@@ -1,0 +1,51 @@
+/*
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.util.msgpack.core;
+
+import java.math.BigInteger;
+
+/**
+ * This error is thrown when the user tries to read an integer value using a smaller types. For
+ * example, calling MessageUnpacker.unpackInt() for an integer value that is larger than
+ * Integer.MAX_VALUE will cause this exception.
+ */
+@SuppressWarnings("ALL")
+public class MessageIntegerOverflowException extends MessageTypeException {
+  private final BigInteger bigInteger;
+
+  public MessageIntegerOverflowException(BigInteger bigInteger) {
+    super();
+    this.bigInteger = bigInteger;
+  }
+
+  public MessageIntegerOverflowException(long value) {
+    this(BigInteger.valueOf(value));
+  }
+
+  public MessageIntegerOverflowException(String message, BigInteger bigInteger) {
+    super(message);
+    this.bigInteger = bigInteger;
+  }
+
+  public BigInteger getBigInteger() {
+    return bigInteger;
+  }
+
+  @Override
+  public String getMessage() {
+    return bigInteger.toString();
+  }
+}

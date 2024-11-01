@@ -19,12 +19,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.Value;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessageUnpacker;
+import org.pkl.core.util.msgpack.value.Value;
 
 public class BaseMessagePackDecoder extends AbstractMessagePackDecoder {
 

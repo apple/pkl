@@ -187,8 +187,6 @@ fun Exec.configureExecutable(
         // currently gives a deprecation warning, but we've been told
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         add("--initialize-at-build-time=")
-        // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
-        add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
         add("--no-fallback")
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResources=org/jline/utils/.*")

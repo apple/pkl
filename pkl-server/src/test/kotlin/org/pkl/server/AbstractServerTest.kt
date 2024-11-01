@@ -28,10 +28,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
+import org.pkl.core.util.msgpack.core.MessagePack
 
 abstract class AbstractServerTest {
 

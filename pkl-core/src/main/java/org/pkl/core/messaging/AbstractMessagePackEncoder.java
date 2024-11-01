@@ -20,9 +20,9 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessagePacker;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessagePack;
+import org.pkl.core.util.msgpack.core.MessagePacker;
 
 public abstract class AbstractMessagePackEncoder implements MessageEncoder {
 

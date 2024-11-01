@@ -26,7 +26,7 @@ import com.oracle.svm.core.annotate.TargetClass;
  * <p>This informs the compiler which field to re-compute.
  */
 @SuppressWarnings("unused")
-@TargetClass(className = "org.msgpack.core.buffer.MessageBuffer")
+@TargetClass(className = "org.pkl.core.util.msgpack.core.buffer.MessageBuffer")
 final class MessagePackRecomputations {
   @Alias
   @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.ArrayBaseOffset, declClass = byte[].class)

@@ -18,12 +18,12 @@ package org.pkl.server
 import java.io.OutputStream
 import java.nio.file.Path
 import kotlin.io.path.pathString
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessagePacker
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackEncoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
+import org.pkl.core.util.msgpack.core.MessagePack
+import org.pkl.core.util.msgpack.core.MessagePacker
 
 class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(packer) {
 

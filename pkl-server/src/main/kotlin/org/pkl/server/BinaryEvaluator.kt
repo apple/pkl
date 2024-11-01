@@ -17,7 +17,6 @@ package org.pkl.server
 
 import java.nio.file.Path
 import java.time.Duration
-import org.msgpack.core.MessagePacker
 import org.pkl.core.*
 import org.pkl.core.ast.member.ObjectMember
 import org.pkl.core.http.HttpClient
@@ -25,6 +24,7 @@ import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.runtime.*
+import org.pkl.core.util.msgpack.core.MessagePacker
 
 internal class BinaryEvaluator(
   transformer: StackFrameTransformer,

@@ -17,13 +17,13 @@ package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessagePacker;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackEncoder;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessagePack;
+import org.pkl.core.util.msgpack.core.MessagePacker;
 
 final class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
 

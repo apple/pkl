@@ -23,7 +23,6 @@ import java.time.Duration
 import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.msgpack.core.MessagePack
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.Message
@@ -31,6 +30,7 @@ import org.pkl.core.messaging.MessageDecoder
 import org.pkl.core.messaging.MessageEncoder
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.packages.Checksums
+import org.pkl.core.util.msgpack.core.MessagePack
 
 class ServerMessagePackCodecTest {
   private val encoder: MessageEncoder

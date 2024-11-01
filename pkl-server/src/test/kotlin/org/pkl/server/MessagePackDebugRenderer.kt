@@ -16,9 +16,9 @@
 package org.pkl.server
 
 import java.lang.IllegalStateException
-import org.msgpack.core.MessagePack
-import org.msgpack.core.MessageUnpacker
-import org.msgpack.value.ValueType
+import org.pkl.core.util.msgpack.core.MessagePack
+import org.pkl.core.util.msgpack.core.MessageUnpacker
+import org.pkl.core.util.msgpack.value.ValueType
 import org.pkl.core.util.yaml.YamlEmitter
 
 /** Renders MessagePack structures in YAML. */

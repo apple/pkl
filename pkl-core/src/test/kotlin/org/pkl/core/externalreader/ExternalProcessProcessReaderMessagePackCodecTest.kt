@@ -19,9 +19,9 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.msgpack.core.MessagePack
 import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.*
+import org.pkl.core.util.msgpack.core.MessagePack
 
 class ExternalProcessProcessReaderMessagePackCodecTest {
   private val encoder: MessageEncoder

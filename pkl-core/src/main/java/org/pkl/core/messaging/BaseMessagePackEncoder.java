@@ -17,11 +17,11 @@ package org.pkl.core.messaging;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import org.msgpack.core.MessagePacker;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessagePacker;
 
 public class BaseMessagePackEncoder extends AbstractMessagePackEncoder {
 

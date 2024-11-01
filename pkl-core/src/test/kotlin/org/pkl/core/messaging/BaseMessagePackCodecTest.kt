@@ -21,9 +21,9 @@ import java.net.URI
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.msgpack.core.MessagePack
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
+import org.pkl.core.util.msgpack.core.MessagePack
 
 class BaseMessagePackCodecTest {
   private val encoder: MessageEncoder

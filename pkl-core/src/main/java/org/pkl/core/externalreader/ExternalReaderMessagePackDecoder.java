@@ -18,15 +18,15 @@ package org.pkl.core.externalreader;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Map;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.Value;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackDecoder;
 import org.pkl.core.messaging.DecodeException;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessagePack;
+import org.pkl.core.util.msgpack.core.MessageUnpacker;
+import org.pkl.core.util.msgpack.value.Value;
 
 final class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
 

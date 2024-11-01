@@ -23,14 +23,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessageTypeException;
-import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.Value;
-import org.msgpack.value.impl.ImmutableStringValueImpl;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.msgpack.core.MessagePack;
+import org.pkl.core.util.msgpack.core.MessageTypeException;
+import org.pkl.core.util.msgpack.core.MessageUnpacker;
+import org.pkl.core.util.msgpack.value.Value;
+import org.pkl.core.util.msgpack.value.impl.ImmutableStringValueImpl;
 
 public abstract class AbstractMessagePackDecoder implements MessageDecoder {
 

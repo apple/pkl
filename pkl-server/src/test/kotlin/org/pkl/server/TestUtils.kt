@@ -18,8 +18,8 @@ package org.pkl.server
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
-import org.msgpack.core.MessagePack
-import org.msgpack.value.ImmutableValue
+import org.pkl.core.util.msgpack.core.MessagePack
+import org.pkl.core.util.msgpack.value.ImmutableValue
 
 fun ByteArray.unpack(): ImmutableValue = MessagePack.newDefaultUnpacker(this).unpackValue()
 

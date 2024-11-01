@@ -39,7 +39,6 @@ ktfmt = "0.44"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
 log4j = "2.17.1"
-msgpack = "0.9.8"
 nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
 paguro = "3.+"
@@ -84,7 +83,6 @@ kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", ve
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
-msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }

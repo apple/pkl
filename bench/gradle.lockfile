@@ -32,7 +32,6 @@ org.junit.jupiter:junit-jupiter-params:5.11.2=testCompileClasspath,testImplement
 org.junit.platform:junit-platform-commons:1.11.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath,testRuntimeOnlyDependenciesMetadata
 org.junit.platform:junit-platform-engine:1.11.2=testRuntimeClasspath,testRuntimeOnlyDependenciesMetadata
 org.junit:junit-bom:5.11.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath,testRuntimeOnlyDependenciesMetadata
-org.msgpack:msgpack-core:0.9.8=jmh,jmhRuntimeClasspath
 org.openjdk.jmh:jmh-core:1.37=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
 org.openjdk.jmh:jmh-generator-asm:1.37=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
 org.openjdk.jmh:jmh-generator-bytecode:1.37=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
