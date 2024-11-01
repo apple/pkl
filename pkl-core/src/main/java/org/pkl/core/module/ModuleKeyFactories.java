@@ -267,7 +267,7 @@ public final class ModuleKeyFactories {
     @GuardedBy("this")
     private ExternalModuleResolver resolver;
 
-    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
+    ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;
@@ -283,8 +283,7 @@ public final class ModuleKeyFactories {
       return resolver;
     }
 
-    public Optional<ModuleKey> create(URI uri)
-        throws URISyntaxException, ExternalReaderProcessException, IOException {
+    public Optional<ModuleKey> create(URI uri) throws ExternalReaderProcessException, IOException {
       if (!scheme.equalsIgnoreCase(uri.getScheme())) return Optional.empty();
 
       var spec = process.getModuleReaderSpec(scheme);

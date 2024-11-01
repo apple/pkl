@@ -19,8 +19,8 @@ import java.io.Writer
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
-import org.pkl.core.ModuleSource
 import org.pkl.core.Closeables
+import org.pkl.core.ModuleSource
 
 class CliImportAnalyzer
 @JvmOverloads

@@ -28,10 +28,10 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.currentWorkingDir
 import org.pkl.commons.writeString
+import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
-import org.pkl.core.Closeables
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
