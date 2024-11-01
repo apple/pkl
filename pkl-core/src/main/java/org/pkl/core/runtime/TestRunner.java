@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
@@ -40,8 +41,6 @@ import org.pkl.core.stdlib.base.PcfRenderer;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.MutableReference;
 
 /** Runs test results examples and facts. */
 public final class TestRunner {
@@ -84,54 +83,52 @@ public final class TestRunner {
   }
 
   private TestSectionResults runFacts(VmTyped testModule) {
-    var facts = VmUtils.readMember(testModule, Identifier.FACTS);
+    var callNode = IndirectCallNode.getUncached();
+    var facts = VmUtils.readMember(testModule, Identifier.FACTS, callNode);
     if (facts instanceof VmNull) return new TestSectionResults(TestSectionName.FACTS, List.of());
 
     var testResults = new ArrayList<TestResult>();
     var factsMapping = (VmMapping) facts;
-    factsMapping.forceAndIterateMemberValues(
-        (groupKey, groupMember, groupValue) -> {
-          var listing = (VmListing) groupValue;
-          var name = String.valueOf(groupKey);
-          var resultBuilder = new TestResult.Builder(name);
-          listing.iterateMembers(
-              (idx, member) -> {
-                if (member.isLocalOrExternalOrHidden()) {
-                  return true;
-                }
-                try {
-                  var factValue = VmUtils.readMember(listing, idx);
-                  if (factValue == Boolean.FALSE) {
-                    if (PowerAssertions.isEnabled() && member.getSourceSection().isAvailable()) {
-                      try (var valueTracker = valueTrackerFactory.create()) {
-                        listing.cachedValues.clear();
-                        VmUtils.readMember(listing, idx);
-                        var failure =
-                            factFailure(
-                                member.getSourceSection(),
-                                getDisplayUri(member),
-                                valueTracker.values());
-                        resultBuilder.addFailure(failure);
-                      }
-                    } else {
-                      var failure =
-                          factFailure(member.getSourceSection(), getDisplayUri(member), null);
-                      resultBuilder.addFailure(failure);
-                    }
-                  } else {
-                    resultBuilder.addSuccess();
-                  }
-                } catch (VmException err) {
-                  var error =
-                      new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor));
-                  resultBuilder.addError(error);
-                }
-                return true;
-              });
-          testResults.add(resultBuilder.build());
-          return true;
-        });
+    for (var cursor = factsMapping.entries(); cursor.advance(); ) {
+      var groupKey = cursor.key();
+      var listing = (VmListing) cursor.value(callNode);
+      var name = String.valueOf(groupKey);
+      var resultBuilder = new TestResult.Builder(name);
+      for (var lCursor = listing.elements(); lCursor.advance(); ) {
+        var idx = lCursor.key();
+        var member = lCursor.member();
+        if (member.isLocalOrExternalOrHidden()) {
+          continue;
+        }
+        try {
+          var factValue = lCursor.value(callNode);
+          if (factValue == Boolean.FALSE) {
+            if (PowerAssertions.isEnabled() && member.getSourceSection().isAvailable()) {
+              try (var valueTracker = valueTrackerFactory.create()) {
+                listing.cachedValues.clear();
+                // Must use `readMember` here to force a re-eval of this fact.
+                VmUtils.readMember(listing, idx, callNode);
+                var failure =
+                    factFailure(
+                        member.getSourceSection(), getDisplayUri(member), valueTracker.values());
+                resultBuilder.addFailure(failure);
+              }
+            } else {
+              var failure = factFailure(member.getSourceSection(), getDisplayUri(member), null);
+              resultBuilder.addFailure(failure);
+            }
+          } else {
+            resultBuilder.addSuccess();
+          }
+        } catch (VmException err) {
+          var error =
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor));
+          resultBuilder.addError(error);
+        }
+      }
+      testResults.add(resultBuilder.build());
+    }
     return new TestSectionResults(TestSectionName.FACTS, Collections.unmodifiableList(testResults));
   }
 
@@ -181,120 +178,111 @@ public final class TestRunner {
   private TestSectionResults doRunAndValidateExamples(
       VmMapping examples, Path expectedOutputFile, Path actualOutputFile) {
     var expectedExampleOutputs = loadExampleOutputs(expectedOutputFile);
-    var actualExampleOutputs = new MutableReference<VmDynamic>(null);
-    var allGroupsSucceeded = new MutableBoolean(true);
-    var errored = new MutableBoolean(false);
+    VmDynamic actualExampleOutputs = null;
+    var allGroupsSucceeded = true;
+    var errored = false;
     var testResults = new ArrayList<TestResult>();
-    examples.forceAndIterateMemberValues(
-        (groupKey, groupMember, groupValue) -> {
-          var testName = String.valueOf(groupKey);
-          var group = (VmListing) groupValue;
-          var expectedGroup =
-              (VmDynamic) VmUtils.readMemberOrNull(expectedExampleOutputs, groupKey);
-          var testResultBuilder = new TestResult.Builder(testName);
+    var callNode = IndirectCallNode.getUncached();
 
-          if (expectedGroup == null) {
-            testResultBuilder.addFailure(
-                examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, true));
-            testResults.add(testResultBuilder.build());
-            return true;
+    for (var groupCursor = examples.entries(); groupCursor.advance(); ) {
+      var groupKey = groupCursor.key();
+      var groupMember = groupCursor.member();
+      var testName = String.valueOf(groupKey);
+      var group = (VmListing) groupCursor.value(callNode);
+      var expectedGroup = (VmDynamic) VmUtils.readMemberOrNull(expectedExampleOutputs, groupKey);
+      var testResultBuilder = new TestResult.Builder(testName);
+
+      if (expectedGroup == null) {
+        testResultBuilder.addFailure(
+            examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, true));
+        testResults.add(testResultBuilder.build());
+        continue;
+      }
+
+      if (group.getLength() != expectedGroup.getLength()) {
+        testResultBuilder.addFailure(
+            exampleLengthMismatchFailure(
+                getDisplayUri(groupMember),
+                testName,
+                expectedGroup.getLength(),
+                group.getLength()));
+        testResults.add(testResultBuilder.build());
+        continue;
+      }
+
+      for (var exampleCursor = group.elements(); exampleCursor.advance(); ) {
+        var exampleIndex = exampleCursor.key();
+
+        Object exampleValue;
+        try {
+          exampleValue = exampleCursor.value(callNode);
+        } catch (VmException err) {
+          errored = true;
+          testResultBuilder.addError(
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
+          continue;
+        }
+        var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex, callNode);
+
+        var exampleValuePcf = renderAsPcf(exampleValue);
+        var expectedValuePcf = renderAsPcf(expectedValue);
+
+        if (!(exampleValuePcf.equals(expectedValuePcf))) {
+          if (actualExampleOutputs == null) {
+            // immediately write and load `<fileName>-actual.pcf`
+            // so that we can generate deep link with correct line number for each
+            // mismatch
+            writeExampleOutputs(actualOutputFile, examples);
+            actualExampleOutputs = loadExampleOutputs(actualOutputFile);
           }
 
-          if (group.getLength() != expectedGroup.getLength()) {
-            testResultBuilder.addFailure(
-                exampleLengthMismatchFailure(
-                    getDisplayUri(groupMember),
-                    testName,
-                    expectedGroup.getLength(),
-                    group.getLength()));
-            testResults.add(testResultBuilder.build());
-            return true;
+          var expectedMember = VmUtils.findMember(expectedGroup, exampleIndex);
+          assert expectedMember != null;
+
+          var actualGroup = (VmObjectLike) VmUtils.readMemberOrNull(actualExampleOutputs, groupKey);
+          var actualMember =
+              actualGroup == null ? null : VmUtils.findMember(actualGroup, exampleIndex);
+          if (actualMember == null) {
+            // file was written earlier in this method;
+            // must have been tampered with by another process
+            throw new VmExceptionBuilder()
+                .evalError("invalidOutputFileStructure", actualOutputFile)
+                .build();
           }
 
-          group.iterateMembers(
-              ((exampleIndex, exampleMember) -> {
-                if (exampleMember.isLocalOrExternalOrHidden()) {
-                  return true;
-                }
+          testResultBuilder.addFailure(
+              exampleFailure(
+                  getDisplayUri(exampleCursor.member()),
+                  getDisplayUri(expectedMember),
+                  expectedValuePcf,
+                  getDisplayUri(actualMember),
+                  exampleValuePcf,
+                  testResultBuilder.getCount()));
+        } else {
+          testResultBuilder.addSuccess();
+        }
+      }
 
-                Object exampleValue;
-                try {
-                  exampleValue = VmUtils.readMember(group, exampleIndex);
-                } catch (VmException err) {
-                  errored.set(true);
-                  testResultBuilder.addError(
-                      new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
-                  return true;
-                }
-                var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
+      testResults.add(testResultBuilder.build());
+    }
 
-                var exampleValuePcf = renderAsPcf(exampleValue);
-                var expectedValuePcf = renderAsPcf(expectedValue);
+    for (var groupCursor = expectedExampleOutputs.entries(); groupCursor.advance(); ) {
+      var groupKey = groupCursor.key();
+      if (examples.getCachedValue(groupKey) == null) {
+        var testName = String.valueOf(groupKey);
+        allGroupsSucceeded = false;
+        var result =
+            new TestResult.Builder(testName)
+                .addFailure(
+                    examplePropertyMismatchFailure(
+                        getDisplayUri(groupCursor.member()), testName, false))
+                .build();
+        testResults.add(result);
+      }
+    }
 
-                if (!(exampleValuePcf.equals(expectedValuePcf))) {
-                  if (actualExampleOutputs.isNull()) {
-                    // immediately write and load `<fileName>-actual.pcf`
-                    // so that we can generate deep link with correct line number for each
-                    // mismatch
-                    writeExampleOutputs(actualOutputFile, examples);
-                    actualExampleOutputs.set(loadExampleOutputs(actualOutputFile));
-                  }
-
-                  var expectedMember = VmUtils.findMember(expectedGroup, exampleIndex);
-                  assert expectedMember != null;
-
-                  var actualGroup =
-                      (VmObjectLike) VmUtils.readMemberOrNull(actualExampleOutputs.get(), groupKey);
-                  var actualMember =
-                      actualGroup == null ? null : VmUtils.findMember(actualGroup, exampleIndex);
-                  if (actualMember == null) {
-                    // file was written earlier in this method;
-                    // must have been tampered with by another process
-                    throw new VmExceptionBuilder()
-                        .evalError("invalidOutputFileStructure", actualOutputFile)
-                        .build();
-                  }
-
-                  testResultBuilder.addFailure(
-                      exampleFailure(
-                          getDisplayUri(exampleMember),
-                          getDisplayUri(expectedMember),
-                          expectedValuePcf,
-                          getDisplayUri(actualMember),
-                          exampleValuePcf,
-                          testResultBuilder.getCount()));
-                } else {
-                  testResultBuilder.addSuccess();
-                }
-
-                return true;
-              }));
-
-          testResults.add(testResultBuilder.build());
-
-          return true;
-        });
-
-    expectedExampleOutputs.iterateMembers(
-        (groupKey, groupMember) -> {
-          if (groupMember.isLocalOrExternalOrHidden()) {
-            return true;
-          }
-          if (examples.getCachedValue(groupKey) == null) {
-            var testName = String.valueOf(groupKey);
-            allGroupsSucceeded.set(false);
-            var result =
-                new TestResult.Builder(testName)
-                    .addFailure(
-                        examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, false))
-                    .build();
-            testResults.add(result);
-          }
-          return true;
-        });
-
-    if (!allGroupsSucceeded.get() && actualExampleOutputs.isNull() && !errored.get()) {
+    if (!allGroupsSucceeded && actualExampleOutputs == null && !errored) {
       writeExampleOutputs(actualOutputFile, examples);
     }
     return new TestSectionResults(
@@ -303,40 +291,33 @@ public final class TestRunner {
 
   private TestSectionResults doRunAndWriteExamples(VmMapping examples, Path outputFile) {
     var testResults = new ArrayList<TestResult>();
-    var allSucceeded = new MutableBoolean(true);
-    examples.forceAndIterateMemberValues(
-        (groupKey, groupMember, groupValue) -> {
-          var testName = String.valueOf(groupKey);
-          var listing = (VmListing) groupValue;
-          var testResultBuilder = new TestResult.Builder(testName);
-          var success = new MutableBoolean(true);
-          listing.iterateMembers(
-              (idx, member) -> {
-                if (member.isLocalOrExternalOrHidden()) {
-                  return true;
-                }
-                try {
-                  VmUtils.readMember(listing, idx);
-                  return true;
-                } catch (VmException err) {
-                  testResultBuilder.addError(
-                      new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
-                  allSucceeded.set(false);
-                  success.set(false);
-                  return true;
-                }
-              });
-          if (success.get()) {
-            // treat writing an example as a message
-            testResultBuilder.setExampleWritten(true);
-            testResultBuilder.addFailure(
-                writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
-          }
-          testResults.add(testResultBuilder.build());
-          return true;
-        });
-    if (allSucceeded.get()) {
+    var allSucceeded = true;
+    var callNode = IndirectCallNode.getUncached();
+    for (var cursor = examples.entries(); cursor.advance(); ) {
+      var testName = (String) cursor.key();
+      var groupMember = cursor.member();
+      var listing = (VmListing) cursor.value(callNode);
+      var testResultBuilder = new TestResult.Builder(testName);
+      var success = true;
+      for (var listingCursor = listing.elements(); listingCursor.advance(); ) {
+        try {
+          listingCursor.value(callNode);
+        } catch (VmException err) {
+          testResultBuilder.addError(
+              new TestResults.Error(
+                  err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
+          allSucceeded = false;
+          success = false;
+        }
+      }
+      if (success) {
+        testResultBuilder.setExampleWritten(true);
+        testResultBuilder.addFailure(
+            writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
+      }
+      testResults.add(testResultBuilder.build());
+    }
+    if (allSucceeded) {
       writeExampleOutputs(outputFile, examples);
     }
     return new TestSectionResults(

@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.jsonnet;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.pkl.core.runtime.Identifier;
@@ -43,19 +45,22 @@ import org.pkl.core.util.ArrayCharEscaper;
 import org.pkl.core.util.IoUtils;
 
 public final class RendererNodes {
-  private static Renderer createRenderer(VmTyped self, StringBuilder builder) {
+  private static Renderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
     var indent = (String) VmNull.unwrap(VmUtils.readMember(self, Identifier.INDENT));
     if (indent == null) indent = "";
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    return new Renderer(builder, indent, omitNullProperties, PklConverter.fromRenderer(self));
+    return new Renderer(
+        builder, indent, omitNullProperties, PklConverter.fromRenderer(self, callNode));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -63,9 +68,10 @@ public final class RendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }

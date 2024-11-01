@@ -23,8 +23,11 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
+import org.pkl.core.ast.internal.ReadCursorValueNodeGen;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -41,12 +44,18 @@ import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObject;
+import org.pkl.core.runtime.VmObjectCursor;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
+  private final LoopConditionProfile loopConditionProfile = LoopConditionProfile.create();
   @Child private ExpressionNode iterableNode;
+
+  @Child
+  private ReadCursorValueNode readCursorValueNode = ReadCursorValueNodeGen.create(sourceSection);
+
   private final boolean nullable;
 
   public GeneratorSpreadNode(
@@ -189,53 +198,76 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
   }
 
   protected void doEvalDynamic(VirtualFrame frame, ObjectData data, VmObject iterable) {
-    var materializedFrame = frame.materialize();
-    iterable.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          if (member.isElement()) {
-            data.addElement(materializedFrame, createMember(member, value), this);
-          } else {
-            data.addMember(materializedFrame, key, createMember(member, value), this);
-          }
-          return true;
-        });
+    var cursor = iterable.members();
+    var counted = isCounted(cursor);
+    while (advance(cursor, counted)) {
+      var member = cursor.member();
+      var value = cursor.cachedValueOrNull();
+      if (value == null) {
+        value = readCursorValueNode.execute(frame, cursor);
+      }
+      if (member.isElement()) {
+        data.addElement(frame, createMember(member, value), this);
+      } else {
+        data.addMember(frame, cursor.key(), createMember(member, value), this);
+      }
+    }
   }
 
   private void doEvalMapping(VirtualFrame frame, ObjectData data, VmObject iterable) {
-    var materializedFrame = frame.materialize();
-    iterable.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          if (member.isElement() || member.isProp()) {
-            cannotHaveMember(BaseModule.getMappingClass(), member);
-          }
-          data.addMember(materializedFrame, key, createMember(member, value), this);
-          return true;
-        });
+    var cursor = iterable.members();
+    var counted = isCounted(cursor);
+    while (advance(cursor, counted)) {
+      var member = cursor.member();
+      if (member.isElement() || member.isProp()) {
+        cannotHaveMember(BaseModule.getMappingClass(), member);
+      }
+      data.addMember(
+          frame,
+          cursor.key(),
+          createMember(member, readCursorValueNode.execute(frame, cursor)),
+          this);
+    }
   }
 
   private void doEvalListing(VirtualFrame frame, ObjectData data, VmObject iterable) {
-    var materializedFrame = frame.materialize();
-    iterable.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          if (member.isEntry() || member.isProp()) {
-            cannotHaveMember(getListingClass(), member);
-          }
-          data.addElement(materializedFrame, createMember(member, value), this);
-          return true;
-        });
+    var cursor = iterable.members();
+    var counted = isCounted(cursor);
+    while (advance(cursor, counted)) {
+      var member = cursor.member();
+      if (member.isEntry() || member.isProp()) {
+        cannotHaveMember(getListingClass(), member);
+      }
+      data.addElement(
+          frame, createMember(member, readCursorValueNode.execute(frame, cursor)), this);
+    }
   }
 
   private void doEvalTyped(VirtualFrame frame, VmClass clazz, ObjectData data, VmObject iterable) {
-    var materializedFrame = frame.materialize();
-    iterable.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          if (member.isElement() || member.isEntry()) {
-            cannotHaveMember(clazz, member);
-          }
-          checkIsValidTypedProperty(clazz, member);
-          data.addProperty(materializedFrame, createMember(member, value), this);
-          return true;
-        });
+    var cursor = iterable.members();
+    var counted = isCounted(cursor);
+    while (advance(cursor, counted)) {
+      var member = cursor.member();
+      if (member.isElement() || member.isEntry()) {
+        cannotHaveMember(clazz, member);
+      }
+      checkIsValidTypedProperty(clazz, member);
+      data.addProperty(
+          frame, createMember(member, readCursorValueNode.execute(frame, cursor)), this);
+    }
+  }
+
+  private boolean isCounted(VmObjectCursor cursor) {
+    var length = cursor.getLength();
+    if (length == -1) return false;
+    loopConditionProfile.profileCounted(length);
+    return true;
+  }
+
+  private boolean advance(VmObjectCursor cursor, boolean counted) {
+    return counted
+        ? loopConditionProfile.inject(cursor.advance())
+        : loopConditionProfile.profile(cursor.advance());
   }
 
   // handles both `List` and `Set`
@@ -250,7 +282,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .withProgramValue("Value", iterable)
           .build();
     }
-    spreadIterable(frame, data, iterable);
+    spreadIterable(frame, data, iterable, iterable.getLength());
   }
 
   private void doEvalMap(VirtualFrame frame, VmClass parent, ObjectData data, VmMap iterable) {
@@ -278,7 +310,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .withProgramValue("Value", iterable)
           .build();
     }
-    spreadIterable(frame, data, iterable);
+    spreadIterable(frame, data, iterable, iterable.getLength());
   }
 
   private void doEvalBytes(VirtualFrame frame, VmClass parent, ObjectData data, VmBytes iterable) {
@@ -290,7 +322,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .withProgramValue("Value", iterable)
           .build();
     }
-    spreadIterable(frame, data, iterable);
+    spreadIterable(frame, data, iterable, iterable.getLength());
   }
 
   private void cannotHaveMember(VmClass clazz, ObjectMember member) {
@@ -352,9 +384,11 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     return result;
   }
 
-  private void spreadIterable(VirtualFrame frame, ObjectData data, Iterable<?> iterable) {
+  private void spreadIterable(
+      VirtualFrame frame, ObjectData data, Iterable<?> iterable, long length) {
+    loopConditionProfile.profileCounted(length);
     var iterator = new TruffleIterator<>(iterable);
-    while (iterator.hasNext()) {
+    while (loopConditionProfile.inject(iterator.hasNext())) {
       var elem = iterator.next();
       var member = VmUtils.createSyntheticObjectElement(String.valueOf(data.length()), elem);
       data.addElement(frame, member, this);

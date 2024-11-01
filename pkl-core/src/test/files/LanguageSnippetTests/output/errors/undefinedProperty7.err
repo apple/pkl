@@ -5,6 +5,8 @@ x | name: String
     ^^^^
 at undefinedProperty7#Person.name (file:///$snippetsDir/input/errors/undefinedProperty7.pkl)
 
+The above error occurred when rendering path `name` of module `file:///$snippetsDir/input/errors/undefinedProperty7.pkl`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

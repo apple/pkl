@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -29,12 +30,16 @@ import org.pkl.core.util.EconomicMaps;
 
 /** Corresponds to `pkl.base#Object`. */
 public abstract class VmObject extends VmObjectLike {
+  private static final byte SHALLOW_FORCE_FLAG = 0x1;
+  private static final byte DEEP_FORCE_FLAG = 0x2;
+
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
   protected final EconomicMap<Object, Object> cachedValues;
 
   protected int cachedHash;
-  protected boolean forced;
+  private byte flags;
+  private final int depth;
 
   public VmObject(
       MaterializedFrame enclosingFrame,
@@ -42,6 +47,11 @@ public abstract class VmObject extends VmObjectLike {
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       EconomicMap<Object, Object> cachedValues) {
     super(enclosingFrame);
+    if (parent == null) {
+      depth = 0;
+    } else {
+      depth = parent.depth + 1;
+    }
     this.parent = parent;
     this.members = members;
     this.cachedValues = cachedValues;
@@ -71,6 +81,16 @@ public abstract class VmObject extends VmObjectLike {
     return EconomicMaps.containsKey(members, key);
   }
 
+  public final @Nullable ObjectMember getRootFirstMember(Object key) {
+    if (parent != null) {
+      var parentMember = parent.getRootFirstMember(key);
+      if (parentMember != null) {
+        return parentMember;
+      }
+    }
+    return getMember(key);
+  }
+
   @Override
   public final @Nullable ObjectMember getMember(Object key) {
     return EconomicMaps.get(members, key);
@@ -98,43 +118,6 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   @TruffleBoundary
-  public final boolean iterateMemberValues(MemberValueConsumer consumer) {
-    var visited = new HashSet<>();
-    return iterateMembers(
-        (key, member) -> {
-          var alreadyVisited = !visited.add(key);
-          // important to record hidden member as visited before skipping it
-          // because any overriding member won't carry a `hidden` identifier
-          if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
-          return consumer.accept(key, member, getCachedValue(key));
-        });
-  }
-
-  @Override
-  @TruffleBoundary
-  public final boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
-    force(false, false);
-    return iterateAlreadyForcedMemberValues(consumer);
-  }
-
-  @Override
-  @TruffleBoundary
-  public final boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
-    var visited = new HashSet<>();
-    return iterateMembers(
-        (key, member) -> {
-          var alreadyVisited = !visited.add(key);
-          // important to record hidden member as visited before skipping it
-          // because any overriding member won't carry a `hidden` identifier
-          if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
-          Object cachedValue = getCachedValue(key);
-          assert cachedValue != null; // forced
-          return consumer.accept(key, member, cachedValue);
-        });
-  }
-
-  @Override
-  @TruffleBoundary
   public final boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
     var parent = getParent();
     if (parent != null) {
@@ -150,14 +133,25 @@ public abstract class VmObject extends VmObjectLike {
     return true;
   }
 
+  protected boolean isShallowForced() {
+    return (flags & SHALLOW_FORCE_FLAG) != 0;
+  }
+
+  protected boolean isDeepForced() {
+    return (flags & DEEP_FORCE_FLAG) != 0;
+  }
+
   /** Evaluates this object's members. Skips local, hidden, and external members. */
   @Override
-  @TruffleBoundary
   public final void force(boolean allowUndefinedValues, boolean recurse) {
-    if (forced) return;
-
-    // set eagerly to break reference cycles
-    if (recurse) forced = true;
+    var oldFlags = flags;
+    if (recurse) {
+      if (isDeepForced()) return;
+      flags |= (DEEP_FORCE_FLAG | SHALLOW_FORCE_FLAG);
+    } else {
+      if (isShallowForced()) return;
+      flags |= SHALLOW_FORCE_FLAG;
+    }
 
     var fullyForced = true;
 
@@ -191,12 +185,13 @@ public abstract class VmObject extends VmObjectLike {
         }
       }
     } catch (Throwable t) {
-      forced = false;
+      CompilerDirectives.transferToInterpreter();
+      flags = oldFlags;
       throw t;
     }
 
     // make sure uncached values are not marked as forced
-    if (recurse && !fullyForced) forced = false;
+    if (recurse && !fullyForced) flags = 0;
   }
 
   @Override
@@ -218,17 +213,14 @@ public abstract class VmObject extends VmObjectLike {
    */
   @TruffleBoundary
   protected final Map<String, Object> exportMembers() {
-    Map<String, Object> result = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
-    assert forced : "Value was not forced prior to export";
+    assert isDeepForced() : "Value was not forced prior to export";
 
-    iterateAlreadyForcedMemberValues(
-        (key, member, value) -> {
-          if (member.isClass() || member.isTypeAlias()) return true;
-
-          result.put(key.toString(), VmValue.export(value));
-          return true;
-        });
-
+    var result = CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    for (var cursor = members(); cursor.advance(); ) {
+      var member = cursor.member();
+      if (member.isType()) continue;
+      CollectionUtils.put(result, cursor.key().toString(), VmValue.export(cursor.cachedValue()));
+    }
     return result;
   }
 }

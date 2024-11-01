@@ -34,6 +34,7 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTypeAlias;
@@ -193,18 +194,17 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          if (member.isClass() || member.isTypeAlias()) return true;
-          assert member.isProp();
-          doVisitProperty(
-              (Identifier) memberKey,
-              memberValue,
-              value.getVmClass().getProperty((Identifier) memberKey),
-              member.getSourceSection(),
-              isFirst);
-          return true;
-        });
+    for (var cursor = value.properties(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var member = cursor.member();
+      if (member.isClass() || member.isTypeAlias()) continue;
+      assert member.isProp();
+      doVisitProperty(
+          (Identifier) cursor.key(),
+          cursor.cachedValue(),
+          value.getVmClass().getProperty((Identifier) cursor.key()),
+          cursor.member().getSourceSection(),
+          isFirst);
+    }
 
     enclosingValue = prevEnclosingValue;
     endTyped(value, isFirst.get());
@@ -220,21 +220,20 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     var isFirst = new MutableBoolean(true);
     var canRenderPropertyOrEntry = canRenderPropertyOrEntryOf(value);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          var sourceSection = member.getSourceSection();
-          if (member.isProp()) {
-            if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
-            doVisitProperty((Identifier) memberKey, memberValue, null, sourceSection, isFirst);
-          } else if (member.isEntry()) {
-            if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
-            doVisitEntry(memberKey, memberValue, sourceSection, isFirst);
-          } else {
-            doVisitElement((long) memberKey, memberValue, sourceSection, isFirst.getAndSetFalse());
-          }
-          return true;
-        });
-
+    for (var cursor = value.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var memberKey = cursor.key();
+      var memberValue = cursor.cachedValue();
+      var sourceSection = cursor.member().getSourceSection();
+      if (cursor.isProperty()) {
+        if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
+        doVisitProperty((Identifier) memberKey, memberValue, null, sourceSection, isFirst);
+      } else if (cursor.isEntry()) {
+        if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
+        doVisitEntry(memberKey, memberValue, sourceSection, isFirst);
+      } else {
+        doVisitElement((long) memberKey, memberValue, sourceSection, isFirst.getAndSetFalse());
+      }
+    }
     enclosingValue = prevEnclosingValue;
     endDynamic(value, isFirst.get());
   }
@@ -259,13 +258,13 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          assert member.isElement();
-          doVisitElement(
-              (long) memberKey, memberValue, member.getSourceSection(), isFirst.getAndSetFalse());
-          return true;
-        });
+    for (var cursor = value.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      doVisitElement(
+          (long) cursor.key(),
+          cursor.cachedValue(),
+          cursor.member().getSourceSection(),
+          isFirst.getAndSetFalse());
+    }
 
     enclosingValue = prevEnclosingValue;
     endListing(value, isFirst.get());
@@ -280,12 +279,10 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.iterateAlreadyForcedMemberValues(
-        (memberKey, member, memberValue) -> {
-          assert member.isEntry();
-          doVisitEntry(memberKey, memberValue, member.getSourceSection(), isFirst);
-          return true;
-        });
+    for (var cursor = value.entries(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      assert cursor.member().isEntry();
+      doVisitEntry(cursor.key(), cursor.cachedValue(), cursor.member().getSourceSection(), isFirst);
+    }
 
     enclosingValue = prevEnclosingValue;
     endMapping(value, isFirst.get());
