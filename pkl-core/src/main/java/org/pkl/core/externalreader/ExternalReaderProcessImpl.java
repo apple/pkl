@@ -31,8 +31,6 @@ import org.pkl.core.Duration;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
-import org.pkl.core.messaging.MessageTransportModuleResolver;
-import org.pkl.core.messaging.MessageTransportResourceResolver;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.ExternalModuleResolver;
@@ -81,13 +79,13 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   @Override
   public ExternalModuleResolver getModuleResolver(long evaluatorId)
       throws ExternalReaderProcessException {
-    return new MessageTransportModuleResolver(getTransport(), evaluatorId);
+    return new ExternalModuleResolver(getTransport(), evaluatorId);
   }
 
   @Override
   public ExternalResourceResolver getResourceResolver(long evaluatorId)
       throws ExternalReaderProcessException {
-    return new MessageTransportResourceResolver(getTransport(), evaluatorId);
+    return new ExternalResourceResolver(getTransport(), evaluatorId);
   }
 
   private MessageTransport getTransport() throws ExternalReaderProcessException {
