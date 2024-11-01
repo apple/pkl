@@ -85,6 +85,9 @@ dependencies {
 
   testImplementation(libs.javaxInject)
 
+  // add msgpack as runtime dependency for pkl-config-java-all only
+  fatJar(libs.msgpack)
+
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
 
   pklCodegenJava(projects.pklCodegenJava)

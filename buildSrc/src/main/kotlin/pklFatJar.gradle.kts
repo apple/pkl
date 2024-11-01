@@ -78,7 +78,7 @@ tasks.shadowJar {
 
   archiveClassifier.set(null as String?)
 
-  configurations = listOf(project.configurations.runtimeClasspath.get())
+  configurations = listOf(project.configurations.runtimeClasspath.get(), fatJarConfiguration)
 
   exclude("META-INF/maven/**")
   exclude("META-INF/upgrade/**")

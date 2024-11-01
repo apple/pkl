@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.GuardedBy;
+import org.msgpack.core.MessagePacker;
 import org.pkl.core.Readers;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
@@ -79,7 +80,11 @@ public final class ModuleKeyFactories {
   }
 
   /**
-   * Returns a factory for external reader module keys.
+   * Returns a factory for external process module keys.
+   *
+   * <p>Using external process module keys requires a separate runtime dependency on <a
+   * href="https://github.com/msgpack/msgpack-java">msgpack-java</a> version 0.9.x, unless using
+   * pkl-config-java-all or pkl-tools.
    *
    * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
    * resource leaks.
@@ -89,7 +94,11 @@ public final class ModuleKeyFactories {
   }
 
   /**
-   * Returns a factory for external reader module keys.
+   * Returns a factory for external process module keys.
+   *
+   * <p>Using external process module keys requires a separate runtime dependency on <a
+   * href="https://github.com/msgpack/msgpack-java">msgpack-java</a> version 0.9.x, unless using
+   * pkl-config-java-all or pkl-tools.
    *
    * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
    * resource leaks.
@@ -267,7 +276,7 @@ public final class ModuleKeyFactories {
     @GuardedBy("this")
     private ExternalModuleResolver resolver;
 
-    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
+    ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;

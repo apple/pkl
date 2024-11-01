@@ -143,6 +143,10 @@ public final class ResourceReaders {
   /**
    * Returns a reader for external reader resources.
    *
+   * <p>Using external process resource readers requires a separate runtime dependency on <a
+   * href="https://github.com/msgpack/msgpack-java">msgpack-java</a> version 0.9.x, unless using
+   * pkl-config-java-all or pkl-tools.
+   *
    * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
    * resource leaks.
    */
@@ -152,6 +156,10 @@ public final class ResourceReaders {
 
   /**
    * Returns a reader for external reader resources.
+   *
+   * <p>Using external process resource readers requires a separate runtime dependency on <a
+   * href="https://github.com/msgpack/msgpack-java">msgpack-java</a> version 0.9.x, unless using
+   * pkl-config-java-all or pkl-tools.
    *
    * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
    * resource leaks.
