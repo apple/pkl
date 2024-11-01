@@ -42,6 +42,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
   protected final boolean isCustomThisScope;
   protected final @Nullable FrameDescriptor parametersDescriptor;
   @Children protected final UnresolvedTypeNode[] parameterTypes;
+  @Child protected @Nullable AmendFunctionNode amendFunctionNode;
 
   public ObjectLiteralNode(
       SourceSection sourceSection,

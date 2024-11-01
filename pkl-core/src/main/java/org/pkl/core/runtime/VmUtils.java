@@ -60,6 +60,7 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Pair;
 import org.pkl.parser.Parser;
@@ -278,43 +279,43 @@ public final class VmUtils {
   }
 
   public static Map<String, FileOutput> readFilesProperty(
-      VmObjectLike receiver, Function<VmTyped, FileOutput> fileOutputFactory) {
-    var filesOrNull = VmUtils.readMember(receiver, Identifier.FILES);
+      VmObjectLike receiver,
+      Function<VmTyped, FileOutput> fileOutputFactory,
+      IndirectCallNode callNode) {
+    var filesOrNull = VmUtils.readMember(receiver, Identifier.FILES, callNode);
     if (filesOrNull instanceof VmNull) {
       return Map.of();
     }
     var files = (VmMapping) filesOrNull;
     var result = new LinkedHashMap<String, FileOutput>();
-    files.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          assert member.isEntry();
-          result.put((String) key, fileOutputFactory.apply((VmTyped) value));
-          return true;
-        });
+    for (var cursor = files.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var key = cursor.key();
+      var member = cursor.member();
+      assert member.isEntry();
+      var value = (VmTyped) cursor.value(callNode);
+      result.put((String) key, fileOutputFactory.apply(value));
+    }
     return result;
   }
 
-  @TruffleBoundary
   public static Object readMember(VmObjectLike receiver, Object memberKey) {
     var result = readMemberOrNull(receiver, memberKey);
     if (result != null) return result;
 
+    CompilerDirectives.transferToInterpreter();
     throw new VmExceptionBuilder().cannotFindMember(receiver, memberKey).build();
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType) {
     return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached());
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
     return readMemberOrNull(receiver, memberKey, true, callNode);
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
     var cachedValue = receiver.getCachedValue(memberKey);
     if (cachedValue != null) {
@@ -327,17 +328,16 @@ public final class VmUtils {
    * Before calling this method, always try `VmObject.getCachedValue()`. (This method writes to the
    * cache, but doesn't read from it.)
    */
-  @TruffleBoundary
   public static Object doReadMember(
       VmObjectLike receiver, VmObjectLike owner, Object memberKey, ObjectMember member) {
     return doReadMember(receiver, owner, memberKey, member, true, IndirectCallNode.getUncached());
   }
 
-  @TruffleBoundary
   public static Object readMember(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
     var result = readMemberOrNull(receiver, memberKey, true, callNode);
     if (result != null) return result;
+    CompilerDirectives.transferToInterpreter();
 
     throw new VmExceptionBuilder()
         .cannotFindMember(receiver, memberKey)
@@ -345,13 +345,12 @@ public final class VmUtils {
         .build();
   }
 
-  @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType, IndirectCallNode callNode) {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
-    final var cachedValue = receiver.getCachedValue(memberKey);
+    var cachedValue = receiver.getCachedValue(memberKey);
     if (cachedValue != null) return cachedValue;
 
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
@@ -367,7 +366,6 @@ public final class VmUtils {
    * Before calling this method, always try `VmObject.getCachedValue()`. (This method writes to the
    * cache, but doesn't read from it.)
    */
-  @TruffleBoundary
   public static Object doReadMember(
       VmObjectLike receiver,
       VmObjectLike owner,
@@ -587,6 +585,11 @@ public final class VmUtils {
   @TruffleBoundary
   public static void appendToBuilder(StringBuilder builder, String string) {
     builder.append(string);
+  }
+
+  @TruffleBoundary
+  public static void appendToBuilder(StringBuilder builder, Object object) {
+    builder.append(object);
   }
 
   @TruffleBoundary

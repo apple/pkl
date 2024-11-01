@@ -60,4 +60,9 @@ public final class CollectionUtils {
     // this is exactly how java.util.HashMap does it
     return (int) Math.ceil(expectedSize / (double) LOAD_FACTOR);
   }
+
+  @TruffleBoundary
+  public static <K, V> @Nullable V put(Map<K, V> map, K key, V value) {
+    return map.put(key, value);
+  }
 }

@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -29,12 +31,13 @@ public final class JsonRendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       // JSON document can have any top-level value
       // https://stackoverflow.com/a/3833312
       // http://www.ietf.org/rfc/rfc7159.txt
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -42,17 +45,20 @@ public final class JsonRendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
 
-  private static JsonRenderer createRenderer(VmTyped self, StringBuilder builder) {
+  private static JsonRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    return new JsonRenderer(builder, indent, PklConverter.fromRenderer(self), omitNullProperties);
+    return new JsonRenderer(
+        builder, indent, PklConverter.fromRenderer(self, callNode), omitNullProperties);
   }
 
   private static final class JsonRenderer extends AbstractStringRenderer {

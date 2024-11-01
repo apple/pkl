@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,13 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 
@@ -65,30 +69,33 @@ public final class DynamicNodes {
 
   public abstract static class toMap extends ExternalMethod0Node {
     @Specialization
-    protected VmMap eval(VmDynamic self) {
+    protected VmMap eval(
+        VirtualFrame frame,
+        VmDynamic self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       var builder = VmMap.builder();
-      self.forceAndIterateMemberValues( // could be smarter and skip forcing elements
-          (key, member, value) -> {
-            if (!member.isElement()) {
-              builder.add(key instanceof Identifier ? key.toString() : key, value);
-            }
-            return true;
-          });
+      for (var cursor = self.members(); cursor.advance(); ) {
+        if (!cursor.isElement()) {
+          var key = cursor.key();
+          builder.add(
+              key instanceof Identifier ? key.toString() : key,
+              readCursorValueNode.execute(frame, cursor));
+        }
+      }
       return builder.build();
     }
   }
 
   public abstract static class toList extends ExternalMethod0Node {
     @Specialization
-    protected VmList eval(VmDynamic self) {
+    protected VmList eval(
+        VirtualFrame frame,
+        VmDynamic self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       var builder = VmList.EMPTY.builder();
-      self.forceAndIterateMemberValues( // could be smarter and only force elements
-          (key, member, value) -> {
-            if (member.isElement()) {
-              builder.add(value);
-            }
-            return true;
-          });
+      for (var cursor = self.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+        builder.add(readCursorValueNode.execute(frame, cursor));
+      }
       return builder.build();
     }
   }

@@ -23,6 +23,16 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmDynamicCursors.CachedElementCursor;
+import org.pkl.core.runtime.VmDynamicCursors.CachedEntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.ElementCursor;
+import org.pkl.core.runtime.VmDynamicCursors.EntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.MemberCursor;
+import org.pkl.core.runtime.VmDynamicCursors.PropertyCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedEntryCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedMemberCursor;
+import org.pkl.core.runtime.VmDynamicCursors.UnorderedPropertyCursor;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 
@@ -74,19 +84,16 @@ public final class VmDynamic extends VmObject {
   }
 
   @Override
-  @TruffleBoundary
   public PObject export() {
-    assert forced : "Value was not forced prior to export";
+    assert isDeepForced() : "Value was not forced prior to export";
 
     var properties =
         CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
-
-    iterateAlreadyForcedMemberValues(
-        (key, member, value) -> {
-          properties.put(VmUtils.toPklString(key), VmValue.export(value));
-          return true;
-        });
-
+    // export all members, not just properties
+    for (var cursor = members(); cursor.advance(); ) {
+      CollectionUtils.put(
+          properties, cursor.key().toString(), VmValue.export(cursor.cachedValue()));
+    }
     return new PObject(PClassInfo.Dynamic, properties);
   }
 
@@ -98,6 +105,77 @@ public final class VmDynamic extends VmObject {
   @Override
   public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
     return converter.convertDynamic(this, path);
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return new PropertyCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    // never shallow-force because it's impossible to only force properties
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    return anyOrder ? new UnorderedPropertyCursor(this) : new PropertyCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    // never shallow-force because it's impossible to only force elements
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
+    // never shallow-force because it's impossible to only force elements
+    var anyOrder = option1 == CursorOption.ANY_ORDER || option2 == CursorOption.ANY_ORDER;
+    return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    // never shallow-force because it's impossible to only force entries
+    var anyOrder = option == CursorOption.ANY_ORDER;
+    if (anyOrder) {
+      return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
+    // never shallow-force because it's impossible to only force entries
+    var anyOrder = option1 == CursorOption.ANY_ORDER || option2 == CursorOption.ANY_ORDER;
+    if (anyOrder) {
+      return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return new MemberCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    if (option == CursorOption.ALL_VALUES) {
+      force(false, false);
+    }
+    return option == CursorOption.ANY_ORDER
+        ? new UnorderedMemberCursor(this)
+        : new MemberCursor(this);
   }
 
   @Override
@@ -149,10 +227,9 @@ public final class VmDynamic extends VmObject {
     return result;
   }
 
-  // assumes object has been forced
   public int getRegularMemberCount() {
+    assert isShallowForced();
     if (cachedRegularMemberCount != -1) return cachedRegularMemberCount;
-
     var result = 0;
     for (var key : cachedValues.getKeys()) {
       if (!isHiddenOrLocalProperty(key)) result += 1;

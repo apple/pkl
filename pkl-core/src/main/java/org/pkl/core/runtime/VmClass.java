@@ -864,21 +864,14 @@ public final class VmClass extends VmValue {
 
     var size = superclass == null ? 0 : superclass.getAllRegularPropertyNames().size();
     var result = EconomicSet.create(size);
+    if (superclass != null) {
+      result.addAll(superclass.getAllRegularPropertyNames());
+    }
     for (var property : EconomicMaps.getValues(declaredProperties)) {
       if (!(property.isLocal() || isHiddenProperty(property.getName()) || property.isExternal())) {
         result.add(property.getName());
       }
     }
-
-    if (superclass == null) {
-      return result;
-    }
-
-    if (result.isEmpty()) {
-      return superclass.getAllRegularPropertyNames();
-    }
-
-    result.addAll(superclass.getAllRegularPropertyNames());
     return result;
   }
 

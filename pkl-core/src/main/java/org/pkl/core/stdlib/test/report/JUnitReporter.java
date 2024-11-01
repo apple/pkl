@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.test.report;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -208,7 +209,15 @@ public final class JUnitReporter implements TestReporter {
 
   private static String renderXML(String indent, String version, VmDynamic value) {
     var builder = new StringBuilder();
-    var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), PklConverter.NOOP);
+    var renderer =
+        new Renderer(
+            builder,
+            indent,
+            version,
+            "",
+            VmMapping.empty(),
+            PklConverter.NOOP,
+            IndirectCallNode.getUncached());
     renderer.renderDocument(value);
     return builder.toString();
   }

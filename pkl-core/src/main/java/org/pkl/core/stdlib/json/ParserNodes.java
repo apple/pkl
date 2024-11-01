@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.json;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.*;
@@ -39,20 +40,21 @@ public final class ParserNodes {
   public abstract static class parse extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object eval(VmTyped self, String text) {
-      return doParse(self, text);
+    protected Object eval(
+        VmTyped self, String text, @Shared @Cached("create()") IndirectCallNode callNode) {
+      return doParse(self, text, callNode);
     }
 
     @Specialization
     @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
+        VmTyped self, VmTyped resource, @Shared @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
-      return doParse(self, text);
+      return doParse(self, text, callNode);
     }
 
-    private Object doParse(VmTyped self, String text) {
-      var converter = PklConverter.fromParser(self);
+    private Object doParse(VmTyped self, String text, IndirectCallNode callNode) {
+      var converter = PklConverter.fromParser(self, callNode);
       var useMapping = (boolean) VmUtils.readMember(self, Identifier.USE_MAPPING);
       var handler = new Handler(converter, useMapping);
       var parser = new JsonParser(handler);

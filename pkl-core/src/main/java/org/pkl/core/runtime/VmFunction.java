@@ -23,6 +23,8 @@ import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
 import org.pkl.core.util.EconomicMaps;
 
 public final class VmFunction extends VmObjectLike {
@@ -140,23 +142,58 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  public boolean iterateMemberValues(MemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
-  public boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
-  public boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
   public boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
     return true;
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return new EmptyCursor();
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    return new EmptyCursor();
   }
 
   @Override

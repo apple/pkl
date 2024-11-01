@@ -34,8 +34,9 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
 
 /**
- * Object literal that contains both elements and entries (and possibly properties). Example: `new
- * foo { "pigeon", [3] = "barn owl" }`
+ * Object literal that contains both elements and entries (and possibly properties).
+ *
+ * <p>Example: {@code new foo { "pigeon"; [3] = "barn owl" } }
  */
 @ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLiteralNode {

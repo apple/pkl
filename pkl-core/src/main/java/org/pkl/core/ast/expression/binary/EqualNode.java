@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
@@ -30,9 +31,16 @@ import org.pkl.core.runtime.*;
 @NodeChild(value = "rightNode", type = ExpressionNode.class)
 // not extending BinaryExpressionNode because we don't want the latter's fallback
 public abstract class EqualNode extends ExpressionNode {
-  protected EqualNode(SourceSection sourceSection) {
+
+  private final boolean isIntrinsic;
+
+  protected EqualNode(SourceSection sourceSection, boolean isIntrinsic) {
     super(sourceSection);
+    this.isIntrinsic = isIntrinsic;
   }
+
+  /** When using this method, pass {@code null} in for {@code leftNode} and {@code rightNode}. */
+  public abstract boolean executeWith(VirtualFrame frame, Object left, Object right);
 
   @Specialization
   protected boolean eval(String left, String right) {
@@ -107,5 +115,10 @@ public abstract class EqualNode extends ExpressionNode {
     return leftClass == Long.class || leftClass == Double.class
         ? rightClass != Long.class && rightClass != Double.class
         : leftClass != rightClass;
+  }
+
+  @Override
+  public boolean isInstrumentable() {
+    return !isIntrinsic;
   }
 }

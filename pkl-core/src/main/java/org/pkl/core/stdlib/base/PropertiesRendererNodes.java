@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmDataSize;
@@ -49,9 +51,10 @@ public final class PropertiesRendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -59,18 +62,21 @@ public final class PropertiesRendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
 
-  private static PropertiesRenderer createRenderer(VmTyped self, StringBuilder builder) {
-    var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    var restrictCharset = (boolean) VmUtils.readMember(self, Identifier.RESTRICT_CHARSET);
+  private static PropertiesRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
+    var omitNullProperties =
+        (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES, callNode);
+    var restrictCharset = (boolean) VmUtils.readMember(self, Identifier.RESTRICT_CHARSET, callNode);
     return new PropertiesRenderer(
-        builder, omitNullProperties, restrictCharset, PklConverter.fromRenderer(self));
+        builder, omitNullProperties, restrictCharset, PklConverter.fromRenderer(self, callNode));
   }
 
   private static final class PropertiesRenderer extends AbstractStringRenderer {

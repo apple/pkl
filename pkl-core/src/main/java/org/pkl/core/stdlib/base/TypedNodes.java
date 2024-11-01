@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,13 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 
@@ -51,15 +55,14 @@ public final class TypedNodes {
 
   public abstract static class toMap extends ExternalMethod0Node {
     @Specialization
-    protected VmMap eval(VmTyped self) {
+    protected VmMap eval(
+        VirtualFrame frame,
+        VmTyped self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       var builder = VmMap.builder();
-      self.forceAndIterateMemberValues(
-          (memberKey, memberDef, memberValue) -> {
-            // exclude type definitions
-            if (memberDef.isClass() || memberDef.isTypeAlias()) return true;
-            builder.add(memberKey.toString(), memberValue);
-            return true;
-          });
+      for (var cursor = self.properties(CursorOption.ALL_VALUES); cursor.advance(); ) {
+        builder.add(cursor.keyToString(), readCursorValueNode.execute(frame, cursor));
+      }
       return builder.build();
     }
   }

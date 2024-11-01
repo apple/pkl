@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -29,9 +31,10 @@ public final class PListRendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -39,16 +42,18 @@ public final class PListRendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
 
-  private static PListRenderer createRenderer(VmTyped self, StringBuilder builder) {
+  private static PListRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    return new PListRenderer(builder, indent, PklConverter.fromRenderer(self));
+    return new PListRenderer(builder, indent, PklConverter.fromRenderer(self, callNode));
   }
 
   // keep in sync with org.pkl.core.PListRenderer

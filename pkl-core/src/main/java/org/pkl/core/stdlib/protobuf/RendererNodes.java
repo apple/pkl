@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.protobuf;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -89,9 +91,10 @@ public final class RendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -99,9 +102,10 @@ public final class RendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
@@ -137,10 +141,10 @@ public final class RendererNodes {
   }
 
   @TruffleBoundary
-  private static ProtobufRenderer createRenderer(VmTyped self, StringBuilder builder) {
-    var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-
-    return new ProtobufRenderer(builder, indent, PklConverter.fromRenderer(self));
+  private static ProtobufRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
+    var indent = (String) VmUtils.readMember(self, Identifier.INDENT, callNode);
+    return new ProtobufRenderer(builder, indent, PklConverter.fromRenderer(self, callNode));
   }
 
   private static final class ProtobufRenderer extends AbstractStringRenderer {
