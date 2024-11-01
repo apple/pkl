@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
@@ -29,6 +30,7 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
@@ -140,6 +142,17 @@ class BaseOptions : OptionGroup() {
         help = "External property to set (repeatable)."
       )
       .associateProps()
+
+  val color: Color by
+    option(
+        names = arrayOf("--color"),
+        metavar = "<when>",
+        help =
+          "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'."
+      )
+      .enum<Color> { it.name.lowercase() }
+      .single()
+      .default(Color.AUTO)
 
   val noCache: Boolean by
     option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
@@ -265,6 +278,7 @@ class BaseOptions : OptionGroup() {
       projectDir = projectOptions?.projectDir,
       timeout = timeout,
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
+      color = color,
       noCache = noCache,
       testMode = testMode,
       testPort = testPort,

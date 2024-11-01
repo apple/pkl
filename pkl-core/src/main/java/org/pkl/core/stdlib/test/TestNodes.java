@@ -28,7 +28,7 @@ import org.pkl.core.stdlib.PklName;
 
 public final class TestNodes {
   private static final VmExceptionRenderer noStackTraceExceptionRenderer =
-      new VmExceptionRenderer(null);
+      new VmExceptionRenderer(null, false);
 
   private TestNodes() {}
 

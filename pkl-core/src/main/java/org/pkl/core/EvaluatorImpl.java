@@ -57,6 +57,7 @@ import org.pkl.core.util.Nullable;
 
 public class EvaluatorImpl implements Evaluator {
   protected final StackFrameTransformer frameTransformer;
+  protected final boolean color;
   protected final ModuleResolver moduleResolver;
   protected final Context polyglotContext;
   protected final @Nullable Duration timeout;
@@ -68,6 +69,7 @@ public class EvaluatorImpl implements Evaluator {
 
   public EvaluatorImpl(
       StackFrameTransformer transformer,
+      boolean color,
       SecurityManager manager,
       HttpClient httpClient,
       Logger logger,
@@ -82,6 +84,7 @@ public class EvaluatorImpl implements Evaluator {
 
     securityManager = manager;
     frameTransformer = transformer;
+    this.color = color;
     moduleResolver = new ModuleResolver(factories);
     this.logger = new BufferedLogger(logger);
     packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
@@ -304,20 +307,20 @@ public class EvaluatorImpl implements Evaluator {
             .bug("Stack overflow")
             .withCause(e.getCause())
             .build()
-            .toPklException(frameTransformer);
+            .toPklException(frameTransformer, color);
       }
       handleTimeout(timeoutTask);
-      throw e.toPklException(frameTransformer);
+      throw e.toPklException(frameTransformer, color);
     } catch (VmException e) {
       handleTimeout(timeoutTask);
-      throw e.toPklException(frameTransformer);
+      throw e.toPklException(frameTransformer, color);
     } catch (Exception e) {
       throw new PklBugException(e);
     } catch (ExceptionInInitializerError e) {
       if (!(e.getCause() instanceof VmException vmException)) {
         throw new PklBugException(e);
       }
-      var pklException = vmException.toPklException(frameTransformer);
+      var pklException = vmException.toPklException(frameTransformer, color);
       var error = new ExceptionInInitializerError(pklException);
       error.setStackTrace(e.getStackTrace());
       throw new PklBugException(error);

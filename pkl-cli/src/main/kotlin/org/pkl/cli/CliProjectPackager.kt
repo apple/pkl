@@ -81,6 +81,7 @@ class CliProjectPackager(
         cliOptions.normalizedWorkingDir,
         outputPath,
         stackFrameTransformer,
+        cliOptions.color?.hasColor() ?: false,
         securityManager,
         httpClient,
         skipPublishCheck,

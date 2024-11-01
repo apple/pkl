@@ -143,7 +143,7 @@ public final class Project {
                   .build();
         }
         // stack frame transformer never used; this exception has no stack frames.
-        throw vmException.toPklException(StackFrameTransformers.defaultTransformer);
+        throw vmException.toPklException(StackFrameTransformers.defaultTransformer, false);
       }
       throw e;
     } catch (URISyntaxException e) {
@@ -192,6 +192,7 @@ public final class Project {
     var analyzer =
         new Analyzer(
             StackFrameTransformers.defaultTransformer,
+            builder.getColor(),
             SecurityManagers.defaultManager,
             builder.getModuleKeyFactories(),
             builder.getModuleCacheDir(),
@@ -517,6 +518,7 @@ public final class Project {
               env,
               allowedModules,
               allowedResources,
+              null,
               noCache,
               moduleCacheDir,
               modulePath,

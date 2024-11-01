@@ -48,6 +48,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -119,6 +120,10 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract Property<Boolean> getColor();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getNoCache();
 
   @Input
@@ -164,6 +169,7 @@ public abstract class BasePklTask extends DefaultTask {
               null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
               getNoCache().getOrElse(false),
               false,
               false,

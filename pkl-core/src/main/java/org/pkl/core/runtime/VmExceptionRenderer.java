@@ -16,66 +16,67 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.pkl.core.Release;
+import org.pkl.core.runtime.TextFormatter.Element;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.StringBuilderWriter;
 
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
+  private final boolean color;
 
   /**
    * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
    * {@code null}, stack traces will not be included in error output.
    */
-  public VmExceptionRenderer(@Nullable StackTraceRenderer stackTraceRenderer) {
+  public VmExceptionRenderer(@Nullable StackTraceRenderer stackTraceRenderer, boolean color) {
     this.stackTraceRenderer = stackTraceRenderer;
+    this.color = color;
   }
 
   @TruffleBoundary
   public String render(VmException exception) {
-    var builder = new StringBuilder();
-    render(exception, builder);
-    return builder.toString();
+    var formatter = TextFormatter.create(color);
+    render(exception, formatter);
+    return formatter.toString();
   }
 
-  private void render(VmException exception, StringBuilder builder) {
+  private void render(VmException exception, TextFormatter out) {
     if (exception instanceof VmBugException bugException) {
-      renderBugException(bugException, builder);
+      renderBugException(bugException, out);
     } else {
-      renderException(exception, builder, true);
+      renderException(exception, out, true);
     }
   }
 
-  private void renderBugException(VmBugException exception, StringBuilder builder) {
+  private void renderBugException(VmBugException exception, TextFormatter out) {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
+    var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
 
-    builder
-        .append("An unexpected error has occurred. Would you mind filing a bug report?\n")
-        .append("Cmd+Double-click the link below to open an issue.\n")
-        .append(
-            "Please copy and paste the entire error output into the issue's description, provided you can share it.\n\n")
-        .append("https://github.com/apple/pkl/issues/new\n\n");
+    out.style(Element.TEXT)
+        .append("An unexpected error has occurred. Would you mind filing a bug report?")
+        .newline()
+        .append("Cmd+Double-click the link below to open an issue.")
+        .newline()
+        .append("Please copy and paste the entire error output into the issue's description.")
+        .newlines(2)
+        .append("https://github.com/apple/pkl/issues/new")
+        .newlines(2)
+        .append(exceptionUrl.replaceAll("\\+", "%20"))
+        .newlines(2);
 
-    builder.append(
-        URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8)
-            .replaceAll("\\+", "%20"));
+    renderException(exception, out, true);
 
-    builder.append("\n\n");
-    renderException(exception, builder, true);
-    builder.append('\n').append(Release.current().versionInfo()).append("\n\n");
+    out.newline().style(Element.TEXT).append(Release.current().versionInfo()).newlines(2);
 
-    exceptionToReport.printStackTrace(new PrintWriter(new StringBuilderWriter(builder)));
+    exceptionToReport.printStackTrace(out.toPrintWriter());
   }
 
-  private void renderException(VmException exception, StringBuilder builder, boolean withHeader) {
-    var header = "–– Pkl Error ––";
-
+  private void renderException(VmException exception, TextFormatter out, boolean withHeader) {
     String message;
     var hint = exception.getHint();
     if (exception.isExternalMessage()) {
@@ -96,15 +97,9 @@ public final class VmExceptionRenderer {
     }
 
     if (withHeader) {
-      builder.append(header).append('\n');
+      out.style(Element.ERROR_HEADER).append("–– Pkl Error ––").newline();
     }
-    builder.append(message).append('\n');
-
-    if (exception instanceof VmWrappedEvalException vmWrappedEvalException) {
-      var sb = new StringBuilder();
-      renderException(vmWrappedEvalException.getWrappedException(), sb, false);
-      hint = sb.toString().lines().map((it) -> ">\t" + it).collect(Collectors.joining("\n"));
-    }
+    out.style(Element.ERROR).append(message).newline();
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -112,11 +107,11 @@ public final class VmExceptionRenderer {
       var causeMessage = cause.getMessage();
       // null for Truffle's LazyStackTrace
       if (causeMessage != null && !causeMessage.equals(message)) {
-        builder
+        out.style(Element.TEXT)
             .append(cause.getClass().getSimpleName())
             .append(": ")
             .append(causeMessage)
-            .append('\n');
+            .newline();
       }
     }
 
@@ -124,22 +119,28 @@ public final class VmExceptionRenderer {
         exception.getProgramValues().stream().mapToInt(v -> v.name.length()).max().orElse(0);
 
     for (var value : exception.getProgramValues()) {
-      builder.append(value.name);
-      builder.append(" ".repeat(Math.max(0, maxNameLength - value.name.length())));
-      builder.append(": ");
-      builder.append(value);
-      builder.append('\n');
+      out.style(Element.TEXT)
+          .append(value.name)
+          .repeat(Math.max(0, maxNameLength - value.name.length()), ' ')
+          .append(": ")
+          .append(value)
+          .newline();
     }
 
     if (stackTraceRenderer != null) {
       var frames = StackTraceGenerator.capture(exception);
+
+      if (exception instanceof VmWrappedEvalException vmWrappedEvalException) {
+        var sb = out.newInstance();
+        renderException(vmWrappedEvalException.getWrappedException(), sb, false);
+        hint = sb.toString().lines().map((it) -> ">\t" + it).collect(Collectors.joining("\n"));
+      }
+
       if (!frames.isEmpty()) {
-        builder.append('\n');
-        stackTraceRenderer.render(frames, hint, builder);
+        stackTraceRenderer.render(frames, hint, out.newline());
       } else if (hint != null) {
         // render hint if there are no stack frames
-        builder.append('\n');
-        builder.append(hint);
+        out.newline().style(Element.HINT).append(hint);
       }
     }
   }

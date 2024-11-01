@@ -78,7 +78,7 @@ class ImportsAndReadsParserTest {
       assertThrows<VmException> {
         ImportsAndReadsParser.parse(moduleKey, moduleKey.resolve(SecurityManagers.defaultManager))
       }
-    assertThat(err.toPklException(StackFrameTransformers.defaultTransformer))
+    assertThat(err.toPklException(StackFrameTransformers.defaultTransformer, false))
       .hasMessage(
         """
           –– Pkl Error ––

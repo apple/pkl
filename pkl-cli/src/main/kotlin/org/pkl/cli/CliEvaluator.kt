@@ -120,7 +120,7 @@ constructor(
         try {
           moduleResolver.resolve(uri)
         } catch (e: VmException) {
-          throw e.toPklException(stackFrameTransformer)
+          throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
         }
       val substituted =
         pathStr

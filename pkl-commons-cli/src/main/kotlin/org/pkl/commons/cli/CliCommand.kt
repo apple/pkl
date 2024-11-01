@@ -284,6 +284,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setEnvironmentVariables(environmentVariables)
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
       .addResourceReaders(resourceReaders(modulePathResolver))
+      .setColor(cliOptions.color?.hasColor() ?: false)
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)

@@ -59,7 +59,8 @@ public final class TestRunner {
     try {
       checkAmendsPklTest(testModule);
     } catch (VmException v) {
-      var error = new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer));
+      var error =
+          new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, false));
       return resultsBuilder.setError(error).build();
     }
 
@@ -108,7 +109,7 @@ public final class TestRunner {
                 } catch (VmException err) {
                   var error =
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, false));
                   resultBuilder.addError(error);
                 }
                 return true;
@@ -208,7 +209,7 @@ public final class TestRunner {
                   errored.set(true);
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer)));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, false)));
                   return true;
                 }
                 var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
@@ -305,7 +306,7 @@ public final class TestRunner {
                 } catch (VmException err) {
                   testResultBuilder.addError(
                       new TestResults.Error(
-                          err.getMessage(), err.toPklException(stackFrameTransformer)));
+                          err.getMessage(), err.toPklException(stackFrameTransformer, false)));
                   allSucceeded.set(false);
                   success.set(false);
                   return true;

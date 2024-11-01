@@ -45,6 +45,8 @@ public interface BasePklSpec {
 
   DirectoryProperty getModuleCacheDir();
 
+  Property<Boolean> getColor();
+
   Property<Boolean> getNoCache();
 
   // use same type (Duration) as Gradle's `Task.timeout`

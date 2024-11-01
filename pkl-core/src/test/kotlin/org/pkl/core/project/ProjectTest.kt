@@ -65,6 +65,7 @@ class ProjectTest {
         mapOf("one" to "1"),
         listOf("foo:", "bar:").map(Pattern::compile),
         listOf("baz:", "biz:").map(Pattern::compile),
+        null,
         false,
         path.resolve("cache/"),
         listOf(path.resolve("modulepath1/"), path.resolve("modulepath2/")),
