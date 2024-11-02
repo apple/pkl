@@ -1,14 +1,16 @@
 = Pkl 0.27 Release Notes
 :version: 0.27
 :version-minor: 0.27.0
-:release-date: TBD
+:release-date: November 4th, 2024
 
 include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-The next release (0.28) is scheduled for ???..
+This release brings improvements in typechecking of `Listing` and `Mapping`, the ability to use readers from external processes, as well as a new import graph analyzer API.
+
+The next release (0.28) is scheduled for February 2025.
 
 Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
 
@@ -19,34 +21,521 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 News you don't want to miss.
 
-=== XXX
+[#typecheck-improvements]
+=== `Mapping`/`Listing` typecheck improvements
+
+Typechecking of `Listing` and `Mapping` types has been improved (https://github.com/apple/pkl/pull/628[#628], https://github.com/apple/pkl/pull/725[#725], https://github.com/apple/pkl/pull/740[#740], https://github.com/apple/pkl/pull/752[#752]).
+
+Today, in order to typecheck `Mapping` and `Listing`, Pkl will execute each member to check it against the type parameter
+
+For example, in order to typecheck a value as `Listing<Bird>` (given that `Bird` is a class), the evaluator runs the following steps:
+
+1. Check that the value is an instance of `Listing`
+2. For each listing member, check that it is an instance of `Bird`
+
+This behavior is different from how the rest of Pkl works.
+Generally, Pkl will only execute code that is in the critical path of evaluation.
+
+For example, given the following code:
+
+[source,pkl]
+----
+class Bird {
+  name: String
+  canFly: Boolean
+}
+
+local bird: Bird = new {
+  name = "Pidgy"
+  canFly = throw("uh oh")
+}
+
+birdName = bird.name
+----
+
+Even though `canFly` has received an invalid value, this program evaluates to `birdName = "Pidgy"`. This is because `canFly = throw("uh oh")` is not executed.
+
+The behavior of `Mapping` and `Listing` has been changed to match.
+This means that their members are not executed if they are not in the critical path of evaluation.
+
+This subtly changes the behavior of some existing code.
+
+[source,pkl]
+----
+local myNumbers: Listing<Int> = new { 1; 2; "uh oh" } 
+result = myNumbers[0] // <1>
+----
+<1> In Pkl 0.26 and below, throws a type mismatch exception.
++
+In Pkl 0.27, yields `1`.
+
+In practice, this means that some Pkl programs will execute more quickly.
+For example, this program effectively only imports one module called `foo`.
+
+In Pkl 0.26 and below, this results in _every_ import being evaluated.
+In Pkl 0.27, only one import is evaluated.
+
+[source,pkl]
+----
+local allBirds: Mapping<String, Bird> = import*("**/bird.pkl")
+
+environment: "prod"|"qa"
+
+cluster: String
+
+myBird = allBirds["\(environment)/\(cluster)/bird.pkl"] // <1>
+----
+<1> Perform just one logical import by selecting it from a glob import result. This is a common pattern for "dynamic" imports.
+
+To learn more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0010-overhauled-mapping-listing-typechecks.adoc[SPICE-0010].
+
+=== External readers
+
+A new feature has been added to allow Pkl to spawn external processes to read resources and modules (https://github.com/apple/pkl/pull/660[#660]).
+
+Today, users who use Pkl as a library can define custom module and resource readers.
+This allows authors to extend how Pkl performs I/O.
+
+For example, users can implement a reader that reads the `secret:` scheme, where they define exactly how the bytes are fetched in the host runtime.
+
+[source,pkl]
+----
+result = read("secret:mypassword") // <1>
+----
+<1> `secret:` is a custom scheme defined by the host runtime.
+
+However, CLI users have been left out.
+
+In Pkl 0.27, a new extension point is added to allow users to implement module and resource readers as external processes.
+When run, Pkl will spawn the external process, and talk to the process via xref:bindings-specification:message-passing-api.adoc[message passing].
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0009-external-readers.adoc[SPICE-0009].
+
+Thanks to https://github.com/HT154[@HT154] for contributing the feature!
+
+[[import-analysis]]
+=== Import analysis API
+
+A new API has been added to analyze the import graph of Pkl modules (https://github.com/apple/pkl/pull/695[#695]).
+
+This API comes in four forms:
+
+1. A standard library module: `pkl:analyze`
+2. A CLI command: `pkl anaylze imports`
+3. A Java API: `org.pkl.core.Analyzer`
+4. A Gradle API: `org.pkl.gradle.task.AnalyzeImportsTask`
+
+Some use-cases for this API are:
+
+* For build tools to perform out-of-date checks. Build tools can invalidate a cached result if any of the transitive modules have changed.
+* Static code analysis, to determine how Pkl modules depend on each other.
+
+With this API, xref:pkl-gradle:index.adoc[] now by default <<transitive-modules-computed-by-default,computes the transitive modules>> for many of its tasks.
+
+Here is an example of the CLI in use:
+
+[source,shell]
+----
+pkl analyze imports -f json myModule.pkl # <1>
+----
+<1> `-f` means: produce output in JSON.
+
+Produces:
+
+[source,json]
+----
+{
+  "imports": {
+    "file:///my/proj/myModule.pkl": [
+      {
+        "uri": "projectpackage://example.com/birds@1.0.0#/Bird.pkl"
+      }
+    ],
+    "projectpackage://example.com/birds@1.0.0#/Bird.pkl": []
+  },
+  "resolvedImports": {
+    "file:///my/proj/myModule.pkl": "file:///my/proj/myModule.pkl",
+    "projectpackage://example.com/birds@1.0.0#/Bird.pkl": "file:///my/birds/Bird.pkl"
+  }
+}
+----
+
+From this output, we can see that `myModule.pkl` imports `Bird.pkl` from the `birds` package.
+We can also see that the module `projectpackage://example.com/birds@1.0.0#/Bird.pkl` resolves to disk location `\file:///my/birds/Bird.pkl` (we can deduce that `birds` is a xref:language-reference:index.adoc#local-dependencies[local dependency]).
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0001-import-graph-analyzer-api.adoc[SPICE-0001].
 
 == Noteworthy [small]#🎶#
 
 Ready when you need them.
 
-=== XXX
+=== Colored output
+
+The Pkl CLI will now emit some messages in color (https://github.com/apple/pkl/pull/552[#552], https://github.com/apple/pkl/pull/746[#746], https://github.com/apple/pkl/pull/771[#771]).
+
+Here is a sneak peek of colored error messages in action.
+
+image::error_sample.png[syntax highlighted output]
+
+Thanks to https://github.com/thomaspurchas[@thomaspurchas] for contributing to this feature!
+
+=== `const local` object members
+
+The `const` modifier can be applied to object members, provided that they are also `local` (https://github.com/apple/pkl/pull/678[#678]).
+
+Currently, regular object members are not allowed to have the `const` modifier.
+This introduces an artificial pain point.
+
+For example, given the following module:
+
+[source,pkl]
+----
+amends "Bird.pkl"
+
+import "Bird.pkl"
+
+local northAmerica = "North America"
+
+local typealias NorthAmericanBird = Bird(this.origin == northAmerica) // <1>
+----
+<1> Error: cannot reference `northAmerica` from here because it is not `const`.
+
+This is invalid code, because this typealias is referencing a non-const value on the enclosing module.
+However, is not possible fix this by adding the `const` modifier to `northAmerica`.
+This is because this module `amends "Bird.pkl"`, which means that this module is considered a regular object and not a class.
+This means that any members declared here are _object members_, and not _class members_.
+
+In Pkl 0.27, a new rule is introduced to allow the `const` modifier to be applied to object members, provided that they are also `local`.
+
+This change affects object properties, as well as object methods.
+
+To read more about this design, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0011-const-object-members.adoc[SPICE-0011].
+
+=== Pkl CLI changes
+
+==== New CLI Flags
+
+Some new common flags have been added to the CLI (https://github.com/apple/pkl/pull/660[#660], https://github.com/apple/pkl/pull/746[#746]).
+
+|===
+|Flag |Description
+
+|`--color`
+|Format messages with ANSI color codes
+
+|`--external-module-reader`
+|Shell out to a process to read certain modules.
+
+|`--external-resource-reader`
+|Shell out to a process to read certain resources.
+|===
+
+==== New command: `pkl analyze imports`
+
+As part of the set of APIs added for <<import-analysis,import analysis>>, a new subcommand has been added called `analyze imports` (https://github.com/apple/pkl/pull/695[#695]).
+
+For details, consult the xref:pkl-cli:index.adoc#command-analyze-imports[CLI documentation].
+
+=== Kotlin/Java code generator improvements
+
+Various improvements have been made to the Kotlin and Java code generators (https://github.com/apple/pkl/pull/705[#705], https://github.com/apple/pkl/pull/710[#710], https://github.com/apple/pkl/pull/714[#714], https://github.com/apple/pkl/pull/721[#721], https://github.com/apple/pkl/pull/729[#729]).
+
+==== Java codegen improvements
+
+* Only generate `hashCode()`, `equals()`, and `toString()` methods for Java classes that are instantiable.
+* Add support for Spring Boot 3.
+* Make module classes also implement serializable.
+* Make empty Java classes instantiable.
+
+==== Kotlin codegen improvements
+
+* Skip generation of `copy()`, `equals()`, `hashCode()`, `toString()`, `copy()` methods for abstract Kotlin classes.
+* Don't make abstract classes implement `Serializable`
+* Add support for Spring Boot 3.
+
+Thanks to https://github.com/translatenix[@translatenix] for contributing these improvements!
+
+=== Gradle Plugin changes
+
+==== New `AnalyzeImportsTask`
+
+A new task called `org.pkl.gradle.task.AnalyzeImportsTask` is introduced (https://github.com/apple/pkl/pull/695[#695]).
+
+This task is the Gradle analogy to `pkl analyze imports`.
+
+Example:
+
+[tabs]
+====
+build.gradle::
++
+[source,groovy]
+----
+pkl {
+  analyzers {
+    imports {
+      appConfig {
+        sourceModules.add(file("src/main/resources/appConfig.pkl"))
+      }
+    }
+  }
+}
+----
+
+build.gradle.kts::
++
+[source,kotlin]
+----
+pkl {
+  analyzers {
+    imports {
+      register("appConfig") {
+        sourceModules.add(file("src/main/resources/appConfig.pkl"))
+      }
+    }
+  }
+}
+----
+====
+
+For more details, consult the xref:pkl-gradle:index.adoc#analyze-imports[documentation].
+
+==== Tracked file outputs
+
+Tasks created by the Pkl plugin now declare tracked output files (https://github.com/apple/pkl/pull/403[#403]).
+
+This means that downstream tasks do not need to declare an explicit dependency on the Pkl task.
+
+For example, assuming that `evalPkl` is an `EvalTask`:
+
+.build.gradle.kts
+[source,diff]
+----
+ val myGradleTask by tasks.registering {
+   inputs.files(evalPkl)
+-  dependsOn(evalPkl) // <1>
+ }
+----
+<1> No longer necessary to declare this dependency.
+
+[[transitive-modules-computed-by-default]]
+==== `transitiveModules` computed by default 
+
+The `transitiveModules` property of a task is now computed by building the import graph of the source modules (https://github.com/apple/pkl/pull/695[#695]).
+
+This means that Pkl-related tasks no longer need to declare their set of transitive modules, because the pkl-gradle plugin will compute this automatically.
+
+NOTE: This adds latency to each task. To opt out of this behavior, set `transitiveModules` explicitly.
+
+=== Standard library changes
+
+==== Additions to `pkl:base`
+
+New properties and methods have been added to the classes of `pkl:base` (https://github.com/apple/pkl/pull/666[#666], https://github.com/apple/pkl/pull/683[#683]).
+
+New properties and methods have been added to {uri-stdlib-Listing}[`Listing`] and {uri-stdlib-Mapping}[`Mapping`].
+
+One of the goals of this change is to improve the experience of authoring constraints.
+This eliminates the need to convert to collection types as often.
+
+The added properties and methods are:
+
+* {uri-stdlib-Listing}#first[`Listing.first`]
+* {uri-stdlib-Listing}#firstOrNull[`Listing.firstOrNull`]
+* {uri-stdlib-Listing}#last[`Listing.last`]
+* {uri-stdlib-Listing}#lastOrNull[`Listing.lastOrNull`]
+* {uri-stdlib-Listing}#single[`Listing.single`]
+* {uri-stdlib-Listing}#singleOrNull[`Listing.singleOrNull`]
+* {uri-stdlib-Listing}#every()[`Listing.every()`]
+* {uri-stdlib-Listing}#any()[`Listing.any()`]
+* {uri-stdlib-Listing}#contains()[`Listing.contains()`]
+* {uri-stdlib-Mapping}#containsValue()[`Mapping.containsValue()`]
+* {uri-stdlib-Mapping}#every()[`Mapping.every()`]
+* {uri-stdlib-Mapping}#any()[`Mapping.any()`]
+
+With this, the following change can be made to existing constraints:
+
+[source,diff]
+----
+-ipAddresses: Listing<String>(toList().contains("127.0.0.1"))
++ipAddresses: Listing<String>(contains("127.0.0.1"))
+----
+
+Additionally, a new method is added to `String`, called {uri-stdlib-String}#splitLimit()[`String.splitLimit()`].
+
+==== Additions to `pkl:EvaluatorSettings`
+
+New properties have been added to `pkl:EvaluatorSettings` (https://github.com/apple/pkl/pull/660[#660], https://github.com/apple/pkl/pull/746[#746]).
+
+These are:
+
+* {uri-stdlib-evaluatorSettingsModule}/#color[`color`]
+* {uri-stdlib-evaluatorSettingsModule}/#externalModuleReaders[`externalModuleReaders`]
+* {uri-stdlib-evaluatorSettingsModule}/#externalResourceReaders[`externalResourceReaders`]
+
+==== `String` to `Number` conversion improvements.
+
+The `String` to `Number` converter methods, for example,  {uri-stdlib-StringToInt}[`String.toInt()`], can now handle underscore separators (https://github.com/apple/pkl/pull/578[#578], https://github.com/apple/pkl/pull/580[#580]).
+
+This better aligns with the source code representation of file:///Users/danielchao/code/apple/pkl-lang.org/build/local/main/current/language-reference/index.html#integers[number literals].
+
+[source,pkl]
+----
+myNum = "1_000".toInt() // <1>
+----
+<1> Result: `1000`
+
+==== New module: `pkl:analyze`
+
+As part of <<import-analysis>>, a new standard library module is added called `pkl:analyze` (https://github.com/apple/pkl/pull/695[#695]).
+
+This module provides an API for computing the total import graph given a set of input modules.
+This API treats the inputs as entrypoints, and produces a graph representing the entire dependency tree, including transitive imports.
+
+Example:
+[source,pkl]
+----
+import "pkl:analyze"
+
+importGraph: analyze.ImportGraph = analyze.importGraph(Set("file:///path/to/my/module.pkl"))
+----
+
+For details, see the {uri-stdlib-analyzeModule}[documentation].
+
+=== Annotations on `PklProject` added to packages
+
+When creating packages, some annotations on a `PklProject` will affect how pkldoc generates documentation.
+
+* `@Unlisted`: Omit the package from publishing documentation.
+* `@Deprecated`: Add information on the package to show that it is deprecated. 
+
+Example:
+
+.PklProject
+[source,pkl]
+----
+@Deprecated
+amends "pkl:Project"
+----
+
+=== Test report improvements
+
+The report generated from `pkl test` has been overhauled and improved (https://github.com/apple/pkl/pull/498[#498], https://github.com/apple/pkl/pull/628[#682], https://github.com/apple/pkl/pull/738[#738], https://github.com/apple/pkl/pull/771[#771]).
+
+* Tests are grouped into either the `facts` or `examples` section.
+* A summary line is added, describing how many tests have passed and failed, and how many assertions have passed and failed.
+* Test results are colored.
+* The ✅ and ❌ emojis are replaced with ✔ and ✘.
+* Thrown errors are reported within the test.
+
+Here is a sneak peek of the new test result output.
+
+image::test_sample.png[]
+
+Thanks to https://github.com/jjmaestro[@jjmaestro] for contributing to this improvement!
+
+=== Java API additions
+
+==== New API: `org.pkl.core.Analyzer`
+
+As part of <<import-analysis>>, a new Java API called `org.pkl.core.Analyzer` is introduced (https://github.com/apple/pkl/pull/695[#695]).
+
+==== New methods
+
+The following methods are added:
+
+**pkl-executor**
+
+* `org.pkl.executor.ExecutorException.getPklVersion`
+* `org.pkl.executor.ExecutorException.ExecutorException(java.lang.String, java.lang.Throwable, java.lang.String)`
+
+**pkl-core**
+
+* `org.pkl.core.module.ModuleKeyFactories.externalProcess(java.lang.String, org.pkl.core.externalreader.ExternalReaderProcess)`
+* `org.pkl.core.module.ModuleKeyFactories.externalProcess(java.lang.String, org.pkl.core.externalreader.ExternalReaderProcess, long)`
 
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.
 
-=== XXX
+=== Java API breaking changes
+
+The following Java APIs have breaking changes:
+
+|===
+|Class/method | Breaking change
+
+|`org.pkl.core.runtime.TestResults`
+|Moved to `org.pkl.core.TestResults`, turn into a record, and largely restructured.
+
+|`org.pkl.core.module.ModuleKeyFactories.closeQuietly`
+|Deprecated for removal.
+|===
+
+=== Spring Boot 2 support dropped
+
+The Java code generator no longer supports Spring Boot 2.x (https://github.com/apple/pkl/pull/729[#729]).
+
+If Spring Boot 2 is needed, the code generator from Pkl 0.26 can be used.
+
+=== `pkl test` considered failing when writing examples
+
+If running `pkl test` results in `pkl-expected.pcf` files being written, the test now exits with exit code `10` (https://github.com/apple/pkl/pull/738[#738]).
+
+Additionally, the junit reports will consider the test as failing.
+
+=== `Listing` and `Mapping` typecheck changes
+
+Due to changes to <<typecheck-improvements,Listing and Mapping typechecking>>, the behavior of Pkl programs has altered slightly.
+
+Because Pkl now performs lazy typechecks on these objects, some programs that used to throw do not throw anymore.
+
+[source,pkl]
+----
+local myNumbers: Listing<Int> = new { 1; 2; "uh oh" } 
+result = myNumbers[0] // <1>
+----
+<1> In Pkl 0.26 and below, throws a type mismatch exception.
++
+In Pkl 0.27, yields `1`.
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Make pkl-doc top box include a preview of the rest of module-level documentation (https://github.com/apple/pkl/pull/570[#570]).
+* Make PklProject.deps.json files end in a newline (https://github.com/apple/pkl/pull/664[#644]).
+* Fix invalid syntax of code examples in stdlib doc comments (https://github.com/apple/pkl/pull/703[#703]).
+* Update Java dependencies (https://github.com/apple/pkl/pull/689[#689], https://github.com/apple/pkl/pull/767[#767]).
+* Add jbang catalog support (https://github.com/apple/pkl/pull/655[#655]).
+* Documentation improvements (https://github.com/apple/pkl/pull/623[#623], https://github.com/apple/pkl/pull/680[#680], https://github.com/apple/pkl/pull/682[#682], https://github.com/apple/pkl/pull/685[#685], https://github.com/apple/pkl/pull/687[#687], https://github.com/apple/pkl/pull/703[#703], https://github.com/apple/pkl/pull/704[#704], https://github.com/apple/pkl/pull/715[#715], https://github.com/apple/pkl/pull/730[#730], https://github.com/apple/pkl/pull/753[#753]).
 
-== Bugs fixed [small]#🐜#
+== Bug Fixes [small]#🐜#
 
-XXX Bugs down, Inbox Zero in sight ...
+The following bugs have been fixed.
 
-[smaller]
-* XXX (https://github.com/apple/pkl/issues/new[XXX])
+* CLI `--property` flags containing `=` in property values are not parsed correctly (https://github.com/apple/pkl/pull/631[#631]).
+* Thrown `PklBugException` when reading assets from a local project dependency (https://github.com/apple/pkl/pull/642[#642]).
+* Thrown `PklBugException` when PklProjects have a cyclical local dependency (https://github.com/apple/pkl/pull/731[#731]).
+* Thrown exception when sending `ReadResourceResponse` or `ReadModuleResponse` where both `contents` and `error` are `null` (https://github.com/apple/pkl/pull/657[#657]).
+* Double unary minus is evaluated as single unary minus (https://github.com/apple/pkl/pull/697[#697]).
+* Kotlin generator fails with "copy overrides nothing" for subclasses of abstract classes (https://github.com/apple/pkl/issues/569[#569]).
+* "Unexpected error" thrown when `Module.output` has its type overridden (https://github.com/apple/pkl/issues/709[#709]).
+* "Unexpected error" thrown when loading files with non-ASCII characters (https://github.com/apple/pkl/issues/653[#653]).
+* Type parameters new `new Mapping<TypeA, TypeB>`/`new Listing <Type>` are not checked (https://github.com/apple/pkl/issues/405[#405]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
-
+* https://github.com/djarnis73[@djarnis73]
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/jjmaestro[@jjmaestro]
+* https://github.com/HT154[@HT154]
+* https://github.com/lamtrinhdev[@lamtrinhdev]
+* https://github.com/ManuW[@ManuW]
+* https://github.com/maxandersen[@maxandersen]
+* https://github.com/netvl[@netvl]
+* https://github.com/StefMa[@StefMa]
+* https://github.com/taichi-ishitani[@taichi-ishitani]
+* https://github.com/thomaspurchas[@thomaspurchas]
+* https://github.com/translatenix[@translatenix]
