@@ -133,10 +133,10 @@ class Version {
   ///
   /// Note: `version1.equals(version2)` differs from `version1 == version2` in that it ignores [build].
   function equals(other: Version): Boolean =
-    major == other.major &&
-      minor == other.minor &&
-      patch == other.patch &&
-      preRelease == other.preRelease
+    major == other.major
+      && minor == other.minor
+      && patch == other.patch
+      && preRelease == other.preRelease
 
   /// Tells whether this version is less than [other] according to semantic versioning rules.
   ///
@@ -157,10 +157,14 @@ class Version {
   /// semver.Version("1.0.0-rc.1").isLessThan(semver.Version("1.0.0"))
   /// ```
   function isLessThan(other: Version): Boolean =
-    major < other.major ||
-    minor < other.minor ||
-    patch < other.patch ||
-    isPreReleaseLessThan(other)
+    major < other.major
+      || major == other.major && minor < other.minor
+      || major == other.major && minor == other.minor && patch < other.patch
+      ||
+        major == other.major
+          && minor == other.minor
+          && patch == other.patch
+          && isPreReleaseLessThan(other)
 
   /// Tells whether this version is less than or equal to [other] according to semantic versioning rules.
   function isLessThanOrEquals(other: Version): Boolean =
