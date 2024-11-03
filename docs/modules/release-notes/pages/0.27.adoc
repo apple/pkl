@@ -512,15 +512,16 @@ In Pkl 0.27, yields `1`.
 
 The following bugs have been fixed.
 
-* CLI `--property` flags containing `=` in property values are not parsed correctly (https://github.com/apple/pkl/pull/631[#631]).
-* Thrown `PklBugException` when reading assets from a local project dependency (https://github.com/apple/pkl/pull/642[#642]).
+* CLI `--property` flags containing `=` in property values are not parsed correctly (https://github.com/apple/pkl/issues/630[#630]).
+* Thrown `PklBugException` when reading assets from a local project dependency (https://github.com/apple/pkl/issues/641[#641]).
 * Thrown `PklBugException` when PklProjects have a cyclical local dependency (https://github.com/apple/pkl/pull/731[#731]).
 * Thrown exception when sending `ReadResourceResponse` or `ReadModuleResponse` where both `contents` and `error` are `null` (https://github.com/apple/pkl/pull/657[#657]).
 * Double unary minus is evaluated as single unary minus (https://github.com/apple/pkl/pull/697[#697]).
-* Kotlin generator fails with "copy overrides nothing" for subclasses of abstract classes (https://github.com/apple/pkl/issues/569[#569]).
+* Kotlin compiler fails to compiler generated classes with "copy overrides nothing" for subclasses of abstract classes (https://github.com/apple/pkl/issues/569[#569]).
 * "Unexpected error" thrown when `Module.output` has its type overridden (https://github.com/apple/pkl/issues/709[#709]).
 * "Unexpected error" thrown when loading files with non-ASCII characters (https://github.com/apple/pkl/issues/653[#653]).
 * Type parameters new `new Mapping<TypeA, TypeB>`/`new Listing <Type>` are not checked (https://github.com/apple/pkl/issues/405[#405]).
+* Comparison methods of `pkl:semver` are incorrect (https://github.com/apple/pkl/issues/772[#772]).
 
 == Contributors [small]#🙏#
 
