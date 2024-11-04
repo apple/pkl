@@ -20,7 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.pkl.core.Release;
-import org.pkl.core.runtime.TextFormatter.Element;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
@@ -39,12 +39,12 @@ public final class VmExceptionRenderer {
 
   @TruffleBoundary
   public String render(VmException exception) {
-    var formatter = TextFormatter.create(color);
+    var formatter = new AnsiCodingStringBuilder(color);
     render(exception, formatter);
     return formatter.toString();
   }
 
-  private void render(VmException exception, TextFormatter out) {
+  private void render(VmException exception, AnsiCodingStringBuilder out) {
     if (exception instanceof VmBugException bugException) {
       renderBugException(bugException, out);
     } else {
@@ -52,31 +52,31 @@ public final class VmExceptionRenderer {
     }
   }
 
-  private void renderBugException(VmBugException exception, TextFormatter out) {
+  private void renderBugException(VmBugException exception, AnsiCodingStringBuilder out) {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
     var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
 
-    out.style(Element.TEXT)
-        .append("An unexpected error has occurred. Would you mind filing a bug report?")
-        .newline()
+    out.append("An unexpected error has occurred. Would you mind filing a bug report?")
+        .append('\n')
         .append("Cmd+Double-click the link below to open an issue.")
-        .newline()
+        .append('\n')
         .append("Please copy and paste the entire error output into the issue's description.")
-        .newlines(2)
+        .append("\n".repeat(2))
         .append("https://github.com/apple/pkl/issues/new")
-        .newlines(2)
+        .append("\n".repeat(2))
         .append(exceptionUrl.replaceAll("\\+", "%20"))
-        .newlines(2);
+        .append("\n\n");
 
     renderException(exception, out, true);
 
-    out.newline().style(Element.TEXT).append(Release.current().versionInfo()).newlines(2);
+    out.append('\n').append(Release.current().versionInfo()).append("\n".repeat(2));
 
     exceptionToReport.printStackTrace(out.toPrintWriter());
   }
 
-  private void renderException(VmException exception, TextFormatter out, boolean withHeader) {
+  private void renderException(
+      VmException exception, AnsiCodingStringBuilder out, boolean withHeader) {
     String message;
     var hint = exception.getHint();
     if (exception.isExternalMessage()) {
@@ -97,9 +97,9 @@ public final class VmExceptionRenderer {
     }
 
     if (withHeader) {
-      out.style(Element.ERROR_HEADER).append("–– Pkl Error ––").newline();
+      out.append(AnsiTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
     }
-    out.style(Element.ERROR).append(message).newline();
+    out.append(AnsiTheme.ERROR_MESSAGE, message).append('\n');
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -107,11 +107,7 @@ public final class VmExceptionRenderer {
       var causeMessage = cause.getMessage();
       // null for Truffle's LazyStackTrace
       if (causeMessage != null && !causeMessage.equals(message)) {
-        out.style(Element.TEXT)
-            .append(cause.getClass().getSimpleName())
-            .append(": ")
-            .append(causeMessage)
-            .newline();
+        out.append(cause.getClass().getSimpleName()).append(": ").append(causeMessage).append('\n');
       }
     }
 
@@ -119,12 +115,11 @@ public final class VmExceptionRenderer {
         exception.getProgramValues().stream().mapToInt(v -> v.name.length()).max().orElse(0);
 
     for (var value : exception.getProgramValues()) {
-      out.style(Element.TEXT)
-          .append(value.name)
-          .repeat(Math.max(0, maxNameLength - value.name.length()), ' ')
+      out.append(value.name)
+          .append(" ".repeat(Math.max(0, maxNameLength - value.name.length())))
           .append(": ")
           .append(value)
-          .newline();
+          .append('\n');
     }
 
     if (stackTraceRenderer != null) {
@@ -137,10 +132,10 @@ public final class VmExceptionRenderer {
       }
 
       if (!frames.isEmpty()) {
-        stackTraceRenderer.render(frames, hint, out.newline());
+        stackTraceRenderer.render(frames, hint, out.append('\n'));
       } else if (hint != null) {
         // render hint if there are no stack frames
-        out.newline().style(Element.HINT).append(hint);
+        out.append('\n').append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
       }
     }
   }

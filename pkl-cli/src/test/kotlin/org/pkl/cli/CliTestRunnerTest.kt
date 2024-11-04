@@ -37,7 +37,6 @@ import org.pkl.commons.writeString
 import org.pkl.core.Release
 
 class CliTestRunnerTest {
-
   @Test
   fun `CliTestRunner succeed test`(@TempDir tempDir: Path) {
     val code =
@@ -65,8 +64,9 @@ class CliTestRunnerTest {
         """
       module test
         facts
-          ✅ succeed
-      ✅ 100.0% tests pass [1 passed], 100.0% asserts pass [2 passed]
+          ✔ succeed
+      
+      100.0% tests pass [1 passed], 100.0% asserts pass [2 passed]
 
     """
           .trimIndent()
@@ -101,9 +101,10 @@ class CliTestRunnerTest {
         """
         module test
           facts
-            ❌ fail
+            ✘ fail
                4 == 9 (/tempDir/test.pkl, line xx)
-        ❌ 0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
+
+        0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
 
         """
           .trimIndent()
@@ -137,14 +138,15 @@ class CliTestRunnerTest {
         """
       module test
         facts
-          ❌ fail
+          ✘ fail
              –– Pkl Error ––
              uh oh
 
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
              at test#facts["fail"][#1] (/tempDir/test.pkl, line xx)
-      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -178,14 +180,15 @@ class CliTestRunnerTest {
         """
       module test
         examples
-          ❌ fail
+          ✘ fail
              –– Pkl Error ––
              uh oh
 
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
              at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
-      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -233,14 +236,15 @@ class CliTestRunnerTest {
         """
       module test
         examples
-          ❌ fail
+          ✘ fail
              –– Pkl Error ––
              uh oh
       
              5 | throw("uh oh")
                  ^^^^^^^^^^^^^^
              at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
-      ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
     """
           .trimIndent()
@@ -435,10 +439,11 @@ class CliTestRunnerTest {
         """
         module test
           examples
-            ❌ nums
+            ✘ nums
                (/tempDir/test.pkl, line xx)
                Output mismatch: Expected "nums" to contain 1 examples, but found 2
-        ❌ 0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+        0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
         """
           .trimIndent()
@@ -474,6 +479,7 @@ class CliTestRunnerTest {
           module test
             examples
               ✍️ nums
+
           1 examples written
           
           """

@@ -16,6 +16,7 @@
 package org.pkl.core.util;
 
 import java.util.function.Consumer;
+import org.pkl.core.runtime.AnsiCodingStringBuilder;
 
 // Some code in this class was taken from the following Google Guava classes:
 // * com.google.common.base.CharMatcher
@@ -76,12 +77,24 @@ public final class StringUtils {
 
   public static <T> void joinToStringBuilder(
       StringBuilder builder, Iterable<T> coll, String delimiter, Consumer<T> eachFn) {
-    int i = 0;
+    var i = 0;
     for (var v : coll) {
       if (i++ != 0) {
         builder.append(delimiter);
       }
       eachFn.accept(v);
+    }
+  }
+
+  public static <T> void joinToStringBuilder(
+      AnsiCodingStringBuilder builder, Iterable<T> coll, String delimiter, Consumer<T> eachFn) {
+    var i = 0;
+    for (var v : coll) {
+      if (i != 0) {
+        builder.append(delimiter);
+      }
+      eachFn.accept(v);
+      i++;
     }
   }
 

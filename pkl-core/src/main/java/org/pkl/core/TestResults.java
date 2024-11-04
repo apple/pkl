@@ -92,7 +92,7 @@ public record TestResults(
    * being written.
    */
   public boolean isExampleWrittenFailure() {
-    if (!failed() || !examples.failed()) return false;
+    if (!failed() || facts.failed() || !examples.failed()) return false;
     for (var testResult : examples.results) {
       if (!testResult.isExampleWritten) {
         return false;
@@ -295,7 +295,19 @@ public record TestResults(
     }
   }
 
+  /**
+   * Indicates that an exception was thrown when evaluating the assertion.
+   *
+   * @param message The message of the underlying exception.
+   * @param exception The exception thrown by Pkl
+   */
   public record Error(String message, PklException exception) {}
 
+  /**
+   * Indicates that an assertion failed.
+   *
+   * @param kind The type of assertion failure.
+   * @param message The detailed message for the failure.
+   */
   public record Failure(String kind, String message) {}
 }

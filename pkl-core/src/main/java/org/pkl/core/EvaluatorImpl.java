@@ -235,7 +235,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var testRunner = new TestRunner(logger, frameTransformer, overwrite);
+          var testRunner = new TestRunner(logger, frameTransformer, overwrite, color);
           return testRunner.run(module);
         });
   }

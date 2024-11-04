@@ -17,19 +17,32 @@ package org.pkl.core.stdlib.test.report;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
+import org.pkl.core.runtime.AnsiCodingStringBuilder;
+import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
 public final class SimpleReport implements TestReport {
 
+  private static final String passingMark = "✔ ";
+  private static final String failingMark = "✘ ";
+
+  private final boolean useColor;
+
+  public SimpleReport(boolean useColor) {
+    this.useColor = useColor;
+  }
+
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
-    var builder = new StringBuilder();
+    var builder = new AnsiCodingStringBuilder(useColor);
 
-    builder.append("module ").append(results.moduleName()).append("\n");
+    builder.append("module ").append(results.moduleName()).append('\n');
 
     if (results.error() != null) {
       var rendered = results.error().exception().getMessage();
@@ -40,45 +53,61 @@ public final class SimpleReport implements TestReport {
       reportResults(results.examples(), builder);
     }
 
-    if (results.isExampleWrittenFailure()) {
-      builder.append(results.examples().totalFailures()).append(" examples written\n");
-      writer.append(builder);
-      return;
-    }
-
-    builder.append(results.failed() ? "❌ " : "✅ ");
-
-    var totalStatsLine =
-        makeStatsLine("tests", results.totalTests(), results.totalFailures(), results.failed());
-    builder.append(totalStatsLine);
-
-    var totalAssertsStatsLine =
-        makeStatsLine(
-            "asserts", results.totalAsserts(), results.totalAssertsFailed(), results.failed());
-    builder.append(", ").append(totalAssertsStatsLine);
-
-    builder.append("\n");
-
-    writer.append(builder);
+    writer.append(builder.toString());
   }
 
-  private void reportResults(TestSectionResults section, StringBuilder builder) {
-    if (!section.results().isEmpty()) {
-      builder.append("  ").append(section.name()).append("\n");
+  public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
+    var totalTests = 0;
+    var totalFailedTests = 0;
+    var totalAsserts = 0;
+    var totalFailedAsserts = 0;
+    var isFailed = false;
+    var isExampleWrittenFailure = true;
+    for (var testResults : allTestResults) {
+      if (!isFailed) {
+        isFailed = testResults.failed();
+      }
+      if (testResults.failed()) {
+        isExampleWrittenFailure = testResults.isExampleWrittenFailure() & isExampleWrittenFailure;
+      }
+      totalTests += testResults.totalTests();
+      totalFailedTests += testResults.totalFailures();
+      totalAsserts += testResults.totalAsserts();
+      totalFailedAsserts += testResults.totalAssertsFailed();
+    }
+    var builder = new AnsiCodingStringBuilder(useColor);
+    if (isFailed && isExampleWrittenFailure) {
+      builder.append(totalFailedTests).append(" examples written");
+    } else {
+      makeStatsLine(builder, "tests", totalTests, totalFailedTests, isFailed);
+      builder.append(", ");
+      makeStatsLine(builder, "asserts", totalAsserts, totalFailedAsserts, isFailed);
+    }
+    builder.append('\n');
+    writer.append(builder.toString());
+  }
 
+  private void reportResults(TestSectionResults section, AnsiCodingStringBuilder builder) {
+    if (!section.results().isEmpty()) {
+      builder.append("  ").append(section.name()).append('\n');
       StringUtils.joinToStringBuilder(
           builder, section.results(), "\n", res -> reportResult(res, builder));
-      builder.append("\n");
+      builder.append('\n');
     }
   }
 
-  private void reportResult(TestResult result, StringBuilder builder) {
+  private void reportResult(TestResult result, AnsiCodingStringBuilder builder) {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
       builder.append("✍️ ").append(result.name());
     } else {
-      builder.append(result.isFailure() ? "❌ " : "✅ ").append(result.name());
+      if (result.isFailure()) {
+        builder.append(AnsiTheme.FAILING_TEST_MARK, failingMark);
+      } else {
+        builder.append(AnsiTheme.PASSING_TEST_MARK, passingMark);
+      }
+      builder.append(AnsiTheme.TEST_NAME, result.name());
       if (result.isFailure()) {
         var failurePadding = "       ";
         builder.append("\n");
@@ -96,7 +125,7 @@ public final class SimpleReport implements TestReport {
     }
   }
 
-  private static void appendPadded(StringBuilder builder, String lines, String padding) {
+  private static void appendPadded(AnsiCodingStringBuilder builder, String lines, String padding) {
     StringUtils.joinToStringBuilder(
         builder,
         lines.lines().collect(Collectors.toList()),
@@ -106,18 +135,21 @@ public final class SimpleReport implements TestReport {
         });
   }
 
-  private String makeStatsLine(String kind, int total, int failed, boolean isFailed) {
+  private void makeStatsLine(
+      AnsiCodingStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
     var passed = total - failed;
     var passRate = total > 0 ? 100.0 * passed / total : 0.0;
 
-    String line = String.format("%.1f%% %s pass", passRate, kind);
+    var color = isFailed ? AnsiCode.RED : AnsiCode.GREEN;
+    sb.append(
+        color,
+        () ->
+            sb.append(String.format("%.1f%%", passRate)).append(" ").append(kind).append(" pass"));
 
     if (isFailed) {
-      line += String.format(" [%d/%d failed]", failed, total);
+      sb.append(" [").append(failed).append('/').append(total).append(" failed]");
     } else {
-      line += String.format(" [%d passed]", passed);
+      sb.append(" [").append(passed).append(" passed]");
     }
-
-    return line;
   }
 }

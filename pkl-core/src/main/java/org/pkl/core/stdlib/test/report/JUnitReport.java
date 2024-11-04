@@ -105,7 +105,9 @@ public final class JUnitReport implements TestReport {
       long element = i++;
       list.add(
           buildXmlElement(
-              "failure", attrs, members -> members.put(element, syntheticElement(fail.message()))));
+              "failure",
+              attrs,
+              members -> members.put(element, syntheticElement(stripColors(fail.message())))));
     }
     return list;
   }
@@ -120,7 +122,9 @@ public final class JUnitReport implements TestReport {
           buildXmlElement(
               "error",
               attrs,
-              members -> members.put(element, syntheticElement(error.exception().getMessage()))));
+              members ->
+                  members.put(
+                      element, syntheticElement(stripColors(error.exception().getMessage())))));
     }
     return list;
   }
@@ -132,7 +136,9 @@ public final class JUnitReport implements TestReport {
         buildXmlElement(
             "error",
             attrs,
-            members -> members.put(1, syntheticElement("\n" + error.exception().getMessage()))));
+            members ->
+                members.put(
+                    1, syntheticElement(stripColors("\n" + error.exception().getMessage())))));
     return list;
   }
 
@@ -191,7 +197,11 @@ public final class JUnitReport implements TestReport {
     return new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, attrs);
   }
 
-  public static String renderXML(String indent, String version, VmDynamic value) {
+  private String stripColors(String str) {
+    return str.replaceAll("\033\\[[;\\d]*m", "");
+  }
+
+  private static String renderXML(String indent, String version, VmDynamic value) {
     var builder = new StringBuilder();
     var converter = new PklConverter(VmMapping.empty());
     var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), converter);
