@@ -64,11 +64,10 @@ This change causes some previously failing programs to evaluate successfully:
 [source,pkl]
 ----
 local myNumbers: Listing<Int> = new { 1; 2; "uh oh" } 
-result = myNumbers[0] // <1>
+result = myNumbers[0]
 ----
-<1> In Pkl 0.26 and below, throws a type mismatch exception.
-+
-In Pkl 0.27, yields `1`.
+In Pkl 0.26 and below, the above program fails with a type mismatch error because element `"uh oh"` is typechecked when `myNumbers` is accessed.
+In Pkl 0.27, the same program succeeds because only element `myNumbers[0]` is part of the program's output, and its typecheck succeeds.
 
 As another consequence of this change, some Pkl programs now complete more quickly:
 
