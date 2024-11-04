@@ -43,7 +43,8 @@ public final class AnsiCodingStringBuilder {
       return this;
     }
     var prevDeclaredCodes = declaredCodes;
-    declaredCodes = codes;
+    declaredCodes = EnumSet.copyOf(codes);
+    declaredCodes.addAll(prevDeclaredCodes);
     append(value);
     declaredCodes = prevDeclaredCodes;
     return this;
@@ -57,6 +58,7 @@ public final class AnsiCodingStringBuilder {
     }
     var prevDeclaredCodes = declaredCodes;
     declaredCodes = EnumSet.of(code);
+    declaredCodes.addAll(prevDeclaredCodes);
     append(value);
     declaredCodes = prevDeclaredCodes;
     return this;
@@ -70,6 +72,7 @@ public final class AnsiCodingStringBuilder {
     }
     var prevDeclaredCodes = declaredCodes;
     declaredCodes = EnumSet.of(code);
+    declaredCodes.addAll(prevDeclaredCodes);
     append(value);
     declaredCodes = prevDeclaredCodes;
     return this;
@@ -101,6 +104,7 @@ public final class AnsiCodingStringBuilder {
     }
     var prevDeclaredCodes = declaredCodes;
     declaredCodes = EnumSet.of(code);
+    declaredCodes.addAll(prevDeclaredCodes);
     runnable.run();
     declaredCodes = prevDeclaredCodes;
     return this;
