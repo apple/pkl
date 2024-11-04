@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
-import org.pkl.core.runtime.AnsiCodingStringBuilder;
-import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
+import org.pkl.core.util.AnsiStringBuilder;
+import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
@@ -40,7 +40,7 @@ public final class SimpleReport implements TestReport {
 
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
-    var builder = new AnsiCodingStringBuilder(useColor);
+    var builder = new AnsiStringBuilder(useColor);
 
     builder.append("module ").append(results.moduleName()).append('\n');
 
@@ -75,7 +75,7 @@ public final class SimpleReport implements TestReport {
       totalAsserts += testResults.totalAsserts();
       totalFailedAsserts += testResults.totalAssertsFailed();
     }
-    var builder = new AnsiCodingStringBuilder(useColor);
+    var builder = new AnsiStringBuilder(useColor);
     if (isFailed && isExampleWrittenFailure) {
       builder.append(totalFailedTests).append(" examples written");
     } else {
@@ -87,7 +87,7 @@ public final class SimpleReport implements TestReport {
     writer.append(builder.toString());
   }
 
-  private void reportResults(TestSectionResults section, AnsiCodingStringBuilder builder) {
+  private void reportResults(TestSectionResults section, AnsiStringBuilder builder) {
     if (!section.results().isEmpty()) {
       builder.append("  ").append(section.name()).append('\n');
       StringUtils.joinToStringBuilder(
@@ -96,7 +96,7 @@ public final class SimpleReport implements TestReport {
     }
   }
 
-  private void reportResult(TestResult result, AnsiCodingStringBuilder builder) {
+  private void reportResult(TestResult result, AnsiStringBuilder builder) {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
@@ -125,7 +125,7 @@ public final class SimpleReport implements TestReport {
     }
   }
 
-  private static void appendPadded(AnsiCodingStringBuilder builder, String lines, String padding) {
+  private static void appendPadded(AnsiStringBuilder builder, String lines, String padding) {
     StringUtils.joinToStringBuilder(
         builder,
         lines.lines().collect(Collectors.toList()),
@@ -136,7 +136,7 @@ public final class SimpleReport implements TestReport {
   }
 
   private void makeStatsLine(
-      AnsiCodingStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
+      AnsiStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
     var passed = total - failed;
     var passRate = total > 0 ? 100.0 * passed / total : 0.0;
 

@@ -34,6 +34,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
@@ -395,7 +396,7 @@ public final class TestRunner {
   }
 
   private Failure factFailure(SourceSection sourceSection, String location) {
-    var sb = new AnsiCodingStringBuilder(useColor);
+    var sb = new AnsiStringBuilder(useColor);
     sb.append(AnsiTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
     appendLocation(sb, location);
     return new Failure("Fact Failure", sb.toString());
@@ -403,7 +404,7 @@ public final class TestRunner {
 
   private Failure exampleLengthMismatchFailure(
       String location, String property, int expectedLength, int actualLength) {
-    var sb = new AnsiCodingStringBuilder(useColor);
+    var sb = new AnsiStringBuilder(useColor);
     appendLocation(sb, location);
 
     sb.append('\n')
@@ -433,7 +434,7 @@ public final class TestRunner {
       missingIn = "actual";
     }
 
-    var sb = new AnsiCodingStringBuilder(useColor);
+    var sb = new AnsiStringBuilder(useColor);
     appendLocation(sb, location);
 
     sb.append('\n')
@@ -457,7 +458,7 @@ public final class TestRunner {
       String actualLocation,
       String actualValue,
       int exampleNumber) {
-    var sb = new AnsiCodingStringBuilder(useColor);
+    var sb = new AnsiStringBuilder(useColor);
     sb.append(AnsiTheme.TEST_NAME, "#" + exampleNumber + ": ");
     sb.append(
         AnsiTheme.TEST_FAILURE_MESSAGE,
@@ -475,14 +476,14 @@ public final class TestRunner {
     return new Failure("Example Failure", sb.toString());
   }
 
-  private void appendLocation(AnsiCodingStringBuilder stringBuilder, String location) {
+  private void appendLocation(AnsiStringBuilder stringBuilder, String location) {
     stringBuilder.append(
         AnsiTheme.STACK_FRAME,
         () -> stringBuilder.append("(").appendUntrusted(location).append(")"));
   }
 
   private Failure writtenExampleOutputFailure(String testName, String location) {
-    var sb = new AnsiCodingStringBuilder(useColor);
+    var sb = new AnsiStringBuilder(useColor);
     appendLocation(sb, location);
     sb.append(AnsiTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
     return new Failure("Example Output Written", sb.toString());

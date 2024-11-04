@@ -17,7 +17,7 @@ package org.pkl.core.util;
 
 import java.util.EnumSet;
 import java.util.Set;
-import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
+import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 
 public final class AnsiTheme {
   private AnsiTheme() {}
@@ -28,7 +28,7 @@ public final class AnsiTheme {
 
   public static final AnsiCode STACK_FRAME = AnsiCode.FAINT;
   public static final AnsiCode STACK_TRACE_MARGIN = AnsiCode.YELLOW;
-  public static final AnsiCode STACK_TRACE_LINE_NUMBER = AnsiCode.BLUE;
+  public static final AnsiCode STACK_TRACE_LINE_NUMBER = AnsiCode.FAINT;
   public static final AnsiCode STACK_TRACE_LOOP_COUNT = AnsiCode.MAGENTA;
   public static final AnsiCode STACK_TRACE_CARET = AnsiCode.RED;
 

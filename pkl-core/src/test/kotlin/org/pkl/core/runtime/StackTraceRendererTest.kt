@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.core.*
+import org.pkl.core.util.AnsiStringBuilder
 
 class StackTraceRendererTest {
   companion object {
@@ -190,7 +191,7 @@ class StackTraceRendererTest {
     }
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
     val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
-    val formatter = AnsiCodingStringBuilder(false)
+    val formatter = AnsiStringBuilder(false)
     renderer.doRender(frames, null, formatter, "", true)
     val renderedFrames = formatter.toString()
     assertThat(renderedFrames)
