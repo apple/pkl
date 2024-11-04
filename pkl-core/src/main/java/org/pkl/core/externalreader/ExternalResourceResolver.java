@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.resource;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,16 +21,12 @@ import java.util.List;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.module.PathElement;
 
 public interface ExternalResourceResolver {
-
-  interface Spec {
-    boolean hasHierarchicalUris();
-
-    boolean isGlobbable();
-
-    String scheme();
+  static ExternalResourceResolver of(MessageTransport transport, long evaluatorId) {
+    return new ExternalResourceResolverImpl(transport, evaluatorId);
   }
 
   Optional<Object> read(URI uri) throws IOException;

@@ -20,7 +20,6 @@ import java.nio.file.Path
 import kotlin.io.path.pathString
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePacker
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.BaseMessagePackEncoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
@@ -105,8 +104,8 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           msg.externalResourceReaders,
         )
         packKeyValue("requestId", msg.requestId())
-        packKeyValue("allowedModules", msg.allowedModules?.map { it.toString() })
-        packKeyValue("allowedResources", msg.allowedResources?.map { it.toString() })
+        packKeyValue("allowedModules", msg.allowedModules)
+        packKeyValue("allowedResources", msg.allowedResources)
         if (msg.clientModuleReaders != null) {
           packer.packString("clientModuleReaders")
           packer.packArrayHeader(msg.clientModuleReaders.size)

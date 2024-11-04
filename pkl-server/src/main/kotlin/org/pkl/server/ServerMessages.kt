@@ -19,23 +19,16 @@ import java.net.URI
 import java.nio.file.Path
 import java.time.Duration
 import java.util.*
-import java.util.regex.Pattern
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.Proxy
 import org.pkl.core.messaging.Message
-import org.pkl.core.messaging.Messages.*
+import org.pkl.core.messaging.Messages
 import org.pkl.core.packages.Checksums
-
-private fun <T> T?.equalsNullable(other: Any?): Boolean {
-  return Objects.equals(this, other)
-}
 
 data class CreateEvaluatorRequest(
   private val requestId: Long,
-  val allowedModules: List<Pattern>?,
-  val allowedResources: List<Pattern>?,
-  val clientModuleReaders: List<ModuleReaderSpec>?,
-  val clientResourceReaders: List<ResourceReaderSpec>?,
+  val allowedModules: List<String>?,
+  val allowedResources: List<String>?,
+  val clientModuleReaders: List<Messages.ModuleReaderSpec>?,
+  val clientResourceReaders: List<Messages.ResourceReaderSpec>?,
   val modulePaths: List<Path>?,
   val env: Map<String, String>?,
   val properties: Map<String, String>?,
@@ -52,57 +45,11 @@ data class CreateEvaluatorRequest(
   override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
 
   override fun requestId(): Long = requestId
-
-  // need to implement this manually because [Pattern.equals] returns false for two patterns
-  // that have the same underlying pattern string.
-  override fun equals(other: Any?): Boolean {
-    if (other == null) return false
-    if (other !is CreateEvaluatorRequest) return false
-    return requestId == other.requestId &&
-      Objects.equals(
-        allowedModules?.map { it.pattern() },
-        other.allowedModules?.map { it.pattern() },
-      ) &&
-      Objects.equals(
-        allowedResources?.map { it.pattern() },
-        other.allowedResources?.map { it.pattern() },
-      ) &&
-      clientModuleReaders.equalsNullable(other.clientModuleReaders) &&
-      clientResourceReaders.equalsNullable(other.clientResourceReaders) &&
-      modulePaths.equalsNullable(other.modulePaths) &&
-      env.equalsNullable(other.env) &&
-      properties.equalsNullable(other.properties) &&
-      timeout.equalsNullable(other.timeout) &&
-      rootDir.equalsNullable(other.rootDir) &&
-      cacheDir.equalsNullable(other.cacheDir) &&
-      outputFormat.equalsNullable(other.outputFormat) &&
-      project.equalsNullable(other.project) &&
-      http.equalsNullable(other.http) &&
-      externalModuleReaders.equalsNullable(other.externalModuleReaders) &&
-      externalResourceReaders.equalsNullable(other.externalResourceReaders)
-  }
-
-  @Suppress("DuplicatedCode") // false duplicate within method
-  override fun hashCode(): Int {
-    var result = requestId.hashCode()
-    result = 31 * result + allowedModules?.map { it.pattern() }.hashCode()
-    result = 31 * result + allowedResources?.map { it.pattern() }.hashCode()
-    result = 31 * result + clientModuleReaders.hashCode()
-    result = 31 * result + clientResourceReaders.hashCode()
-    result = 31 * result + modulePaths.hashCode()
-    result = 31 * result + env.hashCode()
-    result = 31 * result + properties.hashCode()
-    result = 31 * result + timeout.hashCode()
-    result = 31 * result + rootDir.hashCode()
-    result = 31 * result + cacheDir.hashCode()
-    result = 31 * result + outputFormat.hashCode()
-    result = 31 * result + project.hashCode()
-    result = 31 * result + http.hashCode()
-    result = 31 * result + externalModuleReaders.hashCode()
-    result = 31 * result + externalResourceReaders.hashCode()
-    return result
-  }
 }
+
+data class ExternalReader(val executable: String, val arguments: List<String>?)
+
+data class Proxy(val address: URI?, val noProxy: List<String>?)
 
 data class Http(
   /** PEM-format CA certificates as raw bytes. */

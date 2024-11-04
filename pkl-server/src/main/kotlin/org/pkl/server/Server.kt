@@ -21,13 +21,16 @@ import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.regex.Pattern
 import kotlin.random.Random
 import org.pkl.core.*
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.externalreader.ExternalModuleReaderSpec
 import org.pkl.core.externalreader.ExternalReaderProcess
+import org.pkl.core.externalreader.ExternalResourceReaderSpec
+import org.pkl.core.externalreader.ExternalResourceResolver
 import org.pkl.core.http.HttpClient
 import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransportResourceResolver
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.module.ModuleKeyFactories
@@ -182,8 +185,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
     val modulePaths = message.modulePaths ?: emptyList()
     val resolver = ModulePathResolver(modulePaths)
-    val allowedModules = message.allowedModules ?: emptyList()
-    val allowedResources = message.allowedResources ?: emptyList()
+    val allowedModules = message.allowedModules?.map { Pattern.compile(it) } ?: emptyList()
+    val allowedResources = message.allowedResources?.map { Pattern.compile(it) } ?: emptyList()
     val rootDir = message.rootDir
     val env = message.env ?: emptyMap()
     val properties = message.properties ?: emptyMap()
@@ -247,8 +250,12 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     for (readerSpec in message.clientResourceReaders ?: emptyList()) {
       add(
         ResourceReaders.externalResolver(
-          readerSpec,
-          MessageTransportResourceResolver(transport, evaluatorId),
+          ExternalResourceReaderSpec(
+            readerSpec.scheme,
+            readerSpec.hasHierarchicalUris,
+            readerSpec.isGlobbable
+          ),
+          ExternalResourceResolver.of(transport, evaluatorId),
         )
       )
     }
@@ -261,7 +268,11 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   ): List<ModuleKeyFactory> = buildList {
     // add client-side module key factory first to ensure it wins over builtin ones
     if (message.clientModuleReaders?.isNotEmpty() == true) {
-      add(ClientModuleKeyFactory(message.clientModuleReaders, transport, evaluatorId))
+      val readerSpecs =
+        message.clientModuleReaders.map {
+          ExternalModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
+        }
+      add(ClientModuleKeyFactory(readerSpecs, transport, evaluatorId))
     }
     for ((scheme, spec) in message.externalModuleReaders ?: emptyMap()) {
       add(
@@ -285,5 +296,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private fun getExternalProcess(evaluatorId: Long, spec: ExternalReader): ExternalReaderProcess =
     externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
-      .computeIfAbsent(spec) { ExternalReaderProcess.of(it) }
+      .computeIfAbsent(spec) {
+        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(it.executable, it.arguments))
+      }
 }

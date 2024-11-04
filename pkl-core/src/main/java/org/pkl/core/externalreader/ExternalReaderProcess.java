@@ -17,8 +17,6 @@ package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.module.ExternalModuleResolver;
-import org.pkl.core.resource.ExternalResourceResolver;
 import org.pkl.core.util.Nullable;
 
 /** An external process that reads Pkl modules and resources. */
@@ -56,7 +54,8 @@ public interface ExternalReaderProcess extends AutoCloseable {
    * @throws IllegalStateException if this process has already been {@linkplain #close closed}
    * @throws IOException if an I/O error occurs
    */
-  ExternalModuleResolver.@Nullable Spec getModuleReaderSpec(String scheme) throws IOException;
+  @Nullable
+  ExternalModuleReaderSpec getModuleReaderSpec(String scheme) throws IOException;
 
   /**
    * Returns the spec, if available, of this process's resource reader with the given scheme.
@@ -64,7 +63,8 @@ public interface ExternalReaderProcess extends AutoCloseable {
    * @throws IllegalStateException if this process has already been {@linkplain #close closed}
    * @throws IOException if an I/O error occurs
    */
-  ExternalResourceResolver.@Nullable Spec getResourceReaderSpec(String scheme) throws IOException;
+  @Nullable
+  ExternalResourceReaderSpec getResourceReaderSpec(String scheme) throws IOException;
 
   /**
    * Closes this process, releasing any associated resources.

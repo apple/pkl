@@ -25,16 +25,15 @@ import java.util.concurrent.Future
 import kotlin.random.Random
 import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransportModuleResolver
-import org.pkl.core.messaging.MessageTransportResourceResolver
 import org.pkl.core.messaging.MessageTransports
-import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
 
 class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
-  private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
+  private val initializeModuleReaderResponses:
+    MutableMap<String, Future<ExternalModuleReaderSpec?>> =
     ConcurrentHashMap()
-  private val initializeResourceReaderResponses: MutableMap<String, Future<ResourceReaderSpec?>> =
+  private val initializeResourceReaderResponses:
+    MutableMap<String, Future<ExternalResourceReaderSpec?>> =
     ConcurrentHashMap()
 
   override fun close() {
@@ -42,11 +41,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     transport.close()
   }
 
-  override fun getModuleResolver(evaluatorId: Long): MessageTransportModuleResolver =
-    MessageTransportModuleResolver(transport, evaluatorId)
+  override fun getModuleResolver(evaluatorId: Long): ExternalModuleResolver =
+    ExternalModuleResolver.of(transport, evaluatorId)
 
-  override fun getResourceResolver(evaluatorId: Long): MessageTransportResourceResolver =
-    MessageTransportResourceResolver(transport, evaluatorId)
+  override fun getResourceResolver(evaluatorId: Long): ExternalResourceResolver =
+    ExternalResourceResolver.of(transport, evaluatorId)
 
   fun run() {
     try {
@@ -61,15 +60,24 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     }
   }
 
-  override fun getModuleReaderSpec(scheme: String): ModuleReaderSpec? =
+  override fun getModuleReaderSpec(scheme: String): ExternalModuleReaderSpec? =
     initializeModuleReaderResponses
       .computeIfAbsent(scheme) {
-        CompletableFuture<ModuleReaderSpec?>().apply {
+        CompletableFuture<ExternalModuleReaderSpec?>().apply {
           val request = InitializeModuleReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
               is InitializeModuleReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ExternalModuleReaderSpec(
+                      it.scheme,
+                      it.hasHierarchicalUris,
+                      it.isLocal,
+                      it.isGlobbable
+                    )
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }
@@ -78,15 +86,19 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
       }
       .getUnderlying()
 
-  override fun getResourceReaderSpec(scheme: String): ResourceReaderSpec? =
+  override fun getResourceReaderSpec(scheme: String): ExternalResourceReaderSpec? =
     initializeResourceReaderResponses
       .computeIfAbsent(scheme) {
-        CompletableFuture<ResourceReaderSpec?>().apply {
+        CompletableFuture<ExternalResourceReaderSpec?>().apply {
           val request = InitializeResourceReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
               is InitializeResourceReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ExternalResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }

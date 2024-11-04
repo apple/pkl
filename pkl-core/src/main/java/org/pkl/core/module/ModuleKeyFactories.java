@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.Closeables;
+import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;

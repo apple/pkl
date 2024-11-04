@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.messaging;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,21 +26,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.messaging.MessageTransport;
+import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.Messages.ListModulesRequest;
 import org.pkl.core.messaging.Messages.ListModulesResponse;
 import org.pkl.core.messaging.Messages.ReadModuleRequest;
 import org.pkl.core.messaging.Messages.ReadModuleResponse;
-import org.pkl.core.module.ExternalModuleResolver;
+import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 
-public class MessageTransportModuleResolver implements ExternalModuleResolver {
+final class ExternalModuleResolverImpl implements ExternalModuleResolver {
   private final MessageTransport transport;
   private final long evaluatorId;
   private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
-  public MessageTransportModuleResolver(MessageTransport transport, long evaluatorId) {
+  ExternalModuleResolverImpl(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
     this.evaluatorId = evaluatorId;
   }

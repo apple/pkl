@@ -31,6 +31,8 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalResourceReaderSpec;
+import org.pkl.core.externalreader.ExternalResourceResolver;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -162,7 +164,7 @@ public final class ResourceReaders {
 
   /** Returns a reader for external and client reader resources. */
   public static ResourceReader externalResolver(
-      ExternalResourceResolver.Spec spec, ExternalResourceResolver resolver) {
+      ExternalResourceReaderSpec spec, ExternalResourceResolver resolver) {
     return new ExternalResolver(spec, resolver);
   }
 
@@ -691,11 +693,11 @@ public final class ResourceReaders {
   }
 
   private static final class ExternalResolver implements ResourceReader {
-    private final ExternalResourceResolver.Spec readerSpec;
+    private final ExternalResourceReaderSpec readerSpec;
     private final ExternalResourceResolver resolver;
 
     public ExternalResolver(
-        ExternalResourceResolver.Spec readerSpec, ExternalResourceResolver resolver) {
+        ExternalResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
       this.readerSpec = readerSpec;
       this.resolver = resolver;
     }
