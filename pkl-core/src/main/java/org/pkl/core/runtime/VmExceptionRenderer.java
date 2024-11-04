@@ -66,7 +66,7 @@ public final class VmExceptionRenderer {
         .append("https://github.com/apple/pkl/issues/new")
         .append("\n".repeat(2))
         .append(exceptionUrl.replaceAll("\\+", "%20"))
-        .append("\n".repeat(2));
+        .append("\n\n");
 
     renderException(exception, out, true);
 

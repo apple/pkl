@@ -484,7 +484,7 @@ public final class TestRunner {
   private Failure writtenExampleOutputFailure(String testName, String location) {
     var sb = new AnsiCodingStringBuilder(useColor);
     appendLocation(sb, location);
-    sb.append(ColorTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test " + testName);
+    sb.append(ColorTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
     return new Failure("Example Output Written", sb.toString());
   }
 }
