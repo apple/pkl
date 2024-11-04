@@ -130,9 +130,8 @@ class ModuleKeyFactoriesTest {
 
   @Test
   fun externalProcess() {
-    val extReader = TestExternalModuleReader()
-    val (proc, runtime) =
-      TestExternalReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
+    val extReader = TestModuleReader()
+    val (proc, runtime) = TestReaderProcess.initializeTestHarness(listOf(extReader), emptyList())
 
     val factory = ModuleKeyFactories.externalProcess(extReader.scheme, proc)
 

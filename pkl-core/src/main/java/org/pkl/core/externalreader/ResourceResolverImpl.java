@@ -34,14 +34,14 @@ import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.resource.Resource;
 
-final class ExternalResourceResolverImpl implements ExternalResourceResolver {
+final class ResourceResolverImpl implements ResourceResolver {
   private final MessageTransport transport;
   private final long evaluatorId;
   private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
-  ExternalResourceResolverImpl(MessageTransport transport, long evaluatorId) {
+  ResourceResolverImpl(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
     this.evaluatorId = evaluatorId;
   }

@@ -18,20 +18,20 @@ package org.pkl.core.externalreader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.module.PathElement;
 
-public interface ExternalResourceResolver {
-  static ExternalResourceResolver of(MessageTransport transport, long evaluatorId) {
-    return new ExternalResourceResolverImpl(transport, evaluatorId);
+public interface ModuleResolver {
+  static ModuleResolver of(MessageTransport transport, long evaluatorId) {
+    return new ModuleResolverImpl(transport, evaluatorId);
   }
 
-  Optional<Object> read(URI uri) throws IOException;
+  String resolveModule(SecurityManager securityManager, URI uri)
+      throws IOException, SecurityManagerException;
 
-  boolean hasElement(SecurityManager securityManager, URI elementUri)
+  boolean hasElement(org.pkl.core.SecurityManager securityManager, URI elementUri)
       throws SecurityManagerException;
 
   List<PathElement> listElements(SecurityManager securityManager, URI baseUri)

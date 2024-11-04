@@ -23,17 +23,15 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.core.externalreader.ExternalReaderMessages.*
+import org.pkl.core.externalreader.ReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.ProtocolException
 
-class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
-  private val initializeModuleReaderResponses:
-    MutableMap<String, Future<ExternalModuleReaderSpec?>> =
+class TestReaderProcess(private val transport: MessageTransport) : ReaderProcess {
+  private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
     ConcurrentHashMap()
-  private val initializeResourceReaderResponses:
-    MutableMap<String, Future<ExternalResourceReaderSpec?>> =
+  private val initializeResourceReaderResponses: MutableMap<String, Future<ResourceReaderSpec?>> =
     ConcurrentHashMap()
 
   override fun close() {
@@ -41,11 +39,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     transport.close()
   }
 
-  override fun getModuleResolver(evaluatorId: Long): ExternalModuleResolver =
-    ExternalModuleResolver.of(transport, evaluatorId)
+  override fun getModuleResolver(evaluatorId: Long): ModuleResolver =
+    ModuleResolver.of(transport, evaluatorId)
 
-  override fun getResourceResolver(evaluatorId: Long): ExternalResourceResolver =
-    ExternalResourceResolver.of(transport, evaluatorId)
+  override fun getResourceResolver(evaluatorId: Long): ResourceResolver =
+    ResourceResolver.of(transport, evaluatorId)
 
   fun run() {
     try {
@@ -60,22 +58,17 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     }
   }
 
-  override fun getModuleReaderSpec(scheme: String): ExternalModuleReaderSpec? =
+  override fun getModuleReaderSpec(scheme: String): ModuleReaderSpec? =
     initializeModuleReaderResponses
       .computeIfAbsent(scheme) {
-        CompletableFuture<ExternalModuleReaderSpec?>().apply {
+        CompletableFuture<ModuleReaderSpec?>().apply {
           val request = InitializeModuleReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
               is InitializeModuleReaderResponse -> {
                 val spec =
                   response.spec?.let {
-                    ExternalModuleReaderSpec(
-                      it.scheme,
-                      it.hasHierarchicalUris,
-                      it.isLocal,
-                      it.isGlobbable
-                    )
+                    ModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
                   }
                 complete(spec)
               }
@@ -86,17 +79,17 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
       }
       .getUnderlying()
 
-  override fun getResourceReaderSpec(scheme: String): ExternalResourceReaderSpec? =
+  override fun getResourceReaderSpec(scheme: String): ResourceReaderSpec? =
     initializeResourceReaderResponses
       .computeIfAbsent(scheme) {
-        CompletableFuture<ExternalResourceReaderSpec?>().apply {
+        CompletableFuture<ResourceReaderSpec?>().apply {
           val request = InitializeResourceReaderRequest(Random.nextLong(), scheme)
           transport.send(request) { response ->
             when (response) {
               is InitializeResourceReaderResponse -> {
                 val spec =
                   response.spec?.let {
-                    ExternalResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
+                    ResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
                   }
                 complete(spec)
               }
@@ -109,26 +102,20 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
 
   companion object {
     fun initializeTestHarness(
-      moduleReaders: List<ExternalModuleReader>,
-      resourceReaders: List<ExternalResourceReader>,
-    ): Pair<TestExternalReaderProcess, ExternalReaderRuntime> {
+      moduleReaders: List<ModuleReader>,
+      resourceReaders: List<ResourceReader>,
+    ): Pair<TestReaderProcess, ReaderRuntime> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
       val txIn = PipedInputStream(10240)
       val txOut = PipedOutputStream(txIn)
       val serverTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(rxIn),
-          ExternalReaderMessagePackEncoder(txOut),
-        ) {}
+        MessageTransports.stream(MessagePackDecoder(rxIn), MessagePackEncoder(txOut)) {}
       val clientTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(txIn),
-          ExternalReaderMessagePackEncoder(rxOut),
-        ) {}
+        MessageTransports.stream(MessagePackDecoder(txIn), MessagePackEncoder(rxOut)) {}
 
-      val runtime = ExternalReaderRuntime(moduleReaders, resourceReaders, clientTransport)
-      val proc = TestExternalReaderProcess(serverTransport)
+      val runtime = ReaderRuntime(moduleReaders, resourceReaders, clientTransport)
+      val proc = TestReaderProcess(serverTransport)
 
       Thread(runtime::run).start()
       Thread(proc::run).start()

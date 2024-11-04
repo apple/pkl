@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
@@ -105,7 +105,7 @@ public class ImportGlobNode extends AbstractImportNode {
           .evalError("invalidGlobPattern", globPattern)
           .withHint(e.getMessage())
           .build();
-    } catch (ExternalReaderProcessException e) {
+    } catch (ReaderProcessException e) {
       throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
   }

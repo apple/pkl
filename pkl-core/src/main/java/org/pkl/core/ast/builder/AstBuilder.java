@@ -152,7 +152,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeTestNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode.Constrained;
-import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -2768,7 +2768,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .withHint(e.getHint())
           .withSourceSection(createSourceSection(ctx))
           .build();
-    } catch (ExternalReaderProcessException e) {
+    } catch (ReaderProcessException e) {
       throw exceptionBuilder()
           .evalError("externalReaderFailure")
           .withCause(e.getCause())

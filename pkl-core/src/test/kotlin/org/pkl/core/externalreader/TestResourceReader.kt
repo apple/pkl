@@ -16,12 +16,16 @@
 package org.pkl.core.externalreader
 
 import java.net.URI
-import org.pkl.core.messaging.Messages.ResourceReaderSpec
+import org.pkl.core.module.PathElement
 
-/** An external resource reader, to be used with [ExternalReaderRuntime]. */
-interface ExternalResourceReader : ExternalReaderBase {
-  fun read(uri: URI): ByteArray
+class TestResourceReader : ResourceReader {
+  override val scheme: String = "test"
 
-  val spec: ResourceReaderSpec
-    get() = ResourceReaderSpec(scheme, hasHierarchicalUris, isGlobbable)
+  override val hasHierarchicalUris: Boolean = false
+
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
 }

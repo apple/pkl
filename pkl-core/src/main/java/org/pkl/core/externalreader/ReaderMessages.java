@@ -20,8 +20,8 @@ import org.pkl.core.messaging.Messages.ModuleReaderSpec;
 import org.pkl.core.messaging.Messages.ResourceReaderSpec;
 import org.pkl.core.util.Nullable;
 
-final class ExternalReaderMessages {
-  private ExternalReaderMessages() {}
+final class ReaderMessages {
+  private ReaderMessages() {}
 
   record InitializeModuleReaderRequest(long requestId, String scheme) implements Server.Request {
     public Type type() {
