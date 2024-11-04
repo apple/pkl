@@ -22,17 +22,17 @@ import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
-import org.pkl.core.runtime.TextFormattingStringBuilder;
-import org.pkl.core.runtime.TextFormattingStringBuilder.AnsiCode;
+import org.pkl.core.runtime.AnsiCodingStringBuilder;
+import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
 import org.pkl.core.util.ColorTheme;
+import org.pkl.core.util.StringUtils;
 
 public final class SimpleReport implements TestReport {
 
-  private final boolean useColor;
-
   private static final String passingMark = "✔ ";
-
   private static final String failingMark = "✘ ";
+
+  private final boolean useColor;
 
   public SimpleReport(boolean useColor) {
     this.useColor = useColor;
@@ -40,14 +40,14 @@ public final class SimpleReport implements TestReport {
 
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
-    var builder = new TextFormattingStringBuilder(useColor);
+    var builder = new AnsiCodingStringBuilder(useColor);
 
-    builder.append("module ").append(results.moduleName()).append("\n");
+    builder.append("module ").append(results.moduleName()).append('\n');
 
     if (results.error() != null) {
       var rendered = results.error().exception().getMessage();
       appendPadded(builder, rendered, "  ");
-      builder.appendLine();
+      builder.append('\n');
     } else {
       reportResults(results.facts(), builder);
       reportResults(results.examples(), builder);
@@ -75,7 +75,7 @@ public final class SimpleReport implements TestReport {
       totalAsserts += testResults.totalAsserts();
       totalFailedAsserts += testResults.totalAssertsFailed();
     }
-    var builder = new TextFormattingStringBuilder(useColor);
+    var builder = new AnsiCodingStringBuilder(useColor);
     if (isFailed && isExampleWrittenFailure) {
       builder.append(totalFailedTests).append(" examples written");
     } else {
@@ -83,19 +83,20 @@ public final class SimpleReport implements TestReport {
       builder.append(", ");
       makeStatsLine(builder, "asserts", totalAsserts, totalFailedAsserts, isFailed);
     }
-    builder.appendLine();
+    builder.append('\n');
     writer.append(builder.toString());
   }
 
-  private void reportResults(TestSectionResults section, TextFormattingStringBuilder builder) {
+  private void reportResults(TestSectionResults section, AnsiCodingStringBuilder builder) {
     if (!section.results().isEmpty()) {
-      builder.append("  ").append(section.name()).append("\n");
-      builder.join(section.results(), "\n", res -> reportResult(res, builder));
-      builder.append("\n");
+      builder.append("  ").append(section.name()).append('\n');
+      StringUtils.joinToStringBuilder(
+          builder, section.results(), "\n", res -> reportResult(res, builder));
+      builder.append('\n');
     }
   }
 
-  private void reportResult(TestResult result, TextFormattingStringBuilder builder) {
+  private void reportResult(TestResult result, AnsiCodingStringBuilder builder) {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
@@ -110,11 +111,13 @@ public final class SimpleReport implements TestReport {
       if (result.isFailure()) {
         var failurePadding = "       ";
         builder.append("\n");
-        builder.join(
+        StringUtils.joinToStringBuilder(
+            builder,
             result.failures(),
             "\n",
             failure -> appendPadded(builder, failure.message(), failurePadding));
-        builder.join(
+        StringUtils.joinToStringBuilder(
+            builder,
             result.errors(),
             "\n",
             error -> appendPadded(builder, error.exception().getMessage(), failurePadding));
@@ -122,9 +125,9 @@ public final class SimpleReport implements TestReport {
     }
   }
 
-  private static void appendPadded(
-      TextFormattingStringBuilder builder, String lines, String padding) {
-    builder.join(
+  private static void appendPadded(AnsiCodingStringBuilder builder, String lines, String padding) {
+    StringUtils.joinToStringBuilder(
+        builder,
         lines.lines().collect(Collectors.toList()),
         "\n",
         str -> {
@@ -133,16 +136,15 @@ public final class SimpleReport implements TestReport {
   }
 
   private void makeStatsLine(
-      TextFormattingStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
+      AnsiCodingStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
     var passed = total - failed;
     var passRate = total > 0 ? 100.0 * passed / total : 0.0;
 
     var color = isFailed ? AnsiCode.RED : AnsiCode.GREEN;
     sb.append(
         color,
-        () -> {
-          sb.append(String.format("%.1f%%", passRate)).append(" ").append(kind).append(" pass");
-        });
+        () ->
+            sb.append(String.format("%.1f%%", passRate)).append(" ").append(kind).append(" pass"));
 
     if (isFailed) {
       sb.append(" [").append(failed).append('/').append(total).append(" failed]");

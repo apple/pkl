@@ -198,7 +198,7 @@ public final class JUnitReport implements TestReport {
   }
 
   private String stripColors(String str) {
-    return str.replaceAll("\u001B\\[[;\\d]*m", "");
+    return str.replaceAll("\033\\[[;\\d]*m", "");
   }
 
   private static String renderXML(String indent, String version, VmDynamic value) {

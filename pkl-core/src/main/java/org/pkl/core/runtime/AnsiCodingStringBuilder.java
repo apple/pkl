@@ -19,13 +19,10 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.function.Consumer;
 import org.pkl.core.util.StringBuilderWriter;
 
-// TODO: Replace `newInstance()` with an alternative that doesn't require instance management,
-//   i.e. better composition (currently only used for pre-rendering `hint`s).
 @SuppressWarnings("DuplicatedCode")
-public final class TextFormattingStringBuilder {
+public final class AnsiCodingStringBuilder {
   private final StringBuilder builder = new StringBuilder();
   private final boolean usingColor;
 
@@ -35,21 +32,12 @@ public final class TextFormattingStringBuilder {
   /** The set of ansi codes intended to be applied the next time text is written. */
   private Set<AnsiCode> declaredCodes = Collections.emptySet();
 
-  public TextFormattingStringBuilder(boolean usingColor) {
+  public AnsiCodingStringBuilder(boolean usingColor) {
     this.usingColor = usingColor;
   }
 
-  public TextFormattingStringBuilder appendLine() {
-    builder.append("\n");
-    return this;
-  }
-
-  public TextFormattingStringBuilder appendLine(int count) {
-    builder.append("\n".repeat(count));
-    return this;
-  }
-
-  public TextFormattingStringBuilder append(Set<AnsiCode> codes, String value) {
+  /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
+  public AnsiCodingStringBuilder append(Set<AnsiCode> codes, String value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -61,7 +49,8 @@ public final class TextFormattingStringBuilder {
     return this;
   }
 
-  public TextFormattingStringBuilder append(AnsiCode code, int value) {
+  /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
+  public AnsiCodingStringBuilder append(AnsiCode code, int value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -73,7 +62,8 @@ public final class TextFormattingStringBuilder {
     return this;
   }
 
-  public TextFormattingStringBuilder append(AnsiCode code, String value) {
+  /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
+  public AnsiCodingStringBuilder append(AnsiCode code, String value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -85,7 +75,26 @@ public final class TextFormattingStringBuilder {
     return this;
   }
 
-  public TextFormattingStringBuilder append(AnsiCode code, Runnable runnable) {
+  /**
+   * Apply {@code code} to every appended element within {@code runnable}.
+   *
+   * <p>This is a helper method. With this:
+   *
+   * <ul>
+   *   <li>There is no need to repeat the same style for multiple appends in a row.
+   *   <li>The parent style is added to any styles added applied in the children.
+   *       <p>For example, in the following snippet, {@code "hello"} is formatted in both bold and
+   *       red:
+   *       <pre>{@code
+   * var sb = new AnsiCodingStringBuilder(true);
+   * sb.append(AnsiCode.RED, () -> {
+   *   sb.append(AnsiCode.BOLD, "hello");
+   * });
+   *
+   * }</pre>
+   * </ul>
+   */
+  public AnsiCodingStringBuilder append(AnsiCode code, Runnable runnable) {
     if (!usingColor) {
       runnable.run();
       return this;
@@ -102,7 +111,7 @@ public final class TextFormattingStringBuilder {
    *
    * <p>Always add a reset and re-apply all colors after appending the string.
    */
-  public TextFormattingStringBuilder appendUntrusted(String value) {
+  public AnsiCodingStringBuilder appendUntrusted(String value) {
     appendCodes();
     builder.append(value);
     if (usingColor) {
@@ -112,51 +121,64 @@ public final class TextFormattingStringBuilder {
     return this;
   }
 
-  public TextFormattingStringBuilder append(String value) {
+  /**
+   * Append {@code value} to the string.
+   *
+   * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
+   * context.
+   */
+  public AnsiCodingStringBuilder append(String value) {
     appendCodes();
     builder.append(value);
     return this;
   }
 
-  public TextFormattingStringBuilder append(char value) {
+  /**
+   * Append the string representation of {@code value} to the string.
+   *
+   * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
+   * context.
+   */
+  public AnsiCodingStringBuilder append(char value) {
     appendCodes();
     builder.append(value);
     return this;
   }
 
-  public TextFormattingStringBuilder append(int value) {
+  /**
+   * Append the string representation of {@code value} to the string.
+   *
+   * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
+   * context.
+   */
+  public AnsiCodingStringBuilder append(int value) {
     appendCodes();
     builder.append(value);
     return this;
   }
 
-  public TextFormattingStringBuilder append(Object value) {
+  /**
+   * Append the string representation of {@code value} to the string.
+   *
+   * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
+   * context.
+   */
+  public AnsiCodingStringBuilder append(Object value) {
     appendCodes();
     builder.append(value);
     return this;
   }
 
-  public <T> TextFormattingStringBuilder join(
-      Iterable<T> coll, String delimiter, Consumer<T> eachFn) {
-    var i = 0;
-    for (var v : coll) {
-      if (i != 0) {
-        builder.append(delimiter);
-      }
-      eachFn.accept(v);
-      i++;
-    }
-    return this;
-  }
-
-  public TextFormattingStringBuilder newInstance() {
-    return new TextFormattingStringBuilder(usingColor);
+  /** Returns a fresh instance of this string builder. */
+  public AnsiCodingStringBuilder newInstance() {
+    return new AnsiCodingStringBuilder(usingColor);
   }
 
   public PrintWriter toPrintWriter() {
     return new PrintWriter(new StringBuilderWriter(builder));
   }
 
+  /** Builds the data represented by this builder into a {@link String}. */
   public String toString() {
     // be a good citizen and unset any ansi escape codes currently set.
     reset();
@@ -194,25 +216,11 @@ public final class TextFormattingStringBuilder {
   private void reset() {
     if (!usingColor || currentCodes.isEmpty()) return;
     doReset();
+    currentCodes = Collections.emptySet();
   }
 
   private void doReset() {
     builder.append("\033[0m");
-  }
-
-  public enum Element {
-    PLAIN,
-    MARGIN,
-    HINT,
-    STACK_OVERFLOW_LOOP_COUNT,
-    LINE_NUMBER,
-    TEXT,
-    ERROR_HEADER,
-    ERROR,
-    RESET,
-    FAILING_TEST_MARK,
-    PASSING_TEST_MARK,
-    TEST_NAME,
   }
 
   public enum AnsiCode {

@@ -29,8 +29,7 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(
-      List<StackFrame> frames, @Nullable String hint, TextFormattingStringBuilder out) {
+  public void render(List<StackFrame> frames, @Nullable String hint, AnsiCodingStringBuilder out) {
     var compressed = compressFrames(frames);
     doRender(compressed, hint, out, "", true);
   }
@@ -39,7 +38,7 @@ public final class StackTraceRenderer {
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
-      TextFormattingStringBuilder out,
+      AnsiCodingStringBuilder out,
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
@@ -49,7 +48,7 @@ public final class StackTraceRenderer {
           doRender(loop.frames, null, out, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
-            out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).appendLine();
+            out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
           }
           out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
               .append(ColorTheme.STACK_TRACE_MARGIN, "┌─ ")
@@ -61,11 +60,11 @@ public final class StackTraceRenderer {
             renderHint(hint, out, newLeftMargin);
             isFirstElement = false;
           }
-          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin + "└─").appendLine();
+          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
         }
       } else {
         if (!isFirstElement) {
-          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).appendLine();
+          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
         }
         renderFrame((StackFrame) frame, out, leftMargin);
       }
@@ -77,24 +76,22 @@ public final class StackTraceRenderer {
     }
   }
 
-  private void renderFrame(StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
+  private void renderFrame(StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
     var transformed = frameTransformer.apply(frame);
     renderSourceLine(transformed, out, leftMargin);
     renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(
-      @Nullable String hint, TextFormattingStringBuilder out, String leftMargin) {
+  private void renderHint(@Nullable String hint, AnsiCodingStringBuilder out, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
 
-    out.appendLine()
+    out.append('\n')
         .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(ColorTheme.ERROR_MESSAGE_HINT, hint)
-        .appendLine();
+        .append('\n');
   }
 
-  private void renderSourceLine(
-      StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
+  private void renderSourceLine(StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -108,15 +105,15 @@ public final class StackTraceRenderer {
     out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(ColorTheme.STACK_TRACE_LINE_NUMBER, prefix)
         .append(sourceLine)
-        .appendLine()
+        .append('\n')
         .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(" ".repeat(prefix.length() + startColumn - 1))
         .append(ColorTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
-        .appendLine();
+        .append('\n');
   }
 
   private void renderSourceLocation(
-      StackFrame frame, TextFormattingStringBuilder out, String leftMargin) {
+      StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
     out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(
             ColorTheme.STACK_FRAME,
@@ -126,7 +123,7 @@ public final class StackTraceRenderer {
                     .append(" (")
                     .appendUntrusted(frame.getModuleUri())
                     .append(")")
-                    .appendLine());
+                    .append('\n'));
   }
 
   /**

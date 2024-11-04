@@ -37,10 +37,6 @@ import org.pkl.commons.writeString
 import org.pkl.core.Release
 
 class CliTestRunnerTest {
-  // make test failures easier to debug
-  private val String.escaped
-    get() = replace("\u001b", "[ESC]")
-
   @Test
   fun `CliTestRunner succeed test`(@TempDir tempDir: Path) {
     val code =

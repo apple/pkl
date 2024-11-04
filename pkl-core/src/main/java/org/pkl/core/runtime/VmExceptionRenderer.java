@@ -39,12 +39,12 @@ public final class VmExceptionRenderer {
 
   @TruffleBoundary
   public String render(VmException exception) {
-    var formatter = new TextFormattingStringBuilder(color);
+    var formatter = new AnsiCodingStringBuilder(color);
     render(exception, formatter);
     return formatter.toString();
   }
 
-  private void render(VmException exception, TextFormattingStringBuilder out) {
+  private void render(VmException exception, AnsiCodingStringBuilder out) {
     if (exception instanceof VmBugException bugException) {
       renderBugException(bugException, out);
     } else {
@@ -52,31 +52,31 @@ public final class VmExceptionRenderer {
     }
   }
 
-  private void renderBugException(VmBugException exception, TextFormattingStringBuilder out) {
+  private void renderBugException(VmBugException exception, AnsiCodingStringBuilder out) {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
     var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
 
     out.append("An unexpected error has occurred. Would you mind filing a bug report?")
-        .appendLine()
+        .append('\n')
         .append("Cmd+Double-click the link below to open an issue.")
-        .appendLine()
+        .append('\n')
         .append("Please copy and paste the entire error output into the issue's description.")
-        .appendLine(2)
+        .append("\n".repeat(2))
         .append("https://github.com/apple/pkl/issues/new")
-        .appendLine(2)
+        .append("\n".repeat(2))
         .append(exceptionUrl.replaceAll("\\+", "%20"))
-        .appendLine(2);
+        .append("\n".repeat(2));
 
     renderException(exception, out, true);
 
-    out.appendLine().append(Release.current().versionInfo()).appendLine(2);
+    out.append('\n').append(Release.current().versionInfo()).append("\n".repeat(2));
 
     exceptionToReport.printStackTrace(out.toPrintWriter());
   }
 
   private void renderException(
-      VmException exception, TextFormattingStringBuilder out, boolean withHeader) {
+      VmException exception, AnsiCodingStringBuilder out, boolean withHeader) {
     String message;
     var hint = exception.getHint();
     if (exception.isExternalMessage()) {
@@ -97,9 +97,9 @@ public final class VmExceptionRenderer {
     }
 
     if (withHeader) {
-      out.append(ColorTheme.ERROR_HEADER, "–– Pkl Error ––").appendLine();
+      out.append(ColorTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
     }
-    out.append(ColorTheme.ERROR_MESSAGE, message).appendLine();
+    out.append(ColorTheme.ERROR_MESSAGE, message).append('\n');
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -107,7 +107,7 @@ public final class VmExceptionRenderer {
       var causeMessage = cause.getMessage();
       // null for Truffle's LazyStackTrace
       if (causeMessage != null && !causeMessage.equals(message)) {
-        out.append(cause.getClass().getSimpleName()).append(": ").append(causeMessage).appendLine();
+        out.append(cause.getClass().getSimpleName()).append(": ").append(causeMessage).append('\n');
       }
     }
 
@@ -119,7 +119,7 @@ public final class VmExceptionRenderer {
           .append(" ".repeat(Math.max(0, maxNameLength - value.name.length())))
           .append(": ")
           .append(value)
-          .appendLine();
+          .append('\n');
     }
 
     if (stackTraceRenderer != null) {
@@ -132,10 +132,10 @@ public final class VmExceptionRenderer {
       }
 
       if (!frames.isEmpty()) {
-        stackTraceRenderer.render(frames, hint, out.appendLine());
+        stackTraceRenderer.render(frames, hint, out.append('\n'));
       } else if (hint != null) {
         // render hint if there are no stack frames
-        out.appendLine().append(ColorTheme.ERROR_MESSAGE_HINT, hint);
+        out.append('\n').append(ColorTheme.ERROR_MESSAGE_HINT, hint);
       }
     }
   }

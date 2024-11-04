@@ -17,7 +17,7 @@ package org.pkl.core.util;
 
 import java.util.EnumSet;
 import java.util.Set;
-import org.pkl.core.runtime.TextFormattingStringBuilder.AnsiCode;
+import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
 
 public class ColorTheme {
   private ColorTheme() {}

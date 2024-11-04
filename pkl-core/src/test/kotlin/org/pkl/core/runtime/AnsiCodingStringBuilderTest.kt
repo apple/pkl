@@ -18,12 +18,12 @@ package org.pkl.core.runtime
 import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.pkl.core.runtime.TextFormattingStringBuilder.AnsiCode
+import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode
 
-class TextFormattingStringBuilderTest {
+class AnsiCodingStringBuilderTest {
   @Test
   fun `no formatting`() {
-    val result = TextFormattingStringBuilder(false).append(AnsiCode.RED, "hello").toString()
+    val result = AnsiCodingStringBuilder(false).append(AnsiCode.RED, "hello").toString()
     assertThat(result).isEqualTo("hello")
   }
 
@@ -39,17 +39,14 @@ class TextFormattingStringBuilderTest {
   @Test
   fun `don't emit same color code`() {
     val result =
-      TextFormattingStringBuilder(true)
-        .append(AnsiCode.RED, "hi")
-        .append(AnsiCode.RED, "hi")
-        .toString()
+      AnsiCodingStringBuilder(true).append(AnsiCode.RED, "hi").append(AnsiCode.RED, "hi").toString()
     assertThat(result.escaped).isEqualTo("${red}hihi${reset}".escaped)
   }
 
   @Test
   fun `only add needed codes`() {
     val result =
-      TextFormattingStringBuilder(true)
+      AnsiCodingStringBuilder(true)
         .append(AnsiCode.RED, "hi")
         .append(EnumSet.of(AnsiCode.RED, AnsiCode.BOLD), "hi")
         .toString()
@@ -59,7 +56,7 @@ class TextFormattingStringBuilderTest {
   @Test
   fun `reset if need to subtract`() {
     val result =
-      TextFormattingStringBuilder(true)
+      AnsiCodingStringBuilder(true)
         .append(EnumSet.of(AnsiCode.RED, AnsiCode.BOLD), "hi")
         .append(AnsiCode.RED, "hi")
         .toString()
@@ -69,7 +66,7 @@ class TextFormattingStringBuilderTest {
   @Test
   fun `plain text in between`() {
     val result =
-      TextFormattingStringBuilder(true)
+      AnsiCodingStringBuilder(true)
         .append(AnsiCode.RED, "hi")
         .append("hi")
         .append(AnsiCode.RED, "hi")
