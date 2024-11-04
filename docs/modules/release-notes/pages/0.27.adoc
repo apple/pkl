@@ -464,17 +464,17 @@ The following Java APIs have breaking changes:
 |Class/method | Breaking change
 
 |`org.pkl.core.runtime.TestResults`
-|Moved to `org.pkl.core.TestResults`, turn into a record, and largely restructured.
+|Moved to `org.pkl.core.TestResults`, turned into a record, and largely restructured.
 
 |`org.pkl.core.module.ModuleKeyFactories.closeQuietly`
-|Deprecated for removal.
+|Deprecated for removal in favor of `org.pkl.core.Closeables.closeQuietly`.
 |===
 
 === Spring Boot 2 support dropped
 
 The Java code generator no longer supports Spring Boot 2.x (https://github.com/apple/pkl/pull/729[#729]).
 
-If Spring Boot 2 is needed, the code generator from Pkl 0.26 can be used.
+Spring Boot 2 users can continue to use the Pkl 0.26 code generator.
 
 === `pkl test` considered failing when writing examples
 
@@ -484,16 +484,15 @@ Additionally, the junit reports will consider the test as failing.
 
 === `Listing` and `Mapping` typecheck changes
 
-Due to changes to <<typecheck-improvements,Listing and Mapping typechecking>>, the behavior of Pkl programs has altered slightly.
-
-Because Pkl now performs lazy typechecks on these objects, some programs that used to throw do not throw anymore.
+Due to changes to <<typecheck-improvements,Listing and Mapping typechecking>>, some previously failing programs now succeed.
+This can happen when erroneous code is never evaluated because it does not affect program output:
 
 [source,pkl]
 ----
 local myNumbers: Listing<Int> = new { 1; 2; "uh oh" } 
 result = myNumbers[0] // <1>
 ----
-<1> In Pkl 0.26 and below, throws a type mismatch exception.
+<1> In Pkl 0.26 and below, throws a type mismatch error.
 +
 In Pkl 0.27, yields `1`.
 
