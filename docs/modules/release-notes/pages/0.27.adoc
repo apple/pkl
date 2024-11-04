@@ -22,21 +22,22 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 News you don't want to miss.
 
 [#typecheck-improvements]
-=== `Mapping`/`Listing` typecheck improvements
+=== Improved typechecking of `Listing` and `Mapping` types
 
 Typechecking of `Listing` and `Mapping` types has been improved (https://github.com/apple/pkl/pull/628[#628], https://github.com/apple/pkl/pull/725[#725], https://github.com/apple/pkl/pull/740[#740], https://github.com/apple/pkl/pull/752[#752]).
 
-Today, in order to typecheck `Mapping` and `Listing`, Pkl will execute each member to check it against the type parameter
+Today, the typecheck `listing: Listing<E>` immediately evaluates all listing elements to check that they have type `E`.
+Likewise, the typecheck `mapping: Mapping<K, V>` immediately evaluates all mapping values to check that they have type `V`.
 
-For example, in order to typecheck a value as `Listing<Bird>` (given that `Bird` is a class), the evaluator runs the following steps:
+For example, the typecheck `listing: Listing<Bird>` proceeds as follows:
 
-1. Check that the value is an instance of `Listing`
-2. For each listing member, check that it is an instance of `Bird`
+1. Check that `listing` has type `Listing`
+2. Evaluate each listing element and check that it has type `Bird`
 
 This behavior is different from how the rest of Pkl works.
-Generally, Pkl will only execute code that is in the critical path of evaluation.
+Generally, Pkl only evaluates code that affects program output.
 
-For example, given the following code:
+For example, consider the following program:
 
 [source,pkl]
 ----
@@ -53,12 +54,12 @@ local bird: Bird = new {
 birdName = bird.name
 ----
 
-Even though `canFly` has received an invalid value, this program evaluates to `birdName = "Pidgy"`. This is because `canFly = throw("uh oh")` is not executed.
+Even though `bird.canFly` throws an error, the above program succeeds because `bird.canFly` is not part of the program's output and hence is never accessed (Note that `bird` is a _local_ property).
 
-The behavior of `Mapping` and `Listing` has been changed to match.
-This means that their members are not executed if they are not in the critical path of evaluation.
+Typechecks of `Mapping` and `Listing` types have been changed to match this behavior.
+Mapping values and listing elements are now only typechecked if and when they are accessed.
 
-This subtly changes the behavior of some existing code.
+This change causes some previously failing programs to evaluate successfully:
 
 [source,pkl]
 ----
@@ -69,11 +70,7 @@ result = myNumbers[0] // <1>
 +
 In Pkl 0.27, yields `1`.
 
-In practice, this means that some Pkl programs will execute more quickly.
-For example, this program effectively only imports one module called `foo`.
-
-In Pkl 0.26 and below, this results in _every_ import being evaluated.
-In Pkl 0.27, only one import is evaluated.
+As another consequence of this change, some Pkl programs now complete more quickly:
 
 [source,pkl]
 ----
@@ -85,7 +82,9 @@ cluster: String
 
 myBird = allBirds["\(environment)/\(cluster)/bird.pkl"] // <1>
 ----
-<1> Perform just one logical import by selecting it from a glob import result. This is a common pattern for "dynamic" imports.
+In Pkl 0.26 and below, all modules matching `**/bird.pkl` are imported when `allBirds` is accessed and typechecked.
+This can take a long time.
+In Pkl 0.27, only module `"\(environment)/\(cluster)/bird.pkl"` is imported because only this module is part of the program's output.
 
 To learn more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0010-overhauled-mapping-listing-typechecks.adoc[SPICE-0010].
 
