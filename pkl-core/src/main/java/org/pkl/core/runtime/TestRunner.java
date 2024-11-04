@@ -34,7 +34,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
-import org.pkl.core.util.ColorTheme;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
@@ -396,7 +396,7 @@ public final class TestRunner {
 
   private Failure factFailure(SourceSection sourceSection, String location) {
     var sb = new AnsiCodingStringBuilder(useColor);
-    sb.append(ColorTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
+    sb.append(AnsiTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
     appendLocation(sb, location);
     return new Failure("Fact Failure", sb.toString());
   }
@@ -408,7 +408,7 @@ public final class TestRunner {
 
     sb.append('\n')
         .append(
-            ColorTheme.TEST_FAILURE_MESSAGE,
+            AnsiTheme.TEST_FAILURE_MESSAGE,
             () ->
                 sb.append("Output mismatch: Expected \"")
                     .append(property)
@@ -438,7 +438,7 @@ public final class TestRunner {
 
     sb.append('\n')
         .append(
-            ColorTheme.TEST_FAILURE_MESSAGE,
+            AnsiTheme.TEST_FAILURE_MESSAGE,
             () ->
                 sb.append("Output mismatch: \"")
                     .append(property)
@@ -458,33 +458,33 @@ public final class TestRunner {
       String actualValue,
       int exampleNumber) {
     var sb = new AnsiCodingStringBuilder(useColor);
-    sb.append(ColorTheme.TEST_NAME, "#" + exampleNumber + ": ");
+    sb.append(AnsiTheme.TEST_NAME, "#" + exampleNumber + ": ");
     sb.append(
-        ColorTheme.TEST_FAILURE_MESSAGE,
+        AnsiTheme.TEST_FAILURE_MESSAGE,
         () -> {
           appendLocation(sb, location);
           sb.append("\n  Expected: ");
           appendLocation(sb, expectedLocation);
           sb.append("\n  ");
-          sb.append(ColorTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replaceAll("\n", "\n  "));
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replaceAll("\n", "\n  "));
           sb.append("\n  Actual: ");
           appendLocation(sb, actualLocation);
           sb.append("\n  ");
-          sb.append(ColorTheme.TEST_EXAMPLE_OUTPUT, actualValue.replaceAll("\n", "\n  "));
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, actualValue.replaceAll("\n", "\n  "));
         });
     return new Failure("Example Failure", sb.toString());
   }
 
   private void appendLocation(AnsiCodingStringBuilder stringBuilder, String location) {
     stringBuilder.append(
-        ColorTheme.STACK_FRAME,
+        AnsiTheme.STACK_FRAME,
         () -> stringBuilder.append("(").appendUntrusted(location).append(")"));
   }
 
   private Failure writtenExampleOutputFailure(String testName, String location) {
     var sb = new AnsiCodingStringBuilder(useColor);
     appendLocation(sb, location);
-    sb.append(ColorTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
+    sb.append(AnsiTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
     return new Failure("Example Output Written", sb.toString());
   }
 }

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
-import org.pkl.core.util.ColorTheme;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.Nullable;
 
 public final class StackTraceRenderer {
@@ -48,11 +48,11 @@ public final class StackTraceRenderer {
           doRender(loop.frames, null, out, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
-            out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
+            out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
           }
-          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
-              .append(ColorTheme.STACK_TRACE_MARGIN, "┌─ ")
-              .append(ColorTheme.STACK_TRACE_LOOP_COUNT, loop.count)
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+              .append(AnsiTheme.STACK_TRACE_MARGIN, "┌─ ")
+              .append(AnsiTheme.STACK_TRACE_LOOP_COUNT, loop.count)
               .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
           doRender(loop.frames, null, out, newLeftMargin, isFirstElement);
@@ -60,11 +60,11 @@ public final class StackTraceRenderer {
             renderHint(hint, out, newLeftMargin);
             isFirstElement = false;
           }
-          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
         }
       } else {
         if (!isFirstElement) {
-          out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
         }
         renderFrame((StackFrame) frame, out, leftMargin);
       }
@@ -86,8 +86,8 @@ public final class StackTraceRenderer {
     if (hint == null || hint.isEmpty()) return;
 
     out.append('\n')
-        .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
-        .append(ColorTheme.ERROR_MESSAGE_HINT, hint)
+        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.ERROR_MESSAGE_HINT, hint)
         .append('\n');
   }
 
@@ -102,21 +102,21 @@ public final class StackTraceRenderer {
             : sourceLine.length();
 
     var prefix = frame.getStartLine() + " | ";
-    out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
-        .append(ColorTheme.STACK_TRACE_LINE_NUMBER, prefix)
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.STACK_TRACE_LINE_NUMBER, prefix)
         .append(sourceLine)
         .append('\n')
-        .append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(" ".repeat(prefix.length() + startColumn - 1))
-        .append(ColorTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
+        .append(AnsiTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
         .append('\n');
   }
 
   private void renderSourceLocation(
       StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
-    out.append(ColorTheme.STACK_TRACE_MARGIN, leftMargin)
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(
-            ColorTheme.STACK_FRAME,
+            AnsiTheme.STACK_FRAME,
             () ->
                 out.append("at ")
                     .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")

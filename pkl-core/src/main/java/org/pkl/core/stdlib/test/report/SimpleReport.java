@@ -24,7 +24,7 @@ import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.runtime.AnsiCodingStringBuilder;
 import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode;
-import org.pkl.core.util.ColorTheme;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
 public final class SimpleReport implements TestReport {
@@ -103,11 +103,11 @@ public final class SimpleReport implements TestReport {
       builder.append("✍️ ").append(result.name());
     } else {
       if (result.isFailure()) {
-        builder.append(ColorTheme.FAILING_TEST_MARK, failingMark);
+        builder.append(AnsiTheme.FAILING_TEST_MARK, failingMark);
       } else {
-        builder.append(ColorTheme.PASSING_TEST_MARK, passingMark);
+        builder.append(AnsiTheme.PASSING_TEST_MARK, passingMark);
       }
-      builder.append(ColorTheme.TEST_NAME, result.name());
+      builder.append(AnsiTheme.TEST_NAME, result.name());
       if (result.isFailure()) {
         var failurePadding = "       ";
         builder.append("\n");

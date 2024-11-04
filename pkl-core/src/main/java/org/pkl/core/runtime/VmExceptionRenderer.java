@@ -20,7 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.pkl.core.Release;
-import org.pkl.core.util.ColorTheme;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
@@ -97,9 +97,9 @@ public final class VmExceptionRenderer {
     }
 
     if (withHeader) {
-      out.append(ColorTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
+      out.append(AnsiTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
     }
-    out.append(ColorTheme.ERROR_MESSAGE, message).append('\n');
+    out.append(AnsiTheme.ERROR_MESSAGE, message).append('\n');
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {
@@ -135,7 +135,7 @@ public final class VmExceptionRenderer {
         stackTraceRenderer.render(frames, hint, out.append('\n'));
       } else if (hint != null) {
         // render hint if there are no stack frames
-        out.append('\n').append(ColorTheme.ERROR_MESSAGE_HINT, hint);
+        out.append('\n').append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
       }
     }
   }
