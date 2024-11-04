@@ -499,6 +499,7 @@ In Pkl 0.27, yields `1`.
 == Miscellaneous [small]#🐸#
 
 * Make pkl-doc top box include a preview of the rest of module-level documentation (https://github.com/apple/pkl/pull/570[#570]).
+* Module `pkl-core` now has a dependency on `org.msgpack:msgpack-core` (https://github.com/apple/pkl/pull/660[#660]). Users concerned about potential version conflicts can use one of Pkl's shaded fat JARs (`pkl-config-java-all`, `pkl-tools`).
 * Make PklProject.deps.json files end in a newline (https://github.com/apple/pkl/pull/664[#644]).
 * Fix invalid syntax of code examples in stdlib doc comments (https://github.com/apple/pkl/pull/703[#703]).
 * Update Java dependencies (https://github.com/apple/pkl/pull/689[#689], https://github.com/apple/pkl/pull/767[#767]).
