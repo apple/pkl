@@ -77,13 +77,13 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function, arg1);
+    return callNode.call(function.getThisValue(), function, false, arg1);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
       VmFunction function, Object arg1, @Cached("create()") IndirectCallNode callNode) {
 
-    return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1);
+    return callNode.call(function.getCallTarget(), function.getThisValue(), function, false, arg1);
   }
 }

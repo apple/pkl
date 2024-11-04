@@ -71,6 +71,6 @@ public final class LetExprNode extends ExpressionNode {
 
     var value = valueNode.executeGeneric(frame);
 
-    return callNode.call(function.getThisValue(), function, value);
+    return callNode.call(function.getThisValue(), function, false, value);
   }
 }

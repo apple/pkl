@@ -1986,6 +1986,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               visitArgumentList(argCtx),
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
+              symbolTable.getCurrentScope().isVisitingIterable(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -1998,6 +1999,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         visitArgumentList(argCtx),
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
+        symbolTable.getCurrentScope().isVisitingIterable(),
         receiver,
         GetClassNodeGen.create(null));
   }
@@ -2072,7 +2074,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       return InvokeSuperMethodNodeGen.create(
-          sourceSection, memberName, visitArgumentList(argCtx), needsConst);
+          sourceSection,
+          memberName,
+          symbolTable.getCurrentScope().isVisitingIterable(),
+          visitArgumentList(argCtx),
+          needsConst);
     }
 
     // superproperty call
@@ -2130,7 +2136,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         isBaseModule,
         scope.isCustomThisScope(),
         scope.getConstLevel(),
-        scope.getConstDepth());
+        scope.getConstDepth(),
+        scope.isVisitingIterable());
   }
 
   @Override
