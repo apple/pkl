@@ -23,3 +23,14 @@ res10 = new Listing { "one" } == new Listing { "one"; default = 9 }
 res11 = new Listing { x; local x = "one" } == new Listing { "one" }
 res12 = new Listing { x; local x = "one"; local `_` = "two" } == new Listing { "one"; default = 9 }
 res13 = new Listing { x; local x = "one" } { y; local y = "two" } == new Listing { "one"; "two" }
+
+local class Bird { name: String }
+
+local l1: Listing<Bird> = new {
+  new { name = "Pigeon" }
+  new { name = "Stork" }
+}
+
+local l2: Listing<Bird|Int> = l1
+
+res14 = l1 == l2

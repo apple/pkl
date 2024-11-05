@@ -35,7 +35,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
    * A Listing or Mapping typecast creates a new object that contains a new typecheck node, and
    * delegates member lookups to this delegate.
    */
-  private final @Nullable SELF delegate;
+  protected final @Nullable SELF delegate;
 
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final MaterializedFrame typeNodeFrame;

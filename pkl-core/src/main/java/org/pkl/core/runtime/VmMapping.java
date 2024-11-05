@@ -81,12 +81,16 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
 
   @TruffleBoundary
   public VmSet getAllKeys() {
+    if (delegate != null) {
+      return delegate.getAllKeys();
+    }
     synchronized (this) {
       if (__allKeys == null) {
         // building upon parent's `getAllKeys()` should improve at least worst case efficiency
-        var parentKeys = parent instanceof VmMapping mapping ? mapping.getAllKeys() : VmSet.EMPTY;
+        var parentKeys =
+            getParent() instanceof VmMapping mapping ? mapping.getAllKeys() : VmSet.EMPTY;
         var builder = VmSet.builder(parentKeys);
-        for (var cursor = members.getEntries(); cursor.advance(); ) {
+        for (var cursor = getMembers().getEntries(); cursor.advance(); ) {
           var member = cursor.getValue();
           if (!member.isEntry()) continue;
           builder.add(cursor.getKey());
@@ -113,21 +117,6 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
     return properties;
   }
 
-  @TruffleBoundary
-  public Map<Object, Object> toMap() {
-    var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
-
-    forceAndIterateMemberValues(
-        (key, prop, value) -> {
-          if (isDefaultProperty(key)) return true;
-
-          properties.put(key, value);
-          return true;
-        });
-
-    return properties;
-  }
-
   @Override
   public void accept(VmValueVisitor visitor) {
     visitor.visitMapping(this);
@@ -144,17 +133,12 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
     if (this == obj) return true;
     if (!(obj instanceof VmMapping other)) return false;
 
+    if (getEntryCount() != other.getEntryCount()) return false;
     // could use shallow force, but deep force is cached
     force(false);
     other.force(false);
-    if (getEntryCount() != other.getEntryCount()) return false;
-
-    var cursor = cachedValues.getEntries();
-    while (cursor.advance()) {
-      Object key = cursor.getKey();
-      if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
+    for (var key : getAllKeys()) {
+      var value = getCachedValue(key);
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -167,35 +151,26 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
   @TruffleBoundary
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
+    // It's possible that the delegate has already computed its hash code.
+    // If so, we can go ahead and use it.
+    if (delegate != null && delegate.cachedHash != 0) return delegate.cachedHash;
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
-
-    while (cursor.advance()) {
-      var key = cursor.getKey();
+    for (var key : getAllKeys()) {
       if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
+      var value = getCachedValue(key);
       assert value != null;
       result += key.hashCode() ^ value.hashCode();
     }
-
     cachedHash = result;
     return result;
   }
 
-  // assumes mapping has been forced
   public int getEntryCount() {
     if (cachedEntryCount != -1) return cachedEntryCount;
-
-    var result = 0;
-    for (var key : cachedValues.getKeys()) {
-      if (key instanceof Identifier) continue;
-      result += 1;
-    }
-    cachedEntryCount = result;
-    return result;
+    cachedEntryCount = getAllKeys().getLength();
+    return cachedEntryCount;
   }
 
   @Override
