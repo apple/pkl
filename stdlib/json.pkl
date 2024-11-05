@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A JSON parser.
-@ModuleInfo { minPklVersion = "0.27.0" }
+@ModuleInfo { minPklVersion = "0.28.0" }
 module pkl.json
 
 /// A JSON parser.
