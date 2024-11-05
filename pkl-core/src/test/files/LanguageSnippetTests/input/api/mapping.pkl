@@ -34,6 +34,12 @@ local empty2 = (empty) {
   local function `_`() = 42
 }
 
+local typedMapping: Mapping<String, String> = new {
+  ["hello"] = "hellooooo"
+}
+
+local delegatingTypedMapping: Mapping<String, String|Int> = typedMapping
+
 facts {
   ["isEmpty"] {
     !base.isEmpty
@@ -56,6 +62,8 @@ facts {
     !empty.containsKey("Pigeon")
     !empty.containsKey("default")
     !empty2.containsKey("Pigeon")
+
+    delegatingTypedMapping.containsKey("hello")
   }
 
   ["containsValue()"] {

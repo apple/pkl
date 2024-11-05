@@ -79,6 +79,17 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
   }
 
   @Override
+  public boolean hasCachedValue(Object key) {
+    if (super.hasCachedValue(key)) {
+      return true;
+    }
+    if (delegate != null) {
+      return delegate.hasCachedValue(key);
+    }
+    return false;
+  }
+
+  @Override
   public @Nullable Object getCachedValue(Object key) {
     var myCachedValue = super.getCachedValue(key);
     if (myCachedValue != null || delegate == null) {
