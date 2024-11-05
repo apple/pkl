@@ -377,7 +377,7 @@ These are:
 
 The `String` to `Number` converter methods, for example,  {uri-stdlib-StringToInt}[`String.toInt()`], can now handle underscore separators (https://github.com/apple/pkl/pull/578[#578], https://github.com/apple/pkl/pull/580[#580]).
 
-This better aligns with the source code representation of file:///Users/danielchao/code/apple/pkl-lang.org/build/local/main/current/language-reference/index.html#integers[number literals].
+This better aligns with the source code representation of xref:language-reference:index.adoc#integers[number literals].
 
 [source,pkl]
 ----
