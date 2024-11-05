@@ -68,15 +68,18 @@ endif::[]
 :uri-pkldoc-example: {uri-pkl-examples-tree}/pkldoc
 
 :uri-stdlib-baseModule: {uri-pkl-stdlib-docs}/base
+:uri-stdlib-analyzeModule: {uri-pkl-stdlib-docs}/analyze
 :uri-stdlib-jsonnetModule: {uri-pkl-stdlib-docs}/jsonnet
 :uri-stdlib-reflectModule: {uri-pkl-stdlib-docs}/reflect
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
+:uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
 :uri-stdlib-Boolean: {uri-stdlib-baseModule}/Boolean
 :uri-stdlib-xor: {uri-stdlib-baseModule}/Boolean#xor()
 :uri-stdlib-implies: {uri-stdlib-baseModule}/Boolean#implies()
 :uri-stdlib-Any: {uri-stdlib-baseModule}/Any
 :uri-stdlib-String: {uri-stdlib-baseModule}/String
+:uri-stdlib-StringToInt: {uri-stdlib-baseModule}/String#toInt()
 :uri-stdlib-Int: {uri-stdlib-baseModule}/Int
 :uri-stdlib-Float: {uri-stdlib-baseModule}/Float
 :uri-stdlib-Number: {uri-stdlib-baseModule}/Number
