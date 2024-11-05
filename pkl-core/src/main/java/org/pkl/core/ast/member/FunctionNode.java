@@ -44,6 +44,10 @@ public final class FunctionNode extends RegularMemberNode {
   // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
   // For other receivers, the owner is the prototype of the receiver's class.
   // The chain of enclosing owners forms a function/property's lexical scope.
+  //
+  // For function calls only, a third implicit argument is passed; whether the call came from within
+  // an iterable node or not.
+  // This is a mitigation for an existing bug (https://github.com/apple/pkl/issues/741).
   private static final int IMPLICIT_PARAM_COUNT = 3;
 
   private final int paramCount;
