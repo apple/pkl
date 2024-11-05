@@ -142,10 +142,10 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     force(false);
     other.force(false);
 
-    for (var i = 0; i < length; i++) {
-      var value = getCachedValue((long) i);
+    for (var i = 0L; i < length; i++) {
+      var value = getCachedValue(i);
       assert value != null;
-      var otherValue = other.getCachedValue((long) i);
+      var otherValue = other.getCachedValue(i);
       if (!value.equals(otherValue)) return false;
     }
 
@@ -162,8 +162,8 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
 
     force(false);
     var result = 0;
-    for (var i = 0; i < length; i++) {
-      var value = getCachedValue((long) i);
+    for (var i = 0L; i < length; i++) {
+      var value = getCachedValue(i);
       assert value != null;
       result = 31 * result + value.hashCode();
     }
