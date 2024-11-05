@@ -13,31 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.runtime;
+package org.pkl.core.util;
 
 import java.io.PrintWriter;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import org.pkl.core.util.StringBuilderWriter;
 
 @SuppressWarnings("DuplicatedCode")
-public final class AnsiCodingStringBuilder {
+public final class AnsiStringBuilder {
   private final StringBuilder builder = new StringBuilder();
   private final boolean usingColor;
 
   /** The set of ansi codes currently applied. */
-  private Set<AnsiCode> currentCodes = Collections.emptySet();
+  private Set<AnsiCode> currentCodes = EnumSet.noneOf(AnsiCode.class);
 
   /** The set of ansi codes intended to be applied the next time text is written. */
-  private Set<AnsiCode> declaredCodes = Collections.emptySet();
+  private Set<AnsiCode> declaredCodes = EnumSet.noneOf(AnsiCode.class);
 
-  public AnsiCodingStringBuilder(boolean usingColor) {
+  public AnsiStringBuilder(boolean usingColor) {
     this.usingColor = usingColor;
   }
 
   /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
-  public AnsiCodingStringBuilder append(Set<AnsiCode> codes, String value) {
+  public AnsiStringBuilder append(Set<AnsiCode> codes, String value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -51,7 +49,7 @@ public final class AnsiCodingStringBuilder {
   }
 
   /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
-  public AnsiCodingStringBuilder append(AnsiCode code, int value) {
+  public AnsiStringBuilder append(AnsiCode code, int value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -65,7 +63,7 @@ public final class AnsiCodingStringBuilder {
   }
 
   /** Append {@code value} to the string, ensuring it is formatted with {@code codes}. */
-  public AnsiCodingStringBuilder append(AnsiCode code, String value) {
+  public AnsiStringBuilder append(AnsiCode code, String value) {
     if (!usingColor) {
       builder.append(value);
       return this;
@@ -97,7 +95,7 @@ public final class AnsiCodingStringBuilder {
    * }</pre>
    * </ul>
    */
-  public AnsiCodingStringBuilder append(AnsiCode code, Runnable runnable) {
+  public AnsiStringBuilder append(AnsiCode code, Runnable runnable) {
     if (!usingColor) {
       runnable.run();
       return this;
@@ -115,7 +113,7 @@ public final class AnsiCodingStringBuilder {
    *
    * <p>Always add a reset and re-apply all colors after appending the string.
    */
-  public AnsiCodingStringBuilder appendUntrusted(String value) {
+  public AnsiStringBuilder appendUntrusted(String value) {
     appendCodes();
     builder.append(value);
     if (usingColor) {
@@ -131,7 +129,7 @@ public final class AnsiCodingStringBuilder {
    * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
    * context.
    */
-  public AnsiCodingStringBuilder append(String value) {
+  public AnsiStringBuilder append(String value) {
     appendCodes();
     builder.append(value);
     return this;
@@ -143,7 +141,7 @@ public final class AnsiCodingStringBuilder {
    * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
    * context.
    */
-  public AnsiCodingStringBuilder append(char value) {
+  public AnsiStringBuilder append(char value) {
     appendCodes();
     builder.append(value);
     return this;
@@ -155,7 +153,7 @@ public final class AnsiCodingStringBuilder {
    * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
    * context.
    */
-  public AnsiCodingStringBuilder append(int value) {
+  public AnsiStringBuilder append(int value) {
     appendCodes();
     builder.append(value);
     return this;
@@ -167,15 +165,15 @@ public final class AnsiCodingStringBuilder {
    * <p>If called within {@link #append(AnsiCode, Runnable)}, applies any styles in the current
    * context.
    */
-  public AnsiCodingStringBuilder append(Object value) {
+  public AnsiStringBuilder append(Object value) {
     appendCodes();
     builder.append(value);
     return this;
   }
 
   /** Returns a fresh instance of this string builder. */
-  public AnsiCodingStringBuilder newInstance() {
-    return new AnsiCodingStringBuilder(usingColor);
+  public AnsiStringBuilder newInstance() {
+    return new AnsiStringBuilder(usingColor);
   }
 
   public PrintWriter toPrintWriter() {
@@ -220,7 +218,7 @@ public final class AnsiCodingStringBuilder {
   private void reset() {
     if (!usingColor || currentCodes.isEmpty()) return;
     doReset();
-    currentCodes = Collections.emptySet();
+    currentCodes = EnumSet.noneOf(AnsiCode.class);
   }
 
   private void doReset() {

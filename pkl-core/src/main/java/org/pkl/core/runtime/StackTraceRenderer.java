@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.Nullable;
 
@@ -29,7 +30,7 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(List<StackFrame> frames, @Nullable String hint, AnsiCodingStringBuilder out) {
+  public void render(List<StackFrame> frames, @Nullable String hint, AnsiStringBuilder out) {
     var compressed = compressFrames(frames);
     doRender(compressed, hint, out, "", true);
   }
@@ -38,7 +39,7 @@ public final class StackTraceRenderer {
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
-      AnsiCodingStringBuilder out,
+      AnsiStringBuilder out,
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
@@ -76,13 +77,13 @@ public final class StackTraceRenderer {
     }
   }
 
-  private void renderFrame(StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
+  private void renderFrame(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
     var transformed = frameTransformer.apply(frame);
     renderSourceLine(transformed, out, leftMargin);
     renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(@Nullable String hint, AnsiCodingStringBuilder out, String leftMargin) {
+  private void renderHint(@Nullable String hint, AnsiStringBuilder out, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
 
     out.append('\n')
@@ -91,7 +92,7 @@ public final class StackTraceRenderer {
         .append('\n');
   }
 
-  private void renderSourceLine(StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
+  private void renderSourceLine(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -112,8 +113,7 @@ public final class StackTraceRenderer {
         .append('\n');
   }
 
-  private void renderSourceLocation(
-      StackFrame frame, AnsiCodingStringBuilder out, String leftMargin) {
+  private void renderSourceLocation(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
     out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(
             AnsiTheme.STACK_FRAME,

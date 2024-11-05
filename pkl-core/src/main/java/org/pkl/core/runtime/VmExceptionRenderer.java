@@ -20,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.pkl.core.Release;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
@@ -39,12 +40,12 @@ public final class VmExceptionRenderer {
 
   @TruffleBoundary
   public String render(VmException exception) {
-    var formatter = new AnsiCodingStringBuilder(color);
+    var formatter = new AnsiStringBuilder(color);
     render(exception, formatter);
     return formatter.toString();
   }
 
-  private void render(VmException exception, AnsiCodingStringBuilder out) {
+  private void render(VmException exception, AnsiStringBuilder out) {
     if (exception instanceof VmBugException bugException) {
       renderBugException(bugException, out);
     } else {
@@ -52,7 +53,7 @@ public final class VmExceptionRenderer {
     }
   }
 
-  private void renderBugException(VmBugException exception, AnsiCodingStringBuilder out) {
+  private void renderBugException(VmBugException exception, AnsiStringBuilder out) {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
     var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
@@ -75,8 +76,7 @@ public final class VmExceptionRenderer {
     exceptionToReport.printStackTrace(out.toPrintWriter());
   }
 
-  private void renderException(
-      VmException exception, AnsiCodingStringBuilder out, boolean withHeader) {
+  private void renderException(VmException exception, AnsiStringBuilder out, boolean withHeader) {
     String message;
     var hint = exception.getHint();
     if (exception.isExternalMessage()) {

@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.runtime
+package org.pkl.core.util
 
 import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.pkl.core.runtime.AnsiCodingStringBuilder.AnsiCode
+import org.pkl.core.util.AnsiStringBuilder.AnsiCode
 
-class AnsiCodingStringBuilderTest {
+class AnsiStringBuilderTest {
   @Test
   fun `no formatting`() {
-    val result = AnsiCodingStringBuilder(false).append(AnsiCode.RED, "hello").toString()
+    val result = AnsiStringBuilder(false).append(AnsiCode.RED, "hello").toString()
     assertThat(result).isEqualTo("hello")
   }
 
@@ -39,14 +39,14 @@ class AnsiCodingStringBuilderTest {
   @Test
   fun `don't emit same color code`() {
     val result =
-      AnsiCodingStringBuilder(true).append(AnsiCode.RED, "hi").append(AnsiCode.RED, "hi").toString()
+      AnsiStringBuilder(true).append(AnsiCode.RED, "hi").append(AnsiCode.RED, "hi").toString()
     assertThat(result.escaped).isEqualTo("${red}hihi${reset}".escaped)
   }
 
   @Test
   fun `only add needed codes`() {
     val result =
-      AnsiCodingStringBuilder(true)
+      AnsiStringBuilder(true)
         .append(AnsiCode.RED, "hi")
         .append(EnumSet.of(AnsiCode.RED, AnsiCode.BOLD), "hi")
         .toString()
@@ -56,7 +56,7 @@ class AnsiCodingStringBuilderTest {
   @Test
   fun `reset if need to subtract`() {
     val result =
-      AnsiCodingStringBuilder(true)
+      AnsiStringBuilder(true)
         .append(EnumSet.of(AnsiCode.RED, AnsiCode.BOLD), "hi")
         .append(AnsiCode.RED, "hi")
         .toString()
@@ -66,7 +66,7 @@ class AnsiCodingStringBuilderTest {
   @Test
   fun `plain text in between`() {
     val result =
-      AnsiCodingStringBuilder(true)
+      AnsiStringBuilder(true)
         .append(AnsiCode.RED, "hi")
         .append("hi")
         .append(AnsiCode.RED, "hi")
