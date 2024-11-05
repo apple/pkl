@@ -28,6 +28,7 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
   private final VmObjectLike owner;
   @Child private ExpressionNode receiverNode;
   @Children private final ExpressionNode[] argumentNodes;
+  private final boolean isInIterable;
 
   @Child private DirectCallNode callNode;
 
@@ -35,12 +36,14 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
       SourceSection sourceSection,
       ClassMethod method,
       ExpressionNode receiverNode,
-      ExpressionNode[] argumentNodes) {
+      ExpressionNode[] argumentNodes,
+      boolean isInIterable) {
 
     super(sourceSection);
     this.owner = method.getOwner();
     this.receiverNode = receiverNode;
     this.argumentNodes = argumentNodes;
+    this.isInIterable = isInIterable;
 
     callNode = DirectCallNode.create(method.getCallTarget(sourceSection));
   }
@@ -48,11 +51,12 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
   @Override
   @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var args = new Object[2 + argumentNodes.length];
+    var args = new Object[3 + argumentNodes.length];
     args[0] = receiverNode.executeGeneric(frame);
     args[1] = owner;
+    args[2] = isInIterable;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);

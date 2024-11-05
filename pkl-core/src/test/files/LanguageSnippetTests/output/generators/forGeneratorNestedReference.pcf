@@ -8,3 +8,13 @@ res2 {
     age = 1
   }
 }
+res3 {
+  new {
+    "hello-there"
+  }
+}
+res4 {
+  new {
+    "hello-there"
+  }
+}

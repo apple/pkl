@@ -94,6 +94,14 @@ public abstract class TypeNode extends PklNode {
     return execute(frame, value);
   }
 
+  /**
+   * Checks if {@code value} conforms to this type.
+   *
+   * <p>If {@code value} is conforming, sets {@code slot} to {@code value}. Otherwise, throws a
+   * {@link VmTypeMismatchException}.
+   */
+  public abstract Object executeEagerlyAndSet(VirtualFrame frame, Object value);
+
   // method arguments are used when default value contains a root node
   public @Nullable Object createDefaultValue(
       VmLanguage language,
@@ -213,6 +221,11 @@ public abstract class TypeNode extends PklNode {
       frame.setLong(slot, (long) value);
       return value;
     }
+
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      return executeAndSet(frame, value);
+    }
   }
 
   public abstract static class ObjectSlotTypeNode extends FrameSlotTypeNode {
@@ -227,6 +240,13 @@ public abstract class TypeNode extends PklNode {
     @Override
     public final Object executeAndSet(VirtualFrame frame, Object value) {
       var result = execute(frame, value);
+      frame.setObject(slot, result);
+      return result;
+    }
+
+    @Override
+    public final Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      var result = executeEagerly(frame, value);
       frame.setObject(slot, result);
       return result;
     }
@@ -260,6 +280,13 @@ public abstract class TypeNode extends PklNode {
     @Override
     public final Object executeAndSet(VirtualFrame frame, Object value) {
       var result = execute(frame, value);
+      writeSlotNode.executeWithValue(frame, result);
+      return result;
+    }
+
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      var result = executeEagerly(frame, value);
       writeSlotNode.executeWithValue(frame, result);
       return result;
     }
@@ -326,6 +353,11 @@ public abstract class TypeNode extends PklNode {
       // guaranteed to never run (execute will always throw).
       CompilerDirectives.transferToInterpreter();
       throw PklBugException.unreachableCode();
+    }
+
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      return executeAndSet(frame, value);
     }
 
     @Override
@@ -2382,6 +2414,22 @@ public abstract class TypeNode extends PklNode {
       }
     }
 
+    /** See docstring on {@link TypeAliasTypeNode#execute}. */
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
+      try {
+        return aliasedTypeNode.executeEagerlyAndSet(frame, value);
+      } finally {
+        VmUtils.setOwner(frame, prevOwner);
+        VmUtils.setReceiver(frame, prevReceiver);
+      }
+    }
+
     @Override
     @TruffleBoundary
     public @Nullable Object createDefaultValue(
@@ -2498,6 +2546,13 @@ public abstract class TypeNode extends PklNode {
     public Object executeAndSet(VirtualFrame frame, Object value) {
       var ret = execute(frame, value);
       childNode.executeAndSet(frame, ret);
+      return ret;
+    }
+
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      var ret = executeEagerly(frame, value);
+      childNode.executeEagerlyAndSet(frame, ret);
       return ret;
     }
 
@@ -2649,6 +2704,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      return executeAndSet(frame, value);
+    }
+
+    @Override
     public VmClass getVmClass() {
       return BaseModule.getNumberClass();
     }
@@ -2717,6 +2777,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      return executeAndSet(frame, value);
+    }
+
+    @Override
     public VmClass getVmClass() {
       return BaseModule.getFloatClass();
     }
@@ -2754,6 +2819,11 @@ public abstract class TypeNode extends PklNode {
       execute(frame, value);
       frame.setBoolean(slot, (boolean) value);
       return value;
+    }
+
+    @Override
+    public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
+      return executeAndSet(frame, value);
     }
 
     @Override

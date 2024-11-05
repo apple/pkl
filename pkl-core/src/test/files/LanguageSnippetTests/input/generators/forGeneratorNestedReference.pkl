@@ -31,3 +31,27 @@ res2 {
     }.birds
   }
 }
+
+res3 {
+  for (key, _ in Map("hello-there", 5)) {
+    ...myself(new Listing {
+      new Listing {
+        key
+      }
+    })
+  }
+}
+
+res4 {
+  for (key, _ in Map("hello-there", 5)) {
+    ...myself2.apply(new Listing {
+      new Listing {
+        key
+      }
+    })
+  }
+}
+
+function myself(l: Listing<Listing<String>>) = l
+
+local myself2 = (l: Listing<Listing<String>>) -> l
