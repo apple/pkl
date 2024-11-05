@@ -80,13 +80,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
 
   @Override
   public boolean hasCachedValue(Object key) {
-    if (super.hasCachedValue(key)) {
-      return true;
-    }
-    if (delegate != null) {
-      return delegate.hasCachedValue(key);
-    }
-    return false;
+    return super.hasCachedValue(key) || delegate != null && delegate.hasCachedValue(key);
   }
 
   @Override
