@@ -57,7 +57,9 @@ birdName = bird.name
 Even though `bird.canFly` throws an error, the above program succeeds because `bird.canFly` is not part of the program's output and hence is never accessed (Note that `bird` is a _local_ property).
 
 Typechecks of `Mapping` and `Listing` types have been changed to match this behavior.
-Mapping values and listing elements are now only typechecked if and when they are accessed.
+Mapping and listing values are now only typechecked if and when they are accessed.
+
+NOTE: Mapping _keys_ are still eagerly checked.
 
 This change causes some previously failing programs to evaluate successfully:
 
