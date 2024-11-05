@@ -91,7 +91,7 @@ To learn more about this change, consult https://github.com/apple/pkl-evolution/
 
 === External readers
 
-A new feature has been added to allow Pkl to spawn external processes to read resources and modules (https://github.com/apple/pkl/pull/660[#660]).
+A new feature has been added to allow Pkl to spawn external processes to read resources and modules (https://github.com/apple/pkl/pull/660[#660], https://github.com/apple/pkl/pull/762[#762], https://github.com/apple/pkl/pull/766[#766], https://github.com/apple/pkl/pull/770[#770]).
 
 Today, users who use Pkl as a library can define custom module and resource readers.
 This allows authors to extend how Pkl performs I/O.
