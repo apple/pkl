@@ -24,7 +24,7 @@ News you don't want to miss.
 [#typecheck-improvements]
 === Improved typechecking of `Listing` and `Mapping` types
 
-Typechecking of `Listing` and `Mapping` types has been improved (https://github.com/apple/pkl/pull/628[#628], https://github.com/apple/pkl/pull/725[#725], https://github.com/apple/pkl/pull/740[#740], https://github.com/apple/pkl/pull/752[#752]).
+Typechecking of `Listing` and `Mapping` types has been improved (https://github.com/apple/pkl/pull/628[#628], https://github.com/apple/pkl/pull/725[#725], https://github.com/apple/pkl/pull/740[#740], https://github.com/apple/pkl/pull/752[#752], https://github.com/apple/pkl/pull/778[#778], https://github.com/apple/pkl/pull/781[#781]).
 
 Today, the typecheck `listing: Listing<E>` immediately evaluates all listing elements to check that they have type `E`.
 Likewise, the typecheck `mapping: Mapping<K, V>` immediately evaluates all mapping values to check that they have type `V`.
@@ -171,7 +171,7 @@ Ready when you need them.
 
 === Colored output
 
-The Pkl CLI will now emit some messages in color (https://github.com/apple/pkl/pull/552[#552], https://github.com/apple/pkl/pull/746[#746], https://github.com/apple/pkl/pull/771[#771]).
+The Pkl CLI will now emit some messages in color (https://github.com/apple/pkl/pull/552[#552], https://github.com/apple/pkl/pull/746[#746], https://github.com/apple/pkl/pull/771[#771], https://github.com/apple/pkl/pull/779[#779]).
 
 Here is a sneak peek of colored error messages in action.
 
