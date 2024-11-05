@@ -35,7 +35,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
    * A Listing or Mapping typecast creates a new object that contains a new typecheck node, and
    * delegates member lookups to this delegate.
    */
-  private final @Nullable SELF delegate;
+  protected final @Nullable SELF delegate;
 
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final MaterializedFrame typeNodeFrame;
@@ -76,6 +76,11 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
     super.setCachedValue(key, value, objectMember);
     EconomicMaps.put(cachedMembers, key, objectMember);
+  }
+
+  @Override
+  public boolean hasCachedValue(Object key) {
+    return super.hasCachedValue(key) || delegate != null && delegate.hasCachedValue(key);
   }
 
   @Override

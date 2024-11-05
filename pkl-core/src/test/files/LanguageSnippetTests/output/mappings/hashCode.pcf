@@ -11,3 +11,25 @@ facts {
     true
   }
 }
+examples {
+  ["delegating mappings produce correct hash codes"] {
+    List(1, 2, 3, 4, 5, 6, new {
+      ["Pigeon"] {
+        name = "Pigeon"
+      }
+      ["Stork"] {
+        name = "Stork"
+      }
+    })
+  }
+  ["delegating mappings produce correct hash codes -- re-use hash-code"] {
+    List(1, 2, 3, 4, 5, 6, new {
+      ["Pigeon"] {
+        name = "Pigeon"
+      }
+      ["Stork"] {
+        name = "Stork"
+      }
+    })
+  }
+}

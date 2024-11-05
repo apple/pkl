@@ -142,14 +142,10 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     force(false);
     other.force(false);
 
-    var cursor = cachedValues.getEntries();
-    while (cursor.advance()) {
-      Object key = cursor.getKey();
-      if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
+    for (var i = 0L; i < length; i++) {
+      var value = getCachedValue(i);
       assert value != null;
-      var otherValue = other.getCachedValue(key);
+      var otherValue = other.getCachedValue(i);
       if (!value.equals(otherValue)) return false;
     }
 
@@ -160,16 +156,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   @TruffleBoundary
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
+    // It's possible that the delegate has already computed its hash code.
+    // If so, we can go ahead and use it.
+    if (delegate != null && delegate.cachedHash != 0) return delegate.cachedHash;
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
-
-    while (cursor.advance()) {
-      var key = cursor.getKey();
-      if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
+    for (var i = 0L; i < length; i++) {
+      var value = getCachedValue(i);
       assert value != null;
       result = 31 * result + value.hashCode();
     }

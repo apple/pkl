@@ -1,5 +1,9 @@
 amends "../snippetTest.pkl"
 
+local class Bird {
+  name: String
+}
+
 facts {
   local set: Set<Int> = IntSeq(1, 100).fold(Set(), (res, n) -> res.add(n))
   
@@ -21,5 +25,33 @@ facts {
     set.add(listing1).contains(listing2)
     set.add(listing2).contains(listing1)
     set.add(listing1).add(listing2).length == 101
+  }
+}
+
+examples {
+  ["delegating listings compute correct hash codes"] {
+    local l1: Listing<Bird> = new {
+      new { name = "Pigeon" }
+      new { name = "Stork" }
+    }
+
+    local l2: Listing<Bird|Int> = l1
+
+    // need to add 6 other elements here; `EconomicMap` will back shorter collections
+    // with an array and not compute hash code
+    List(1, 2, 3, 4, 5, 6, l2, l1).distinct
+  }
+
+  ["delegating listings compute correct hash codes -- re-use hash-code"] {
+    local l1: Listing<Bird> = new {
+      new { name = "Pigeon" }
+      new { name = "Stork" }
+    }
+
+    local l2: Listing<Bird|Int> = l1
+
+    // same as the other test but put `l1` first this time (execute code path where we re-use
+    // already computed hashcode)
+    List(1, 2, 3, 4, 5, 6, l1, l2).distinct
   }
 }

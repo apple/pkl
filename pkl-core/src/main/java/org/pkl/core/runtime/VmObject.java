@@ -92,7 +92,7 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   @Override
-  public final boolean hasCachedValue(Object key) {
+  public boolean hasCachedValue(Object key) {
     return EconomicMaps.containsKey(cachedValues, key);
   }
 
