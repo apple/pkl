@@ -67,7 +67,7 @@ local myNumbers: Listing<Int> = new { 1; 2; "uh oh" }
 result = myNumbers[0]
 ----
 In Pkl 0.26 and below, the above program fails with a type mismatch error because element `"uh oh"` is typechecked when `myNumbers` is accessed.
-In Pkl 0.27, the same program succeeds because only element `myNumbers[0]` is part of the program's output, and its typecheck succeeds.
+In Pkl 0.27, the same program succeeds, because only element `myNumbers[0]` is part of the program's output and its typecheck succeeds.
 
 As another consequence of this change, some Pkl programs now complete more quickly:
 
@@ -247,8 +247,8 @@ Various improvements have been made to the Kotlin and Java code generators (http
 
 ==== Kotlin codegen improvements
 
-* Skip generation of `copy()`, `equals()`, `hashCode()`, `toString()`, `copy()` methods for abstract Kotlin classes.
-* Don't make abstract classes implement `Serializable`
+* Skip generation of `copy()`, `equals()`, `hashCode()`, `toString()` methods for abstract Kotlin classes.
+* Don't implement `Serializable` for abstract classes
 * Add support for Spring Boot 3.
 
 Thanks to https://github.com/translatenix[@translatenix] for contributing these improvements!
