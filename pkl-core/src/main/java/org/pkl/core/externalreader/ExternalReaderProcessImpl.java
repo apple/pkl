@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
-import org.pkl.core.Duration;
+import java.time.Duration;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
@@ -152,40 +152,23 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   @Override
   public void close() {
     synchronized (lock) {
+      if (closed) return;
       closed = true;
-      if (process == null || !process.isAlive()) {
-        return;
-      }
-
+      
       try {
-        if (transport != null) {
+        if (transport != null && process != null && process.isAlive()) {
           transport.send(new CloseExternalProcess());
+          process.waitFor(CLOSE_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        }
+      } catch (Exception ignored) {
+      } finally {
+        if (process != null) {
+          // no-op unless process is alive
+          process.destroyForcibly();
+        }
+        if (transport != null) {
           transport.close();
         }
-
-        // forcefully stop the process after the timeout
-        // note that both transport.close() and process.destroy() are safe to call multiple times
-        new Timer()
-            .schedule(
-                new TimerTask() {
-                  @Override
-                  public void run() {
-                    if (process != null) {
-                      transport.close();
-                      process.destroyForcibly();
-                    }
-                  }
-                },
-                CLOSE_TIMEOUT.inWholeMillis());
-
-        // block on process exit
-        process.onExit().get();
-      } catch (Exception e) {
-        transport.close();
-        process.destroyForcibly();
-      } finally {
-        process = null;
-        transport = null;
       }
     }
   }
