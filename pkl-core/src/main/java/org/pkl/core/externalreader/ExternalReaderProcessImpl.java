@@ -17,17 +17,16 @@ package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
-import java.time.Duration;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
@@ -154,7 +153,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
     synchronized (lock) {
       if (closed) return;
       closed = true;
-      
+
       try {
         if (transport != null && process != null && process.isAlive()) {
           transport.send(new CloseExternalProcess());
