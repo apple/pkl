@@ -189,6 +189,15 @@ public class PklPlugin implements Plugin<Project> {
 
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
+          // Not using `convention()` so that users can disable generation of
+          // constructor parameters annotations by setting this property to `null`.
+          spec.getParamsAnnotation()
+              .set(
+                  project.provider(
+                      () ->
+                          spec.getGenerateSpringBootConfig().get()
+                              ? null
+                              : "org.pkl.config.java.mapper.Named"));
 
           createModulesTask(JavaCodeGenTask.class, spec)
               .configure(

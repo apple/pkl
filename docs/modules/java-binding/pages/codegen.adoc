@@ -145,23 +145,27 @@ Flag that indicates to generate private final fields and public getter methods i
 [%collapsible]
 ====
 Default: (flag not set) +
-Flag that indicates to generate Javadoc based on doc comments for Pkl modules, classes, and properties.
+Flag that indicates to preserve Pkl doc comments by generating corresponding Javadoc comments.
 ====
 
 .--params-annotation
 [%collapsible]
 ====
-Default: `org.pkl.config.java.mapper.Named` +
-Fully qualified name of the annotation to use on constructor parameters.
+Default: `none` if `--generate-spring-boot` is set, `org.pkl.config.java.mapper.Named` otherwise +
+Fully qualified name of the annotation type to use for annotating constructor parameters with their name. +
+The specified annotation type must have a `value` parameter of type `String` or the generated code may not compile.
+If set to `none`, constructor parameters are not annotated.
+Whether and how constructor parameters should be annotated depends on the library that instantiates the generated classes.
+For Spring Boot applications, and for users of `pkl-config-java` compiling the generated classes with `-parameters`, no annotation is required.
 ====
 
 .--non-null-annotation
 [%collapsible]
 ====
 Default: `org.pkl.config.java.mapper.NonNull` +
-Fully qualified named of the annotation class to use for non-null types. +
-This annotation is required to have `java.lang.annotation.ElementType.TYPE_USE` as a `@Target`
-or it may generate code that does not compile.
+Fully qualified name of the annotation type to use for annotating non-null types. +
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+or the generated code may not compile.
 ====
 
 Common code generator options:

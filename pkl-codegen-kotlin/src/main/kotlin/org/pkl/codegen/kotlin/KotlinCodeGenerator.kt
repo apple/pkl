@@ -32,13 +32,13 @@ data class KotlinCodeGeneratorOptions(
   /** The characters to use for indenting generated Kotlin code. */
   val indent: String = "  ",
 
-  /** Whether to generate KDoc based on doc comments for Pkl modules, classes, and properties. */
+  /** Whether to preserve Pkl doc comments by generating corresponding KDoc comments. */
   val generateKdoc: Boolean = false,
 
   /** Whether to generate config classes for use with Spring Boot. */
   val generateSpringBootConfig: Boolean = false,
 
-  /** Whether to make generated classes implement [java.io.Serializable] */
+  /** Whether to generate classes that implement [java.io.Serializable]. */
   val implementSerializable: Boolean = false,
 
   /**
