@@ -5,7 +5,6 @@ import kotlin.Any
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.String
-import kotlin.text.StringBuilder
 
 /**
  * type alias comment.
@@ -51,13 +50,7 @@ data class Mod(
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(100)
-      builder.append(Product::class.java.simpleName).append(" {")
-      appendProperty(builder, "price", this.price)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """Product(price=$price)"""
   }
 
   /**
@@ -71,19 +64,4 @@ data class Mod(
      */
     val name: String
   )
-
-  companion object {
-    private fun appendProperty(
-      builder: StringBuilder,
-      name: String,
-      value: Any?
-    ) {
-      builder.append("\n  ").append(name).append(" = ")
-      val lines = value.toString().split("\n")
-      builder.append(lines[0])
-      for (i in 1..lines.lastIndex) {
-        builder.append("\n  ").append(lines[i])
-      }
-    }
-  }
 }

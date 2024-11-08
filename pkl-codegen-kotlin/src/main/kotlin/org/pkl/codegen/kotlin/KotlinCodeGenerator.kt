@@ -58,19 +58,6 @@ class KotlinCodeGenerator(
   private val options: KotlinCodegenOptions,
 ) {
   companion object {
-    // Prevent class name from being replaced with shaded name
-    // when pkl-codegen-kotlin is shaded and embedded in pkl-tools
-    // (requires circumventing kotlinc constant folding).
-    private val KOTLIN_TEXT_PACKAGE_NAME = buildString {
-      append("kot")
-      append("lin.")
-      append("text")
-    }
-
-    // `StringBuilder::class.asClassName()` generates "java.lang.StringBuilder",
-    // apparently because `StringBuilder` is an `expect class`.
-    private val STRING_BUILDER = ClassName(KOTLIN_TEXT_PACKAGE_NAME, "StringBuilder")
-
     private val STRING = String::class.asClassName()
     private val ANY_NULL = ANY.copy(nullable = true)
     private val NOTHING = Nothing::class.asClassName()
@@ -149,36 +136,6 @@ class KotlinCodeGenerator(
         // ensure that at most one companion object is generated for this type
         val companionObjectBuilder: Lazy<TypeSpec.Builder> = lazy {
           TypeSpec.companionObjectBuilder()
-        }
-
-        // generate append method for module classes w/o parent class;
-        // reuse in subclasses and nested classes
-        val isGenerateAppendPropertyMethod =
-          isModuleType &&
-            // check if we inherit another module's append method
-            pModuleClass.superclass!!.info == PClassInfo.Module &&
-            // check if anyone is (potentially) going to use our append method
-            (pModuleClass.isOpen ||
-              pModuleClass.isAbstract ||
-              (isGenerateModuleClass && !builder.modifiers.contains(KModifier.DATA)) ||
-              builder.typeSpecs.any { !it.modifiers.contains(KModifier.DATA) })
-
-        if (isGenerateAppendPropertyMethod) {
-          val appendPropertyMethodModifier =
-            if (pModuleClass.isOpen || pModuleClass.isAbstract) {
-              // alternative is `@JvmStatic protected`
-              // (`protected` alone isn't sufficient as of Kotlin 1.6)
-              KModifier.PUBLIC
-            } else KModifier.PRIVATE
-          if (isGenerateModuleClass) {
-            companionObjectBuilder.value.addFunction(
-              appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-            )
-          } else { // kotlin object
-            builder.addFunction(
-              appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-            )
-          }
         }
 
         // generate serialization code
@@ -385,34 +342,25 @@ class KotlinCodeGenerator(
     }
 
     fun generateToStringMethod(): FunSpec {
-      val builder = FunSpec.builder("toString").addModifiers(KModifier.OVERRIDE).returns(STRING)
-
-      var builderSize = 50
-      val appendBuilder = CodeBlock.builder()
-      for (propertyName in allProperties.keys) {
-        builderSize += 50
-        appendBuilder.addStatement(
-          "appendProperty(builder, %S, this.%N)",
-          propertyName,
-          propertyName
-        )
-      }
-
-      builder
-        .addStatement("val builder = %T(%L)", STRING_BUILDER, builderSize)
+      return FunSpec.builder("toString")
+        .addModifiers(KModifier.OVERRIDE)
+        .returns(STRING)
         .addStatement(
-          // generate `::class.java.simpleName` instead of `::class.simpleName`
-          // to avoid making user code depend on kotlin-reflect
-          "builder.append(%T::class.java.simpleName).append(\" {\")",
-          kotlinPoetClassName
+          "return %P",
+          buildString {
+            append(pClass.simpleName)
+            append("(")
+            var isFirst = true
+            for (propertyName in allProperties.keys) {
+              if (isFirst) isFirst = false else append(", ")
+              append(propertyName)
+              append("=$")
+              append(propertyName)
+            }
+            append(")")
+          }
         )
-        .addCode(appendBuilder.build())
-        // not using %S here because it generates `"\n" + "{"`
-        // with a line break in the generated code after `+`
-        .addStatement("builder.append(\"\\n}\")")
-        .addStatement("return builder.toString()")
-
-      return builder.build()
+        .build()
     }
 
     fun generateDeprecation(
@@ -632,18 +580,6 @@ class KotlinCodeGenerator(
   // do the minimum work necessary to avoid kotlin compile errors
   // generating idiomatic KDoc would require parsing doc comments, converting member links, etc.
   private fun renderAsKdoc(docComment: String): String = docComment
-
-  private fun appendPropertyMethod() =
-    FunSpec.builder("appendProperty")
-      .addParameter("builder", STRING_BUILDER)
-      .addParameter("name", STRING)
-      .addParameter("value", ANY_NULL)
-      .addStatement("builder.append(\"\\n  \").append(name).append(\" = \")")
-      .addStatement("val lines = value.toString().split(\"\\n\")")
-      .addStatement("builder.append(lines[0])")
-      .beginControlFlow("for (i in 1..lines.lastIndex)")
-      .addStatement("builder.append(\"\\n  \").append(lines[i])")
-      .endControlFlow()
 
   private fun PClass.toKotlinPoetName(): ClassName {
     val (packageName, moduleTypeName) = nameMapper.map(moduleName)

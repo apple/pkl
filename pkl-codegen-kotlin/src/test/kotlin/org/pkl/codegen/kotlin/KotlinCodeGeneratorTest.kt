@@ -195,64 +195,15 @@ class KotlinCodeGeneratorTest {
 
     assertThat(propertyTypes.toString())
       .isEqualTo(
-        """
-        PropertyTypes {
-          boolean = true
-          int = 42
-          float = 42.3
-          string = string
-          duration = 5.min
-          durationUnit = min
-          dataSize = 3.gb
-          dataSizeUnit = gb
-          nullable = idea
-          nullable2 = null
-          pair = (1, 2)
-          pair2 = (pigeon, Other {
-            name = pigeon
-          })
-          coll = [1, 2]
-          coll2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          list = [1, 2]
-          list2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          set = [1, 2]
-          set2 = [Other {
-            name = pigeon
-          }]
-          map = {1=one, 2=two}
-          map2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          container = {1=one, 2=two}
-          container2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          other = Other {
-            name = pigeon
-          }
-          regex = (i?)\w*
-          any = Other {
-            name = pigeon
-          }
-          nonNull = Other {
-            name = pigeon
-          }
-          enum = north
-        }
-      """
-          .trimIndent()
+        """PropertyTypes(boolean=true, int=42, float=42.3, string=string, duration=5.min, """ +
+          """durationUnit=min, dataSize=3.gb, dataSizeUnit=gb, nullable=idea, nullable2=null, """ +
+          """pair=(1, 2), pair2=(pigeon, Other(name=pigeon)), coll=[1, 2], """ +
+          """coll2=[Other(name=pigeon), Other(name=pigeon)], list=[1, 2], """ +
+          """list2=[Other(name=pigeon), Other(name=pigeon)], set=[1, 2], """ +
+          """set2=[Other(name=pigeon)], map={1=one, 2=two}, map2={one=Other(name=pigeon), """ +
+          """two=Other(name=pigeon)}, container={1=one, 2=two}, container2={one=Other(name=pigeon), """ +
+          """two=Other(name=pigeon)}, other=Other(name=pigeon), regex=(i?)\w*, any=Other(name=pigeon), """ +
+          """nonNull=Other(name=pigeon), enum=north)"""
       )
   }
 

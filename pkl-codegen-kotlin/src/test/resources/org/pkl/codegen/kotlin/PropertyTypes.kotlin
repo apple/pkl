@@ -13,26 +13,12 @@ import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.text.Regex
-import kotlin.text.StringBuilder
 import org.pkl.core.DataSize
 import org.pkl.core.DataSizeUnit
 import org.pkl.core.Duration
 import org.pkl.core.DurationUnit
 
 object Mod {
-  private fun appendProperty(
-    builder: StringBuilder,
-    name: String,
-    value: Any?
-  ) {
-    builder.append("\n  ").append(name).append(" = ")
-    val lines = value.toString().split("\n")
-    builder.append(lines[0])
-    for (i in 1..lines.lastIndex) {
-      builder.append("\n  ").append(lines[i])
-    }
-  }
-
   open class PropertyTypes(
     open val boolean: Boolean,
     open val int: Long,
@@ -160,39 +146,8 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(1400)
-      builder.append(PropertyTypes::class.java.simpleName).append(" {")
-      appendProperty(builder, "boolean", this.boolean)
-      appendProperty(builder, "int", this.int)
-      appendProperty(builder, "float", this.float)
-      appendProperty(builder, "string", this.string)
-      appendProperty(builder, "duration", this.duration)
-      appendProperty(builder, "durationUnit", this.durationUnit)
-      appendProperty(builder, "dataSize", this.dataSize)
-      appendProperty(builder, "dataSizeUnit", this.dataSizeUnit)
-      appendProperty(builder, "nullable", this.nullable)
-      appendProperty(builder, "nullable2", this.nullable2)
-      appendProperty(builder, "pair", this.pair)
-      appendProperty(builder, "pair2", this.pair2)
-      appendProperty(builder, "coll", this.coll)
-      appendProperty(builder, "coll2", this.coll2)
-      appendProperty(builder, "list", this.list)
-      appendProperty(builder, "list2", this.list2)
-      appendProperty(builder, "set", this.set)
-      appendProperty(builder, "set2", this.set2)
-      appendProperty(builder, "map", this.map)
-      appendProperty(builder, "map2", this.map2)
-      appendProperty(builder, "container", this.container)
-      appendProperty(builder, "container2", this.container2)
-      appendProperty(builder, "other", this.other)
-      appendProperty(builder, "regex", this.regex)
-      appendProperty(builder, "any", this.any)
-      appendProperty(builder, "nonNull", this.nonNull)
-      appendProperty(builder, "enum", this.enum)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String =
+        """PropertyTypes(boolean=$boolean, int=$int, float=$float, string=$string, duration=$duration, durationUnit=$durationUnit, dataSize=$dataSize, dataSizeUnit=$dataSizeUnit, nullable=$nullable, nullable2=$nullable2, pair=$pair, pair2=$pair2, coll=$coll, coll2=$coll2, list=$list, list2=$list2, set=$set, set2=$set2, map=$map, map2=$map2, container=$container, container2=$container2, other=$other, regex=$regex, any=$any, nonNull=$nonNull, enum=$enum)"""
   }
 
   open class Other(
@@ -214,13 +169,7 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(100)
-      builder.append(Other::class.java.simpleName).append(" {")
-      appendProperty(builder, "name", this.name)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """Other(name=$name)"""
   }
 
   enum class Direction(
