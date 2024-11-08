@@ -25,7 +25,10 @@ import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
 
-data class KotlinCodegenOptions(
+@Deprecated("renamed to KotlinCodeGeneratorOptions", ReplaceWith("KotlinCodeGeneratorOptions"))
+typealias KotlinCodegenOptions = KotlinCodeGeneratorOptions
+
+data class KotlinCodeGeneratorOptions(
   /** The characters to use for indenting generated Kotlin code. */
   val indent: String = "  ",
 
@@ -55,7 +58,7 @@ class KotlinCodeGenerator(
   private val moduleSchema: ModuleSchema,
 
   /** The options to use for the code generator */
-  private val options: KotlinCodegenOptions,
+  private val options: KotlinCodeGeneratorOptions,
 ) {
   companion object {
     private val STRING = String::class.asClassName()

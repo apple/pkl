@@ -147,7 +147,7 @@ class KotlinCodeGeneratorTest {
       val generator =
         KotlinCodeGenerator(
           module,
-          KotlinCodegenOptions(
+          KotlinCodeGeneratorOptions(
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
             implementSerializable = implementSerializable
@@ -1767,7 +1767,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names in a standalone module`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("a.b.c" to "x.y.z", "d.e.f.AnotherModule" to "u.v.w.RenamedModule")
         )
         .generateFiles(
@@ -1802,7 +1802,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names based on the longest prefix`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
         )
         .generateFiles(
@@ -1848,7 +1848,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names in multiple modules using each other`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames =
             mapOf(
               "org.foo" to "com.foo.x",
@@ -1931,7 +1931,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `do not capitalize names of renamed classes`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
         )
         .generateFiles(
@@ -1975,7 +1975,7 @@ class KotlinCodeGeneratorTest {
     assertThat(files).isEmpty()
   }
 
-  private fun KotlinCodegenOptions.generateFiles(
+  private fun KotlinCodeGeneratorOptions.generateFiles(
     vararg pklModules: PklModule
   ): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
@@ -1987,13 +1987,13 @@ class KotlinCodeGeneratorTest {
     }
   }
 
-  private fun KotlinCodegenOptions.generateFiles(
+  private fun KotlinCodeGeneratorOptions.generateFiles(
     vararg pklModules: kotlin.Pair<String, String>
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, KotlinSourceCode> =
-    KotlinCodegenOptions().generateFiles(*pklModules).mapValues { KotlinSourceCode(it.value) }
+    KotlinCodeGeneratorOptions().generateFiles(*pklModules).mapValues { KotlinSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("Other").constructors.first()
