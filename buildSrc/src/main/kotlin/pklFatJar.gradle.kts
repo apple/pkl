@@ -65,7 +65,7 @@ val relocations =
     "io.leangen.geantyref." to "org.pkl.thirdparty.geantyref.",
 
     // pkl-codegen-java dependencies
-    "com.squareup.javapoet." to "org.pkl.thirdparty.javapoet.",
+    "com.palantir.javapoet." to "org.pkl.thirdparty.javapoet.",
 
     // pkl-codegen-kotlin dependencies
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",

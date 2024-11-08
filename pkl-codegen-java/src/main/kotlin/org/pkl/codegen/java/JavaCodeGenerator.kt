@@ -15,7 +15,7 @@
  */
 package org.pkl.codegen.java
 
-import com.squareup.javapoet.*
+import com.palantir.javapoet.*
 import java.io.StringWriter
 import java.lang.Deprecated
 import java.net.URI
@@ -91,6 +91,7 @@ class JavaCodeGenerator(
 ) {
 
   companion object {
+    private val OBJECT = ClassName.get(Object::class.java)
     private val STRING = ClassName.get(String::class.java)
     private val DURATION = ClassName.get(Duration::class.java)
     private val DURATION_UNIT = ClassName.get(DurationUnit::class.java)
@@ -721,15 +722,15 @@ class JavaCodeGenerator(
 
   private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName =
     when (this) {
-      PType.UNKNOWN -> TypeName.OBJECT.nullableIf(nullable)
+      PType.UNKNOWN -> OBJECT.nullableIf(nullable)
       PType.NOTHING -> TypeName.VOID
       is PType.StringLiteral -> STRING.nullableIf(nullable)
       is PType.Class -> {
         // if in doubt, spell it out
         when (val classInfo = pClass.info) {
-          PClassInfo.Any -> TypeName.OBJECT
+          PClassInfo.Any -> OBJECT
           PClassInfo.Typed,
-          PClassInfo.Dynamic -> TypeName.OBJECT.nullableIf(nullable)
+          PClassInfo.Dynamic -> OBJECT.nullableIf(nullable)
           PClassInfo.Boolean -> TypeName.BOOLEAN.boxIf(boxed).nullableIf(nullable)
           PClassInfo.String -> STRING.nullableIf(nullable)
           // seems more useful to generate `double` than `java.lang.Number`
@@ -742,12 +743,12 @@ class JavaCodeGenerator(
             ParameterizedTypeName.get(
                 PAIR,
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
                 },
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[1].toJavaPoetTypeArgumentName()
                 }
@@ -757,7 +758,7 @@ class JavaCodeGenerator(
             ParameterizedTypeName.get(
                 COLLECTION,
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
                 }
@@ -768,7 +769,7 @@ class JavaCodeGenerator(
             ParameterizedTypeName.get(
                 LIST,
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
                 }
@@ -779,7 +780,7 @@ class JavaCodeGenerator(
             ParameterizedTypeName.get(
                 SET,
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
                 }
@@ -790,12 +791,12 @@ class JavaCodeGenerator(
             ParameterizedTypeName.get(
                 MAP,
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
                 },
                 if (typeArguments.isEmpty()) {
-                  TypeName.OBJECT
+                  OBJECT
                 } else {
                   typeArguments[1].toJavaPoetTypeArgumentName()
                 }
@@ -820,7 +821,7 @@ class JavaCodeGenerator(
       is PType.Constrained -> baseType.toJavaPoetName(nullable = nullable, boxed = boxed)
       is PType.Alias ->
         when (typeAlias.qualifiedName) {
-          "pkl.base#NonNull" -> TypeName.OBJECT.nullableIf(nullable)
+          "pkl.base#NonNull" -> OBJECT.nullableIf(nullable)
           "pkl.base#Int8" -> TypeName.BYTE.boxIf(boxed).nullableIf(nullable)
           "pkl.base#Int16",
           "pkl.base#UInt8" -> TypeName.SHORT.boxIf(boxed).nullableIf(nullable)
