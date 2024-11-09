@@ -20,13 +20,12 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.*;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.JsonHandler;
 import org.pkl.core.util.json.JsonParser;
@@ -116,7 +115,7 @@ public final class ParserNodes {
     @Override
     public EconomicMap<Object, ObjectMember> startArray() {
       currPath.push(VmValueConverter.WILDCARD_ELEMENT);
-      return EconomicMaps.create();
+      return EconomicMap.create();
     }
 
     @Override
@@ -127,14 +126,14 @@ public final class ParserNodes {
               VmUtils.createEmptyMaterializedFrame(),
               BaseModule.getListingClass().getPrototype(),
               members,
-              EconomicMaps.size(members));
+              members.size());
       currPath.pop();
     }
 
     @Override
     public void endArrayValue(@Nullable EconomicMap<Object, ObjectMember> members) {
       assert members != null;
-      var size = EconomicMaps.size(members);
+      var size = members.size();
       var member =
           new ObjectMember(
               VmUtils.unavailableSourceSection(),
@@ -143,12 +142,12 @@ public final class ParserNodes {
               null,
               String.valueOf(size));
       member.initConstantValue(converter.convert(value, currPath));
-      EconomicMaps.put(members, (long) size, member);
+      members.put((long) size, member);
     }
 
     @Override
     public EconomicMap<Object, ObjectMember> startObject() {
-      return EconomicMaps.create();
+      return EconomicMap.create();
     }
 
     @Override
@@ -187,7 +186,7 @@ public final class ParserNodes {
               useMapping ? null : (Identifier) memberName,
               "generated");
       member.initConstantValue(converter.convert(value, currPath));
-      EconomicMaps.put(members, memberName, member);
+      members.put(memberName, member);
       currPath.pop();
     }
   }

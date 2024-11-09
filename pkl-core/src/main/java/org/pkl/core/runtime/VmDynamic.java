@@ -18,12 +18,12 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Objects;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.CollectionUtils;
-import org.pkl.core.util.EconomicMaps;
 
 public final class VmDynamic extends VmObject {
   private int cachedRegularMemberCount = -1;
@@ -33,7 +33,7 @@ public final class VmDynamic extends VmObject {
         new VmDynamic(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getDynamicClass().getPrototype(),
-            EconomicMaps.create(),
+            EconomicMap.create(),
             0);
   }
 
@@ -75,8 +75,7 @@ public final class VmDynamic extends VmObject {
   @Override
   @TruffleBoundary
   public PObject export() {
-    var properties =
-        CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.<String, Object>newLinkedHashMap(cachedValues.size());
 
     iterateMemberValues(
         (key, member, value) -> {
@@ -114,7 +113,6 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
-      assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
     }
@@ -136,7 +134,6 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
-      assert value != null;
       result += key.hashCode() ^ value.hashCode();
     }
 

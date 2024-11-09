@@ -19,12 +19,12 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.function.Consumer;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
 import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
@@ -34,7 +34,6 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.XmlModule;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
-import org.pkl.core.util.EconomicMaps;
 
 public final class JUnitReport implements TestReport {
 
@@ -156,15 +155,17 @@ public final class JUnitReport implements TestReport {
 
   private VmDynamic buildXmlElement(
       String name, VmMapping attributes, Consumer<EconomicMap<Object, ObjectMember>> gen) {
-    EconomicMap<Object, ObjectMember> members =
-        EconomicMaps.of(
-            Identifier.IS_XML_ELEMENT,
-                VmUtils.createSyntheticObjectProperty(Identifier.IS_XML_ELEMENT, "", true),
-            Identifier.NAME, VmUtils.createSyntheticObjectProperty(Identifier.NAME, "", name),
-            Identifier.ATTRIBUTES,
-                VmUtils.createSyntheticObjectProperty(Identifier.ATTRIBUTES, "", attributes),
-            Identifier.IS_BLOCK_FORMAT,
-                VmUtils.createSyntheticObjectProperty(Identifier.IS_BLOCK_FORMAT, "", true));
+    var members = EconomicMap.<Object, ObjectMember>create(4);
+    members.put(
+        Identifier.IS_XML_ELEMENT,
+        VmUtils.createSyntheticObjectProperty(Identifier.IS_XML_ELEMENT, "", true));
+    members.put(Identifier.NAME, VmUtils.createSyntheticObjectProperty(Identifier.NAME, "", name));
+    members.put(
+        Identifier.ATTRIBUTES,
+        VmUtils.createSyntheticObjectProperty(Identifier.ATTRIBUTES, "", attributes));
+    members.put(
+        Identifier.IS_BLOCK_FORMAT,
+        VmUtils.createSyntheticObjectProperty(Identifier.IS_BLOCK_FORMAT, "", true));
     gen.accept(members);
     return new VmDynamic(
         VmUtils.createEmptyMaterializedFrame(),
@@ -174,7 +175,7 @@ public final class JUnitReport implements TestReport {
   }
 
   private VmMapping buildAttributes(Object... attributes) {
-    EconomicMap<Object, ObjectMember> attrs = EconomicMaps.create(attributes.length);
+    EconomicMap<Object, ObjectMember> attrs = EconomicMap.create(attributes.length);
     for (int i = 0; i < attributes.length; i += 2) {
       attrs.put(
           attributes[i],
@@ -193,7 +194,7 @@ public final class JUnitReport implements TestReport {
     // HACK: The property identifier here has to be `null` instead of `Identifier.TEXT` or
     // a `Invalid sharing of AST nodes detected` error will be thrown.
     EconomicMap<Object, ObjectMember> attrs =
-        EconomicMaps.of(Identifier.TEXT, VmUtils.createSyntheticObjectProperty(null, "", text));
+        EconomicMap.of(Identifier.TEXT, VmUtils.createSyntheticObjectProperty(null, "", text));
     return new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, attrs);
   }
 

@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.StringSimilarity;
 
@@ -74,7 +73,7 @@ public final class MemberLookupSuggestions {
   private void addPropertyCandidates(VmObjectLike object, boolean includeLocal) {
     if (!memberKinds.contains(Kind.PROPERTY)) return;
 
-    for (var member : EconomicMaps.getValues(object.getMembers())) {
+    for (var member : object.getMembers().getValues()) {
       addIfSimilar(member, Candidate.Kind.PROPERTY, -1, includeLocal);
     }
   }

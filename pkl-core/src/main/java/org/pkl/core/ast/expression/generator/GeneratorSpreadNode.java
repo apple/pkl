@@ -41,7 +41,6 @@ import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObject;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableLong;
 
 @ImportStatic(BaseModule.class)
@@ -179,9 +178,9 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           if (member.isElement()) {
-            EconomicMaps.put(data.members, length.getAndIncrement(), createMember(member, value));
+            data.members.put(length.getAndIncrement(), createMember(member, value));
           } else {
-            if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
+            if (data.members.put(key, createMember(member, value)) != null) {
               duplicateMember(key, member);
             }
           }
@@ -196,7 +195,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           if (member.isElement() || member.isProp()) {
             cannotHaveMember(BaseModule.getMappingClass(), member);
           }
-          if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
+          if (data.members.put(key, createMember(member, value)) != null) {
             duplicateMember(key, member);
           }
           return true;
@@ -210,7 +209,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           if (member.isEntry() || member.isProp()) {
             cannotHaveMember(getListingClass(), member);
           }
-          EconomicMaps.put(data.members, length.getAndIncrement(), createMember(member, value));
+          data.members.put(length.getAndIncrement(), createMember(member, value));
           return true;
         });
     data.length = (int) length.get();
@@ -223,7 +222,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
             cannotHaveMember(clazz, member);
           }
           checkTypedProperty(clazz, member);
-          if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
+          if (data.members.put(key, createMember(member, value)) != null) {
             duplicateMember(key, member);
           }
           return true;
@@ -255,7 +254,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     }
     for (var entry : iterable) {
       var member = VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry));
-      if (EconomicMaps.put(data.members, VmUtils.getKey(entry), member) != null) {
+      if (data.members.put(VmUtils.getKey(entry), member) != null) {
         duplicateMember(VmUtils.getKey(entry), member);
       }
     }
@@ -337,7 +336,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     for (var elem : iterable) {
       var index = length++;
       var member = VmUtils.createSyntheticObjectElement(String.valueOf(index), elem);
-      EconomicMaps.put(data.members, (long) index, member);
+      data.members.put((long) index, member);
     }
     data.length = length;
   }

@@ -23,9 +23,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
-import org.graalvm.collections.EconomicMap;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.EconomicMapUtil;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
@@ -34,7 +34,6 @@ import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.runtime.VmExceptionBuilder;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
@@ -103,7 +102,7 @@ public final class ProjectDeps {
     if (!(object instanceof JsObject jsObj)) {
       throw new FormatException("resolvedDependencies", "object", object.getClass());
     }
-    var ret = EconomicMaps.<CanonicalPackageUri, Dependency>create(jsObj.size());
+    var ret = EconomicMap.<CanonicalPackageUri, Dependency>create(jsObj.size());
     for (var entry : jsObj.entrySet()) {
       Dependency resolvedDependency = parseResolvedDependency(entry);
       var canonicalPackageUri = CanonicalPackageUri.of(entry.getKey());
@@ -154,16 +153,15 @@ public final class ProjectDeps {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof ProjectDeps that)) {
       return false;
     }
-    ProjectDeps that = (ProjectDeps) o;
-    return EconomicMaps.equals(resolvedDependencies, that.resolvedDependencies);
+    return EconomicMapUtil.equals(resolvedDependencies, that.resolvedDependencies);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(resolvedDependencies);
+    return EconomicMapUtil.hashCode(resolvedDependencies);
   }
 
   private static final class ProjectDepsWriter {

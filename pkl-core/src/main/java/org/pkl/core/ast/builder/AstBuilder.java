@@ -32,7 +32,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.TypeParameter;
@@ -55,6 +54,7 @@ import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.*;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
@@ -68,7 +68,6 @@ import org.pkl.core.stdlib.LanguageAwareNode;
 import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
 import org.pkl.core.stdlib.registry.MemberRegistryFactory;
 import org.pkl.core.util.CollectionUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
@@ -217,7 +216,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
     for (var methodCtx : ctx.ms) {
       var localMethod = doVisitObjectMethod(methodCtx.methodHeader(), methodCtx.expr(), true);
-      EconomicMaps.put(moduleProperties, localMethod.getName(), localMethod);
+      moduleProperties.put(localMethod.getName(), localMethod);
     }
 
     var moduleNode =
@@ -302,7 +301,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   typeParameters,
                   null,
                   supertypeNode,
-                  EconomicMaps.create(),
+                  EconomicMap.create(),
                   doVisitClassProperties(propertyCtxs, propertyNames),
                   doVisitMethodDefs(methodCtxs));
 
@@ -1065,7 +1064,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           var parametersDescriptorBuilder = createFrameDescriptorBuilder(ctx);
           var parameterTypes = doVisitParameterTypes(ctx);
 
-          var members = EconomicMaps.<Object, ObjectMember>create();
+          var members = EconomicMap.<Object, ObjectMember>create();
           var elements = new ArrayList<ObjectMember>();
           var keyNodes = new ArrayList<ExpressionNode>();
           var values = new ArrayList<ObjectMember>();
@@ -1188,7 +1187,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     for (var i = 0; i < keyNodes.size(); i++) {
       var key = ((ConstantNode) keyNodes.get(i)).getValue();
       var value = values.get(i);
-      var previousValue = EconomicMaps.put(members, key, value);
+      var previousValue = members.put(key, value);
       if (previousValue != null) {
         CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder()
@@ -1310,7 +1309,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           currentScope.isCustomThisScope(),
           null,
           new UnresolvedTypeNode[0],
-          EconomicMaps.create(),
+          EconomicMap.create(),
           verifyNode);
     }
 
@@ -2606,12 +2605,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       ModuleInfo moduleInfo) {
 
     var totalSize = importCtxs.size() + classCtxs.size() + typeAliasCtxs.size();
-    var result = EconomicMaps.<Object, ObjectMember>create(totalSize);
+    var result = EconomicMap.<Object, ObjectMember>create(totalSize);
 
     for (var ctx : importCtxs) {
       var member = visitImportClause(ctx);
       checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
-      EconomicMaps.put(result, member.getName(), member);
+      result.put(member.getName(), member);
     }
 
     for (var ctx : classCtxs) {
@@ -2625,7 +2624,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
-      EconomicMaps.put(result, member.getName(), member);
+      result.put(member.getName(), member);
     }
 
     for (TypeAliasContext ctx : typeAliasCtxs) {
@@ -2639,7 +2638,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
-      EconomicMaps.put(result, member.getName(), member);
+      result.put(member.getName(), member);
     }
 
     for (var ctx : propertyCtxs) {
@@ -2660,7 +2659,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
-      EconomicMaps.put(result, member.getName(), member);
+      result.put(member.getName(), member);
     }
 
     return result;
@@ -2684,7 +2683,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   // TODO: use Set<String> and checkDuplicateMember() to find duplicates between local and non-local
   // properties
   private void addProperty(EconomicMap<Object, ObjectMember> objectMembers, ObjectMember property) {
-    if (EconomicMaps.put(objectMembers, property.getName(), property) != null) {
+    if (objectMembers.put(property.getName(), property) != null) {
       throw exceptionBuilder()
           .evalError("duplicateDefinition", property.getName())
           .withSourceSection(property.getHeaderSection())

@@ -18,14 +18,13 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
@@ -48,11 +47,11 @@ public final class VmTyped extends VmObject {
   }
 
   public void addProperty(ObjectMember property) {
-    EconomicMaps.put((EconomicMap<Object, ObjectMember>) members, property.getName(), property);
+    ((EconomicMap<Object, ObjectMember>) members).put(property.getName(), property);
   }
 
   public void addProperties(UnmodifiableEconomicMap<Object, ObjectMember> properties) {
-    EconomicMaps.putAll((EconomicMap<Object, ObjectMember>) members, properties);
+    ((EconomicMap<Object, ObjectMember>) members).putAll(properties);
   }
 
   public VmClass getVmClass() {

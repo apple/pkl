@@ -31,12 +31,12 @@ import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionName;
 import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
 
@@ -340,7 +340,7 @@ public final class TestRunner {
         new VmDynamic(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getDynamicClass().getPrototype(),
-            EconomicMaps.of(
+            EconomicMap.of(
                 Identifier.EXAMPLES,
                 VmUtils.createSyntheticObjectProperty(Identifier.EXAMPLES, "examples", examples)),
             0);

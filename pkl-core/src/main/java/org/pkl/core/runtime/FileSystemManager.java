@@ -32,8 +32,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.graalvm.collections.EconomicMap;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
 
 /**
  * Manages file systems, potentially across multiple evaluator instances.
@@ -43,7 +42,7 @@ import org.pkl.core.util.EconomicMaps;
 public final class FileSystemManager {
   private FileSystemManager() {}
 
-  private static final EconomicMap<URI, FileSystem> fileSystems = EconomicMaps.create();
+  private static final EconomicMap<URI, FileSystem> fileSystems = EconomicMap.create();
 
   private static final Map<FileSystem, Integer> counts = new IdentityHashMap<>();
 

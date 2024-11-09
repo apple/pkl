@@ -21,10 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
@@ -34,7 +34,6 @@ import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.ProjectDeps;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmExceptionBuilder;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.json.Json.JsonParseException;
 
@@ -56,11 +55,11 @@ public final class ProjectDependenciesManager {
 
   @GuardedBy("lock")
   private final EconomicMap<PackageUri, Map<String, Dependency>> localPackageDependencies =
-      EconomicMaps.create();
+      EconomicMap.create();
 
   @GuardedBy("lock")
   private final EconomicMap<PackageUri, Map<String, Dependency>> packageDependencies =
-      EconomicMaps.create();
+      EconomicMap.create();
 
   private final Object lock = new Object();
 

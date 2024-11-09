@@ -15,11 +15,10 @@
  */
 package org.pkl.core.runtime;
 
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.SharedMemberNode;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
 
 /** A builder for {@link VmObject}s whose {@link ObjectMember}s are determined at run time. */
 public final class VmObjectBuilder {
@@ -27,26 +26,26 @@ public final class VmObjectBuilder {
   private int elementCount = 0;
 
   public VmObjectBuilder() {
-    members = EconomicMaps.create();
+    members = EconomicMap.create();
   }
 
   public VmObjectBuilder(int initialSize) {
-    members = EconomicMaps.create(initialSize);
+    // for economic maps, size == capacity
+    members = EconomicMap.create(initialSize);
   }
 
   public VmObjectBuilder addProperty(Identifier name, Object value) {
-    EconomicMaps.put(members, name, VmUtils.createSyntheticObjectProperty(name, "", value));
+    members.put(name, VmUtils.createSyntheticObjectProperty(name, "", value));
     return this;
   }
 
   public VmObjectBuilder addElement(Object value) {
-    EconomicMaps.put(
-        members, (long) elementCount++, VmUtils.createSyntheticObjectElement("", value));
+    members.put((long) elementCount++, VmUtils.createSyntheticObjectElement("", value));
     return this;
   }
 
   public VmObjectBuilder addEntry(Object key, Object value) {
-    EconomicMaps.put(members, key, VmUtils.createSyntheticObjectEntry("", value));
+    members.put(key, VmUtils.createSyntheticObjectEntry("", value));
     return this;
   }
 
@@ -55,7 +54,7 @@ public final class VmObjectBuilder {
         new ObjectMember(
             valueNode.getSourceSection(), valueNode.getHeaderSection(), VmModifier.ENTRY, null, "");
     entry.initMemberNode(valueNode);
-    EconomicMaps.put(members, key, entry);
+    members.put(key, entry);
     return this;
   }
 

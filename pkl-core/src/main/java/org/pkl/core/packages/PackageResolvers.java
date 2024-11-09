@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipInputStream;
 import javax.annotation.concurrent.GuardedBy;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.PathElement;
@@ -53,7 +53,6 @@ import org.pkl.core.module.PathElement.TreePathElement;
 import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
@@ -78,7 +77,7 @@ final class PackageResolvers {
     protected AbstractPackageResolver(SecurityManager securityManager, HttpClient httpClient) {
       this.securityManager = securityManager;
       this.httpClient = httpClient;
-      cachedDependencyMetadata = EconomicMaps.create();
+      cachedDependencyMetadata = EconomicMap.create();
     }
 
     /** Retrieves a dependency's metadata file. */
@@ -250,11 +249,11 @@ final class PackageResolvers {
   static final class InMemoryPackageResolver extends AbstractPackageResolver {
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, EconomicMap<String, ByteBuffer>> cachedEntries =
-        EconomicMaps.create();
+        EconomicMap.create();
 
     @GuardedBy("lock")
     private final EconomicMap<PackageUri, TreePathElement> cachedTreePathElementRoots =
-        EconomicMaps.create();
+        EconomicMap.create();
 
     InMemoryPackageResolver(SecurityManager securityManager, HttpClient httpClient) {
       super(securityManager, httpClient);
@@ -278,7 +277,7 @@ final class PackageResolvers {
           return;
         }
         var metadata = getDependencyMetadata(uri, checksums);
-        var cachedEntrySet = EconomicMaps.<String, ByteBuffer>create();
+        var cachedEntrySet = EconomicMap.<String, ByteBuffer>create();
         var packageBytes = getPackageBytes(uri, metadata);
         try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(packageBytes))) {
           var rootPathElement = new TreePathElement("", true);
@@ -415,7 +414,7 @@ final class PackageResolvers {
     private static final String CACHE_DIR_PREFIX = "package-2";
 
     @GuardedBy("lock")
-    private final EconomicMap<PackageUri, FileSystem> fileSystems = EconomicMaps.create();
+    private final EconomicMap<PackageUri, FileSystem> fileSystems = EconomicMap.create();
 
     private static final Set<PosixFilePermission> FILE_PERMISSIONS =
         EnumSet.of(

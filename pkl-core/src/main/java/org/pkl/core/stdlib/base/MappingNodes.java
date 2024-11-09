@@ -28,7 +28,6 @@ import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableLong;
 import org.pkl.core.util.MutableReference;
@@ -41,7 +40,7 @@ public final class MappingNodes {
     @TruffleBoundary
     protected boolean eval(VmMapping self) {
       for (VmObjectLike curr = self; curr != null; curr = curr.getParent()) {
-        var cursor = EconomicMaps.getEntries(curr.getMembers());
+        var cursor = curr.getMembers().getEntries();
         while (cursor.advance()) {
           if (!(cursor.getKey() instanceof Identifier)) return false;
         }

@@ -22,14 +22,13 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -157,14 +156,13 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @ExplodeLoop
   protected EconomicMap<Object, ObjectMember> createMapMembers(VirtualFrame frame) {
-    var result =
-        EconomicMaps.<Object, ObjectMember>create(EconomicMaps.size(members) + keyNodes.length);
-    EconomicMaps.putAll(result, members);
+    var result = EconomicMap.<Object, ObjectMember>create(members.size() + keyNodes.length);
+    result.putAll(members);
 
     for (var i = 0; i < keyNodes.length; i++) {
       var key = keyNodes[i].executeGeneric(frame);
       var value = values[i];
-      var previousValue = EconomicMaps.put(result, key, value);
+      var previousValue = result.put(key, value);
       if (previousValue != null) {
         CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder()
@@ -179,9 +177,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   protected UnmodifiableEconomicMap<Object, ObjectMember> createListMembers(
       VirtualFrame frame, int parentLength) {
-    var result =
-        EconomicMaps.<Object, ObjectMember>create(EconomicMaps.size(members) + keyNodes.length);
-    EconomicMaps.putAll(result, members);
+    var result = EconomicMap.<Object, ObjectMember>create(members.size() + keyNodes.length);
+    result.putAll(members);
     addListEntries(frame, parentLength, result, keyNodes, values);
     return result;
   }

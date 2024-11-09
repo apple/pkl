@@ -19,10 +19,10 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.pkl.core.collection.EconomicMap
 import org.pkl.core.packages.Checksums
 import org.pkl.core.packages.Dependency
 import org.pkl.core.packages.PackageUri
-import org.pkl.core.util.EconomicMaps
 
 class ProjectDepsTest {
   private val projectDepsStr =
@@ -50,7 +50,7 @@ class ProjectDepsTest {
 
   private val projectDeps = let {
     val projectDepsMap =
-      EconomicMaps.of<CanonicalPackageUri, Dependency>(
+      EconomicMap.of(
         CanonicalPackageUri.of("package://localhost:0/birds@0"),
         Dependency.RemoteDependency(
           PackageUri.create("package://localhost:0/birds@0.5.0"),

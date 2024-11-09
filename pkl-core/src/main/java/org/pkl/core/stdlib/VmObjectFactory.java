@@ -19,20 +19,19 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.function.Supplier;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.TypeCheckedPropertyNodeGen;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public final class VmObjectFactory<E> {
   private final Supplier<VmClass> classSupplier;
-  private final EconomicMap<Object, ObjectMember> members = EconomicMaps.create();
+  private final EconomicMap<Object, ObjectMember> members = EconomicMap.create();
   // not static to avoid compile-time evaluation by native-image
   private final boolean isPropertyTypeChecked = IoUtils.isTestMode();
 

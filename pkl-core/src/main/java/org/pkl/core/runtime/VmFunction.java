@@ -20,10 +20,10 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.function.BiFunction;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.Nullable;
 
 public final class VmFunction extends VmObjectLike {
@@ -103,7 +103,7 @@ public final class VmFunction extends VmObjectLike {
 
   @Override
   public UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
-    return EconomicMaps.create();
+    return EconomicMap.create();
   }
 
   @Override
