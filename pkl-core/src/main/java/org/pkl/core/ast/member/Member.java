@@ -133,16 +133,15 @@ public abstract class Member {
 
   /**
    * Tells if this member is declared inside the iterable of a for-generator, or an object spread.
-   * <p>
-   * This is {@code true} for {@code new {}} within:
    *
-   * <pre>
-   * {@code
+   * <p>This is {@code true} for {@code new {}} within:
+   *
+   * <pre>{@code
    * for (x in new Listing { new {} }) {
    *                         ^^^^^^
    *   // etc
    * }
-   * </pre>
+   * }</pre>
    */
   public boolean isInIterable() {
     return VmModifier.isInIterable(modifiers);
