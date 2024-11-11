@@ -45,28 +45,11 @@ public final class GlobResolver {
     }
   }
 
-  public static final class ResolvedGlobElement {
-    private final String path;
-
-    private final URI uri;
-    private final boolean isDirectory;
-
+  public record ResolvedGlobElement(String path, URI uri, boolean isDirectory) {
     public ResolvedGlobElement(String path, URI uri, boolean isDirectory) {
       this.path = path;
       this.uri = uri.normalize();
       this.isDirectory = isDirectory;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    public URI getUri() {
-      return uri;
-    }
-
-    public boolean isDirectory() {
-      return isDirectory;
     }
   }
 
@@ -434,15 +417,15 @@ public final class GlobResolver {
               listElementCallCount);
       for (var element : matchedElements) {
         if (isLeaf) {
-          result.put(element.getPath(), element);
+          result.put(element.path(), element);
         } else if (element.isDirectory()) {
           resolveHierarchicalGlob(
               securityManager,
               reader,
               globPatternParts,
               idx + 1,
-              element.getUri(),
-              element.getPath(),
+              element.uri(),
+              element.path(),
               hasAbsoluteGlob,
               result,
               listElementCallCount);

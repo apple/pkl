@@ -54,7 +54,7 @@ public final class ImportGlobMemberBodyNode extends ExpressionNode {
   private VmTyped importModule(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")
     var globElements = (Map<String, ResolvedGlobElement>) mapping.getExtraStorage();
-    var importUri = globElements.get(path).getUri();
+    var importUri = globElements.get(path).uri();
     var context = VmContext.get(this);
     try {
       context.getSecurityManager().checkImportModule(currentModule.getUri(), importUri);

@@ -114,7 +114,7 @@ public class VmImportAnalyzer {
                   entry.stringValue());
           var globImports =
               elements.values().stream()
-                  .map(ResolvedGlobElement::getUri)
+                  .map(ResolvedGlobElement::uri)
                   .map(ImportGraph.Import::new)
                   .toList();
           result.addAll(globImports);

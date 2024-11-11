@@ -48,15 +48,7 @@ public abstract class YamlResolver implements ScalarResolver {
     return Tag.STR;
   }
 
-  private static final class ResolverTuple {
-    private final Tag tag;
-    private final Pattern regexp;
-
-    ResolverTuple(Tag tag, Pattern regexp) {
-      this.tag = tag;
-      this.regexp = regexp;
-    }
-
+  private record ResolverTuple(Tag tag, Pattern regexp) {
     @Override
     public String toString() {
       return "Tuple tag=" + tag + " regexp=" + regexp;
