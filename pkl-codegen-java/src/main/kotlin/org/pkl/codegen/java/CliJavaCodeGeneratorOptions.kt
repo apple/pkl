@@ -66,7 +66,7 @@ data class CliJavaCodeGeneratorOptions(
   val renames: Map<String, String> = emptyMap()
 ) {
   fun toJavaCodegenOptions() =
-    JavaCodegenOptions(
+    JavaCodeGeneratorOptions(
       indent,
       generateGetters,
       generateJavadoc,

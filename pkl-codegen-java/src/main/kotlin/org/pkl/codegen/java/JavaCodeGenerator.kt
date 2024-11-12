@@ -41,7 +41,10 @@ import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorException(message: String) : RuntimeException(message)
 
-data class JavaCodegenOptions(
+@kotlin.Deprecated("renamed to JavaCodeGeneratorOptions", ReplaceWith("JavaCodeGeneratorOptions"))
+typealias JavaCodegenOptions = JavaCodeGeneratorOptions
+
+data class JavaCodeGeneratorOptions(
   /** The characters to use for indenting generated Java code. */
   val indent: String = "  ",
 
@@ -84,7 +87,7 @@ data class JavaCodegenOptions(
 /** Entrypoint for the Java code generator API. */
 class JavaCodeGenerator(
   private val schema: ModuleSchema,
-  private val codegenOptions: JavaCodegenOptions
+  private val codegenOptions: JavaCodeGeneratorOptions
 ) {
 
   companion object {
