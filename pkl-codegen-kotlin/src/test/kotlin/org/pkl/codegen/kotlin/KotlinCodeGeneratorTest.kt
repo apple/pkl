@@ -575,6 +575,26 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `data class with Regex property has custom equals and hashCode methods`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Person {
+        age: Int
+        name: Regex
+      }
+    """
+          .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .contains("if (this.name.pattern != other.name.pattern) return false")
+      .contains("result = 31 * result + Objects.hashCode(this.name.pattern)")
+  }
+
+  @Test
   fun `recursive types`() {
     val kotlinCode =
       generateKotlinCode(
