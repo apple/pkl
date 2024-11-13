@@ -47,8 +47,8 @@ data class CliKotlinCodeGeneratorOptions(
    */
   val renames: Map<String, String> = emptyMap()
 ) {
-  fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(
+  fun toKotlinCodegenOptions(): KotlinCodeGeneratorOptions =
+    KotlinCodeGeneratorOptions(
       indent,
       generateKdoc,
       generateSpringBootConfig,

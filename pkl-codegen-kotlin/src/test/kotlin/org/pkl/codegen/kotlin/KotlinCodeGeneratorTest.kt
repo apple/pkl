@@ -147,7 +147,7 @@ class KotlinCodeGeneratorTest {
       val generator =
         KotlinCodeGenerator(
           module,
-          KotlinCodegenOptions(
+          KotlinCodeGeneratorOptions(
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
             implementSerializable = implementSerializable
@@ -195,64 +195,51 @@ class KotlinCodeGeneratorTest {
 
     assertThat(propertyTypes.toString())
       .isEqualTo(
+        """PropertyTypes(boolean=true, int=42, float=42.3, string=string, duration=5.min, """ +
+          """durationUnit=min, dataSize=3.gb, dataSizeUnit=gb, nullable=idea, nullable2=null, """ +
+          """pair=(1, 2), pair2=(pigeon, Other(name=pigeon)), coll=[1, 2], """ +
+          """coll2=[Other(name=pigeon), Other(name=pigeon)], list=[1, 2], """ +
+          """list2=[Other(name=pigeon), Other(name=pigeon)], set=[1, 2], """ +
+          """set2=[Other(name=pigeon)], map={1=one, 2=two}, map2={one=Other(name=pigeon), """ +
+          """two=Other(name=pigeon)}, container={1=one, 2=two}, container2={one=Other(name=pigeon), """ +
+          """two=Other(name=pigeon)}, other=Other(name=pigeon), regex=(i?)\w*, any=Other(name=pigeon), """ +
+          """nonNull=Other(name=pigeon), enum=north)"""
+      )
+  }
+
+  @Test
+  fun `quoted identifiers`() {
+    val kotlinCode =
+      generateKotlinCode(
         """
-        PropertyTypes {
-          boolean = true
-          int = 42
-          float = 42.3
-          string = string
-          duration = 5.min
-          durationUnit = min
-          dataSize = 3.gb
-          dataSizeUnit = gb
-          nullable = idea
-          nullable2 = null
-          pair = (1, 2)
-          pair2 = (pigeon, Other {
-            name = pigeon
-          })
-          coll = [1, 2]
-          coll2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          list = [1, 2]
-          list2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          set = [1, 2]
-          set2 = [Other {
-            name = pigeon
-          }]
-          map = {1=one, 2=two}
-          map2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          container = {1=one, 2=two}
-          container2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          other = Other {
-            name = pigeon
-          }
-          regex = (i?)\w*
-          any = Other {
-            name = pigeon
-          }
-          nonNull = Other {
-            name = pigeon
-          }
-          enum = north
-        }
-      """
+      open class `A Person` {
+        `first name`: String
+      }
+    """
           .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class `A Person`(
+        |    open val `first name`: String
+        |  )
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+          |  override fun toString(): String = ""${'"'}A Person(first name=${'$'}`first name`)""${'"'}
+        """
+          .trimMargin()
+      )
+      .contains(
+        """
+          |  open fun copy(`first name`: String = this.`first name`): `A Person` = `A Person`(`first name`)
+        """
+          .trimMargin()
       )
   }
 
@@ -1816,7 +1803,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names in a standalone module`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("a.b.c" to "x.y.z", "d.e.f.AnotherModule" to "u.v.w.RenamedModule")
         )
         .generateFiles(
@@ -1851,7 +1838,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names based on the longest prefix`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
         )
         .generateFiles(
@@ -1897,7 +1884,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `override names in multiple modules using each other`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames =
             mapOf(
               "org.foo" to "com.foo.x",
@@ -1980,7 +1967,7 @@ class KotlinCodeGeneratorTest {
   @Test
   fun `do not capitalize names of renamed classes`() {
     val files =
-      KotlinCodegenOptions(
+      KotlinCodeGeneratorOptions(
           renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
         )
         .generateFiles(
@@ -2024,7 +2011,7 @@ class KotlinCodeGeneratorTest {
     assertThat(files).isEmpty()
   }
 
-  private fun KotlinCodegenOptions.generateFiles(
+  private fun KotlinCodeGeneratorOptions.generateFiles(
     vararg pklModules: PklModule
   ): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
@@ -2036,13 +2023,13 @@ class KotlinCodeGeneratorTest {
     }
   }
 
-  private fun KotlinCodegenOptions.generateFiles(
+  private fun KotlinCodeGeneratorOptions.generateFiles(
     vararg pklModules: kotlin.Pair<String, String>
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, KotlinSourceCode> =
-    KotlinCodegenOptions().generateFiles(*pklModules).mapValues { KotlinSourceCode(it.value) }
+    KotlinCodeGeneratorOptions().generateFiles(*pklModules).mapValues { KotlinSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("Other").constructors.first()
