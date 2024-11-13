@@ -98,16 +98,8 @@ public abstract class VmException extends AbstractTruffleException {
     BUG
   }
 
-  public static final class ProgramValue {
+  public record ProgramValue(String name, Object value) {
     private static final VmValueRenderer valueRenderer = VmValueRenderer.singleLine(80);
-
-    public final String name;
-    public final Object value;
-
-    public ProgramValue(String name, Object value) {
-      this.name = name;
-      this.value = value;
-    }
 
     @Override
     @TruffleBoundary
