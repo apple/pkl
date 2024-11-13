@@ -164,23 +164,13 @@ public final class Release {
   }
 
   /** The source code of a Pkl release. */
-  public static final class SourceCode {
-    private final String homepage;
-    private final String version;
-
-    /** Constructs a {@link SourceCode}. */
-    public SourceCode(String homepage, String version) {
-      this.homepage = homepage;
-      this.version = version;
-    }
-
+  public record SourceCode(String homepage, String version) {
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #version()}.
+     */
+    @Deprecated(forRemoval = true)
     public String getVersion() {
       return version;
-    }
-
-    /** The homepage of this source code. */
-    public String homepage() {
-      return homepage;
     }
 
     /**
@@ -195,75 +185,20 @@ public final class Release {
     public String getSourceCodeUrlScheme() {
       return homepage + "blob/" + version + "/stdlib%{path}#L%{line}-L%{endLine}";
     }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof SourceCode other)) return false;
-      return homepage.equals(other.homepage) && version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(homepage, version);
-    }
   }
 
-  /** The documentation of a Pkl release. */
-  public static final class Documentation {
-    private final String homepage;
-
-    /** Constructs a {@link Documentation}. */
-    public Documentation(String homepage) {
-      this.homepage = homepage;
-    }
-
-    /** The homepage of this documentation. */
-    public String homepage() {
-      return homepage;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Documentation other)) return false;
-      return homepage.equals(other.homepage);
-    }
-
-    @Override
-    public int hashCode() {
-      return homepage.hashCode();
-    }
-  }
+  /**
+   * The documentation of a Pkl release.
+   *
+   * @param homepage the homepage of this documentation.
+   */
+  public record Documentation(String homepage) {}
 
   /**
    * The standard library of a Pkl release.
    *
    * @since 0.21.0
+   * @param modules the modules of this standard library.
    */
-  public static final class StandardLibrary {
-    private final Set<String> modules;
-
-    /** Constructs a {@link StandardLibrary}. */
-    public StandardLibrary(Set<String> modules) {
-      this.modules = modules;
-    }
-
-    /** The modules of this standard library. */
-    public Set<String> modules() {
-      return modules;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof StandardLibrary other)) return false;
-      return modules.equals(other.modules);
-    }
-
-    @Override
-    public int hashCode() {
-      return modules.hashCode();
-    }
-  }
+  public record StandardLibrary(Set<String> modules) {}
 }
