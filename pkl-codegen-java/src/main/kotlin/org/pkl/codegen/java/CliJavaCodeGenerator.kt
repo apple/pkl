@@ -33,7 +33,7 @@ class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
       builder.build().use { evaluator ->
         for (moduleUri in options.base.normalizedSourceModules) {
           val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
-          val codeGenerator = JavaCodeGenerator(schema, options.toJavaCodegenOptions())
+          val codeGenerator = JavaCodeGenerator(schema, options.toJavaCodeGeneratorOptions())
           try {
             for ((fileName, fileContents) in codeGenerator.output) {
               val outputFile = options.outputDir.resolve(fileName)

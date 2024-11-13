@@ -115,7 +115,7 @@ class JavaCodeGeneratorTest {
       val generator =
         JavaCodeGenerator(
           module,
-          JavaCodegenOptions(
+          JavaCodeGeneratorOptions(
             generateGetters = generateGetters,
             generateJavadoc = generateJavadoc,
             generateSpringBootConfig = generateSpringBootConfig,
@@ -1987,7 +1987,7 @@ class JavaCodeGeneratorTest {
   @Test
   fun `override names in a standalone module`() {
     val files =
-      JavaCodegenOptions(
+      JavaCodeGeneratorOptions(
           renames = mapOf("a.b.c." to "x.y.z.", "d.e.f.AnotherModule" to "u.v.w.RenamedModule")
         )
         .generateFiles(
@@ -2023,7 +2023,7 @@ class JavaCodeGeneratorTest {
   @Test
   fun `override names based on the longest prefix`() {
     val files =
-      JavaCodegenOptions(
+      JavaCodeGeneratorOptions(
           renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
         )
         .generateFiles(
@@ -2068,7 +2068,7 @@ class JavaCodeGeneratorTest {
   @Test
   fun `override names in multiple modules using each other`() {
     val files =
-      JavaCodegenOptions(
+      JavaCodeGeneratorOptions(
           renames =
             mapOf(
               "org.foo." to "com.foo.x.",
@@ -2150,7 +2150,7 @@ class JavaCodeGeneratorTest {
   @Test
   fun `do not capitalize names of renamed classes`() {
     val files =
-      JavaCodegenOptions(
+      JavaCodeGeneratorOptions(
           renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
         )
         .generateFiles(
@@ -2238,7 +2238,9 @@ class JavaCodeGeneratorTest {
     assertThat(files).isEmpty()
   }
 
-  private fun JavaCodegenOptions.generateFiles(vararg pklModules: PklModule): Map<String, String> {
+  private fun JavaCodeGeneratorOptions.generateFiles(
+    vararg pklModules: PklModule
+  ): Map<String, String> {
     val pklFiles = pklModules.map { it.writeToDisk(tempDir.resolve("pkl/${it.name}.pkl")) }
     val evaluator = Evaluator.preconfigured()
     return pklFiles.fold(mapOf()) { acc, pklFile ->
@@ -2248,13 +2250,13 @@ class JavaCodeGeneratorTest {
     }
   }
 
-  private fun JavaCodegenOptions.generateFiles(
+  private fun JavaCodeGeneratorOptions.generateFiles(
     vararg pklModules: kotlin.Pair<String, String>
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, JavaSourceCode> =
-    JavaCodegenOptions().generateFiles(*pklModules).mapValues { JavaSourceCode(it.value) }
+    JavaCodeGeneratorOptions().generateFiles(*pklModules).mapValues { JavaSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("my.Mod\$Other").constructors.first()

@@ -65,8 +65,12 @@ data class CliJavaCodeGeneratorOptions(
    */
   val renames: Map<String, String> = emptyMap()
 ) {
-  fun toJavaCodegenOptions() =
-    JavaCodegenOptions(
+  @Suppress("DeprecatedCallableAddReplaceWith")
+  @Deprecated("deprecated without replacement")
+  fun toJavaCodegenOptions() = toJavaCodeGeneratorOptions()
+
+  internal fun toJavaCodeGeneratorOptions() =
+    JavaCodeGeneratorOptions(
       indent,
       generateGetters,
       generateJavadoc,
