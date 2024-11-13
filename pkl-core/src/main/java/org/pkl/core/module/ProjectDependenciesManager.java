@@ -70,7 +70,7 @@ public final class ProjectDependenciesManager {
       SecurityManager securityManager) {
     this.declaredDependencies = declaredDependencies;
     // new URI("scheme://host/a/b/c.txt").resolve(".") == new URI("scheme://host/a/b/")
-    this.projectBaseUri = IoUtils.resolve(declaredDependencies.getProjectFileUri(), ".");
+    this.projectBaseUri = IoUtils.resolve(declaredDependencies.projectFileUri(), ".");
     this.moduleResolver = moduleResolver;
     this.securityManager = securityManager;
   }
@@ -88,7 +88,7 @@ public final class ProjectDependenciesManager {
       }
       var projectDeps = getProjectDeps();
       myDependencies = doBuildResolvedDependenciesForProject(declaredDependencies, projectDeps);
-      for (var localPkg : declaredDependencies.getLocalDependencies().values()) {
+      for (var localPkg : declaredDependencies.localDependencies().values()) {
         ensureLocalProjectDependencyInitialized(localPkg, projectDeps);
       }
     }
@@ -97,14 +97,14 @@ public final class ProjectDependenciesManager {
   private void ensureLocalProjectDependencyInitialized(
       DeclaredDependencies localProjectDependencies, ProjectDeps projectDeps) {
     // turn `package:` scheme into `projectpackage`: scheme
-    var uri = PackageUri.create("project" + localProjectDependencies.getMyPackageUri());
+    var uri = PackageUri.create("project" + localProjectDependencies.myPackageUri());
     if (localPackageDependencies.containsKey(uri)) {
       return;
     }
     var resolvedDeps = doBuildResolvedDependenciesForProject(localProjectDependencies, projectDeps);
     localPackageDependencies.put(uri, resolvedDeps);
     // TODO: check circular imports (should not be possible)
-    for (var declaredDeps : localProjectDependencies.getLocalDependencies().values()) {
+    for (var declaredDeps : localProjectDependencies.localDependencies().values()) {
       ensureLocalProjectDependencyInitialized(declaredDeps, projectDeps);
     }
   }
@@ -124,22 +124,21 @@ public final class ProjectDependenciesManager {
       DeclaredDependencies declaredDeps, ProjectDeps resolvedProjectDeps) {
     var ret =
         new HashMap<String, Dependency>(
-            declaredDeps.getRemoteDependencies().size()
-                + declaredDeps.getLocalDependencies().size());
-    for (var entry : declaredDeps.getLocalDependencies().entrySet()) {
+            declaredDeps.remoteDependencies().size() + declaredDeps.localDependencies().size());
+    for (var entry : declaredDeps.localDependencies().entrySet()) {
       var localDeclaredDependencies = entry.getValue();
-      var packageUri = localDeclaredDependencies.getMyPackageUri();
+      var packageUri = localDeclaredDependencies.myPackageUri();
       assert packageUri != null;
       var canonicalPackageUri =
-          CanonicalPackageUri.fromPackageUri(localDeclaredDependencies.getMyPackageUri());
+          CanonicalPackageUri.fromPackageUri(localDeclaredDependencies.myPackageUri());
       var resolvedDep = resolvedProjectDeps.get(canonicalPackageUri);
       if (resolvedDep == null) {
         throw new PackageLoadError("unresolvedProjectDependency", packageUri);
       }
-      checkProjectDependencyOutOfDate(declaredDeps.getProjectFileUri(), packageUri, resolvedDep);
+      checkProjectDependencyOutOfDate(declaredDeps.projectFileUri(), packageUri, resolvedDep);
       ret.put(entry.getKey(), resolvedDep);
     }
-    for (var entry : declaredDeps.getRemoteDependencies().entrySet()) {
+    for (var entry : declaredDeps.remoteDependencies().entrySet()) {
       var remoteDep = entry.getValue();
       var packageUri = CanonicalPackageUri.fromPackageUri(remoteDep.getPackageUri());
       var resolvedDep = resolvedProjectDeps.get(packageUri);
@@ -147,7 +146,7 @@ public final class ProjectDependenciesManager {
         throw new PackageLoadError("unresolvedProjectDependency", entry.getValue().getPackageUri());
       }
       checkProjectDependencyOutOfDate(
-          declaredDeps.getProjectFileUri(), remoteDep.getPackageUri(), resolvedDep);
+          declaredDeps.projectFileUri(), remoteDep.getPackageUri(), resolvedDep);
       ret.put(entry.getKey(), resolvedDep);
     }
     return ret;
@@ -220,7 +219,7 @@ public final class ProjectDependenciesManager {
   }
 
   public URI getProjectFileUri() {
-    return declaredDependencies.getProjectFileUri();
+    return declaredDependencies.projectFileUri();
   }
 
   private ProjectDeps getProjectDeps() {

@@ -62,8 +62,8 @@ public final class ProjectDependenciesResolver {
 
   public ProjectDeps resolve() {
     buildResolvedDependencies(project.getDependencies());
-    for (var localProject : project.getDependencies().getLocalDependencies().values()) {
-      var packageUri = localProject.getMyPackageUri();
+    for (var localProject : project.getDependencies().localDependencies().values()) {
+      var packageUri = localProject.myPackageUri();
       assert packageUri != null;
       var canonicalUri = CanonicalPackageUri.fromPackageUri(packageUri);
       var resolvedDependency = resolvedDependencies.get(canonicalUri);
@@ -86,11 +86,11 @@ public final class ProjectDependenciesResolver {
   }
 
   private void buildResolvedDependencies(DeclaredDependencies declaredDependencies) {
-    for (var dependency : declaredDependencies.getRemoteDependencies().values()) {
+    for (var dependency : declaredDependencies.remoteDependencies().values()) {
       resolveDependenciesOfPackageUri(
           dependency.getPackageUri().toProjectPackageUri(), dependency.getChecksums());
     }
-    for (var localDeclaredDependencies : declaredDependencies.getLocalDependencies().values()) {
+    for (var localDeclaredDependencies : declaredDependencies.localDependencies().values()) {
       resolveDependencies(localDeclaredDependencies);
     }
   }
@@ -128,9 +128,9 @@ public final class ProjectDependenciesResolver {
   }
 
   private void resolveDependencies(DeclaredDependencies declaredDependencies) {
-    var packageUri = declaredDependencies.getMyPackageUri();
+    var packageUri = declaredDependencies.myPackageUri();
     assert packageUri != null;
-    var projectDir = Path.of(declaredDependencies.getProjectFileUri()).getParent();
+    var projectDir = Path.of(declaredDependencies.projectFileUri()).getParent();
     var relativePath = IoUtils.relativize(projectDir, this.project.getProjectDir());
     var localDependency = new LocalDependency(packageUri.toProjectPackageUri(), relativePath);
     updateDependency(localDependency);

@@ -134,10 +134,10 @@ public final class ProjectPackager {
   public void createPackages() throws IOException {
     for (var project : projects) {
       var packageResult = doPackage(project);
-      writeLine(IoUtils.relativize(packageResult.getMetadataFile(), workingDir).toString());
-      writeLine(IoUtils.relativize(packageResult.getMetadataChecksumFile(), workingDir).toString());
-      writeLine(IoUtils.relativize(packageResult.getZipFile(), workingDir).toString());
-      writeLine(IoUtils.relativize(packageResult.getZipChecksumFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.metadataFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.metadataChecksumFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.zipFile(), workingDir).toString());
+      writeLine(IoUtils.relativize(packageResult.zipChecksumFile(), workingDir).toString());
       outputWriter.flush();
     }
   }
@@ -145,8 +145,8 @@ public final class ProjectPackager {
   private Path resolveOutputDirectory(Package pkg) {
     var substituted =
         outputPathPattern
-            .replace("%{name}", pkg.getName())
-            .replace("%{version}", pkg.getVersion().toString());
+            .replace("%{name}", pkg.name())
+            .replace("%{version}", pkg.version().toString());
     return workingDir.resolve(substituted);
   }
 
@@ -156,13 +156,13 @@ public final class ProjectPackager {
       throw new PklException(
           ErrorMessages.create("noPackageDefinedByProject", project.getProjectFileUri()));
     }
-    if (packageResults.containsKey(pkg.getUri())) {
-      return packageResults.get(pkg.getUri());
+    if (packageResults.containsKey(pkg.uri())) {
+      return packageResults.get(pkg.uri());
     }
     var files = collectPackageElements(project, pkg);
     validatePklImportsAndReads(project, files);
     var outputDir = resolveOutputDirectory(pkg);
-    var metadataFileName = IoUtils.takeLastSegment(pkg.getUri().getUri().getPath(), '/');
+    var metadataFileName = IoUtils.takeLastSegment(pkg.uri().getUri().getPath(), '/');
     var metadataFile = outputDir.resolve(metadataFileName);
     var metadataChecksumFile = outputDir.resolve(metadataFileName + ".sha256");
     var zipFile = outputDir.resolve(metadataFileName + ".zip");
@@ -178,21 +178,20 @@ public final class ProjectPackager {
     var result =
         new PackageResult(
             metadataFile, metadataChecksumFile, zipFile, zipChecksumFile, metadataFileChecksum);
-    packageResults.put(pkg.getUri(), result);
+    packageResults.put(pkg.uri(), result);
     return result;
   }
 
   private void checkAlreadyPublishedPackage(Package pkg, String computedChecksum)
       throws IOException {
     try {
-      var metadataAndChecksum =
-          packageResolver.getDependencyMetadataAndComputeChecksum(pkg.getUri());
+      var metadataAndChecksum = packageResolver.getDependencyMetadataAndComputeChecksum(pkg.uri());
       var receivedChecksum = metadataAndChecksum.second.getSha256();
       if (!receivedChecksum.equals(computedChecksum)) {
         throw new PklException(
             ErrorMessages.create(
                 "packageAlreadyPublishedWithDifferentContents",
-                pkg.getUri(),
+                pkg.uri(),
                 computedChecksum,
                 receivedChecksum));
       }
@@ -204,8 +203,8 @@ public final class ProjectPackager {
           throw new PklException(
               ErrorMessages.create(
                   "unableToAccessPublishedPackage",
-                  pkg.getName(),
-                  pkg.getPackageZipUrl(),
+                  pkg.name(),
+                  pkg.packageZipUrl(),
                   e.getArguments()[0]));
         }
       }
@@ -229,15 +228,15 @@ public final class ProjectPackager {
     try {
       var ret =
           new HashMap<String, RemoteDependency>(
-              project.getDependencies().getLocalDependencies().size()
-                  + project.getDependencies().getRemoteDependencies().size());
+              project.getDependencies().localDependencies().size()
+                  + project.getDependencies().remoteDependencies().size());
       // module resolver is only used for reading PklProject.deps.json, so provide one that reads
       // files.
       var moduleResolver = new ModuleResolver(List.of(ModuleKeyFactories.file));
       var projectDependenciesManager =
           new ProjectDependenciesManager(
               project.getDependencies(), moduleResolver, this.securityManager);
-      for (var entry : project.getDependencies().getRemoteDependencies().entrySet()) {
+      for (var entry : project.getDependencies().remoteDependencies().entrySet()) {
         var resolved =
             (RemoteDependency)
                 projectDependenciesManager.getResolvedDependency(entry.getValue().getPackageUri());
@@ -249,7 +248,7 @@ public final class ProjectPackager {
       for (var entry : project.getLocalProjectDependencies().entrySet()) {
         var localProject = entry.getValue();
         assert localProject.getPackage() != null;
-        var packageUri = localProject.getPackage().getUri();
+        var packageUri = localProject.getPackage().uri();
         var resolved = projectDependenciesManager.getResolvedDependency(packageUri);
         if (resolved instanceof LocalDependency) {
           var packageResult = doPackage(localProject);
@@ -257,7 +256,7 @@ public final class ProjectPackager {
               entry.getKey(),
               new RemoteDependency(
                   packageUri.toExternalPackageUri(),
-                  new Checksums(packageResult.getMetadataChecksum())));
+                  new Checksums(packageResult.metadataChecksum())));
         } else {
           var remoteDep = (RemoteDependency) resolved;
           ret.put(
@@ -278,20 +277,20 @@ public final class ProjectPackager {
   private DependencyMetadata createDependencyMetadata(
       Project project, Package pkg, String packageZipChecksum) throws IOException {
     return new DependencyMetadata(
-        pkg.getName(),
-        pkg.getUri(),
-        pkg.getVersion(),
-        pkg.getPackageZipUrl(),
+        pkg.name(),
+        pkg.uri(),
+        pkg.version(),
+        pkg.packageZipUrl(),
         new Checksums(packageZipChecksum),
         buildDependencies(project),
-        pkg.getSourceCodeUrlScheme(),
-        pkg.getSourceCode(),
-        pkg.getDocumentation(),
-        pkg.getLicense(),
-        pkg.getLicenseText(),
-        pkg.getAuthors(),
-        pkg.getIssueTracker(),
-        pkg.getDescription(),
+        pkg.sourceCodeUrlScheme(),
+        pkg.sourceCode(),
+        pkg.documentation(),
+        pkg.license(),
+        pkg.licenseText(),
+        pkg.authors(),
+        pkg.issueTracker(),
+        pkg.description(),
         project.getAnnotations());
   }
 
@@ -343,7 +342,7 @@ public final class ProjectPackager {
 
   private List<Pattern> getExcludePatterns(Package pkg) {
     var excludePatterns = new ArrayList<Pattern>();
-    for (String s : pkg.getExclude()) {
+    for (String s : pkg.exclude()) {
       try {
         excludePatterns.add(GlobResolver.toRegexPattern(s));
       } catch (InvalidGlobPatternException e) {
@@ -452,42 +451,48 @@ public final class ProjectPackager {
     }
   }
 
-  public static class PackageResult {
-    private final Path zipFile;
-    private final Path zipChecksumFile;
-    private final Path metadataFile;
-    private final Path metadataChecksumFile;
-    private final String metadataChecksum;
-
-    public PackageResult(
-        Path zipFile,
-        Path zipChecksumFile,
-        Path metadataFile,
-        Path metadataChecksumFile,
-        String metadataChecksum) {
-      this.zipFile = zipFile;
-      this.zipChecksumFile = zipChecksumFile;
-      this.metadataFile = metadataFile;
-      this.metadataChecksumFile = metadataChecksumFile;
-      this.metadataChecksum = metadataChecksum;
-    }
-
+  public record PackageResult(
+      Path zipFile,
+      Path zipChecksumFile,
+      Path metadataFile,
+      Path metadataChecksumFile,
+      String metadataChecksum) {
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #zipFile()}.
+     */
+    @Deprecated(forRemoval = true)
     public Path getZipFile() {
       return zipFile;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #zipChecksumFile()}.
+     */
+    @Deprecated(forRemoval = true)
     public Path getZipChecksumFile() {
       return zipChecksumFile;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #metadataFile()}.
+     */
+    @Deprecated(forRemoval = true)
     public Path getMetadataFile() {
       return metadataFile;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #metadataChecksumFile()}.
+     */
+    @Deprecated(forRemoval = true)
     public Path getMetadataChecksumFile() {
       return metadataChecksumFile;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #metadataChecksum()}.
+     */
+    @Deprecated(forRemoval = true)
     public String getMetadataChecksum() {
       return metadataChecksum;
     }
