@@ -20,22 +20,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /** An external (file, HTTP, etc.) resource. */
-public final class Resource {
-  private final URI uri;
-
-  private final byte[] bytes;
-
-  /** Constructs a resource. */
-  public Resource(URI uri, byte[] bytes) {
-    this.uri = uri;
-    this.bytes = bytes;
-  }
-
-  /** Returns the URI of this resource. */
+public record Resource(URI uri, byte[] bytes) {
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #uri()}
+   */
+  @Deprecated(forRemoval = true)
   public URI getUri() {
     return uri;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #bytes()}
+   */
+  @Deprecated(forRemoval = true)
   public byte[] getBytes() {
     return bytes;
   }

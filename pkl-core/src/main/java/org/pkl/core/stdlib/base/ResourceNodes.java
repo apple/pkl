@@ -33,7 +33,7 @@ public final class ResourceNodes {
     @Specialization(guards = "self.hasExtraStorage()")
     protected String evalWithExtraStorage(VmTyped self) {
       var resource = (Resource) self.getExtraStorage();
-      return ByteArrayUtils.md5(resource.getBytes());
+      return ByteArrayUtils.md5(resource.bytes());
     }
 
     @TruffleBoundary
@@ -54,7 +54,7 @@ public final class ResourceNodes {
     @Specialization(guards = "self.hasExtraStorage()")
     protected String evalWithExtraStorage(VmTyped self) {
       var resource = (Resource) self.getExtraStorage();
-      return ByteArrayUtils.sha1(resource.getBytes());
+      return ByteArrayUtils.sha1(resource.bytes());
     }
 
     @TruffleBoundary
@@ -71,7 +71,7 @@ public final class ResourceNodes {
     @Specialization(guards = "self.hasExtraStorage()")
     protected String evalWithExtraStorage(VmTyped self) {
       var resource = (Resource) self.getExtraStorage();
-      return ByteArrayUtils.sha256(resource.getBytes());
+      return ByteArrayUtils.sha256(resource.bytes());
     }
 
     @TruffleBoundary
@@ -88,7 +88,7 @@ public final class ResourceNodes {
     @Specialization(guards = "self.hasExtraStorage()")
     protected long evalWithExtraStorage(VmTyped self) {
       var resource = (Resource) self.getExtraStorage();
-      return ByteArrayUtils.sha256Int(resource.getBytes());
+      return ByteArrayUtils.sha256Int(resource.bytes());
     }
 
     @TruffleBoundary
