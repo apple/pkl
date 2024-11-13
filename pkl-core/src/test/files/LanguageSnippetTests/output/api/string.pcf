@@ -47,6 +47,9 @@ facts {
     true
     true
   }
+  ["isBase64"] {
+    true
+  }
   ["toBoolean()"] {
     true
     true
@@ -175,8 +178,8 @@ examples {
   }
   ["trimStart()"] {
     """
-    abcdefg \t 
-    
+    abcdefg \t
+
     """
   }
   ["trimEnd()"] {

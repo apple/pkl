@@ -25,6 +25,10 @@ facts {
     str2.base64.base64Decoded == str2
   }
 
+  ["isBase64"] {
+    str1.isBase64
+  }
+
   ["contains()"] {
     str1.contains(str2)
     str1.contains(str1)
@@ -304,12 +308,12 @@ examples {
     str1.sha1
     str2.sha1
   }
-  
+
   ["sha256"] {
     str1.sha256
     str2.sha256
   }
-  
+
   ["sha256Int"] {
     str1.sha256Int
     str2.sha256Int
@@ -319,7 +323,7 @@ examples {
     str1.md5
     str2.md5
   }
-  
+
   ["base64"] {
     str1.base64
     str2.base64

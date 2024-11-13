@@ -40,6 +40,9 @@ facts {
     true
     true
   }
+  ["isBase64"] {
+    true
+  }
   ["capitalize"] {
     true
     true
@@ -126,8 +129,8 @@ examples {
   }
   ["trimStart()"] {
     """
-    😀😈😍😎😡🤢🤣 \t 
-    
+    😀😈😍😎😡🤢🤣 \t
+
     """
   }
   ["trimEnd()"] {

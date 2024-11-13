@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import org.apache.commons.codec.binary.Base64;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.*;
@@ -145,6 +146,13 @@ public final class StringNodes {
       } catch (PatternSyntaxException e) {
         return false;
       }
+    }
+  }
+
+  public abstract static class isBase64 extends ExternalPropertyNode {
+    @Specialization
+    protected boolean eval(String self) {
+      return Base64.isArrayByteBase64(self.getBytes());
     }
   }
 
