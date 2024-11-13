@@ -27,12 +27,20 @@ local altered: Listing<Person> = (base) {
   [0] { name = "Wood Pigeon" }
 }
 
+local computedIndex: Listing<Person> = (base) {
+  [computeIndex()] { name = "Wood Pigeon" }
+}
+
+local function computeIndex() = 0
+
 facts {
   ["isEmpty"] {
     empty.isEmpty
     empty2.isEmpty
     !base.isEmpty
     !derived.isEmpty
+    !altered.isEmpty
+    !computedIndex.isEmpty
   }
   
   ["lastIndex"] {
@@ -41,6 +49,8 @@ facts {
     base.lastIndex == 2
     derived.lastIndex == 4
     duplicate.lastIndex == 5
+    altered.lastIndex == 2
+    computedIndex.lastIndex == 2
   }
 
   ["isDistinct"] {
@@ -49,6 +59,8 @@ facts {
     base.isDistinct
     derived.isDistinct
     !duplicate.isDistinct
+    altered.isDistinct
+    computedIndex.isDistinct
   }
 
   ["isDistinctBy()"] {
@@ -57,18 +69,24 @@ facts {
     base.isDistinctBy((it) -> it)
     derived.isDistinctBy((it) -> it)
     !duplicate.isDistinctBy((it) -> it)
+    altered.isDistinctBy((it) -> it)
+    computedIndex.isDistinctBy((it) -> it)
 
     empty.isDistinctBy((it) -> it.name)
     empty2.isDistinctBy((it) -> it.name)
     base.isDistinctBy((it) -> it.name)
     derived.isDistinctBy((it) -> it.name)
     !duplicate.isDistinctBy((it) -> it.name)
+    altered.isDistinctBy((it) -> it.name)
+    computedIndex.isDistinctBy((it) -> it.name)
 
     empty.isDistinctBy((it) -> it.getClass())
     empty2.isDistinctBy((it) -> it.getClass())
     !base.isDistinctBy((it) -> it.getClass())
     !derived.isDistinctBy((it) -> it.getClass())
     !duplicate.isDistinctBy((it) -> it.getClass())
+    !altered.isDistinctBy((it) -> it.getClass())
+    !computedIndex.isDistinctBy((it) -> it.getClass())
   }
   
   ["getOrNull"] {
@@ -85,24 +103,32 @@ facts {
     module.catch(() -> empty.first) == "Expected a non-empty Listing."
     base.first == base[0]
     derived.first == base[0]
+    altered.first != base[0]
+    computedIndex.first == altered.first
   }
   
   ["firstOrNull"] {
     empty.firstOrNull == null
     base.firstOrNull == base[0]
     derived.firstOrNull == base[0]
+    altered.firstOrNull != base[0]
+    computedIndex.firstOrNull == altered.first
   }
 
   ["last"] {
     module.catch(() -> empty.last) == "Expected a non-empty Listing."
     base.last == base[2]
     derived.last == derived[4]
+    altered.last == base[2]
+    computedIndex.last == base[2]
   }
 
   ["lastOrNull"] {
     empty.lastOrNull == null
     base.lastOrNull == base[2]
     derived.lastOrNull == derived[4]
+    altered.lastOrNull == base[2]
+    computedIndex.lastOrNull == base[2]
   }
 
   ["single"] {
@@ -135,6 +161,7 @@ facts {
     derived.contains(base[1])
     derived.contains(derived[3])
     !altered.contains(base[0])
+    !computedIndex.contains(base[0])
   }
 }
 
@@ -144,6 +171,17 @@ examples {
     empty2.length
     base.length
     derived.length
+    altered.length
+    computedIndex.length
+    
+    local elementsAndEntries = (base) {
+      new { name = "" }
+      [2] { name = "" }
+      [computeIndex()] { name = "" }
+      new { name = "" }
+      [1 + 0] { name = "" }
+    }
+    elementsAndEntries.length
   }
 
   ["toList()"] {
@@ -152,6 +190,8 @@ examples {
     base.toList()
     derived.toList()
     duplicate.toList()
+    altered.toList()
+    computedIndex.toList()
   }
 
   ["toSet()"] {
@@ -160,6 +200,8 @@ examples {
     base.toSet()
     derived.toSet()
     duplicate.toSet()
+    altered.toSet()
+    computedIndex.toSet()
   }
 
   ["distinct"] {
@@ -168,6 +210,8 @@ examples {
     base.distinct
     derived.distinct
     duplicate.distinct
+    altered.distinct
+    computedIndex.distinct
   }
 
   ["distinctBy()"] {
@@ -176,36 +220,48 @@ examples {
     base.distinctBy((it) -> it)
     derived.distinctBy((it) -> it)
     duplicate.distinctBy((it) -> it)
+    altered.distinctBy((it) -> it)
+    computedIndex.distinctBy((it) -> it)
 
     empty.distinctBy((it) -> it.name)
     empty2.distinctBy((it) -> it.name)
     base.distinctBy((it) -> it.name)
     derived.distinctBy((it) -> it.name)
     duplicate.distinctBy((it) -> it.name)
+    altered.distinctBy((it) -> it.name)
+    computedIndex.distinctBy((it) -> it.name)
 
     empty.distinctBy((it) -> it.getClass())
     empty2.distinctBy((it) -> it.getClass())
     base.distinctBy((it) -> it.getClass())
     derived.distinctBy((it) -> it.getClass())
     duplicate.distinctBy((it) -> it.getClass())
+    altered.distinctBy((it) -> it.getClass())
+    computedIndex.distinctBy((it) -> it.getClass())
   }
 
   ["fold"] {
     empty.fold(List(), (l, e) -> l.add(e))
     base.fold(List(), (l, e) -> l.add(e))
     derived.fold(List(), (l, e) -> l.add(e))
+    altered.fold(List(), (l, e) -> l.add(e))
+    computedIndex.fold(List(), (l, e) -> l.add(e))
   }
 
   ["foldIndexed"] {
     empty.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
     base.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
     derived.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
+    altered.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
+    computedIndex.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
   }
 
 
   local baseNum = new Listing { 1; 2; 3 }
   local baseString = new Listing { "Pigeon"; "Barn Owl"; "Parrot" }
   local derivedString = (baseString) { "Albatross"; "Elf Owl" }
+  local alteredString = (baseString) { [0] = "Wood Pigeon" }
+  local computedIndexString = (baseString) { [computeIndex()] = "Wood Pigeon" }
 
   ["join"] {
     empty.join("")
@@ -215,5 +271,9 @@ examples {
     baseString.join("---")
     derivedString.join("")
     derivedString.join("\n")
+    alteredString.join("")
+    alteredString.join("\n")
+    computedIndexString.join("")
+    computedIndexString.join("\n")
   }
 }
