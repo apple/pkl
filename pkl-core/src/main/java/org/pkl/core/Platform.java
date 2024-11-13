@@ -24,11 +24,11 @@ import org.graalvm.home.Version;
  * equivalent of standard library module {@code pkl.platform}.
  */
 public record Platform(
-    org.pkl.core.Platform.Language language,
-    org.pkl.core.Platform.Runtime runtime,
-    org.pkl.core.Platform.VirtualMachine virtualMachine,
-    org.pkl.core.Platform.OperatingSystem operatingSystem,
-    org.pkl.core.Platform.Processor processor) {
+    Language language,
+    Runtime runtime,
+    VirtualMachine virtualMachine,
+    OperatingSystem operatingSystem,
+    Processor processor) {
   private static final Platform CURRENT;
 
   static {
