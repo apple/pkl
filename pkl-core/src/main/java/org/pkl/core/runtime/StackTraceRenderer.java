@@ -131,15 +131,7 @@ public final class StackTraceRenderer {
    * former is public API and the latter isn't.
    */
   // non-private for testing
-  static class StackFrameLoop {
-    final List<Object /*StackFrame|StackFrameLoop*/> frames;
-    final int count;
-
-    StackFrameLoop(List<Object> frames, int count) {
-      this.count = count;
-      this.frames = frames;
-    }
-  }
+  record StackFrameLoop(List<Object /*StackFrame|StackFrameLoop*/> frames, int count) {}
 
   // non-private for testing
   static List<Object /*StackFrame|StackFrameLoop*/> compressFrames(List<StackFrame> frames) {

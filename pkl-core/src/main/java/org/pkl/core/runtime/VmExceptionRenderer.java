@@ -112,11 +112,11 @@ public final class VmExceptionRenderer {
     }
 
     var maxNameLength =
-        exception.getProgramValues().stream().mapToInt(v -> v.name.length()).max().orElse(0);
+        exception.getProgramValues().stream().mapToInt(v -> v.name().length()).max().orElse(0);
 
     for (var value : exception.getProgramValues()) {
-      out.append(value.name)
-          .append(" ".repeat(Math.max(0, maxNameLength - value.name.length())))
+      out.append(value.name())
+          .append(" ".repeat(Math.max(0, maxNameLength - value.name().length())))
           .append(": ")
           .append(value)
           .append('\n');
