@@ -114,8 +114,8 @@ internal fun String.replaceSourceCodePlaceholders(
   sourceLocation: Member.SourceLocation
 ): String {
   return replace("%{path}", path)
-    .replace("%{line}", sourceLocation.startLine.toString())
-    .replace("%{endLine}", sourceLocation.endLine.toString())
+    .replace("%{line}", sourceLocation.startLine().toString())
+    .replace("%{endLine}", sourceLocation.endLine().toString())
 }
 
 /** Encodes a URI string, encoding characters that are part of URI syntax. */

@@ -274,8 +274,8 @@ internal abstract class ModuleOrClassPageGenerator<S>(
   protected fun HtmlBlockTag.renderMemberSourceLink(member: Member) {
     // Prevent churn by setting static line numbers.
     // This is so our doc generator tests don't break if, say, we change sources in the stdlib.
-    val startLine = if (isTestMode) 123 else member.sourceLocation.startLine
-    val endLine = if (isTestMode) 456 else member.sourceLocation.endLine
+    val startLine = if (isTestMode) 123 else member.sourceLocation.startLine()
+    val endLine = if (isTestMode) 456 else member.sourceLocation.endLine()
     val moduleSourceUrl =
       pageScope.resolveModuleNameToSourceUrl(
         member.moduleName,

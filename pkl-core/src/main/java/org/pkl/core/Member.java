@@ -98,21 +98,21 @@ public abstract class Member implements Serializable {
     return simpleName;
   }
 
-  public static class SourceLocation implements Serializable {
+  public record SourceLocation(int startLine, int endLine) implements Serializable {
     @Serial private static final long serialVersionUID = 0L;
 
-    private final int startLine;
-    private final int endLine;
-
-    public SourceLocation(int startLine, int endLine) {
-      this.startLine = startLine;
-      this.endLine = endLine;
-    }
-
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #startLine()}.
+     */
+    @Deprecated(forRemoval = true)
     public int getStartLine() {
       return startLine;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #endLine()}.
+     */
+    @Deprecated(forRemoval = true)
     public int getEndLine() {
       return endLine;
     }
