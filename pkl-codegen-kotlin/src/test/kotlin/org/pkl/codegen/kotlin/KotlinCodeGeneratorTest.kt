@@ -208,6 +208,42 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `quoted identifiers`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      open class `A Person` {
+        `first name`: String
+      }
+    """
+          .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .contains(
+        """
+        |  open class `A Person`(
+        |    open val `first name`: String
+        |  )
+      """
+          .trimMargin()
+      )
+      .contains(
+        """
+          |  override fun toString(): String = ""${'"'}A Person(first name=${'$'}`first name`)""${'"'}
+        """
+          .trimMargin()
+      )
+      .contains(
+        """
+          |  open fun copy(`first name`: String = this.`first name`): `A Person` = `A Person`(`first name`)
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `deprecated property with message`() {
     val kotlinCode =
       generateKotlinCode(

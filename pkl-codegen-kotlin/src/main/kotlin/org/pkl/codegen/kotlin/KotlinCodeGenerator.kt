@@ -256,14 +256,8 @@ class KotlinCodeGenerator(
       }
 
       val codeBuilder = CodeBlock.builder().add("return %T(", kotlinPoetClassName)
-      var firstProperty = true
-      for (name in allProperties.keys) {
-        if (firstProperty) {
-          codeBuilder.add("%N", name)
-          firstProperty = false
-        } else {
-          codeBuilder.add(", %N", name)
-        }
+      for ((index, name) in allProperties.keys.withIndex()) {
+        codeBuilder.add(if (index == 0) "%N" else ", %N", name)
       }
       codeBuilder.add(")\n")
 
@@ -344,24 +338,25 @@ class KotlinCodeGenerator(
       return builder.build()
     }
 
+    // produce same output as default toString() method of data classes
     fun generateToStringMethod(): FunSpec {
       return FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
         .returns(STRING)
         .addStatement(
           "return %P",
-          buildString {
-            append(pClass.simpleName)
-            append("(")
-            var isFirst = true
-            for (propertyName in allProperties.keys) {
-              if (isFirst) isFirst = false else append(", ")
-              append(propertyName)
-              append("=$")
-              append(propertyName)
+          CodeBlock.builder()
+            .apply {
+              add("%L", pClass.toKotlinPoetName().simpleName)
+              add("(")
+              for ((index, propertyName) in allProperties.keys.withIndex()) {
+                add(if (index == 0) "%L" else ", %L", propertyName)
+                add("=$")
+                add("%N", propertyName)
+              }
+              add(")")
             }
-            append(")")
-          }
+            .build()
         )
         .build()
     }
