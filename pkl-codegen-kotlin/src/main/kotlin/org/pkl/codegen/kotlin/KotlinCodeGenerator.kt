@@ -227,8 +227,6 @@ class KotlinCodeGenerator(
     fun PClass.Property.isRegex(): Boolean =
       (this.type as? PType.Class)?.pClass?.info == PClassInfo.Regex
 
-    val containRegexProperty = properties.values.any { it.isRegex() }
-
     fun generateConstructor(): FunSpec {
       val builder = FunSpec.constructorBuilder()
       for ((name, property) in allProperties) {
@@ -324,11 +322,12 @@ class KotlinCodeGenerator(
           .returns(INT)
           .addStatement("var result = 1")
 
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
+        val accessor = if (property.isRegex()) "this.%N.pattern" else "this.%N"
         // use Objects.hashCode() because Kotlin's Any?.hashCode()
         // doesn't work for platform types (will get NPE if null)
         builder.addStatement(
-          "result = 31 * result + %T.hashCode(this.%N)",
+          "result = 31 * result + %T.hashCode($accessor)",
           Objects::class,
           propertyName
         )
@@ -490,15 +489,17 @@ class KotlinCodeGenerator(
         builder.addKdoc(renderAsKdoc(docComment))
       }
 
+      var hasRegex = false
       for ((name, property) in properties) {
+        hasRegex = hasRegex || property.isRegex()
         builder.addProperty(generateProperty(name, property))
       }
 
-      // Regex requires special approach when compared to another Regex
-      // So we need to override `.equals` method even for kotlin's `data class`es if
-      // any of the properties is of Regex type
-      if (containRegexProperty) {
-        builder.addFunction(generateEqualsMethod())
+      // kotlin.text.Regex (and java.util.regex.Pattern) defines equality as identity.
+      // To match Pkl semantics and compare regexes by their String pattern,
+      // override equals and hashCode if the data class has a property of type Regex.
+      if (hasRegex) {
+        builder.addFunction(generateEqualsMethod()).addFunction(generateHashCodeMethod())
       }
 
       return builder

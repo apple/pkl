@@ -221,6 +221,9 @@ class JavaCodeGenerator(
     val properties = renameIfReservedWord(pClass.properties).filterValues { !it.isHidden }
     val allProperties = superProperties + properties
 
+    fun PClass.Property.isRegex(): Boolean =
+      (this.type as? PType.Class)?.pClass?.info == PClassInfo.Regex
+
     fun addCtorParameter(
       builder: MethodSpec.Builder,
       propJavaName: String,
@@ -283,9 +286,7 @@ class JavaCodeGenerator(
           .addStatement("\$T other = (\$T) obj", javaPoetClassName, javaPoetClassName)
 
       for ((propertyName, property) in allProperties) {
-        val accessor =
-          if ((property.type as? PType.Class)?.pClass?.info == PClassInfo.Regex) "\$N.pattern()"
-          else "\$N"
+        val accessor = if (property.isRegex()) "\$N.pattern()" else "\$N"
         builder.addStatement(
           "if (!\$T.equals(this.$accessor, other.$accessor)) return false",
           Objects::class.java,
@@ -306,9 +307,10 @@ class JavaCodeGenerator(
           .returns(Int::class.java)
           .addStatement("int result = 1")
 
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
+        val accessor = if (property.isRegex()) "this.\$N.pattern()" else "this.\$N"
         builder.addStatement(
-          "result = 31 * result + \$T.hashCode(this.\$N)",
+          "result = 31 * result + \$T.hashCode($accessor)",
           Objects::class.java,
           propertyName
         )
