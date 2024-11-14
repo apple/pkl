@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.yaml.snake.YamlUtils;
+import org.snakeyaml.engine.v2.api.ConstructNode;
 import org.snakeyaml.engine.v2.api.DumpSettings;
 import org.snakeyaml.engine.v2.api.StreamDataWriter;
 import org.snakeyaml.engine.v2.common.FlowStyle;
@@ -29,6 +30,7 @@ import org.snakeyaml.engine.v2.emitter.Emitter;
 import org.snakeyaml.engine.v2.events.*;
 import org.snakeyaml.engine.v2.nodes.Tag;
 import org.snakeyaml.engine.v2.resolver.ScalarResolver;
+import org.snakeyaml.engine.v2.schema.Schema;
 
 final class YamlRenderer implements ValueRenderer {
   private final ScalarResolver resolver = YamlUtils.getEmitterResolver("compat");
@@ -42,7 +44,18 @@ final class YamlRenderer implements ValueRenderer {
         DumpSettings.builder()
             .setIndent(indent)
             .setBestLineBreak("\n")
-            .setScalarResolver(resolver)
+            .setSchema(
+                new Schema() {
+                  @Override
+                  public ScalarResolver getScalarResolver() {
+                    return resolver;
+                  }
+
+                  @Override
+                  public Map<Tag, ConstructNode> getSchemaTagConstructors() {
+                    throw new AssertionError("emitters don't use tag constructors");
+                  }
+                })
             .build();
 
     emitter =

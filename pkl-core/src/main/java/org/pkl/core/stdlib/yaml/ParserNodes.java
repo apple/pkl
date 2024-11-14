@@ -39,6 +39,8 @@ import org.snakeyaml.engine.v2.constructor.StandardConstructor;
 import org.snakeyaml.engine.v2.exceptions.Mark;
 import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import org.snakeyaml.engine.v2.nodes.*;
+import org.snakeyaml.engine.v2.resolver.ScalarResolver;
+import org.snakeyaml.engine.v2.schema.Schema;
 
 public final class ParserNodes {
   private static final Pattern WHITESPACE = Pattern.compile("\\s");
@@ -133,12 +135,24 @@ public final class ParserNodes {
 
   private static Load createLoad(VmTyped self, String text, String uri, PklConverter converter) {
     var mode = (String) VmUtils.readMember(self, Identifier.MODE);
-    var resolver = YamlUtils.getParserResolver(mode);
     var useMapping = (boolean) VmUtils.readMember(self, Identifier.USE_MAPPING);
     var settings =
         LoadSettings.builder()
             .setMaxAliasesForCollections(getMaxCollectionAliases(self))
-            .setScalarResolver(resolver)
+            .setSchema(
+                new Schema() {
+                  @Override
+                  public ScalarResolver getScalarResolver() {
+                    return YamlUtils.getParserResolver(mode);
+                  }
+
+                  @Override
+                  public Map<Tag, ConstructNode> getSchemaTagConstructors() {
+                    // ParserNodes.Constructor ignores this method,
+                    // but it is called from its superclass.
+                    return Map.of();
+                  }
+                })
             .setLabel(uri)
             .build();
     var source =
