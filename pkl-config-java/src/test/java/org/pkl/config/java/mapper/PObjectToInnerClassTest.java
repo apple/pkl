@@ -38,7 +38,13 @@ public class PObjectToInnerClassTest {
     try (var evaluator = ConfigEvaluator.preconfigured()) {
       var config =
           evaluator.evaluate(
-              text("class Inner {\n" + "  text: String = \"Bar\"\n" + "}\n" + "inner: Inner"));
+              text(
+                  """
+                  class Inner {
+                    text: String = "Bar"
+                  }
+                  inner: Inner
+                  """));
 
       assertThatExceptionOfType(ConversionException.class)
           .isThrownBy(() -> config.get("inner").as(InnerConfig.class));
