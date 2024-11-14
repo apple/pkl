@@ -34,7 +34,7 @@ class CliKotlinCodeGenerator(private val options: CliKotlinCodeGeneratorOptions)
       builder.build().use { evaluator ->
         for (moduleUri in options.base.normalizedSourceModules) {
           val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
-          val codeGenerator = KotlinCodeGenerator(schema, options.toKotlinCodegenOptions())
+          val codeGenerator = KotlinCodeGenerator(schema, options.toKotlinCodeGeneratorOptions())
           try {
             for ((fileName, fileContents) in codeGenerator.output) {
               val outputFile = options.outputDir.resolve(fileName)
