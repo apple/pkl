@@ -22,6 +22,12 @@ import org.graalvm.home.Version;
 /**
  * Information about the Pkl release that the current program runs on. This class is the Java
  * equivalent of standard library module {@code pkl.platform}.
+ *
+ * @param language the language implementation of this platform
+ * @param runtime the language runtime of this platform
+ * @param virtualMachine the virtual machine of this platform
+ * @param operatingSystem the operating system of this platform
+ * @param processor the processor of this platform
  */
 public record Platform(
     Language language,
@@ -68,31 +74,31 @@ public record Platform(
   /**
    * The language runtime of a platform.
    *
-   * @param name the name of this language runtime.
-   * @param version the version of this language runtime.
+   * @param name the name of this language runtime
+   * @param version the version of this language runtime
    */
   public record Runtime(String name, String version) {}
 
   /**
    * The virtual machine of a platform.
    *
-   * @param name the name of this virtual machine.
-   * @param version the version of this virtual machine.
+   * @param name the name of this virtual machine
+   * @param version the version of this virtual machine
    */
   public record VirtualMachine(String name, String version) {}
 
   /**
    * The operating system of a platform.
    *
-   * @param name the name of this operating system.
-   * @param version the version of this operating system.
+   * @param name the name of this operating system
+   * @param version the version of this operating system
    */
   public record OperatingSystem(String name, String version) {}
 
   /**
    * The processor of a platform.
    *
-   * @param architecture the instruction set architecture of this processor.
+   * @param architecture the instruction set architecture of this processor
    */
   public record Processor(String architecture) {}
 }

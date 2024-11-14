@@ -49,7 +49,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
       sourceCodeUrlScheme =
         if (options.isTestMode)
           "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
-        else Release.current().sourceCode().sourceCodeUrlScheme,
+        else Release.current().sourceCode().sourceCodeUrlScheme(),
       documentation =
         if (options.isTestMode) URI("https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/")
         else

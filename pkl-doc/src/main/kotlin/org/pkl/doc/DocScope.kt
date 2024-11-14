@@ -210,7 +210,7 @@ internal class SiteScope(
         val path = "/stdlib/${name.substring(4)}.pkl"
         Release.current()
           .sourceCode()
-          .sourceCodeUrlScheme
+          .sourceCodeUrlScheme()
           .replaceSourceCodePlaceholders(path, sourceLocation)
           .toUri()
       }

@@ -98,6 +98,12 @@ public abstract class Member implements Serializable {
     return simpleName;
   }
 
+  /**
+   * The source location of a {@link Member}.
+   *
+   * @param startLine the first line of the member
+   * @param endLine the last line of the member
+   */
   public record SourceLocation(int startLine, int endLine) implements Serializable {
     @Serial private static final long serialVersionUID = 0L;
 
