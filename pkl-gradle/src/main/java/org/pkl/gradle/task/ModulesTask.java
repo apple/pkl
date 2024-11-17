@@ -37,8 +37,8 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
-import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
+import org.pkl.gradle.utils.PluginUtils;
 
 public abstract class ModulesTask extends BasePklTask {
   // We expose the contents of this property as task inputs via the sourceModuleFiles
@@ -84,7 +84,7 @@ public abstract class ModulesTask extends BasePklTask {
   @Override
   protected List<URI> getSourceModulesAsUris() {
     return getSourceModules().get().stream()
-        .map(this::parseModuleNotationToUri)
+        .map(PluginUtils::parseModuleNotationToUri)
         .collect(Collectors.toList());
   }
 
@@ -117,7 +117,7 @@ public abstract class ModulesTask extends BasePklTask {
     var files = new ArrayList<File>();
     var uris = new ArrayList<URI>();
     for (var m : modules) {
-      var parsed = parseModuleNotation(m);
+      var parsed = PluginUtils.parseModuleNotation(m);
       if (parsed instanceof File file) {
         files.add(file);
       } else if (parsed instanceof URI uri) {
@@ -125,28 +125,6 @@ public abstract class ModulesTask extends BasePklTask {
       }
     }
     return Pair.of(files, uris);
-  }
-
-  /**
-   * Converts either a file or a URI to a URI. We convert a relative file to a URI via the {@link
-   * IoUtils#createUri(String)} because other ways of conversion can make relative paths into
-   * absolute URIs, which may break module loading.
-   */
-  private URI parsedModuleNotationToUri(Object notation) {
-    if (notation instanceof File file) {
-      if (file.isAbsolute()) {
-        return file.toPath().toUri();
-      }
-      return IoUtils.createUri(IoUtils.toNormalizedPathString(file.toPath()));
-    } else if (notation instanceof URI uri) {
-      return uri;
-    }
-    throw new IllegalArgumentException("Invalid parsed module notation: " + notation);
-  }
-
-  protected URI parseModuleNotationToUri(Object m) {
-    var parsed1 = parseModuleNotation(m);
-    return parsedModuleNotationToUri(parsed1);
   }
 
   @TaskAction
@@ -172,7 +150,7 @@ public abstract class ModulesTask extends BasePklTask {
               parseModulePath(),
               getProject().getProjectDir().toPath(),
               mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
-              mapAndGetOrNull(getSettingsModule(), this::parseModuleNotationToUri),
+              mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
               getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
