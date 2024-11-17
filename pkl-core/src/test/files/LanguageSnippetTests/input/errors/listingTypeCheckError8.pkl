@@ -1,0 +1,6 @@
+local a = new Listing { new Listing { 0 } }
+local b = a as Listing<Listing<String>>
+local c = (b) { new Listing { 1 } }
+local d = c as Listing<Listing<Int>>
+
+result = d
