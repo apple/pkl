@@ -15,13 +15,17 @@
  */
 package org.pkl.gradle
 
+import java.nio.file.Path
 import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.test.PackageServer
 
 class PkldocGeneratorsTest : AbstractTest() {
   @Test
-  fun `generate docs`() {
+  fun `generate docs`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
     writeFile(
       "build.gradle",
       """
@@ -32,7 +36,8 @@ class PkldocGeneratorsTest : AbstractTest() {
       pkl {
         pkldocGenerators {
           pkldoc {
-            sourceModules = ["person.pkl", "doc-package-info.pkl"]
+            moduleCacheDir = file("${tempDir.toUri()}")
+            sourceModules = ["package://localhost:0/birds@0.5.0", "person.pkl", "doc-package-info.pkl"]
             outputDir = file("build/pkldoc")
             settingsModule = "pkl:settings"
           }
@@ -94,6 +99,39 @@ class PkldocGeneratorsTest : AbstractTest() {
     checkTextContains(moduleFile.readText(), "<html>", "Person", "Address", "other")
     checkTextContains(personFile.readText(), "<html>", "name", "addresses")
     checkTextContains(addressFile.readText(), "<html>", "street", "zip")
+
+    val birdsPackageFile = baseDir.resolve("localhost(3a)0/birds/0.5.0/index.html")
+    assertThat(birdsPackageFile).exists()
+  }
+
+  @Test
+  fun `generate docs only for package`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    writeFile(
+      "build.gradle",
+      """
+      plugins {
+        id "org.pkl-lang"
+      }
+
+      pkl {
+        pkldocGenerators {
+          pkldoc {
+            moduleCacheDir = file("${tempDir.toUri()}")
+            sourceModules = ["package://localhost:0/birds@0.5.0"]
+            outputDir = file("build/pkldoc")
+            settingsModule = "pkl:settings"
+          }
+        }
+      }
+    """
+    )
+
+    runTask("pkldoc")
+
+    val baseDir = testProjectDir.resolve("build/pkldoc")
+    val birdsPackageFile = baseDir.resolve("localhost(3a)0/birds/0.5.0/index.html")
+    assertThat(birdsPackageFile).exists()
   }
 
   @Test

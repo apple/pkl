@@ -17,9 +17,6 @@ package org.pkl.gradle.task;
 
 import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -31,10 +28,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -49,9 +44,9 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
-import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
+import org.pkl.gradle.utils.PluginUtils;
 
 public abstract class BasePklTask extends DefaultTask {
   @Input
@@ -74,7 +69,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Internal
   public Provider<Object> getParsedSettingsModule() {
-    return getSettingsModule().map(this::parseModuleNotation);
+    return getSettingsModule().map(PluginUtils::parseModuleNotation);
   }
 
   @InputFile
@@ -165,7 +160,7 @@ public abstract class BasePklTask extends DefaultTask {
               parseModulePath(),
               getProject().getProjectDir().toPath(),
               mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
-              mapAndGetOrNull(getSettingsModule(), this::parseModuleNotationToUri),
+              mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
               null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
@@ -197,100 +192,6 @@ public abstract class BasePklTask extends DefaultTask {
 
   protected List<Path> parseModulePath() {
     return getModulePath().getFiles().stream().map(File::toPath).collect(Collectors.toList());
-  }
-
-  /**
-   * Parses the specified source module notation into a "parsed" notation which is then used for
-   * input path tracking and as an argument for the CLI API.
-   *
-   * <p>This method accepts the following input types:
-   *
-   * <ul>
-   *   <li>{@link URI} - used as is.
-   *   <li>{@link File} - used as is.
-   *   <li>{@link Path} - converted to a {@link File}. This conversion may fail because not all
-   *       {@link Path}s point to the local file system.
-   *   <li>{@link URL} - converted to a {@link URI}. This conversion may fail because {@link URL}
-   *       allows for URLs which are not compliant URIs.
-   *   <li>{@link CharSequence} - first, converted to a string. If this string is "URI-like" (see
-   *       {@link IoUtils#isUriLike(String)}), then we attempt to parse it as a {@link URI}, which
-   *       may fail. Otherwise, we attempt to parse it as a {@link Path}, which is then converted to
-   *       a {@link File} (both of these operations may fail).
-   *   <li>{@link FileSystemLocation} - converted to a {@link File} via the {@link
-   *       FileSystemLocation#getAsFile()} method.
-   * </ul>
-   *
-   * In case the returned value is determined to be a {@link URI}, then this URI is first checked
-   * for whether its scheme is {@code file}, like {@code file:///example/path}. In such case, this
-   * method returns a {@link File} corresponding to the file path in the URI. Otherwise, a {@link
-   * URI} instance is returned.
-   *
-   * @throws InvalidUserDataException In case the input is none of the types described above, or
-   *     when the underlying value cannot be parsed correctly.
-   */
-  protected Object parseModuleNotation(Object notation) {
-    if (notation instanceof URI uri) {
-      if ("file".equals(uri.getScheme())) {
-        return new File(uri.getPath());
-      }
-      return uri;
-    } else if (notation instanceof File) {
-      return notation;
-    } else if (notation instanceof Path path) {
-      try {
-        return path.toFile();
-      } catch (UnsupportedOperationException e) {
-        throw new InvalidUserDataException("Failed to parse Pkl module file path: " + notation, e);
-      }
-    } else if (notation instanceof URL url) {
-      try {
-        return parseModuleNotation(url.toURI());
-      } catch (URISyntaxException e) {
-        throw new InvalidUserDataException("Failed to parse Pkl module URI: " + notation, e);
-      }
-    } else if (notation instanceof CharSequence) {
-      var s = notation.toString();
-      if (IoUtils.isUriLike(s)) {
-        try {
-          return parseModuleNotation(IoUtils.toUri(s));
-        } catch (URISyntaxException e) {
-          throw new InvalidUserDataException("Failed to parse Pkl module URI: " + s, e);
-        }
-      } else {
-        try {
-          return Paths.get(s).toFile();
-        } catch (InvalidPathException | UnsupportedOperationException e) {
-          throw new InvalidUserDataException("Failed to parse Pkl module file path: " + s, e);
-        }
-      }
-    } else if (notation instanceof FileSystemLocation location) {
-      return location.getAsFile();
-    } else {
-      throw new InvalidUserDataException(
-          "Unsupported value of type "
-              + notation.getClass()
-              + " used as a module path: "
-              + notation);
-    }
-  }
-
-  protected URI parseModuleNotationToUri(Object m) {
-    var parsed1 = parseModuleNotation(m);
-    return parsedModuleNotationToUri(parsed1);
-  }
-
-  /**
-   * Converts either a file or a URI to a URI. We convert a file to a URI via the {@link
-   * IoUtils#createUri(String)} because other ways of conversion can make relative paths into
-   * absolute URIs, which may break module loading.
-   */
-  private URI parsedModuleNotationToUri(Object notation) {
-    if (notation instanceof File file) {
-      return IoUtils.createUri(file.getPath());
-    } else if (notation instanceof URI uri) {
-      return uri;
-    }
-    throw new IllegalArgumentException("Invalid parsed module notation: " + notation);
   }
 
   protected List<Pattern> patternsFromStrings(List<String> patterns) {
