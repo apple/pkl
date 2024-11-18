@@ -132,6 +132,9 @@ examples {
 
   ["atan2"] {
     math.atan2(4, -3)
+    math.atan2(4.5, -3.5)
+    math.atan2(4.5, -3)
+    math.atan2(4, 3.5)
   }
 
   ["gcd"] {
@@ -191,5 +194,12 @@ examples {
     math.min(NaN, NaN)
     math.min(NaN, 2)
     math.min(Infinity, -Infinity)
+  }
+}
+
+facts {
+  ["atan2"] {
+    math.atan2(1, 0) == math.pi / 2
+    math.atan2(0, -1) == math.pi
   }
 }
