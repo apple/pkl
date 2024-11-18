@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.core.*
+import org.pkl.core.util.AnsiStringBuilder
 
 class StackTraceRendererTest {
   companion object {
@@ -190,7 +191,9 @@ class StackTraceRendererTest {
     }
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
     val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
-    val renderedFrames = buildString { renderer.doRender(frames, null, this, "", true) }
+    val formatter = AnsiStringBuilder(false)
+    renderer.doRender(frames, null, formatter, "", true)
+    val renderedFrames = formatter.toString()
     assertThat(renderedFrames)
       .isEqualTo(
         """

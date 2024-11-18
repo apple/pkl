@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -118,6 +120,10 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract Property<Boolean> getColor();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getNoCache();
 
   @Input
@@ -163,6 +169,7 @@ public abstract class BasePklTask extends DefaultTask {
               null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
               getNoCache().getOrElse(false),
               false,
               false,
@@ -170,7 +177,9 @@ public abstract class BasePklTask extends DefaultTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
-              getHttpNoProxy().getOrElse(List.of()));
+              getHttpNoProxy().getOrElse(List.of()),
+              Map.of(),
+              Map.of());
     }
     return cachedOptions;
   }

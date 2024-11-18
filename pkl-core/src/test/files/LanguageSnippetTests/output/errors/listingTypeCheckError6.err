@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `String`, but got type `Int`.
+Value: 1
+
+x | local listing2: Listing<String> = listing1
+                            ^^^^^^
+at listingTypeCheckError6#listing2 (file:///$snippetsDir/input/errors/listingTypeCheckError6.pkl)
+
+x | local listing1: Listing<Int> = new { 1 }
+                                         ^
+at listingTypeCheckError6#listing1[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError6.pkl)
+
+x | first = listing3[0]
+            ^^^^^^^^^^^
+at listingTypeCheckError6#first (file:///$snippetsDir/input/errors/listingTypeCheckError6.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

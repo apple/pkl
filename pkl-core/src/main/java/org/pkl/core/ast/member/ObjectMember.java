@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public final class ObjectMember extends Member {
+
   @CompilationFinal private @Nullable Object constantValue;
   @CompilationFinal private @Nullable MemberNode memberNode;
 

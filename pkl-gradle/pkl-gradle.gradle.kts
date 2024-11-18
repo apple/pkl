@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,3 +94,9 @@ signing {
     }
   }
 }
+
+// As of Gradle 8.10, the following is necessary to avoid a test compile error.
+// (Apparently, gradle-api.jar now contains metadata that causes kotlinc to enforce Gradle's Kotlin
+// version.)
+// A more robust solution would be to port plugin tests to Java.
+tasks.compileTestKotlin { kotlinOptions { freeCompilerArgs += "-Xskip-metadata-version-check" } }

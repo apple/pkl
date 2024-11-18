@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,4 +15,4 @@
  */
 package org.pkl.commons.cli
 
-class CliTestException(msg: String) : CliException(msg, 1)
+class CliTestException(msg: String, exitCode: Int) : CliException(msg, exitCode)

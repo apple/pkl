@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ import org.pkl.core.stdlib.PklName;
 
 public final class TestNodes {
   private static final VmExceptionRenderer noStackTraceExceptionRenderer =
-      new VmExceptionRenderer(null);
+      new VmExceptionRenderer(null, false);
 
   private TestNodes() {}
 

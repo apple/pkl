@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,8 +72,8 @@ class EvaluateSchemaTest {
 
     assertThat(module.moduleName).isEqualTo("test")
 
-    assertThat(module.moduleClass.sourceLocation.startLine).isEqualTo(2)
-    assertThat(module.moduleClass.sourceLocation.endLine).isEqualTo(26)
+    assertThat(module.moduleClass.sourceLocation.startLine()).isEqualTo(2)
+    assertThat(module.moduleClass.sourceLocation.endLine()).isEqualTo(26)
   }
 
   private fun checkModuleProperties(module: ModuleSchema) {
@@ -81,21 +81,21 @@ class EvaluateSchemaTest {
     assertThat(properties).hasSize(3)
 
     val propertyb1 = properties.getValue("propertyb1")
-    assertThat(propertyb1.sourceLocation.startLine).isEqualTo(5)
-    assertThat(propertyb1.sourceLocation.endLine).isEqualTo(5)
+    assertThat(propertyb1.sourceLocation.startLine()).isEqualTo(5)
+    assertThat(propertyb1.sourceLocation.endLine()).isEqualTo(5)
     assertThat(propertyb1.type).isEqualTo(PType.UNKNOWN)
 
     val propertyb2 = properties.getValue("propertyb2")
-    assertThat(propertyb2.sourceLocation.startLine).isEqualTo(8)
-    assertThat(propertyb2.sourceLocation.endLine).isEqualTo(9)
+    assertThat(propertyb2.sourceLocation.startLine()).isEqualTo(8)
+    assertThat(propertyb2.sourceLocation.endLine()).isEqualTo(9)
     val paramType = propertyb2.type
     assertThat(paramType).isInstanceOf(PType.Class::class.java)
     paramType as PType.Class
     assertThat(paramType.pClass).isEqualTo(BaseModule.getIntClass().export())
 
     val propertyb3 = properties.getValue("propertyb3")
-    assertThat(propertyb3.sourceLocation.startLine).isEqualTo(24)
-    assertThat(propertyb3.sourceLocation.endLine).isEqualTo(24)
+    assertThat(propertyb3.sourceLocation.startLine()).isEqualTo(24)
+    assertThat(propertyb3.sourceLocation.endLine()).isEqualTo(24)
   }
 
   private fun checkModuleMethods(module: ModuleSchema) {
@@ -103,14 +103,14 @@ class EvaluateSchemaTest {
     assertThat(methods).hasSize(3)
 
     val methodb1 = methods.getValue("methodb1")
-    assertThat(methodb1.sourceLocation.startLine).isEqualTo(12)
-    assertThat(methodb1.sourceLocation.endLine).isEqualTo(12)
+    assertThat(methodb1.sourceLocation.startLine()).isEqualTo(12)
+    assertThat(methodb1.sourceLocation.endLine()).isEqualTo(12)
     assertThat(methodb1.parameters).isEmpty()
     assertThat(methodb1.returnType).isEqualTo(PType.UNKNOWN)
 
     val methodb2 = methods.getValue("methodb2")
-    assertThat(methodb2.sourceLocation.startLine).isEqualTo(15)
-    assertThat(methodb2.sourceLocation.endLine).isEqualTo(16)
+    assertThat(methodb2.sourceLocation.startLine()).isEqualTo(15)
+    assertThat(methodb2.sourceLocation.endLine()).isEqualTo(16)
     val paramType = methodb2.parameters.getValue("str")
     assertThat(paramType).isInstanceOf(PType.Constrained::class.java)
     paramType as PType.Constrained
@@ -130,8 +130,8 @@ class EvaluateSchemaTest {
     assertThat(returnType.constraints).isEqualTo(listOf("isPositive"))
 
     val methodb3 = methods.getValue("methodb3")
-    assertThat(methodb3.sourceLocation.startLine).isEqualTo(26)
-    assertThat(methodb3.sourceLocation.endLine).isEqualTo(26)
+    assertThat(methodb3.sourceLocation.startLine()).isEqualTo(26)
+    assertThat(methodb3.sourceLocation.endLine()).isEqualTo(26)
     assertThat(methodb3.parameters.keys).containsExactly("x", "_#1", "i", "_#3")
   }
 
@@ -139,8 +139,8 @@ class EvaluateSchemaTest {
     val classes = module.classes
     assertThat(classes).hasSize(1)
     val classb1 = classes.getValue("Classb1")
-    assertThat(classb1.sourceLocation.startLine).isEqualTo(19)
-    assertThat(classb1.sourceLocation.endLine).isEqualTo(22)
+    assertThat(classb1.sourceLocation.startLine()).isEqualTo(19)
+    assertThat(classb1.sourceLocation.endLine()).isEqualTo(22)
     assertThat(classb1.properties).hasSize(2)
   }
 
@@ -157,8 +157,8 @@ class EvaluateSchemaTest {
       .isEqualTo(URI("modulepath:/org/pkl/core/EvaluateSchemaTestBaseModule.pkl"))
     assertThat(supermodule.moduleName).isEqualTo("test.base")
 
-    assertThat(supermodule.moduleClass.sourceLocation.startLine).isEqualTo(1)
-    assertThat(supermodule.moduleClass.sourceLocation.endLine).isEqualTo(10)
+    assertThat(supermodule.moduleClass.sourceLocation.startLine()).isEqualTo(1)
+    assertThat(supermodule.moduleClass.sourceLocation.endLine()).isEqualTo(10)
 
     val properties = supermodule.moduleClass.properties
     assertThat(properties).hasSize(1)

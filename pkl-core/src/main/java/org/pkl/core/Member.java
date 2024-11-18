@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,21 +98,27 @@ public abstract class Member implements Serializable {
     return simpleName;
   }
 
-  public static class SourceLocation implements Serializable {
+  /**
+   * The source location of a {@link Member}.
+   *
+   * @param startLine the first line of the member
+   * @param endLine the last line of the member
+   */
+  public record SourceLocation(int startLine, int endLine) implements Serializable {
     @Serial private static final long serialVersionUID = 0L;
 
-    private final int startLine;
-    private final int endLine;
-
-    public SourceLocation(int startLine, int endLine) {
-      this.startLine = startLine;
-      this.endLine = endLine;
-    }
-
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #startLine()}.
+     */
+    @Deprecated(forRemoval = true)
     public int getStartLine() {
       return startLine;
     }
 
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #endLine()}.
+     */
+    @Deprecated(forRemoval = true)
     public int getEndLine() {
       return endLine;
     }

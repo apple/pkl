@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
+import org.pkl.core.messaging.Message
 
 internal fun log(msg: String) {
   if (System.getenv("PKL_DEBUG") == "1") {
@@ -41,7 +42,7 @@ internal val threadLocalBufferPacker: ThreadLocal<MessageBufferPacker> =
 private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> =
   ThreadLocal.withInitial {
     val packer = threadLocalBufferPacker.get()
-    val encoder = MessageEncoders.into(packer);
+    val encoder = ServerMessagePackEncoder(packer);
     { message: Message ->
       packer.clear()
       encoder.encode(message)

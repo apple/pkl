@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@ package org.pkl.core.project;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Objects;
 import org.pkl.core.PklBugException;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.util.ErrorMessages;
@@ -29,10 +28,7 @@ import org.pkl.core.util.ErrorMessages;
  * package://example.com/foo/bar@0}. Does not include a URI's userinfo, query params or fragment
  * segments.
  */
-public final class CanonicalPackageUri {
-  private final URI baseUri;
-  private final int majorVersion;
-
+public record CanonicalPackageUri(URI baseUri, int majorVersion) {
   public static CanonicalPackageUri fromPackageUri(PackageUri packageUri) {
     var uri = packageUri.getUri();
     URI baseUri;
@@ -71,17 +67,18 @@ public final class CanonicalPackageUri {
     return new CanonicalPackageUri(baseUri, majorVersion);
   }
 
-  public CanonicalPackageUri(URI baseUri, int majorVersion) {
-    this.baseUri = baseUri;
-    this.majorVersion = majorVersion;
-  }
-
-  @SuppressWarnings("unused")
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #majorVersion()}.
+   */
+  @Deprecated(forRemoval = true)
   public int getMajorVersion() {
     return majorVersion;
   }
 
-  @SuppressWarnings("unused")
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #baseUri()}.
+   */
+  @Deprecated(forRemoval = true)
   public URI getBaseUri() {
     return baseUri;
   }
@@ -96,11 +93,6 @@ public final class CanonicalPackageUri {
     }
     CanonicalPackageUri that = (CanonicalPackageUri) o;
     return majorVersion == that.majorVersion && baseUri.equals(that.baseUri);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(baseUri, majorVersion);
   }
 
   @Override

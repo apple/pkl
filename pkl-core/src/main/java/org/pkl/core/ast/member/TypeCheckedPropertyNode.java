@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,8 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
 
     // TODO: propagate SUPER_CALL_MARKER to disable constraint (but not type) check
     if (callNode != null && VmUtils.shouldRunTypeCheck(frame)) {
-      return callNode.call(VmUtils.getReceiverOrNull(frame), property.getOwner(), result);
+      return callNode.call(
+          VmUtils.getReceiverOrNull(frame), property.getOwner(), result, member.isInIterable());
     }
 
     return result;
@@ -75,7 +76,8 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
             typeAnnNode.getCallTarget(),
             VmUtils.getReceiverOrNull(frame),
             property.getOwner(),
-            result);
+            result,
+            member.isInIterable());
       }
     }
 

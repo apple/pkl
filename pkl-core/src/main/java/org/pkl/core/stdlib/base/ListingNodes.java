@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,12 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.*;
-import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -41,6 +42,23 @@ public final class ListingNodes {
     @Specialization
     protected boolean eval(VmListing self) {
       return self.isEmpty();
+    }
+  }
+
+  public abstract static class lastIndex extends ExternalPropertyNode {
+    @Specialization
+    protected long eval(VmListing self) {
+      return self.getLength() - 1;
+    }
+  }
+
+  public abstract static class getOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmListing self, long index) {
+      if (index < 0 || index >= self.getLength()) {
+        return VmNull.withoutDefault();
+      }
+      return VmUtils.readMember(self, index);
     }
   }
 
@@ -68,24 +86,69 @@ public final class ListingNodes {
     @Specialization
     protected VmListing eval(VmListing self) {
       var visitedValues = CollectionUtils.newHashSet();
-      var newMembers = EconomicMaps.<Object, ObjectMember>create();
-      var index = new MutableLong(0);
+      var builder = new VmObjectBuilder();
 
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             if (visitedValues.add(value)) {
-              newMembers.put(
-                  index.getAndIncrement(),
-                  VmUtils.createSyntheticObjectElement(member.getQualifiedName(), value));
+              builder.addElement(value);
             }
             return true;
           });
 
-      return new VmListing(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getListingClass().getPrototype(),
-          newMembers,
-          newMembers.size());
+      return builder.toListing();
+    }
+  }
+
+  public abstract static class first extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkNonEmpty(self, this);
+      return VmUtils.readMember(self, 0L);
+    }
+  }
+
+  public abstract static class firstOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      if (self.isEmpty()) {
+        return VmNull.withoutDefault();
+      }
+      return VmUtils.readMember(self, 0L);
+    }
+  }
+
+  public abstract static class last extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkNonEmpty(self, this);
+      return VmUtils.readMember(self, self.getLength() - 1L);
+    }
+  }
+
+  public abstract static class lastOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      var length = self.getLength();
+      return length == 0 ? VmNull.withoutDefault() : VmUtils.readMember(self, length - 1L);
+    }
+  }
+
+  public abstract static class single extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      checkSingleton(self, this);
+      return VmUtils.readMember(self, 0L);
+    }
+  }
+
+  public abstract static class singleOrNull extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmListing self) {
+      if (self.getLength() != 1) {
+        return VmNull.withoutDefault();
+      }
+      return VmUtils.readMember(self, 0L);
     }
   }
 
@@ -95,24 +158,70 @@ public final class ListingNodes {
     @Specialization
     protected VmListing eval(VmListing self, VmFunction selector) {
       var visitedValues = CollectionUtils.newHashSet();
-      var newMembers = EconomicMaps.<Object, ObjectMember>create();
-      var index = new MutableLong(0);
+      var builder = new VmObjectBuilder();
 
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             if (visitedValues.add(applyNode.execute(selector, value))) {
-              newMembers.put(
-                  index.getAndIncrement(),
-                  VmUtils.createSyntheticObjectElement(member.getQualifiedName(), value));
+              builder.addElement(value);
             }
             return true;
           });
 
-      return new VmListing(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getListingClass().getPrototype(),
-          newMembers,
-          newMembers.size());
+      return builder.toListing();
+    }
+  }
+
+  public abstract static class every extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected boolean eval(VmListing self, VmFunction predicate) {
+      var result = new MutableBoolean(true);
+      self.iterateMemberValues(
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
+            result.set(applyNode.executeBoolean(predicate, value));
+            return result.get();
+          });
+      return result.get();
+    }
+  }
+
+  public abstract static class any extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected boolean eval(VmListing self, VmFunction predicate) {
+      var result = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
+            result.set(applyNode.executeBoolean(predicate, value));
+            return !result.get();
+          });
+      return result.get();
+    }
+  }
+
+  public abstract static class contains extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmListing self, Object element) {
+      var result = new MutableBoolean(false);
+      self.iterateMemberValues(
+          (key, member, value) -> {
+            if (value == null) {
+              value = VmUtils.readMember(self, key);
+            }
+            result.set(element.equals(value));
+            return !result.get();
+          });
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result.get();
     }
   }
 
@@ -192,6 +301,26 @@ public final class ListingNodes {
             return true;
           });
       return builder.build();
+    }
+  }
+
+  private static void checkNonEmpty(VmListing self, PklNode node) {
+    if (self.isEmpty()) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+          .evalError("expectedNonEmptyListing")
+          .withLocation(node)
+          .build();
+    }
+  }
+
+  private static void checkSingleton(VmListing self, PklNode node) {
+    if (self.getLength() != 1) {
+      CompilerDirectives.transferToInterpreter();
+      throw new VmExceptionBuilder()
+          .evalError("expectedSingleElementListing")
+          .withLocation(node)
+          .build();
     }
   }
 }

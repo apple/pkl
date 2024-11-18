@@ -92,6 +92,8 @@ facts {
     true
     true
     true
+    true
+    true
   }
   ["Version.isLessThanOrEquals()"] {
     true
@@ -101,6 +103,9 @@ facts {
     true
   }
   ["Version.isGreaterThan()"] {
+    true
+    true
+    true
     true
     true
     true
@@ -171,5 +176,20 @@ examples {
     "`1.2` is not a valid semantic version number."
     "`1.02.3` is not a valid semantic version number."
     "`aaa` is not a valid semantic version number."
+  }
+  ["List.sortWith()"] {
+    List(new {
+      major = 0
+      minor = 0
+      patch = 100
+    }, new {
+      major = 0
+      minor = 100
+      patch = 0
+    }, new {
+      major = 100
+      minor = 0
+      patch = 0
+    })
   }
 }

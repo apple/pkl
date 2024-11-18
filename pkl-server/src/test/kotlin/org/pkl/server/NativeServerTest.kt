@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package org.pkl.server
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.pkl.commons.test.PklExecutablePaths
+import org.pkl.core.messaging.MessageTransports
 
 class NativeServerTest : AbstractServerTest() {
   private lateinit var server: Process
@@ -27,7 +28,14 @@ class NativeServerTest : AbstractServerTest() {
   fun beforeEach() {
     val executable = PklExecutablePaths.firstExisting.toString()
     server = ProcessBuilder(executable, "server").start()
-    client = TestTransport(MessageTransports.stream(server.inputStream, server.outputStream))
+    client =
+      TestTransport(
+        MessageTransports.stream(
+          ServerMessagePackDecoder(server.inputStream),
+          ServerMessagePackEncoder(server.outputStream)
+        ) { _ ->
+        }
+      )
     executor.execute { client.start() }
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.Platform;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
@@ -86,6 +87,20 @@ public final class IoUtils {
       return new URI(str);
     }
     return new URI(null, null, str, null);
+  }
+
+  /** Converts a URI to a Path, normalizing any non-ASCII characters. */
+  public static Path pathOf(URI uri) {
+    // Path.of(URI) throws on non-ASCII characters so the module URI here must be normalized to
+    // ASCII
+    // Unfortunately there's no way to go from URI -> ASCII URI directly
+    // so this must transform URI -> ASCII String -> ASCII URI
+    try {
+      return Path.of(new URI(uri.toASCIIString()));
+    } catch (URISyntaxException e) {
+      // impossible to get here; we started from a valid URI to begin with
+      throw PklBugException.unreachableCode();
+    }
   }
 
   /** Like {@link #toUri(String)}, except without checked exceptions. */
@@ -303,7 +318,7 @@ public final class IoUtils {
 
   private static URI resolveTripleDotImport(
       SecurityManager securityManager, ModuleKey moduleKey, String tripleDotPath)
-      throws IOException, SecurityManagerException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     var moduleKeyUri = moduleKey.getUri();
     if (!moduleKey.isLocal() || !moduleKey.hasHierarchicalUris()) {
       throw new VmExceptionBuilder()
@@ -349,7 +364,8 @@ public final class IoUtils {
     return Pair.of(importPath.substring(1, idx), importPath.substring(idx));
   }
 
-  private static URI resolveProjectDependency(ModuleKey moduleKey, String notation) {
+  private static URI resolveProjectDependency(ModuleKey moduleKey, String notation)
+      throws IOException, ExternalReaderProcessException {
     var parsed = parseDependencyNotation(notation);
     var name = parsed.getFirst();
     var path = parsed.getSecond();
@@ -381,7 +397,10 @@ public final class IoUtils {
    * dependency notation ()
    */
   public static URI resolve(SecurityManager securityManager, ModuleKey moduleKey, URI importUri)
-      throws URISyntaxException, IOException, SecurityManagerException {
+      throws URISyntaxException,
+          IOException,
+          SecurityManagerException,
+          ExternalReaderProcessException {
     if (importUri.isAbsolute()) {
       return moduleKey.resolveUri(importUri);
     }
@@ -531,7 +550,7 @@ public final class IoUtils {
     return ServiceLoader.load(serviceClass, IoUtils.class.getClassLoader());
   }
 
-  // not a static property to avoid compile-time evaluation by native-image
+  // not a static field to avoid compile-time evaluation by native-image
   public static boolean isTestMode() {
     return Boolean.getBoolean("org.pkl.testMode");
   }

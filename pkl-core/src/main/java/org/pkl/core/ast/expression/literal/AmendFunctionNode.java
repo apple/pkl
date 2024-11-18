@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -184,7 +184,8 @@ public final class AmendFunctionNode extends PklNode {
       var arguments = new Object[frameArguments.length];
       arguments[0] = functionToAmend.getThisValue();
       arguments[1] = functionToAmend;
-      System.arraycopy(frameArguments, 2, arguments, 2, frameArguments.length - 2);
+      arguments[2] = false;
+      System.arraycopy(frameArguments, 3, arguments, 3, frameArguments.length - 3);
 
       var valueToAmend = callNode.call(functionToAmend.getCallTarget(), arguments);
       if (!(valueToAmend instanceof VmFunction newFunctionToAmend)) {

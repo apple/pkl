@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,31 @@ import com.oracle.truffle.api.TruffleOptions;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
 /**
  * Information about the Pkl release that the current program runs on. This class is the Java
  * equivalent of standard library module {@code pkl.release}.
+ *
+ * @param version the version of this release
+ * @param os the operating system (name and version) this release is running on
+ * @param flavor the flavor of this release (native, or Java and JVM version)
+ * @param versionInfo the output of {@code pkl --version} for this release
+ * @param commitId the Git commit ID of this release
+ * @param sourceCode the source code of this release
+ * @param documentation the documentation of this release
+ * @param standardLibrary the standard library of this release
  */
-public final class Release {
+public record Release(
+    Version version,
+    String os,
+    String flavor,
+    String versionInfo,
+    String commitId,
+    SourceCode sourceCode,
+    Documentation documentation,
+    StandardLibrary standardLibrary) {
   private static final String SOURCE_CODE_HOMEPAGE = "https://github.com/apple/pkl/";
   private static final String DOCUMENTATION_HOMEPAGE = "https://pkl-lang.org/main/";
 
@@ -72,115 +88,24 @@ public final class Release {
             new StandardLibrary(stdlibModules));
   }
 
-  private final Version version;
-  private final String os;
-  private final String flavor;
-  private final String versionInfo;
-  private final String commitId;
-  private final SourceCode sourceCode;
-  private final Documentation documentation;
-  private final StandardLibrary standardLibrary;
-
-  /** Constructs a release. */
-  public Release(
-      Version version,
-      String os,
-      String flavor,
-      String versionInfo,
-      String commitId,
-      SourceCode sourceCode,
-      Documentation documentation,
-      StandardLibrary standardLibrary) {
-    this.version = version;
-    this.os = os;
-    this.flavor = flavor;
-    this.versionInfo = versionInfo;
-    this.commitId = commitId;
-    this.sourceCode = sourceCode;
-    this.documentation = documentation;
-    this.standardLibrary = standardLibrary;
-  }
-
   /** The Pkl release that the current program runs on. */
   public static Release current() {
     return CURRENT;
   }
 
-  /** The version of this release. */
-  public Version version() {
-    return version;
-  }
-
-  /** The operating system (name and version) this release is running on. */
-  public String os() {
-    return os;
-  }
-
-  /** The flavor of this release (native, or Java and JVM version). */
-  public String flavor() {
-    return flavor;
-  }
-
-  /** The output of {@code pkl --version} for this release. */
-  public String versionInfo() {
-    return versionInfo;
-  }
-
-  /** The Git commit ID of this release. */
-  public String commitId() {
-    return commitId;
-  }
-
-  /** The source code of this release. */
-  public SourceCode sourceCode() {
-    return sourceCode;
-  }
-
-  /** The documentation of this release. */
-  public Documentation documentation() {
-    return documentation;
-  }
-
-  /** The standard library of this release. */
-  public StandardLibrary standardLibrary() {
-    return standardLibrary;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof Release other)) return false;
-    return version.equals(other.version)
-        && versionInfo.equals(other.versionInfo)
-        && commitId.equals(other.commitId)
-        && sourceCode.equals(other.sourceCode)
-        && documentation.equals(other.documentation)
-        && standardLibrary.equals(other.standardLibrary);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(version, versionInfo, commitId, sourceCode, documentation, standardLibrary);
-  }
-
-  /** The source code of a Pkl release. */
-  public static final class SourceCode {
-    private final String homepage;
-    private final String version;
-
-    /** Constructs a {@link SourceCode}. */
-    public SourceCode(String homepage, String version) {
-      this.homepage = homepage;
-      this.version = version;
-    }
-
+  /**
+   * The source code of a Pkl release.
+   *
+   * @param homepage the homepage of this source code
+   * @param version the version of this source code
+   */
+  public record SourceCode(String homepage, String version) {
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #version()}.
+     */
+    @Deprecated(forRemoval = true)
     public String getVersion() {
       return version;
-    }
-
-    /** The homepage of this source code. */
-    public String homepage() {
-      return homepage;
     }
 
     /**
@@ -191,79 +116,32 @@ public final class Release {
       return homepage + "blob/" + version + "/" + path;
     }
 
-    /** The source code scheme for the stdlib module. */
+    /**
+     * @deprecated As of 0.28.0, replaced by {@link #sourceCodeUrlScheme()}.
+     */
+    @Deprecated(forRemoval = true)
     public String getSourceCodeUrlScheme() {
+      return sourceCodeUrlScheme();
+    }
+
+    /** Returns the source code scheme for the stdlib module. */
+    public String sourceCodeUrlScheme() {
       return homepage + "blob/" + version + "/stdlib%{path}#L%{line}-L%{endLine}";
     }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof SourceCode other)) return false;
-      return homepage.equals(other.homepage) && version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(homepage, version);
-    }
   }
 
-  /** The documentation of a Pkl release. */
-  public static final class Documentation {
-    private final String homepage;
-
-    /** Constructs a {@link Documentation}. */
-    public Documentation(String homepage) {
-      this.homepage = homepage;
-    }
-
-    /** The homepage of this documentation. */
-    public String homepage() {
-      return homepage;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Documentation other)) return false;
-      return homepage.equals(other.homepage);
-    }
-
-    @Override
-    public int hashCode() {
-      return homepage.hashCode();
-    }
-  }
+  /**
+   * The documentation of a Pkl release.
+   *
+   * @param homepage the homepage of this documentation
+   */
+  public record Documentation(String homepage) {}
 
   /**
    * The standard library of a Pkl release.
    *
    * @since 0.21.0
+   * @param modules the modules of this standard library
    */
-  public static final class StandardLibrary {
-    private final Set<String> modules;
-
-    /** Constructs a {@link StandardLibrary}. */
-    public StandardLibrary(Set<String> modules) {
-      this.modules = modules;
-    }
-
-    /** The modules of this standard library. */
-    public Set<String> modules() {
-      return modules;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof StandardLibrary other)) return false;
-      return modules.equals(other.modules);
-    }
-
-    @Override
-    public int hashCode() {
-      return modules.hashCode();
-    }
-  }
+  public record StandardLibrary(Set<String> modules) {}
 }

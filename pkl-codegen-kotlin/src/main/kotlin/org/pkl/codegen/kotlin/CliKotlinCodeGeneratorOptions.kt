@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,8 +47,12 @@ data class CliKotlinCodeGeneratorOptions(
    */
   val renames: Map<String, String> = emptyMap()
 ) {
-  fun toKotlinCodegenOptions(): KotlinCodegenOptions =
-    KotlinCodegenOptions(
+  @Suppress("DeprecatedCallableAddReplaceWith")
+  @Deprecated("deprecated without replacement")
+  fun toKotlinCodegenOptions(): KotlinCodeGeneratorOptions = toKotlinCodeGeneratorOptions()
+
+  internal fun toKotlinCodeGeneratorOptions(): KotlinCodeGeneratorOptions =
+    KotlinCodeGeneratorOptions(
       indent,
       generateKdoc,
       generateSpringBootConfig,

@@ -409,6 +409,10 @@ Evaluate the given `<modules>` as _tests_, producing a test report and appropria
 
 Renderers defined in test files will be ignored by the `test` command.
 
+Tests that result in writing `pkl-expected.pcf` files are considered failing tests.
+If these are the only failures, the command exits with exit code 10.
+Otherwise, failures result in exit code 1.
+
 <modules>::
 The absolute or relative URIs of the modules to test. Relative URIs are resolved against the working directory.
 
@@ -558,14 +562,64 @@ package already exists in the cache directory, this command is a no-op.
 
 This command accepts <<common-options,common options>>.
 
+[[command-analyze-imports]]
+=== `pkl analyze imports`
+
+*Synopsis*: `pkl analyze imports [<modules>]`
+
+This command builds a graph of imports declared in the provided modules.
+
+This is a lower level command that is meant to be useful for Pkl-related tooling.
+For example, this command feeds into the xref:pkl-gradle:index.adoc[] to determine if tasks are considered up-to-date or not.
+
+This command produces an object with two properties, `imports` and `resolvedImports`.
+
+The `imports` property is a mapping of a module's absolute URI, to the set of imports declared within that module.
+
+The `resolvedImports` property is a mapping of a module's absolute URI (as stated in `imports`), to the resolved absolute URI that might be useful for fetching the module's contents.
+For example, a xref:language-reference:index.adoc#local-dependencies[local dependency] import will have an in-language URI with scheme `projectpackage:`, and may have resolved URI with scheme `file:` (assuming that the project is file-based).
+
+Examples:
+
+[source,shell]
+----
+# Analyze the imports of a single module
+pkl analyze imports myModule.pkl
+
+# Same as the previous command, but output in JSON.
+pkl analyze imports -f json myModule.pkl
+
+# Analyze imports of all modules declared within src/
+pkl analyze imports src/*.pkl
+----
+
+<modules>::
+The absolute or relative URIs of the modules to analyze. Relative URIs are resolved against the working directory.
+
+==== Options
+
+.-f, --format
+[%collapsible]
+====
+Same meaning as <<format>> in <<command-eval>>.
+====
+
+.-o, --output-path
+[%collapsible]
+====
+Same meaning as <<output-path>> in <<command-eval>>.
+====
+
+This command also takes <<common-options,common options>>.
+
 [[common-options]]
 === Common options
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, and <<command-download-package>> commands support the following common options:
+The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, <<command-download-package>>, and <<command-analyze-imports>> commands support the following common options:
 
 include::../../pkl-cli/partials/cli-common-options.adoc[]
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, and <<command-download-package>> commands also take the following options:
+The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-download-package>>, and <<command-analyze-imports>> commands also take the following options:
 
 include::../../pkl-cli/partials/cli-project-options.adoc[]
 

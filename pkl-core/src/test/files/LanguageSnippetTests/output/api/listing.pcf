@@ -4,8 +4,21 @@ facts {
     true
     true
     true
+    true
+    true
+  }
+  ["lastIndex"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
   }
   ["isDistinct"] {
+    true
+    true
     true
     true
     true
@@ -28,12 +41,86 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["getOrNull"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["first"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["firstOrNull"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["last"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["lastOrNull"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["single"] {
+    true
+    true
+    true
+  }
+  ["singleOrNull"] {
+    true
+    true
+    true
+  }
+  ["every"] {
+    true
+    true
+    true
+  }
+  ["any"] {
+    true
+    true
+    true
+  }
+  ["contains"] {
+    true
+    true
+    true
+    true
+    true
+    true
   }
 }
 examples {
   ["length"] {
     0
     0
+    3
+    5
+    3
     3
     5
   }
@@ -71,6 +158,20 @@ examples {
     }, new {
       name = "Elf Owl"
     })
+    List(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
+    })
+    List(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
+    })
   }
   ["toSet()"] {
     Set()
@@ -103,6 +204,20 @@ examples {
       name = "Albatross"
     }, new {
       name = "Elf Owl"
+    })
+    Set(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
+    })
+    Set(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
     })
   }
   ["distinct"] {
@@ -151,6 +266,28 @@ examples {
       }
       new {
         name = "Elf Owl"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
       }
     }
   }
@@ -202,6 +339,28 @@ examples {
         name = "Elf Owl"
       }
     }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
+      }
+    }
     new {}
     new {}
     new {
@@ -249,6 +408,28 @@ examples {
         name = "Elf Owl"
       }
     }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+      new {
+        name = "Barn Owl"
+      }
+      new {
+        name = "Parrot"
+      }
+    }
     new {}
     new {}
     new {
@@ -264,6 +445,16 @@ examples {
     new {
       new {
         name = "Pigeon"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
+      }
+    }
+    new {
+      new {
+        name = "Wood Pigeon"
       }
     }
   }
@@ -287,6 +478,20 @@ examples {
     }, new {
       name = "Elf Owl"
     })
+    List(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
+    })
+    List(new {
+      name = "Wood Pigeon"
+    }, new {
+      name = "Barn Owl"
+    }, new {
+      name = "Parrot"
+    })
   }
   ["foldIndexed"] {
     List()
@@ -308,6 +513,20 @@ examples {
     }), Pair(4, new {
       name = "Elf Owl"
     }))
+    List(Pair(0, new {
+      name = "Wood Pigeon"
+    }), Pair(1, new {
+      name = "Barn Owl"
+    }), Pair(2, new {
+      name = "Parrot"
+    }))
+    List(Pair(0, new {
+      name = "Wood Pigeon"
+    }), Pair(1, new {
+      name = "Barn Owl"
+    }), Pair(2, new {
+      name = "Parrot"
+    }))
   }
   ["join"] {
     ""
@@ -322,6 +541,18 @@ examples {
     Parrot
     Albatross
     Elf Owl
+    """
+    "Wood PigeonBarn OwlParrot"
+    """
+    Wood Pigeon
+    Barn Owl
+    Parrot
+    """
+    "Wood PigeonBarn OwlParrot"
+    """
+    Wood Pigeon
+    Barn Owl
+    Parrot
     """
   }
 }

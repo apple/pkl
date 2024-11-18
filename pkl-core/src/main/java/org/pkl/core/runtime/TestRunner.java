@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,27 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.pkl.core.BufferedLogger;
 import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.TestResults;
+import org.pkl.core.TestResults.Failure;
+import org.pkl.core.TestResults.TestResult;
+import org.pkl.core.TestResults.TestSectionName;
+import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.module.ModuleKeys;
-import org.pkl.core.runtime.TestResults.Error;
-import org.pkl.core.runtime.TestResults.Failure;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.base.PcfRenderer;
+import org.pkl.core.util.AnsiStringBuilder;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
@@ -34,31 +43,39 @@ import org.pkl.core.util.MutableReference;
 /** Runs test results examples and facts. */
 public final class TestRunner {
   private static final PklConverter converter = new PklConverter(VmMapping.empty());
-  private final boolean overwrite;
-  private final StackFrameTransformer stackFrameTransformer;
   private final BufferedLogger logger;
+  private final StackFrameTransformer stackFrameTransformer;
+  private final boolean overwrite;
+  private final boolean useColor;
 
   public TestRunner(
-      BufferedLogger logger, StackFrameTransformer stackFrameTransformer, boolean overwrite) {
+      BufferedLogger logger,
+      StackFrameTransformer stackFrameTransformer,
+      boolean overwrite,
+      boolean useColor) {
     this.logger = logger;
     this.stackFrameTransformer = stackFrameTransformer;
     this.overwrite = overwrite;
+    this.useColor = useColor;
   }
 
   public TestResults run(VmTyped testModule) {
     var info = VmUtils.getModuleInfo(testModule);
-    var results = new TestResults(info.getModuleName(), getDisplayUri(info));
+    var resultsBuilder = new TestResults.Builder(info.getModuleName(), getDisplayUri(info));
 
     try {
       checkAmendsPklTest(testModule);
-      runFacts(testModule, results);
-      runExamples(testModule, info, results);
     } catch (VmException v) {
-      var meta = results.newResult(info.getModuleName());
-      meta.addError(new Error(v.getMessage(), v.toPklException(stackFrameTransformer)));
+      var error =
+          new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, useColor));
+      return resultsBuilder.setError(error).build();
     }
-    results.setErr(logger.getLogs());
-    return results;
+
+    resultsBuilder.setFactsSection(runFacts(testModule));
+    resultsBuilder.setExamplesSection(runExamples(testModule, info));
+
+    resultsBuilder.setStdErr(logger.getLogs());
+    return resultsBuilder.build();
   }
 
   private void checkAmendsPklTest(VmTyped value) {
@@ -72,16 +89,18 @@ public final class TestRunner {
     }
   }
 
-  private void runFacts(VmTyped testModule, TestResults results) {
+  private TestSectionResults runFacts(VmTyped testModule) {
     var facts = VmUtils.readMember(testModule, Identifier.FACTS);
-    if (facts instanceof VmNull) return;
+    if (facts instanceof VmNull) return new TestSectionResults(TestSectionName.FACTS, List.of());
 
+    var testResults = new ArrayList<TestResult>();
     var factsMapping = (VmMapping) facts;
     factsMapping.forceAndIterateMemberValues(
         (groupKey, groupMember, groupValue) -> {
           var listing = (VmListing) groupValue;
-          var result = results.newResult(String.valueOf(groupKey));
-          return listing.iterateMembers(
+          var name = String.valueOf(groupKey);
+          var resultBuilder = new TestResult.Builder(name);
+          listing.iterateMembers(
               (idx, member) -> {
                 if (member.isLocalOrExternalOrHidden()) {
                   return true;
@@ -89,21 +108,29 @@ public final class TestRunner {
                 try {
                   var factValue = VmUtils.readMember(listing, idx);
                   if (factValue == Boolean.FALSE) {
-                    result.addFailure(
-                        Failure.buildFactFailure(member.getSourceSection(), getDisplayUri(member)));
+                    var failure = factFailure(member.getSourceSection(), getDisplayUri(member));
+                    resultBuilder.addFailure(failure);
+                  } else {
+                    resultBuilder.addSuccess();
                   }
                 } catch (VmException err) {
-                  result.addError(
-                      new Error(err.getMessage(), err.toPklException(stackFrameTransformer)));
+                  var error =
+                      new TestResults.Error(
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor));
+                  resultBuilder.addError(error);
                 }
                 return true;
               });
+          testResults.add(resultBuilder.build());
+          return true;
         });
+    return new TestSectionResults(TestSectionName.FACTS, Collections.unmodifiableList(testResults));
   }
 
-  private void runExamples(VmTyped testModule, ModuleInfo info, TestResults results) {
+  private TestSectionResults runExamples(VmTyped testModule, ModuleInfo info) {
     var examples = VmUtils.readMember(testModule, Identifier.EXAMPLES);
-    if (examples instanceof VmNull) return;
+    if (examples instanceof VmNull)
+      return new TestSectionResults(TestSectionName.EXAMPLES, List.of());
 
     var moduleUri = info.getModuleKey().getUri();
     if (!moduleUri.getScheme().equalsIgnoreCase("file")) {
@@ -137,58 +164,59 @@ public final class TestRunner {
     }
 
     if (Files.exists(expectedOutputFile)) {
-      doRunAndValidateExamples(examplesMapping, expectedOutputFile, actualOutputFile, results);
+      return doRunAndValidateExamples(examplesMapping, expectedOutputFile, actualOutputFile);
     } else {
-      doRunAndWriteExamples(examplesMapping, expectedOutputFile, results);
+      return doRunAndWriteExamples(examplesMapping, expectedOutputFile);
     }
   }
 
-  private void doRunAndValidateExamples(
-      VmMapping examples, Path expectedOutputFile, Path actualOutputFile, TestResults results) {
+  private TestSectionResults doRunAndValidateExamples(
+      VmMapping examples, Path expectedOutputFile, Path actualOutputFile) {
     var expectedExampleOutputs = loadExampleOutputs(expectedOutputFile);
     var actualExampleOutputs = new MutableReference<VmDynamic>(null);
     var allGroupsSucceeded = new MutableBoolean(true);
     var errored = new MutableBoolean(false);
+    var testResults = new ArrayList<TestResult>();
     examples.forceAndIterateMemberValues(
         (groupKey, groupMember, groupValue) -> {
           var testName = String.valueOf(groupKey);
           var group = (VmListing) groupValue;
           var expectedGroup =
               (VmDynamic) VmUtils.readMemberOrNull(expectedExampleOutputs, groupKey);
-          var result = results.newResult(testName);
+          var testResultBuilder = new TestResult.Builder(testName);
 
           if (expectedGroup == null) {
-            results.newResult(
-                testName,
-                Failure.buildExamplePropertyMismatchFailure(
-                    getDisplayUri(groupMember), String.valueOf(groupKey), true));
+            testResultBuilder.addFailure(
+                examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, true));
+            testResults.add(testResultBuilder.build());
             return true;
           }
 
           if (group.getLength() != expectedGroup.getLength()) {
-            result.addFailure(
-                Failure.buildExampleLengthMismatchFailure(
+            testResultBuilder.addFailure(
+                exampleLengthMismatchFailure(
                     getDisplayUri(groupMember),
-                    String.valueOf(groupKey),
+                    testName,
                     expectedGroup.getLength(),
                     group.getLength()));
+            testResults.add(testResultBuilder.build());
             return true;
           }
 
-          var groupSucceeded = new MutableBoolean(true);
           group.iterateMembers(
               ((exampleIndex, exampleMember) -> {
                 if (exampleMember.isLocalOrExternalOrHidden()) {
                   return true;
                 }
+
                 Object exampleValue;
                 try {
                   exampleValue = VmUtils.readMember(group, exampleIndex);
                 } catch (VmException err) {
                   errored.set(true);
-                  result.addError(
-                      new Error(err.getMessage(), err.toPklException(stackFrameTransformer)));
-                  groupSucceeded.set(false);
+                  testResultBuilder.addError(
+                      new TestResults.Error(
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
                   return true;
                 }
                 var expectedValue = VmUtils.readMember(expectedGroup, exampleIndex);
@@ -205,8 +233,6 @@ public final class TestRunner {
                     actualExampleOutputs.set(loadExampleOutputs(actualOutputFile));
                   }
 
-                  groupSucceeded.set(false);
-
                   var expectedMember = VmUtils.findMember(expectedGroup, exampleIndex);
                   assert expectedMember != null;
 
@@ -222,21 +248,22 @@ public final class TestRunner {
                         .build();
                   }
 
-                  result.addFailure(
-                      Failure.buildExampleFailure(
+                  testResultBuilder.addFailure(
+                      exampleFailure(
                           getDisplayUri(exampleMember),
                           getDisplayUri(expectedMember),
                           expectedValuePcf,
                           getDisplayUri(actualMember),
-                          exampleValuePcf));
+                          exampleValuePcf,
+                          testResultBuilder.getCount()));
+                } else {
+                  testResultBuilder.addSuccess();
                 }
 
                 return true;
               }));
 
-          if (!groupSucceeded.get()) {
-            allGroupsSucceeded.set(false);
-          }
+          testResults.add(testResultBuilder.build());
 
           return true;
         });
@@ -247,12 +274,14 @@ public final class TestRunner {
             return true;
           }
           if (examples.getCachedValue(groupKey) == null) {
+            var testName = String.valueOf(groupKey);
             allGroupsSucceeded.set(false);
-            results
-                .newResult(String.valueOf(groupKey))
-                .addFailure(
-                    Failure.buildExamplePropertyMismatchFailure(
-                        getDisplayUri(groupMember), String.valueOf(groupKey), false));
+            var result =
+                new TestResult.Builder(testName)
+                    .addFailure(
+                        examplePropertyMismatchFailure(getDisplayUri(groupMember), testName, false))
+                    .build();
+            testResults.add(result);
           }
           return true;
         });
@@ -260,40 +289,50 @@ public final class TestRunner {
     if (!allGroupsSucceeded.get() && actualExampleOutputs.isNull() && !errored.get()) {
       writeExampleOutputs(actualOutputFile, examples);
     }
+    return new TestSectionResults(
+        TestSectionName.EXAMPLES, Collections.unmodifiableList(testResults));
   }
 
-  private void doRunAndWriteExamples(VmMapping examples, Path outputFile, TestResults results) {
-    var allSucceeded =
-        examples.forceAndIterateMemberValues(
-            (groupKey, groupMember, groupValue) -> {
-              var listing = (VmListing) groupValue;
-              var success =
-                  listing.iterateMembers(
-                      (idx, member) -> {
-                        if (member.isLocalOrExternalOrHidden()) {
-                          return true;
-                        }
-                        try {
-                          VmUtils.readMember(listing, idx);
-                          return true;
-                        } catch (VmException err) {
-                          results
-                              .newResult(String.valueOf(groupKey))
-                              .addError(
-                                  new Error(
-                                      err.getMessage(), err.toPklException(stackFrameTransformer)));
-                          return false;
-                        }
-                      });
-              if (!success) {
-                return false;
-              }
-              results.newResult(String.valueOf(groupKey)).setExampleWritten(true);
-              return true;
-            });
-    if (allSucceeded) {
+  private TestSectionResults doRunAndWriteExamples(VmMapping examples, Path outputFile) {
+    var testResults = new ArrayList<TestResult>();
+    var allSucceeded = new MutableBoolean(true);
+    examples.forceAndIterateMemberValues(
+        (groupKey, groupMember, groupValue) -> {
+          var testName = String.valueOf(groupKey);
+          var listing = (VmListing) groupValue;
+          var testResultBuilder = new TestResult.Builder(testName);
+          var success = new MutableBoolean(true);
+          listing.iterateMembers(
+              (idx, member) -> {
+                if (member.isLocalOrExternalOrHidden()) {
+                  return true;
+                }
+                try {
+                  VmUtils.readMember(listing, idx);
+                  return true;
+                } catch (VmException err) {
+                  testResultBuilder.addError(
+                      new TestResults.Error(
+                          err.getMessage(), err.toPklException(stackFrameTransformer, useColor)));
+                  allSucceeded.set(false);
+                  success.set(false);
+                  return true;
+                }
+              });
+          if (success.get()) {
+            // treat writing an example as a message
+            testResultBuilder.setExampleWritten(true);
+            testResultBuilder.addFailure(
+                writtenExampleOutputFailure(testName, getDisplayUri(groupMember)));
+          }
+          testResults.add(testResultBuilder.build());
+          return true;
+        });
+    if (allSucceeded.get()) {
       writeExampleOutputs(outputFile, examples);
     }
+    return new TestSectionResults(
+        TestSectionName.EXAMPLES, Collections.unmodifiableList(testResults));
   }
 
   private void writeExampleOutputs(Path outputFile, VmMapping examples) {
@@ -354,5 +393,99 @@ public final class TestRunner {
   private static String getDisplayUri(ModuleInfo moduleInfo) {
     return VmUtils.getDisplayUri(
         moduleInfo.getModuleKey().getUri(), VmContext.get(null).getFrameTransformer());
+  }
+
+  private Failure factFailure(SourceSection sourceSection, String location) {
+    var sb = new AnsiStringBuilder(useColor);
+    sb.append(AnsiTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
+    appendLocation(sb, location);
+    return new Failure("Fact Failure", sb.toString());
+  }
+
+  private Failure exampleLengthMismatchFailure(
+      String location, String property, int expectedLength, int actualLength) {
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    sb.append('\n')
+        .append(
+            AnsiTheme.TEST_FAILURE_MESSAGE,
+            () ->
+                sb.append("Output mismatch: Expected \"")
+                    .append(property)
+                    .append("\" to contain ")
+                    .append(expectedLength)
+                    .append(" examples, but found ")
+                    .append(actualLength));
+    return new Failure("Output Mismatch (Length)", sb.toString());
+  }
+
+  private Failure examplePropertyMismatchFailure(
+      String location, String property, boolean isMissingInExpected) {
+
+    String existsIn;
+    String missingIn;
+
+    if (isMissingInExpected) {
+      existsIn = "actual";
+      missingIn = "expected";
+    } else {
+      existsIn = "expected";
+      missingIn = "actual";
+    }
+
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+
+    sb.append('\n')
+        .append(
+            AnsiTheme.TEST_FAILURE_MESSAGE,
+            () ->
+                sb.append("Output mismatch: \"")
+                    .append(property)
+                    .append("\" exists in ")
+                    .append(existsIn)
+                    .append(" but not in ")
+                    .append(missingIn)
+                    .append(" output"));
+    return new Failure("Output Mismatch", sb.toString());
+  }
+
+  private Failure exampleFailure(
+      String location,
+      String expectedLocation,
+      String expectedValue,
+      String actualLocation,
+      String actualValue,
+      int exampleNumber) {
+    var sb = new AnsiStringBuilder(useColor);
+    sb.append(AnsiTheme.TEST_NAME, "#" + exampleNumber + ": ");
+    sb.append(
+        AnsiTheme.TEST_FAILURE_MESSAGE,
+        () -> {
+          appendLocation(sb, location);
+          sb.append("\n  Expected: ");
+          appendLocation(sb, expectedLocation);
+          sb.append("\n  ");
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replaceAll("\n", "\n  "));
+          sb.append("\n  Actual: ");
+          appendLocation(sb, actualLocation);
+          sb.append("\n  ");
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, actualValue.replaceAll("\n", "\n  "));
+        });
+    return new Failure("Example Failure", sb.toString());
+  }
+
+  private void appendLocation(AnsiStringBuilder stringBuilder, String location) {
+    stringBuilder.append(
+        AnsiTheme.STACK_FRAME,
+        () -> stringBuilder.append("(").appendUntrusted(location).append(")"));
+  }
+
+  private Failure writtenExampleOutputFailure(String testName, String location) {
+    var sb = new AnsiStringBuilder(useColor);
+    appendLocation(sb, location);
+    sb.append(AnsiTheme.TEST_FAILURE_MESSAGE, "\nWrote expected output for test ").append(testName);
+    return new Failure("Example Output Written", sb.toString());
   }
 }

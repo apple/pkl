@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +19,32 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.pkl.core.messaging.MessageTransport
+import org.pkl.core.messaging.MessageTransports
+import org.pkl.core.util.Pair
 
 class JvmServerTest : AbstractServerTest() {
   private val transports: Pair<MessageTransport, MessageTransport> = run {
     if (USE_DIRECT_TRANSPORT) {
-      MessageTransports.direct()
+      MessageTransports.direct(::log)
     } else {
-      val in1 = PipedInputStream()
+      val in1 =
+        PipedInputStream(10240) // use larger pipe size since large messages can be >1024 bytes
       val out1 = PipedOutputStream(in1)
       val in2 = PipedInputStream()
       val out2 = PipedOutputStream(in2)
-      MessageTransports.stream(in1, out2) to MessageTransports.stream(in2, out1)
+      Pair.of(
+        MessageTransports.stream(
+          ServerMessagePackDecoder(in1),
+          ServerMessagePackEncoder(out2),
+          ::log
+        ),
+        MessageTransports.stream(
+          ServerMessagePackDecoder(in2),
+          ServerMessagePackEncoder(out1),
+          ::log
+        )
+      )
     }
   }
 

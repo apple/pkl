@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,12 +78,13 @@ public class ReplServer implements AutoCloseable {
       @Nullable DeclaredDependencies projectDependencies,
       @Nullable String outputFormat,
       Path workingDir,
-      StackFrameTransformer frameTransformer) {
+      StackFrameTransformer frameTransformer,
+      boolean color) {
 
     this.workingDir = workingDir;
     this.securityManager = securityManager;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
-    this.errorRenderer = new VmExceptionRenderer(new StackTraceRenderer(frameTransformer));
+    this.errorRenderer = new VmExceptionRenderer(new StackTraceRenderer(frameTransformer), color);
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -37,6 +36,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 
@@ -49,7 +49,7 @@ public abstract class ModulesTask extends BasePklTask {
   public abstract ListProperty<Object> getSourceModules();
 
   @InputFiles
-  public abstract ConfigurableFileCollection getTransitiveModules();
+  public abstract ListProperty<File> getTransitiveModules();
 
   private final Map<List<Object>, Pair<List<File>, List<URI>>> parsedSourceModulesCache =
       new HashMap<>();
@@ -176,6 +176,7 @@ public abstract class ModulesTask extends BasePklTask {
               getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
               getEvalTimeout().getOrNull(),
               mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
               getNoCache().getOrElse(false),
               getOmitProjectSettings().getOrElse(false),
               getNoProject().getOrElse(false),
@@ -183,7 +184,9 @@ public abstract class ModulesTask extends BasePklTask {
               getTestPort().getOrElse(-1),
               Collections.emptyList(),
               null,
-              List.of());
+              List.of(),
+              Map.of(),
+              Map.of());
     }
     return cachedOptions;
   }

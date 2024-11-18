@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,6 @@ import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.ResourceManager;
-import org.pkl.core.runtime.TestResults;
 import org.pkl.core.runtime.TestRunner;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
@@ -58,6 +57,7 @@ import org.pkl.core.util.Nullable;
 
 public class EvaluatorImpl implements Evaluator {
   protected final StackFrameTransformer frameTransformer;
+  protected final boolean color;
   protected final ModuleResolver moduleResolver;
   protected final Context polyglotContext;
   protected final @Nullable Duration timeout;
@@ -69,6 +69,7 @@ public class EvaluatorImpl implements Evaluator {
 
   public EvaluatorImpl(
       StackFrameTransformer transformer,
+      boolean color,
       SecurityManager manager,
       HttpClient httpClient,
       Logger logger,
@@ -83,6 +84,7 @@ public class EvaluatorImpl implements Evaluator {
 
     securityManager = manager;
     frameTransformer = transformer;
+    this.color = color;
     moduleResolver = new ModuleResolver(factories);
     this.logger = new BufferedLogger(logger);
     packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
@@ -137,7 +139,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           return VmUtils.readTextProperty(output);
         });
   }
@@ -147,7 +149,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           if (value instanceof VmValue vmValue) {
             vmValue.force(false);
@@ -162,7 +164,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var filesOrNull = VmUtils.readMember(output, Identifier.FILES);
           if (filesOrNull instanceof VmNull) {
             return Map.of();
@@ -233,7 +235,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var testRunner = new TestRunner(logger, frameTransformer, overwrite);
+          var testRunner = new TestRunner(logger, frameTransformer, overwrite, color);
           return testRunner.run(module);
         });
   }
@@ -243,7 +245,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = (VmTyped) VmUtils.readMember(module, Identifier.OUTPUT);
+          var output = readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           var valueClassInfo = VmUtils.getClass(value).getPClassInfo();
           if (valueClassInfo.equals(classInfo)) {
@@ -305,20 +307,20 @@ public class EvaluatorImpl implements Evaluator {
             .bug("Stack overflow")
             .withCause(e.getCause())
             .build()
-            .toPklException(frameTransformer);
+            .toPklException(frameTransformer, color);
       }
       handleTimeout(timeoutTask);
-      throw e.toPklException(frameTransformer);
+      throw e.toPklException(frameTransformer, color);
     } catch (VmException e) {
       handleTimeout(timeoutTask);
-      throw e.toPklException(frameTransformer);
+      throw e.toPklException(frameTransformer, color);
     } catch (Exception e) {
       throw new PklBugException(e);
     } catch (ExceptionInInitializerError e) {
       if (!(e.getCause() instanceof VmException vmException)) {
         throw new PklBugException(e);
       }
-      var pklException = vmException.toPklException(frameTransformer);
+      var pklException = vmException.toPklException(frameTransformer, color);
       var error = new ExceptionInInitializerError(pklException);
       error.setStackTrace(e.getStackTrace());
       throw new PklBugException(error);
@@ -365,13 +367,40 @@ public class EvaluatorImpl implements Evaluator {
             "evaluationTimedOut", (timeout.getSeconds() + timeout.getNano() / 1_000_000_000d)));
   }
 
+  private VmTyped readModuleOutput(VmTyped module) {
+    var value = VmUtils.readMember(module, Identifier.OUTPUT);
+    if (value instanceof VmTyped typedOutput
+        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
+      return typedOutput;
+    }
+
+    var moduleUri = module.getModuleInfo().getModuleKey().getUri();
+    var builder =
+        new VmExceptionBuilder()
+            .evalError(
+                "invalidModuleOutput",
+                "output",
+                PClassInfo.ModuleOutput.getDisplayName(),
+                VmUtils.getClass(value).getPClassInfo().getDisplayName(),
+                moduleUri);
+    var outputMember = module.getMember(Identifier.OUTPUT);
+    assert outputMember != null;
+    var uriOfValueMember = outputMember.getSourceSection().getSource().getURI();
+    // If `output` was explicitly re-assigned, show that in the stack trace.
+    if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
+      builder.withSourceSection(outputMember.getBodySection()).withMemberName("output");
+    }
+    throw builder.build();
+  }
+
   private VmException moduleOutputValueTypeMismatch(
       VmTyped module, PClassInfo<?> expectedClassInfo, Object value, VmTyped output) {
     var moduleUri = module.getModuleInfo().getModuleKey().getUri();
     var builder =
         new VmExceptionBuilder()
             .evalError(
-                "invalidModuleOutputValue",
+                "invalidModuleOutput",
+                "output.value",
                 expectedClassInfo.getDisplayName(),
                 VmUtils.getClass(value).getPClassInfo().getDisplayName(),
                 moduleUri);

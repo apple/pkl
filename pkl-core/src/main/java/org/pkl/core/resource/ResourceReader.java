@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.runtime.ReaderBase;
 
 /**
@@ -29,7 +30,7 @@ import org.pkl.core.runtime.ReaderBase;
  *
  * <p>See {@link ResourceReaders} for predefined resource readers.
  */
-public interface ResourceReader extends ReaderBase {
+public interface ResourceReader extends ReaderBase, AutoCloseable {
   /** The URI scheme associated with resources read by this resource reader. */
   String getUriScheme();
 
@@ -54,5 +55,16 @@ public interface ResourceReader extends ReaderBase {
    *       manager.
    * </ul>
    */
-  Optional<Object> read(URI uri) throws IOException, URISyntaxException, SecurityManagerException;
+  Optional<Object> read(URI uri)
+      throws IOException,
+          URISyntaxException,
+          SecurityManagerException,
+          ExternalReaderProcessException;
+
+  /**
+   * Closes this reader, releasing any resources held. See the documentation of factory methods in
+   * {@link ResourceReaders} for which factories need to be closed.
+   */
+  @Override
+  default void close() {}
 }

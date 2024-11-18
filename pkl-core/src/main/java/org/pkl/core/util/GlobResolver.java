@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.runtime.ReaderBase;
@@ -44,28 +45,11 @@ public final class GlobResolver {
     }
   }
 
-  public static final class ResolvedGlobElement {
-    private final String path;
-
-    private final URI uri;
-    private final boolean isDirectory;
-
+  public record ResolvedGlobElement(String path, URI uri, boolean isDirectory) {
     public ResolvedGlobElement(String path, URI uri, boolean isDirectory) {
       this.path = path;
       this.uri = uri.normalize();
       this.isDirectory = isDirectory;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    public URI getUri() {
-      return uri;
-    }
-
-    public boolean isDirectory() {
-      return isDirectory;
     }
   }
 
@@ -79,9 +63,16 @@ public final class GlobResolver {
    * a complex glob pattern can starve CPU/memory on a host.
    *
    * <p>Glob limit value taken from <a
-   * href="https://github.com/openbsd/src/commit/46df4fe576b7">https://github.com/openbsd/src/commit/46df4fe576b7</a>
+   * href="https://github.com/openbsd/src/commit/46df4fe576b7">https://github.com/openbsd/src/commit/46df4fe576b7</a>.
+   *
+   * <p>If test mode is enabled, a smaller value is used. This greatly speeds up the test that
+   * verifies enforcement of the limit (invalidGlobImport6.pkl).
+   *
+   * <p>Not a static field to prevent compile-time evaluation by native-image.
    */
-  private static final int MAX_LIST_ELEMENTS = 16384;
+  private static int maxListElements() {
+    return IoUtils.isTestMode() ? 512 : 16384;
+  }
 
   private static final Map<String, Pattern> patterns =
       Collections.synchronizedMap(new WeakHashMap<>());
@@ -253,7 +244,7 @@ public final class GlobResolver {
       URI globUri,
       Pattern pattern,
       Map<String, ResolvedGlobElement> result)
-      throws IOException, SecurityManagerException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     var elements = reader.listElements(securityManager, globUri);
     for (var elem : sorted(elements)) {
       URI resolvedUri;
@@ -311,7 +302,10 @@ public final class GlobResolver {
       boolean isGlobStar,
       boolean hasAbsoluteGlob,
       MutableLong listElementCallCount)
-      throws IOException, SecurityManagerException, InvalidGlobPatternException {
+      throws IOException,
+          SecurityManagerException,
+          InvalidGlobPatternException,
+          ExternalReaderProcessException {
     var result = new ArrayList<ResolvedGlobElement>();
     doExpandHierarchicalGlobPart(
         securityManager,
@@ -336,9 +330,12 @@ public final class GlobResolver {
       boolean hasAbsoluteGlob,
       MutableLong listElementCallCount,
       List<ResolvedGlobElement> result)
-      throws IOException, SecurityManagerException, InvalidGlobPatternException {
+      throws IOException,
+          SecurityManagerException,
+          InvalidGlobPatternException,
+          ExternalReaderProcessException {
 
-    if (listElementCallCount.getAndIncrement() > MAX_LIST_ELEMENTS) {
+    if (listElementCallCount.getAndIncrement() > maxListElements()) {
       throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobTooComplex"));
     }
     var elements = reader.listElements(securityManager, baseUri);
@@ -377,7 +374,10 @@ public final class GlobResolver {
       boolean hasAbsoluteGlob,
       Map<String, ResolvedGlobElement> result,
       MutableLong listElementCallCount)
-      throws IOException, SecurityManagerException, InvalidGlobPatternException {
+      throws IOException,
+          SecurityManagerException,
+          InvalidGlobPatternException,
+          ExternalReaderProcessException {
     var isLeaf = idx == globPatternParts.length - 1;
     var patternPart = globPatternParts[idx];
     if (isRegularPathPart(patternPart)) {
@@ -417,15 +417,15 @@ public final class GlobResolver {
               listElementCallCount);
       for (var element : matchedElements) {
         if (isLeaf) {
-          result.put(element.getPath(), element);
+          result.put(element.path(), element);
         } else if (element.isDirectory()) {
           resolveHierarchicalGlob(
               securityManager,
               reader,
               globPatternParts,
               idx + 1,
-              element.getUri(),
-              element.getPath(),
+              element.uri(),
+              element.path(),
               hasAbsoluteGlob,
               result,
               listElementCallCount);
@@ -474,7 +474,10 @@ public final class GlobResolver {
       ModuleKey enclosingModuleKey,
       URI enclosingUri,
       String globPattern)
-      throws IOException, SecurityManagerException, InvalidGlobPatternException {
+      throws IOException,
+          SecurityManagerException,
+          InvalidGlobPatternException,
+          ExternalReaderProcessException {
 
     var result = new LinkedHashMap<String, ResolvedGlobElement>();
     var hasAbsoluteGlob = globPattern.matches("\\w+:.*");

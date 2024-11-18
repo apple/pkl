@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ public class ReadGlobMemberBodyNode extends ExpressionNode {
   private Object readResource(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")
     var globElements = (Map<String, ResolvedGlobElement>) mapping.getExtraStorage();
-    var resourceUri = VmUtils.getMapValue(globElements, path).getUri();
+    var resourceUri = VmUtils.getMapValue(globElements, path).uri();
     var resource = VmContext.get(this).getResourceManager().read(resourceUri, this).orElse(null);
     if (resource == null) {
       CompilerDirectives.transferToInterpreter();

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,35 +21,39 @@ import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.util.Nullable;
 
-public final class DeclaredDependencies {
-  private final Map<String, RemoteDependency> remoteDependencies;
-  private final Map<String, DeclaredDependencies> localDependencies;
-  private final URI projectFileUri;
-  private final @Nullable PackageUri myPackageUri;
-
-  public DeclaredDependencies(
-      Map<String, RemoteDependency> remoteDependencies,
-      Map<String, DeclaredDependencies> localDependencies,
-      URI projectFileUri,
-      @Nullable PackageUri myPackageUri) {
-    this.remoteDependencies = remoteDependencies;
-    this.localDependencies = localDependencies;
-    this.projectFileUri = projectFileUri;
-    this.myPackageUri = myPackageUri;
-  }
-
+public record DeclaredDependencies(
+    Map<String, RemoteDependency> remoteDependencies,
+    Map<String, DeclaredDependencies> localDependencies,
+    URI projectFileUri,
+    @Nullable PackageUri myPackageUri) {
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #localDependencies()}.
+   */
+  @Deprecated(forRemoval = true)
   public Map<String, DeclaredDependencies> getLocalDependencies() {
     return localDependencies;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #remoteDependencies()}.
+   */
+  @Deprecated(forRemoval = true)
   public Map<String, RemoteDependency> getRemoteDependencies() {
     return remoteDependencies;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #projectFileUri()}.
+   */
+  @Deprecated(forRemoval = true)
   public URI getProjectFileUri() {
     return projectFileUri;
   }
 
+  /**
+   * @deprecated As of 0.28.0, replaced by {@link #myPackageUri()}.
+   */
+  @Deprecated(forRemoval = true)
   public @Nullable PackageUri getMyPackageUri() {
     return myPackageUri;
   }

@@ -6,23 +6,9 @@ import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
 import kotlin.String
-import kotlin.text.StringBuilder
 import org.pkl.core.Duration
 
 object Mod {
-  private fun appendProperty(
-    builder: StringBuilder,
-    name: String,
-    value: Any?
-  ) {
-    builder.append("\n  ").append(name).append(" = ")
-    val lines = value.toString().split("\n")
-    builder.append(lines[0])
-    for (i in 1..lines.lastIndex) {
-      builder.append("\n  ").append(lines[i])
-    }
-  }
-
   open class Foo(
     open val one: Long
   ) {
@@ -42,13 +28,7 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(100)
-      builder.append(Foo::class.java.simpleName).append(" {")
-      appendProperty(builder, "one", this.one)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """Foo(one=$one)"""
   }
 
   open class None(
@@ -70,13 +50,7 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(100)
-      builder.append(None::class.java.simpleName).append(" {")
-      appendProperty(builder, "one", this.one)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """None(one=$one)"""
   }
 
   open class Bar(
@@ -103,14 +77,7 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(150)
-      builder.append(Bar::class.java.simpleName).append(" {")
-      appendProperty(builder, "one", this.one)
-      appendProperty(builder, "two", this.two)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """Bar(one=$one, two=$two)"""
   }
 
   class Baz(
@@ -146,14 +113,6 @@ object Mod {
       return result
     }
 
-    override fun toString(): String {
-      val builder = StringBuilder(200)
-      builder.append(Baz::class.java.simpleName).append(" {")
-      appendProperty(builder, "one", this.one)
-      appendProperty(builder, "two", this.two)
-      appendProperty(builder, "three", this.three)
-      builder.append("\n}")
-      return builder.toString()
-    }
+    override fun toString(): String = """Baz(one=$one, two=$two, three=$three)"""
   }
 }

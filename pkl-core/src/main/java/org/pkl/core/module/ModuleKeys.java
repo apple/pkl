@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,6 @@
 package org.pkl.core.module;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,11 +25,11 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -129,6 +128,12 @@ public final class ModuleKeys {
     return new ProjectPackage(assetUri);
   }
 
+  /** Creates a module key for an externally read module. */
+  public static ModuleKey externalResolver(
+      URI uri, ExternalModuleResolver.Spec spec, ExternalModuleResolver resolver) {
+    return new ExternalResolver(uri, spec, resolver);
+  }
+
   /**
    * Creates a module key that behaves like {@code delegate}, except that it returns {@code text} as
    * its loaded source.
@@ -167,7 +172,7 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean hasHierarchicalUris() {
+    public boolean hasHierarchicalUris() throws IOException, ExternalReaderProcessException {
       return delegate.hasHierarchicalUris();
     }
 
@@ -177,19 +182,19 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean isGlobbable() {
+    public boolean isGlobbable() throws IOException, ExternalReaderProcessException {
       return delegate.isGlobbable();
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI uri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.hasElement(securityManager, uri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.listElements(securityManager, baseUri);
     }
   }
@@ -325,7 +330,7 @@ public final class ModuleKeys {
       if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
         throw new FileNotFoundException();
       }
-      var realPath = Path.of(uri).toRealPath();
+      var realPath = IoUtils.pathOf(uri).toRealPath();
       var resolvedUri = realPath.toUri();
       securityManager.checkResolveModule(resolvedUri);
       return ResolvedModuleKeys.file(this, resolvedUri, realPath);
@@ -399,7 +404,6 @@ public final class ModuleKeys {
   }
 
   private static final class ClassPath implements ModuleKey {
-
     final URI uri;
 
     final ClassLoader classLoader;
@@ -462,7 +466,6 @@ public final class ModuleKeys {
   }
 
   private static class Http implements ModuleKey {
-
     private final URI uri;
 
     Http(URI uri) {
@@ -552,7 +555,6 @@ public final class ModuleKeys {
   }
 
   private abstract static class AbstractPackage implements ModuleKey {
-
     protected final PackageAssetUri packageAssetUri;
 
     AbstractPackage(PackageAssetUri packageAssetUri) {
@@ -665,6 +667,7 @@ public final class ModuleKeys {
    * an internal implementation detail, and we do not expect a module to declare this.
    */
   public static class ProjectPackage extends AbstractPackage {
+
     ProjectPackage(PackageAssetUri packageAssetUri) {
       super(packageAssetUri);
     }
@@ -714,7 +717,7 @@ public final class ModuleKeys {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -735,7 +738,7 @@ public final class ModuleKeys {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -769,6 +772,58 @@ public final class ModuleKeys {
       var dependencyMetadata =
           getPackageResolver().getDependencyMetadata(packageUri, dep.getChecksums());
       return projectResolver.getResolvedDependenciesForPackage(packageUri, dependencyMetadata);
+    }
+  }
+
+  public static class ExternalResolver implements ModuleKey {
+
+    private final URI uri;
+    private final ExternalModuleResolver.Spec spec;
+    private final ExternalModuleResolver resolver;
+
+    ExternalResolver(URI uri, ExternalModuleResolver.Spec spec, ExternalModuleResolver resolver) {
+      this.uri = uri;
+      this.spec = spec;
+      this.resolver = resolver;
+    }
+
+    @Override
+    public boolean isLocal() {
+      return spec.isLocal();
+    }
+
+    @Override
+    public boolean hasHierarchicalUris() {
+      return spec.hasHierarchicalUris();
+    }
+
+    @Override
+    public boolean isGlobbable() {
+      return spec.isGlobbable();
+    }
+
+    @Override
+    public URI getUri() {
+      return uri;
+    }
+
+    @Override
+    public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
+        throws IOException, SecurityManagerException {
+      return resolver.listElements(securityManager, baseUri);
+    }
+
+    @Override
+    public ResolvedModuleKey resolve(SecurityManager securityManager)
+        throws IOException, SecurityManagerException {
+      var contents = resolver.resolveModule(securityManager, uri);
+      return ResolvedModuleKeys.virtual(this, uri, contents, true);
+    }
+
+    @Override
+    public boolean hasElement(SecurityManager securityManager, URI elementUri)
+        throws IOException, SecurityManagerException {
+      return resolver.hasElement(securityManager, elementUri);
     }
   }
 }

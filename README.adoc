@@ -41,3 +41,73 @@ We'd love to hear from you!
 * link:CONTRIBUTING.adoc[] for tips on pull requests and filing issues
 * link:DEVELOPMENT.adoc[] for build instructions
 * {uri-ci-artifacts}[Sonatype Repository] for the artifacts/binaries built by our {uri-ci-pipeline}[CI pipelines] (and those of our other tools and packages repositories).
+
+== Pkl GitHub Repositories
+
+[%autowidth]
+|===
+|Name |Description
+
+|`apple/pkl`
+|A configuration as code language with rich validation and tooling.
+
+|https://github.com/apple/pkl-evolution[`apple/pkl-evolution`]
+|Suggested Pkl Improvements, Changes, or Enhancements (SPICEs)
+
+|https://github.com/apple/pkl-go[`apple/pkl-go`]
+|Pkl bindings for the Go programming language
+
+|https://github.com/apple/pkl-go-examples[`apple/pkl-go-examples`]
+|Examples for using Pkl within Go applications
+
+|https://github.com/apple/pkl-intellij[`apple/pkl-intellij`]
+|JetBrains editor plugins providing Pkl language support
+
+|https://github.com/apple/pkl-jvm-examples[`apple/pkl-jvm-examples`]
+|Examples for using Pkl within JVM applications
+
+|https://github.com/apple/pkl-k8s[`apple/pkl-k8s`]
+|Templates for using Pkl with Kubernetes
+
+|https://github.com/apple/pkl-k8s-examples[`apple/pkl-k8s-examples`]
+|Examples for using Pkl with Kubernetes
+
+|https://github.com/apple/pkl-lang.org[`apple/pkl-lang.org`]
+|The pkl-lang.org website
+
+|https://github.com/apple/pkl-lsp[`apple/pkl-lsp`]
+| Language server for Pkl, implementing the server-side of the Language Server Protocol
+
+|https://github.com/apple/pkl-neovim[`apple/pkl-neovim`]
+|Pkl language support for Neovim
+
+|https://github.com/apple/pkl-package-docs[`apple/pkl-package-docs`]
+|Documentation for Pkl packages
+
+|https://github.com/apple/pkl-pantry[`apple/pkl-pantry`]
+|Shared Pkl packages
+
+|https://github.com/apple/pkl-project-commons[`apple/pkl-project-commons`]
+|Utility libraries for Pkl
+
+|https://github.com/apple/pkl-spring[`apple/pkl-spring`]
+|Spring Boot extension for configuring Boot apps with Pkl
+
+|https://github.com/apple/pkl-swift[`apple/pkl-swift`]
+|Pkl bindings for the Swift programming language
+
+|https://github.com/apple/pkl-swift-examples[`apple/pkl-swift-examples`]
+|Examples for using Pkl within Swift applications
+
+|https://github.com/apple/pkl-vscode[`apple/pkl-vscode`]
+|Pkl language support for VS Code
+
+|https://github.com/apple/pkl.tmbundle[`apple/pkl.tmbundle`]
+|TextMate bundle for Pkl
+
+|https://github.com/apple/rules_pkl[`apple/rules_pkl`]
+| Bazel build rules for Pkl
+
+|https://github.com/apple/tree-sitter-pkl[`apple/tree-sitter-pkl`]
+|Tree-sitter parser for Pkl
+|===

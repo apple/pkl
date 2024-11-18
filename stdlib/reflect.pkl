@@ -26,7 +26,7 @@
 /// - Documentation generators (such as *Pkldoc*)
 /// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
 /// - Domain-specific schema validators
-@ModuleInfo { minPklVersion = "0.27.0" }
+@ModuleInfo { minPklVersion = "0.28.0" }
 module pkl.reflect
 
 import "pkl:base"
@@ -116,7 +116,7 @@ external const nothingType: NothingType
 /// In the following example, `barnOwl` is such an object, created by amending the module `pigeon.pkl`.
 ///
 /// ```
-/// barnOwl = import("pigeon.pkl") {
+/// barnOwl = (import("pigeon.pkl")) {
 ///   name = "Barn Owl"
 /// }
 /// ```
@@ -129,7 +129,7 @@ external const function Module(mod: base.Module): Module
 /// In the following example, `barnOwl` is such an object, created by amending the module `pigeon.pkl`.
 ///
 /// ```
-/// barnOwl = import("pigeon.pkl") {
+/// barnOwl = (import("pigeon.pkl")) {
 ///   name = "Barn Owl"
 /// }
 /// ```

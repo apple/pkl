@@ -20,11 +20,17 @@ This property accepts the following types to represent a module:
 .transitiveModules: ConfigurableFileCollection
 [%collapsible]
 ====
-Default: `files()` (empty collection) +
+Default: [computed by pkl-gradle] +
 Example 1: `transitiveModules.from files("module1.pkl", "module2.pkl")` +
 Example 2: `+transitiveModules.from fileTree("config").include("**/*.pkl")+` +
+
 File paths of modules that are directly or indirectly used by source modules.
-Setting this option enables correct Gradle up-to-date checks, which ensures that your Pkl tasks are executed if any of the transitive files are modified; it does not affect evaluation otherwise.
+
+This property, along with `sourceModules`, is the set of input files used to determine whether this task is up-to-date or not.
+
+By default, Pkl computes this property by analyzing the imports of the source modules.
+Setting this property explicitly causes Pkl to skip the analyze imports step.
+
 Including source modules in `transitiveModules` is permitted but not required.
 Relative paths are resolved against the project directory.
 ====

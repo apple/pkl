@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,15 +43,15 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @Children private final ExpressionNode[] keyNodes;
   private final ObjectMember[] values;
 
-  public EntriesLiteralNode(
+  protected EntriesLiteralNode(
       SourceSection sourceSection,
       VmLanguage language,
-      // contains local properties and default property (if present)
-      // does *not* contain entries with constant keys to maintain definition order of entries
       String qualifiedScopeName,
       boolean isCustomThisScope,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
+      // contains local properties and default property (if present)
+      // does *not* contain entries with constant keys to maintain definition order of entries
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ExpressionNode[] keyNodes,
       ObjectMember[] values) {
@@ -103,7 +103,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
         frame.materialize(),
         parent,
         createListMembers(frame, parent.getLength()),
-        parent.getLength() + keyNodes.length);
+        // `[x] = y` overrides existing element and doesn't increase length
+        parent.getLength());
   }
 
   @Specialization

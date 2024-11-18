@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,12 +33,12 @@ public abstract class ApplyVmFunction0Node extends PklNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function);
+    return callNode.call(function.getThisValue(), function, false);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(VmFunction function, @Cached("create()") IndirectCallNode callNode) {
 
-    return callNode.call(function.getCallTarget(), function.getThisValue(), function);
+    return callNode.call(function.getCallTarget(), function.getThisValue(), function, false);
   }
 }

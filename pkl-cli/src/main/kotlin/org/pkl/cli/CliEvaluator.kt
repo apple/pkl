@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +28,10 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.createParentDirectories
 import org.pkl.commons.currentWorkingDir
 import org.pkl.commons.writeString
+import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
-import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
@@ -100,7 +100,8 @@ constructor(
         writeOutput(builder)
       }
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
   }
 
@@ -119,7 +120,7 @@ constructor(
         try {
           moduleResolver.resolve(uri)
         } catch (e: VmException) {
-          throw e.toPklException(stackFrameTransformer)
+          throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
         }
       val substituted =
         pathStr

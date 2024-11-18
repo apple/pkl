@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ class CliProjectPackager(
 ) : CliProjectCommand(baseOptions, projectDirs) {
 
   private fun runApiTests(project: Project) {
-    val apiTests = project.`package`!!.apiTests
+    val apiTests = project.`package`!!.apiTests()
     if (apiTests.isEmpty()) return
     val normalizeApiTests = apiTests.map { project.projectDir.resolve(it).toUri() }
     val testRunner =
@@ -49,7 +49,7 @@ class CliProjectPackager(
     try {
       testRunner.run()
     } catch (e: CliTestException) {
-      throw CliException(ErrorMessages.create("packageTestsFailed", project.`package`!!.uri))
+      throw CliException(ErrorMessages.create("packageTestsFailed", project.`package`!!.uri()))
     }
   }
 
@@ -67,8 +67,8 @@ class CliProjectPackager(
     }
     // Require that all local projects are included
     projects.forEach { proj ->
-      proj.dependencies.localDependencies.values.forEach { localDep ->
-        val projectDir = Path.of(localDep.projectFileUri).parent
+      proj.dependencies.localDependencies().values.forEach { localDep ->
+        val projectDir = Path.of(localDep.projectFileUri()).parent
         if (projects.none { it.projectDir == projectDir }) {
           throw CliException(
             ErrorMessages.create("missingProjectInPackageCommand", proj.projectDir, projectDir)
@@ -81,6 +81,7 @@ class CliProjectPackager(
         cliOptions.normalizedWorkingDir,
         outputPath,
         stackFrameTransformer,
+        cliOptions.color?.hasColor() ?: false,
         securityManager,
         httpClient,
         skipPublishCheck,

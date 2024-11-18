@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +54,7 @@ public final class ImportGlobMemberBodyNode extends ExpressionNode {
   private VmTyped importModule(VmObjectLike mapping, String path) {
     @SuppressWarnings("unchecked")
     var globElements = (Map<String, ResolvedGlobElement>) mapping.getExtraStorage();
-    var importUri = globElements.get(path).getUri();
+    var importUri = globElements.get(path).uri();
     var context = VmContext.get(this);
     try {
       context.getSecurityManager().checkImportModule(currentModule.getUri(), importUri);

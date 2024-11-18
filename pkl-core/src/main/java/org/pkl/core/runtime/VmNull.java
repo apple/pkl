@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,10 +49,6 @@ public final class VmNull extends VmValue {
   public Object getDefaultValue() {
     // defer calling VmDynamic.empty() until this method is called
     return defaultValue == null ? VmDynamic.empty() : defaultValue;
-  }
-
-  public boolean isMappingDefault() {
-    return defaultValue instanceof VmMapping;
   }
 
   @Override

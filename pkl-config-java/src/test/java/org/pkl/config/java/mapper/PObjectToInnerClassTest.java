@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,13 @@ public class PObjectToInnerClassTest {
     try (var evaluator = ConfigEvaluator.preconfigured()) {
       var config =
           evaluator.evaluate(
-              text("class Inner {\n" + "  text: String = \"Bar\"\n" + "}\n" + "inner: Inner"));
+              text(
+                  """
+                  class Inner {
+                    text: String = "Bar"
+                  }
+                  inner: Inner
+                  """));
 
       assertThatExceptionOfType(ConversionException.class)
           .isThrownBy(() -> config.get("inner").as(InnerConfig.class));

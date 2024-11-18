@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,24 @@ package org.pkl.core;
 
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleOptions;
-import java.util.Objects;
 import org.graalvm.home.Version;
 
 /**
  * Information about the Pkl release that the current program runs on. This class is the Java
  * equivalent of standard library module {@code pkl.platform}.
+ *
+ * @param language the language implementation of this platform
+ * @param runtime the language runtime of this platform
+ * @param virtualMachine the virtual machine of this platform
+ * @param operatingSystem the operating system of this platform
+ * @param processor the processor of this platform
  */
-public final class Platform {
+public record Platform(
+    Language language,
+    Runtime runtime,
+    VirtualMachine virtualMachine,
+    OperatingSystem operatingSystem,
+    Processor processor) {
   private static final Platform CURRENT;
 
   static {
@@ -49,225 +59,46 @@ public final class Platform {
             new Processor(architecture));
   }
 
-  private final Language language;
-  private final Runtime runtime;
-  private final VirtualMachine virtualMachine;
-  private final OperatingSystem operatingSystem;
-  private final Processor processor;
-
-  /** Constructs a platform. */
-  public Platform(
-      Language language,
-      Runtime runtime,
-      VirtualMachine virtualMachine,
-      OperatingSystem operatingSystem,
-      Processor processor) {
-    this.language = language;
-    this.runtime = runtime;
-    this.virtualMachine = virtualMachine;
-    this.operatingSystem = operatingSystem;
-    this.processor = processor;
-  }
-
   /** The Pkl release that the current program runs on. */
   public static Platform current() {
     return CURRENT;
   }
 
-  /** The language implementation of this platform. */
-  public Language language() {
-    return language;
-  }
+  /**
+   * The language implementation of a platform.
+   *
+   * @param version the version of this language implementation
+   */
+  public record Language(String version) {}
 
-  /** The language runtime of this platform. */
-  public Runtime runtime() {
-    return runtime;
-  }
+  /**
+   * The language runtime of a platform.
+   *
+   * @param name the name of this language runtime
+   * @param version the version of this language runtime
+   */
+  public record Runtime(String name, String version) {}
 
-  /** The virtual machine of this platform. */
-  public VirtualMachine virtualMachine() {
-    return virtualMachine;
-  }
+  /**
+   * The virtual machine of a platform.
+   *
+   * @param name the name of this virtual machine
+   * @param version the version of this virtual machine
+   */
+  public record VirtualMachine(String name, String version) {}
 
-  /** The operating system of this platform. */
-  public OperatingSystem operatingSystem() {
-    return operatingSystem;
-  }
+  /**
+   * The operating system of a platform.
+   *
+   * @param name the name of this operating system
+   * @param version the version of this operating system
+   */
+  public record OperatingSystem(String name, String version) {}
 
-  /** The processor of this platform. */
-  public Processor processor() {
-    return processor;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof Platform other)) return false;
-    return language.equals(other.language)
-        && runtime.equals(other.runtime)
-        && virtualMachine.equals(other.virtualMachine)
-        && operatingSystem.equals(other.operatingSystem)
-        && processor.equals(other.processor);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(language, runtime, virtualMachine, operatingSystem, processor);
-  }
-
-  /** The language implementation of a platform. */
-  public static final class Language {
-    private final String version;
-
-    /** Constructs a {@link Language}. */
-    public Language(String version) {
-      this.version = version;
-    }
-
-    /** The version of this language implementation. */
-    public String version() {
-      return version;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Language other)) return false;
-      return version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return version.hashCode();
-    }
-  }
-
-  /** The language runtime of a platform. */
-  public static final class Runtime {
-    private final String name;
-    private final String version;
-
-    /** Constructs a {@link Runtime}. */
-    public Runtime(String name, String version) {
-      this.name = name;
-      this.version = version;
-    }
-
-    /** The name of this language runtime. */
-    public String name() {
-      return name;
-    }
-
-    /** The version of this language runtime. */
-    public String version() {
-      return version;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Runtime other)) return false;
-      return name.equals(other.name) && version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, version);
-    }
-  }
-
-  /** The virtual machine of a platform. */
-  public static final class VirtualMachine {
-    private final String name;
-    private final String version;
-
-    /** Constructs a {@link VirtualMachine}. */
-    public VirtualMachine(String name, String version) {
-      this.name = name;
-      this.version = version;
-    }
-
-    /** The name of this virtual machine. */
-    public String name() {
-      return name;
-    }
-
-    /** The version of this virtual machine. */
-    public String version() {
-      return version;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof VirtualMachine other)) return false;
-      return name.equals(other.name) && version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, version);
-    }
-  }
-
-  /** The operating system of a platform. */
-  public static final class OperatingSystem {
-    private final String name;
-    private final String version;
-
-    /** Constructs an {@link OperatingSystem}. */
-    public OperatingSystem(String name, String version) {
-      this.name = name;
-      this.version = version;
-    }
-
-    /** The name of this operating system. */
-    public String name() {
-      return name;
-    }
-
-    /** The version of this operating system. */
-    public String version() {
-      return version;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof OperatingSystem other)) return false;
-      return name.equals(other.name) && version.equals(other.version);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, version);
-    }
-  }
-
-  /** The processor of a platform. */
-  public static final class Processor {
-    private final String architecture;
-
-    /** Constructs a {@link Processor}. */
-    public Processor(String architecture) {
-      this.architecture = architecture;
-    }
-
-    /** The instruction set architecture of this processor. */
-    public String architecture() {
-      return architecture;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Processor other)) return false;
-      return architecture.equals(other.architecture);
-    }
-
-    @Override
-    public int hashCode() {
-      return architecture.hashCode();
-    }
-  }
+  /**
+   * The processor of a platform.
+   *
+   * @param architecture the instruction set architecture of this processor
+   */
+  public record Processor(String architecture) {}
 }

@@ -24,3 +24,14 @@ res10 = new Mapping { ["one"] = 1 } == new Mapping { ["one"] = 1; default = 1 }
 res11 = new Mapping { ["one"] = x; local x = 1 } == new Mapping { ["one"] = 1 }
 res12 = new Mapping { ["one"] = x; local x = 1; local `_` = "two" } == new Mapping { ["one"] = 1; default = 9 }
 res13 = new Mapping { ["one"] = x; local x = 1 } { ["two"] = y; local y = 2 } == new Mapping { ["one"] = 1; ["two"] = 2 }
+
+class Bird { name: String }
+
+local m1: Mapping<String, Bird> = new {
+  ["Pigeon"] = new { name = "Pigeon" }
+  ["Stork"] = new { name = "Stork" }
+}
+
+local m2: Mapping<String, Bird|Int> = m1
+
+res14 = m1 == m2

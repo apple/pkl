@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +21,11 @@ import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
@@ -63,15 +65,30 @@ class ProjectTest {
         mapOf("one" to "1"),
         listOf("foo:", "bar:").map(Pattern::compile),
         listOf("baz:", "biz:").map(Pattern::compile),
+        null,
         false,
         path.resolve("cache/"),
         listOf(path.resolve("modulepath1/"), path.resolve("modulepath2/")),
         Duration.ofMinutes(5.0),
         path,
+        null,
+        null,
         null
+      )
+    val expectedAnnotations =
+      listOf(
+        PObject(
+          PClassInfo.Deprecated,
+          mapOf("since" to "1.2", "message" to "do not use", "replaceWith" to "somethingElse")
+        ),
+        PObject(PClassInfo.Unlisted, mapOf()),
+        PObject(PClassInfo.ModuleInfo, mapOf("minPklVersion" to "0.26.0")),
       )
     projectPath.writeString(
       """
+      @Deprecated { since = "1.2"; message = "do not use"; replaceWith = "somethingElse" }
+      @Unlisted
+      @ModuleInfo { minPklVersion = "0.26.0" }
       amends "pkl:Project"
 
       evaluatorSettings {
@@ -136,6 +153,7 @@ class ProjectTest {
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
     assertThat(project.evaluatorSettings).isEqualTo(expectedSettings)
+    assertThat(project.annotations).isEqualTo(expectedAnnotations)
     assertThat(project.tests)
       .isEqualTo(listOf(path.resolve("test1.pkl"), path.resolve("test2.pkl")))
   }
@@ -187,5 +205,59 @@ class ProjectTest {
             .trimIndent()
         )
     }
+  }
+
+  @Test
+  fun `fails if project has cyclical dependencies`() {
+    val projectPath = javaClass.getResource("projectCycle1/PklProject")!!.toURI().toPath()
+    val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
+    val cleanMsg = e.message!!.replace(Regex("file:///.*/resources/test"), "file://")
+    assertThat(cleanMsg)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        Local project dependencies cannot be circular.
+        
+        Cycle:
+        ┌─>
+        │  file:///org/pkl/core/project/projectCycle2/PklProject
+        │
+        │  file:///org/pkl/core/project/projectCycle3/PklProject
+        └─
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `fails if a project has cyclical dependencies -- multiple cycles found`() {
+    val projectPath = javaClass.getResource("projectCycle4/PklProject")!!.toURI().toPath()
+    val e = assertThrows<PklException> { Project.loadFromPath(projectPath) }
+    val cleanMsg = e.message!!.replace(Regex("file://.*/resources/test"), "file://")
+    assertThat(cleanMsg)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        Local project dependencies cannot be circular.
+        
+        The following circular imports were found.
+        Not all of them are necessarily problematic.
+        The problematic cycles are those declared as local dependencies.
+        
+        Cycle 1:
+        ┌─>
+        │  file:///org/pkl/core/project/projectCycle2/PklProject
+        │
+        │  file:///org/pkl/core/project/projectCycle3/PklProject
+        └─
+        
+        Cycle 2:
+        ┌─>
+        │  file:///org/pkl/core/project/projectCycle4/PklProject
+        └─
+        
+        """
+          .trimIndent()
+      )
   }
 }

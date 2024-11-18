@@ -1,30 +1,32 @@
 [versions] # ordered alphabetically
 antlr = "4.+"
 assertj = "3.+" 
-checksumPlugin = "1.2.0"
-clikt = "3.5.1"
+checksumPlugin = "1.4.0"
+clikt = "3.+"
 commonMark = "0.+"
 downloadTaskPlugin = "5.6.0"
 geantyref = "1.+"
 googleJavaFormat = "1.21.0"
 # must not use `+` because used in download URL
-graalVm = "23.0.2"
-graalVmJdkVersion = "17.0.10"
+# 23.1.x requires JDK 20+
+graalVm = "23.0.6"
+graalVmJdkVersion = "17.0.12"
 # slightly hacky but convenient place so we remember to update the checksum
-graalVmSha256-macos-x64 = "14f4bd6417809905f86e786c779d0fc2feb840d7dac35ae3503eb25af0530da0"
-graalVmSha256-macos-aarch64 = "e944c5ce5da56e683fc8f1a57191b46d9cb702930b1688bda064fcf467d876b8"
-graalVmSha256-linux-x64 = "112dc9b92d81a946f1b5b334646151b790785c813e76fcf13527a319003d7e2c"
-graalVmSha256-linux-aarch64 = "c95ac550d070f06666cf8c1023a098380dd565be00866473caf6ff1b7cdf680c"
-graalVmSha256-windows-x64 = "1ab2291e71f54d73e3e57b7fccbf184cabcba37e16ca9d1cf42d08474a7c02f0"
-ideaExtPlugin = "1.1"
+graalVmSha256-macos-x64 = "3ecac1471f3fa95a56c5b75c65db9e60ac4551f56eda09eb9da95e6049ea77d7"
+graalVmSha256-macos-aarch64 = "4cdfdc6c9395f6773efcd191b6605f1b7c8e1b78ab900ab5cff34720a3feffc5"
+graalVmSha256-linux-x64 = "b6f3dace24cf1960ec790216f4c86f00d4f43df64e4e8b548f6382f04894713f"
+graalVmSha256-linux-aarch64 = "bd991d486b92deb74337b881e0f13a764c9c1e90fc358819080f7321fa5175e8"
+graalVmSha256-windows-x64 = "8b978e56dddc0edc60db99794b56975740d9c52293b31549cfc3f7516fc18b43"
+ideaExtPlugin = "1.1.9"
 javaPoet = "1.+"
 javaxInject = "1"
 jansi = "2.+"
 jimfs = "1.+"
-# 3.25.1 doesn't work with native image
+# later versions don't work with native image
+# (at least not without additional configuration; tested with 3.25.1 and 3.27.1)
 jline = "3.23.0"
 jmh = "1.+"
-jmhPlugin = "0.6.6"
+jmhPlugin = "0.7.2"
 jsr305 = "3.+"
 junit = "5.+"
 kotlin = "1.7.10"
@@ -38,15 +40,16 @@ ktfmt = "0.44"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
 log4j = "2.17.1"
-msgpack = "0.9.0"
-nexusPublishPlugin = "1.3.0"
+msgpack = "0.9.8"
+nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
 paguro = "3.+"
 shadowPlugin = "8.1.1"
 slf4j = "1.+"
-# Breaking change in snakeYaml 2.6 (removing DumpSettingsBuilder::setScalarResolver), so pin to 2.5
+# snakeYaml 2.6 removed DumpSettingsBuilder::setScalarResolver,
+# which is used by the external YAML renderer (org.pkl.core.YamlRenderer)
 snakeYaml = "2.5"
-spotlessPlugin = "6.11.0"
+spotlessPlugin = "6.25.0"
 wiremock = "3.+"
 
 [libraries] # ordered alphabetically

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,8 @@ public class ListSort {
           null,
           null,
           IoUtils.getCurrentWorkingDir(),
-          StackFrameTransformers.defaultTransformer);
+          StackFrameTransformers.defaultTransformer,
+          false);
   private static final List<Object> list = new ArrayList<>(100000);
 
   static {

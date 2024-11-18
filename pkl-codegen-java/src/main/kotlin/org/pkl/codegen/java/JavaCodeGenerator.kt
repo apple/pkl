@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,10 @@ import org.pkl.core.util.IoUtils
 
 class JavaCodeGeneratorException(message: String) : RuntimeException(message)
 
-data class JavaCodegenOptions(
+@kotlin.Deprecated("renamed to JavaCodeGeneratorOptions", ReplaceWith("JavaCodeGeneratorOptions"))
+typealias JavaCodegenOptions = JavaCodeGeneratorOptions
+
+data class JavaCodeGeneratorOptions(
   /** The characters to use for indenting generated Java code. */
   val indent: String = "  ",
 
@@ -84,7 +87,7 @@ data class JavaCodegenOptions(
 /** Entrypoint for the Java code generator API. */
 class JavaCodeGenerator(
   private val schema: ModuleSchema,
-  private val codegenOptions: JavaCodegenOptions
+  private val codegenOptions: JavaCodeGeneratorOptions
 ) {
 
   companion object {
@@ -221,6 +224,9 @@ class JavaCodeGenerator(
     val properties = renameIfReservedWord(pClass.properties).filterValues { !it.isHidden }
     val allProperties = superProperties + properties
 
+    fun PClass.Property.isRegex(): Boolean =
+      (this.type as? PType.Class)?.pClass?.info == PClassInfo.Regex
+
     fun addCtorParameter(
       builder: MethodSpec.Builder,
       propJavaName: String,
@@ -237,15 +243,14 @@ class JavaCodeGenerator(
       )
     }
 
-    fun generateConstructor(): MethodSpec {
+    fun generateConstructor(isInstantiable: Boolean): MethodSpec {
       val builder =
         MethodSpec.constructorBuilder()
           // choose most restrictive access modifier possible
           .addModifiers(
             when {
-              pClass.isAbstract -> Modifier.PROTECTED
-              allProperties.isNotEmpty() -> Modifier.PUBLIC // if `false`, has no state
-              pClass.isOpen -> Modifier.PROTECTED
+              isInstantiable -> Modifier.PUBLIC
+              pClass.isAbstract || pClass.isOpen -> Modifier.PROTECTED
               else -> Modifier.PRIVATE
             }
           )
@@ -284,9 +289,7 @@ class JavaCodeGenerator(
           .addStatement("\$T other = (\$T) obj", javaPoetClassName, javaPoetClassName)
 
       for ((propertyName, property) in allProperties) {
-        val accessor =
-          if ((property.type as? PType.Class)?.pClass?.info == PClassInfo.Regex) "\$N.pattern()"
-          else "\$N"
+        val accessor = if (property.isRegex()) "\$N.pattern()" else "\$N"
         builder.addStatement(
           "if (!\$T.equals(this.$accessor, other.$accessor)) return false",
           Objects::class.java,
@@ -307,9 +310,10 @@ class JavaCodeGenerator(
           .returns(Int::class.java)
           .addStatement("int result = 1")
 
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
+        val accessor = if (property.isRegex()) "this.\$N.pattern()" else "this.\$N"
         builder.addStatement(
-          "result = 31 * result + \$T.hashCode(this.\$N)",
+          "result = 31 * result + \$T.hashCode($accessor)",
           Objects::class.java,
           propertyName
         )
@@ -494,10 +498,6 @@ class JavaCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      builder.addAnnotation(
-        ClassName.get("org.springframework.boot.context.properties", "ConstructorBinding")
-      )
-
       if (isModuleClass) {
         builder.addAnnotation(
           ClassName.get("org.springframework.boot.context.properties", "ConfigurationProperties")
@@ -542,7 +542,11 @@ class JavaCodeGenerator(
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
 
-      if (codegenOptions.implementSerializable && !isModuleClass) {
+      // stateless final module classes are non-instantiable by choice
+      val isInstantiable =
+        !(pClass.isAbstract || (isModuleClass && !pClass.isOpen && allProperties.isEmpty()))
+
+      if (codegenOptions.implementSerializable && isInstantiable) {
         builder.addSuperinterface(java.io.Serializable::class.java)
         builder.addField(generateSerialVersionUIDField())
       }
@@ -574,7 +578,7 @@ class JavaCodeGenerator(
         generateSpringBootAnnotations(builder)
       }
 
-      builder.addMethod(generateConstructor())
+      builder.addMethod(generateConstructor(isInstantiable))
 
       superclass?.let { builder.superclass(it.toJavaPoetName()) }
 
@@ -590,12 +594,12 @@ class JavaCodeGenerator(
             builder.addMethod(generateGetter(name, property, isOverridden))
           }
         }
-        if (!pClass.isAbstract) {
+        if (isInstantiable) {
           builder.addMethod(generateWithMethod(name, property))
         }
       }
 
-      if (properties.isNotEmpty()) {
+      if (isInstantiable) {
         builder
           .addMethod(generateEqualsMethod())
           .addMethod(generateHashCodeMethod())

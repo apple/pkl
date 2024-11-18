@@ -306,7 +306,7 @@ public final class Mod {
       result = 31 * result + Objects.hashCode(this.container);
       result = 31 * result + Objects.hashCode(this.container2);
       result = 31 * result + Objects.hashCode(this.other);
-      result = 31 * result + Objects.hashCode(this.regex);
+      result = 31 * result + Objects.hashCode(this.regex.pattern());
       result = 31 * result + Objects.hashCode(this.any);
       result = 31 * result + Objects.hashCode(this.nonNull);
       result = 31 * result + Objects.hashCode(this._enum);

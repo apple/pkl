@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystemNotFoundException;
@@ -25,6 +26,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import javax.annotation.concurrent.GuardedBy;
+import org.pkl.core.Closeables;
+import org.pkl.core.externalreader.ExternalReaderProcess;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using module key factories. */
@@ -72,7 +78,33 @@ public final class ModuleKeyFactories {
     return new ClassPath(classLoader);
   }
 
-  /** Closes the given factories, ignoring any exceptions. */
+  /**
+   * Returns a factory for external reader module keys.
+   *
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
+   */
+  public static ModuleKeyFactory externalProcess(String scheme, ExternalReaderProcess process) {
+    return new ExternalProcess(scheme, process, 0);
+  }
+
+  /**
+   * Returns a factory for external reader module keys.
+   *
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
+   */
+  public static ModuleKeyFactory externalProcess(
+      String scheme, ExternalReaderProcess process, long evaluatorId) {
+    return new ExternalProcess(scheme, process, evaluatorId);
+  }
+
+  /**
+   * Closes the given factories, ignoring any exceptions.
+   *
+   * @deprecated Replaced by {@link Closeables#closeQuietly}.
+   */
+  @Deprecated(since = "0.27.0", forRemoval = true)
   public static void closeQuietly(Iterable<ModuleKeyFactory> factories) {
     for (ModuleKeyFactory factory : factories) {
       try {
@@ -87,7 +119,7 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (!uri.getScheme().equals("pkl")) return Optional.empty();
+      if (!uri.getScheme().equalsIgnoreCase("pkl")) return Optional.empty();
       return Optional.of(ModuleKeys.standardLibrary(uri));
     }
   }
@@ -101,10 +133,10 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (uri.getScheme().equals("modulepath")) {
+      if (uri.getScheme().equalsIgnoreCase("modulepath")) {
         return Optional.of(ModuleKeys.modulePath(uri, resolver));
       }
-      if (uri.getScheme().equals("jar")) {
+      if (uri.getScheme().equalsIgnoreCase("jar")) {
         try {
           // modulepaths that resolve to jar-file URIs will register a FileSystemProvider that
           // such that `Paths.get("jar:file")` returns a path.
@@ -133,7 +165,7 @@ public final class ModuleKeyFactories {
 
     @Override
     public Optional<ModuleKey> create(URI uri) {
-      if (!uri.getScheme().equals("modulepath")) return Optional.empty();
+      if (!uri.getScheme().equalsIgnoreCase("modulepath")) return Optional.empty();
       return Optional.of(ModuleKeys.classPath(uri, classLoader));
     }
   }
@@ -223,6 +255,49 @@ public final class ModuleKeyFactories {
       var factories = new ArrayList<ModuleKeyFactory>();
       loader.forEach(factories::add);
       INSTANCE = Collections.unmodifiableList(factories);
+    }
+  }
+
+  /** Represents a module from an external reader process. */
+  private static final class ExternalProcess implements ModuleKeyFactory {
+    private final String scheme;
+    private final ExternalReaderProcess process;
+    private final long evaluatorId;
+
+    @GuardedBy("this")
+    private ExternalModuleResolver resolver;
+
+    ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
+      this.scheme = scheme;
+      this.process = process;
+      this.evaluatorId = evaluatorId;
+    }
+
+    private synchronized ExternalModuleResolver getResolver()
+        throws ExternalReaderProcessException {
+      if (resolver != null) {
+        return resolver;
+      }
+
+      resolver = process.getModuleResolver(evaluatorId);
+      return resolver;
+    }
+
+    public Optional<ModuleKey> create(URI uri) throws ExternalReaderProcessException, IOException {
+      if (!scheme.equalsIgnoreCase(uri.getScheme())) return Optional.empty();
+
+      var spec = process.getModuleReaderSpec(scheme);
+      if (spec == null) {
+        throw new ExternalReaderProcessException(
+            ErrorMessages.create("externalReaderDoesNotSupportScheme", "module", scheme));
+      }
+
+      return Optional.of(ModuleKeys.externalResolver(uri, spec, getResolver()));
+    }
+
+    @Override
+    public void close() {
+      process.close();
     }
   }
 }

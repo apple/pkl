@@ -1,0 +1,9 @@
+/// A module from a deprecated package
+module deprecated.deprecated
+
+/// Old foo
+@Deprecated { replaceWith = "bar" }
+foo: Int = 1
+
+/// New bar
+bar: Int = 2

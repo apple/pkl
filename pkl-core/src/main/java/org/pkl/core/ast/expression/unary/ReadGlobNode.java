@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;
@@ -103,6 +104,8 @@ public abstract class ReadGlobNode extends AbstractReadNode {
           .evalError("invalidGlobPattern", globPattern)
           .withHint(e.getMessage())
           .build();
+    } catch (ExternalReaderProcessException e) {
+      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
   }
 }

@@ -7,7 +7,6 @@ Comma-separated list of URI patterns that determine which modules can be loaded 
 Patterns are matched against the beginning of module URIs.
 (File paths have been converted to `file:` URLs at this stage.)
 At least one pattern needs to match for a module to be loadable.
-Both source modules and transitive modules are subject to this check.
 ====
 
 [[allowed-resources]]
@@ -18,6 +17,19 @@ Default: `env:,prop:,package:,projectpackage:` +
 Comma-separated list of URI patterns that determine which external resources can be read.
 Patterns are matched against the beginning of resource URIs.
 At least one pattern needs to match for a resource to be readable.
+====
+
+[[color]]
+.--color
+[%collapsible]
+====
+Default: `auto` +
+When to format messages with ANSI color codes.
+Possible values:
+
+- `"never"`: Never format
+- `"auto"`: Format if `stdin`, `stdout`, or `stderr` are connected to a console.
+- `"always"`: Always format
 ====
 
 [[cache-dir]]

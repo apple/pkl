@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
@@ -50,7 +51,7 @@ public final class ResourceManager {
 
     resourceFactory =
         new VmObjectFactory<Resource>(BaseModule::getResourceClass)
-            .addProperty("uri", resource -> resource.getUri().toString())
+            .addProperty("uri", resource -> resource.uri().toString())
             .addProperty("text", Resource::getText)
             .addProperty("base64", Resource::getBase64);
   }
@@ -83,7 +84,10 @@ public final class ResourceManager {
           .withHint(e.getReason())
           .withOptionalLocation(readNode)
           .build();
-    } catch (SecurityManagerException | PackageLoadError | HttpClientInitException e) {
+    } catch (SecurityManagerException
+        | PackageLoadError
+        | HttpClientInitException
+        | ExternalReaderProcessException e) {
       throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
     }
     return resource;

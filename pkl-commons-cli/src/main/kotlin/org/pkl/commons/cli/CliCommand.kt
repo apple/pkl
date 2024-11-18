@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
@@ -108,12 +109,16 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   protected val allowedModules: List<Pattern> by lazy {
     cliOptions.allowedModules
-      ?: evaluatorSettings?.allowedModules ?: SecurityManagers.defaultAllowedModules
+      ?: evaluatorSettings?.allowedModules
+        ?: (SecurityManagers.defaultAllowedModules +
+        externalModuleReaders.keys.map { Pattern.compile("$it:") }.toList())
   }
 
   protected val allowedResources: List<Pattern> by lazy {
     cliOptions.allowedResources
-      ?: evaluatorSettings?.allowedResources ?: SecurityManagers.defaultAllowedResources
+      ?: evaluatorSettings?.allowedResources
+        ?: (SecurityManagers.defaultAllowedResources +
+        externalResourceReaders.keys.map { Pattern.compile("$it:") }.toList())
   }
 
   protected val rootDir: Path? by lazy {
@@ -159,6 +164,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
+  protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
+
   private val proxyAddress by lazy {
     cliOptions.httpProxy
       ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
@@ -167,6 +174,25 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   private val noProxy by lazy {
     cliOptions.httpNoProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+  }
+
+  private val externalModuleReaders by lazy {
+    (project?.evaluatorSettings?.externalModuleReaders
+      ?: emptyMap()) + cliOptions.externalModuleReaders
+  }
+
+  private val externalResourceReaders by lazy {
+    (project?.evaluatorSettings?.externalResourceReaders
+      ?: emptyMap()) + cliOptions.externalResourceReaders
+  }
+
+  private val externalProcesses by lazy {
+    // Share ExternalReaderProcess instances between configured external resource/module readers
+    // with the same spec. This avoids spawning multiple subprocesses if the same reader implements
+    // both reader types and/or multiple schemes.
+    (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
+      ExternalReaderProcess.of(it)
+    }
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
@@ -213,6 +239,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {
+      externalModuleReaders.forEach { (key, value) ->
+        add(ModuleKeyFactories.externalProcess(key, externalProcesses[value]!!))
+      }
       add(ModuleKeyFactories.standardLibrary)
       add(ModuleKeyFactories.modulePath(modulePathResolver))
       add(ModuleKeyFactories.pkg)
@@ -234,6 +263,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ResourceReaders.file())
       add(ResourceReaders.http())
       add(ResourceReaders.https())
+      externalResourceReaders.forEach { (key, value) ->
+        add(ResourceReaders.externalProcess(key, externalProcesses[value]!!))
+      }
     }
   }
 
@@ -254,6 +286,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setEnvironmentVariables(environmentVariables)
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
       .addResourceReaders(resourceReaders(modulePathResolver))
+      .setColor(useColor)
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)

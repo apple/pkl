@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.cli.commands.AnalyzeCommand
 import org.pkl.cli.commands.EvalCommand
 import org.pkl.cli.commands.RootCommand
 import org.pkl.commons.writeString
@@ -34,7 +35,8 @@ import org.pkl.commons.writeString
 class CliMainTest {
 
   private val evalCmd = EvalCommand("")
-  private val cmd = RootCommand("pkl", "pkl version 1", "").subcommands(evalCmd)
+  private val analyzeCommand = AnalyzeCommand("")
+  private val cmd = RootCommand("pkl", "pkl version 1", "").subcommands(evalCmd, analyzeCommand)
 
   @Test
   fun `duplicate CLI option produces meaningful error message`(@TempDir tempDir: Path) {

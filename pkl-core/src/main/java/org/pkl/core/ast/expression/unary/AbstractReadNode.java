@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
@@ -75,6 +76,8 @@ public abstract class AbstractReadNode extends UnaryExpressionNode {
           .build();
     } catch (PackageLoadError | SecurityManagerException e) {
       throw exceptionBuilder().withCause(e).build();
+    } catch (ExternalReaderProcessException e) {
+      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
 
     if (!resolvedUri.isAbsolute()) {

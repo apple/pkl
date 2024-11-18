@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
+import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.Nullable;
 
 public final class StackTraceRenderer {
@@ -28,66 +30,69 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(List<StackFrame> frames, @Nullable String hint, StringBuilder builder) {
+  public void render(List<StackFrame> frames, @Nullable String hint, AnsiStringBuilder out) {
     var compressed = compressFrames(frames);
-    doRender(compressed, hint, builder, "", true);
+    doRender(compressed, hint, out, "", true);
   }
 
   // non-private for testing
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
-      StringBuilder builder,
+      AnsiStringBuilder out,
       String leftMargin,
       boolean isFirstElement) {
     for (var frame : frames) {
       if (frame instanceof StackFrameLoop loop) {
         // ensure a cycle of length 1 doesn't get rendered as a loop
         if (loop.count == 1) {
-          doRender(loop.frames, null, builder, leftMargin, isFirstElement);
+          doRender(loop.frames, null, out, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
-            builder.append(leftMargin).append("\n");
+            out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
           }
-          builder.append(leftMargin).append("┌─ ").append(loop.count).append(" repetitions of:\n");
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+              .append(AnsiTheme.STACK_TRACE_MARGIN, "┌─ ")
+              .append(AnsiTheme.STACK_TRACE_LOOP_COUNT, loop.count)
+              .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
-          doRender(loop.frames, null, builder, newLeftMargin, isFirstElement);
+          doRender(loop.frames, null, out, newLeftMargin, isFirstElement);
           if (isFirstElement) {
-            renderHint(hint, builder, newLeftMargin);
+            renderHint(hint, out, newLeftMargin);
             isFirstElement = false;
           }
-          builder.append(leftMargin).append("└─\n");
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
         }
       } else {
         if (!isFirstElement) {
-          builder.append(leftMargin).append('\n');
+          out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
         }
-        renderFrame((StackFrame) frame, builder, leftMargin);
+        renderFrame((StackFrame) frame, out, leftMargin);
       }
 
       if (isFirstElement) {
-        renderHint(hint, builder, leftMargin);
+        renderHint(hint, out, leftMargin);
         isFirstElement = false;
       }
     }
   }
 
-  private void renderFrame(StackFrame frame, StringBuilder builder, String leftMargin) {
+  private void renderFrame(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
     var transformed = frameTransformer.apply(frame);
-    renderSourceLine(transformed, builder, leftMargin);
-    renderSourceLocation(transformed, builder, leftMargin);
+    renderSourceLine(transformed, out, leftMargin);
+    renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(@Nullable String hint, StringBuilder builder, String leftMargin) {
+  private void renderHint(@Nullable String hint, AnsiStringBuilder out, String leftMargin) {
     if (hint == null || hint.isEmpty()) return;
 
-    builder.append('\n');
-    builder.append(leftMargin);
-    builder.append(hint);
-    builder.append('\n');
+    out.append('\n')
+        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.ERROR_MESSAGE_HINT, hint)
+        .append('\n');
   }
 
-  private void renderSourceLine(StackFrame frame, StringBuilder builder, String leftMargin) {
+  private void renderSourceLine(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
@@ -98,27 +103,27 @@ public final class StackTraceRenderer {
             : sourceLine.length();
 
     var prefix = frame.getStartLine() + " | ";
-    builder.append(leftMargin).append(prefix).append(sourceLine).append('\n');
-    builder.append(leftMargin);
-    //noinspection StringRepeatCanBeUsed
-    for (int i = 1; i < prefix.length() + startColumn; i++) {
-      builder.append(' ');
-    }
-    //noinspection StringRepeatCanBeUsed
-    for (int i = startColumn; i <= endColumn; i++) {
-      builder.append('^');
-    }
-    builder.append('\n');
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(AnsiTheme.STACK_TRACE_LINE_NUMBER, prefix)
+        .append(sourceLine)
+        .append('\n')
+        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(" ".repeat(prefix.length() + startColumn - 1))
+        .append(AnsiTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
+        .append('\n');
   }
 
-  private void renderSourceLocation(StackFrame frame, StringBuilder builder, String leftMargin) {
-    builder.append(leftMargin).append("at ");
-    if (frame.getMemberName() != null) {
-      builder.append(frame.getMemberName());
-    } else {
-      builder.append("<unknown>");
-    }
-    builder.append(" (").append(frame.getModuleUri()).append(')').append('\n');
+  private void renderSourceLocation(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
+    out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
+        .append(
+            AnsiTheme.STACK_FRAME,
+            () ->
+                out.append("at ")
+                    .append(frame.getMemberName() != null ? frame.getMemberName() : "<unknown>")
+                    .append(" (")
+                    .appendUntrusted(frame.getModuleUri())
+                    .append(")")
+                    .append('\n'));
   }
 
   /**
@@ -126,15 +131,7 @@ public final class StackTraceRenderer {
    * former is public API and the latter isn't.
    */
   // non-private for testing
-  static class StackFrameLoop {
-    final List<Object /*StackFrame|StackFrameLoop*/> frames;
-    final int count;
-
-    StackFrameLoop(List<Object> frames, int count) {
-      this.count = count;
-      this.frames = frames;
-    }
-  }
+  record StackFrameLoop(List<Object /*StackFrame|StackFrameLoop*/> frames, int count) {}
 
   // non-private for testing
   static List<Object /*StackFrame|StackFrameLoop*/> compressFrames(List<StackFrame> frames) {

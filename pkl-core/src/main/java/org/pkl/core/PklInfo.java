@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,20 +41,12 @@ public final class PklInfo {
     return packageIndex;
   }
 
-  /** A Pkl package index. */
-  public static final class PackageIndex {
-    private final String homepage;
-
-    /** Constructs a {@link PackageIndex}. */
-    public PackageIndex(String homepage) {
-      this.homepage = homepage;
-    }
-
-    /** The homepage of this package index. */
-    public String homepage() {
-      return homepage;
-    }
-
+  /**
+   * A Pkl package index.
+   *
+   * @param homepage The homepage of this package index.
+   */
+  public record PackageIndex(String homepage) {
     /** Returns the homepage of the given package. */
     public String getPackagePage(String packageName, String packageVersion) {
       return homepage + packageName + "/" + packageVersion + "/";

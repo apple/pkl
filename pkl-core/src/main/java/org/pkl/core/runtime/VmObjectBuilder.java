@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,10 @@ import org.pkl.core.util.EconomicMaps;
 public final class VmObjectBuilder {
   private final EconomicMap<Object, ObjectMember> members;
   private int elementCount = 0;
+
+  public VmObjectBuilder() {
+    members = EconomicMaps.create();
+  }
 
   public VmObjectBuilder(int initialSize) {
     members = EconomicMaps.create(initialSize);

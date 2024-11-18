@@ -9,8 +9,8 @@ The first element of the array is a code that designates the message's type, enc
 The second element of the array is the message body, encoded as a map.
 
 Messages are passed between the _client_ and the _server_.
-The _client_ is the host language (for example, the Swift application when using pkl-swift).
-The _server_ is the entity that provides controls for interacting with Pkl.
+When hosting Pkl (for example, the Swift application when using pkl-swift), the _client_ is the host program and the _server_ is the entity that provides controls for interacting with Pkl.
+When implementing an xref:language-reference:index.adoc#external-readers[external reader], the _client_ is the external reader process and the _server_ is the Pkl evaluator.
 
 For example, in JSON representation:
 
@@ -596,4 +596,97 @@ class PathElement {
   /// Tells whether the element is a directory.
   isDirectory: Boolean
 }
+----
+
+[[initialize-module-reader-request]]
+=== Initialize Module Reader Request
+
+Code: `0x2e` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+Initialize an xref:language-reference:index.adoc#external-readers[External Module Reader].
+This message is sent to external reader processes the first time a module scheme it is registered for is read.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// The module scheme to initialize.
+scheme: String
+----
+
+[[initialize-module-reader-response]]
+=== Initialize Module Reader Response
+
+Code: `0x2f` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+Return the requested external module reader specification.
+The `spec` field should be set to `null` when the external process does not implement the requested module scheme.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// Client-side module reader spec.
+///
+/// Null when the external process does not implement the requested module scheme.
+spec: ClientModuleReader?
+----
+
+`ClientModuleReader` is defined above by <<create-evaluator-request,Create Evaluator Request>>.
+
+[[initialize-resource-reader-request]]
+=== Initialize Resource Reader Request
+
+Code: `0x30` +
+Type: <<server-message,Server>> <<request-message,Request>>
+
+Initialize an xref:language-reference:index.adoc#external-readers[External Resource Reader].
+This message is sent to external reader processes the first time a resource scheme it is registered for is read.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// The resource scheme to initialize.
+scheme: String
+----
+
+[[initialize-resource-reader-response]]
+=== Initialize Resource Reader Response
+
+Code: `0x31` +
+Type: <<client-message,Client>> <<response-message,Response>>
+
+Return the requested external resource reader specification.
+The `spec` field should be set to `null` when the external process does not implement the requested resource scheme.
+
+[source,pkl]
+----
+/// A number identifying this request.
+requestId: Int
+
+/// Client-side resource reader spec.
+///
+/// Null when the external process does not implement the requested resource scheme.
+spec: ClientResourceReader?
+----
+
+`ClientResourceReader` is defined above by <<create-evaluator-request,Create Evaluator Request>>. 
+
+[[close-external-process]]
+=== Close External Process
+
+Code: `0x32` +
+Type: <<server-message,Server>> <<one-way-message,One Way>> 
+
+Initiate graceful shutdown of the external reader process.
+
+[source,pkl]
+----
+/// This message has no properties.
 ----

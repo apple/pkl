@@ -19,7 +19,26 @@ evaluatorSettings {
     ["two"] = "2"
   }
   moduleCacheDir = "my-cache-dir/"
+  color = "always"
   noCache = false
   rootDir = "my-root-dir/"
   timeout = 5.min
+  externalModuleReaders {
+    ["scheme1"] {
+      executable = "reader1"
+    }
+    ["scheme2"] {
+      executable = "reader2"
+      arguments { "with"; "args" }
+    }
+  }
+  externalResourceReaders {
+    ["scheme3"] {
+      executable = "reader3"
+    }
+    ["scheme4"] {
+      executable = "reader4"
+      arguments { "with"; "args" }
+    }
+  }
 }

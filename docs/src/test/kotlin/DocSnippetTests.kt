@@ -22,10 +22,10 @@ import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
-import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
 import org.antlr.v4.runtime.ParserRuleContext
 import org.pkl.core.http.HttpClient
+import org.pkl.core.resource.ResourceReaders
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
@@ -96,7 +96,8 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
       null,
       null,
       IoUtils.getCurrentWorkingDir(),
-      StackFrameTransformers.defaultTransformer
+      StackFrameTransformers.defaultTransformer,
+      false,
     )
     return ExecutionContext(replServer)
   }

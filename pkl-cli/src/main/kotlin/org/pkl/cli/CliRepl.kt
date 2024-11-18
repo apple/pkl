@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,8 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
           project?.dependencies,
           options.outputFormat,
           options.base.normalizedWorkingDir,
-          stackFrameTransformer
+          stackFrameTransformer,
+          options.base.color?.hasColor() ?: false,
         )
       Repl(options.base.normalizedWorkingDir, server).run()
     }

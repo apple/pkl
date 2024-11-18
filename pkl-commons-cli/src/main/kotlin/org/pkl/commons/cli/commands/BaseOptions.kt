@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import com.github.ajalt.clikt.parameters.types.path
@@ -28,6 +29,9 @@ import java.time.Duration
 import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.shlex
+import org.pkl.core.evaluatorSettings.Color
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
@@ -73,6 +77,17 @@ class BaseOptions : OptionGroup() {
         }
         .multiple()
         .toMap()
+    }
+
+    fun OptionWithValues<String?, String, String>.parseExternalReader(
+      delimiter: String
+    ): OptionWithValues<
+      Pair<String, ExternalReader>?, Pair<String, ExternalReader>, Pair<String, ExternalReader>
+    > {
+      return splitPair(delimiter).convert {
+        val cmd = shlex(it.second)
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+      }
     }
   }
 
@@ -127,6 +142,17 @@ class BaseOptions : OptionGroup() {
         help = "External property to set (repeatable)."
       )
       .associateProps()
+
+  val color: Color by
+    option(
+        names = arrayOf("--color"),
+        metavar = "<when>",
+        help =
+          "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'."
+      )
+      .enum<Color> { it.name.lowercase() }
+      .single()
+      .default(Color.AUTO)
 
   val noCache: Boolean by
     option(names = arrayOf("--no-cache"), help = "Disable caching of packages")
@@ -207,6 +233,26 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val externalModuleReaders: Map<String, ExternalReader> by
+    option(
+        names = arrayOf("--external-module-reader"),
+        metavar = "<scheme>='<executable>[ <arguments>]'",
+        help = "External reader registrations for module URI schemes"
+      )
+      .parseExternalReader("=")
+      .multiple()
+      .toMap()
+
+  val externalResourceReaders: Map<String, ExternalReader> by
+    option(
+        names = arrayOf("--external-resource-reader"),
+        metavar = "<scheme>='<executable>[ <arguments>]'",
+        help = "External reader registrations for resource URI schemes"
+      )
+      .parseExternalReader("=")
+      .multiple()
+      .toMap()
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -232,6 +278,7 @@ class BaseOptions : OptionGroup() {
       projectDir = projectOptions?.projectDir,
       timeout = timeout,
       moduleCacheDir = cacheDir ?: defaults.normalizedModuleCacheDir,
+      color = color,
       noCache = noCache,
       testMode = testMode,
       testPort = testPort,
@@ -239,7 +286,9 @@ class BaseOptions : OptionGroup() {
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
       httpProxy = proxy,
-      httpNoProxy = noProxy ?: emptyList()
+      httpNoProxy = noProxy ?: emptyList(),
+      externalModuleReaders = externalModuleReaders,
+      externalResourceReaders = externalResourceReaders,
     )
   }
 }

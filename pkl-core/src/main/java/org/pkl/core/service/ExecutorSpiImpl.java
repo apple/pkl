@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,17 +115,27 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
             .setTimeout(options.getTimeout())
             .setOutputFormat(options.getOutputFormat())
             .setModuleCacheDir(options.getModuleCacheDir());
-    if (options.getProjectDir() != null) {
-      var project = Project.loadFromPath(options.getProjectDir().resolve(PKL_PROJECT_FILENAME));
-      builder.setProjectDependencies(project.getDependencies());
-    }
 
-    try (var evaluator = builder.build()) {
-      return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+    try {
+      if (options.getProjectDir() != null) {
+        var project =
+            Project.loadFromPath(
+                options.getProjectDir().resolve(PKL_PROJECT_FILENAME),
+                securityManager,
+                null,
+                transformer,
+                options.getEnvironmentVariables());
+        builder.setProjectDependencies(project.getDependencies());
+      }
+
+      try (var evaluator = builder.build()) {
+        return evaluator.evaluateOutputText(ModuleSource.path(modulePath));
+      }
     } catch (PklException e) {
       throw new ExecutorSpiException(e.getMessage(), e.getCause());
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.getModuleKeyFactories());
+      Closeables.closeQuietly(builder.getModuleKeyFactories());
+      Closeables.closeQuietly(builder.getResourceReaders());
     }
   }
 

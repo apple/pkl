@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.toPath
 import org.pkl.core.*
-import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.packages.*
 
 /**
@@ -50,7 +49,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
       sourceCodeUrlScheme =
         if (options.isTestMode)
           "https://github.com/apple/pkl/blob/0.24.0/stdlib%{path}#L%{line}-L%{endLine}"
-        else Release.current().sourceCode().sourceCodeUrlScheme,
+        else Release.current().sourceCode().sourceCodeUrlScheme(),
       documentation =
         if (options.isTestMode) URI("https://pages.github.com/apple/pkl/stdlib/pkl/0.24.0/")
         else
@@ -108,7 +107,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
       overview = metadata.description,
       extraAttributes = mapOf("Checksum" to checksum.sha256),
       sourceCode = metadata.sourceCode,
-      sourceCodeUrlScheme = metadata.sourceCodeUrlScheme
+      sourceCodeUrlScheme = metadata.sourceCodeUrlScheme,
+      annotations = metadata.annotations,
     )
   }
 
@@ -249,7 +249,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
         importedModules[pklBaseUri] = evaluator.evaluateSchema(ModuleSource.uri(pklBaseUri))
       }
     } finally {
-      ModuleKeyFactories.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.moduleKeyFactories)
+      Closeables.closeQuietly(builder.resourceReaders)
     }
 
     val versions = mutableMapOf<String, Version>()

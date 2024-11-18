@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,10 @@ import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
 
-data class KotlinCodegenOptions(
+@Deprecated("renamed to KotlinCodeGeneratorOptions", ReplaceWith("KotlinCodeGeneratorOptions"))
+typealias KotlinCodegenOptions = KotlinCodeGeneratorOptions
+
+data class KotlinCodeGeneratorOptions(
   /** The characters to use for indenting generated Kotlin code. */
   val indent: String = "  ",
 
@@ -55,22 +58,9 @@ class KotlinCodeGenerator(
   private val moduleSchema: ModuleSchema,
 
   /** The options to use for the code generator */
-  private val options: KotlinCodegenOptions,
+  private val options: KotlinCodeGeneratorOptions,
 ) {
   companion object {
-    // Prevent class name from being replaced with shaded name
-    // when pkl-codegen-kotlin is shaded and embedded in pkl-tools
-    // (requires circumventing kotlinc constant folding).
-    private val KOTLIN_TEXT_PACKAGE_NAME = buildString {
-      append("kot")
-      append("lin.")
-      append("text")
-    }
-
-    // `StringBuilder::class.asClassName()` generates "java.lang.StringBuilder",
-    // apparently because `StringBuilder` is an `expect class`.
-    private val STRING_BUILDER = ClassName(KOTLIN_TEXT_PACKAGE_NAME, "StringBuilder")
-
     private val STRING = String::class.asClassName()
     private val ANY_NULL = ANY.copy(nullable = true)
     private val NOTHING = Nothing::class.asClassName()
@@ -138,50 +128,56 @@ class KotlinCodeGenerator(
 
       val pModuleClass = moduleSchema.moduleClass
 
-      val hasProperties = pModuleClass.properties.any { !it.value.isHidden }
-      val isGenerateClass = hasProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+      val hasModuleProperties = pModuleClass.properties.any { !it.value.isHidden }
+      val isGenerateModuleClass =
+        hasModuleProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+
+      fun generateCompanionRelatedCode(
+        builder: TypeSpec.Builder,
+        isModuleType: Boolean = false
+      ): TypeSpec.Builder {
+        // ensure that at most one companion object is generated for this type
+        val companionObjectBuilder: Lazy<TypeSpec.Builder> = lazy {
+          TypeSpec.companionObjectBuilder()
+        }
+
+        // generate serialization code
+        if (
+          options.implementSerializable &&
+            (!isModuleType || isGenerateModuleClass) &&
+            !builder.modifiers.contains(KModifier.ABSTRACT)
+        ) {
+          builder.addSuperinterface(java.io.Serializable::class.java)
+          companionObjectBuilder.value.addProperty(
+            PropertySpec.builder(
+                "serialVersionUID",
+                Long::class.java,
+                KModifier.PRIVATE,
+                KModifier.CONST
+              )
+              .initializer("0L")
+              .build()
+          )
+        }
+
+        if (companionObjectBuilder.isInitialized()) {
+          builder.addType(companionObjectBuilder.value.build())
+        }
+
+        return builder
+      }
+
       val moduleType =
-        if (isGenerateClass) {
+        if (isGenerateModuleClass) {
           generateTypeSpec(pModuleClass, moduleSchema)
         } else {
           generateObjectSpec(pModuleClass)
         }
 
       for (pClass in moduleSchema.classes.values) {
-        moduleType.addType(generateTypeSpec(pClass, moduleSchema).ensureSerializable().build())
-      }
-
-      // generate append method for module classes w/o parent class; reuse in subclasses and nested
-      // classes
-      val isGenerateAppendPropertyMethod =
-        // check if we can inherit someone else's append method
-        pModuleClass.superclass!!.info == PClassInfo.Module &&
-          // check if anyone is (potentially) going to use our append method
-          (pModuleClass.isOpen ||
-            pModuleClass.isAbstract ||
-            (hasProperties && !moduleType.modifiers.contains(KModifier.DATA)) ||
-            moduleType.typeSpecs.any { !it.modifiers.contains(KModifier.DATA) })
-
-      if (isGenerateAppendPropertyMethod) {
-        val appendPropertyMethodModifier =
-          if (pModuleClass.isOpen || pModuleClass.isAbstract) {
-            // alternative is `@JvmStatic protected`
-            // (`protected` alone isn't sufficient as of Kotlin 1.6)
-            KModifier.PUBLIC
-          } else KModifier.PRIVATE
-        if (isGenerateClass) {
-          moduleType.addType(
-            TypeSpec.companionObjectBuilder()
-              .addFunction(
-                appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-              )
-              .build()
-          )
-        } else { // kotlin object
-          moduleType.addFunction(
-            appendPropertyMethod().addModifiers(appendPropertyMethodModifier).build()
-          )
-        }
+        moduleType.addType(
+          generateCompanionRelatedCode(generateTypeSpec(pClass, moduleSchema)).build()
+        )
       }
 
       val moduleName = moduleSchema.moduleName
@@ -206,7 +202,7 @@ class KotlinCodeGenerator(
         }
       }
 
-      fileSpec.addType(moduleType.build())
+      fileSpec.addType(generateCompanionRelatedCode(moduleType, isModuleType = true).build())
       return fileSpec.build().toString()
     }
 
@@ -230,8 +226,6 @@ class KotlinCodeGenerator(
 
     fun PClass.Property.isRegex(): Boolean =
       (this.type as? PType.Class)?.pClass?.info == PClassInfo.Regex
-
-    val containRegexProperty = properties.values.any { it.isRegex() }
 
     fun generateConstructor(): FunSpec {
       val builder = FunSpec.constructorBuilder()
@@ -260,23 +254,28 @@ class KotlinCodeGenerator(
       }
 
       val codeBuilder = CodeBlock.builder().add("return %T(", kotlinPoetClassName)
-      var firstProperty = true
-      for (name in allProperties.keys) {
-        if (firstProperty) {
-          codeBuilder.add("%N", name)
-          firstProperty = false
-        } else {
-          codeBuilder.add(", %N", name)
-        }
+      for ((index, name) in allProperties.keys.withIndex()) {
+        codeBuilder.add(if (index == 0) "%N" else ", %N", name)
       }
       codeBuilder.add(")\n")
 
       return methodBuilder.addCode(codeBuilder.build()).build()
     }
 
+    fun inheritsCopyMethodWithSameArity(): Boolean {
+      val nearestNonAbstractAncestor =
+        generateSequence(pClass.superclass) { it.superclass }.firstOrNull { !it.isAbstract }
+          ?: return false
+      return nearestNonAbstractAncestor.allProperties.values.count { !it.isHidden } ==
+        allProperties.size
+    }
+
     // besides generating copy method for current class,
     // override copy methods inherited from parent classes
     fun generateCopyMethods(typeBuilder: TypeSpec.Builder) {
+      // copy methods don't make sense for abstract classes
+      if (pClass.isAbstract) return
+
       var prevParameterCount = Int.MAX_VALUE
       for (currClass in generateSequence(pClass) { it.superclass }) {
         if (currClass.isAbstract) continue
@@ -285,7 +284,7 @@ class KotlinCodeGenerator(
 
         // avoid generating multiple methods with same no. of parameters
         if (currParameters.size < prevParameterCount) {
-          val isOverride = currClass !== pClass || superclass != null && properties.isEmpty()
+          val isOverride = currClass !== pClass || inheritsCopyMethodWithSameArity()
           typeBuilder.addFunction(generateCopyMethod(currParameters, isOverride))
           prevParameterCount = currParameters.size
         }
@@ -323,11 +322,12 @@ class KotlinCodeGenerator(
           .returns(INT)
           .addStatement("var result = 1")
 
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
+        val accessor = if (property.isRegex()) "this.%N.pattern" else "this.%N"
         // use Objects.hashCode() because Kotlin's Any?.hashCode()
         // doesn't work for platform types (will get NPE if null)
         builder.addStatement(
-          "result = 31 * result + %T.hashCode(this.%N)",
+          "result = 31 * result + %T.hashCode($accessor)",
           Objects::class,
           propertyName
         )
@@ -337,35 +337,27 @@ class KotlinCodeGenerator(
       return builder.build()
     }
 
+    // produce same output as default toString() method of data classes
     fun generateToStringMethod(): FunSpec {
-      val builder = FunSpec.builder("toString").addModifiers(KModifier.OVERRIDE).returns(STRING)
-
-      var builderSize = 50
-      val appendBuilder = CodeBlock.builder()
-      for (propertyName in allProperties.keys) {
-        builderSize += 50
-        appendBuilder.addStatement(
-          "appendProperty(builder, %S, this.%N)",
-          propertyName,
-          propertyName
-        )
-      }
-
-      builder
-        .addStatement("val builder = %T(%L)", STRING_BUILDER, builderSize)
+      return FunSpec.builder("toString")
+        .addModifiers(KModifier.OVERRIDE)
+        .returns(STRING)
         .addStatement(
-          // generate `::class.java.simpleName` instead of `::class.simpleName`
-          // to avoid making user code depend on kotlin-reflect
-          "builder.append(%T::class.java.simpleName).append(\" {\")",
-          kotlinPoetClassName
+          "return %P",
+          CodeBlock.builder()
+            .apply {
+              add("%L", pClass.toKotlinPoetName().simpleName)
+              add("(")
+              for ((index, propertyName) in allProperties.keys.withIndex()) {
+                add(if (index == 0) "%L" else ", %L", propertyName)
+                add("=$")
+                add("%N", propertyName)
+              }
+              add(")")
+            }
+            .build()
         )
-        .addCode(appendBuilder.build())
-        // not using %S here because it generates `"\n" + "{"`
-        // with a line break in the generated code after `+`
-        .addStatement("builder.append(\"\\n}\")")
-        .addStatement("return builder.toString()")
-
-      return builder.build()
+        .build()
     }
 
     fun generateDeprecation(
@@ -402,10 +394,6 @@ class KotlinCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      builder.addAnnotation(
-        ClassName("org.springframework.boot.context.properties", "ConstructorBinding")
-      )
-
       if (isModuleClass) {
         builder.addAnnotation(
           ClassName("org.springframework.boot.context.properties", "ConfigurationProperties")
@@ -474,12 +462,13 @@ class KotlinCodeGenerator(
         builder.addProperty(generateProperty(name, property))
       }
 
-      generateCopyMethods(builder)
-
-      builder
-        .addFunction(generateEqualsMethod())
-        .addFunction(generateHashCodeMethod())
-        .addFunction(generateToStringMethod())
+      if (!pClass.isAbstract) {
+        generateCopyMethods(builder)
+        builder
+          .addFunction(generateEqualsMethod())
+          .addFunction(generateHashCodeMethod())
+          .addFunction(generateToStringMethod())
+      }
 
       return builder
     }
@@ -500,15 +489,17 @@ class KotlinCodeGenerator(
         builder.addKdoc(renderAsKdoc(docComment))
       }
 
+      var hasRegex = false
       for ((name, property) in properties) {
+        hasRegex = hasRegex || property.isRegex()
         builder.addProperty(generateProperty(name, property))
       }
 
-      // Regex requires special approach when compared to another Regex
-      // So we need to override `.equals` method even for kotlin's `data class`es if
-      // any of the properties is of Regex type
-      if (containRegexProperty) {
-        builder.addFunction(generateEqualsMethod())
+      // kotlin.text.Regex (and java.util.regex.Pattern) defines equality as identity.
+      // To match Pkl semantics and compare regexes by their String pattern,
+      // override equals and hashCode if the data class has a property of type Regex.
+      if (hasRegex) {
+        builder.addFunction(generateEqualsMethod()).addFunction(generateHashCodeMethod())
       }
 
       return builder
@@ -516,44 +507,6 @@ class KotlinCodeGenerator(
 
     return if (superclass == null && !pClass.isAbstract && !pClass.isOpen) generateDataClass()
     else generateRegularClass()
-  }
-
-  private fun TypeSpec.Builder.ensureSerializable(): TypeSpec.Builder {
-    if (!options.implementSerializable) {
-      return this
-    }
-
-    if (!this.superinterfaces.containsKey(java.io.Serializable::class.java.asTypeName())) {
-      this.addSuperinterface(java.io.Serializable::class.java)
-    }
-
-    var useExistingCompanionBuilder = false
-    val companionBuilder =
-      this.typeSpecs
-        .find { it.isCompanion }
-        ?.let {
-          useExistingCompanionBuilder = true
-          it.toBuilder(TypeSpec.Kind.OBJECT)
-        }
-        ?: TypeSpec.companionObjectBuilder()
-
-    if (!companionBuilder.propertySpecs.any { it.name == "serialVersionUID" })
-      companionBuilder.addProperty(
-        PropertySpec.builder(
-            "serialVersionUID",
-            Long::class.java,
-            KModifier.PRIVATE,
-            KModifier.CONST
-          )
-          .initializer("0L")
-          .build()
-      )
-
-    if (!useExistingCompanionBuilder) {
-      this.addType(companionBuilder.build())
-    }
-
-    return this
   }
 
   private fun generateEnumTypeSpec(
@@ -626,18 +579,6 @@ class KotlinCodeGenerator(
   // do the minimum work necessary to avoid kotlin compile errors
   // generating idiomatic KDoc would require parsing doc comments, converting member links, etc.
   private fun renderAsKdoc(docComment: String): String = docComment
-
-  private fun appendPropertyMethod() =
-    FunSpec.builder("appendProperty")
-      .addParameter("builder", STRING_BUILDER)
-      .addParameter("name", STRING)
-      .addParameter("value", ANY_NULL)
-      .addStatement("builder.append(\"\\n  \").append(name).append(\" = \")")
-      .addStatement("val lines = value.toString().split(\"\\n\")")
-      .addStatement("builder.append(lines[0])")
-      .beginControlFlow("for (i in 1..lines.lastIndex)")
-      .addStatement("builder.append(\"\\n  \").append(lines[i])")
-      .endControlFlow()
 
   private fun PClass.toKotlinPoetName(): ClassName {
     val (packageName, moduleTypeName) = nameMapper.map(moduleName)

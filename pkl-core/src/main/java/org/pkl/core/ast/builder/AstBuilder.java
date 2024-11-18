@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +55,7 @@ import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.*;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -721,12 +722,22 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable TypeAnnotationContext typeAnnCtx,
       @Nullable ExprContext exprCtx,
       @Nullable List<? extends ObjectBodyContext> bodyCtx) {
-
+    var modifiers =
+        doVisitModifiers(
+            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier");
+    if (VmModifier.isConst(modifiers) && !VmModifier.isLocal(modifiers)) {
+      @SuppressWarnings("OptionalGetWithoutIsPresent")
+      var constModifierCtx =
+          modifierCtxs.stream().filter((it) -> it.CONST() != null).findFirst().get();
+      throw exceptionBuilder()
+          .evalError("invalidConstObjectMemberModifier")
+          .withSourceSection(createSourceSection(constModifierCtx))
+          .build();
+    }
     return doVisitObjectProperty(
         createSourceSection(ctx),
         createSourceSection(propertyName),
-        doVisitModifiers(
-            modifierCtxs, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier"),
+        modifiers,
         propertyName.getText(),
         typeAnnCtx,
         exprCtx,
@@ -889,8 +900,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpreadContext ctx) {
-    return GeneratorSpreadNodeGen.create(
-        createSourceSection(ctx), visitExpr(ctx.expr()), ctx.QSPREAD() != null);
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
+    var expr = visitExpr(ctx.expr());
+    scope.setVisitingIterable(visitingIterable);
+    return GeneratorSpreadNodeGen.create(createSourceSection(ctx), expr, ctx.QSPREAD() != null);
   }
 
   private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
@@ -981,7 +996,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
     }
 
+    var scope = symbolTable.getCurrentScope();
+    var visitingIterable = scope.isVisitingIterable();
+    scope.setVisitingIterable(true);
     var iterableNode = visitExpr(ctx.e);
+    scope.setVisitingIterable(visitingIterable);
     var memberNodes = doVisitForWhenBody(ctx.objectBody());
     if (keyVariableSlot != -1) {
       currentScope.popForGeneratorVariable();
@@ -1186,11 +1205,15 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         scope -> {
           var elementNode = visitExpr(ctx.expr());
 
+          var modifier =
+              scope.isVisitingIterable()
+                  ? VmModifier.ELEMENT | VmModifier.IS_IN_ITERABLE
+                  : VmModifier.ELEMENT;
           var member =
               new ObjectMember(
                   createSourceSection(ctx),
                   elementNode.getSourceSection(),
-                  VmModifier.ELEMENT,
+                  modifier,
                   null,
                   scope.getQualifiedName());
 
@@ -1241,13 +1264,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       @Nullable ExprContext valueCtx,
       List<? extends ObjectBodyContext> objectBodyCtxs) {
     return scope -> {
+      var modifier =
+          scope.isVisitingIterable()
+              ? VmModifier.ENTRY | VmModifier.IS_IN_ITERABLE
+              : VmModifier.ENTRY;
       var member =
           new ObjectMember(
-              sourceSection,
-              keyNode.getSourceSection(),
-              VmModifier.ENTRY,
-              null,
-              scope.getQualifiedName());
+              sourceSection, keyNode.getSourceSection(), modifier, null, scope.getQualifiedName());
 
       if (valueCtx != null) { // ["key"] = value
         var valueNode = visitExpr(valueCtx);
@@ -1325,6 +1348,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
       result += modifier;
+    }
+
+    if (symbolTable.getCurrentScope().isVisitingIterable()) {
+      result += VmModifier.IS_IN_ITERABLE;
     }
 
     // flag modifier combinations that are never valid right away
@@ -1516,7 +1543,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       text = "-" + text;
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Long.parseLong(text, radix);
       return new IntLiteralNode(section, num);
@@ -1550,7 +1577,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           source.createSection(ctx.getStart().getStartIndex() + exponentIdx + 1, 1));
     }
 
-    text = text.replaceAll("_", "");
+    text = text.replace("_", "");
     try {
       var num = Double.parseDouble(text);
       return new FloatLiteralNode(section, num);
@@ -1837,6 +1864,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           .withHint(e.getHint())
           .withSourceSection(createSourceSection(importUriCtx))
           .build();
+    } catch (ExternalReaderProcessException e) {
+      throw exceptionBuilder()
+          .evalError("externalReaderFailure")
+          .withCause(e.getCause())
+          .withSourceSection(createSourceSection(importUriCtx))
+          .build();
     }
 
     if (!resolvedUri.isAbsolute()) {
@@ -1869,12 +1902,12 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitUnaryMinusExpr(UnaryMinusExprContext ctx) {
-    var childExpr = visitExpr(ctx.expr());
-    if (childExpr instanceof IntLiteralNode || childExpr instanceof FloatLiteralNode) {
-      // negation already handled in child expr (see corresponding code)
+    var childCtx = ctx.expr();
+    var childExpr = visitExpr(childCtx);
+    if (childCtx instanceof IntLiteralContext || childCtx instanceof FloatLiteralContext) {
+      // negation already handled (see visitIntLiteral/visitFloatLiteral)
       return childExpr;
     }
-
     return UnaryMinusNodeGen.create(createSourceSection(ctx), childExpr);
   }
 
@@ -1953,6 +1986,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               visitArgumentList(argCtx),
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
+              symbolTable.getCurrentScope().isVisitingIterable(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -1965,6 +1999,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         visitArgumentList(argCtx),
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
+        symbolTable.getCurrentScope().isVisitingIterable(),
         receiver,
         GetClassNodeGen.create(null));
   }
@@ -2039,7 +2074,11 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       return InvokeSuperMethodNodeGen.create(
-          sourceSection, memberName, visitArgumentList(argCtx), needsConst);
+          sourceSection,
+          memberName,
+          symbolTable.getCurrentScope().isVisitingIterable(),
+          visitArgumentList(argCtx),
+          needsConst);
     }
 
     // superproperty call
@@ -2097,7 +2136,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         isBaseModule,
         scope.isCustomThisScope(),
         scope.getConstLevel(),
-        scope.getConstDepth());
+        scope.getConstDepth(),
+        scope.isVisitingIterable());
   }
 
   @Override

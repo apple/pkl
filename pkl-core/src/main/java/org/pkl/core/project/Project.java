@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.pkl.core.Analyzer;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
 import org.pkl.core.Evaluator;
@@ -49,6 +50,9 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
 import org.pkl.core.packages.PackageUtils;
 import org.pkl.core.resource.ResourceReaders;
+import org.pkl.core.runtime.VmException;
+import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.ImportGraphUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -61,6 +65,7 @@ public final class Project {
   private final URI projectBaseUri;
   private final List<URI> tests;
   private final Map<String, Project> localProjectDependencies;
+  private final List<PObject> annotations;
 
   /**
    * Loads Project data from the given {@link Path}.
@@ -108,16 +113,7 @@ public final class Project {
 
   /** Loads a project from the given source. */
   public static Project load(ModuleSource moduleSource) {
-    try (var evaluator =
-        EvaluatorBuilder.unconfigured()
-            .setSecurityManager(SecurityManagers.defaultManager)
-            .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
-            .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
-            .addModuleKeyFactory(ModuleKeyFactories.file)
-            .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
-            .addResourceReader(ResourceReaders.environmentVariable())
-            .addResourceReader(ResourceReaders.file())
-            .build()) {
+    try (var evaluator = evaluatorBuilder().build()) {
       return load(evaluator, moduleSource);
     }
   }
@@ -126,9 +122,104 @@ public final class Project {
     try {
       var output = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Project);
       return Project.parseProject(output);
+    } catch (StackOverflowError e) {
+      var cycles = findImportCycle(moduleSource);
+      VmException vmException;
+      if (!cycles.isEmpty()) {
+        if (cycles.size() == 1) {
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError(
+                      "cannotHaveCircularProjectDependenciesSingle",
+                      renderCycle(cycles.stream().toList().get(0)))
+                  .withCause(e)
+                  .build();
+        } else {
+          var renderedCycles = renderMultipleCycles(cycles);
+          vmException =
+              new VmExceptionBuilder()
+                  .evalError("cannotHaveCircularProjectDependenciesMultiple", renderedCycles)
+                  .withCause(e)
+                  .build();
+        }
+        // stack frame transformer never used; this exception has no stack frames.
+        throw vmException.toPklException(StackFrameTransformers.defaultTransformer, false);
+      }
+      throw e;
     } catch (URISyntaxException e) {
       throw new PklException(e.getMessage(), e);
     }
+  }
+
+  private static String renderMultipleCycles(List<List<URI>> cycles) {
+    var sb = new StringBuilder();
+    var i = 0;
+    for (var cycle : cycles) {
+      if (i > 0) {
+        sb.append('\n');
+      }
+      sb.append("Cycle ").append(i + 1).append(":\n");
+      renderCycle(sb, cycle);
+      sb.append('\n');
+      i++;
+    }
+    return sb.toString();
+  }
+
+  private static void renderCycle(StringBuilder sb, List<URI> cycle) {
+    sb.append("┌─>");
+    var isFirst = true;
+    for (URI uri : cycle) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        sb.append("\n│");
+      }
+      sb.append("\n│  ");
+      sb.append(uri.toString());
+    }
+    sb.append("\n└─");
+  }
+
+  private static String renderCycle(List<URI> cycle) {
+    var sb = new StringBuilder();
+    renderCycle(sb, cycle);
+    return sb.toString();
+  }
+
+  private static List<List<URI>> findImportCycle(ModuleSource moduleSource) {
+    var builder = evaluatorBuilder();
+    var analyzer =
+        new Analyzer(
+            StackFrameTransformers.defaultTransformer,
+            builder.getColor(),
+            SecurityManagers.defaultManager,
+            builder.getModuleKeyFactories(),
+            builder.getModuleCacheDir(),
+            builder.getProjectDependencies(),
+            builder.getHttpClient());
+    var importGraph = analyzer.importGraph(moduleSource.getUri());
+    var ret = ImportGraphUtils.findImportCycles(importGraph);
+    // we only care about cycles in the same scheme as `moduleSource`
+    return ret.stream()
+        .filter(
+            (cycle) ->
+                cycle.stream()
+                    .anyMatch(
+                        (uri) ->
+                            uri.getScheme().equalsIgnoreCase(moduleSource.getUri().getScheme())))
+        .collect(Collectors.toList());
+  }
+
+  private static EvaluatorBuilder evaluatorBuilder() {
+    return EvaluatorBuilder.unconfigured()
+        .setSecurityManager(SecurityManagers.defaultManager)
+        .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+        .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
+        .addModuleKeyFactory(ModuleKeyFactories.file)
+        .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
+        .addResourceReader(ResourceReaders.environmentVariable())
+        .addResourceReader(ResourceReaders.file());
   }
 
   private static DeclaredDependencies parseDependencies(
@@ -167,6 +258,11 @@ public final class Project {
     return new RemoteDependency(packageUri, checksums);
   }
 
+  @SuppressWarnings("unchecked")
+  private static List<PObject> parseAnnotations(PObject module) {
+    return (List<PObject>) getProperty(module, "annotations");
+  }
+
   public static Project parseProject(PObject module) throws URISyntaxException {
     var pkgObj = getNullableProperty(module, "package");
     var projectFileUri = URI.create((String) module.getProperty("projectFileUri"));
@@ -190,6 +286,7 @@ public final class Project {
             .map((it) -> projectBaseUri.resolve(it).normalize())
             .collect(Collectors.toList());
     var localProjectDependencies = parseLocalProjectDependencies(module);
+    var annotations = parseAnnotations(module);
     return new Project(
         pkg,
         dependencies,
@@ -197,7 +294,8 @@ public final class Project {
         projectFileUri,
         projectBaseUri,
         tests,
-        localProjectDependencies);
+        localProjectDependencies,
+        annotations);
   }
 
   private static Map<String, Project> parseLocalProjectDependencies(PObject module)
@@ -280,7 +378,7 @@ public final class Project {
     var sourceCodeUrlScheme = (String) getNullableProperty(pObj, "sourceCodeUrlScheme");
     var license = (String) getNullableProperty(pObj, "license");
     var licenseText = (String) getNullableProperty(pObj, "licenseText");
-    var issueTracker = (URI) getNullableURI(pObj, "issueTracker");
+    var issueTracker = getNullableURI(pObj, "issueTracker");
     var apiTestStrs = (List<String>) getProperty(pObj, "apiTests");
     var apiTests = apiTestStrs.stream().map(Path::of).collect(Collectors.toList());
     var exclude = (List<String>) getProperty(pObj, "exclude");
@@ -310,7 +408,8 @@ public final class Project {
       URI projectFileUri,
       URI projectBaseUri,
       List<URI> tests,
-      Map<String, Project> localProjectDependencies) {
+      Map<String, Project> localProjectDependencies,
+      List<PObject> annotations) {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
@@ -318,6 +417,7 @@ public final class Project {
     this.projectBaseUri = projectBaseUri;
     this.tests = tests;
     this.localProjectDependencies = localProjectDependencies;
+    this.annotations = annotations;
   }
 
   public @Nullable Package getPackage() {
@@ -364,12 +464,13 @@ public final class Project {
         && dependencies.equals(project.dependencies)
         && evaluatorSettings.equals(project.evaluatorSettings)
         && projectFileUri.equals(project.projectFileUri)
-        && tests.equals(project.tests);
+        && tests.equals(project.tests)
+        && annotations.equals(project.annotations);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pkg, dependencies, evaluatorSettings, projectFileUri, tests);
+    return Objects.hash(pkg, dependencies, evaluatorSettings, projectFileUri, tests, annotations);
   }
 
   public DeclaredDependencies getDependencies() {
@@ -387,6 +488,10 @@ public final class Project {
   public Path getProjectDir() {
     assert projectBaseUri.getScheme().equalsIgnoreCase("file");
     return Path.of(projectBaseUri);
+  }
+
+  public List<PObject> getAnnotations() {
+    return annotations;
   }
 
   @Deprecated(forRemoval = true)
@@ -413,11 +518,14 @@ public final class Project {
               env,
               allowedModules,
               allowedResources,
+              null,
               noCache,
               moduleCacheDir,
               modulePath,
               timeout,
               rootDir,
+              null,
+              null,
               null);
     }
 

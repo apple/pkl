@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +79,7 @@ public class ConfigTest {
     assertThat(t)
         .isInstanceOf(NoSuchChildException.class)
         .hasMessageStartingWith(
-            "Node `x` of type `pkl.base#Map` " + "does not have a key named `non-existing`.");
+            "Node `x` of type `pkl.base#Map` does not have a key named `non-existing`.");
   }
 
   @Test
@@ -90,8 +90,7 @@ public class ConfigTest {
     assertThat(t)
         .isInstanceOf(NoSuchChildException.class)
         .hasMessageStartingWith(
-            "Leaf node `pigeon.age` of type `pkl.base#Int` "
-                + "does not have a child named `non-existing`.");
+            "Leaf node `pigeon.age` of type `pkl.base#Int` does not have a child named `non-existing`.");
   }
 
   @Test
