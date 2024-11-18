@@ -299,6 +299,28 @@ public final class MathNodes {
     }
   }
 
+  public abstract static class atan2 extends ExternalMethod2Node {
+    @Specialization
+    protected double eval(VmTyped self, long x, long y) {
+      return StrictMath.atan2(x, y);
+    }
+
+    @Specialization
+    protected double eval(VmTyped self, long x, double y) {
+      return StrictMath.atan2(x, y);
+    }
+
+    @Specialization
+    protected double eval(VmTyped self, double x, double y) {
+      return StrictMath.atan2(x, y);
+    }
+
+    @Specialization
+    protected double eval(VmTyped self, double x, long y) {
+      return StrictMath.atan2(x, y);
+    }
+  }
+
   public abstract static class gcd extends ExternalMethod2Node {
     @TruffleBoundary
     @Specialization

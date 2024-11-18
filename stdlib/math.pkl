@@ -145,6 +145,12 @@ external function acos(x: Number): Float
 /// [1]: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
 external function atan(x: Number): Float
 
+/// Returns the [2-argument arctangent][1] of [x] and [y].
+///
+/// [1]: https://en.wikipedia.org/wiki/Atan2
+@Since { version = "0.28.0" }
+external function atan2(x: Number, y: Number): Float
+
 /// Returns the [greatest common divisor][1] of [x] and [y].
 ///
 /// [1]: https://en.wikipedia.org/wiki/Greatest_common_divisor
