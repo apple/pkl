@@ -18,6 +18,7 @@ package org.pkl.gradle;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Transformer;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.Convention;
 import org.gradle.api.provider.Provider;
@@ -64,6 +66,7 @@ import org.pkl.gradle.task.PkldocTask;
 import org.pkl.gradle.task.ProjectPackageTask;
 import org.pkl.gradle.task.ProjectResolveTask;
 import org.pkl.gradle.task.TestTask;
+import org.pkl.gradle.utils.PluginUtils;
 
 @SuppressWarnings("unused")
 public class PklPlugin implements Plugin<Project> {
@@ -456,6 +459,9 @@ public class PklPlugin implements Plugin<Project> {
 
   private List<File> getTransitiveModules(AnalyzeImportsTask analyzeTask) {
     var outputFile = analyzeTask.getOutputFile().get().getAsFile().toPath();
+    if (!analyzeTask.getOnlyIf().isSatisfiedBy(analyzeTask)) {
+      return Collections.emptyList();
+    }
     try {
       var contents = Files.readString(outputFile);
       ImportGraph importGraph = ImportGraph.parseFromJson(contents);
@@ -470,9 +476,16 @@ public class PklPlugin implements Plugin<Project> {
   }
 
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
-      T task, S spec, @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
+      T task,
+      S spec,
+      @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask,
+      @Nullable Transformer<List<?>, List<?>> mapSourceModules) {
     configureBaseTask(task, spec);
-    task.getSourceModules().set(spec.getSourceModules());
+    if (mapSourceModules != null) {
+      task.getSourceModules().set(spec.getSourceModules().map(mapSourceModules));
+    } else {
+      task.getSourceModules().set(spec.getSourceModules());
+    }
     task.getNoProject().set(spec.getNoProject());
     task.getProjectDir().set(spec.getProjectDir());
     task.getOmitProjectSettings().set(spec.getOmitProjectSettings());
@@ -482,6 +495,11 @@ public class PklPlugin implements Plugin<Project> {
       task.dependsOn(analyzeImportsTask);
       task.getTransitiveModules().set(analyzeImportsTask.map(this::getTransitiveModules));
     }
+  }
+
+  private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
+      T task, S spec, @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
+    configureModulesTask(task, spec, analyzeImportsTask, null);
   }
 
   private TaskProvider<AnalyzeImportsTask> createAnalyzeImportsTask(ModulesSpec spec) {
@@ -496,11 +514,26 @@ public class PklPlugin implements Plugin<Project> {
             spec.getName() + "GatherImports",
             AnalyzeImportsTask.class,
             task -> {
-              configureModulesTask(task, spec, null);
+              configureModulesTask(
+                  task,
+                  spec,
+                  null,
+                  (modules) ->
+                      // only need to analyze imports of file-based modules; it's unlikely that a
+                      // non-file-based module will import a file-based module due to security
+                      // manager trust levels (see
+                      // org.pkl.core.SecurityManagers.getDefaultTrustLevel).
+                      modules.stream()
+                          .map(PluginUtils::parseModuleNotationToUri)
+                          .filter(
+                              (it) ->
+                                  it.getScheme() == null || it.getScheme().equalsIgnoreCase("file"))
+                          .toList());
               task.setDescription("Compute the set of imports declared by input modules");
               task.setGroup("build");
               task.getOutputFormat().set(OutputFormat.JSON.toString());
               task.getOutputFile().set(outputFile);
+              task.onlyIf(ignored -> !task.getSourceModules().get().isEmpty());
             });
   }
 

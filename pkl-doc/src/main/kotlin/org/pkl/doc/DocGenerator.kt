@@ -117,7 +117,7 @@ class DocGenerator(
   }
 
   private fun DocPackage.deletePackageDir() {
-    outputDir.resolve("$name/$version").deleteRecursively()
+    outputDir.resolve(IoUtils.encodePath("$name/$version")).deleteRecursively()
   }
 
   private fun createSymlinks(currentPackagesData: List<PackageData>) {
