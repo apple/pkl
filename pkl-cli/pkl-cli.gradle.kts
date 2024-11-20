@@ -194,6 +194,7 @@ fun Exec.configureExecutable(
         add("-H:IncludeResources=org/jline/utils/.*")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
+        add("--gc=G1")
         add("--macro:truffle")
         add("-H:Class=org.pkl.cli.Main")
         add("-H:Name=${outputFile.get().asFile.name}")
