@@ -46,9 +46,7 @@ nuValidator = "20.+"
 paguro = "3.+"
 shadowPlugin = "8.1.1"
 slf4j = "1.+"
-# snakeYaml 2.6 removed DumpSettingsBuilder::setScalarResolver,
-# which is used by the external YAML renderer (org.pkl.core.YamlRenderer)
-snakeYaml = "2.5"
+snakeYaml = "2.+"
 spotlessPlugin = "6.25.0"
 wiremock = "3.+"
 
