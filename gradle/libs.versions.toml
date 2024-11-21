@@ -18,7 +18,7 @@ graalVmSha256-linux-x64 = "b6f3dace24cf1960ec790216f4c86f00d4f43df64e4e8b548f638
 graalVmSha256-linux-aarch64 = "bd991d486b92deb74337b881e0f13a764c9c1e90fc358819080f7321fa5175e8"
 graalVmSha256-windows-x64 = "8b978e56dddc0edc60db99794b56975740d9c52293b31549cfc3f7516fc18b43"
 ideaExtPlugin = "1.1.9"
-javaPoet = "1.+"
+javaPoet = "0.+"
 javaxInject = "1"
 jansi = "2.+"
 jimfs = "1.+"
@@ -62,7 +62,7 @@ geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = 
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
-javaPoet = { group = "com.squareup", name = "javapoet", version.ref = "javaPoet" }
+javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }

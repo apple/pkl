@@ -2,7 +2,7 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 com.google.code.findbugs:jsr305:3.0.2=compileClasspath,compileOnlyDependenciesMetadata
-com.squareup:javapoet:1.13.0=generatorCompileClasspath,generatorImplementationDependenciesMetadata,generatorRuntimeClasspath
+com.palantir.javapoet:javapoet:0.5.0=generatorCompileClasspath,generatorImplementationDependenciesMetadata,generatorRuntimeClasspath
 com.tunnelvisionlabs:antlr4-annotations:4.9.0=antlr
 com.tunnelvisionlabs:antlr4-runtime:4.9.0=antlr,compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.tunnelvisionlabs:antlr4:4.9.0=antlr
