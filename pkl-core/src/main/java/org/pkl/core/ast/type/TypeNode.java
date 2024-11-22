@@ -161,7 +161,11 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** Tells if this typenode is the same typecheck as the other typenode. */
-  public abstract boolean isEquivalentTo(TypeNode other);
+  public boolean isEquivalentTo(TypeNode other) {
+    return this == other || doIsEquivalentTo(other);
+  }
+
+  protected abstract boolean doIsEquivalentTo(TypeNode other);
 
   public @Nullable VmClass getVmClass() {
     return null;
@@ -304,7 +308,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof UnknownTypeNode;
     }
 
@@ -371,7 +375,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof NothingTypeNode;
     }
 
@@ -408,7 +412,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof FinalModuleTypeNode finalModuleTypeNode)) {
         return false;
       }
@@ -460,7 +464,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof NonFinalModuleTypeNode nonFinalModuleTypeNode)) {
         return false;
       }
@@ -496,7 +500,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof StringLiteralTypeNode stringLiteralTypeNode)) {
         return false;
       }
@@ -551,7 +555,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof TypedTypeNode;
     }
 
@@ -586,7 +590,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof DynamicTypeNode;
     }
 
@@ -636,7 +640,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof FinalClassTypeNode finalClassTypeNode)) {
         return false;
       }
@@ -705,7 +709,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof NonFinalClassTypeNode nonFinalClassTypeNode)) {
         return false;
       }
@@ -772,7 +776,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof NullableTypeNode nullableTypeNode)) {
         return false;
       }
@@ -842,7 +846,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof UnionTypeNode unionTypeNode)) {
         return false;
       }
@@ -1016,7 +1020,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @TruffleBoundary
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode)) {
         return false;
       }
@@ -1092,7 +1096,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return false;
     }
 
@@ -1223,7 +1227,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof ListTypeNode listTypeNode)) {
         return false;
       }
@@ -1268,7 +1272,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof SetTypeNode setTypeNode)) {
         return false;
       }
@@ -1360,7 +1364,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof MapTypeNode mapTypeNode)) {
         return false;
       }
@@ -1451,7 +1455,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof ListingTypeNode listingTypeNode)) {
         return false;
       }
@@ -1509,7 +1513,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof MappingTypeNode mappingTypeNode)) {
         return false;
       }
@@ -1748,7 +1752,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof FunctionTypeNode functionTypeNode)) {
         return false;
       }
@@ -1845,7 +1849,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof FunctionClassTypeNode functionClassTypeNode)) {
         return false;
       }
@@ -1883,7 +1887,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof FunctionNClassTypeNode functionNClassTypeNode)) {
         return false;
       }
@@ -1986,7 +1990,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof PairTypeNode pairTypeNode)) {
         return false;
       }
@@ -2043,7 +2047,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if (!(other instanceof VarArgsTypeNode varArgsTypeNode)) {
         return false;
       }
@@ -2095,7 +2099,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof TypeVariableNode;
     }
 
@@ -2135,7 +2139,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof NonNullTypeAliasTypeNode;
     }
 
@@ -2184,7 +2188,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof UIntTypeAliasTypeNode aliasTypeNode && mask == aliasTypeNode.mask;
     }
 
@@ -2228,7 +2232,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof Int8TypeAliasTypeNode;
     }
 
@@ -2272,7 +2276,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof Int16TypeAliasTypeNode;
     }
 
@@ -2316,7 +2320,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof Int32TypeAliasTypeNode;
     }
 
@@ -2471,7 +2475,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       if ((other instanceof TypeAliasTypeNode typeAliasTypeNode)) {
         return aliasedTypeNode.isEquivalentTo(typeAliasTypeNode.aliasedTypeNode);
       }
@@ -2581,7 +2585,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       // consider constrained types as always different
       return false;
     }
@@ -2622,7 +2626,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof AnyTypeNode;
     }
 
@@ -2650,7 +2654,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof StringTypeNode;
     }
 
@@ -2714,7 +2718,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof NumberTypeNode;
     }
 
@@ -2742,7 +2746,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof IntTypeNode;
     }
 
@@ -2787,7 +2791,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof FloatTypeNode;
     }
 
@@ -2832,7 +2836,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public boolean isEquivalentTo(TypeNode other) {
+    public boolean doIsEquivalentTo(TypeNode other) {
       return other instanceof BooleanTypeNode;
     }
 
