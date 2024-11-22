@@ -16,7 +16,6 @@
 plugins {
   pklAllProjects
   pklJavaLibrary
-  pklGraalVm
   id("me.champeau.jmh")
 }
 

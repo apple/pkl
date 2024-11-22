@@ -50,6 +50,11 @@ open class BuildInfo(project: Project) {
       "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.$extension"
     }
 
+    val downloadFile: File by lazy {
+      val extension = if (os.isWindows) "zip" else "tar.gz"
+      File(homeDir, "${baseName}.$extension")
+    }
+
     val installDir: File by lazy { File(homeDir, baseName) }
 
     val baseDir: String by lazy {
