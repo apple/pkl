@@ -25,7 +25,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorEntryNode extends GeneratorMemberNode {
@@ -112,7 +111,7 @@ public abstract class GeneratorEntryNode extends GeneratorMemberNode {
   }
 
   private void doAdd(Object key, ObjectData data) {
-    if (EconomicMaps.put(data.members, key, member) != null) {
+    if (data.members.put(key, member) != null) {
       CompilerDirectives.transferToInterpreter();
       throw duplicateDefinition(key, member);
     }

@@ -20,11 +20,10 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.*;
 import java.util.function.BiFunction;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.CollectionUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /** Corresponds to `pkl.base#Object`. */
@@ -53,7 +52,7 @@ public abstract class VmObject extends VmObjectLike {
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    this(enclosingFrame, parent, members, EconomicMaps.create());
+    this(enclosingFrame, parent, members, EconomicMap.create());
   }
 
   public final void lateInitParent(VmObject parent) {
@@ -68,12 +67,12 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   public final boolean hasMember(Object key) {
-    return EconomicMaps.containsKey(members, key);
+    return members.containsKey(key);
   }
 
   @Override
   public final @Nullable ObjectMember getMember(Object key) {
-    return EconomicMaps.get(members, key);
+    return members.get(key);
   }
 
   @Override
@@ -83,17 +82,17 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   public @Nullable Object getCachedValue(Object key) {
-    return EconomicMaps.get(cachedValues, key);
+    return cachedValues.get(key);
   }
 
   @Override
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
-    EconomicMaps.put(cachedValues, key, value);
+    cachedValues.put(key, value);
   }
 
   @Override
   public boolean hasCachedValue(Object key) {
-    return EconomicMaps.containsKey(cachedValues, key);
+    return cachedValues.containsKey(key);
   }
 
   @Override
@@ -160,7 +159,7 @@ public abstract class VmObject extends VmObjectLike {
 
     try {
       for (VmObjectLike owner = this; owner != null; owner = owner.getParent()) {
-        var cursor = EconomicMaps.getEntries(owner.getMembers());
+        var cursor = owner.getMembers().getEntries();
         var clazz = owner.getVmClass();
         while (cursor.advance()) {
           var memberKey = cursor.getKey();
@@ -208,7 +207,7 @@ public abstract class VmObject extends VmObjectLike {
    */
   @TruffleBoundary
   protected final Map<String, Object> exportMembers() {
-    var result = CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var result = CollectionUtils.<String, Object>newLinkedHashMap(cachedValues.size());
 
     iterateMemberValues(
         (key, member, value) -> {

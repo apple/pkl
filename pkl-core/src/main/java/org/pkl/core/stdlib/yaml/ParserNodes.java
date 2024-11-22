@@ -24,13 +24,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.yaml.snake.YamlUtils;
 import org.snakeyaml.engine.v2.api.ConstructNode;
 import org.snakeyaml.engine.v2.api.Load;
@@ -336,7 +335,7 @@ public final class ParserNodes {
       public VmListing construct(Node node) {
         var sequenceNode = (SequenceNode) node;
         var size = sequenceNode.getValue().size();
-        var members = EconomicMaps.<Object, ObjectMember>create(size);
+        var members = EconomicMap.<Object, ObjectMember>create(size);
 
         var result =
             new VmListing(
@@ -371,7 +370,7 @@ public final class ParserNodes {
               new ObjectMember(
                   sourceSection, sourceSection, VmModifier.ELEMENT, null, String.valueOf(index));
           member.initConstantValue(converter.convert(constructObject(childNode), currPath));
-          EconomicMaps.put(members, index++, member);
+          members.put(index++, member);
         }
         currPath.pop();
       }
@@ -382,7 +381,7 @@ public final class ParserNodes {
       public VmListing construct(Node node) {
         var mappingNode = (MappingNode) node;
         var size = mappingNode.getValue().size();
-        var members = EconomicMaps.<Object, ObjectMember>create(size);
+        var members = EconomicMap.<Object, ObjectMember>create(size);
 
         var result =
             new VmListing(
@@ -419,7 +418,7 @@ public final class ParserNodes {
               new ObjectMember(
                   sourceSection, sourceSection, VmModifier.ELEMENT, null, String.valueOf(index));
           member.initConstantValue(converter.convert(constructObject(keyNode), currPath));
-          EconomicMaps.put(members, index++, member);
+          members.put(index++, member);
         }
         currPath.pop();
       }
@@ -430,7 +429,7 @@ public final class ParserNodes {
       public VmObject construct(Node node) {
         var mappingNode = (MappingNode) node;
         var size = mappingNode.getValue().size();
-        var members = EconomicMaps.<Object, ObjectMember>create(size);
+        var members = EconomicMap.<Object, ObjectMember>create(size);
 
         VmObject result;
         if (useMapping) {
@@ -500,7 +499,7 @@ public final class ParserNodes {
           member.initConstantValue(convertedValue);
           currPath.pop();
 
-          EconomicMaps.put(members, memberName != null ? memberName : convertedKey, member);
+          members.put(memberName != null ? memberName : convertedKey, member);
         }
       }
     }

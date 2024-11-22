@@ -24,7 +24,6 @@ import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmListing;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorElementNode extends GeneratorMemberNode {
@@ -68,7 +67,7 @@ public abstract class GeneratorElementNode extends GeneratorMemberNode {
 
   private void addElement(ObjectData data) {
     long index = data.length;
-    EconomicMaps.put(data.members, index, element);
+    data.members.put(index, element);
     data.length += 1;
     data.persistForBindings(index);
   }

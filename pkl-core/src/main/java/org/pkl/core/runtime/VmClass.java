@@ -23,7 +23,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.function.*;
 import javax.annotation.concurrent.GuardedBy;
-import org.graalvm.collections.*;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
@@ -32,8 +31,8 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.collection.*;
 import org.pkl.core.util.CollectionUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
@@ -53,8 +52,8 @@ public final class VmClass extends VmValue {
   private final List<TypeParameter> typeParameters;
   private final VmTyped prototype;
 
-  private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
-  private final EconomicMap<Identifier, ClassMethod> declaredMethods = EconomicMaps.create();
+  private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMap.create();
+  private final EconomicMap<Identifier, ClassMethod> declaredMethods = EconomicMap.create();
 
   // initialized to non-null value by `initSupertype()` for all classes but `pkl.base#Any`
   @CompilationFinal private @Nullable TypeNode supertypeNode;
@@ -157,7 +156,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
-    EconomicMaps.put(declaredProperties, property.getName(), property);
+    declaredProperties.put(property.getName(), property);
 
     if (!property.isLocal()) {
       __allProperties = null;
@@ -174,7 +173,7 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   public void addMethod(ClassMethod method) {
-    EconomicMaps.put(declaredMethods, method.getName(), method);
+    declaredMethods.put(method.getName(), method);
 
     if (!method.isLocal()) {
       __allMethods = null;
@@ -202,12 +201,12 @@ public final class VmClass extends VmValue {
    * property was found. Does return local properties.
    */
   public @Nullable ClassProperty getDeclaredProperty(Identifier name) {
-    return EconomicMaps.get(declaredProperties, name);
+    return declaredProperties.get(name);
   }
 
   /** Returns all properties declared in this class. Does include local properties. */
   public Iterable<ClassProperty> getDeclaredProperties() {
-    return EconomicMaps.getValues(declaredProperties);
+    return declaredProperties.getValues();
   }
 
   @Override
@@ -279,12 +278,12 @@ public final class VmClass extends VmValue {
    * null} if no such property was found. Does not return local properties.
    */
   public @Nullable ClassProperty getProperty(Identifier name) {
-    return EconomicMaps.get(getAllProperties(), name);
+    return getAllProperties().get(name);
   }
 
   /** Shorthand for {@code getProperty(name) != null}. */
   public boolean hasProperty(Identifier name) {
-    return !isInitialized || EconomicMaps.containsKey(getAllProperties(), name);
+    return !isInitialized || getAllProperties().containsKey(name);
   }
 
   /**
@@ -312,27 +311,27 @@ public final class VmClass extends VmValue {
 
   /** Includes local methods. */
   public boolean hasDeclaredMethod(Identifier name) {
-    return EconomicMaps.containsKey(declaredMethods, name);
+    return declaredMethods.containsKey(name);
   }
 
   /** Does return local methods. */
   public @Nullable ClassMethod getDeclaredMethod(Identifier name) {
-    return EconomicMaps.get(declaredMethods, name);
+    return declaredMethods.get(name);
   }
 
   /** Includes local methods. */
   public Iterable<ClassMethod> getDeclaredMethods() {
-    return EconomicMaps.getValues(declaredMethods);
+    return declaredMethods.getValues();
   }
 
   /** Does not return local methods. */
   public @Nullable ClassMethod getMethod(Identifier name) {
-    return EconomicMaps.get(getAllMethods(), name);
+    return getAllMethods().get(name);
   }
 
   /** Does not include local methods. */
   public Iterable<ClassMethod> getMethods() {
-    return EconomicMaps.getValues(getAllMethods());
+    return getAllMethods().getValues();
   }
 
   public @Nullable VmClass getSuperclass() {
@@ -462,7 +461,7 @@ public final class VmClass extends VmValue {
     if (superclass != null) {
       superclass.visitMethodDefsTopDown(visitor);
     }
-    EconomicMaps.getValues(declaredMethods).forEach(visitor);
+    declaredMethods.getValues().forEach(visitor);
   }
 
   @Override
@@ -529,7 +528,7 @@ public final class VmClass extends VmValue {
 
   private EconomicMap<Object, ObjectMember> createDelegatingMembers(
       Function<ObjectMember, MemberNode> memberNodeFactory) {
-    var result = EconomicMaps.<Object, ObjectMember>create();
+    var result = EconomicMap.<Object, ObjectMember>create();
     for (var cursor = getAllProperties().getEntries(); cursor.advance(); ) {
       var property = cursor.getValue();
       // Typed->Dynamic conversion: Dynamic objects cannot currently have hidden members.
@@ -596,11 +595,9 @@ public final class VmClass extends VmValue {
       if (__pClass == null) {
         var exportedAnnotations = new ArrayList<PObject>();
         var properties =
-            CollectionUtils.<String, PClass.Property>newLinkedHashMap(
-                EconomicMaps.size(declaredProperties));
+            CollectionUtils.<String, PClass.Property>newLinkedHashMap(declaredProperties.size());
         var methods =
-            CollectionUtils.<String, PClass.Method>newLinkedHashMap(
-                EconomicMaps.size(declaredMethods));
+            CollectionUtils.<String, PClass.Method>newLinkedHashMap(declaredMethods.size());
 
         // set pClass before exporting class members to prevent
         // infinite recursion in case of cyclic references
@@ -626,13 +623,13 @@ public final class VmClass extends VmValue {
 
         VmUtils.exportAnnotations(annotations, exportedAnnotations);
 
-        for (var property : EconomicMaps.getValues(declaredProperties)) {
+        for (var property : declaredProperties.getValues()) {
           if (isClassPropertyDefinition(property)) {
             properties.put(property.getName().toString(), property.export(__pClass));
           }
         }
 
-        for (var method : EconomicMaps.getValues(declaredMethods)) {
+        for (var method : declaredMethods.getValues()) {
           if (method.isLocal()) continue;
           methods.put(method.getName().toString(), method.export(__pClass));
         }
@@ -691,20 +688,19 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   private UnmodifiableEconomicMap<Identifier, ClassProperty> collectAllProperties() {
-    if (EconomicMaps.isEmpty(declaredProperties)) {
-      return superclass == null ? EconomicMaps.create() : superclass.getAllProperties();
+    if (declaredProperties.isEmpty()) {
+      return superclass == null ? EconomicMap.create() : superclass.getAllProperties();
     }
 
     var size =
-        EconomicMaps.size(declaredProperties)
-            + (superclass == null ? 0 : EconomicMaps.size(superclass.getAllProperties()));
-    var result = EconomicMaps.<Identifier, ClassProperty>create(size);
+        declaredProperties.size() + (superclass == null ? 0 : superclass.getAllProperties().size());
+    var result = EconomicMap.<Identifier, ClassProperty>create(size);
 
     if (superclass != null) {
-      EconomicMaps.putAll(result, superclass.getAllProperties());
+      result.putAll(superclass.getAllProperties());
     }
 
-    for (var property : EconomicMaps.getValues(declaredProperties)) {
+    for (var property : declaredProperties.getValues()) {
       if (property.isLocal()) continue;
 
       // A property is considered a class property definition
@@ -712,8 +708,8 @@ public final class VmClass extends VmValue {
       // Otherwise, it is considered an object property definition,
       // which means it affects the class prototype but not the class itself.
       // An example for the latter is when `Module.output` is overridden with `output { ... }`.
-      if (property.getTypeNode() != null || !EconomicMaps.containsKey(result, property.getName())) {
-        EconomicMaps.put(result, property.getName(), property);
+      if (property.getTypeNode() != null || !result.containsKey(property.getName())) {
+        result.put(property.getName(), property);
       }
     }
 
@@ -722,23 +718,22 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   private UnmodifiableEconomicMap<Identifier, ClassMethod> collectAllMethods() {
-    if (EconomicMaps.isEmpty(declaredMethods)) {
-      return superclass == null ? EconomicMaps.create() : superclass.getAllMethods();
+    if (declaredMethods.isEmpty()) {
+      return superclass == null ? EconomicMap.create() : superclass.getAllMethods();
     }
 
     var size =
-        EconomicMaps.size(declaredMethods)
-            + (superclass == null ? 0 : EconomicMaps.size(superclass.getAllMethods()));
-    var result = EconomicMaps.<Identifier, ClassMethod>create(size);
+        declaredMethods.size() + (superclass == null ? 0 : superclass.getAllMethods().size());
+    var result = EconomicMap.<Identifier, ClassMethod>create(size);
 
     if (superclass != null) {
-      EconomicMaps.putAll(result, superclass.getAllMethods());
+      result.putAll(superclass.getAllMethods());
     }
 
-    for (var method : EconomicMaps.getValues(declaredMethods)) {
+    for (var method : declaredMethods.getValues()) {
       if (method.isLocal()) continue;
 
-      EconomicMaps.put(result, method.getName(), method);
+      result.put(method.getName(), method);
     }
 
     return result;
@@ -746,13 +741,13 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   private UnmodifiableEconomicSet<Object> collectAllRegularPropertyNames() {
-    if (EconomicMaps.isEmpty(declaredProperties)) {
+    if (declaredProperties.isEmpty()) {
       return superclass == null ? EconomicSet.create() : superclass.getAllRegularPropertyNames();
     }
 
     var size = superclass == null ? 0 : superclass.getAllRegularPropertyNames().size();
     var result = EconomicSet.create(size);
-    for (var property : EconomicMaps.getValues(declaredProperties)) {
+    for (var property : declaredProperties.getValues()) {
       if (!(property.isLocal() || isHiddenProperty(property.getName()) || property.isExternal())) {
         result.add(property.getName());
       }
@@ -772,13 +767,13 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   private UnmodifiableEconomicSet<Object> collectAllHiddenPropertyNames() {
-    if (EconomicMaps.isEmpty(declaredProperties)) {
+    if (declaredProperties.isEmpty()) {
       return superclass == null ? EconomicSet.create() : superclass.getAllHiddenPropertyNames();
     }
 
     var size = superclass == null ? 0 : superclass.getAllHiddenPropertyNames().size();
     var result = EconomicSet.create(size);
-    for (var property : EconomicMaps.getValues(declaredProperties)) {
+    for (var property : declaredProperties.getValues()) {
       if (property.isHidden()) {
         result.add(property.getName());
       }

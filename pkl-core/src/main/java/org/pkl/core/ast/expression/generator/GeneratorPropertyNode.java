@@ -22,7 +22,6 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic({BaseModule.class, GeneratorObjectLiteralNode.class})
 public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
@@ -118,7 +117,7 @@ public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
   }
 
   private void addProperty(ObjectData data) {
-    if (EconomicMaps.put(data.members, member.getName(), member) == null) return;
+    if (data.members.put(member.getName(), member) == null) return;
 
     CompilerDirectives.transferToInterpreter();
     throw duplicateDefinition(member.getName(), member);

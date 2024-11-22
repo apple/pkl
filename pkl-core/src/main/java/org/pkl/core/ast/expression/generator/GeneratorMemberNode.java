@@ -22,14 +22,13 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Arrays;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public abstract class GeneratorMemberNode extends PklNode {
@@ -81,7 +80,7 @@ public abstract class GeneratorMemberNode extends PklNode {
   public static final class ObjectData {
     // member count is exact iff every for/when body has exactly one member
     ObjectData(int minMemberCount, int length) {
-      this.members = EconomicMaps.create(minMemberCount);
+      this.members = EconomicMap.create(minMemberCount);
       this.length = length;
     }
 
@@ -122,7 +121,7 @@ public abstract class GeneratorMemberNode extends PklNode {
     }
 
     void persistForBindings(Object key) {
-      EconomicMaps.put(forBindings, key, currentForBindings);
+      forBindings.put(key, currentForBindings);
     }
 
     void resetForBindings(Object @Nullable [] bindings) {

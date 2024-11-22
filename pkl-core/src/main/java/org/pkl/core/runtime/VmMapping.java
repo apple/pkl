@@ -20,11 +20,11 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.CollectionUtils;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
 
 public final class VmMapping extends VmListingOrMapping<VmMapping> {
@@ -39,7 +39,7 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
         new VmMapping(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getMappingClass().getPrototype(),
-            EconomicMaps.create());
+            EconomicMap.create());
   }
 
   public static VmMapping empty() {
@@ -104,7 +104,7 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
   @Override
   @TruffleBoundary
   public Map<Object, Object> export() {
-    var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.newLinkedHashMap(cachedValues.size());
 
     iterateMemberValues(
         (key, prop, value) -> {

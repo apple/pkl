@@ -24,12 +24,12 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -152,15 +152,15 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   protected UnmodifiableEconomicMap<Object, ObjectMember> createMembers(
       VirtualFrame frame, int parentLength) {
     var result =
-        EconomicMaps.<Object, ObjectMember>create(
-            EconomicMaps.size(members) + keyNodes.length + elements.length);
+        EconomicMap.<Object, ObjectMember>create(
+            members.size() + keyNodes.length + elements.length);
 
-    EconomicMaps.putAll(result, members);
+    result.putAll(members);
 
     addListEntries(frame, parentLength, result, keyNodes, values);
 
     for (var i = 0; i < elements.length; i++) {
-      EconomicMaps.put(result, (long) (parentLength + i), elements[i]);
+      result.put((long) (parentLength + i), elements[i]);
     }
 
     return result;

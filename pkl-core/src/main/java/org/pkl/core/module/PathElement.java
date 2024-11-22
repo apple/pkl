@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import org.graalvm.collections.EconomicMap;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.util.Nullable;
 
 public class PathElement {
@@ -81,7 +80,7 @@ public class PathElement {
   }
 
   public static final class TreePathElement extends PathElement {
-    private final EconomicMap<String, TreePathElement> children = EconomicMaps.create();
+    private final EconomicMap<String, TreePathElement> children = EconomicMap.create();
 
     public TreePathElement(String name, boolean isDirectory) {
       super(name, isDirectory);
@@ -117,7 +116,7 @@ public class PathElement {
 
     public List<PathElement> getChildrenValues() {
       var ret = new ArrayList<PathElement>(children.size());
-      for (var elem : EconomicMaps.getValues(children)) {
+      for (var elem : children.getValues()) {
         ret.add(elem);
       }
       return ret;

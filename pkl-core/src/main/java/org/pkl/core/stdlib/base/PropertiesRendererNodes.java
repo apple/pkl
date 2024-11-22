@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
@@ -38,7 +39,6 @@ import org.pkl.core.runtime.VmValueConverter;
 import org.pkl.core.stdlib.AbstractRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.properties.PropertiesUtils;
 
@@ -277,7 +277,7 @@ public final class PropertiesRendererNodes {
             new VmListing(
                 VmUtils.createEmptyMaterializedFrame(),
                 dynamic,
-                EconomicMaps.create(),
+                EconomicMap.create(),
                 dynamic.getLength());
         visit(converter.convert(newValue, currPath));
       } else {

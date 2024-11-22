@@ -25,7 +25,6 @@ import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.expression.unary.AbstractImportNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
@@ -127,7 +126,7 @@ public final class ModuleInfo {
         var classes = new LinkedHashMap<String, PClass>();
         var typeAliases = new LinkedHashMap<String, TypeAlias>();
 
-        for (var propertyDef : EconomicMaps.getValues(module.getMembers())) {
+        for (var propertyDef : module.getMembers().getValues()) {
           if (propertyDef.isImport()) {
             MemberNode memberNode = propertyDef.getMemberNode();
             assert memberNode != null; // import is never a constant

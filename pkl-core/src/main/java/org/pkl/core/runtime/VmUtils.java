@@ -51,13 +51,13 @@ import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.antlr.PklParser.ExprContext;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmUtils {
@@ -90,7 +90,7 @@ public final class VmUtils {
   private VmUtils() {}
 
   static VmTyped createEmptyModule() {
-    return new VmTyped(createEmptyMaterializedFrame(), null, null, EconomicMaps.create());
+    return new VmTyped(createEmptyMaterializedFrame(), null, null, EconomicMap.create());
   }
 
   @TruffleBoundary

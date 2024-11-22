@@ -18,15 +18,13 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.PklBugException;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.EconomicSet;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> extends VmObject {
@@ -39,8 +37,8 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
 
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final MaterializedFrame typeNodeFrame;
-  private final EconomicMap<Object, ObjectMember> cachedMembers = EconomicMaps.create();
-  private final EconomicSet<Object> checkedMembers = EconomicSets.create();
+  private final EconomicMap<Object, ObjectMember> cachedMembers = EconomicMap.create();
+  private final EconomicSet<Object> checkedMembers = EconomicSet.create();
 
   public VmListingOrMapping(
       MaterializedFrame enclosingFrame,
@@ -56,7 +54,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
   }
 
   ObjectMember findMember(Object key) {
-    var member = EconomicMaps.get(cachedMembers, key);
+    var member = cachedMembers.get(key);
     if (member != null) {
       return member;
     }
@@ -75,7 +73,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
   @Override
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
     super.setCachedValue(key, value, objectMember);
-    EconomicMaps.put(cachedMembers, key, objectMember);
+    cachedMembers.put(key, objectMember);
   }
 
   @Override
@@ -92,7 +90,7 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     var memberValue = delegate.getCachedValue(key);
     // if this object member appears inside `checkedMembers`, we have already checked its type
     // and can safely return it.
-    if (EconomicSets.contains(checkedMembers, key)) {
+    if (checkedMembers.contains(key)) {
       return memberValue;
     }
     if (memberValue == null) {
@@ -103,10 +101,10 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     var objectMember = findMember(key);
     var ret = typecastObjectMember(objectMember, memberValue, IndirectCallNode.getUncached());
     if (ret != memberValue) {
-      EconomicMaps.put(cachedValues, key, ret);
+      cachedValues.put(key, ret);
     } else {
       // optimization: don't add to own cached values if typecast results in the same value
-      EconomicSets.add(checkedMembers, key);
+      checkedMembers.add(key);
     }
     return ret;
   }

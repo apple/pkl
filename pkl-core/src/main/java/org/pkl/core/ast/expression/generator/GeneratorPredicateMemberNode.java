@@ -24,9 +24,8 @@ import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicSet;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
 
 public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
   @Child private ExpressionNode predicateNode;
@@ -81,15 +80,15 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
     initThisSlot(frame);
 
     var previousValue = frame.getAuxiliarySlot(customThisSlot);
-    var visitedKeys = EconomicSets.create();
+    var visitedKeys = EconomicSet.create();
 
     // do our own traversal instead of relying on `VmAbstractObject.force/iterateMemberValues`
     // (more efficient and we don't want to execute `predicateNode` behind Truffle boundary)
     for (var owner = parent; owner != null; owner = owner.getParent()) {
-      var entries = EconomicMaps.getEntries(owner.getMembers());
+      var entries = owner.getMembers().getEntries();
       while (entries.advance()) {
         var key = entries.getKey();
-        if (!EconomicSets.add(visitedKeys, key)) continue;
+        if (!visitedKeys.add(key)) continue;
 
         var member = entries.getValue();
         if (member.isProp() || member.isLocal()) continue;
@@ -136,7 +135,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
   }
 
   private void doAdd(Object key, ObjectData data) {
-    if (EconomicMaps.put(data.members, key, member) != null) {
+    if (data.members.put(key, member) != null) {
       CompilerDirectives.transferToInterpreter();
       throw duplicateDefinition(key, member);
     }

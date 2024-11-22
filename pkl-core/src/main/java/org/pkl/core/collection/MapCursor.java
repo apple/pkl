@@ -13,26 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.util;
+package org.pkl.core.collection;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import org.graalvm.collections.EconomicSet;
 
-public final class EconomicSets {
-  private EconomicSets() {}
-
+/**
+ * Cursor to iterate over a mutable map.
+ *
+ * @since 19.0
+ */
+public interface MapCursor<K, V> extends UnmodifiableMapCursor<K, V> {
+  /**
+   * Remove the current entry from the map. May only be called once. After calling {@link
+   * #remove()}, it is no longer valid to call {@link #getKey()} or {@link #getValue()} on the
+   * current entry.
+   *
+   * @since 19.0
+   */
   @TruffleBoundary
-  public static <E> EconomicSet<E> create() {
-    return EconomicSet.create();
-  }
+  void remove();
 
+  /**
+   * Set the value of the current entry.
+   *
+   * @param newValue new value to be associated with the current key.
+   * @return previous value associated with the current key.
+   * @since 22.1
+   */
   @TruffleBoundary
-  public static <E> boolean add(EconomicSet<E> self, E element) {
-    return self.add(element);
-  }
-
-  @TruffleBoundary
-  public static <E> boolean contains(EconomicSet<E> self, E element) {
-    return self.contains(element);
+  default V setValue(V newValue) {
+    throw new UnsupportedOperationException();
   }
 }

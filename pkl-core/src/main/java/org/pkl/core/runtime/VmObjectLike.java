@@ -18,8 +18,8 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.function.BiFunction;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.Nullable;
 
 /**

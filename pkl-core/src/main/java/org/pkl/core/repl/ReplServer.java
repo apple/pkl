@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.polyglot.Context;
 import org.pkl.core.*;
 import org.pkl.core.SecurityManager;
@@ -33,6 +32,8 @@ import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
@@ -49,7 +50,6 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
 import org.pkl.core.util.Nullable;
@@ -393,7 +393,7 @@ public class ReplServer implements AutoCloseable {
   }
 
   private VmTyped createEmptyReplModule(@Nullable VmTyped parent) {
-    return createReplModule(List.of(), List.of(), EconomicMaps.create(), parent);
+    return createReplModule(List.of(), List.of(), EconomicMap.create(), parent);
   }
 
   private VmTyped createReplModule(

@@ -17,10 +17,9 @@ package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.EconomicMaps;
 
 public final class WriteForVariablesNode extends ExpressionNode {
   private final int[] auxiliarySlots;
@@ -39,7 +38,7 @@ public final class WriteForVariablesNode extends ExpressionNode {
 
     @SuppressWarnings("unchecked")
     var forBindings = (UnmodifiableEconomicMap<Object, Object[]>) extraStorage;
-    var bindings = EconomicMaps.get(forBindings, VmUtils.getMemberKey(frame));
+    var bindings = forBindings.get(VmUtils.getMemberKey(frame));
     assert bindings != null;
     assert bindings.length == auxiliarySlots.length;
 

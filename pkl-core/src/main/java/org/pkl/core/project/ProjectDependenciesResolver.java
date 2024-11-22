@@ -19,10 +19,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Path;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
 import org.pkl.core.PklException;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.EconomicSet;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
@@ -30,8 +30,6 @@ import org.pkl.core.packages.Dependency.RemoteDependency;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.packages.PackageUri;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
@@ -49,9 +47,9 @@ public final class ProjectDependenciesResolver {
   private final PackageResolver packageResolver;
   private final Writer logWriter;
   private final EconomicMap<CanonicalPackageUri, Dependency> resolvedDependencies =
-      EconomicMaps.create();
+      EconomicMap.create();
 
-  private final EconomicSet<PackageUri> alreadyHandledDependencies = EconomicSets.create();
+  private final EconomicSet<PackageUri> alreadyHandledDependencies = EconomicSet.create();
 
   public ProjectDependenciesResolver(
       Project project, PackageResolver packageResolver, Writer logWriter) {
@@ -116,7 +114,7 @@ public final class ProjectDependenciesResolver {
       }
       var dependencyWithChecksum = new RemoteDependency(packageUri, computedChecksums);
       updateDependency(dependencyWithChecksum);
-      EconomicSets.add(alreadyHandledDependencies, packageUri);
+      alreadyHandledDependencies.add(packageUri);
       for (var transitiveDependency : metadata.getDependencies().values()) {
         resolveDependenciesOfPackageUri(
             transitiveDependency.getPackageUri().toProjectPackageUri(),
@@ -142,7 +140,7 @@ public final class ProjectDependenciesResolver {
     var currentDependency = resolvedDependencies.get(canonicalPackageUri);
     if (currentDependency == null
         || currentDependency.getVersion().compareTo(dependency.getVersion()) < 0) {
-      EconomicMaps.put(resolvedDependencies, canonicalPackageUri, dependency);
+      resolvedDependencies.put(canonicalPackageUri, dependency);
     }
   }
 }

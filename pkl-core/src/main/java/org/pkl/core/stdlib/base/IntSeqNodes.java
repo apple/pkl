@@ -21,13 +21,13 @@ import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.collection.EconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
-import org.pkl.core.util.EconomicMaps;
 
 public final class IntSeqNodes {
   private IntSeqNodes() {}
@@ -109,15 +109,13 @@ public final class IntSeqNodes {
     @Specialization
     @TruffleBoundary
     protected VmListing eval(VmIntSeq self) {
-      var result = EconomicMaps.<Object, ObjectMember>create();
+      var result = EconomicMap.<Object, ObjectMember>create();
       var iterator = self.iterator();
       long idx = 0;
 
       while (iterator.hasNext()) {
-        EconomicMaps.put(
-            result,
-            idx,
-            VmUtils.createSyntheticObjectElement(String.valueOf(idx), iterator.nextLong()));
+        result.put(
+            idx, VmUtils.createSyntheticObjectElement(String.valueOf(idx), iterator.nextLong()));
         idx += 1;
       }
 

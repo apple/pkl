@@ -23,12 +23,12 @@ import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
 import org.pkl.core.ast.lambda.*;
+import org.pkl.core.collection.EconomicSet;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
-import org.pkl.core.util.EconomicSets;
 
 // duplication between ListNodes and SetNodes is "intentional"
 // (sharing nodes between VmCollection subtypes results in
@@ -481,10 +481,10 @@ public final class ListNodes {
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization
     protected boolean eval(VmList self) {
-      var visited = EconomicSets.create();
+      var visited = EconomicSet.create();
 
       for (var elem : self) {
-        if (!EconomicSets.add(visited, elem)) return false;
+        if (!visited.add(elem)) return false;
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -497,10 +497,11 @@ public final class ListNodes {
 
     @Specialization
     protected boolean eval(VmList self, VmFunction function) {
-      var visited = EconomicSets.create();
+      var visited = EconomicSet.create();
 
       for (var elem : self) {
-        if (!EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) return false;
+        Object element = applyLambdaNode.execute(function, elem);
+        if (!visited.add(element)) return false;
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -512,10 +513,10 @@ public final class ListNodes {
     @Specialization
     protected VmList eval(VmList self) {
       var builder = self.builder();
-      var visited = EconomicSets.create();
+      var visited = EconomicSet.create();
 
       for (var elem : self) {
-        if (EconomicSets.add(visited, elem)) builder.add(elem);
+        if (visited.add(elem)) builder.add(elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -529,10 +530,11 @@ public final class ListNodes {
     @Specialization
     protected VmList eval(VmList self, VmFunction function) {
       var builder = self.builder();
-      var visited = EconomicSets.create();
+      var visited = EconomicSet.create();
 
       for (var elem : self) {
-        if (EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) builder.add(elem);
+        Object element = applyLambdaNode.execute(function, elem);
+        if (visited.add(element)) builder.add(elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());

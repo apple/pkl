@@ -20,10 +20,10 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.util.Nullable;
 
 public final class VmListing extends VmListingOrMapping<VmListing> {
@@ -32,7 +32,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
         new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getListingClass().getPrototype(),
-            EconomicMaps.create(),
+            EconomicMap.create(),
             0);
   }
 
@@ -94,7 +94,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   @Override
   @TruffleBoundary
   public List<Object> export() {
-    var properties = new ArrayList<>(EconomicMaps.size(cachedValues));
+    var properties = new ArrayList<>(cachedValues.size());
 
     iterateMemberValues(
         (key, prop, value) -> {

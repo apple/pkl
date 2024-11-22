@@ -24,14 +24,13 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -74,7 +73,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     var parentClass = parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent);
     VmUtils.checkIsInstantiable(parentClass, getParentNode());
 
-    for (var member : EconomicMaps.getValues(members)) {
+    for (var member : members.getValues()) {
       if (member.isLocal()) continue;
 
       var memberName = member.getName();
@@ -119,7 +118,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   protected final boolean checkIsValidListingAmendment() {
     if (maxListingMemberIndex != Long.MIN_VALUE) return true;
 
-    var cursor = EconomicMaps.getEntries(members);
+    var cursor = members.getEntries();
     long maxIndex = -1;
 
     while (cursor.advance()) {
@@ -172,7 +171,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   protected final boolean checkIsValidMappingAmendment() {
     if (checkedIsValidMappingAmendment) return true;
 
-    for (var member : EconomicMaps.getValues(members)) {
+    for (var member : members.getValues()) {
       if (member.isLocal()) continue;
 
       var memberName = member.getNameOrNull();
@@ -203,7 +202,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     if (maxListingMemberIndex < parentLength) return true;
 
     CompilerDirectives.transferToInterpreter();
-    var cursor = EconomicMaps.getEntries(members);
+    var cursor = members.getEntries();
     while (cursor.advance()) {
       var key = cursor.getKey();
       if (!(key instanceof Long)) continue;
@@ -251,7 +250,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
             .build();
       }
 
-      if (EconomicMaps.put(result, index, value) != null) {
+      if (result.put(index, value) != null) {
         CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder()
             .evalError("duplicateDefinition", new ProgramValue("", index))
@@ -264,7 +263,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   @TruffleBoundary
   protected @Nullable ObjectMember findFirstNonProperty(
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    var cursor = EconomicMaps.getEntries(members);
+    var cursor = members.getEntries();
     while (cursor.advance()) {
       var member = cursor.getValue();
       if (member.getNameOrNull() == null) return member;
@@ -275,7 +274,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   @TruffleBoundary
   protected @Nullable ObjectMember findFirstNonDefaultProperty(
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    var cursor = EconomicMaps.getEntries(members);
+    var cursor = members.getEntries();
     while (cursor.advance()) {
       var member = cursor.getValue();
       if (member.getNameOrNull() != null && member.getNameOrNull() != Identifier.DEFAULT)

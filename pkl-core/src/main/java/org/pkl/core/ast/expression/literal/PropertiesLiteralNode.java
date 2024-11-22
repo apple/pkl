@@ -22,10 +22,10 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
-import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.collection.UnmodifiableEconomicMap;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.Nullable;
 

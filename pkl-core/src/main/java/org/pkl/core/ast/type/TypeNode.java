@@ -43,9 +43,9 @@ import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.collection.EconomicMap;
+import org.pkl.core.collection.EconomicSet;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.Nonnull;
@@ -901,7 +901,7 @@ public abstract class TypeNode extends PklNode {
      */
     @TruffleBoundary
     private boolean shouldEagerCheck() {
-      var seenParameterizedClasses = EconomicSets.<VmClass>create();
+      var seenParameterizedClasses = EconomicSet.<VmClass>create();
       var ret = new MutableBoolean(false);
       this.acceptTypeNode(
           (typeNode) -> {
@@ -916,7 +916,7 @@ public abstract class TypeNode extends PklNode {
               ret.set(true);
               return false;
             } else {
-              EconomicSets.add(seenParameterizedClasses, typeNodeClass);
+              seenParameterizedClasses.add(typeNodeClass);
               return true;
             }
           });
@@ -1591,14 +1591,14 @@ public abstract class TypeNode extends PklNode {
           return new VmListing(
               VmUtils.createEmptyMaterializedFrame(),
               BaseModule.getListingClass().getPrototype(),
-              EconomicMaps.create(),
+              EconomicMap.create(),
               0);
         }
 
         return new VmMapping(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getMappingClass().getPrototype(),
-            EconomicMaps.create());
+            EconomicMap.create());
       }
 
       var defaultMember =
@@ -1641,14 +1641,14 @@ public abstract class TypeNode extends PklNode {
         return new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getListingClass().getPrototype(),
-            EconomicMaps.of(Identifier.DEFAULT, defaultMember),
+            EconomicMap.of(Identifier.DEFAULT, defaultMember),
             0);
       }
 
       return new VmMapping(
           VmUtils.createEmptyMaterializedFrame(),
           BaseModule.getMappingClass().getPrototype(),
-          EconomicMaps.of(Identifier.DEFAULT, defaultMember));
+          EconomicMap.of(Identifier.DEFAULT, defaultMember));
     }
 
     protected <T extends VmListingOrMapping<T>> T doTypeCast(VirtualFrame frame, T original) {
@@ -1675,7 +1675,7 @@ public abstract class TypeNode extends PklNode {
 
       // similar to shallow forcing
       for (var owner = object; owner != null; owner = owner.getParent()) {
-        var cursor = EconomicMaps.getEntries(owner.getMembers());
+        var cursor = owner.getMembers().getEntries();
         while (cursor.advance()) {
           loopCount += 1;
           var member = cursor.getValue();
