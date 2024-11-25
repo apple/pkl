@@ -315,6 +315,9 @@ public final class VmUtils {
       ret = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
     }
     if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
+      if (owner != receiver && owner instanceof VmListingOrMapping<?> vmListingOrMappingOwner) {
+        ret = vmListingOrMappingOwner.typecastObjectMember(member, ret, callNode);
+      }
       ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
     }
     receiver.setCachedValue(memberKey, ret, member);
