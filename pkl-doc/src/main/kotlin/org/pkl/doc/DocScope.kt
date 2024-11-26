@@ -35,7 +35,7 @@ internal sealed class DocScope {
 
   abstract val parent: DocScope?
 
-  private val siteScope: SiteScope? by lazy {
+  val siteScope: SiteScope? by lazy {
     var scope = this
     while (scope !is SiteScope) {
       scope = scope.parent ?: return@lazy null
