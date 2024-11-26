@@ -94,7 +94,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   @Override
   @TruffleBoundary
   public List<Object> export() {
-    var properties = new ArrayList<>(EconomicMaps.size(cachedValues));
+    var properties = new ArrayList<>(getCacheSize());
 
     iterateMemberValues(
         (key, prop, value) -> {

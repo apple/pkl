@@ -75,8 +75,7 @@ public final class VmDynamic extends VmObject {
   @Override
   @TruffleBoundary
   public PObject export() {
-    var properties =
-        CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.<String, Object>newLinkedHashMap(getCacheSize());
 
     iterateMemberValues(
         (key, member, value) -> {
@@ -107,7 +106,9 @@ public final class VmDynamic extends VmObject {
     force(false);
     other.force(false);
     if (getRegularMemberCount() != other.getRegularMemberCount()) return false;
+    if (getCacheSize() == 0) return true;
 
+    assert cachedValues != null;
     var cursor = cachedValues.getEntries();
     while (cursor.advance()) {
       Object key = cursor.getKey();
@@ -129,6 +130,10 @@ public final class VmDynamic extends VmObject {
 
     force(false);
     var result = 0;
+    if (getCacheSize() == 0) {
+      return 0;
+    }
+    assert cachedValues != null;
     var cursor = cachedValues.getEntries();
 
     while (cursor.advance()) {
@@ -149,8 +154,11 @@ public final class VmDynamic extends VmObject {
     if (cachedRegularMemberCount != -1) return cachedRegularMemberCount;
 
     var result = 0;
-    for (var key : cachedValues.getKeys()) {
-      if (!isHiddenOrLocalProperty(key)) result += 1;
+    if (getCacheSize() != 0) {
+      assert cachedValues != null;
+      for (var key : cachedValues.getKeys()) {
+        if (!isHiddenOrLocalProperty(key)) result += 1;
+      }
     }
     cachedRegularMemberCount = result;
     return result;
