@@ -1,5 +1,7 @@
 import "pkl:test"
 
+import "helpers/originalTypealias.pkl"
+
 typealias Simple = String
 const function simple(arg: Simple): Simple = arg
 
@@ -105,3 +107,8 @@ res19: LocalTypeAlias = "abc"
 typealias VeryComposite = Pair<Composite, Composite>
 
 res20: VeryComposite = Pair(Map("abc", List("def")), Map("abc", List("def")))
+
+// typealiases should be executed in their original context
+res21: originalTypealias.Birds = new { "John Birdo" }
+
+res22: originalTypealias.Birds2 = Pair(new Listing { "John Birdo" }, 0)

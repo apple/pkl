@@ -23,6 +23,8 @@ import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 /** Performs a typecast on a Mapping entry value, or a Listing element. */
@@ -30,12 +32,29 @@ public class ListingOrMappingTypeCastNode extends PklRootNode {
 
   @Child private TypeNode typeNode;
   private final String qualifiedName;
+  private final @Nullable VmObjectLike owner;
+  private final @Nullable Object receiver;
 
   public ListingOrMappingTypeCastNode(
       VmLanguage language, FrameDescriptor descriptor, TypeNode typeNode, String qualifiedName) {
     super(language, descriptor);
     this.typeNode = typeNode;
     this.qualifiedName = qualifiedName;
+    owner = null;
+    receiver = null;
+  }
+
+  public ListingOrMappingTypeCastNode(
+      VmLanguage language,
+      FrameDescriptor descriptor,
+      TypeNode typeNode,
+      String qualifiedName,
+      VirtualFrame frame) {
+    super(language, descriptor);
+    this.typeNode = typeNode;
+    this.qualifiedName = qualifiedName;
+    owner = VmUtils.getOwner(frame);
+    receiver = VmUtils.getReceiver(frame);
   }
 
   public TypeNode getTypeNode() {
@@ -54,6 +73,20 @@ public class ListingOrMappingTypeCastNode extends PklRootNode {
 
   @Override
   public Object execute(VirtualFrame frame) {
+    if (owner == null || receiver == null) return executeInternal(frame);
+    var prevOwner = VmUtils.getOwner(frame);
+    var prevReceiver = VmUtils.getReceiver(frame);
+    try {
+      VmUtils.setOwner(frame, owner);
+      VmUtils.setReceiver(frame, receiver);
+      return executeInternal(frame);
+    } finally {
+      VmUtils.setOwner(frame, prevOwner);
+      VmUtils.setReceiver(frame, prevReceiver);
+    }
+  }
+
+  private Object executeInternal(VirtualFrame frame) {
     try {
       return typeNode.execute(frame, frame.getArguments()[2]);
     } catch (VmTypeMismatchException e) {

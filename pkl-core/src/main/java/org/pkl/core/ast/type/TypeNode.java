@@ -79,6 +79,16 @@ public abstract class TypeNode extends PklNode {
   /**
    * Checks if {@code value} conforms to this type, and possibly casts its value.
    *
+   * <p>Any lazy type checks will be performed in the context of the original type. E.g: type
+   * aliases.
+   */
+  public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+    return execute(frame, value);
+  }
+
+  /**
+   * Checks if {@code value} conforms to this type, and possibly casts its value.
+   *
    * <p>If {@code value} is conforming, sets {@code slot} to {@code value}. Otherwise, throws a
    * {@link VmTypeMismatchException}.
    */
@@ -1203,7 +1213,6 @@ public abstract class TypeNode extends PklNode {
       return value;
     }
 
-    @SuppressWarnings("DuplicatedCode")
     @Override
     @ExplodeLoop
     public Object execute(VirtualFrame frame, Object value) {
@@ -1216,6 +1225,28 @@ public abstract class TypeNode extends PklNode {
 
       for (var elem : vmList) {
         var result = elementTypeNode.execute(frame, elem);
+        if (result != elem) {
+          ret = ret.replace(idx, result);
+        }
+        idx++;
+      }
+
+      LoopNode.reportLoopCount(this, vmList.getLength());
+      return ret;
+    }
+
+    @Override
+    @ExplodeLoop
+    public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmList vmList)) {
+        throw typeMismatch(value, BaseModule.getListClass());
+      }
+      if (skipElementTypeChecks) return vmList;
+      var ret = vmList;
+      var idx = 0;
+
+      for (var elem : vmList) {
+        var result = elementTypeNode.executeInDefinitionContext(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
         }
@@ -1343,6 +1374,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+      if (value instanceof VmMap vmMap) {
+        return evalInDefinitionContext(frame, vmMap);
+      }
+      throw typeMismatch(value, BaseModule.getMapClass());
+    }
+
+    @Override
     public Object createDefaultValue(
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
@@ -1411,6 +1450,23 @@ public abstract class TypeNode extends PklNode {
       return value;
     }
 
+    private Object evalInDefinitionContext(VirtualFrame frame, VmMap value) {
+      if (skipEntryTypeChecks) return value;
+      var ret = value;
+
+      for (var entry : value) {
+        var key = VmUtils.getKey(entry);
+        keyTypeNode.executeEagerly(frame, key);
+        var result = valueTypeNode.executeInDefinitionContext(frame, VmUtils.getValue(entry));
+        if (result != VmUtils.getValue(entry)) {
+          ret = ret.put(key, result);
+        }
+      }
+
+      LoopNode.reportLoopCount(this, value.getLength());
+      return ret;
+    }
+
     @Override
     protected boolean isParametric() {
       return true;
@@ -1427,7 +1483,15 @@ public abstract class TypeNode extends PklNode {
       if (!(value instanceof VmListing vmListing)) {
         throw typeMismatch(value, BaseModule.getListingClass());
       }
-      return doTypeCast(frame, vmListing);
+      return doTypeCast(frame, vmListing, false);
+    }
+
+    @Override
+    public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmListing vmListing)) {
+        throw typeMismatch(value, BaseModule.getListingClass());
+      }
+      return doTypeCast(frame, vmListing, true);
     }
 
     @Override
@@ -1482,7 +1546,17 @@ public abstract class TypeNode extends PklNode {
       }
       // execute type checks on mapping keys
       doEagerCheck(frame, vmMapping, false, true);
-      return doTypeCast(frame, vmMapping);
+      return doTypeCast(frame, vmMapping, false);
+    }
+
+    @Override
+    public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+      if (!(value instanceof VmMapping vmMapping)) {
+        throw typeMismatch(value, BaseModule.getMappingClass());
+      }
+      // execute type checks on mapping keys
+      doEagerCheck(frame, vmMapping, false, true);
+      return doTypeCast(frame, vmMapping, true);
     }
 
     @Override
@@ -1560,15 +1634,26 @@ public abstract class TypeNode extends PklNode {
       return valueTypeNode;
     }
 
-    protected ListingOrMappingTypeCastNode getListingOrMappingTypeCastNode() {
+    protected ListingOrMappingTypeCastNode getListingOrMappingTypeCastNode(
+        VirtualFrame frame, boolean executeInDefinition) {
       if (listingOrMappingTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        listingOrMappingTypeCastNode =
-            new ListingOrMappingTypeCastNode(
-                VmLanguage.get(this),
-                getRootNode().getFrameDescriptor(),
-                valueTypeNode,
-                getRootNode().getName());
+        if (executeInDefinition) {
+          listingOrMappingTypeCastNode =
+              new ListingOrMappingTypeCastNode(
+                  VmLanguage.get(this),
+                  getRootNode().getFrameDescriptor(),
+                  valueTypeNode,
+                  getRootNode().getName(),
+                  frame);
+        } else {
+          listingOrMappingTypeCastNode =
+              new ListingOrMappingTypeCastNode(
+                  VmLanguage.get(this),
+                  getRootNode().getFrameDescriptor(),
+                  valueTypeNode,
+                  getRootNode().getName());
+        }
       }
       return listingOrMappingTypeCastNode;
     }
@@ -1651,13 +1736,15 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
     }
 
-    protected <T extends VmListingOrMapping<T>> T doTypeCast(VirtualFrame frame, T original) {
+    protected <T extends VmListingOrMapping<T>> T doTypeCast(
+        VirtualFrame frame, T original, boolean executeInDefinition) {
       // optimization: don't create new object if the original already has the same typecheck, or if
       // this typecheck is a no-op.
       if (isNoopTypeCheck() || original.hasSameChecksAs(valueTypeNode)) {
         return original;
       }
-      return original.withCheckedMembers(getListingOrMappingTypeCastNode(), frame.materialize());
+      return original.withCheckedMembers(
+          getListingOrMappingTypeCastNode(frame, executeInDefinition), frame.materialize());
     }
 
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
@@ -1961,6 +2048,19 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof VmPair vmPair) {
         var first = firstTypeNode.execute(frame, vmPair.getFirst());
         var second = secondTypeNode.execute(frame, vmPair.getSecond());
+        if (first == vmPair.getFirst() && second == vmPair.getSecond()) {
+          return vmPair;
+        }
+        return new VmPair(first, second);
+      }
+      throw typeMismatch(value, BaseModule.getPairClass());
+    }
+
+    @Override
+    public Object executeInDefinitionContext(VirtualFrame frame, Object value) {
+      if (value instanceof VmPair vmPair) {
+        var first = firstTypeNode.executeInDefinitionContext(frame, vmPair.getFirst());
+        var second = secondTypeNode.executeInDefinitionContext(frame, vmPair.getSecond());
         if (first == vmPair.getFirst() && second == vmPair.getSecond()) {
           return vmPair;
         }
@@ -2395,7 +2495,7 @@ public abstract class TypeNode extends PklNode {
       VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
-        return aliasedTypeNode.execute(frame, value);
+        return aliasedTypeNode.executeInDefinitionContext(frame, value);
       } finally {
         VmUtils.setOwner(frame, prevOwner);
         VmUtils.setReceiver(frame, prevReceiver);
