@@ -103,6 +103,9 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
     var objectMember = findMember(key);
     var ret = typecastObjectMember(objectMember, memberValue, IndirectCallNode.getUncached());
     if (ret != memberValue) {
+      if (cachedValues == null) {
+        cachedValues = EconomicMaps.create();
+      }
       EconomicMaps.put(cachedValues, key, ret);
     } else {
       // optimization: don't add to own cached values if typecast results in the same value

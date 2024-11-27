@@ -104,7 +104,7 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
   @Override
   @TruffleBoundary
   public Map<Object, Object> export() {
-    var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.newLinkedHashMap(getCacheSize());
 
     iterateMemberValues(
         (key, prop, value) -> {

@@ -83,6 +83,12 @@ public abstract class VmObjectLike extends VmValue {
   public abstract UnmodifiableEconomicMap<Object, ObjectMember> getMembers();
 
   /**
+   * @return The (current) size of the properties cache for this object.
+   */
+  @TruffleBoundary
+  public abstract @Nullable int getCacheSize();
+
+  /**
    * Reads from the properties cache for this object. The cache contains the values of all members
    * defined in this object or an ancestor thereof which have been requested with this object as the
    * receiver.

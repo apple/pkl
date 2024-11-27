@@ -31,7 +31,7 @@ import org.pkl.core.util.Nullable;
 public abstract class VmObject extends VmObjectLike {
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
-  protected final EconomicMap<Object, Object> cachedValues;
+  protected @Nullable EconomicMap<Object, Object> cachedValues;
 
   protected int cachedHash;
   private boolean forced;
@@ -39,21 +39,13 @@ public abstract class VmObject extends VmObjectLike {
   public VmObject(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
-      UnmodifiableEconomicMap<Object, ObjectMember> members,
-      EconomicMap<Object, Object> cachedValues) {
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame);
     this.parent = parent;
     this.members = members;
-    this.cachedValues = cachedValues;
+    this.cachedValues = null;
 
     assert parent != this;
-  }
-
-  public VmObject(
-      MaterializedFrame enclosingFrame,
-      @Nullable VmObject parent,
-      UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    this(enclosingFrame, parent, members, EconomicMaps.create());
   }
 
   public final void lateInitParent(VmObject parent) {
@@ -82,17 +74,31 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   @Override
+  public int getCacheSize() {
+    return cachedValues == null ? 0 : cachedValues.size();
+  }
+
+  @Override
   public @Nullable Object getCachedValue(Object key) {
+    if (cachedValues == null) {
+      return null;
+    }
     return EconomicMaps.get(cachedValues, key);
   }
 
   @Override
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
+    if (cachedValues == null) {
+      cachedValues = EconomicMaps.create();
+    }
     EconomicMaps.put(cachedValues, key, value);
   }
 
   @Override
   public boolean hasCachedValue(Object key) {
+    if (cachedValues == null) {
+      return false;
+    }
     return EconomicMaps.containsKey(cachedValues, key);
   }
 
@@ -208,7 +214,7 @@ public abstract class VmObject extends VmObjectLike {
    */
   @TruffleBoundary
   protected final Map<String, Object> exportMembers() {
-    var result = CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var result = CollectionUtils.<String, Object>newLinkedHashMap(getCacheSize());
 
     iterateMemberValues(
         (key, member, value) -> {

@@ -107,6 +107,11 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
+  public int getCacheSize() {
+    return 0;
+  }
+
+  @Override
   public @Nullable Object getCachedValue(Object key) {
     return null;
   }
