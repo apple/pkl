@@ -36,25 +36,21 @@ public class ListingOrMappingTypeCastNode extends PklRootNode {
   private final @Nullable Object receiver;
 
   public ListingOrMappingTypeCastNode(
-      VmLanguage language, FrameDescriptor descriptor, TypeNode typeNode, String qualifiedName) {
-    super(language, descriptor);
-    this.typeNode = typeNode;
-    this.qualifiedName = qualifiedName;
-    owner = null;
-    receiver = null;
-  }
-
-  public ListingOrMappingTypeCastNode(
       VmLanguage language,
       FrameDescriptor descriptor,
       TypeNode typeNode,
       String qualifiedName,
-      VirtualFrame frame) {
+      @Nullable VirtualFrame originalFrame) {
     super(language, descriptor);
     this.typeNode = typeNode;
     this.qualifiedName = qualifiedName;
-    owner = VmUtils.getOwner(frame);
-    receiver = VmUtils.getReceiver(frame);
+    if (originalFrame != null) {
+      owner = VmUtils.getOwner(originalFrame);
+      receiver = VmUtils.getReceiver(originalFrame);
+    } else {
+      owner = null;
+      receiver = null;
+    }
   }
 
   public TypeNode getTypeNode() {

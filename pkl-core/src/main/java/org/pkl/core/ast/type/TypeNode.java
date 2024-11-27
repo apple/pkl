@@ -1635,25 +1635,16 @@ public abstract class TypeNode extends PklNode {
     }
 
     protected ListingOrMappingTypeCastNode getListingOrMappingTypeCastNode(
-        VirtualFrame frame, boolean executeInDefinition) {
+        @Nullable VirtualFrame originalFrame) {
       if (listingOrMappingTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        if (executeInDefinition) {
-          listingOrMappingTypeCastNode =
-              new ListingOrMappingTypeCastNode(
-                  VmLanguage.get(this),
-                  getRootNode().getFrameDescriptor(),
-                  valueTypeNode,
-                  getRootNode().getName(),
-                  frame);
-        } else {
-          listingOrMappingTypeCastNode =
-              new ListingOrMappingTypeCastNode(
-                  VmLanguage.get(this),
-                  getRootNode().getFrameDescriptor(),
-                  valueTypeNode,
-                  getRootNode().getName());
-        }
+        listingOrMappingTypeCastNode =
+            new ListingOrMappingTypeCastNode(
+                VmLanguage.get(this),
+                getRootNode().getFrameDescriptor(),
+                valueTypeNode,
+                getRootNode().getName(),
+                originalFrame);
       }
       return listingOrMappingTypeCastNode;
     }
@@ -1743,8 +1734,9 @@ public abstract class TypeNode extends PklNode {
       if (isNoopTypeCheck() || original.hasSameChecksAs(valueTypeNode)) {
         return original;
       }
+      var originalFrame = executeInDefinition ? frame : null;
       return original.withCheckedMembers(
-          getListingOrMappingTypeCastNode(frame, executeInDefinition), frame.materialize());
+          getListingOrMappingTypeCastNode(originalFrame), frame.materialize());
     }
 
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
