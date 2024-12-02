@@ -237,14 +237,8 @@ final class Version implements Comparable<Version> {
     return __preReleaseIdentifiers;
   }
 
-  private static final class Identifier implements Comparable<Identifier> {
-    private final long numericId;
-    private final /*@Nullable*/ String alphanumericId;
-
-    Identifier(long numericId, /*@Nullable*/ String alphanumericId) {
-      this.numericId = numericId;
-      this.alphanumericId = alphanumericId;
-    }
+  private record Identifier(long numericId, /*@Nullable*/ String alphanumericId)
+      implements Comparable<Identifier> {
 
     @Override
     public int compareTo(/*@Nonnull*/ @SuppressWarnings("NullableProblems") Identifier other) {
