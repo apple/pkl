@@ -20,7 +20,6 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.PklRootNode;
-import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
@@ -53,7 +52,7 @@ public final class IdentityMixinNode extends PklRootNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
+  protected Object executeImpl(VirtualFrame frame) {
     var arguments = frame.getArguments();
     if (arguments.length != 4) {
       CompilerDirectives.transferToInterpreter();
@@ -62,23 +61,10 @@ public final class IdentityMixinNode extends PklRootNode {
           .withSourceSection(sourceSection)
           .build();
     }
-
-    try {
-      var argument = arguments[3];
-      if (argumentTypeNode != null) {
-        return argumentTypeNode.execute(frame, argument);
-      }
-      return argument;
-    } catch (VmTypeMismatchException e) {
-      CompilerDirectives.transferToInterpreter();
-      throw e.toVmException();
-    } catch (Exception e) {
-      CompilerDirectives.transferToInterpreter();
-      if (e instanceof VmException) {
-        throw e;
-      } else {
-        throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
-      }
+    var argument = arguments[3];
+    if (argumentTypeNode != null) {
+      return argumentTypeNode.execute(frame, argument);
     }
+    return argument;
   }
 }

@@ -51,7 +51,7 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
       @Cached("getProperty(cachedOwnerClass)") ClassProperty property,
       @Cached("createTypeCheckCallNode(property)") @Nullable DirectCallNode callNode) {
 
-    var result = executeBody(frame);
+    var result = bodyNode.executeGeneric(frame);
 
     // TODO: propagate SUPER_CALL_MARKER to disable constraint (but not type) check
     if (callNode != null && VmUtils.shouldRunTypeCheck(frame)) {
@@ -66,7 +66,7 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
   protected Object eval(
       VirtualFrame frame, VmObjectLike owner, @Cached("create()") IndirectCallNode callNode) {
 
-    var result = executeBody(frame);
+    var result = bodyNode.executeGeneric(frame);
 
     if (VmUtils.shouldRunTypeCheck(frame)) {
       var property = getProperty(owner.getVmClass());
@@ -86,7 +86,7 @@ public abstract class TypeCheckedPropertyNode extends RegularMemberNode {
 
   @Specialization
   protected Object eval(VirtualFrame frame, @SuppressWarnings("unused") VmDynamic owner) {
-    return executeBody(frame);
+    return bodyNode.executeGeneric(frame);
   }
 
   protected ClassProperty getProperty(VmClass ownerClass) {

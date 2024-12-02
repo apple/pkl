@@ -21,8 +21,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
-import org.pkl.core.ast.type.VmTypeMismatchException;
-import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -58,25 +56,13 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
-    try {
-      if (typeNode == null) {
-        CompilerDirectives.transferToInterpreter();
-        typeNode = insert(unresolvedTypeNode.execute(frame));
-        unresolvedTypeNode = null;
-      }
-      var result = bodyNode.executeGeneric(frame);
-      return typeNode.execute(frame, result);
-    } catch (VmTypeMismatchException e) {
+  protected Object executeImpl(VirtualFrame frame) {
+    if (typeNode == null) {
       CompilerDirectives.transferToInterpreter();
-      throw e.toVmException();
-    } catch (Exception e) {
-      CompilerDirectives.transferToInterpreter();
-      if (e instanceof VmException) {
-        throw e;
-      } else {
-        throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
-      }
+      typeNode = insert(unresolvedTypeNode.execute(frame));
+      unresolvedTypeNode = null;
     }
+    var result = bodyNode.executeGeneric(frame);
+    return typeNode.execute(frame, result);
   }
 }
