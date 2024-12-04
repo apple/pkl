@@ -54,14 +54,14 @@ public final class IdentityMixinNode extends PklRootNode {
   @Override
   protected Object executeImpl(VirtualFrame frame) {
     var arguments = frame.getArguments();
-    if (arguments.length != 4) {
+    if (arguments.length != 3) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
-          .evalError("wrongFunctionArgumentCount", 1, arguments.length - 3)
+          .evalError("wrongFunctionArgumentCount", 1, arguments.length - 2)
           .withSourceSection(sourceSection)
           .build();
     }
-    var argument = arguments[3];
+    var argument = arguments[2];
     if (argumentTypeNode != null) {
       return argumentTypeNode.execute(frame, argument);
     }

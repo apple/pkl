@@ -34,7 +34,7 @@ public final class GeneratorWhenNode extends GeneratorMemberNode {
       GeneratorMemberNode[] thenNodes,
       GeneratorMemberNode[] elseNodes) {
 
-    super(sourceSection);
+    super(sourceSection, false);
     this.conditionNode = conditionNode;
     this.thenNodes = thenNodes;
     this.elseNodes = elseNodes;

@@ -16,25 +16,23 @@
 package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.Arrays;
-import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.runtime.VmUtils;
 
 public abstract class GeneratorMemberNode extends PklNode {
-  protected GeneratorMemberNode(SourceSection sourceSection) {
+  final boolean needsStoredFrame;
+
+  protected GeneratorMemberNode(SourceSection sourceSection, boolean needsStoredFrame) {
     super(sourceSection);
+    this.needsStoredFrame = needsStoredFrame;
   }
 
   public abstract void execute(VirtualFrame frame, Object parent, ObjectData data);
@@ -54,79 +52,39 @@ public abstract class GeneratorMemberNode extends PklNode {
   }
 
   @Idempotent
-  protected boolean checkIsValidTypedProperty(VmClass clazz, ObjectMember member) {
-    if (member.isLocal() || clazz.hasProperty(member.getName())) return true;
+  @SuppressWarnings("SameReturnValue")
+  protected final boolean checkIsValidTypedProperty(VmClass clazz, ObjectMember member) {
+    if (member.isLocal()) return true;
+    var memberName = member.getName();
+    var classProperty = clazz.getProperty(memberName);
+    if (classProperty != null && !classProperty.isConstOrFixed()) return true;
 
     CompilerDirectives.transferToInterpreter();
-    throw exceptionBuilder()
-        .cannotFindProperty(clazz.getPrototype(), member.getName(), false, false)
-        .withSourceSection(member.getHeaderSection())
-        .build();
-  }
-
-  /**
-   * <code>
-   * x = new Mapping { for (i in IntSeq(1, 3)) for (key, value in Map(4, "Pigeon", 6, "Barn Owl")) [i *
-   * key] = value.reverse() }
-   * </code>
-   *
-   * <p>The above code results in - 1 MemberNode for `value.reverse()` - 1 ObjectMember for `[i *
-   * key] = value.reverse()` - 1 ObjectData.members map with 6 identical ObjectMember values keyed
-   * by `i * key` - 1 ObjectData.forBindings map with 6 distinct arrays keyed by `i * key` Each
-   * array contains three elements, namely the current values for `i`, `key`, and `value`. - 1
-   * VmMapping whose `members` field holds `ObjectData.members` and whose `extraStorage` field holds
-   * `ObjectData.forBindings`. - 3 `FrameSlot`s for `i`, `key`, and `value`
-   */
-  @ValueType
-  public static final class ObjectData {
-    // member count is exact iff every for/when body has exactly one member
-    ObjectData(int minMemberCount, int length) {
-      this.members = EconomicMaps.create(minMemberCount);
-      this.length = length;
-    }
-
-    final EconomicMap<Object, ObjectMember> members;
-
-    // For-bindings keyed by object member key.
-    // (There is only one ObjectMember instance per lexical member definition,
-    // hence can't store a member's for-bindings there.)
-    final EconomicMap<Object, Object[]> forBindings = EconomicMap.create();
-
-    int length;
-
-    private Object @Nullable [] currentForBindings;
-
-    @TruffleBoundary
-    Object @Nullable [] addForBinding(Object value) {
-      var result = currentForBindings;
-      if (currentForBindings == null) {
-        currentForBindings = new Object[] {value};
-      } else {
-        currentForBindings = Arrays.copyOf(currentForBindings, currentForBindings.length + 1);
-        currentForBindings[currentForBindings.length - 1] = value;
+    if (classProperty == null) {
+      var exception =
+          exceptionBuilder()
+              .cannotFindProperty(clazz.getPrototype(), memberName, false, false)
+              .build();
+      if (member.getHeaderSection().isAvailable()) {
+        exception
+            .getInsertedStackFrames()
+            .put(
+                getRootNode().getCallTarget(),
+                VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
       }
-      return result;
+      throw exception;
     }
-
-    @TruffleBoundary
-    Object @Nullable [] addForBinding(Object key, Object value) {
-      var result = currentForBindings;
-      if (currentForBindings == null) {
-        currentForBindings = new Object[] {key, value};
-      } else {
-        currentForBindings = Arrays.copyOf(currentForBindings, currentForBindings.length + 2);
-        currentForBindings[currentForBindings.length - 2] = key;
-        currentForBindings[currentForBindings.length - 1] = value;
-      }
-      return result;
+    assert classProperty.isConstOrFixed();
+    var errMsg =
+        classProperty.isConst() ? "cannotAssignConstProperty" : "cannotAssignFixedProperty";
+    var exception = exceptionBuilder().evalError(errMsg, memberName).build();
+    if (member.getHeaderSection().isAvailable()) {
+      exception
+          .getInsertedStackFrames()
+          .put(
+              getRootNode().getCallTarget(),
+              VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
     }
-
-    void persistForBindings(Object key) {
-      EconomicMaps.put(forBindings, key, currentForBindings);
-    }
-
-    void resetForBindings(Object @Nullable [] bindings) {
-      currentForBindings = bindings;
-    }
+    throw exception;
   }
 }

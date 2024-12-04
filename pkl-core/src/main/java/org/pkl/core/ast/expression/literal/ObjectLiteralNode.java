@@ -66,7 +66,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
         parametersDescriptor == null
             ? new TypeNode[0]
             : VmUtils.resolveParameterTypes(frame, parametersDescriptor, parameterTypes);
-    return new AmendFunctionNode(this, resolvedParameterTypes, frame.getFrameDescriptor());
+    return new AmendFunctionNode(this, resolvedParameterTypes);
   }
 
   @Idempotent

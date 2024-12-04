@@ -26,8 +26,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.SimpleRootNode;
-import org.pkl.core.ast.builder.SymbolTable;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
 import org.pkl.core.ast.member.FunctionNode;
 import org.pkl.core.ast.member.Lambda;
@@ -40,10 +38,7 @@ public final class AmendFunctionNode extends PklNode {
   private final PklRootNode initialFunctionRootNode;
   @CompilationFinal private int customThisSlot = -1;
 
-  public AmendFunctionNode(
-      ObjectLiteralNode hostNode,
-      TypeNode[] parameterTypeNodes,
-      FrameDescriptor hostFrameDescriptor) {
+  public AmendFunctionNode(ObjectLiteralNode hostNode, TypeNode[] parameterTypeNodes) {
     super(hostNode.getSourceSection());
 
     isCustomThisScope = hostNode.isCustomThisScope;
@@ -61,39 +56,7 @@ public final class AmendFunctionNode extends PklNode {
     } else {
       parameterSlots = new int[0];
     }
-    var hasForGenVars = false;
-    for (var i = 0; i < hostFrameDescriptor.getNumberOfSlots(); i++) {
-      var slotInfo = hostFrameDescriptor.getSlotInfo(i);
-      // Copy for-generator variables from the outer frame descriptor into inner lambda.
-      //
-      // We need to do this because at parse time within AstBuilder, we inject for-generator
-      // variables into the frame descriptor of the containing root node.
-      // The expectation is that when GeneratorForNode executes, it writes for-generator variables
-      // into these slots.
-      //
-      // In the case of an amend function node, AstBuilder can't determine out that there is another
-      // frame (e.g. with `new Mixin { ... }` syntax), so it injects for-generator vars into the
-      // wrong frame.
-      //
-      // As a remedy, we simply copy outer variables into this frame if there are any for generator
-      // variables.
-      //
-      // We need to preserve the frame slot index, so we insert dummy identifiers
-      // for other slots that aren't for generator variables.
-      if (slotInfo != null && slotInfo.equals(SymbolTable.FOR_GENERATOR_VARIABLE)) {
-        if (!hasForGenVars) {
-          hasForGenVars = true;
-          for (var j = 0; j < i; j++) {
-            builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
-          }
-        }
-        builder.addSlot(
-            hostFrameDescriptor.getSlotKind(i), hostFrameDescriptor.getSlotName(i), null);
-      } else if (hasForGenVars) {
-        builder.addSlot(FrameSlotKind.Illegal, Identifier.DUMMY, null);
-      }
-    }
-    var objectToAmendSlot = builder.addSlot(FrameSlotKind.Object, new Object(), null);
+    var objectToAmendSlot = builder.addSlot(FrameSlotKind.Object, null, null);
     var frameDescriptor = builder.build();
 
     var subsequentFunctionRootNode =
@@ -138,7 +101,7 @@ public final class AmendFunctionNode extends PklNode {
   public VmFunction execute(VirtualFrame frame, VmFunction functionToAmend) {
     if (isCustomThisScope && customThisSlot == -1) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      customThisSlot = VmUtils.findAuxiliarySlot(frame, CustomThisScope.FRAME_SLOT_ID);
+      customThisSlot = VmUtils.findCustomThisSlot(frame);
     }
     return new VmFunction(
         frame.materialize(),
@@ -184,8 +147,7 @@ public final class AmendFunctionNode extends PklNode {
       var arguments = new Object[frameArguments.length];
       arguments[0] = functionToAmend.getThisValue();
       arguments[1] = functionToAmend;
-      arguments[2] = false;
-      System.arraycopy(frameArguments, 3, arguments, 3, frameArguments.length - 3);
+      System.arraycopy(frameArguments, 2, arguments, 2, frameArguments.length - 2);
 
       var valueToAmend = callNode.call(functionToAmend.getCallTarget(), arguments);
       if (!(valueToAmend instanceof VmFunction newFunctionToAmend)) {

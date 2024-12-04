@@ -25,15 +25,15 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorEntryNode extends GeneratorMemberNode {
   @Child private ExpressionNode keyNode;
   private final ObjectMember member;
 
-  protected GeneratorEntryNode(ExpressionNode keyNode, ObjectMember member) {
-    super(member.getSourceSection());
+  protected GeneratorEntryNode(
+      ExpressionNode keyNode, ObjectMember member, boolean needsStoredFrame) {
+    super(member.getSourceSection(), needsStoredFrame);
     this.keyNode = keyNode;
     this.member = member;
   }
@@ -84,7 +84,7 @@ public abstract class GeneratorEntryNode extends GeneratorMemberNode {
 
   private void addRegularEntry(VirtualFrame frame, ObjectData data) {
     var key = keyNode.executeGeneric(frame);
-    doAdd(key, data);
+    data.addMember(frame, key, member, this);
   }
 
   private void addListingEntry(VirtualFrame frame, ObjectData data, int parentLength) {
@@ -108,15 +108,6 @@ public abstract class GeneratorEntryNode extends GeneratorMemberNode {
           .build();
     }
 
-    doAdd(index, data);
-  }
-
-  private void doAdd(Object key, ObjectData data) {
-    if (EconomicMaps.put(data.members, key, member) != null) {
-      CompilerDirectives.transferToInterpreter();
-      throw duplicateDefinition(key, member);
-    }
-
-    data.persistForBindings(key);
+    data.addMember(frame, index, member, this);
   }
 }

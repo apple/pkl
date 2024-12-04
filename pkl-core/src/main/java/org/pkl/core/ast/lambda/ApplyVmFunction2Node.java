@@ -76,7 +76,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function, false, arg1, arg2);
+    return callNode.call(function.getThisValue(), function, arg1, arg2);
   }
 
   @Specialization(replaces = "evalDirect")
@@ -86,7 +86,6 @@ public abstract class ApplyVmFunction2Node extends PklNode {
       Object arg2,
       @Cached("create()") IndirectCallNode callNode) {
 
-    return callNode.call(
-        function.getCallTarget(), function.getThisValue(), function, false, arg1, arg2);
+    return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1, arg2);
   }
 }

@@ -80,7 +80,6 @@ public abstract class ToStringNode extends UnaryExpressionNode {
         Identifier.TO_STRING,
         new ExpressionNode[] {},
         MemberLookupMode.EXPLICIT_RECEIVER,
-        false,
         null,
         null);
   }

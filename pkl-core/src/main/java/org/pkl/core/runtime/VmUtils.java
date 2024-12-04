@@ -47,6 +47,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
+import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
@@ -298,6 +299,57 @@ public final class VmUtils {
     }
     receiver.setCachedValue(memberKey, result);
     return result;
+  }
+
+  /**
+   * Copies `numberOfLocalsToCopy` locals from `sourceFrame`, starting at `firstSourceSlot`, to
+   * `targetFrame`, starting at `firstTargetSlot`.
+   */
+  public static void copyLocals(
+      VirtualFrame sourceFrame,
+      int firstSourceSlot,
+      VirtualFrame targetFrame,
+      int firstTargetSlot,
+      int numberOfLocalsToCopy) {
+    var sourceDescriptor = sourceFrame.getFrameDescriptor();
+    var targetDescriptor = targetFrame.getFrameDescriptor();
+    for (int i = 0; i < numberOfLocalsToCopy; i++) {
+      var sourceSlot = firstSourceSlot + i;
+      var targetSlot = firstTargetSlot + i;
+      // If, for a particular call site of this method,
+      // slot kinds of `sourceDescriptor` will reach a steady state,
+      // slot kinds of `targetDescriptor` will too.
+      var slotKind = sourceDescriptor.getSlotKind(sourceSlot);
+      switch (slotKind) {
+        case Boolean -> {
+          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Boolean);
+          targetFrame.setBoolean(targetSlot, sourceFrame.getBoolean(sourceSlot));
+        }
+        case Long -> {
+          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Long);
+          targetFrame.setLong(targetSlot, sourceFrame.getLong(sourceSlot));
+        }
+        case Double -> {
+          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Double);
+          targetFrame.setDouble(targetSlot, sourceFrame.getDouble(sourceSlot));
+        }
+        case Object -> {
+          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Object);
+          targetFrame.setObject(
+              targetSlot,
+              sourceFrame instanceof MaterializedFrame
+                  // Even though sourceDescriptor.getSlotKind is now Object,
+                  // it may have been a primitive kind when `sourceFrame`'s local was written.
+                  // Hence we need to read the local with getValue() instead of getObject().
+                  ? sourceFrame.getValue(sourceSlot)
+                  : sourceFrame.getObject(sourceSlot));
+        }
+        default -> {
+          CompilerDirectives.transferToInterpreter();
+          throw new VmExceptionBuilder().bug("Unexpected FrameSlotKind: " + slotKind).build();
+        }
+      }
+    }
   }
 
   // A failed property type check looks as follows in the stack trace:
@@ -687,9 +739,7 @@ public final class VmUtils {
   }
 
   public static TypeNode[] resolveParameterTypes(
-      VirtualFrame frame,
-      FrameDescriptor descriptor,
-      @Nullable UnresolvedTypeNode[] parameterTypeNodes) {
+      VirtualFrame frame, FrameDescriptor descriptor, UnresolvedTypeNode[] parameterTypeNodes) {
 
     var resolvedNodes = new TypeNode[parameterTypeNodes.length];
 
@@ -836,25 +886,11 @@ public final class VmUtils {
     return callNode.call(rootNode.getCallTarget(), module, module);
   }
 
-  public static int findSlot(VirtualFrame frame, Object identifier) {
-    var descriptor = frame.getFrameDescriptor();
-    for (int i = 0; i < descriptor.getNumberOfSlots(); i++) {
-      if (descriptor.getSlotName(i) == identifier
-          && frame.getTag(i) != FrameSlotKind.Illegal.tag
-          // Truffle initializes all frame tags as `FrameSlotKind.Object`, instead of
-          // `FrameSlotKind.Illegal`. Unevaluated (in a `when` with `false` condition) `for`
-          // generators, therefore, leave their bound variables tagged as `Object`, but `null`. If
-          // another `for` generator in the same scope binds variables with the same names, they
-          // resolve the wrong slot number.
-          && (frame.getTag(i) != FrameSlotKind.Object.tag || frame.getObject(i) != null)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  public static int findAuxiliarySlot(VirtualFrame frame, Object identifier) {
-    return frame.getFrameDescriptor().getAuxiliarySlots().getOrDefault(identifier, -1);
+  public static int findCustomThisSlot(VirtualFrame frame) {
+    return frame
+        .getFrameDescriptor()
+        .getAuxiliarySlots()
+        .getOrDefault(CustomThisScope.FRAME_SLOT_ID, -1);
   }
 
   @TruffleBoundary

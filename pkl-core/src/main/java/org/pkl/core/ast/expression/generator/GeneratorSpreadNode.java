@@ -19,7 +19,6 @@ import static org.pkl.core.runtime.BaseModule.getListingClass;
 import static org.pkl.core.runtime.BaseModule.getMappingClass;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -29,9 +28,11 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmCollection;
 import org.pkl.core.runtime.VmDynamic;
+import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.runtime.VmIntSeq;
 import org.pkl.core.runtime.VmListing;
@@ -41,8 +42,6 @@ import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObject;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.MutableLong;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
@@ -51,7 +50,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   public GeneratorSpreadNode(
       SourceSection sourceSection, ExpressionNode iterableNode, boolean nullable) {
-    super(sourceSection);
+    super(sourceSection, false);
     this.iterableNode = iterableNode;
     this.nullable = nullable;
   }
@@ -84,78 +83,82 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   @Specialization(guards = "!iterable.isTyped()")
   @SuppressWarnings("unused")
-  protected void eval(VmDynamic parent, ObjectData data, VmObject iterable) {
-    doEvalDynamic(data, iterable);
+  protected void eval(VirtualFrame frame, VmDynamic parent, ObjectData data, VmObject iterable) {
+    doEvalDynamic(frame, data, iterable);
   }
 
   @Specialization(guards = "!iterable.isTyped()")
   @SuppressWarnings("unused")
-  protected void eval(VmListing parent, ObjectData data, VmObject iterable) {
-    doEvalListing(data, iterable);
+  protected void eval(VirtualFrame frame, VmListing parent, ObjectData data, VmObject iterable) {
+    doEvalListing(frame, data, iterable);
   }
 
   @Specialization(guards = "!iterable.isTyped()")
   @SuppressWarnings("unused")
-  protected void eval(VmMapping parent, ObjectData data, VmObject iterable) {
-    doEvalMapping(data, iterable);
+  protected void eval(VirtualFrame frame, VmMapping parent, ObjectData data, VmObject iterable) {
+    doEvalMapping(frame, data, iterable);
   }
 
   @Specialization(guards = {"parent == getDynamicClass()", "!iterable.isTyped()"})
   @SuppressWarnings("unused")
-  protected void evalDynamicClass(VmClass parent, ObjectData data, VmObject iterable) {
-    doEvalDynamic(data, iterable);
+  protected void evalDynamicClass(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmObject iterable) {
+    doEvalDynamic(frame, data, iterable);
   }
 
   @Specialization(guards = {"parent == getListingClass()", "!iterable.isTyped()"})
   @SuppressWarnings("unused")
-  protected void evalListingClass(VmClass parent, ObjectData data, VmObject iterable) {
-    doEvalListing(data, iterable);
+  protected void evalListingClass(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmObject iterable) {
+    doEvalListing(frame, data, iterable);
   }
 
   @Specialization(guards = {"parent == getMappingClass()", "!iterable.isTyped()"})
   @SuppressWarnings("unused")
-  protected void evalMappingClass(VmClass parent, ObjectData data, VmObject iterable) {
-    doEvalMapping(data, iterable);
+  protected void evalMappingClass(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmObject iterable) {
+    doEvalMapping(frame, data, iterable);
   }
 
   @Specialization(guards = {"isTypedObjectClass(parent)", "!iterable.isTyped()"})
-  protected void evalTypedClass(VmClass parent, ObjectData data, VmObject iterable) {
-    doEvalTyped(parent, data, iterable);
+  protected void evalTypedClass(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmObject iterable) {
+    doEvalTyped(frame, parent, data, iterable);
   }
 
   @Specialization(guards = {"!iterable.isTyped()"})
-  protected void eval(VmTyped parent, ObjectData data, VmObject iterable) {
-    doEvalTyped(parent.getVmClass(), data, iterable);
+  protected void eval(VirtualFrame frame, VmTyped parent, ObjectData data, VmObject iterable) {
+    doEvalTyped(frame, parent.getVmClass(), data, iterable);
   }
 
   @Specialization
-  protected void eval(VmObject parent, ObjectData data, VmMap iterable) {
-    doEvalMap(parent.getVmClass(), data, iterable);
+  protected void eval(VirtualFrame frame, VmObject parent, ObjectData data, VmMap iterable) {
+    doEvalMap(frame, parent.getVmClass(), data, iterable);
   }
 
   @Specialization
-  protected void eval(VmClass parent, ObjectData data, VmMap iterable) {
-    doEvalMap(parent, data, iterable);
+  protected void eval(VirtualFrame frame, VmClass parent, ObjectData data, VmMap iterable) {
+    doEvalMap(frame, parent, data, iterable);
   }
 
   @Specialization
-  protected void eval(VmObject parent, ObjectData data, VmCollection iterable) {
-    doEvalCollection(parent.getVmClass(), data, iterable);
+  protected void eval(VirtualFrame frame, VmObject parent, ObjectData data, VmCollection iterable) {
+    doEvalCollection(frame, parent.getVmClass(), data, iterable);
   }
 
   @Specialization
-  protected void eval(VmClass parent, ObjectData data, VmCollection iterable) {
-    doEvalCollection(parent, data, iterable);
+  protected void eval(VirtualFrame frame, VmClass parent, ObjectData data, VmCollection iterable) {
+    doEvalCollection(frame, parent, data, iterable);
   }
 
   @Specialization
-  protected void eval(VmObject parent, ObjectData data, VmIntSeq iterable) {
-    doEvalIntSeq(parent.getVmClass(), data, iterable);
+  protected void eval(VirtualFrame frame, VmObject parent, ObjectData data, VmIntSeq iterable) {
+    doEvalIntSeq(frame, parent.getVmClass(), data, iterable);
   }
 
   @Specialization
-  protected void eval(VmClass parent, ObjectData data, VmIntSeq iterable) {
-    doEvalIntSeq(parent, data, iterable);
+  protected void eval(VirtualFrame frame, VmClass parent, ObjectData data, VmIntSeq iterable) {
+    doEvalIntSeq(frame, parent, data, iterable);
   }
 
   @Fallback
@@ -174,64 +177,55 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     throw builder.build();
   }
 
-  protected void doEvalDynamic(ObjectData data, VmObject iterable) {
-    var length = new MutableLong(data.length);
+  protected void doEvalDynamic(VirtualFrame frame, ObjectData data, VmObject iterable) {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           if (member.isElement()) {
-            EconomicMaps.put(data.members, length.getAndIncrement(), createMember(member, value));
+            data.addElement(frame, createMember(member, value), this);
           } else {
-            if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
-              duplicateMember(key, member);
-            }
+            data.addMember(frame, key, createMember(member, value), this);
           }
           return true;
         });
-    data.length = (int) length.get();
   }
 
-  private void doEvalMapping(ObjectData data, VmObject iterable) {
+  private void doEvalMapping(VirtualFrame frame, ObjectData data, VmObject iterable) {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           if (member.isElement() || member.isProp()) {
             cannotHaveMember(BaseModule.getMappingClass(), member);
           }
-          if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
-            duplicateMember(key, member);
-          }
+          data.addMember(frame, key, createMember(member, value), this);
           return true;
         });
   }
 
-  private void doEvalListing(ObjectData data, VmObject iterable) {
-    var length = new MutableLong(data.length);
+  private void doEvalListing(VirtualFrame frame, ObjectData data, VmObject iterable) {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           if (member.isEntry() || member.isProp()) {
             cannotHaveMember(getListingClass(), member);
           }
-          EconomicMaps.put(data.members, length.getAndIncrement(), createMember(member, value));
+          data.addElement(frame, createMember(member, value), this);
           return true;
         });
-    data.length = (int) length.get();
   }
 
-  private void doEvalTyped(VmClass clazz, ObjectData data, VmObject iterable) {
+  private void doEvalTyped(VirtualFrame frame, VmClass clazz, ObjectData data, VmObject iterable) {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           if (member.isElement() || member.isEntry()) {
             cannotHaveMember(clazz, member);
           }
-          checkTypedProperty(clazz, member);
-          if (EconomicMaps.put(data.members, key, createMember(member, value)) != null) {
-            duplicateMember(key, member);
-          }
+          checkIsValidTypedProperty(clazz, member);
+          data.addProperty(frame, createMember(member, value), this);
           return true;
         });
   }
 
   // handles both `List` and `Set`
-  private void doEvalCollection(VmClass parent, ObjectData data, VmCollection iterable) {
+  private void doEvalCollection(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmCollection iterable) {
     if (isTypedObjectClass(parent) || parent == getMappingClass()) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -241,10 +235,10 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .withProgramValue("Value", iterable)
           .build();
     }
-    spreadIterable(data, iterable);
+    spreadIterable(frame, data, iterable);
   }
 
-  private void doEvalMap(VmClass parent, ObjectData data, VmMap iterable) {
+  private void doEvalMap(VirtualFrame frame, VmClass parent, ObjectData data, VmMap iterable) {
     if (isTypedObjectClass(parent) || parent == getListingClass()) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -255,13 +249,12 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     }
     for (var entry : iterable) {
       var member = VmUtils.createSyntheticObjectEntry("", VmUtils.getValue(entry));
-      if (EconomicMaps.put(data.members, VmUtils.getKey(entry), member) != null) {
-        duplicateMember(VmUtils.getKey(entry), member);
-      }
+      data.addMember(frame, VmUtils.getKey(entry), member, this);
     }
   }
 
-  private void doEvalIntSeq(VmClass parent, ObjectData data, VmIntSeq iterable) {
+  private void doEvalIntSeq(
+      VirtualFrame frame, VmClass parent, ObjectData data, VmIntSeq iterable) {
     if (isTypedObjectClass(parent) || parent == getMappingClass()) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -270,7 +263,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
           .withProgramValue("Value", iterable)
           .build();
     }
-    spreadIterable(data, iterable);
+    spreadIterable(frame, data, iterable);
   }
 
   private void cannotHaveMember(VmClass clazz, ObjectMember member) {
@@ -295,7 +288,8 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     throw exception;
   }
 
-  private void duplicateMember(Object key, ObjectMember member) {
+  @Override
+  protected VmException duplicateDefinition(Object key, ObjectMember member) {
     CompilerDirectives.transferToInterpreter();
     var exception =
         exceptionBuilder()
@@ -331,51 +325,12 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     return result;
   }
 
-  @TruffleBoundary
-  private void spreadIterable(ObjectData data, Iterable<?> iterable) {
-    var length = data.length;
-    for (var elem : iterable) {
-      var index = length++;
-      var member = VmUtils.createSyntheticObjectElement(String.valueOf(index), elem);
-      EconomicMaps.put(data.members, (long) index, member);
-    }
-    data.length = length;
-  }
-
-  protected void checkTypedProperty(VmClass clazz, ObjectMember member) {
-    if (member.isLocal()) return;
-
-    var memberName = member.getName();
-    var classProperty = clazz.getProperty(memberName);
-    if (classProperty == null) {
-      CompilerDirectives.transferToInterpreter();
-      var exception =
-          exceptionBuilder()
-              .cannotFindProperty(clazz.getPrototype(), memberName, false, false)
-              .build();
-      if (member.getHeaderSection().isAvailable()) {
-        exception
-            .getInsertedStackFrames()
-            .put(
-                getRootNode().getCallTarget(),
-                VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
-      }
-      throw exception;
-    }
-
-    if (classProperty.isConstOrFixed()) {
-      CompilerDirectives.transferToInterpreter();
-      var errMsg =
-          classProperty.isConst() ? "cannotAssignConstProperty" : "cannotAssignFixedProperty";
-      var exception = exceptionBuilder().evalError(errMsg, memberName).build();
-      if (member.getHeaderSection().isAvailable()) {
-        exception
-            .getInsertedStackFrames()
-            .put(
-                getRootNode().getCallTarget(),
-                VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
-      }
-      throw exception;
+  private void spreadIterable(VirtualFrame frame, ObjectData data, Iterable<?> iterable) {
+    var iterator = new TruffleIterator<>(iterable);
+    while (iterator.hasNext()) {
+      var elem = iterator.next();
+      var member = VmUtils.createSyntheticObjectElement(String.valueOf(data.length()), elem);
+      data.addElement(frame, member, this);
     }
   }
 }

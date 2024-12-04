@@ -23,8 +23,8 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.Nullable;
 
 /**
- * Corresponds to `pkl.base#Object|pkl.base#Function`. The lexical scope is a hierarchy of
- * `VmOwner`s.
+ * Corresponds to `pkl.base#Object|pkl.base#Function`. The lexical scope is a chain of
+ * `VmObjectLike` instances.
  */
 public abstract class VmObjectLike extends VmValue {
   /** The frame that was active when this object was instantiated. * */
@@ -66,8 +66,8 @@ public abstract class VmObjectLike extends VmValue {
   }
 
   /**
-   * Returns the parent object in the prototype chain. For each concrete subclass X of VmOwner, the
-   * exact return type of this method is `X|VmTyped`.
+   * Returns the parent object in the prototype chain. For each concrete subclass X of VmObjectLike,
+   * the exact return type of this method is `X|VmTyped`.
    */
   public abstract @Nullable VmObjectLike getParent();
 
