@@ -197,14 +197,17 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class Parameterized extends UnresolvedTypeNode {
+    private final VmLanguage language;
     @Child private ExpressionNode resolveTypeNode;
     @Children private final UnresolvedTypeNode[] typeArgumentNodes;
 
     public Parameterized(
         SourceSection sourceSection,
+        VmLanguage language,
         ExpressionNode resolveTypeNode,
         UnresolvedTypeNode[] typeArgumentNodes) {
       super(sourceSection);
+      this.language = language;
       this.resolveTypeNode = resolveTypeNode;
       this.typeArgumentNodes = typeArgumentNodes;
     }
@@ -238,12 +241,13 @@ public abstract class UnresolvedTypeNode extends PklNode {
         }
 
         if (clazz.isListingClass()) {
-          return new ListingTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
+          return new ListingTypeNode(sourceSection, language, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isMappingClass()) {
           return new MappingTypeNode(
               sourceSection,
+              language,
               typeArgumentNodes[0].execute(frame),
               typeArgumentNodes[1].execute(frame));
         }

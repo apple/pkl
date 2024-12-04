@@ -26,7 +26,7 @@ import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
 /** Performs a typecast on a Mapping entry value, or a Listing element. */
-public class ListingOrMappingTypeCastNode extends PklRootNode {
+public final class ListingOrMappingTypeCastNode extends PklRootNode {
 
   @Child private TypeNode typeNode;
   private final String qualifiedName;

@@ -113,7 +113,7 @@ public final class VmFunction extends VmObjectLike {
 
   @Override
   @TruffleBoundary
-  public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
+  public void setCachedValue(Object key, Object value) {
     throw new VmExceptionBuilder()
         .bug("Class `VmFunction` does not support method `setCachedValue()`.")
         .build();

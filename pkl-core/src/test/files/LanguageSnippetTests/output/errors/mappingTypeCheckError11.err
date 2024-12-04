@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `mappingTypeCheckError11#Bar`, but got type `mappingTypeCheckError11#Foo`.
+Value: new Foo {}
+
+x | local c = b as Mapping<Int, Bar>
+                                ^^^
+at mappingTypeCheckError11#c (file:///$snippetsDir/input/errors/mappingTypeCheckError11.pkl)
+
+x | local a = new Mapping { [0] = new Foo {} }
+                                  ^^^^^^^^^^
+at mappingTypeCheckError11#a[0] (file:///$snippetsDir/input/errors/mappingTypeCheckError11.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

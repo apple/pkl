@@ -19,14 +19,13 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
-public final class VmListing extends VmListingOrMapping<VmListing> {
+public final class VmListing extends VmListingOrMapping {
   private static final class EmptyHolder {
     private static final VmListing EMPTY =
         new VmListing(
@@ -47,7 +46,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members, null, null, null);
+    super(enclosingFrame, parent, members);
     this.length = length;
   }
 
@@ -56,16 +55,10 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length,
-      @Nullable VmListing delegate,
-      ListingOrMappingTypeCastNode typeCheckNode,
-      MaterializedFrame typeNodeFrame) {
-    super(
-        enclosingFrame,
-        Objects.requireNonNull(parent),
-        members,
-        delegate,
-        typeCheckNode,
-        typeNodeFrame);
+      ListingOrMappingTypeCastNode typeCastNode,
+      Object typeCheckReceiver,
+      VmObjectLike typeCheckOwner) {
+    super(enclosingFrame, parent, members, typeCastNode, typeCheckReceiver, typeCheckOwner);
     this.length = length;
   }
 
@@ -118,20 +111,6 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   }
 
   @Override
-  public VmListing withCheckedMembers(
-      ListingOrMappingTypeCastNode typeCheckNode, MaterializedFrame typeNodeFrame) {
-
-    return new VmListing(
-        getEnclosingFrame(),
-        Objects.requireNonNull(parent),
-        members,
-        length,
-        this,
-        typeCheckNode,
-        typeNodeFrame);
-  }
-
-  @Override
   @TruffleBoundary
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
@@ -142,10 +121,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     force(false);
     other.force(false);
 
-    for (var i = 0L; i < length; i++) {
-      var value = getCachedValue(i);
+    var cursor = cachedValues.getEntries();
+    while (cursor.advance()) {
+      var key = cursor.getKey();
+      if (key instanceof Identifier) continue;
+
+      var value = cursor.getValue();
       assert value != null;
-      var otherValue = other.getCachedValue(i);
+      var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
     }
 
@@ -156,14 +139,16 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   @TruffleBoundary
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
-    // It's possible that the delegate has already computed its hash code.
-    // If so, we can go ahead and use it.
-    if (delegate != null && delegate.cachedHash != 0) return delegate.cachedHash;
 
     force(false);
     var result = 0;
-    for (var i = 0L; i < length; i++) {
-      var value = getCachedValue(i);
+    var cursor = cachedValues.getEntries();
+
+    while (cursor.advance()) {
+      var key = cursor.getKey();
+      if (key instanceof Identifier) continue;
+
+      var value = cursor.getValue();
       assert value != null;
       result = 31 * result + value.hashCode();
     }

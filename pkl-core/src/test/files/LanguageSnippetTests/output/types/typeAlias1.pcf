@@ -38,3 +38,9 @@ res18 = "Expected value of type `Duration`, but got type `DataSize`. Value: 5.mb
 res18b = "Expected value of type `Duration`, but got type `DataSize`. Value: 5.mb"
 res19 = "abc"
 res20 = Pair(Map("abc", List("def")), Map("abc", List("def")))
+res21 {
+  "John Birdo"
+}
+res22 = Pair(new {
+  "John Birdo"
+}, 0)

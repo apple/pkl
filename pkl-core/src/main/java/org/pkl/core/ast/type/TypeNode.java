@@ -21,6 +21,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -1418,8 +1419,9 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class ListingTypeNode extends ListingOrMappingTypeNode {
-    public ListingTypeNode(SourceSection sourceSection, TypeNode valueTypeNode) {
-      super(sourceSection, null, valueTypeNode);
+    public ListingTypeNode(
+        SourceSection sourceSection, VmLanguage language, TypeNode valueTypeNode) {
+      super(sourceSection, language, null, valueTypeNode);
     }
 
     @Override
@@ -1427,7 +1429,17 @@ public abstract class TypeNode extends PklNode {
       if (!(value instanceof VmListing vmListing)) {
         throw typeMismatch(value, BaseModule.getListingClass());
       }
-      return doTypeCast(frame, vmListing);
+      if (vmListing.isValueTypeKnownSubtypeOf(valueTypeNode)) {
+        return vmListing;
+      }
+      return new VmListing(
+          vmListing.getEnclosingFrame(),
+          vmListing,
+          EconomicMaps.emptyMap(),
+          vmListing.getLength(),
+          getValueTypeCastNode(),
+          VmUtils.getReceiver(frame),
+          VmUtils.getOwner(frame));
     }
 
     @Override
@@ -1470,9 +1482,12 @@ public abstract class TypeNode extends PklNode {
 
   public static final class MappingTypeNode extends ListingOrMappingTypeNode {
     public MappingTypeNode(
-        SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
+        SourceSection sourceSection,
+        VmLanguage language,
+        TypeNode keyTypeNode,
+        TypeNode valueTypeNode) {
 
-      super(sourceSection, keyTypeNode, valueTypeNode);
+      super(sourceSection, language, keyTypeNode, valueTypeNode);
     }
 
     @Override
@@ -1482,7 +1497,16 @@ public abstract class TypeNode extends PklNode {
       }
       // execute type checks on mapping keys
       doEagerCheck(frame, vmMapping, false, true);
-      return doTypeCast(frame, vmMapping);
+      if (vmMapping.isValueTypeKnownSubtypeOf(valueTypeNode)) {
+        return vmMapping;
+      }
+      return new VmMapping(
+          vmMapping.getEnclosingFrame(),
+          vmMapping,
+          EconomicMaps.emptyMap(),
+          getValueTypeCastNode(),
+          VmUtils.getReceiver(frame),
+          VmUtils.getOwner(frame));
     }
 
     @Override
@@ -1530,17 +1554,22 @@ public abstract class TypeNode extends PklNode {
   }
 
   public abstract static class ListingOrMappingTypeNode extends ObjectSlotTypeNode {
+    private final VmLanguage language;
     @Child protected @Nullable TypeNode keyTypeNode;
     @Child protected TypeNode valueTypeNode;
-    @Child @Nullable protected ListingOrMappingTypeCastNode listingOrMappingTypeCastNode;
+    @Child @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
 
     private final boolean skipKeyTypeChecks;
     private final boolean skipValueTypeChecks;
 
     protected ListingOrMappingTypeNode(
-        SourceSection sourceSection, @Nullable TypeNode keyTypeNode, TypeNode valueTypeNode) {
+        SourceSection sourceSection,
+        VmLanguage language,
+        @Nullable TypeNode keyTypeNode,
+        TypeNode valueTypeNode) {
 
       super(sourceSection);
+      this.language = language;
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
 
@@ -1560,17 +1589,14 @@ public abstract class TypeNode extends PklNode {
       return valueTypeNode;
     }
 
-    protected ListingOrMappingTypeCastNode getListingOrMappingTypeCastNode() {
-      if (listingOrMappingTypeCastNode == null) {
+    protected ListingOrMappingTypeCastNode getValueTypeCastNode() {
+      if (valueTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        listingOrMappingTypeCastNode =
+        valueTypeCastNode =
             new ListingOrMappingTypeCastNode(
-                VmLanguage.get(this),
-                getRootNode().getFrameDescriptor(),
-                valueTypeNode,
-                getRootNode().getName());
+                language, new FrameDescriptor(), valueTypeNode, getRootNode().getName());
       }
-      return listingOrMappingTypeCastNode;
+      return valueTypeCastNode;
     }
 
     // either (if defaultMemberValue != null):
@@ -1651,15 +1677,6 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
     }
 
-    protected <T extends VmListingOrMapping<T>> T doTypeCast(VirtualFrame frame, T original) {
-      // optimization: don't create new object if the original already has the same typecheck, or if
-      // this typecheck is a no-op.
-      if (isNoopTypeCheck() || original.hasSameChecksAs(valueTypeNode)) {
-        return original;
-      }
-      return original.withCheckedMembers(getListingOrMappingTypeCastNode(), frame.materialize());
-    }
-
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
       doEagerCheck(frame, object, skipKeyTypeChecks, skipValueTypeChecks);
     }
@@ -1704,7 +1721,7 @@ public abstract class TypeNode extends PklNode {
                 var callTarget = member.getCallTarget();
                 memberValue = callTarget.call(object, owner, memberKey);
               }
-              object.setCachedValue(memberKey, memberValue, member);
+              object.setCachedValue(memberKey, memberValue);
             }
             valueTypeNode.executeEagerly(frame, memberValue);
           }
@@ -2391,14 +2408,14 @@ public abstract class TypeNode extends PklNode {
     public Object execute(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
-      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
-      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
         return aliasedTypeNode.execute(frame, value);
       } finally {
-        VmUtils.setOwner(frame, prevOwner);
-        VmUtils.setReceiver(frame, prevReceiver);
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
       }
     }
 
@@ -2407,14 +2424,14 @@ public abstract class TypeNode extends PklNode {
     public Object executeAndSet(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
-      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
-      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
         return aliasedTypeNode.executeAndSet(frame, value);
       } finally {
-        VmUtils.setOwner(frame, prevOwner);
-        VmUtils.setReceiver(frame, prevReceiver);
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
       }
     }
 
@@ -2423,14 +2440,14 @@ public abstract class TypeNode extends PklNode {
     public Object executeEagerlyAndSet(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
-      VmUtils.setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
-      VmUtils.setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
         return aliasedTypeNode.executeEagerlyAndSet(frame, value);
       } finally {
-        VmUtils.setOwner(frame, prevOwner);
-        VmUtils.setReceiver(frame, prevReceiver);
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
       }
     }
 
@@ -2501,6 +2518,22 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean isParametric() {
       return typeArgumentNodes.length > 0;
+    }
+
+    // Note that mutating a frame's receiver and owner argument is very risky
+    // because any VmObject instantiated within the same root node execution
+    // holds a reference to (not immutable snapshot of) the frame
+    // via VmObjectLike.enclosingFrame.
+    // *Maybe* this works out for TypeAliasTypeNode because an object instantiated
+    // within a type constraint doesn't escape the constraint expression.
+    // If mutating receiver and owner can't be avoided, it would be safer
+    // to have VmObjectLike store them directly instead of storing enclosingFrame.
+    private static void setReceiver(Frame frame, Object receiver) {
+      frame.getArguments()[0] = receiver;
+    }
+
+    private static void setOwner(Frame frame, VmObjectLike owner) {
+      frame.getArguments()[1] = owner;
     }
   }
 
