@@ -1,6 +1,28 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.27.1]]
+== 0.27.1 (2024-12-06)
+
+=== Fixes
+
+- Fixes a broken "number literals" link in the 0.27 release notes (https://github.com/apple/pkl/pull/784[#784]).
+- Fixes a possible deadlock during external reader process close (https://github.com/apple/pkl/pull/786[#786]).
+- Fixes counting elements with computed indices multiple times in length computation of listings (https://github.com/apple/pkl/pull/797[#797]).
+- Fixes non Pkl modules being reported in GatherImports task, leading to plugin failures (https://github.com/apple/pkl/pull/821[#821]).
+- Fixes a problem where the delegate chain of type casts for Listing/Mapping get unreasonably big, even though the type nodes are the same, which may lead to a stack overflow or performance degradation (https://github.com/apple/pkl/pull/826[#826]).
+- Fixes incorrect scoping of type variables in lazy Listing/Mapping type checking in cross-module typealiases (https://github.com/apple/pkl/pull/789[#789]).
+- Fixes regression in type checking logic for Listing/Mapping (https://github.com/apple/pkl/pull/789[#789]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/GUI[@GUI]
+* link:https://github.com/HT154[@HT154]
+* link:https://github.com/odenix[@odenix] (formerly @translatenix)
+
+
 [[release-0.27.0]]
 == 0.27.0 (2024-11-05)
 
