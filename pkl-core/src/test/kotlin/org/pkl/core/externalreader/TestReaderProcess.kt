@@ -23,15 +23,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.core.externalreader.ExternalReaderMessages.*
+import org.pkl.core.externalreader.ReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransportModuleResolver
-import org.pkl.core.messaging.MessageTransportResourceResolver
 import org.pkl.core.messaging.MessageTransports
-import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
 
-class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
+class TestReaderProcess(private val transport: MessageTransport) : ReaderProcess {
   private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
     ConcurrentHashMap()
   private val initializeResourceReaderResponses: MutableMap<String, Future<ResourceReaderSpec?>> =
@@ -42,11 +39,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     transport.close()
   }
 
-  override fun getModuleResolver(evaluatorId: Long): MessageTransportModuleResolver =
-    MessageTransportModuleResolver(transport, evaluatorId)
+  override fun getModuleResolver(evaluatorId: Long): ModuleResolver =
+    ModuleResolver.of(transport, evaluatorId)
 
-  override fun getResourceResolver(evaluatorId: Long): MessageTransportResourceResolver =
-    MessageTransportResourceResolver(transport, evaluatorId)
+  override fun getResourceResolver(evaluatorId: Long): ResourceResolver =
+    ResourceResolver.of(transport, evaluatorId)
 
   fun run() {
     try {
@@ -69,7 +66,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
           transport.send(request) { response ->
             when (response) {
               is InitializeModuleReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }
@@ -86,7 +87,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
           transport.send(request) { response ->
             when (response) {
               is InitializeResourceReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }
@@ -97,28 +102,20 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
 
   companion object {
     fun initializeTestHarness(
-      moduleReaders: List<ExternalModuleReader>,
-      resourceReaders: List<ExternalResourceReader>
-    ): Pair<TestExternalReaderProcess, ExternalReaderRuntime> {
+      moduleReaders: List<ModuleReader>,
+      resourceReaders: List<ResourceReader>
+    ): Pair<TestReaderProcess, ReaderRuntime> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
       val txIn = PipedInputStream(10240)
       val txOut = PipedOutputStream(txIn)
       val serverTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(rxIn),
-          ExternalReaderMessagePackEncoder(txOut),
-          {}
-        )
+        MessageTransports.stream(MessagePackDecoder(rxIn), MessagePackEncoder(txOut)) {}
       val clientTransport =
-        MessageTransports.stream(
-          ExternalReaderMessagePackDecoder(txIn),
-          ExternalReaderMessagePackEncoder(rxOut),
-          {}
-        )
+        MessageTransports.stream(MessagePackDecoder(txIn), MessagePackEncoder(rxOut)) {}
 
-      val runtime = ExternalReaderRuntime(moduleReaders, resourceReaders, clientTransport)
-      val proc = TestExternalReaderProcess(serverTransport)
+      val runtime = ReaderRuntime(moduleReaders, resourceReaders, clientTransport)
+      val proc = TestReaderProcess(serverTransport)
 
       Thread(runtime::run).start()
       Thread(proc::run).start()
