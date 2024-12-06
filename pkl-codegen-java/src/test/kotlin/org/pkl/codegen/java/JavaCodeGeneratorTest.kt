@@ -104,26 +104,10 @@ class JavaCodeGeneratorTest {
 
     private fun generateJavaCode(
       pklCode: String,
-      generateGetters: Boolean = false,
-      generateJavadoc: Boolean = false,
-      generateSpringBootConfig: Boolean = false,
-      nonNullAnnotation: String? = null,
-      implementSerializable: Boolean = false,
-      renames: Map<String, String> = emptyMap()
+      options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions()
     ): JavaSourceCode {
       val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
-      val generator =
-        JavaCodeGenerator(
-          module,
-          JavaCodeGeneratorOptions(
-            generateGetters = generateGetters,
-            generateJavadoc = generateJavadoc,
-            generateSpringBootConfig = generateSpringBootConfig,
-            nonNullAnnotation = nonNullAnnotation,
-            implementSerializable = implementSerializable,
-            renames = renames
-          )
-        )
+      val generator = JavaCodeGenerator(module, options)
       return JavaSourceCode(generator.javaFile)
     }
   }
@@ -235,7 +219,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateJavadoc = true)
       )
     assertThat(javaCode)
       .contains(
@@ -274,8 +258,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateGetters = true,
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true)
       )
     assertThat(javaCode)
       .contains(
@@ -322,7 +305,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateJavadoc = true)
       )
     assertThat(javaCode)
       .contains(
@@ -349,7 +332,7 @@ class JavaCodeGeneratorTest {
       propertyInDeprecatedModuleClass : Int = 42
     """
           .trimIndent(),
-        generateJavadoc = generateJavadoc
+        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc)
       )
 
     assertThat(javaCode)
@@ -389,7 +372,7 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent(),
         // no message, so no Javadoc, regardless of flag
-        generateJavadoc = generateJavadoc
+        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc)
       )
 
     assertThat(javaCode)
@@ -424,7 +407,7 @@ class JavaCodeGeneratorTest {
         }
       """
           .trimIndent(),
-        generateGetters = true
+        JavaCodeGeneratorOptions(generateGetters = true)
       )
 
     assertThat(javaCode)
@@ -513,7 +496,7 @@ class JavaCodeGeneratorTest {
       @Deprecated { message = "property is deprecated" }
       deprecatedProperty: Int
     """,
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateJavadoc = true)
       )
 
     assertThat(javaCode)
@@ -735,7 +718,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateGetters = true
+        JavaCodeGeneratorOptions(generateGetters = true)
       )
 
     assertThat(javaCode)
@@ -889,7 +872,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateGetters = true
+        JavaCodeGeneratorOptions(generateGetters = true)
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GenerateGetters.jva")
@@ -1002,7 +985,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateJavadoc = true)
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("Javadoc.jva")
@@ -1026,8 +1009,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateGetters = true,
-        generateJavadoc = true
+        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true)
       )
 
     assertThat(javaCode)
@@ -1169,7 +1151,7 @@ class JavaCodeGeneratorTest {
       foo: String
     """
           .trimIndent(),
-        nonNullAnnotation = "com.example.Annotations\$NonNull"
+        JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull")
       )
 
     assertThat(javaCode)
@@ -1464,6 +1446,40 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `custom constructor parameter annotation`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      name: String
+    """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(paramsAnnotation = "org.project.MyAnnotation")
+      )
+
+    assertThat(javaCode)
+      .contains("import org.project.MyAnnotation;")
+      .contains("public Mod(@MyAnnotation(\"name\") @NonNull String name)")
+  }
+
+  @Test
+  fun `no constructor parameter annotation`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      name: String
+    """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(paramsAnnotation = null)
+      )
+
+    assertThat(javaCode).contains("public Mod(@NonNull String name)")
+  }
+
+  @Test
   fun `spring boot config`() {
     val javaCode =
       generateJavaCode(
@@ -1478,7 +1494,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateSpringBootConfig = true
+        JavaCodeGeneratorOptions(generateSpringBootConfig = true)
       )
 
     assertThat(javaCode)
@@ -1511,6 +1527,7 @@ class JavaCodeGeneratorTest {
           .trimMargin()
       )
       .doesNotContain("@ConstructorBinding")
+      .doesNotContain("@Named")
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
@@ -1765,7 +1782,7 @@ class JavaCodeGeneratorTest {
       typealias Direction = "north"|"east"|"south"|"west"
     """
           .trimIndent(),
-        implementSerializable = true
+        JavaCodeGeneratorOptions(implementSerializable = true)
       )
 
     assertThat(javaCode)
@@ -1846,7 +1863,7 @@ class JavaCodeGeneratorTest {
       abstract class Foo { str: String }
     """
           .trimIndent(),
-        implementSerializable = true
+        JavaCodeGeneratorOptions(implementSerializable = true)
       )
 
     assertThat(javaCode).doesNotContain("Serializable")
@@ -1857,7 +1874,7 @@ class JavaCodeGeneratorTest {
       module my.mod
     """
           .trimIndent(),
-        implementSerializable = true
+        JavaCodeGeneratorOptions(implementSerializable = true)
       )
 
     assertThat(javaCode).doesNotContain("Serializable")
@@ -1874,7 +1891,7 @@ class JavaCodeGeneratorTest {
       class Address { city: String }
     """
           .trimIndent(),
-        implementSerializable = true
+        JavaCodeGeneratorOptions(implementSerializable = true)
       )
 
     assertThat(javaCode)
@@ -1960,7 +1977,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateGetters = true
+        JavaCodeGeneratorOptions(generateGetters = true)
       )
 
     assertThat(javaCode)
