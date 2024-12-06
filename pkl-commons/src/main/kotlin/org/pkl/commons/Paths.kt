@@ -20,6 +20,7 @@ import java.nio.charset.Charset
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 import java.util.stream.Stream
+import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
@@ -69,6 +70,19 @@ fun Path.readString(charset: Charset = Charsets.UTF_8): String = Files.readStrin
 fun Path.deleteRecursively() {
   if (exists()) {
     walk().use { paths -> paths.sorted(Comparator.reverseOrder()).forEach { it.deleteIfExists() } }
+  }
+}
+
+@Throws(IOException::class)
+fun Path.copyRecursively(target: Path) {
+  if (exists()) {
+    target.createParentDirectories()
+    walk().use { paths ->
+      paths.forEach { src ->
+        val dst = target.resolve(this@copyRecursively.relativize(src))
+        src.copyTo(dst, overwrite = true)
+      }
+    }
   }
 }
 
