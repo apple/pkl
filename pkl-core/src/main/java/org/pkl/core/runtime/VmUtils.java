@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
@@ -134,10 +135,6 @@ public final class VmUtils {
     return result;
   }
 
-  public static void setReceiver(Frame frame, Object receiver) {
-    frame.getArguments()[0] = receiver;
-  }
-
   public static VmObjectLike getObjectReceiver(Frame frame) {
     return (VmObjectLike) getReceiver(frame);
   }
@@ -156,10 +153,6 @@ public final class VmUtils {
     var result = getOwnerOrNull(frame);
     assert result != null;
     return result;
-  }
-
-  public static void setOwner(Frame frame, VmObjectLike owner) {
-    frame.getArguments()[1] = owner;
   }
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
@@ -261,17 +254,17 @@ public final class VmUtils {
 
     final var constantValue = member.getConstantValue();
     if (constantValue != null) {
-      var ret = constantValue;
-      // for a property, do a type check
+      var result = constantValue;
+      // for a property, Listing element, or Mapping value, do a type check
       if (member.isProp()) {
         var property = receiver.getVmClass().getProperty(member.getName());
         if (property != null && property.getTypeNode() != null) {
           var callTarget = property.getTypeNode().getCallTarget();
           try {
             if (checkType) {
-              ret = callNode.call(callTarget, receiver, property.getOwner(), constantValue);
+              result = callNode.call(callTarget, receiver, property.getOwner(), constantValue);
             } else {
-              ret =
+              result =
                   callNode.call(
                       callTarget,
                       receiver,
@@ -281,44 +274,52 @@ public final class VmUtils {
             }
           } catch (VmException e) {
             CompilerDirectives.transferToInterpreter();
-            // A failed property type check looks as follows in the stack trace:
-            // x: Int(isPositive)
-            // at ...
-            // x = -10
-            // at ...
-            // However, if the value of `x` is a parse-time constant (as in `x = -10`),
-            // there's no root node for it and hence no stack trace element.
-            // In this case, insert a stack trace element to make the stack trace look the same
-            // as in the non-constant case. (Parse-time constants are an internal optimization.)
-            e.getInsertedStackFrames()
-                .put(
-                    callTarget,
-                    createStackFrame(member.getBodySection(), member.getQualifiedName()));
+            insertStackFrame(member, callTarget, e);
             throw e;
           }
         }
-      } else if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
-        if (owner != receiver && owner instanceof VmListingOrMapping<?> vmListingOrMappingOwner) {
-          ret = vmListingOrMappingOwner.typecastObjectMember(member, ret, callNode);
-        }
-        ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
+      } else if (receiver instanceof VmListingOrMapping listingOrMapping
+          && owner instanceof VmListingOrMapping) {
+        // `owner instanceof VmListingOrMapping` guards against
+        // PropertiesRenderer amending VmDynamic with VmListing (hack?)
+        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member, null);
       }
-      receiver.setCachedValue(memberKey, ret, member);
-      return ret;
+
+      receiver.setCachedValue(memberKey, result);
+      return result;
     }
 
     var callTarget = member.getCallTarget();
-    Object ret;
+    Object result;
     if (checkType) {
-      ret = callNode.call(callTarget, receiver, owner, memberKey);
+      result = callNode.call(callTarget, receiver, owner, memberKey);
     } else {
-      ret = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
+      result = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
     }
-    if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
-      ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
+    receiver.setCachedValue(memberKey, result);
+    return result;
+  }
+
+  // A failed property type check looks as follows in the stack trace:
+  // x: Int(isPositive)
+  // at ...
+  // x = -10
+  // at ...
+  // However, if the value of `x` is a parse-time constant (as in `x = -10`),
+  // there's no root node for it and hence no stack trace element.
+  // In this case, insert a stack trace element to make the stack trace look the same
+  // as in the non-constant case. (Parse-time constants are an internal optimization.)
+  public static void insertStackFrame(
+      ObjectMember member, CallTarget location, VmException exception) {
+    var sourceSection = member.getBodySection();
+    if (!sourceSection.isAvailable()) {
+      sourceSection = member.getSourceSection();
     }
-    receiver.setCachedValue(memberKey, ret, member);
-    return ret;
+    if (sourceSection.isAvailable()) {
+      exception
+          .getInsertedStackFrames()
+          .put(location, createStackFrame(sourceSection, member.getQualifiedName()));
+    }
   }
 
   public static @Nullable ObjectMember findMember(VmObjectLike receiver, Object memberKey) {

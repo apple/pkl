@@ -50,6 +50,7 @@ import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmIntSeq;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMap;
@@ -573,7 +574,8 @@ public final class RendererNodes {
         type =
             requiresWrapper()
                 ? null
-                : new ListingTypeNode(VmUtils.unavailableSourceSection(), valueType);
+                : new ListingTypeNode(
+                    VmUtils.unavailableSourceSection(), VmLanguage.get(null), valueType);
         return type;
       } else if (type instanceof MappingTypeNode mappingType) {
         var keyType = resolveType(mappingType.getKeyTypeNode());
@@ -587,7 +589,9 @@ public final class RendererNodes {
         }
         var valueType = resolveType(mappingType.getValueTypeNode());
         assert valueType != null : "Incomplete or malformed Mapping type";
-        mappingType = new MappingTypeNode(VmUtils.unavailableSourceSection(), keyType, valueType);
+        mappingType =
+            new MappingTypeNode(
+                VmUtils.unavailableSourceSection(), VmLanguage.get(null), keyType, valueType);
 
         type = requiresWrapper() ? null : mappingType;
         return type;

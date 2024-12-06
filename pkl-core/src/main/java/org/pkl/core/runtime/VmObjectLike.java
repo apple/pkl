@@ -96,7 +96,7 @@ public abstract class VmObjectLike extends VmValue {
    * receiver.
    */
   @TruffleBoundary
-  public abstract void setCachedValue(Object key, Object value, ObjectMember objectMember);
+  public abstract void setCachedValue(Object key, Object value);
 
   /**
    * Prefer this method over {@link #getCachedValue} if the value is not required. (There is no

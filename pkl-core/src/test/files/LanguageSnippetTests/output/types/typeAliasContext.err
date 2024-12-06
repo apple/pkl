@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `endsWith(lastName)` violated.
+Value: "Jimmy Bird"
+
+x | typealias Birds = Listing<String(endsWith(lastName))>
+                                     ^^^^^^^^^^^^^^^^^^
+at typeAliasContext#res (file:///$snippetsDir/input/types/helpers/originalTypealias.pkl)
+
+x | res: originalTypealias.Birds = new { "Jimmy Bird" }
+                                         ^^^^^^^^^^^^
+at typeAliasContext#res[#1] (file:///$snippetsDir/input/types/typeAliasContext.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

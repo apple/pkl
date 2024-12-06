@@ -184,12 +184,12 @@ public final class ResolveVariableNode extends ExpressionNode {
       if (member != null) {
         var constantValue = member.getConstantValue();
         if (constantValue != null) {
-          baseModule.setCachedValue(variableName, constantValue, member);
+          baseModule.setCachedValue(variableName, constantValue);
           return new ConstantValueNode(sourceSection, constantValue);
         }
 
         var computedValue = member.getCallTarget().call(baseModule, baseModule);
-        baseModule.setCachedValue(variableName, computedValue, member);
+        baseModule.setCachedValue(variableName, computedValue);
         return new ConstantValueNode(sourceSection, computedValue);
       }
     }

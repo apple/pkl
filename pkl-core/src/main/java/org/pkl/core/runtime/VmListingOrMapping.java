@@ -16,159 +16,122 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
 import org.graalvm.collections.UnmodifiableEconomicMap;
-import org.pkl.core.PklBugException;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.Nullable;
 
-public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> extends VmObject {
-
-  /**
-   * A Listing or Mapping typecast creates a new object that contains a new typecheck node, and
-   * delegates member lookups to this delegate.
-   */
-  protected final @Nullable SELF delegate;
-
+public abstract class VmListingOrMapping extends VmObject {
+  // reified type of listing elements and mapping values
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
-  private final MaterializedFrame typeNodeFrame;
-  private final EconomicMap<Object, ObjectMember> cachedMembers = EconomicMaps.create();
-  private final EconomicSet<Object> checkedMembers = EconomicSets.create();
+  private final @Nullable Object typeCheckReceiver;
+  private final @Nullable VmObjectLike typeCheckOwner;
+
+  public VmListingOrMapping(
+      MaterializedFrame enclosingFrame,
+      @Nullable VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    super(enclosingFrame, parent, members);
+    typeCastNode = null;
+    typeCheckReceiver = null;
+    typeCheckOwner = null;
+  }
 
   public VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
-      @Nullable SELF delegate,
-      @Nullable ListingOrMappingTypeCastNode typeCastNode,
-      @Nullable MaterializedFrame typeNodeFrame) {
+      ListingOrMappingTypeCastNode typeCastNode,
+      Object typeCheckReceiver,
+      VmObjectLike typeCheckOwner) {
     super(enclosingFrame, parent, members);
-    this.delegate = delegate;
     this.typeCastNode = typeCastNode;
-    this.typeNodeFrame = typeNodeFrame;
+    this.typeCheckReceiver = typeCheckReceiver;
+    this.typeCheckOwner = typeCheckOwner;
   }
 
-  ObjectMember findMember(Object key) {
-    var member = EconomicMaps.get(cachedMembers, key);
-    if (member != null) {
-      return member;
-    }
-    if (delegate != null) {
-      return delegate.findMember(key);
-    }
-    // member is guaranteed to exist; this is only called if `getCachedValue()` returns non-null
-    // and `setCachedValue` will record the object member in `cachedMembers`.
-    throw PklBugException.unreachableCode();
-  }
-
-  public @Nullable ListingOrMappingTypeCastNode getTypeCastNode() {
-    return typeCastNode;
-  }
-
-  @Override
-  public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
-    super.setCachedValue(key, value, objectMember);
-    EconomicMaps.put(cachedMembers, key, objectMember);
-  }
-
-  @Override
-  public boolean hasCachedValue(Object key) {
-    return super.hasCachedValue(key) || delegate != null && delegate.hasCachedValue(key);
-  }
-
-  @Override
-  public @Nullable Object getCachedValue(Object key) {
-    var myCachedValue = super.getCachedValue(key);
-    if (myCachedValue != null || delegate == null) {
-      return myCachedValue;
-    }
-    var memberValue = delegate.getCachedValue(key);
-    // if this object member appears inside `checkedMembers`, we have already checked its type
-    // and can safely return it.
-    if (EconomicSets.contains(checkedMembers, key)) {
-      return memberValue;
-    }
-    if (memberValue == null) {
-      return null;
-    }
-    // If a cached value already exists on the delegate, run a typecast on it.
-    // optimization: don't use `VmUtils.findMember` to avoid iterating over all members
-    var objectMember = findMember(key);
-    var ret = typecastObjectMember(objectMember, memberValue, IndirectCallNode.getUncached());
-    if (ret != memberValue) {
-      EconomicMaps.put(cachedValues, key, ret);
-    } else {
-      // optimization: don't add to own cached values if typecast results in the same value
-      EconomicSets.add(checkedMembers, key);
-    }
-    return ret;
-  }
-
-  @Override
-  public Object getExtraStorage() {
-    if (delegate != null) {
-      return delegate.getExtraStorage();
-    }
-    assert extraStorage != null;
-    return extraStorage;
-  }
-
-  /** Perform a typecast on this member, */
-  public Object typecastObjectMember(
-      ObjectMember member, Object memberValue, IndirectCallNode callNode) {
-    if (!(member.isEntry() || member.isElement()) || typeCastNode == null) {
-      return memberValue;
-    }
-    assert typeNodeFrame != null;
-    var ret = memberValue;
-    if (delegate != null) {
-      ret = delegate.typecastObjectMember(member, ret, callNode);
-    }
+  // Recursively executes type casts between `owner` and `this` and returns the resulting value.
+  public final Object executeTypeCasts(
+      Object value,
+      VmObjectLike owner,
+      IndirectCallNode callNode,
+      // if non-null, a stack frame for this member is inserted if a type cast fails
+      @Nullable ObjectMember member,
+      // Next type cast to be performed by the caller.
+      // Avoids repeating the same type cast in some cases.
+      @Nullable ListingOrMappingTypeCastNode nextTypeCastNode) {
+    var newNextTypeCastNode = typeCastNode != null ? typeCastNode : nextTypeCastNode;
+    @SuppressWarnings("DataFlowIssue")
+    var result =
+        this == owner
+            ? value
+            : ((VmListingOrMapping) parent)
+                .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
+    if (typeCastNode == null || typeCastNode == nextTypeCastNode) return result;
     var callTarget = typeCastNode.getCallTarget();
     try {
-      return callNode.call(
-          callTarget, VmUtils.getReceiver(typeNodeFrame), VmUtils.getOwner(typeNodeFrame), ret);
-    } catch (VmException vmException) {
+      return callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+    } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
-      // treat typecheck as part of the call stack to read the original member if there is a
-      // source section for it.
-      var sourceSection = member.getBodySection();
-      if (!sourceSection.isAvailable()) {
-        sourceSection = member.getSourceSection();
+      if (member != null) {
+        VmUtils.insertStackFrame(member, callTarget, e);
       }
-      if (sourceSection.isAvailable()) {
-        vmException
-            .getInsertedStackFrames()
-            .put(callTarget, VmUtils.createStackFrame(sourceSection, member.getQualifiedName()));
-      }
-      throw vmException;
+      throw e;
     }
   }
 
-  public abstract SELF withCheckedMembers(
-      ListingOrMappingTypeCastNode typeCastNode, MaterializedFrame typeNodeFrame);
+  @Override
+  @TruffleBoundary
+  public final @Nullable Object getCachedValue(Object key) {
+    var result = EconomicMaps.get(cachedValues, key);
+    // if this object has members, `this[key]` may differ from `parent[key]`, so stop the search
+    if (result != null || !members.isEmpty()) return result;
 
-  /** Tells if this mapping/listing runs the same typechecks as {@code typeNode}. */
-  public boolean hasSameChecksAs(TypeNode typeNode) {
+    // Optimization: Recursively steal value from parent cache to avoid computing it multiple times.
+    // The current implementation has the following limitations and drawbacks:
+    // * It only works if a parent has, coincidentally, already cached `key`.
+    // * It turns getCachedValue() into an operation that isn't guaranteed to be fast and fail-safe.
+    // * It requires making VmObject.getCachedValue() non-final,
+    //   which is unfavorable for Truffle partial evaluation and JVM inlining.
+    // * It may not be worth its cost for constant members and members that are cheap to compute.
+
+    assert parent != null; // VmListingOrMapping always has a parent
+    result = parent.getCachedValue(key);
+    if (result == null) return null;
+
+    if (typeCastNode != null && !(key instanceof Identifier)) {
+      var callNode = IndirectCallNode.getUncached();
+      var callTarget = typeCastNode.getCallTarget();
+      try {
+        result = callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+      } catch (VmException e) {
+        var member = VmUtils.findMember(parent, key);
+        assert member != null; // already found the member's cached value
+        VmUtils.insertStackFrame(member, callTarget, e);
+        throw e;
+      }
+    }
+    setCachedValue(key, result);
+    return result;
+  }
+
+  /**
+   * Tells whether the value type of this listing/mapping is known to be a subtype of {@code
+   * typeNode}. If {@code true}, type checks of individual values can be elided because
+   * listings/mappings are covariant in their value type.
+   */
+  public final boolean isValueTypeKnownSubtypeOf(TypeNode typeNode) {
+    if (typeNode.isNoopTypeCheck()) {
+      return true;
+    }
     if (typeCastNode == null) {
       return false;
     }
-    if (typeCastNode.getTypeNode().isEquivalentTo(typeNode)) {
-      return true;
-    }
-    // we can say the check is the same if the delegate has this check.
-    // when `Listing<Any>` delegates to `Listing<UInt>`, it has the same checks as a `UInt`
-    // typenode.
-    if (delegate != null) {
-      return delegate.hasSameChecksAs(typeNode);
-    }
-    return false;
+    return typeCastNode.getTypeNode().isEquivalentTo(typeNode);
   }
 }
