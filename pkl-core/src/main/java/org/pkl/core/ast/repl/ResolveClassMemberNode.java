@@ -49,7 +49,7 @@ public final class ResolveClassMemberNode extends PklRootNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
+  protected Object executeImpl(VirtualFrame frame) {
     return unresolvedNode.execute(frame, clazz);
   }
 }
