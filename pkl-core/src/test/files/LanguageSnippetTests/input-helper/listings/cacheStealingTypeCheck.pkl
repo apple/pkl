@@ -1,0 +1,3 @@
+function isValid(str): Boolean = str.startsWith("a")
+
+foo: Listing<String(isValid(this))>(isDistinct)

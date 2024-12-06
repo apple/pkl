@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `listingTypeCheckError9#Bar`, but got type `listingTypeCheckError9#Foo`.
+Value: new Foo {}
+
+x | local c = b as Listing<Bar>
+                           ^^^
+at listingTypeCheckError9#c (file:///$snippetsDir/input/errors/listingTypeCheckError9.pkl)
+
+x | local a = new Listing { new Foo {} }
+                            ^^^^^^^^^^
+at listingTypeCheckError9#a[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError9.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

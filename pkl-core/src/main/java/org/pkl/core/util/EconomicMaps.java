@@ -30,6 +30,10 @@ import org.graalvm.collections.UnmodifiableMapCursor;
 public final class EconomicMaps {
   private EconomicMaps() {}
 
+  public static <K, V> UnmodifiableEconomicMap<K, V> emptyMap() {
+    return EconomicMap.emptyMap();
+  }
+
   @TruffleBoundary
   public static <K, V> EconomicMap<K, V> create() {
     return EconomicMap.create();

@@ -1,0 +1,10 @@
+local a = new Listing { new Foo {} }
+local b = (a) { new Bar {} }
+local c = b as Listing<Bar>
+local d = (c) { new Foo {} }
+local e = d as Listing<Foo>
+
+result = e
+
+open class Foo
+class Bar extends Foo

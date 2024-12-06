@@ -1,0 +1,5 @@
+const local lastName = "Birdo"
+
+typealias Birds = Listing<String(endsWith(lastName))>
+
+typealias Birds2 = Pair<Listing<String(endsWith(lastName))>, Int>

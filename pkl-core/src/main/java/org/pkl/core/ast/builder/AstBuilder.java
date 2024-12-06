@@ -1221,7 +1221,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             member.initConstantValue(constantNode);
           } else {
             member.initMemberNode(
-                new UntypedObjectMemberNode(
+                ElementOrEntryNodeGen.create(
                     language, scope.buildFrameDescriptor(), member, elementNode));
           }
 
@@ -1278,7 +1278,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           member.initConstantValue(constantNode);
         } else {
           member.initMemberNode(
-              new UntypedObjectMemberNode(
+              ElementOrEntryNodeGen.create(
                   language, scope.buildFrameDescriptor(), member, valueNode));
         }
       } else { // ["key"] { ... }
@@ -1287,7 +1287,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                 objectBodyCtxs,
                 new ReadSuperEntryNode(unavailableSourceSection(), new GetMemberKeyNode()));
         member.initMemberNode(
-            new UntypedObjectMemberNode(
+            ElementOrEntryNodeGen.create(
                 language, scope.buildFrameDescriptor(), member, objectBody));
       }
 
@@ -2446,6 +2446,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
     return new UnresolvedTypeNode.Parameterized(
         createSourceSection(ctx),
+        language,
         doVisitTypeName(idCtx),
         argCtx.ts.stream().map(this::visitType).toArray(UnresolvedTypeNode[]::new));
   }
