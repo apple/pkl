@@ -23,8 +23,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.core.externalreader.TestExternalReaderProcess
-import org.pkl.core.externalreader.TestExternalResourceReader
+import org.pkl.core.externalreader.TestReaderProcess
+import org.pkl.core.externalreader.TestResourceReader
 import org.pkl.core.module.ModulePathResolver
 
 class ResourceReadersTest {
@@ -137,9 +137,8 @@ class ResourceReadersTest {
 
   @Test
   fun externalProcess() {
-    val extReader = TestExternalResourceReader()
-    val (proc, runtime) =
-      TestExternalReaderProcess.initializeTestHarness(emptyList(), listOf(extReader))
+    val extReader = TestResourceReader()
+    val (proc, runtime) = TestReaderProcess.initializeTestHarness(emptyList(), listOf(extReader))
 
     val reader = ResourceReaders.externalProcess(extReader.scheme, proc)
     val resource = reader.read(URI("test:foo"))

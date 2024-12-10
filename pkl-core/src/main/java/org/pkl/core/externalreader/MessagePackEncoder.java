@@ -19,19 +19,19 @@ import java.io.IOException;
 import java.io.OutputStream;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
-import org.pkl.core.externalreader.ExternalReaderMessages.*;
+import org.pkl.core.externalreader.ReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackEncoder;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.Nullable;
 
-final class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
+final class MessagePackEncoder extends BaseMessagePackEncoder {
 
-  public ExternalReaderMessagePackEncoder(MessagePacker packer) {
+  public MessagePackEncoder(MessagePacker packer) {
     super(packer);
   }
 
-  public ExternalReaderMessagePackEncoder(OutputStream outputStream) {
+  public MessagePackEncoder(OutputStream outputStream) {
     this(MessagePack.newDefaultPacker(outputStream));
   }
 
