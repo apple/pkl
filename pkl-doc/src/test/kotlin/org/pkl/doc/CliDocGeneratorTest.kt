@@ -36,6 +36,7 @@ import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
 import org.pkl.commons.toPath
+import org.pkl.commons.walk
 import org.pkl.core.Version
 import org.pkl.core.util.IoUtils
 import org.pkl.doc.DocGenerator.Companion.current
@@ -113,7 +114,12 @@ class CliDocGeneratorTest {
         "svg",
       )
 
-    private fun runDocGenerator(outputDir: Path, cacheDir: Path?) {
+    private fun runDocGenerator(
+      outputDir: Path,
+      cacheDir: Path?,
+      currentDirectoryMode: DocGenerator.CurrentDirectoryMode =
+        DocGenerator.CurrentDirectoryMode.SYMLINK
+    ) {
       CliDocGenerator(
           CliDocGeneratorOptions(
             CliBaseOptions(
@@ -130,7 +136,8 @@ class CliDocGeneratorTest {
               moduleCacheDir = cacheDir
             ),
             outputDir = outputDir,
-            isTestMode = true
+            isTestMode = true,
+            currentDirectoryMode = currentDirectoryMode
           )
         )
         .run()
@@ -260,15 +267,36 @@ class CliDocGeneratorTest {
   }
 
   @Test
-  fun `creates a symlink called current`(@TempDir tempDir: Path) {
+  fun `creates a symlink called current by default`(@TempDir tempDir: Path) {
     PackageServer.populateCacheDir(tempDir)
     runDocGenerator(actualOutputDir, tempDir)
+
     val expectedSymlink = actualOutputDir.resolve("com.package1/current")
     val expectedDestination = actualOutputDir.resolve("com.package1/1.2.3")
-    org.junit.jupiter.api.Assertions.assertTrue(Files.isSymbolicLink(expectedSymlink))
-    org.junit.jupiter.api.Assertions.assertTrue(
-      Files.isSameFile(expectedSymlink, expectedDestination)
+
+    assertThat(expectedSymlink).isSymbolicLink().matches {
+      Files.isSameFile(it, expectedDestination)
+    }
+  }
+
+  @Test
+  fun `creates a copy of the latest output called current when configured`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    runDocGenerator(
+      actualOutputDir,
+      tempDir,
+      currentDirectoryMode = DocGenerator.CurrentDirectoryMode.COPY
     )
+
+    val currentDirectory = actualOutputDir.resolve("com.package1/current")
+    val sourceDirectory = actualOutputDir.resolve("com.package1/1.2.3")
+
+    assertThat(currentDirectory).isDirectory()
+
+    val expectedFiles = sourceDirectory.walk().map(sourceDirectory::relativize).toList()
+    val actualFiles = currentDirectory.walk().map(currentDirectory::relativize).toList()
+
+    assertThat(actualFiles).hasSameElementsAs(expectedFiles)
   }
 
   @Test
