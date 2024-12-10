@@ -888,9 +888,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
     var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.k));
     var member = doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody());
-    var needsStoredFrame =
+    var isFrameStored =
         member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
-    return GeneratorPredicateMemberNodeGen.create(keyNode, member, needsStoredFrame);
+    return GeneratorPredicateMemberNodeGen.create(keyNode, member, isFrameStored);
   }
 
   @Override
@@ -898,9 +898,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var keyNodeAndMember = doVisitObjectEntry(ctx);
     var keyNode = keyNodeAndMember.first;
     var member = keyNodeAndMember.second;
-    var needsStoredFrame =
+    var isFrameStored =
         member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
-    return GeneratorEntryNodeGen.create(keyNode, member, needsStoredFrame);
+    return GeneratorEntryNodeGen.create(keyNode, member, isFrameStored);
   }
 
   @Override
@@ -912,9 +912,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public GeneratorElementNode visitObjectElement(ObjectElementContext ctx) {
     var member = doVisitObjectElement(ctx);
-    var needsStoredFrame =
+    var isFrameStored =
         member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
-    return GeneratorElementNodeGen.create(member, needsStoredFrame);
+    return GeneratorElementNodeGen.create(member, isFrameStored);
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBodyContext ctx) {

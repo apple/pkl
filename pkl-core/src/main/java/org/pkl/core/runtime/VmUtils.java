@@ -313,12 +313,14 @@ public final class VmUtils {
       int numberOfLocalsToCopy) {
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
+    // Alternatively, locals could be copied with `numberOfLocalsToCopy`
+    // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
     for (int i = 0; i < numberOfLocalsToCopy; i++) {
       var sourceSlot = firstSourceSlot + i;
       var targetSlot = firstTargetSlot + i;
       // If, for a particular call site of this method,
       // slot kinds of `sourceDescriptor` will reach a steady state,
-      // slot kinds of `targetDescriptor` will too.
+      // then slot kinds of `targetDescriptor` will too.
       var slotKind = sourceDescriptor.getSlotKind(sourceSlot);
       switch (slotKind) {
         case Boolean -> {

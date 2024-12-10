@@ -30,9 +30,9 @@ public final class ObjectData {
   // The object's members.
   private final EconomicMap<Object, ObjectMember> members;
   // The frames that were active when `members` were generated.
-  // Only a subset of members need to have their frames stored.
-  // `generatorFrames` will be stored in `VmObject.extraStorage`,
-  // and will be retrieved by `RestoreForBindingsNode` when `members` are executed.
+  // Only a subset of members have their frames stored (`GeneratorMemberNode.isFrameStored`).
+  // Frames are stored in `owner.extraStorage` and retrieved by `RestoreForBindingsNode`
+  // when members are executed.
   private final EconomicMap<Object, MaterializedFrame> generatorFrames;
   // The object's number of elements.
   private int length;
@@ -70,12 +70,12 @@ public final class ObjectData {
       CompilerDirectives.transferToInterpreter();
       throw node.duplicateDefinition(key, member);
     }
-    if (node.needsStoredFrame) {
+    if (node.isFrameStored) {
       EconomicMaps.put(generatorFrames, key, frame.materialize());
     }
   }
 
-  <T extends VmObject> T storedIn(T object) {
+  <T extends VmObject> T storeGeneratorFrames(T object) {
     object.setExtraStorage(generatorFrames);
     return object;
   }

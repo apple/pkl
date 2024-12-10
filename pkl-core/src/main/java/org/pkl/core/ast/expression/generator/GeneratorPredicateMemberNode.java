@@ -35,8 +35,8 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
   @CompilationFinal private int customThisSlot = -1;
 
   protected GeneratorPredicateMemberNode(
-      ExpressionNode predicateNode, ObjectMember member, boolean needsStoredFrame) {
-    super(member.getSourceSection(), needsStoredFrame);
+      ExpressionNode predicateNode, ObjectMember member, boolean isFrameStored) {
+    super(member.getSourceSection(), isFrameStored);
     this.predicateNode = predicateNode;
     this.member = member;
   }

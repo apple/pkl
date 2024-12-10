@@ -72,31 +72,31 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
 
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    var data = createData(frame, parent, parent.getLength());
+    var data = executeChildren(frame, parent, parent.getLength());
     var result = new VmDynamic(frame.materialize(), parent, data.members(), data.length());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmTyped evalTyped(VirtualFrame frame, VmTyped parent) {
     VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode());
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     assert data.hasNoGeneratorFrames();
     return new VmTyped(frame.materialize(), parent, parent.getVmClass(), data.members());
   }
 
   @Specialization(guards = "checkListingCannotHaveParameters()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
-    var data = createData(frame, parent, parent.getLength());
+    var data = executeChildren(frame, parent, parent.getLength());
     var result = new VmListing(frame.materialize(), parent, data.members(), data.length());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = "checkMappingCannotHaveParameters()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     var result = new VmMapping(frame.materialize(), parent, data.members());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = "checkObjectCannotHaveParameters()")
@@ -117,31 +117,31 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
 
   @Specialization(guards = {"parent == getDynamicClass()", "checkObjectCannotHaveParameters()"})
   protected VmDynamic evalDynamicClass(VirtualFrame frame, VmClass parent) {
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     var result =
         new VmDynamic(frame.materialize(), parent.getPrototype(), data.members(), data.length());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = {"parent == getMappingClass()", "checkMappingCannotHaveParameters()"})
   protected VmMapping evalMappingClass(VirtualFrame frame, VmClass parent) {
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     var result = new VmMapping(frame.materialize(), parent.getPrototype(), data.members());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = {"parent == getListingClass()", "checkListingCannotHaveParameters()"})
   protected VmListing evalListingClass(VirtualFrame frame, VmClass parent) {
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     var result =
         new VmListing(frame.materialize(), parent.getPrototype(), data.members(), data.length());
-    return data.storedIn(result);
+    return data.storeGeneratorFrames(result);
   }
 
   @Specialization(guards = {"isTypedObjectClass(parent)", "checkObjectCannotHaveParameters()"})
   protected VmTyped evalTypedObjectClass(VirtualFrame frame, VmClass parent) {
     VmUtils.checkIsInstantiable(parent, getParentNode());
-    var data = createData(frame, parent, 0);
+    var data = executeChildren(frame, parent, 0);
     assert data.hasNoGeneratorFrames();
     return new VmTyped(frame.materialize(), parent.getPrototype(), parent, data.members());
   }
@@ -189,7 +189,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   }
 
   @ExplodeLoop
-  private ObjectData createData(VirtualFrame frame, Object parent, int parentLength) {
+  private ObjectData executeChildren(VirtualFrame frame, Object parent, int parentLength) {
     var data = new ObjectData(parentLength);
     for (var memberNode : memberNodes) {
       memberNode.execute(frame, parent, data);

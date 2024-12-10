@@ -30,8 +30,8 @@ import org.pkl.core.runtime.VmListing;
 public abstract class GeneratorElementNode extends GeneratorMemberNode {
   private final ObjectMember element;
 
-  protected GeneratorElementNode(ObjectMember element, boolean needsStoredFrame) {
-    super(element.getSourceSection(), needsStoredFrame);
+  protected GeneratorElementNode(ObjectMember element, boolean isFrameStored) {
+    super(element.getSourceSection(), isFrameStored);
     this.element = element;
   }
 

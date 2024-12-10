@@ -28,11 +28,11 @@ import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.runtime.VmUtils;
 
 public abstract class GeneratorMemberNode extends PklNode {
-  final boolean needsStoredFrame;
+  final boolean isFrameStored;
 
-  protected GeneratorMemberNode(SourceSection sourceSection, boolean needsStoredFrame) {
+  protected GeneratorMemberNode(SourceSection sourceSection, boolean isFrameStored) {
     super(sourceSection);
-    this.needsStoredFrame = needsStoredFrame;
+    this.isFrameStored = isFrameStored;
   }
 
   public abstract void execute(VirtualFrame frame, Object parent, ObjectData data);

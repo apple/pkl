@@ -41,17 +41,17 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   public GeneratorForNode(
       SourceSection sourceSection,
       FrameDescriptor generatorDescriptor,
-      // null if for-generator doesn't bind key or keyTypeNode is passed instead of this node
+      // null if for-generator doesn't bind key or `keyTypeNode` is passed instead of this node
       ExpressionNode iterableNode,
       @Nullable UnresolvedTypeNode unresolvedKeyTypeNode,
-      // null if for-generator doesn't bind value or valueTypeNode is passed instead of this node
+      // null if for-generator doesn't bind value or `valueTypeNode` is passed instead of this node
       @Nullable UnresolvedTypeNode unresolvedValueTypeNode,
       // If this node can be constructed at parse time,
-      // it should be passed instead of unresolvedKeyTypeNode.
+      // it should be passed instead of `unresolvedKeyTypeNode`.
       GeneratorMemberNode[] childNodes,
       @Nullable TypeNode keyTypeNode,
       // If this node can be constructed at parse time,
-      // it should be passed instead of unresolvedValueTypeNode.
+      // it should be passed instead of `unresolvedValueTypeNode`.
       @Nullable TypeNode valueTypeNode) {
     super(sourceSection, false);
     this.generatorDescriptor = generatorDescriptor;
@@ -133,7 +133,7 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
     iterable.forceAndIterateMemberValues(
         (key, member, value) -> {
           var convertedKey = member.isProp() ? key.toString() : key;
-          // TODO: Executing iteration behind Truffle boundary is bad for performance.
+          // TODO: Executing iteration behind a Truffle boundary is bad for performance.
           // This and similar cases will be fixed in an upcoming PR that replaces method
           // `(forceAnd)iterateMemberValues` with cursor-based external iterators.
           executeIteration(frame, parent, data, convertedKey, value);
@@ -145,6 +145,9 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   private void executeIteration(
       VirtualFrame frame, Object parent, ObjectData data, Object key, Object value) {
 
+    // GraalJS uses the same implementation technique here:
+    // https://github.com/oracle/graaljs/blob/44a11ce6e87/graal-js/src/com.oracle.truffle.js/
+    // src/com/oracle/truffle/js/nodes/function/IterationScopeNode.java#L86-L88
     var newFrame =
         Truffle.getRuntime().createVirtualFrame(frame.getArguments(), generatorDescriptor);
     // the locals in `frame` (if any) are function arguments and/or outer for-generator bindings

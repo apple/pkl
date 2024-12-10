@@ -31,9 +31,8 @@ public abstract class GeneratorEntryNode extends GeneratorMemberNode {
   @Child private ExpressionNode keyNode;
   private final ObjectMember member;
 
-  protected GeneratorEntryNode(
-      ExpressionNode keyNode, ObjectMember member, boolean needsStoredFrame) {
-    super(member.getSourceSection(), needsStoredFrame);
+  protected GeneratorEntryNode(ExpressionNode keyNode, ObjectMember member, boolean isFrameStored) {
+    super(member.getSourceSection(), isFrameStored);
     this.keyNode = keyNode;
     this.member = member;
   }
