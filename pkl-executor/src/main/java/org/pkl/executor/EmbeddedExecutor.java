@@ -322,19 +322,12 @@ final class EmbeddedExecutor implements Executor {
     }
   }
 
-  private static final class ConcatenatedEnumeration<E> implements Enumeration<E> {
-    final Enumeration<E> e1;
-    final Enumeration<E> e2;
-
+  private record ConcatenatedEnumeration<E>(Enumeration<E> e1, Enumeration<E> e2)
+      implements Enumeration<E> {
     static <E> Enumeration<E> create(Enumeration<E> e1, Enumeration<E> e2) {
       return !e1.hasMoreElements()
           ? e2
           : !e2.hasMoreElements() ? e1 : new ConcatenatedEnumeration<>(e1, e2);
-    }
-
-    ConcatenatedEnumeration(Enumeration<E> e1, Enumeration<E> e2) {
-      this.e1 = e1;
-      this.e2 = e2;
     }
 
     public boolean hasMoreElements() {
