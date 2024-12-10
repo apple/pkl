@@ -35,25 +35,35 @@ data class CliJavaCodeGeneratorOptions(
    */
   val generateGetters: Boolean = false,
 
-  /** Whether to generate Javadoc based on doc comments for Pkl modules, classes, and properties. */
+  /** Whether to preserve Pkl doc comments by generating corresponding Javadoc comments. */
   val generateJavadoc: Boolean = false,
 
   /** Whether to generate config classes for use with Spring Boot. */
   val generateSpringBootConfig: Boolean = false,
 
   /**
-   * Fully qualified name of the annotation to use on constructor parameters. If this options is not
-   * set, [org.pkl.config.java.mapper.Named] will be used.
+   * Fully qualified name of the annotation type to use for annotating constructor parameters with
+   * their name.
+   *
+   * The specified annotation type must have a `value` parameter of type [java.lang.String] or the
+   * generated code may not compile.
+   *
+   * If set to `null`, constructor parameters are not annotated. The default value is `null` if
+   * [generateSpringBootConfig] is `true` and `"org.pkl.config.java.mapper.Named"` otherwise.
    */
-  val paramsAnnotation: String? = null,
+  val paramsAnnotation: String? =
+    if (generateSpringBootConfig) null else "org.pkl.config.java.mapper.Named",
 
   /**
-   * Fully qualified name of the annotation to use on non-null properties. If this option is not
-   * set, [org.pkl.config.java.mapper.NonNull] will be used.
+   * Fully qualified name of the annotation type to use for annotating non-null types.
+   *
+   * The specified annotation type must have a [java.lang.annotation.Target] of
+   * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
+   * `null`, [org.pkl.config.java.mapper.NonNull] will be used.
    */
   val nonNullAnnotation: String? = null,
 
-  /** Whether to make generated classes implement [java.io.Serializable] */
+  /** Whether to generate classes that implement [java.io.Serializable]. */
   val implementSerializable: Boolean = false,
 
   /**

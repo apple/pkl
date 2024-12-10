@@ -26,7 +26,7 @@ Flag that indicates to generate config classes for use with Spring Boot.
 [%collapsible]
 ====
 Default: (not set) +
-Whether to make generated classes implement `java.io.Serializable`.
+Flag that indicates to generate classes that implement `java.io.Serializable`.
 ====
 
 .--rename

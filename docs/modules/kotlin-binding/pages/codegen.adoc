@@ -118,7 +118,7 @@ Relative URIs are resolved against the working directory.
 [%collapsible]
 ====
 Default: (flag not set) +
-Flag that indicates to generate Kdoc based on doc comments for Pkl modules, classes, and properties.
+Flag that indicates to preserve Pkl doc comments by generating corresponding KDoc comments.
 ====
 
 Common code generator options:

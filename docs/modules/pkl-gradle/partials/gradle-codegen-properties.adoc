@@ -36,6 +36,14 @@ Example: `generateSpringBootConfig = true` +
 Whether to generate config classes for use with Spring Boot.
 ====
 
+.implementSerializable: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `implementSerializable = true` +
+Whether to generate classes that implement `java.io.Serializable`.
+====
+
 .renames: MapProperty<String, String>
 [%collapsible]
 ====
@@ -86,4 +94,3 @@ Keys in this mapping can be arbitrary strings, including an empty string.
 Values must be valid dot-separated fully qualifed class name prefixes, possibly terminated by a dot.
 ====
 
-// TODO: fixme (implementSerializable)
