@@ -31,12 +31,11 @@ public final class FunctionNodes {
     protected Object eval(VmFunction self, VmList argList) {
       var argCount = argList.getLength();
 
-      var args = new Object[3 + argCount];
+      var args = new Object[2 + argCount];
       args[0] = self.getThisValue();
       args[1] = self;
-      args[2] = false;
 
-      var i = 3;
+      var i = 2;
       for (var arg : argList) {
         args[i++] = arg;
       }

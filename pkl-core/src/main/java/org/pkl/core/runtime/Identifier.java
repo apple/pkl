@@ -141,9 +141,6 @@ public final class Identifier implements Comparable<Identifier> {
   // common in lambdas etc
   public static final Identifier IT = get("it");
 
-  // dummy, unrepresentable identifier
-  public static final Identifier DUMMY = get("`#_");
-
   private final String name;
 
   private Identifier(String name) {

@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Duplicate definition of member `_dup`.
-
-x | for (_dup, j in b) {
-         ^^^^
-at forGeneratorDuplicateParams2#foo (file:///$snippetsDir/input/errors/forGeneratorDuplicateParams2.pkl)

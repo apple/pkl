@@ -49,7 +49,7 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       VirtualFrame frame,
       VmListing receiver,
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-    var result = executeBody(frame);
+    var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
         ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
         : result;
@@ -60,7 +60,7 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       VirtualFrame frame,
       VmMapping receiver,
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-    var result = executeBody(frame);
+    var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
         ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
         : result;
@@ -68,6 +68,6 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
 
   @Specialization
   protected Object evalDynamic(VirtualFrame frame, VmDynamic ignored) {
-    return executeBody(frame);
+    return bodyNode.executeGeneric(frame);
   }
 }
