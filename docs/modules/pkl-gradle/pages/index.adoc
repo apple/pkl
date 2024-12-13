@@ -373,14 +373,26 @@ Example: `generateGetters = true` +
 Whether to generate private final fields and public getter methods rather than public final fields.
 ====
 
-// TODO: fixme (paramsAnnotation, nonNullAnnotation)
-.preferJavaxInjectAnnotation: Boolean
+.paramsAnnotation: Property<String>
 [%collapsible]
 ====
-Default: `false` +
-Example: `preferJavaxInjectAnnotation = true` +
-Whether to annotate constructor parameters with `@javax.inject.Named` instead of `@org.pkl.config.java.mapper.Named`.
-If `true`, the generated code will have a compile dependency on `javax.inject:javax.inject:1`.
+Default: `null` if `generateSpringBootConfig` is `true`, `"org.pkl.config.java.mapper.Named"` otherwise+
+Example: `paramsAnnotation = "org.project.MyAnnotation"` +
+Fully qualified name of the annotation type to use for annotating constructor parameters with their name. +
+The specified annotation type must have a `value` parameter of type `String` or the generated code may not compile.
+If set to `null`, constructor parameters are not annotated.
+Whether and how constructor parameters should be annotated depends on the library that instantiates the generated classes.
+For Spring Boot applications, and for users of `pkl-config-java` compiling the generated classes with `-parameters`, no annotation is required.
+
+====
+.nonNullAnnotation: Property<String>
+[%collapsible]
+====
+Default: `"org.pkl.config.java.mapper.NonNull"` +
+Example: `nonNullAnnotation = "org.project.MyAnnotation"` +
+Fully qualified name of the annotation type to use for annotating non-null types. +
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)` 
+or the generated code may not compile.
 ====
 
 Common code generation properties:
@@ -443,8 +455,15 @@ see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl/pkl-examples_ 
 
 === Configuration Options
 
-// TODO: fixme (generateKdoc)
-(None)
+=== Configuration Options
+
+.generateKdoc: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `generateKdoc = true` +
+Whether to preserve Pkl doc comments by generating corresponding KDoc comments.
+====
 
 Common code generation properties:
 

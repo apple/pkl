@@ -17,10 +17,7 @@
 
 package org.pkl.codegen.java
 
-import com.github.ajalt.clikt.parameters.options.associate
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
@@ -71,33 +68,37 @@ class PklJavaCodegenCommand :
   private val generateJavadoc: Boolean by
     option(
         names = arrayOf("--generate-javadoc"),
-        help =
-          "Whether to generate Javadoc based on doc comments " +
-            "for Pkl modules, classes, and properties."
+        help = "Whether to preserve Pkl doc comments by generating corresponding Javadoc comments."
       )
       .flag()
 
-  private val generateSpringboot: Boolean by
+  private val generateSpringBoot: Boolean by
     option(
         names = arrayOf("--generate-spring-boot"),
-        help = "Whether to generate config classes for use with Spring boot."
+        help = "Whether to generate config classes for use with Spring Boot."
       )
       .flag()
 
-  private val paramsAnnotation: String? by
+  private val paramsAnnotation: String by
     option(
-      names = arrayOf("--params-annotation"),
-      help = "Fully qualified name of the annotation to use on constructor parameters."
-    )
+        names = arrayOf("--params-annotation"),
+        help =
+          "Fully qualified name of the annotation type to use for annotating constructor parameters with their name."
+      )
+      .defaultLazy(
+        "`none` if `--generate-spring-boot` is set, `org.pkl.config.java.mapper.Named` otherwise"
+      ) {
+        if (generateSpringBoot) "none" else "org.pkl.config.java.mapper.Named"
+      }
 
   private val nonNullAnnotation: String? by
     option(
       names = arrayOf("--non-null-annotation"),
       help =
         """
-      Fully qualified named of the annotation class to use for non-null types.
-      This annotation is required to have `java.lang.annotation.ElementType.TYPE_USE` as a `@Target`
-      or it may generate code that does not compile.
+      Fully qualified name of the annotation type to use for annotating non-null types.
+      The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+      or the generated code may not compile.
     """
           .trimIndent()
     )
@@ -105,7 +106,7 @@ class PklJavaCodegenCommand :
   private val implementSerializable: Boolean by
     option(
         names = arrayOf("--implement-serializable"),
-        help = "Whether to make generated classes implement java.io.Serializable."
+        help = "Whether to generate classes that implement java.io.Serializable."
       )
       .flag()
 
@@ -117,7 +118,7 @@ class PklJavaCodegenCommand :
           """
             Replace a prefix in the names of the generated Java classes (repeatable).
             By default, the names of generated classes are derived from the Pkl module names.
-            With this option, you can override the modify the default names, renaming entire
+            With this option, you can override or modify the default names, renaming entire
             classes or just their packages.
           """
             .trimIndent()
@@ -132,8 +133,8 @@ class PklJavaCodegenCommand :
         indent = indent,
         generateGetters = generateGetters,
         generateJavadoc = generateJavadoc,
-        generateSpringBootConfig = generateSpringboot,
-        paramsAnnotation = paramsAnnotation,
+        generateSpringBootConfig = generateSpringBoot,
+        paramsAnnotation = if (paramsAnnotation == "none") null else paramsAnnotation,
         nonNullAnnotation = nonNullAnnotation,
         implementSerializable = implementSerializable,
         renames = renames

@@ -62,23 +62,21 @@ class PklKotlinCodegenCommand :
   private val generateKdoc: Boolean by
     option(
         names = arrayOf("--generate-kdoc"),
-        help =
-          "Whether to generate Kdoc based on doc comments " +
-            "for Pkl modules, classes, and properties."
+        help = "Whether to preserve Pkl doc comments by generating corresponding KDoc comments."
       )
       .flag()
 
   private val generateSpringboot: Boolean by
     option(
         names = arrayOf("--generate-spring-boot"),
-        help = "Whether to generate config classes for use with Spring boot."
+        help = "Whether to generate config classes for use with Spring Boot."
       )
       .flag()
 
   private val implementSerializable: Boolean by
     option(
         names = arrayOf("--implement-serializable"),
-        help = "Whether to make generated classes implement java.io.Serializable"
+        help = "Whether to generate classes that implement java.io.Serializable."
       )
       .flag()
 
@@ -90,7 +88,7 @@ class PklKotlinCodegenCommand :
           """
             Replace a prefix in the names of the generated Kotlin classes (repeatable).
             By default, the names of generated classes are derived from the Pkl module names.
-            With this option, you can override the modify the default names, renaming entire
+            With this option, you can override or modify the default names, renaming entire
             classes or just their packages.
           """
             .trimIndent()
