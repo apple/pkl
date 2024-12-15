@@ -716,7 +716,7 @@ public final class IoUtils {
    * URI#resolve(URI)}
    */
   public static URI fixTripleSlashUri(URI baseUri, URI newUri) {
-    // `getHost()` is erroroneously `null` when parsing triple-slash URIs.
+    // `getHost()` is erroneously `null` when parsing triple-slash URIs.
     // Ensure that they are preserved during resolution.
     if (baseUri.getScheme() != null
         && baseUri.getScheme().equalsIgnoreCase(newUri.getScheme())
