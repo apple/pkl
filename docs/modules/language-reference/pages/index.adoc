@@ -5475,7 +5475,7 @@ Readers are implemented as ordinary executables and use Pkl's xref:bindings-spec
 The xref:swift:ROOT:index.adoc[Swift] and xref:go:ROOT:index.adoc[Go] language binding libraries provide an `ExternalReaderRuntime` type to facilitate implementing external readers.
 
 External readers are configured separately for modules and resources.
-They are registered by mapping their URI scheme to the executable to run and additonal arguments to pass.
+They are registered by mapping their URI scheme to the executable to run and additional arguments to pass.
 This is done on the command line by passing `--external-resource-reader` and `--external-module-reader` flags, which may both be passed multiple times.
 
 [source,text]
