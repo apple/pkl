@@ -1313,7 +1313,7 @@ result = someLib.x
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(
-          sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostritch.pkl")),
+          sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostrich.pkl")),
           noCache = true,
           httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
@@ -1324,7 +1324,7 @@ result = someLib.x
     assertThat(output)
       .isEqualTo(
         """
-      name = "Ostritch"
+      name = "Ostrich"
 
       favoriteFruit {
         name = "Orange"
