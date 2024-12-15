@@ -12,7 +12,7 @@ This release brings improvements in typechecking of `Listing` and `Mapping`, the
 
 The next release (0.28) is scheduled for February 2025.
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
