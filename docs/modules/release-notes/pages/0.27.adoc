@@ -121,7 +121,7 @@ A new API has been added to analyze the import graph of Pkl modules (https://git
 This API comes in four forms:
 
 1. A standard library module: `pkl:analyze`
-2. A CLI command: `pkl anaylze imports`
+2. A CLI command: `pkl analyze imports`
 3. A Java API: `org.pkl.core.Analyzer`
 4. A Gradle API: `org.pkl.gradle.task.AnalyzeImportsTask`
 
