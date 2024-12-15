@@ -3353,9 +3353,9 @@ swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
 <2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
 <3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
 <4> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
-<5> `Mapping` value assignment, amdending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<5> `Mapping` value assignment, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
 <6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
-<7> Admending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
+<7> Amending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
 <8> Error: Cannot tell which parent to amend.
 
 [[let-expressions]]
