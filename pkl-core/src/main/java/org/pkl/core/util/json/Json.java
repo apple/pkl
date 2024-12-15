@@ -32,7 +32,7 @@ import org.pkl.core.util.Nullable;
 /**
  * Parser for JSON.
  *
- * <p>JSON types are paresd into the following Java types:
+ * <p>JSON types are parsed into the following Java types:
  *
  * <table>
  *   <thead>
