@@ -1242,7 +1242,7 @@ result = someLib.x
   }
 
   @Test
-  fun `gives decent error message if certificate file is emtpy`(@TempDir tempDir: Path) {
+  fun `gives decent error message if certificate file is empty`(@TempDir tempDir: Path) {
     val emptyCerts = tempDir.writeEmptyFile("empty.pem")
     val err = assertThrows<CliException> { evalModuleThatImportsPackage(emptyCerts) }
     assertThat(err).hasMessageContaining("CA certificate file `${emptyCerts.pathString}` is empty.")
