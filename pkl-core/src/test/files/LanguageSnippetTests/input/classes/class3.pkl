@@ -8,5 +8,5 @@ class Person {
 person = new Person {
   name = "Pigeon"
   // typo
-  adress = "Howdy St."
+  address_ = "Howdy St."
 }
