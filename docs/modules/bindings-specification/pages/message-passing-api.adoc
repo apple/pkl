@@ -75,7 +75,7 @@ requestId: Int
 /// API version of the CLI's `--allowed-modules` flag
 allowedModules: Listing<String>?
 
-/// Regex patterns to dettermine which resources are allowed to be read.
+/// Regex patterns to determine which resources are allowed to be read.
 ///
 /// API version of the CLI's `--allowed-resources` flag
 allowedResources: Listing<String>?
