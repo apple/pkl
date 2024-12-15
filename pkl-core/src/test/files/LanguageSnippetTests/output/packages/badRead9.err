@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Cannot find module `package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathReaad.pkl`.
+Cannot find module `package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl`.
 
-x | res = import("package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathReaad.pkl")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | res = import("package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at badRead9.error#res (file:///$snippetsDir/input/packages/badRead9.error.pkl)
 
 xxx | text = renderer.renderDocument(value)
