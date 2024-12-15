@@ -427,7 +427,7 @@ evaluatorId: Int
 /// The contents of the resource.
 contents: Binary? // <1>
 
-/// The description of the error that occured when reading this resource.
+/// The description of the error that occurred when reading this resource.
 error: String?
 
 typealias Binary = Any // <1>
@@ -478,7 +478,7 @@ evaluatorId: Int
 /// The string contents of the module.
 contents: String?
 
-/// The description of the error that occured when reading this resource.
+/// The description of the error that occurred when reading this resource.
 error: String?
 ----
 
@@ -528,7 +528,7 @@ evaluatorId: Int
 /// The elements at the provided base path.
 pathElements: Listing<PathElement>?
 
-/// The description of the error that occured when listing elements.
+/// The description of the error that occurred when listing elements.
 error: String?
 
 class PathElement {
@@ -586,7 +586,7 @@ evaluatorId: Int
 /// The elements at the provided base path.
 pathElements: Listing<PathElement>?
 
-/// The description of the error that occured when listing elements.
+/// The description of the error that occurred when listing elements.
 error: String?
 
 class PathElement {
