@@ -483,8 +483,8 @@ public final class IoUtils {
         start++;
       }
       var uriPartsRemaining = uriParts.subList(start, uriParts.size());
-      var basePartsRemainig = baseParts.subList(start, baseParts.size());
-      if (basePartsRemainig.isEmpty()) {
+      var basePartsRemaining = baseParts.subList(start, baseParts.size());
+      if (basePartsRemaining.isEmpty()) {
         return new URI(
             null,
             null,
@@ -495,7 +495,7 @@ public final class IoUtils {
             uri.getFragment());
       }
       var resultingPath =
-          "../".repeat(basePartsRemainig.size()) + String.join("/", uriPartsRemaining);
+          "../".repeat(basePartsRemaining.size()) + String.join("/", uriPartsRemaining);
       return new URI(null, null, null, -1, resultingPath, uri.getQuery(), uri.getFragment());
     } catch (URISyntaxException e) {
       // Impossible; started from a valid URI to begin with.
