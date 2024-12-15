@@ -130,7 +130,7 @@ class ClientResourceReader {
   /// The URI scheme this reader is responsible for reading.
   scheme: String
 
-  /// Tells whether the path part of ths URI has a
+  /// Tells whether the path part of this URI has a
   /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
   ///
   /// An example of a hierarchical URI is `file:///path/to/my/file`, where
@@ -148,7 +148,7 @@ class ClientModuleReader {
   /// The URI scheme this reader is responsible for reading.
   scheme: String
 
-  /// Tells whether the path part of ths URI has a
+  /// Tells whether the path part of this URI has a
   /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
   ///
   /// An example of a hierarchical URI is `file:///path/to/my/file`, where
