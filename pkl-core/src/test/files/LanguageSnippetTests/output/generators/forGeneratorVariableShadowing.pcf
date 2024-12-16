@@ -1,0 +1,54 @@
+examples {
+  ["shadow key variable"] {
+    new {
+      List("1", 0, "a")
+      List("1", 1, "b")
+      List("1", 2, "c")
+      List("1", 3, "d")
+      List("2", 0, "a")
+      List("2", 1, "b")
+      List("2", 2, "c")
+      List("2", 3, "d")
+      List("3", 0, "a")
+      List("3", 1, "b")
+      List("3", 2, "c")
+      List("3", 3, "d")
+      List("4", 0, "a")
+      List("4", 1, "b")
+      List("4", 2, "c")
+      List("4", 3, "d")
+    }
+  }
+  ["shadow value variable"] {
+    new {
+      List(0, "a", 0)
+      List(0, "b", 1)
+      List(0, "c", 2)
+      List(0, "d", 3)
+      List(1, "a", 0)
+      List(1, "b", 1)
+      List(1, "c", 2)
+      List(1, "d", 3)
+      List(2, "a", 0)
+      List(2, "b", 1)
+      List(2, "c", 2)
+      List(2, "d", 3)
+      List(3, "a", 0)
+      List(3, "b", 1)
+      List(3, "c", 2)
+      List(3, "d", 3)
+    }
+  }
+  ["sibling for-generators can use same variable names"] {
+    new {
+      List(0, "1")
+      List(1, "2")
+      List(2, "3")
+      List(3, "4")
+      List(0, "a")
+      List(1, "b")
+      List(2, "c")
+      List(3, "d")
+    }
+  }
+}

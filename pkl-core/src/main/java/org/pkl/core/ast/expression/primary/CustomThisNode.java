@@ -21,7 +21,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.runtime.VmUtils;
 
 /** `this` inside `CustomThisScope` (type constraint, object member predicate). */
@@ -38,7 +37,7 @@ public final class CustomThisNode extends ExpressionNode {
     if (customThisSlot == -1) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-      customThisSlot = VmUtils.findAuxiliarySlot(frame, CustomThisScope.FRAME_SLOT_ID);
+      customThisSlot = VmUtils.findCustomThisSlot(frame);
     }
     return frame.getAuxiliarySlot(customThisSlot);
   }

@@ -50,7 +50,6 @@ public final class ResolveMethodNode extends ExpressionNode {
   private final boolean isCustomThisScope;
   private final ConstLevel constLevel;
   private final int constDepth;
-  private final boolean isInIterable;
 
   public ResolveMethodNode(
       SourceSection sourceSection,
@@ -59,8 +58,7 @@ public final class ResolveMethodNode extends ExpressionNode {
       boolean isBaseModule,
       boolean isCustomThisScope,
       ConstLevel constLevel,
-      int constDepth,
-      boolean isInIterable) {
+      int constDepth) {
 
     super(sourceSection);
 
@@ -70,7 +68,6 @@ public final class ResolveMethodNode extends ExpressionNode {
     this.isCustomThisScope = isCustomThisScope;
     this.constLevel = constLevel;
     this.constDepth = constDepth;
-    this.isInIterable = isInIterable;
   }
 
   @Override
@@ -94,11 +91,7 @@ public final class ResolveMethodNode extends ExpressionNode {
           assert localMethod.isLocal();
           checkConst(currOwner, localMethod, levelsUp);
           return new InvokeMethodLexicalNode(
-              sourceSection,
-              localMethod.getCallTarget(sourceSection),
-              levelsUp,
-              argumentNodes,
-              isInIterable);
+              sourceSection, localMethod.getCallTarget(sourceSection), levelsUp, argumentNodes);
         }
         var method = currOwner.getVmClass().getDeclaredMethod(methodName);
         if (method != null) {
@@ -106,11 +99,7 @@ public final class ResolveMethodNode extends ExpressionNode {
           checkConst(currOwner, method, levelsUp);
           if (method.getDeclaringClass().isClosed()) {
             return new InvokeMethodLexicalNode(
-                sourceSection,
-                method.getCallTarget(sourceSection),
-                levelsUp,
-                argumentNodes,
-                isInIterable);
+                sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes);
           }
 
           //noinspection ConstantConditions
@@ -119,7 +108,6 @@ public final class ResolveMethodNode extends ExpressionNode {
               methodName,
               argumentNodes,
               MemberLookupMode.IMPLICIT_LEXICAL,
-              isInIterable,
               levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
               GetClassNodeGen.create(null));
         }
@@ -134,7 +122,7 @@ public final class ResolveMethodNode extends ExpressionNode {
               (CallTarget) localMethod.getCallTarget().call(currOwner, currOwner);
 
           return new InvokeMethodLexicalNode(
-              sourceSection, methodCallTarget, levelsUp, argumentNodes, isInIterable);
+              sourceSection, methodCallTarget, levelsUp, argumentNodes);
         }
       }
 
@@ -150,7 +138,7 @@ public final class ResolveMethodNode extends ExpressionNode {
       if (method != null) {
         assert !method.isLocal();
         return new InvokeMethodDirectNode(
-            sourceSection, method, new ConstantValueNode(baseModule), argumentNodes, isInIterable);
+            sourceSection, method, new ConstantValueNode(baseModule), argumentNodes);
       }
     }
 
@@ -170,7 +158,6 @@ public final class ResolveMethodNode extends ExpressionNode {
         argumentNodes,
         MemberLookupMode.IMPLICIT_THIS,
         needsConst,
-        isInIterable,
         VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThisScope),
         GetClassNodeGen.create(null));
   }

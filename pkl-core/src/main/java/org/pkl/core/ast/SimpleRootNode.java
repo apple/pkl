@@ -49,7 +49,7 @@ public final class SimpleRootNode extends PklRootNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
-    return executeBody(frame, bodyNode);
+  protected Object executeImpl(VirtualFrame frame) {
+    return bodyNode.executeGeneric(frame);
   }
 }

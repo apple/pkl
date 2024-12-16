@@ -20,67 +20,67 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic({BaseModule.class, GeneratorObjectLiteralNode.class})
 public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
   protected final ObjectMember member;
 
   protected GeneratorPropertyNode(ObjectMember member) {
-    super(member.getSourceSection());
+    super(member.getSourceSection(), false);
     this.member = member;
     assert member.isProp();
   }
 
   @Specialization
   @SuppressWarnings("unused")
-  protected void evalDynamic(VmDynamic parent, ObjectData data) {
-    addProperty(data);
+  protected void evalDynamic(VirtualFrame frame, VmDynamic parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "checkIsValidTypedProperty(parent.getVmClass(), member)")
-  protected void evalTyped(VmTyped parent, ObjectData data) {
-    addProperty(data);
+  protected void evalTyped(VirtualFrame frame, VmTyped parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "checkIsValidMappingProperty()")
-  protected void evalMapping(VmMapping parent, ObjectData data) {
-    addProperty(data);
+  protected void evalMapping(VirtualFrame frame, VmMapping parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "checkIsValidListingProperty()")
-  protected void evalListing(VmListing parent, ObjectData data) {
-    addProperty(data);
+  protected void evalListing(VirtualFrame frame, VmListing parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "parent == getDynamicClass()")
-  protected void evalDynamicClass(VmClass parent, ObjectData data) {
-    addProperty(data);
+  protected void evalDynamicClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = {"parent == getMappingClass()", "checkIsValidMappingProperty()"})
-  protected void evalMappingClass(VmClass parent, ObjectData data) {
-    addProperty(data);
+  protected void evalMappingClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = {"parent == getListingClass()", "checkIsValidListingProperty()"})
-  protected void evalListingClass(VmClass parent, ObjectData data) {
-    addProperty(data);
+  protected void evalListingClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(
       guards = {"isTypedObjectClass(parent)", "checkIsValidTypedProperty(parent, member)"})
-  protected void evalTypedObjectClass(VmClass parent, ObjectData data) {
-    addProperty(data);
+  protected void evalTypedObjectClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addProperty(frame, member, this);
   }
 
   @Fallback
@@ -115,12 +115,5 @@ public abstract class GeneratorPropertyNode extends GeneratorMemberNode {
         .evalError("objectCannotHaveProperty", BaseModule.getMappingClass())
         .withSourceSection(member.getHeaderSection())
         .build();
-  }
-
-  private void addProperty(ObjectData data) {
-    if (EconomicMaps.put(data.members, member.getName(), member) == null) return;
-
-    CompilerDirectives.transferToInterpreter();
-    throw duplicateDefinition(member.getName(), member);
   }
 }

@@ -1,0 +1,18 @@
+function myMethod(arg) = new {
+  arg = "property" // same name as method arg
+  for (key, value in List("one", "two", arg)) { // `arg` resolves to method arg
+    [Pair(arg, key)] = // `arg` resolves to method arg
+      Pair(arg, value) // `arg` resolves to object property
+  }
+}
+
+local myLambda = (arg) -> new Dynamic {
+  arg = "property" // same name as lambda arg
+  for (key, value in List("one", "two", arg)) { // `arg` resolves to lambda arg
+    [Pair(arg, key)] = // `arg` resolves to lambda arg
+      Pair(arg, value) // `arg` resolves to object property
+  }
+}
+
+res1 = myMethod("three")
+res2 = myLambda.apply("three")
