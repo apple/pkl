@@ -29,7 +29,6 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
@@ -106,7 +105,7 @@ public final class FunctionNode extends RegularMemberNode {
 
   @Override
   @ExplodeLoop
-  public Object execute(VirtualFrame frame) {
+  protected Object executeImpl(VirtualFrame frame) {
     var totalArgCount = frame.getArguments().length;
     if (totalArgCount != totalParamCount) {
       CompilerDirectives.transferToInterpreter();
@@ -114,37 +113,23 @@ public final class FunctionNode extends RegularMemberNode {
     }
 
     var isInIterable = (boolean) frame.getArguments()[2];
-    try {
-      for (var i = 0; i < parameterTypeNodes.length; i++) {
-        var argument = frame.getArguments()[IMPLICIT_PARAM_COUNT + i];
-        if (isInIterable) {
-          parameterTypeNodes[i].executeEagerlyAndSet(frame, argument);
-        } else {
-          parameterTypeNodes[i].executeAndSet(frame, argument);
-        }
-      }
 
-      var result = bodyNode.executeGeneric(frame);
-
-      if (checkedReturnTypeNode != null) {
-        return checkedReturnTypeNode.execute(frame, result);
-      }
-
-      return result;
-    } catch (VmTypeMismatchException e) {
-      CompilerDirectives.transferToInterpreter();
-      throw e.toVmException();
-    } catch (StackOverflowError e) {
-      CompilerDirectives.transferToInterpreter();
-      throw new VmStackOverflowException(e);
-    } catch (Exception e) {
-      CompilerDirectives.transferToInterpreter();
-      if (e instanceof VmException) {
-        throw e;
+    for (var i = 0; i < parameterTypeNodes.length; i++) {
+      var argument = frame.getArguments()[IMPLICIT_PARAM_COUNT + i];
+      if (isInIterable) {
+        parameterTypeNodes[i].executeEagerlyAndSet(frame, argument);
       } else {
-        throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
+        parameterTypeNodes[i].executeAndSet(frame, argument);
       }
     }
+
+    var result = bodyNode.executeGeneric(frame);
+
+    if (checkedReturnTypeNode != null) {
+      return checkedReturnTypeNode.execute(frame, result);
+    }
+
+    return result;
   }
 
   public VmMap getParameterMirrors() {

@@ -22,6 +22,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.Nullable;
 
@@ -36,9 +37,16 @@ public abstract class PklRootNode extends RootNode {
 
   public abstract @Nullable String getName();
 
-  protected final Object executeBody(VirtualFrame frame, ExpressionNode bodyNode) {
+  // name must start with `execute` (see Javadoc of @Specialization)
+  protected abstract Object executeImpl(VirtualFrame frame);
+
+  @Override
+  public final Object execute(VirtualFrame frame) {
     try {
-      return bodyNode.executeGeneric(frame);
+      return executeImpl(frame);
+    } catch (VmTypeMismatchException e) {
+      CompilerDirectives.transferToInterpreter();
+      throw e.toVmException();
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       throw e;
