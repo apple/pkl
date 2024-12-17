@@ -2,12 +2,11 @@
 :uri-gng: https://gng.dsun.org
 :uri-jenv: https://www.jenv.be
 :uri-intellij: https://www.jetbrains.com/idea/download/
-:uri-jdk: https://adoptopenjdk.net/releases.html?variant=openjdk17
 :uri-native-prerequisites: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
 
 == Setup
 
-. (mandatory) Install {uri-jdk}[OpenJDK 17] or higher
+. (mandatory) Install a JDK (any version between 17 - 21).
 . (recommended) Install {uri-intellij}[IntelliJ IDEA] +
 To import the project into IntelliJ, go to File->Open and select the project's root directory.
 If the project is opened but not imported, look for a popup in the lower right corner
