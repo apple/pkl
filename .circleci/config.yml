@@ -40,7 +40,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -136,7 +136,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -197,7 +197,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -329,7 +329,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -425,7 +425,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -486,7 +486,7 @@ jobs:
 
           # install jdk
           curl -Lf \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \

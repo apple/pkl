@@ -38,7 +38,7 @@ fixed majorJdkVersion = javaVersionFull.split(".").first
 fixed jdkGitHubReleaseName =
   let (ver =
     // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
-    if (javaVersionFull == "17.0.9+9") "jdk-17.0.9+9.1"
+    if (javaVersionFull == "17.0.9+9" && os == "windows") "jdk-17.0.9+9.1"
     else "jdk-\(javaVersionFull)"
   )
     URI.encodeComponent(ver)
