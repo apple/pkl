@@ -52,7 +52,7 @@ class ImportGraph {
   ///
   /// Dependency-notation imports, such as `"@myPackage/myModule.pkl"`, are represented as
   /// in-language URIs with scheme `projectpackage:`.
-  /// In the case of local project dependenecies, they will be local URIs resolved from the project
+  /// In the case of local project dependencies, they will be local URIs resolved from the project
   /// file URI (in normal cases, `file:` URIs).
   resolvedImports: Map<Uri, Uri>(keys == imports.keys)
 }

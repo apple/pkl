@@ -11,19 +11,19 @@ barnOwl {
 parrot {
   new {
     lastName = """
-      Flinstone
+      Flintstone
       
-      Flinstone
+      Flintstone
       """
     """
-    Flinstone
+    Flintstone
     
-    Flinstone
+    Flintstone
     """
   }
   """
-  Flistone
+  Flintstone
   
-  Flistone
+  Flintstone
   """
 }

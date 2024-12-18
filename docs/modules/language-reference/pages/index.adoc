@@ -2573,7 +2573,7 @@ the following security checks are performed:
 * The target module URI is checked against the module allowlist (`--allowed-modules`).
 * The source and target modules' _trust levels_ are determined and compared.
 
-For access to be granted, the source module's trust level must be higher than or equal to the target module's trust level.
+For access to be granted, the source module's trust level must be greater than or equal to the target module's trust level.
 By default, there are five trust levels, listed from highest to lowest:
 
 . `repl:` modules (code evaluated in the REPL)
@@ -3353,9 +3353,9 @@ swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
 <2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
 <3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
 <4> `Listing` element creation, amending implicit `default`, `new Dynamic {}`.
-<5> `Mapping` value assignment, amdending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
+<5> `Mapping` value assignment, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
 <6> `Mapping` value assignment _replacing_ the parent's entry, amending the result of applying `default` to `"Saltmarsh Sparrow"`, `new Bird { name = "Saltmarsh Sparrow" }`.
-<7> Admending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
+<7> Amending the property default value `new Listing { new Bird { name = "Osprey" } }`; the result contains both birds.
 <8> Error: Cannot tell which parent to amend.
 
 [[let-expressions]]
@@ -5475,7 +5475,7 @@ Readers are implemented as ordinary executables and use Pkl's xref:bindings-spec
 The xref:swift:ROOT:index.adoc[Swift] and xref:go:ROOT:index.adoc[Go] language binding libraries provide an `ExternalReaderRuntime` type to facilitate implementing external readers.
 
 External readers are configured separately for modules and resources.
-They are registered by mapping their URI scheme to the executable to run and additonal arguments to pass.
+They are registered by mapping their URI scheme to the executable to run and additional arguments to pass.
 This is done on the command line by passing `--external-resource-reader` and `--external-module-reader` flags, which may both be passed multiple times.
 
 [source,text]

@@ -61,7 +61,7 @@ fun shlex(input: String): List<String> {
         quote = null
         lastCloseQuoteIndex = idx
       }
-      // if not in a quote and encounter a quote charater, enter a quote
+      // if not in a quote and encounter a quote character, enter a quote
       quote == null && (char == '\'' || char == '"') -> {
         quote = char
       }
