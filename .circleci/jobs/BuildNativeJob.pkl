@@ -41,7 +41,7 @@ local setupLinuxEnvironment: Config.RunStep =
 
         # install jdk
         curl -Lf \
-         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/jdk-\#(module.jdkGitHubReleaseName)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/\#(module.jdkGitHubReleaseName)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
         mkdir /jdk \
           && cd /jdk \
