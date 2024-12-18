@@ -35,7 +35,13 @@ fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
 
 fixed majorJdkVersion = javaVersionFull.split(".").first
 
-fixed jdkVersionEncoded = URI.encodeComponent(javaVersionFull)
+fixed jdkGitHubReleaseName =
+  let (ver =
+    // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
+    if (javaVersionFull == "17.0.9+9") "jdk-17.0.9+9.1"
+    else "jdk-\(javaVersionFull)"
+  )
+    URI.encodeComponent(ver)
 
 fixed gradleArgs = new Listing {
   "--info"
@@ -76,8 +82,8 @@ job: Config.Job = new {
         shell = "bash.exe"
         command = #"""
           # install jdk
-          curl -L \
-          https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_x64_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip
+          curl -Lf \
+          https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/\#(jdkGitHubReleaseName)/OpenJDK\#(majorJdkVersion)U-jdk_x64_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip
 
           unzip /tmp/jdk.zip -d /tmp/jdk \
             && cd /tmp/jdk/jdk-* \

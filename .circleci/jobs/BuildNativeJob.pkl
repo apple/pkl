@@ -40,8 +40,8 @@ local setupLinuxEnvironment: Config.RunStep =
           && rm -rf /var/cache/dnf
 
         # install jdk
-        curl -L \
-         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/jdk-\#(module.jdkVersionEncoded)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+        curl -Lf \
+         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/jdk-\#(module.jdkGitHubReleaseName)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
         mkdir /jdk \
           && cd /jdk \
@@ -53,7 +53,7 @@ local setupLinuxEnvironment: Config.RunStep =
 
         # install zlib
         if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-          curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+          curl -Lf https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
 
           mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
           && cd /tmp/dep_zlib-\#(zlibVersion) \
@@ -69,7 +69,7 @@ local setupLinuxEnvironment: Config.RunStep =
             #"""
             # install musl
             if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-              curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+              curl -Lf https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
 
               mkdir -p /tmp/dep_musl-\#(muslVersion) \
               && cd /tmp/dep_musl-\#(muslVersion) \

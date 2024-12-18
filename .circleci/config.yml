@@ -39,8 +39,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -52,7 +52,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -65,7 +65,7 @@ jobs:
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
             mkdir -p /tmp/dep_musl-1.2.2 \
             && cd /tmp/dep_musl-1.2.2 \
@@ -135,8 +135,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -148,7 +148,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -196,8 +196,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -209,7 +209,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -222,7 +222,7 @@ jobs:
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
             mkdir -p /tmp/dep_musl-1.2.2 \
             && cd /tmp/dep_musl-1.2.2 \
@@ -265,8 +265,8 @@ jobs:
     - run:
         command: |-
           # install jdk
-          curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
+          curl -Lf \
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
           unzip /tmp/jdk.zip -d /tmp/jdk \
             && cd /tmp/jdk/jdk-* \
@@ -328,8 +328,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -341,7 +341,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -354,7 +354,7 @@ jobs:
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
             mkdir -p /tmp/dep_musl-1.2.2 \
             && cd /tmp/dep_musl-1.2.2 \
@@ -424,8 +424,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -437,7 +437,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -485,8 +485,8 @@ jobs:
             && rm -rf /var/cache/dnf
 
           # install jdk
-          curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+          curl -Lf \
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -498,7 +498,7 @@ jobs:
 
           # install zlib
           if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-            curl -L https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
 
             mkdir -p /tmp/dep_zlib-1.2.13 \
             && cd /tmp/dep_zlib-1.2.13 \
@@ -511,7 +511,7 @@ jobs:
 
           # install musl
           if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-            curl -L https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
 
             mkdir -p /tmp/dep_musl-1.2.2 \
             && cd /tmp/dep_musl-1.2.2 \
@@ -554,8 +554,8 @@ jobs:
     - run:
         command: |-
           # install jdk
-          curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
+          curl -Lf \
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
           unzip /tmp/jdk.zip -d /tmp/jdk \
             && cd /tmp/jdk/jdk-* \
@@ -611,8 +611,8 @@ jobs:
     - run:
         command: |-
           # install jdk
-          curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
+          curl -Lf \
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
           unzip /tmp/jdk.zip -d /tmp/jdk \
             && cd /tmp/jdk/jdk-* \
