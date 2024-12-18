@@ -28,7 +28,7 @@ os: "macOS"|"linux"|"windows"
 javaVersion: "17.0"|"21.0"
 
 fixed javaVersionFull =
-  if (javaVersion == "17.0") "17.0.9+9.1"
+  if (javaVersion == "17.0") "17.0.9+9"
   else "21.0.5+11"
 
 fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
@@ -79,9 +79,10 @@ job: Config.Job = new {
           curl -L \
           https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_x64_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip
 
-          mkdir /jdk \
-          && cd /jdk \
-          && unzip /tmp/jdk.zip -d /jdk
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
           """#
       }
     }

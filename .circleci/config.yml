@@ -40,7 +40,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -136,7 +136,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -197,7 +197,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -266,11 +266,12 @@ jobs:
         command: |-
           # install jdk
           curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
-          mkdir /jdk \
-          && cd /jdk \
-          && unzip /tmp/jdk.zip -d /jdk
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
     - run:
@@ -328,7 +329,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -424,7 +425,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -485,7 +486,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -554,11 +555,12 @@ jobs:
         command: |-
           # install jdk
           curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
-          mkdir /jdk \
-          && cd /jdk \
-          && unzip /tmp/jdk.zip -d /jdk
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
     - run:
@@ -610,11 +612,12 @@ jobs:
         command: |-
           # install jdk
           curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
 
-          mkdir /jdk \
-          && cd /jdk \
-          && unzip /tmp/jdk.zip -d /jdk
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
     - run:
