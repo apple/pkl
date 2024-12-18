@@ -742,7 +742,10 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - pkl-cli-windows-amd64-snapshot:
+    - gradle-check-jdk17:
+        requires:
+        - hold
+    - gradle-check-jdk21:
         requires:
         - hold
     - gradle-check-jdk17-windows:
@@ -754,7 +757,8 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - pkl-cli-windows-amd64-snapshot
+    - gradle-check-jdk17
+    - gradle-check-jdk21
     - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
@@ -766,7 +770,8 @@ workflows:
     - pkl-cli-windows-amd64-snapshot
     - deploy-snapshot:
         requires:
-        - pkl-cli-windows-amd64-snapshot
+        - gradle-check-jdk17
+        - gradle-check-jdk21
         - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
@@ -788,7 +793,13 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-    - pkl-cli-windows-amd64-snapshot:
+    - gradle-check-jdk17:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - gradle-check-jdk21:
         filters:
           branches:
             ignore: /.*/
@@ -850,7 +861,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - pkl-cli-windows-amd64-snapshot
+        - gradle-check-jdk17
+        - gradle-check-jdk21
         - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
@@ -887,7 +899,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
   release-branch:
     jobs:
-    - pkl-cli-windows-amd64-snapshot
+    - gradle-check-jdk17
+    - gradle-check-jdk21
     - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility

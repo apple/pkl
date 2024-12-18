@@ -21,7 +21,7 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = new { "pkl-cli-windows-amd64-snapshot"; "gradle-check-jdk17-windows" }
+local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
