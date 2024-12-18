@@ -130,5 +130,5 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
   }
 
   private fun unpackExternalReader(map: Map<Value, Value>): ExternalReader =
-    ExternalReader(unpackString(map, "executable"), unpackStringListOrNull(map, "arguments")!!)
+    ExternalReader(unpackString(map, "executable"), unpackStringListOrNull(map, "arguments"))
 }
