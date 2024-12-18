@@ -16,12 +16,32 @@
 abstract module GradleJob
 
 import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3#/URI.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
 
 /// The OS to run on
 os: "macOS"|"linux"|"windows"
+
+/// The version of Java to use.
+javaVersion: "17.0"|"21.0"
+
+fixed javaVersionFull =
+  if (javaVersion == "17.0") "17.0.9+9"
+  else "21.0.5+11"
+
+fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
+
+fixed majorJdkVersion = javaVersionFull.split(".").first
+
+fixed jdkGitHubReleaseName =
+  let (ver =
+    // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
+    if (javaVersionFull == "17.0.9+9" && os == "windows") "jdk-17.0.9+9.1"
+    else "jdk-\(javaVersionFull)"
+  )
+    URI.encodeComponent(ver)
 
 fixed gradleArgs = new Listing {
   "--info"
@@ -37,9 +57,41 @@ steps: Listing<Config.Step>
 job: Config.Job = new {
   environment {
     ["LANG"] = "en_US.UTF-8"
+    when (os == "windows") {
+      ["JAVA_HOME"] = "/jdk"
+    }
+  }
+  when (os == "linux") {
+    docker {
+      new {
+        image = "cimg/openjdk:\(javaVersion)"
+      }
+    }
+  }
+  when (os == "windows") {
+    machine {
+      image = "windows-server-2022-gui:current"
+    }
+    resource_class = "windows.large"
   }
   steps {
     "checkout"
+    when (os == "windows") {
+      new Config.RunStep {
+        name = "Set up environment"
+        shell = "bash.exe"
+        command = #"""
+          # install jdk
+          curl -Lf \
+          https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/\#(jdkGitHubReleaseName)/OpenJDK\#(majorJdkVersion)U-jdk_x64_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip
+
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
+          """#
+      }
+    }
     ...module.steps
     new Config.StoreTestResults {
       path = "~/test-results"

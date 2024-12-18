@@ -17,7 +17,6 @@
 extends "GradleJob.pkl"
 
 import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0#/URI.pkl"
 
 /// The architecture to use
 arch: "amd64"|"aarch64"
@@ -25,13 +24,11 @@ arch: "amd64"|"aarch64"
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean = false
 
+javaVersion = "17.0"
+
 local setupLinuxEnvironment: Config.RunStep =
-  let (jdkVersion = "17.0.9+9")
   let (muslVersion = "1.2.2")
   let (zlibVersion = "1.2.13")
-  let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
-  let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
-  let (majorJdkVersion = jdkVersion.split(".").first)
     new {
       name = "Set up environment"
       shell = "#!/bin/bash -exo pipefail"
@@ -43,8 +40,8 @@ local setupLinuxEnvironment: Config.RunStep =
           && rm -rf /var/cache/dnf
 
         # install jdk
-        curl -L \
-         https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+        curl -Lf \
+         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/\#(module.jdkGitHubReleaseName)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
         mkdir /jdk \
           && cd /jdk \
@@ -56,7 +53,7 @@ local setupLinuxEnvironment: Config.RunStep =
 
         # install zlib
         if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
-          curl -L https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+          curl -Lf https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
 
           mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
           && cd /tmp/dep_zlib-\#(zlibVersion) \
@@ -72,7 +69,7 @@ local setupLinuxEnvironment: Config.RunStep =
             #"""
             # install musl
             if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-              curl -L https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+              curl -Lf https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
 
               mkdir -p /tmp/dep_musl-\#(muslVersion) \
               && cd /tmp/dep_musl-\#(muslVersion) \
@@ -145,7 +142,7 @@ job {
     resource_class = "macos.m1.large.gen1"
   }
   when (os == "linux") {
-    docker {
+    docker = new Listing<Config.DockerImage> {
       new {
         image = if (arch == "aarch64") "arm64v8/oraclelinux:8-slim" else "oraclelinux:8-slim"
       }
@@ -160,5 +157,8 @@ job {
       image = "windows-server-2022-gui:current"
     }
     resource_class = "windows.large"
+    environment {
+      ["JAVA_HOME"] = "/jdk"
+    }
   }
 }

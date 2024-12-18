@@ -17,29 +17,9 @@ extends "GradleJob.pkl"
 
 import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
-javaVersion: "17.0"|"21.0"
-
-os = "linux"
-
 steps {
   new Config.RunStep {
     name = "gradle check"
     command = "./gradlew \(module.gradleArgs) check"
-  }
-}
-
-job {
-  when (os == "linux") {
-    docker {
-      new {
-        image = "cimg/openjdk:\(javaVersion)"
-      }
-    }
-  }
-  when (os == "windows") {
-    machine {
-      image = "windows-server-2022-gui:current"
-    }
-    resource_class = "windows.large"
   }
 }
