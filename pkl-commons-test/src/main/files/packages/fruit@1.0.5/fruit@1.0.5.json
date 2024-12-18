@@ -9,7 +9,6 @@
     "sha256": "$computedChecksum"
   },
   "sourceCode": "https://example.com/fruit",
-  "documentation": "https://example.com/fruit-docs",
   "license": "UNLICENSED",
   "authors": [
     "apple-1@example.com",
