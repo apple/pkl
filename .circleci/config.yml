@@ -40,7 +40,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -136,7 +136,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -197,7 +197,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -266,11 +266,11 @@ jobs:
         command: |-
           # install jdk
           curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
 
           mkdir /jdk \
           && cd /jdk \
-          && unzip /tmp/jdk.tar.gz -d /jdk
+          && unzip /tmp/jdk.zip -d /jdk
         name: Set up environment
         shell: bash.exe
     - run:
@@ -328,7 +328,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -424,7 +424,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -485,7 +485,7 @@ jobs:
 
           # install jdk
           curl -L \
-           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.tar.gz -o /tmp/jdk.tar.gz
+           https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.9_9.1.tar.gz -o /tmp/jdk.tar.gz
 
           mkdir /jdk \
             && cd /jdk \
@@ -554,11 +554,11 @@ jobs:
         command: |-
           # install jdk
           curl -L \
-          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.zip -o /tmp/jdk.zip
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
 
           mkdir /jdk \
           && cd /jdk \
-          && unzip /tmp/jdk.tar.gz -d /jdk
+          && unzip /tmp/jdk.zip -d /jdk
         name: Set up environment
         shell: bash.exe
     - run:
@@ -607,12 +607,24 @@ jobs:
     steps:
     - checkout
     - run:
+        command: |-
+          # install jdk
+          curl -L \
+          https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.9%2B9.1/OpenJDK17U-jdk_x64_windows_hotspot_17.0.9_9.1.zip -o /tmp/jdk.zip
+
+          mkdir /jdk \
+          && cd /jdk \
+          && unzip /tmp/jdk.zip -d /jdk
+        name: Set up environment
+        shell: bash.exe
+    - run:
         command: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results check
         name: gradle check
     - store_test_results:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
     resource_class: windows.large
     machine:
       image: windows-server-2022-gui:current
@@ -727,16 +739,10 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - gradle-check-jdk17:
-        requires:
-        - hold
-    - gradle-check-jdk21:
+    - pkl-cli-windows-amd64-snapshot:
         requires:
         - hold
     - gradle-check-jdk17-windows:
-        requires:
-        - hold
-    - pkl-cli-windows-amd64-snapshot:
         requires:
         - hold
     when:
@@ -745,10 +751,8 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - gradle-check-jdk17
-    - gradle-check-jdk21
-    - gradle-check-jdk17-windows
     - pkl-cli-windows-amd64-snapshot
+    - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -759,10 +763,8 @@ workflows:
     - pkl-cli-windows-amd64-snapshot
     - deploy-snapshot:
         requires:
-        - gradle-check-jdk17
-        - gradle-check-jdk21
-        - gradle-check-jdk17-windows
         - pkl-cli-windows-amd64-snapshot
+        - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -783,25 +785,13 @@ workflows:
       - << pipeline.git.branch >>
   release:
     jobs:
-    - gradle-check-jdk17:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - gradle-check-jdk21:
+    - pkl-cli-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-jdk17-windows:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -857,10 +847,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
-        - gradle-check-jdk17
-        - gradle-check-jdk21
-        - gradle-check-jdk17-windows
         - pkl-cli-windows-amd64-snapshot
+        - gradle-check-jdk17-windows
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -896,10 +884,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
   release-branch:
     jobs:
-    - gradle-check-jdk17
-    - gradle-check-jdk21
-    - gradle-check-jdk17-windows
     - pkl-cli-windows-amd64-snapshot
+    - gradle-check-jdk17-windows
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release

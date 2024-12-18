@@ -17,7 +17,6 @@
 extends "GradleJob.pkl"
 
 import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0#/URI.pkl"
 
 /// The architecture to use
 arch: "amd64"|"aarch64"
@@ -25,12 +24,7 @@ arch: "amd64"|"aarch64"
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean = false
 
-/// The JDK version to build against
-local jdkVersion: String = "17.0.9+9"
-
-local jdkVersionEncoded = URI.encodeComponent(jdkVersion)
-local jdkVersionAlt = jdkVersion.replaceLast("+", "_")
-local majorJdkVersion = jdkVersion.split(".").first
+javaVersion = "17.0"
 
 local setupLinuxEnvironment: Config.RunStep =
   let (muslVersion = "1.2.2")
@@ -47,7 +41,7 @@ local setupLinuxEnvironment: Config.RunStep =
 
         # install jdk
         curl -L \
-         https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/jdk-\#(module.jdkVersionEncoded)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_linux_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
 
         mkdir /jdk \
           && cd /jdk \
@@ -93,24 +87,6 @@ local setupLinuxEnvironment: Config.RunStep =
       }.join("\n\n")
     }
 
-local setupWindowsEnvironment: Config.RunStep =
-  let (jdkVersionEncoded = URI.encodeComponent(jdkVersion))
-  let (jdkVersionAlt = jdkVersion.replaceLast("+", "_"))
-  let (majorJdkVersion = jdkVersion.split(".").first)
-    new {
-      name = "Set up environment"
-      shell = "bash.exe"
-      command = #"""
-        # install jdk
-        curl -L \
-        https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/jdk-\#(jdkVersionEncoded)/OpenJDK\#(majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip
-
-        mkdir /jdk \
-        && cd /jdk \
-        && unzip /tmp/jdk.tar.gz -d /jdk
-        """#
-    }
-
 steps {
   when (os == "linux") {
     new Config.RestoreCacheStep {
@@ -133,9 +109,6 @@ steps {
         /usr/sbin/softwareupdate --install-rosetta --agree-to-license
         """
     }
-  }
-  when (os == "windows") {
-    setupWindowsEnvironment
   }
   new Config.RunStep {
     name = "gradle buildNative"
@@ -169,7 +142,7 @@ job {
     resource_class = "macos.m1.large.gen1"
   }
   when (os == "linux") {
-    docker {
+    docker = new Listing<Config.DockerImage> {
       new {
         image = if (arch == "aarch64") "arm64v8/oraclelinux:8-slim" else "oraclelinux:8-slim"
       }

@@ -21,9 +21,7 @@ import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
-local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
-  "pkl-cli-windows-amd64-snapshot"
-}
+local prbJobs: Listing<String> = new { "pkl-cli-windows-amd64-snapshot"; "gradle-check-jdk17-windows" }
 
 local buildAndTestJobs = (prbJobs) {
   "bench"
@@ -110,10 +108,12 @@ local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
   ["gradle-check-jdk17"] {
     javaVersion = "17.0"
     isRelease = false
+    os = "linux"
   }
   ["gradle-check-jdk21"] {
     javaVersion = "21.0"
     isRelease = false
+    os = "linux"
   }
   ["gradle-check-jdk17-windows"] {
     javaVersion = "17.0"
