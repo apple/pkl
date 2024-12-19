@@ -333,7 +333,7 @@ final class PackageResolvers {
         throw fileIsADirectory();
       }
       var entries = cachedEntries.get(packageUri);
-      // need to normalize here but not in `doListElments` nor `doHasElement` because
+      // need to normalize here but not in `doListElements` nor `doHasElement` because
       // `TreePathElement.getElement` does normalization already.
       var path = IoUtils.toNormalizedPathString(Path.of(uri.getAssetPath()).normalize());
       return entries.get(path).array();

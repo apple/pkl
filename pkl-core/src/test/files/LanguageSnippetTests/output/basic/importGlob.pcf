@@ -84,8 +84,8 @@ examples {
   }
   ["package"] {
     new {
-      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
-        name = "Ostritch"
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"] {
+        name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }
@@ -101,7 +101,7 @@ examples {
       "package://localhost:0/birds@0.5.0#/Bird.pkl"
       "package://localhost:0/birds@0.5.0#/allFruit.pkl"
       "package://localhost:0/birds@0.5.0#/catalog.pkl"
-      "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      "package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
       "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
       "package://localhost:0/birds@0.5.0#/some/dir/Bird.pkl"
     }
@@ -116,8 +116,8 @@ examples {
   }
   ["package glob and up one level"] {
     new {
-      ["package://localhost:0/birds@0.5.0#/catalog/../catalog/Ostritch.pkl"] {
-        name = "Ostritch"
+      ["package://localhost:0/birds@0.5.0#/catalog/../catalog/Ostrich.pkl"] {
+        name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }

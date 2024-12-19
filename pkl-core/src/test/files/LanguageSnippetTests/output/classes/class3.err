@@ -1,8 +1,8 @@
 –– Pkl Error ––
-Cannot find property `adress` in object of type `class3#Person`.
+Cannot find property `address_` in object of type `class3#Person`.
 
-xx | adress = "Howdy St."
-     ^^^^^^
+xx | address_ = "Howdy St."
+     ^^^^^^^^
 at class3#person (file:///$snippetsDir/input/classes/class3.pkl)
 
 Did you mean any of the following?
