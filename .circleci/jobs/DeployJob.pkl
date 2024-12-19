@@ -19,13 +19,9 @@ import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
 local self = this
 
-command: String
+javaVersion = "17.0"
 
-job {
-  docker {
-    new { image = "cimg/openjdk:17.0" }
-  }
-}
+command: String
 
 os = "linux"
 
