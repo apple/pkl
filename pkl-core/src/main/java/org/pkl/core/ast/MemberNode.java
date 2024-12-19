@@ -16,9 +16,7 @@
 package org.pkl.core.ast;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.function.Function;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
@@ -42,14 +40,6 @@ public abstract class MemberNode extends PklRootNode {
 
   public final ExpressionNode getBodyNode() {
     return bodyNode;
-  }
-
-  public final void replaceBody(Function<ExpressionNode, ExpressionNode> replacer) {
-    bodyNode = insert(replacer.apply(bodyNode));
-  }
-
-  protected final Object executeBody(VirtualFrame frame) {
-    return executeBody(frame, bodyNode);
   }
 
   protected final VmExceptionBuilder exceptionBuilder() {

@@ -59,7 +59,7 @@ public final class ObjectMethodNode extends RegularMemberNode {
   }
 
   @Override
-  public CallTarget execute(VirtualFrame frame) {
+  protected CallTarget executeImpl(VirtualFrame frame) {
     if (functionNode == null) {
       CompilerDirectives.transferToInterpreter();
 
