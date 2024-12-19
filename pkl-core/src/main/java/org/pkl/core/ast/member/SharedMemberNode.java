@@ -58,7 +58,7 @@ public class SharedMemberNode extends MemberNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
-    return executeBody(frame);
+  protected Object executeImpl(VirtualFrame frame) {
+    return bodyNode.executeGeneric(frame);
   }
 }

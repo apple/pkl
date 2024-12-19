@@ -32,7 +32,7 @@ public final class UntypedObjectMemberNode extends RegularMemberNode {
   }
 
   @Override
-  public Object execute(VirtualFrame frame) {
-    return executeBody(frame);
+  protected Object executeImpl(VirtualFrame frame) {
+    return bodyNode.executeGeneric(frame);
   }
 }

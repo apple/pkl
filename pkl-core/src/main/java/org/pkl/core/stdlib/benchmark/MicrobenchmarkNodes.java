@@ -17,7 +17,6 @@ package org.pkl.core.stdlib.benchmark;
 
 import static org.pkl.core.stdlib.benchmark.BenchmarkUtils.runBenchmark;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -29,7 +28,6 @@ import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.internal.BlackholeNode;
 import org.pkl.core.ast.internal.BlackholeNodeGen;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -83,23 +81,14 @@ public final class MicrobenchmarkNodes {
     }
 
     @Override
-    public @Nullable Object execute(VirtualFrame frame) {
-      try {
-        var repetitions = (long) frame.getArguments()[2];
-        for (long i = 0; i < repetitions; i++) {
-          blackholeNode.executeGeneric(frame);
-        }
-        LoopNode.reportLoopCount(
-            this, repetitions > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) repetitions);
-        return null;
-      } catch (Exception e) {
-        CompilerDirectives.transferToInterpreter();
-        if (e instanceof VmException) {
-          throw e;
-        } else {
-          throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
-        }
+    protected @Nullable Object executeImpl(VirtualFrame frame) {
+      var repetitions = (long) frame.getArguments()[2];
+      for (long i = 0; i < repetitions; i++) {
+        blackholeNode.executeGeneric(frame);
       }
+      LoopNode.reportLoopCount(
+          this, repetitions > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) repetitions);
+      return null;
     }
   }
 }
