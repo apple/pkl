@@ -170,7 +170,7 @@ public interface Evaluator extends AutoCloseable {
   String evaluateExpressionString(ModuleSource moduleSource, String expression);
 
   /**
-   * Evalautes the module's schema, which describes the properties, methods, and classes of a
+   * Evaluates the module's schema, which describes the properties, methods, and classes of a
    * module.
    *
    * @throws PklException if an error occurs during evaluation

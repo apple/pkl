@@ -1,6 +1,6 @@
 amends "../Bird.pkl"
 
-name = "Ostritch"
+name = "Ostrich"
 
 favoriteFruit {
   name = "Orange"

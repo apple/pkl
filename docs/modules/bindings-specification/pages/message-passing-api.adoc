@@ -75,7 +75,7 @@ requestId: Int
 /// API version of the CLI's `--allowed-modules` flag
 allowedModules: Listing<String>?
 
-/// Regex patterns to dettermine which resources are allowed to be read.
+/// Regex patterns to determine which resources are allowed to be read.
 ///
 /// API version of the CLI's `--allowed-resources` flag
 allowedResources: Listing<String>?
@@ -130,7 +130,7 @@ class ClientResourceReader {
   /// The URI scheme this reader is responsible for reading.
   scheme: String
 
-  /// Tells whether the path part of ths URI has a
+  /// Tells whether the path part of this URI has a
   /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
   ///
   /// An example of a hierarchical URI is `file:///path/to/my/file`, where
@@ -148,7 +148,7 @@ class ClientModuleReader {
   /// The URI scheme this reader is responsible for reading.
   scheme: String
 
-  /// Tells whether the path part of ths URI has a
+  /// Tells whether the path part of this URI has a
   /// [hier-part](https://datatracker.ietf.org/doc/html/rfc3986#section-3).
   ///
   /// An example of a hierarchical URI is `file:///path/to/my/file`, where
@@ -427,7 +427,7 @@ evaluatorId: Int
 /// The contents of the resource.
 contents: Binary? // <1>
 
-/// The description of the error that occured when reading this resource.
+/// The description of the error that occurred when reading this resource.
 error: String?
 
 typealias Binary = Any // <1>
@@ -478,7 +478,7 @@ evaluatorId: Int
 /// The string contents of the module.
 contents: String?
 
-/// The description of the error that occured when reading this resource.
+/// The description of the error that occurred when reading this resource.
 error: String?
 ----
 
@@ -528,7 +528,7 @@ evaluatorId: Int
 /// The elements at the provided base path.
 pathElements: Listing<PathElement>?
 
-/// The description of the error that occured when listing elements.
+/// The description of the error that occurred when listing elements.
 error: String?
 
 class PathElement {
@@ -586,7 +586,7 @@ evaluatorId: Int
 /// The elements at the provided base path.
 pathElements: Listing<PathElement>?
 
-/// The description of the error that occured when listing elements.
+/// The description of the error that occurred when listing elements.
 error: String?
 
 class PathElement {

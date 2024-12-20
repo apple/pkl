@@ -15,21 +15,21 @@ parrot {
   new {
     // multiline string that is a property within an element
     lastName = """
-      Flinstone
+      Flintstone
 
-      Flinstone
+      Flintstone
       """
     """
-    Flinstone
+    Flintstone
 
-    Flinstone
+    Flintstone
     """
   }
   // multiline string that is an element
   """
-  Flistone
+  Flintstone
 
-  Flistone
+  Flintstone
   """
 }
 

@@ -16,7 +16,7 @@
 package org.pkl.core;
 
 /**
- * Indicates that a non-existent property was requested for a {@link Composite}. To check if a
+ * Indicates that a nonexistent property was requested for a {@link Composite}. To check if a
  * property exists, use {@link Composite#hasProperty(String)}.
  */
 public final class NoSuchPropertyException extends RuntimeException {

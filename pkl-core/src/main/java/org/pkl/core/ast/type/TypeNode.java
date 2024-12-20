@@ -114,7 +114,7 @@ public abstract class TypeNode extends PklNode {
   }
 
   /**
-   * Visit child type nodes; but not paramaterized types (does not visit {@code String} in {@code
+   * Visit child type nodes; but not parameterized types (does not visit {@code String} in {@code
    * Listing<String>}).
    */
   protected abstract boolean acceptTypeNode(TypeNodeConsumer consumer);

@@ -41,8 +41,8 @@ public class PObjectToDataObjectTest {
           EnumSet.of(Hobby.SURFING, Hobby.SWIMMING),
           new Address("sesame street", 94105));
 
-  private static final PersonConstructoProperties pigeon2 =
-      new PersonConstructoProperties(
+  private static final PersonConstructorProperties pigeon2 =
+      new PersonConstructorProperties(
           "pigeon",
           40,
           EnumSet.of(Hobby.SURFING, Hobby.SWIMMING),
@@ -63,7 +63,7 @@ public class PObjectToDataObjectTest {
   @Test
   public void ex1_constructor_properties() {
     var ex1 = module.getProperty("ex1");
-    assertThat(mapper.map(ex1, PersonConstructoProperties.class)).isEqualTo(pigeon2);
+    assertThat(mapper.map(ex1, PersonConstructorProperties.class)).isEqualTo(pigeon2);
   }
 
   @Test
@@ -149,14 +149,14 @@ public class PObjectToDataObjectTest {
     }
   }
 
-  static class PersonConstructoProperties {
+  static class PersonConstructorProperties {
     final String name;
     final int age;
     final Set<Hobby> hobbies;
     final Address address;
 
     @ConstructorProperties({"name", "age", "hobbies", "address"})
-    PersonConstructoProperties(String name, int age, Set<Hobby> hobbies, Address address) {
+    PersonConstructorProperties(String name, int age, Set<Hobby> hobbies, Address address) {
       this.name = name;
       this.age = age;
       this.hobbies = hobbies;
@@ -166,7 +166,7 @@ public class PObjectToDataObjectTest {
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof PersonConstructoProperties other)) return false;
+      if (!(obj instanceof PersonConstructorProperties other)) return false;
       return name.equals(other.name)
           && age == other.age
           && hobbies.equals(other.hobbies)

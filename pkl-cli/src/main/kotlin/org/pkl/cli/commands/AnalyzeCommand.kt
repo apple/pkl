@@ -40,7 +40,7 @@ class AnalyzeCommand(helpLink: String) :
       ModulesCommand(
         name = "imports",
         helpLink = helpLink,
-        help = "Prints the the graph of modules imported by the input module(s)."
+        help = "Prints the graph of modules imported by the input module(s)."
       ) {
 
       private val outputPath: Path? by

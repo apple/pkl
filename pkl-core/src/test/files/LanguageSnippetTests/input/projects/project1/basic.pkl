@@ -1,11 +1,11 @@
 amends ".../snippetTest.pkl"
 
-import "@birds/catalog/Ostritch.pkl"
+import "@birds/catalog/Ostrich.pkl"
 import "@birds/catalog/Swallow.pkl"
 
 examples {
   ["import package"] {
-    Ostritch
+    Ostrich
     Swallow
   }
 

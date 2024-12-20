@@ -356,7 +356,7 @@ myString = #"foo \ bar \ baz"#
 myString = "foo \\ bar \\ baz"
 ----
 
-NOTE: Sometimes, using custom string delimiters makes source code harder to read. For example, the `+\#+` literal reads better using escapes (`"\\#"`) than using custom string delimimters (`+##"\#"##+`).
+NOTE: Sometimes, using custom string delimiters makes source code harder to read. For example, the `+\#+` literal reads better using escapes (`"\\#"`) than using custom string delimiters (`+##"\#"##+`).
 
 === Interpolation
 
