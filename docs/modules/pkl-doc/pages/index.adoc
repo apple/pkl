@@ -232,8 +232,20 @@ Relative URIs are resolved against the working directory.
 [%collapsible]
 ====
 Default: (none) +
-Example: `pkldoc`
+Example: `pkldoc` +
 The directory where generated documentation is placed.
+====
+
+.--current-directory-mode
+[%collapsible]
+====
+Default: `symlink` +
+Example: `copy` +
+How the "current" directories containing documentation content for the last generated version
+should be created. By default, in the symlink mode, a symbolic link is created pointing to the
+last generated version. In the copy mode, a full copy of the last generated version
+is created. Symbolic links are not processed correctly by some systems (e.g. GitHub Pages),
+so the copy mode is occasionally useful.
 ====
 
 Common CLI options:

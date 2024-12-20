@@ -35,7 +35,18 @@ constructor(
    * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
    * files (e.g., when stdlib line numbers change).
    */
-  val isTestMode: Boolean = false
+  val isTestMode: Boolean = false,
+
+  /**
+   * Determines how to create the "current" directory which contains documentation for the latest
+   * version of the package.
+   *
+   * [DocGenerator.CurrentDirectoryMode.SYMLINK] will make the current directory into a symlink to
+   * the actual version directory. [DocGenerator.CurrentDirectoryMode.COPY], however, will create a
+   * full copy instead.
+   */
+  var currentDirectoryMode: DocGenerator.CurrentDirectoryMode =
+    DocGenerator.CurrentDirectoryMode.SYMLINK
 ) {
   /** [outputDir] after undergoing normalization. */
   val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)
