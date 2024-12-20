@@ -2716,7 +2716,7 @@ quota:
   disk: 20 GB
 ----
 
-In addition to _type_ based converters, renderers also support _path_ based converters:
+In addition to _class_-based converters, renderers also support _path_-based converters:
 
 [source%parsed,{pkl}]
 ----
