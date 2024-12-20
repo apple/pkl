@@ -118,6 +118,9 @@ public abstract class ReadPropertyNode extends ExpressionNode {
         .build();
   }
 
+  // only ever need to check once per node because `needsConst` is only true in the case of implicit
+  // receivers inside class (and module) bodies, and the const-ness of a resolved property cannot be
+  // changed by subclasses.
   private void checkConst(VmObjectLike receiver) {
     if (needsConst && !isConstChecked) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
