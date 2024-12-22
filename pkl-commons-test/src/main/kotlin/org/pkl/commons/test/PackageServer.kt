@@ -46,9 +46,9 @@ import org.pkl.commons.deleteRecursively
  */
 class PackageServer : AutoCloseable {
   companion object {
-    const val BIRDS_SHA = "bfaf5281613d170a740505cc87561041f4e0cad1f0e6938bf94f7609f9a4673d"
-    const val FRUIT_SHA = "34a15b02346e6acb85da5bd71d8b0738a79008b38a7fc805e5869d9129ad27d2"
-    const val FRUIT_1_1_SHA = "8d982761d182f2185e4180c82190791d9a60c721cb3393bb2e946fab90131e8c"
+    const val BIRDS_SHA = "c90e62ac513c93bd5850e21d669dbc70afd267ab7b6c7aff77ab4e0111c5b723"
+    const val FRUIT_SHA = "8ff80e5ac882650e817f261c8af024bf0db9b07888c9d18c20017457e04ffe06"
+    const val FRUIT_1_1_SHA = "eaf03e7162bdc23797b92cffc8151b98ac655476e4ec843d2d2280f225bdfddc"
 
     fun populateCacheDir(cacheDir: Path) {
       doPopulateCacheDir(cacheDir.resolve("package-2/localhost(3a)$PORT"))

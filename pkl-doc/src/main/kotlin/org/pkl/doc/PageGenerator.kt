@@ -525,15 +525,30 @@ internal abstract class PageGenerator<out S>(
         var first = true
         for (dep in dependencies) {
           if (first) first = false else +", "
-          a {
-            href =
-              dep.documentation?.toString()
-                ?: pageScope.relativeSiteUrl
-                  .resolve("${dep.name}/${dep.version}/index.html")
-                  .toString()
-            +dep.name
-            +":"
-            +dep.version
+          val text = "${dep.name}:${dep.version}"
+          if (dep.documentation != null) {
+            a {
+              href = dep.documentation.toString()
+              +text
+            }
+          } else {
+            val localSitePackage =
+              pageScope.siteScope?.packageScopes?.values?.find {
+                it.docPackageInfo.name == dep.name
+              }
+            if (localSitePackage != null) {
+              a {
+                href =
+                  pageScope.relativeSiteUrl
+                    .resolve(
+                      "${localSitePackage.docPackageInfo.name.pathEncoded}/current/index.html"
+                    )
+                    .toString()
+                +text
+              }
+            } else {
+              +text
+            }
           }
         }
       }
