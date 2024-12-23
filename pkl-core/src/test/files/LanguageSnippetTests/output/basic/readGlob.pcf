@@ -156,19 +156,19 @@ examples {
           """
         base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
       }
-      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
-        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"] {
+        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
         text = """
           amends "../Bird.pkl"
           
-          name = "Ostritch"
+          name = "Ostrich"
           
           favoriteFruit {
             name = "Orange"
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"

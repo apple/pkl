@@ -35,7 +35,7 @@ local x7 = new Listing {
 }
 
 local x8 = new Listing<String> {
-  throw("element unneccessarily evaluated")
+  throw("element unnecessarily evaluated")
 }
 
 res5 = x4.length == 1

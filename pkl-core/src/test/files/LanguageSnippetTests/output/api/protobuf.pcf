@@ -199,7 +199,7 @@ examples {
       foo: "renders"
     }
     """
-    "Can not render subtype protobuf#Foo of specified type protobuf#Bar in protobuf."
+    "Cannot render subtype protobuf#Foo of specified type protobuf#Bar in protobuf."
     """
     myFoo: {
       foo: "renders"

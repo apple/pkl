@@ -407,7 +407,7 @@ class EvaluatorTest {
             .trimIndent()
         } else
           """
-          birds = import("@birds/catalog/Ostritch.pkl")
+          birds = import("@birds/catalog/Ostrich.pkl")
         """
             .trimIndent()
 

@@ -245,7 +245,7 @@ public final class ConfigEvaluatorBuilder {
   /**
    * Sets the set of URI patterns to be allowed when importing modules.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    *
    * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
    */
@@ -257,7 +257,7 @@ public final class ConfigEvaluatorBuilder {
   /**
    * Returns the set of patterns to be allowed when importing modules.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    */
   public List<Pattern> getAllowedModules() {
     return evaluatorBuilder.getAllowedModules();
@@ -266,7 +266,7 @@ public final class ConfigEvaluatorBuilder {
   /**
    * Sets the set of URI patterns to be allowed when reading resources.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    *
    * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
    */
@@ -278,7 +278,7 @@ public final class ConfigEvaluatorBuilder {
   /**
    * Returns the set of patterns to be allowed when reading resources.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    */
   public List<Pattern> getAllowedResources() {
     return evaluatorBuilder.getAllowedResources();
@@ -288,7 +288,7 @@ public final class ConfigEvaluatorBuilder {
    * Sets the root directory, which restricts access to file-based modules and resources located
    * under this directory.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    */
   public ConfigEvaluatorBuilder setRootDir(@Nullable Path rootDir) {
     evaluatorBuilder.setRootDir(rootDir);
@@ -298,7 +298,7 @@ public final class ConfigEvaluatorBuilder {
   /**
    * Returns the currently set root directory, if set.
    *
-   * <p>This is a convenieince method that delegates to the underlying evaluator builder.
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
    */
   public @Nullable Path getRootDir() {
     return evaluatorBuilder.getRootDir();

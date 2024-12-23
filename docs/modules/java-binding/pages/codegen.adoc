@@ -1,6 +1,6 @@
 = Java Code Generator
 include::ROOT:partial$component-attributes.adoc[]
-:uri-pkl-codgen-java-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-java
+:uri-pkl-codegen-java-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-java
 
 The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.
 
@@ -23,7 +23,7 @@ See xref:pkl-gradle:index.adoc#installation[Installation] in the Gradle plugin c
 [[install-library]]
 === Java Library
 
-The `pkl-codegen-java` library is available {uri-pkl-codgen-java-maven-module}[from Maven Central].
+The `pkl-codegen-java` library is available {uri-pkl-codegen-java-maven-module}[from Maven Central].
 It requires Java 17 or higher.
 
 ifndef::is-release-version[]

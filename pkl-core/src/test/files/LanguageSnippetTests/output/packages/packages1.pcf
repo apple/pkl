@@ -13,7 +13,7 @@ examples {
       }
     }
     new {
-      name = "Ostritch"
+      name = "Ostrich"
       favoriteFruit {
         name = "Orange"
       }
@@ -57,18 +57,18 @@ examples {
       base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
     }
     new {
-      uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      uri = "package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
       text = """
         amends "../Bird.pkl"
         
-        name = "Ostritch"
+        name = "Ostrich"
         
         favoriteFruit {
           name = "Orange"
         }
         
         """
-      base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+      base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
     }
   }
 }

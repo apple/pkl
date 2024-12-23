@@ -534,7 +534,7 @@ public final class ModuleKeys {
       conn.connect();
       if (conn instanceof JarURLConnection && IoUtils.isWindows()) {
         // On Windows, opening a JarURLConnection prevents the jar file from being deleted, unless
-        // cacheing is disabled.
+        // caching is disabled.
         // See https://bugs.openjdk.org/browse/JDK-8239054
         conn.setUseCaches(false);
       }

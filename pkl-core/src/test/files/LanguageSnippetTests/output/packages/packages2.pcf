@@ -1,8 +1,8 @@
 examples {
   ["glob import"] {
     new {
-      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
-        name = "Ostritch"
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"] {
+        name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }
@@ -17,8 +17,8 @@ examples {
   }
   ["glob import within package"] {
     new {
-      ["catalog/Ostritch.pkl"] {
-        name = "Ostritch"
+      ["catalog/Ostrich.pkl"] {
+        name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }
@@ -40,19 +40,19 @@ examples {
   }
   ["glob read"] {
     new {
-      ["package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"] {
-        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      ["package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"] {
+        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
         text = """
           amends "../Bird.pkl"
           
-          name = "Ostritch"
+          name = "Ostrich"
           
           favoriteFruit {
             name = "Orange"
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -72,19 +72,19 @@ examples {
   }
   ["glob read within package"] {
     new {
-      ["catalog/Ostritch.pkl"] {
-        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl"
+      ["catalog/Ostrich.pkl"] {
+        uri = "package://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
         text = """
           amends "../Bird.pkl"
           
-          name = "Ostritch"
+          name = "Ostrich"
           
           favoriteFruit {
             name = "Orange"
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cml0Y2giCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIk9yYW5nZSIKfQo="
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["catalog/Swallow.pkl"] {
         uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -118,13 +118,13 @@ examples {
   }
   ["glob import while specifying checksum"] {
     new {
-      ["package://localhost:0/birds@0.5.0::sha256:bfaf5281613d170a740505cc87561041f4e0cad1f0e6938bf94f7609f9a4673d#/catalog/Ostritch.pkl"] {
-        name = "Ostritch"
+      ["package://localhost:0/birds@0.5.0::sha256:6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e#/catalog/Ostrich.pkl"] {
+        name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }
       }
-      ["package://localhost:0/birds@0.5.0::sha256:bfaf5281613d170a740505cc87561041f4e0cad1f0e6938bf94f7609f9a4673d#/catalog/Swallow.pkl"] {
+      ["package://localhost:0/birds@0.5.0::sha256:6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e#/catalog/Swallow.pkl"] {
         name = "Swallow"
         favoriteFruit {
           name = "Apple"

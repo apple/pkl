@@ -1,9 +1,9 @@
 –– Pkl Error ––
-Cannot find module `package://localhost:0/badImportsWithinPackage@1.0.0#/unknownDependencyReaad.pkl`.
+Cannot find dependency named `notapackage`, because it was not declared in package `package://localhost:0/badImportsWithinPackage@1.0.0`.
 
-x | res = import("package://localhost:0/badImportsWithinPackage@1.0.0#/unknownDependencyReaad.pkl")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at badRead8.error#res (file:///$snippetsDir/input/packages/badRead8.error.pkl)
+x | res = read("@notapackage/Foo.txt")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at unknownDependencyRead#res (package://localhost:0/badImportsWithinPackage@1.0.0#/unknownDependencyRead.pkl)
 
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

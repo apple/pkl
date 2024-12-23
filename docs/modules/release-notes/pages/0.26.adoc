@@ -12,7 +12,7 @@ This release brings Windows support, improvements to controlling how Pkl talks o
 
 The next release (0.27) is scheduled for October 10th, 2024.
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
@@ -460,7 +460,7 @@ To mitigate, the package's version needs to be bumped, even if package contents 
 
 == Miscellaneous [small]#🐸#
 
-The following changes have been made that are not new features, nor breaking changes.
+The following changes have been made that are neither new features nor breaking changes.
 
 * Pkl's user-agent header for HTTP requests has been tweaked to add a semicolon (https://github.com/apple/pkl/pull/221[#221]). Here is an example difference:
 +
