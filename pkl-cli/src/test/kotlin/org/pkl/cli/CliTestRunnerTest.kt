@@ -487,6 +487,47 @@ class CliTestRunnerTest {
       )
   }
 
+  @Test
+  fun `CliTestRunner locale independence test`(@TempDir tempDir: Path) {
+    val originalLocale = Locale.getDefault()
+    Locale.setDefault(Locale.GERMANY)
+
+    val code =
+        """
+        amends "pkl:test"
+
+        facts {
+            ["localeTest"] {
+                1 == 1
+            }
+        }
+        """
+            .trimIndent()
+    val input = tempDir.resolve("test.pkl").writeString(code).toString()
+    val out = StringWriter()
+    val err = StringWriter()
+    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val testOpts = CliTestOptions()
+    val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+    runner.run()
+
+    assertThat(out.toString().stripFileAndLines(tempDir))
+        .isEqualTo(
+            """
+            module test
+              facts
+                ✔ localeTest
+
+            100.0% tests pass [1 passed], 100.0% asserts pass [1 passed]
+
+            """
+                .trimIndent()
+        )
+    assertThat(err.toString()).isEqualTo("")
+
+    Locale.setDefault(originalLocale)
+}
+
   private fun String.stripFileAndLines(tmpDir: Path): String {
     // handle platform differences in handling of file URIs
     // (file:/// on *nix vs. file:/ on Windows)
