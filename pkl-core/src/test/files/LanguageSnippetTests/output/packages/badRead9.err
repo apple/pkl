@@ -1,9 +1,9 @@
 –– Pkl Error ––
-Cannot find module `package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl`.
+I/O error reading resource `package://localhost:0/badImportsWithinPackage@1.0.0#/not/a/valid/path.txt`.
 
-x | res = import("package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at badRead9.error#res (file:///$snippetsDir/input/packages/badRead9.error.pkl)
+x | res = read("not/a/valid/path.txt")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidPathRead#res (package://localhost:0/badImportsWithinPackage@1.0.0#/invalidPathRead.pkl)
 
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
