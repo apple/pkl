@@ -35,6 +35,7 @@ import org.pkl.commons.readString
 import org.pkl.commons.toUri
 import org.pkl.commons.writeString
 import org.pkl.core.Release
+import java.util.Locale
 
 class CliTestRunnerTest {
   @Test
@@ -512,8 +513,8 @@ class CliTestRunnerTest {
     runner.run()
 
     assertThat(out.toString().stripFileAndLines(tempDir))
-        .isEqualTo(
-            """
+      .isEqualTo(
+        """
             module test
               facts
                 ✔ localeTest
@@ -521,12 +522,12 @@ class CliTestRunnerTest {
             100.0% tests pass [1 passed], 100.0% asserts pass [1 passed]
 
             """
-                .trimIndent()
-        )
+          .trimIndent()
+      )
     assertThat(err.toString()).isEqualTo("")
 
     Locale.setDefault(originalLocale)
-}
+  }
 
   private fun String.stripFileAndLines(tmpDir: Path): String {
     // handle platform differences in handling of file URIs
