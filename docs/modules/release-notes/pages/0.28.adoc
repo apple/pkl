@@ -10,7 +10,7 @@ Pkl {version} was released on {release-date}. +
 
 The next release (0.XX) is scheduled for ???..
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#

@@ -106,7 +106,7 @@ public final class ClassNode extends ExpressionNode {
           new VmTyped(
               frame.materialize(),
               null, // initialized later by VmClass
-              null, // initialized later by Vmclass
+              null, // initialized later by VmClass
               prototypeMembers);
     }
 

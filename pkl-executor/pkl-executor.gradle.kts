@@ -74,7 +74,7 @@ val prepareHistoricalDistributions by
       val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
       for (file in pklHistoricalDistributions.files) {
         val target = distributionDir.resolve(file.name)
-        // Create normal files on Windows, symlink on macOS/linux (need admin priveleges to create
+        // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
         // symlinks on Windows)
         if (buildInfo.os.isWindows) {
           if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {

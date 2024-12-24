@@ -16,7 +16,7 @@ facts {
 examples {
   ["import package"] {
     new {
-      name = "Ostritch"
+      name = "Ostrich"
       favoriteFruit {
         name = "Orange"
       }
@@ -40,11 +40,11 @@ examples {
     new {
       uri = "projectpackage://localhost:0/birds@0.5.0#/catalog"
       text = """
-        Ostritch.pkl
+        Ostrich.pkl
         Swallow.pkl
         
         """
-      base64 = "T3N0cml0Y2gucGtsClN3YWxsb3cucGtsCg=="
+      base64 = "T3N0cmljaC5wa2wKU3dhbGxvdy5wa2wK"
     }
     new {
       uri = "projectpackage://localhost:0/birds@0.5.0#/"

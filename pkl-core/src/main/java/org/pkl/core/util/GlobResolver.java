@@ -434,7 +434,7 @@ public final class GlobResolver {
     }
   }
 
-  /** Split a glob pattern into the base, non-wildard parts, and the wildcard parts. */
+  /** Split a glob pattern into the base, non-wildcard parts, and the wildcard parts. */
   private static Pair<String, String[]> splitGlobPatternIntoBaseAndWildcards(
       ReaderBase reader, String globPattern, boolean hasAbsoluteGlob) {
     var effectiveGlobPattern = globPattern;

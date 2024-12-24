@@ -10,10 +10,10 @@ examples {
   ["type check: local new with inferred parent"] {
     "Expected value of type `String`, but got type `Int`. Value: 1"
   }
-  ["type check: local paramaterized property type, unparamaterized new with explicit parent"] {
+  ["type check: local parameterized property type, unparameterized new with explicit parent"] {
     "Expected value of type `String`, but got type `Int`. Value: 1"
   }
-  ["type check: local unparameterized property type, paramaterized new with explicit parent"] {
+  ["type check: local unparameterized property type, parameterized new with explicit parent"] {
     "Expected value of type `String`, but got type `Int`. Value: 1"
   }
   ["amending listings does not require type checks on amending object members"] {

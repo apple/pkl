@@ -152,7 +152,7 @@ class PackageResolversTest {
       assertThat(elements)
         .isEqualTo(
           setOf(
-            PathElement("Ostritch.pkl", false),
+            PathElement("Ostrich.pkl", false),
             PathElement("Swallow.pkl", false),
           )
         )

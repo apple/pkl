@@ -267,7 +267,7 @@ final class EmbeddedExecutor implements Executor {
         if (clazz == null) {
           if (name.startsWith("org.pkl.executor.spi.")) {
             try {
-              // give pkl-executor a chance to load the SPI clasa
+              // give pkl-executor a chance to load the SPI class
               clazz = pklExecutorClassLoader.loadClass(name);
             } catch (ClassNotFoundException ignored) {
               // The SPI class exists in this distribution but not in pkl-executor,
