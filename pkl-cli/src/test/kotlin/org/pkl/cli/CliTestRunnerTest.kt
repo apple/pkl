@@ -21,6 +21,7 @@ import java.io.StringWriter
 import java.io.Writer
 import java.net.URI
 import java.nio.file.Path
+import java.util.Locale
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -35,7 +36,6 @@ import org.pkl.commons.readString
 import org.pkl.commons.toUri
 import org.pkl.commons.writeString
 import org.pkl.core.Release
-import java.util.Locale
 
 class CliTestRunnerTest {
   @Test
@@ -494,7 +494,7 @@ class CliTestRunnerTest {
     Locale.setDefault(Locale.GERMANY)
 
     val code =
-        """
+      """
         amends "pkl:test"
 
         facts {
@@ -503,7 +503,7 @@ class CliTestRunnerTest {
             }
         }
         """
-            .trimIndent()
+        .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()

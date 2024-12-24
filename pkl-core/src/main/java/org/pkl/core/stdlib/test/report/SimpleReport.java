@@ -17,8 +17,8 @@ package org.pkl.core.stdlib.test.report;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
@@ -145,7 +145,10 @@ public final class SimpleReport implements TestReport {
     sb.append(
         color,
         () ->
-            sb.append(String.format(Locale.ROOT, "%.1f%%", passRate)).append(" ").append(kind).append(" pass"));
+            sb.append(String.format(Locale.ROOT, "%.1f%%", passRate))
+                .append(" ")
+                .append(kind)
+                .append(" pass"));
 
     if (isFailed) {
       sb.append(" [").append(failed).append('/').append(total).append(" failed]");
