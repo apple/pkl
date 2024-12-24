@@ -21,6 +21,7 @@ import java.io.StringWriter
 import java.io.Writer
 import java.net.URI
 import java.nio.file.Path
+import java.util.Locale
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -485,6 +486,50 @@ class CliTestRunnerTest {
           """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `CliTestRunner locale independence test`(@TempDir tempDir: Path) {
+    val originalLocale = Locale.getDefault()
+    Locale.setDefault(Locale.GERMANY)
+
+    try {
+      val code =
+        """
+        amends "pkl:test"
+
+        facts {
+            ["localeTest"] {
+                1 == 1
+            }
+        }
+        """
+          .trimIndent()
+      val input = tempDir.resolve("test.pkl").writeString(code).toString()
+      val out = StringWriter()
+      val err = StringWriter()
+      val opts =
+        CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+      val testOpts = CliTestOptions()
+      val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
+      runner.run()
+
+      assertThat(out.toString().stripFileAndLines(tempDir))
+        .isEqualTo(
+          """
+            module test
+              facts
+                ✔ localeTest
+
+            100.0% tests pass [1 passed], 100.0% asserts pass [1 passed]
+
+            """
+            .trimIndent()
+        )
+      assertThat(err.toString()).isEqualTo("")
+    } finally {
+      Locale.setDefault(originalLocale)
+    }
   }
 
   private fun String.stripFileAndLines(tmpDir: Path): String {
