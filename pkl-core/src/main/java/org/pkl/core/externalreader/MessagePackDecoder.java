@@ -21,20 +21,20 @@ import java.util.Map;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.Value;
-import org.pkl.core.externalreader.ExternalReaderMessages.*;
+import org.pkl.core.externalreader.ReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackDecoder;
 import org.pkl.core.messaging.DecodeException;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.Nullable;
 
-final class ExternalReaderMessagePackDecoder extends BaseMessagePackDecoder {
+final class MessagePackDecoder extends BaseMessagePackDecoder {
 
-  public ExternalReaderMessagePackDecoder(MessageUnpacker unpacker) {
+  public MessagePackDecoder(MessageUnpacker unpacker) {
     super(unpacker);
   }
 
-  public ExternalReaderMessagePackDecoder(InputStream inputStream) {
+  public MessagePackDecoder(InputStream inputStream) {
     this(MessagePack.newDefaultUnpacker(inputStream));
   }
 
