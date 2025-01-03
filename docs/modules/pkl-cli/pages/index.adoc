@@ -201,6 +201,10 @@ NOTE: We currently do not support the aarch64 architecture for Windows.
 [[java-executable]]
 === Java Executable
 
+[tabs]
+====
+macOS/Linux::
++
 [source,shell]
 [subs="+attributes"]
 ----
@@ -209,6 +213,16 @@ chmod +x jpkl
 ./jpkl --version
 ----
 
+Windows::
++
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-java-download}' -OutFile jpkl.bat
+.\jpkl --version
+----
+====
+
 This should print something similar to:
 
 [source,shell]
@@ -216,9 +230,6 @@ This should print something similar to:
 ----
 Pkl {pkl-version} (macOS 14.2, Java 17.0.10)
 ----
-
-NOTE: The Java executable does not work as an executable file on Windows.
-However, it will work as a jar, for example, with `java -jar jpkl`.
 
 [[usage]]
 == Usage
