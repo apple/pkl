@@ -53,8 +53,7 @@ whereas, the Alpine Linux executable is statically linked against _musl libc_ an
 ====
 
 The Java executable works on multiple platforms and has a smaller binary size than the native executables.
-However, it requires a Java 17 (or higher) runtime on the system path, has a noticeable startup delay,
-and runs complex Pkl code slower than the native executables.
+However, it requires a Java 17 (or higher) runtime on the system path, and has a noticeable startup delay.
 
 All flavors are built from the same codebase and undergo the same automated testing.
 Except where noted otherwise, the rest of this page discusses the native executables.
@@ -201,6 +200,10 @@ NOTE: We currently do not support the aarch64 architecture for Windows.
 [[java-executable]]
 === Java Executable
 
+The Java executable is a jar that can be executed directly on macOS, Linux, and Windows.
+
+It requires `java` to be installed, and available on `$PATH`.
+
 [tabs]
 ====
 macOS/Linux::
@@ -230,6 +233,8 @@ This should print something similar to:
 ----
 Pkl {pkl-version} (macOS 14.2, Java 17.0.10)
 ----
+
+NOTE: The Java executable is named `jpkl`.
 
 [[usage]]
 == Usage
@@ -731,8 +736,6 @@ Type :help or :examples for more information.
 
 pkl>
 ----
-
-NOTE: The Java executable is named `jpkl`.
 
 === Loading Modules
 
