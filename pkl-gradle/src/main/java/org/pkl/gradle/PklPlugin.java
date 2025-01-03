@@ -44,6 +44,7 @@ import org.pkl.core.OutputFormat;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
+import org.pkl.doc.DocGenerator.CurrentDirectoryMode;
 import org.pkl.gradle.spec.AnalyzeImportsSpec;
 import org.pkl.gradle.spec.BasePklSpec;
 import org.pkl.gradle.spec.CodeGenSpec;
@@ -261,8 +262,14 @@ public class PklPlugin implements Plugin<Project> {
                       .getBuildDirectory()
                       .map(it -> it.dir("pkldoc").dir(spec.getName())));
 
+          spec.getCurrentDirectoryMode().convention(CurrentDirectoryMode.SYMLINK);
+
           createModulesTask(PkldocTask.class, spec)
-              .configure(task -> task.getOutputDir().set(spec.getOutputDir()));
+              .configure(
+                  task -> {
+                    task.getOutputDir().set(spec.getOutputDir());
+                    task.getCurrentDirectoryMode().set(spec.getCurrentDirectoryMode());
+                  });
         });
   }
 

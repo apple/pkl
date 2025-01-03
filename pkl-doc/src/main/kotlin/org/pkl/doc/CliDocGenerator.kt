@@ -269,7 +269,8 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           importedModules::getValue,
           versionComparator,
           options.normalizedOutputDir,
-          options.isTestMode
+          options.isTestMode,
+          options.currentDirectoryMode
         )
         .run()
     } catch (e: DocGeneratorException) {

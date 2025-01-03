@@ -16,8 +16,12 @@
 package org.pkl.gradle.spec;
 
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
+import org.pkl.doc.DocGenerator.CurrentDirectoryMode;
 
 /** Configuration options for Pkldoc generators. Documented in user manual. */
 public interface PkldocSpec extends ModulesSpec {
   DirectoryProperty getOutputDir();
+
+  Property<CurrentDirectoryMode> getCurrentDirectoryMode();
 }
