@@ -278,7 +278,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by
       buildInfo.graalVmAarch64,
       layout.buildDirectory.file("executable/pkl-linux-aarch64"),
       listOf(
-        // Ensure compatibility for kernels with page size set to 4k, 16 and 64k
+        // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
         // (e.g. Raspberry Pi 5, Asahi Linux)
         "-H:PageSize=65536"
       )
