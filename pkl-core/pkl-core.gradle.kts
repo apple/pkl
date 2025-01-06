@@ -29,6 +29,8 @@ val generatorSourceSet = sourceSets.register("generator")
 
 sourceSets { main { java { srcDir(file("generated/antlr")) } } }
 
+java { useGraalVm() }
+
 idea {
   module {
     // mark src/main/antlr as source dir

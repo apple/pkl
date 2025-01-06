@@ -20,6 +20,7 @@ import org.gradle.accessors.dm.LibrariesForLibs
 plugins {
   `java-library`
   id("pklKotlinTest")
+  id("pklJvmToolchain")
   id("com.diffplug.spotless")
 }
 

@@ -27,6 +27,8 @@ plugins {
 val pklDistributionCurrent: Configuration by configurations.creating
 val pklHistoricalDistributions: Configuration by configurations.creating
 
+java { useGraalVm() }
+
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
 // clients are free to use different versions of pkl-executor and (say) pkl-config-java-all.
@@ -103,14 +105,7 @@ val prepareHistoricalDistributions by
 val prepareTest by
   tasks.registering { dependsOn(pklDistributionCurrent, prepareHistoricalDistributions) }
 
-val testToolchain =
-  javaToolchains.launcherFor {
-    languageVersion = JavaLanguageVersion.of(21)
-    vendor = JvmVendorSpec.GRAAL_VM
-  }
-
 tasks.test {
-  javaLauncher = testToolchain
   dependsOn(prepareTest)
   useJUnitPlatform()
   jvmArgumentProviders.add(CommandLineArgumentProvider { listOf("--add-modules=jdk.unsupported") })

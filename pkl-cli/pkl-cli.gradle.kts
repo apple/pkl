@@ -119,11 +119,6 @@ val javaExecutable by
 
 val testJavaExecutable by
   tasks.registering(Test::class) {
-    javaLauncher =
-      javaToolchains.launcherFor {
-        languageVersion = JavaLanguageVersion.of(21)
-        vendor = JvmVendorSpec.GRAAL_VM
-      }
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath =
       // compiled test classes
@@ -221,10 +216,12 @@ fun Exec.configureExecutable(
         add("-H:-ParseRuntimeOptions")
         // quick build mode: 40% faster compilation, 20% smaller (but presumably also slower)
         // executable
-        if (!buildInfo.isReleaseBuild) {
-          add("-Ob")
-        } else {
-          add("-Os")
+        when {
+          // non-releases should optimize for build time
+          !buildInfo.isReleaseBuild -> add("-Ob")
+
+          // size optimization is only supported at GraalVM JDK 23+
+          libs.versions.graalVmJdkVersion.get().split(".").first().toInt() >= 23 -> add("-Os")
         }
         if (buildInfo.isNativeArch) {
           add("-march=native")
