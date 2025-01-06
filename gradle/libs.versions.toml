@@ -9,14 +9,14 @@ geantyref = "1.+"
 googleJavaFormat = "1.21.0"
 # must not use `+` because used in download URL
 # 23.1.x requires JDK 20+
-graalVm = "23.0.6"
-graalVmJdkVersion = "17.0.12"
+graalVm = "24.1.1"
+graalVmJdkVersion = "23.0.1"
 # slightly hacky but convenient place so we remember to update the checksum
-graalVmSha256-macos-x64 = "3ecac1471f3fa95a56c5b75c65db9e60ac4551f56eda09eb9da95e6049ea77d7"
-graalVmSha256-macos-aarch64 = "4cdfdc6c9395f6773efcd191b6605f1b7c8e1b78ab900ab5cff34720a3feffc5"
-graalVmSha256-linux-x64 = "b6f3dace24cf1960ec790216f4c86f00d4f43df64e4e8b548f6382f04894713f"
-graalVmSha256-linux-aarch64 = "bd991d486b92deb74337b881e0f13a764c9c1e90fc358819080f7321fa5175e8"
-graalVmSha256-windows-x64 = "8b978e56dddc0edc60db99794b56975740d9c52293b31549cfc3f7516fc18b43"
+graalVmSha256-macos-x64 = "539699d8ff4979623bc7bdf8282ac6f76cd2560f47d14ec5438bada24f136f96"
+graalVmSha256-macos-aarch64 = "c00a7a62ce453aa026bff65e5a18c63464f725c01e5a71771856226928ba5b0f"
+graalVmSha256-linux-x64 = "46ec9582ebe114f93470403f2cc123238ac0c7982129c358af7d8e1de52dd663"
+graalVmSha256-linux-aarch64 = "1835a98b87c439c8c654d97956c22d409855952e5560a8127f56c50f3f919d7d"
+graalVmSha256-windows-x64 = "e758646504cfaf23cf218a22691ad70491f3196448a77d03d78e50dff2145533"
 ideaExtPlugin = "1.1.9"
 javaPoet = "0.+"
 javaxInject = "1"
@@ -44,7 +44,7 @@ msgpack = "0.9.8"
 nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
 paguro = "3.+"
-shadowPlugin = "8.1.1"
+shadowPlugin = "8.3.5"
 slf4j = "1.+"
 snakeYaml = "2.+"
 spotlessPlugin = "6.25.0"
@@ -88,7 +88,7 @@ nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuVal
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
-shadowPlugin = { group = "com.github.johnrengelman", name = "shadow", version.ref = "shadowPlugin" }
+shadowPlugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeYaml" }
@@ -96,6 +96,8 @@ spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-grad
 svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
+truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVm" }
+truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
 wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
 [plugins] # ordered alphabetically
@@ -104,4 +106,4 @@ ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtP
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }

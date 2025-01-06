@@ -58,3 +58,11 @@ publishing {
 tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.doc.Main") } }
 
 htmlValidator { sources = files("src/test/files/DocGeneratorTest/output") }
+
+val testToolchain =
+  javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+    vendor = JvmVendorSpec.GRAAL_VM
+  }
+
+tasks.test { javaLauncher = testToolchain }

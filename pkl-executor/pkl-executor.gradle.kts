@@ -21,6 +21,7 @@ plugins {
   pklJavaLibrary
   pklPublishLibrary
   pklKotlinTest
+  `jvm-toolchains`
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
@@ -38,6 +39,10 @@ dependencies {
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(projects.pklCore)
+  testImplementation(libs.truffleApi)
+  testImplementation(libs.graalSdk)
+  testImplementation(libs.svm)
+  testImplementation(libs.truffleSvm)
   testImplementation(libs.slf4jSimple)
 }
 
@@ -98,4 +103,15 @@ val prepareHistoricalDistributions by
 val prepareTest by
   tasks.registering { dependsOn(pklDistributionCurrent, prepareHistoricalDistributions) }
 
-tasks.test { dependsOn(prepareTest) }
+val testToolchain =
+  javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(21)
+    vendor = JvmVendorSpec.GRAAL_VM
+  }
+
+tasks.test {
+  javaLauncher = testToolchain
+  dependsOn(prepareTest)
+  useJUnitPlatform()
+  jvmArgumentProviders.add(CommandLineArgumentProvider { listOf("--add-modules=jdk.unsupported") })
+}

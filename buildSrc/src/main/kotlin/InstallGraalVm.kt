@@ -58,10 +58,16 @@ constructor(
         if (os.isMacOsX) distroDir.resolve("Contents/Home/bin") else distroDir.resolve("bin")
 
       println("Installing native-image into $distroDir")
-      execOperations.exec {
-        val executableName = if (os.isWindows) "gu.cmd" else "gu"
-        executable = distroBinDir.resolve(executableName).toString()
-        args("install", "--no-progress", "native-image")
+      val gvmVersionMajor =
+        requireNotNull(graalVm.get().version.split(".").first().toIntOrNull()) {
+          "Invalid GraalVM JDK version: ${graalVm.get().graalVmJdkVersion}"
+        }
+      if (gvmVersionMajor < 24) {
+        execOperations.exec {
+          val executableName = if (os.isWindows) "gu.cmd" else "gu"
+          executable = distroBinDir.resolve(executableName).toString()
+          args("install", "--no-progress", "native-image")
+        }
       }
 
       println("Creating symlink ${graalVm.get().installDir} for $distroDir")
