@@ -1,4 +1,4 @@
-Copyright © 2024 Apple Inc. and the Pkl project authors
+Copyright © 2024-2025 Apple Inc. and the Pkl project authors
 
 
 Portions of this software were originally based on 'SnakeYAML' developed by Andrey Somov.

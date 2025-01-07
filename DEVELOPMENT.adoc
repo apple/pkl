@@ -26,6 +26,10 @@ Enable _jenv_ plugins for better handling by `gradle`:
 jenv enable-plugin gradle
 jenv enable-plugin export
 ----
+. (optional) If you've named the original apple/pkl git repository something other than `origin`, set env var `PKL_ORIGINAL_REMOTE_NAME` to that name in your `.bashrc`, `.zshrc`, `config.fish` or however you manage your local environment.
++
+This will allow spotless to pick the correct starting branch when formatting source code files.
+Otherwise, you might see that _every_ file has its copyright year updated.
 
 === Additional Linux Setup
 . (optional) To build the native executable (`./gradlew buildNative`),
