@@ -3,7 +3,8 @@
 :uri-jenv: https://www.jenv.be
 :uri-intellij: https://www.jetbrains.com/idea/download/
 :uri-jdk: https://adoptopenjdk.net/releases.html?variant=openjdk17
-:uri-native-prerequisites: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
+:uri-native-prerequisites-linux: https://www.graalvm.org/latest/getting-started/linux/#prerequisites-for-native-image-on-linux
+:uri-native-prerequisites-windows: https://www.graalvm.org/latest/getting-started/windows/#prerequisites-for-native-image-on-windows
 
 == Setup
 
@@ -26,11 +27,15 @@ jenv enable-plugin gradle
 jenv enable-plugin export
 ----
 
+=== Additional Linux Setup
+. (optional) To build the native executable (`./gradlew buildNative`),
+install {uri-native-prerequisites-linux}[Prerequisites For Native Image on Linux].
+
 === Additional Windows Setup
 . (optional) Go to `System->For developers` and enable `Developer Mode`.
 Otherwise, some tests may fail due to insufficient file system privileges.
 . (optional) To build the native executable (`./gradlew buildNative`), 
-install {uri-native-prerequisites}[Prerequisites For Native Image on Windows].
+install {uri-native-prerequisites-windows}[Prerequisites For Native Image on Windows].
 
 == Common Build Commands
 
