@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -358,7 +358,7 @@ publishing {
         description.set(
           """
           Pkl CLI executable for Java.
-          Can be executed directly on *nix (if the `java` command is found on the PATH) and with `java -jar` otherwise.
+          Can be executed directly, or with `java -jar <path/to/jpkl>`.
           Requires Java 17 or higher.
         """
             .trimIndent()
