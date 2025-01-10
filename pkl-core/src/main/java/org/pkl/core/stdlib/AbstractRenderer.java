@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -410,6 +410,16 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     var isMap = enclosingValue instanceof VmMap;
     throw new VmExceptionBuilder()
         .evalError(isMap ? "cannotRenderNonStringMap" : "cannotRenderObjectWithNonStringKey", name)
+        .withProgramValue(isMap ? "Map" : "Object", enclosingValue)
+        .withProgramValue("Key", key)
+        .build();
+  }
+
+  protected void cannotRenderNonScalarKey(Object key) {
+    assert enclosingValue != null;
+    var isMap = enclosingValue instanceof VmMap;
+    throw new VmExceptionBuilder()
+        .evalError(isMap ? "cannotRenderNonScalarMap" : "cannotRenderObjectWithNonScalarKey", name)
         .withProgramValue(isMap ? "Map" : "Object", enclosingValue)
         .withProgramValue("Key", key)
         .build();
