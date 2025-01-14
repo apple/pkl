@@ -1,0 +1,67 @@
+amends "package://pkg.pkl-lang.org/github.com/stefma/pkl-gha/com.github.action@0.0.4#/GitHubAction.pkl"
+
+name = "Checks"
+
+on {
+  push {
+    branches {
+      "main"
+    }
+  }
+  pull_request {}
+}
+
+jobs {
+  ["gradle-checks"] {
+    permissions = new {
+      checks = "write"
+    }
+    strategy {
+      matrix {
+        ["os"] {
+          "ubuntu-latest"
+          "windows-latest"
+        }
+        ["jdk"] {
+          "17"
+          "21"
+        }
+      }
+    }
+    `runs-on` = "${{ matrix.os }}"
+    steps {
+      new {
+        name = "Checkout"
+        uses = "actions/checkout@v4"
+        with {
+          ["fetch-depth"] = 0
+        }
+      }
+      new {
+        name = "Setup JDK"
+        uses = "actions/setup-java@v4"
+        with {
+          ["distribution"] = "adopt"
+          ["java-version"] = "${{ matrix.jdk }}"
+        }
+      }
+      new {
+        name = "Setup Gradle"
+        uses = "gradle/actions/setup-gradle@v4"
+      }
+      new {
+        name = "Gradle check"
+        run = "./gradlew --info --stacktrace check"
+      }
+      new {
+        name = "Report test results"
+        uses = "mikepenz/action-junit-report@v5"
+        `if` = "${{ always() }}"
+        with {
+          ["check_name"] = "Test Results JDK ${{ matrix.jdk }} on ${{ matrix.os }}"
+          ["report_paths"] = "**/build/test-results/test/*.xml"
+        }
+      }
+    }
+  }
+}
