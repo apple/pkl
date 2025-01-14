@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Builds a self-contained Pkl CLI Jar that is directly executable on *nix and executable with `java
- * -jar` on Windows.
+ * Builds a self-contained Pkl CLI Jar that is directly executable on Windows, macOS, and Linux.
  *
  * For direct execution, the `java` command must be on the PATH.
  *
- * https://skife.org/java/unix/2011/06/20/really_executable_jars.html
+ * Technique borrowed from [Mill](https://mill-build.org/blog/5-executable-jars.html).
  */
 abstract class ExecutableJar : DefaultTask() {
   @get:InputFile abstract val inJar: RegularFileProperty
@@ -41,12 +40,27 @@ abstract class ExecutableJar : DefaultTask() {
     val inFile = inJar.get().asFile
     val outFile = outJar.get().asFile
     val escapedJvmArgs = jvmArgs.get().joinToString(separator = " ") { "\"$it\"" }
-    val startScript =
+    val unixStartScript =
       """
-      #!/bin/sh
-      exec java $escapedJvmArgs -jar $0 "$@"
-    """
-        .trimIndent() + "\n\n\n"
+      @ 2>/dev/null # 2>nul & echo off & goto BOF
+      :
+      exec java $escapedJvmArgs -jar "$0" "$@"
+      exit
+      """
+        .trimIndent()
+    val windowsStartScript =
+      """
+      :BOF
+      setlocal
+      @echo off
+      java $escapedJvmArgs -jar "%~dpnx0" %*
+      endlocal
+      exit /B %errorlevel%
+      """
+        .trimIndent()
+        // need crlf endings for Windows portion of script
+        .replace("\n", "\r\n")
+    val startScript = unixStartScript + "\r\n" + windowsStartScript + "\r\n".repeat(3)
     outFile.outputStream().use { outStream ->
       startScript.byteInputStream().use { it.copyTo(outStream) }
       inFile.inputStream().use { it.copyTo(outStream) }
