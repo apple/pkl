@@ -1,0 +1,26 @@
+mappingInt:
+  5: abc
+  10: def
+  20: ghi
+mapInt:
+  5: abc
+  10: def
+  20: ghi
+mappingFloat:
+  5.0: abc
+  10.5: def
+  20.99999999: ghi
+mapFloat:
+  5.0: abc
+  10.5: def
+  20.99999999: ghi
+mappingBool:
+  true: abc
+  false: def
+mapBool:
+  true: abc
+  false: def
+mappingNull:
+  null: abc
+mapNull:
+  null: abc

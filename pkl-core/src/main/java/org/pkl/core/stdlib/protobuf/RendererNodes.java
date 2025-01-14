@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -310,7 +310,7 @@ public final class RendererNodes {
           isDirective || key instanceof Long || key instanceof Boolean || key instanceof String;
       if (!isValidKey) {
         throw new VmExceptionBuilder()
-            .evalError("cannotRenderNonScalarMapKey")
+            .evalError("cannotRenderProtobufMapKey")
             .withProgramValue("Key", key)
             .build();
       }
@@ -583,7 +583,7 @@ public final class RendererNodes {
             || keyType instanceof StringTypeNode
             || keyType instanceof BooleanTypeNode)) {
           throw new VmExceptionBuilder()
-              .evalError("cannotRenderNonScalarMapKeyType")
+              .evalError("cannotRenderProtobufMapKeyType")
               .withSourceSection(type.getSourceSection())
               .build();
         }

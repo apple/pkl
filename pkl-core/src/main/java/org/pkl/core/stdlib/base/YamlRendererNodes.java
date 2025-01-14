@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,8 +278,24 @@ public final class YamlRendererNodes {
         startNewLine();
       }
 
-      if (key instanceof String string) {
-        emitter.emit(string, currIndent, true);
+      if (key instanceof String stringKey) {
+        emitter.emit(stringKey, currIndent, true);
+        builder.append(':');
+        return;
+      } else if (key instanceof Long longKey) {
+        emitter.emit(longKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof Double doubleKey) {
+        emitter.emit(doubleKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof Boolean booleanKey) {
+        emitter.emit(booleanKey);
+        builder.append(':');
+        return;
+      } else if (key instanceof VmNull) {
+        emitter.emitNull();
         builder.append(':');
         return;
       }
@@ -290,7 +306,7 @@ public final class YamlRendererNodes {
         return;
       }
 
-      cannotRenderNonStringKey(key);
+      cannotRenderNonScalarKey(key);
     }
 
     @Override
