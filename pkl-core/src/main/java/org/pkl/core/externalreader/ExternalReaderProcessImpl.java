@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,9 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
     // This relies on Java/OS behavior around PATH resolution, absolute/relative paths, etc.
     var command = new ArrayList<String>();
     command.add(spec.executable());
-    command.addAll(spec.arguments());
+    if (spec.arguments() != null) {
+      command.addAll(spec.arguments());
+    }
 
     var builder = new ProcessBuilder(command);
     builder.redirectError(Redirect.INHERIT); // inherit stderr from this pkl process
