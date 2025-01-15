@@ -19,9 +19,9 @@ import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.createSymbolicLinkPointingTo
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.isSameFileAs
+import org.pkl.commons.copyRecursively
 import org.pkl.commons.deleteRecursively
 import org.pkl.core.ModuleSchema
 import org.pkl.core.PClassInfo
@@ -53,6 +53,7 @@ class DocGenerator(
 
   /** A comparator for package versions. */
   versionComparator: Comparator<String>,
+
   /** The directory where generated documentation is placed. */
   private val outputDir: Path,
 
@@ -62,9 +63,20 @@ class DocGenerator(
    * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
    * files (e.g., when stdlib line numbers change).
    */
-  private val isTestMode: Boolean = false
+  private val isTestMode: Boolean = false,
+
+  /**
+   * Determines how to create the "current" directory which contains documentation for the latest
+   * version of the package.
+   *
+   * [CurrentDirectoryMode.SYMLINK] will make the current directory into a symlink to the actual
+   * version directory. [CurrentDirectoryMode.COPY], however, will create a full copy instead.
+   */
+  private val currentDirectoryMode: CurrentDirectoryMode = CurrentDirectoryMode.SYMLINK
 ) {
   companion object {
+    const val CURRENT_DIRECTORY_NAME = "current"
+
     internal fun List<PackageData>.current(
       versionComparator: Comparator<String>
     ): List<PackageData> {
@@ -105,7 +117,7 @@ class DocGenerator(
       val packagesData = packageDataGenerator.readAll()
       val currentPackagesData = packagesData.current(descendingVersionComparator)
 
-      createSymlinks(currentPackagesData)
+      createCurrentDirectories(currentPackagesData)
 
       htmlGenerator.generateSite(currentPackagesData)
       searchIndexGenerator.generateSiteIndex(currentPackagesData)
@@ -120,15 +132,37 @@ class DocGenerator(
     outputDir.resolve(IoUtils.encodePath("$name/$version")).deleteRecursively()
   }
 
-  private fun createSymlinks(currentPackagesData: List<PackageData>) {
+  private fun createCurrentDirectories(currentPackagesData: List<PackageData>) {
     for (packageData in currentPackagesData) {
       val basePath = outputDir.resolve(packageData.ref.pkg.pathEncoded)
       val src = basePath.resolve(packageData.ref.version)
-      val dest = basePath.resolve("current")
-      if (dest.exists() && dest.isSameFileAs(src)) continue
-      dest.deleteIfExists()
-      dest.createSymbolicLinkPointingTo(IoUtils.relativize(src, basePath))
+      val dst = basePath.resolve(CURRENT_DIRECTORY_NAME)
+
+      when (currentDirectoryMode) {
+        CurrentDirectoryMode.SYMLINK -> {
+          if (!dst.exists() || !dst.isSameFileAs(src)) {
+            dst.deleteRecursively()
+            dst.createSymbolicLinkPointingTo(IoUtils.relativize(src, basePath))
+          }
+        }
+        CurrentDirectoryMode.COPY -> {
+          dst.deleteRecursively()
+          src.copyRecursively(dst)
+        }
+      }
     }
+  }
+
+  /**
+   * Determines how to create the "current" directory with the contents of the latest generated
+   * version of the package docs.
+   */
+  enum class CurrentDirectoryMode {
+    /** Create a symlink pointing to the directory with the latest version of documentation. */
+    SYMLINK,
+
+    /** Make a full copy of the directory with the latest version of documentation. */
+    COPY
   }
 }
 

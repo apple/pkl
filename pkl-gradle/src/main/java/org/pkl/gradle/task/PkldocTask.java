@@ -16,19 +16,28 @@
 package org.pkl.gradle.task;
 
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.pkl.doc.CliDocGenerator;
 import org.pkl.doc.CliDocGeneratorOptions;
+import org.pkl.doc.DocGenerator.CurrentDirectoryMode;
 
 public abstract class PkldocTask extends ModulesTask {
   @OutputDirectory
   public abstract DirectoryProperty getOutputDir();
 
+  @Input
+  public abstract Property<CurrentDirectoryMode> getCurrentDirectoryMode();
+
   @Override
   protected void doRunTask() {
     new CliDocGenerator(
             new CliDocGeneratorOptions(
-                getCliBaseOptions(), getOutputDir().get().getAsFile().toPath()))
+                getCliBaseOptions(),
+                getOutputDir().get().getAsFile().toPath(),
+                false,
+                getCurrentDirectoryMode().get()))
         .run();
   }
 }
