@@ -24,7 +24,7 @@ import org.gradle.kotlin.dsl.*
 plugins {
   `java-library`
   `maven-publish`
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 // make fat Jar available to other subprojects
@@ -40,8 +40,6 @@ val relocations =
   mapOf(
     // pkl-core dependencies
     "org.antlr.v4." to "org.pkl.thirdparty.antlr.v4.",
-    "com.oracle.truffle" to "org.pkl.thirdparty.truffle",
-    "org.graalvm." to "org.pkl.thirdparty.graalvm.",
     "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
     "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
     "org.msgpack." to "org.pkl.thirdparty.msgpack.",
@@ -71,7 +69,11 @@ val relocations =
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
   )
 
-val nonRelocations = listOf("com/oracle/truffle/")
+val nonRelocations =
+  listOf(
+    "com/oracle/truffle/",
+    "org/graalvm/",
+  )
 
 tasks.shadowJar {
   inputs.property("relocations", relocations)

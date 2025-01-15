@@ -86,3 +86,27 @@ tasks.compileJava {
   // (see https://graalvm.slack.com/archives/CNQSB2DHD/p1712380902746829)
   options.compilerArgs.add("-Atruffle.dsl.SuppressWarnings=truffle-limit")
 }
+
+//
+// JPMS Support
+//
+
+fun Project.ifJpms(block: Project.() -> Unit) {
+  // if current java is over 17...
+  if (JavaVersion.current().majorVersion.toInt() >= 17) {
+    block()
+  }
+}
+
+val jpmsJavacArgs =
+  listOf(
+    "--add-modules=jdk.unsupported",
+  )
+
+val jpmsJvmArgs = jpmsJavacArgs.plus(listOf())
+
+tasks.withType<JavaCompile>().configureEach {
+  ifJpms { options.compilerArgumentProviders.add(CommandLineArgumentProvider { jpmsJavacArgs }) }
+}
+
+tasks.withType<JavaExec>().configureEach { ifJpms { jvmArgs(jpmsJvmArgs) } }

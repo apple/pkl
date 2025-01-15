@@ -80,6 +80,10 @@ open class BuildInfo(project: Project) {
 
   val isReleaseBuild: Boolean by lazy { java.lang.Boolean.getBoolean("releaseBuild") }
 
+  val isNativeArch: Boolean by lazy { java.lang.Boolean.getBoolean("nativeArch") }
+
+  val isEnableOracleGraalvm: Boolean by lazy { java.lang.Boolean.getBoolean("oracleGraalvm") }
+
   val hasMuslToolchain: Boolean by lazy {
     // see "install musl" in .circleci/jobs/BuildNativeJob.pkl
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
