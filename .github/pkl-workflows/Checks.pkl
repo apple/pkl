@@ -3,11 +3,7 @@ amends "package://pkg.pkl-lang.org/github.com/stefma/pkl-gha/com.github.action@0
 name = "Checks"
 
 on {
-  push {
-    branches {
-      "main"
-    }
-  }
+  push {}
   pull_request {}
 }
 

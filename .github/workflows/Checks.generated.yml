@@ -4,9 +4,7 @@
 name: Checks
 'on':
   pull_request: {}
-  push:
-    branches:
-    - main
+  push: {}
 jobs:
   gradle-checks:
     strategy:
