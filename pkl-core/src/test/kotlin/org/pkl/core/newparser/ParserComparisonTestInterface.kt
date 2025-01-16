@@ -20,6 +20,7 @@ import kotlin.io.path.readText
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -31,18 +32,24 @@ interface ParserComparisonTestInterface {
   @Test
   fun compareSnippetTests() {
     getSnippets().forEach { snippet ->
-      val text = snippet.readText()
-      compare(text)
+      assertThatCode { compare(snippet) }.`as`("path: $snippet").doesNotThrowAnyException()
     }
   }
 
   fun getSnippets(): List<Path>
 
+  fun compare(path: Path) {
+    val code = path.readText()
+    val (sexp, antlrExp) = renderBoth(code)
+    assertThat(sexp).`as`("path: $path").isEqualTo(antlrExp)
+  }
+
   fun compare(code: String) {
-    val sexp = renderCode(code)
-    val antlrExp = renderANTLRCode(code)
+    val (sexp, antlrExp) = renderBoth(code)
     assertThat(sexp).isEqualTo(antlrExp)
   }
+
+  fun renderBoth(code: String): Pair<String, String> = Pair(renderCode(code), renderANTLRCode(code))
 
   companion object {
     private fun renderCode(code: String): String {
