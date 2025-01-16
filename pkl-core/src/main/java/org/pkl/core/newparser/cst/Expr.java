@@ -12,7 +12,7 @@ public sealed interface Expr {
 
   record Module(Span span) implements Expr {}
 
-  record Null(Span span) implements Expr {}
+  record NullLiteral(Span span) implements Expr {}
 
   record BoolLiteral(boolean b, Span span) implements Expr {}
 
@@ -86,7 +86,7 @@ public sealed interface Expr {
     if (this instanceof This x) return x.span;
     if (this instanceof Outer x) return x.span;
     if (this instanceof Module x) return x.span;
-    if (this instanceof Null x) return x.span;
+    if (this instanceof NullLiteral x) return x.span;
     if (this instanceof BoolLiteral x) return x.span;
     if (this instanceof IntLiteral x) return x.span;
     if (this instanceof FloatLiteral x) return x.span;
@@ -114,11 +114,11 @@ public sealed interface Expr {
     if (this instanceof New x) return x.span;
     if (this instanceof Amends x) return x.span;
     if (this instanceof BinaryOp x) return x.span;
-    if (this instanceof OperatorExpr x) return x.span;
-    if (this instanceof TypeExpr x) return x.type.getSpan();
     if (this instanceof Subscript x) return x.span;
     if (this instanceof TypeCast x) return x.span;
     if (this instanceof TypeCheck x) return x.span;
+    if (this instanceof OperatorExpr x) return x.span;
+    if (this instanceof TypeExpr x) return x.type.getSpan();
     throw new RuntimeException("Unknown expr: " + this);
   }
 }

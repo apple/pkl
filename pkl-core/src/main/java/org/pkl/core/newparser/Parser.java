@@ -25,6 +25,7 @@ import org.pkl.core.newparser.cst.ClassEntry;
 import org.pkl.core.newparser.cst.Clazz;
 import org.pkl.core.newparser.cst.DocComment;
 import org.pkl.core.newparser.cst.Expr;
+import org.pkl.core.newparser.cst.Expr.NullLiteral;
 import org.pkl.core.newparser.cst.Expr.OperatorExpr;
 import org.pkl.core.newparser.cst.Expr.Parenthesized;
 import org.pkl.core.newparser.cst.ExtendsDecl;
@@ -671,7 +672,7 @@ public class Parser {
           case THIS -> new Expr.This(next().span);
           case OUTER -> new Expr.Outer(next().span);
           case MODULE -> new Expr.Module(next().span);
-          case NULL -> new Expr.Null(next().span);
+          case NULL -> new NullLiteral(next().span);
           case THROW -> {
             var start = next().span;
             expect(Token.LPAREN, "Expected `(`");

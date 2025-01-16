@@ -387,7 +387,7 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(moduleExpr)")
       }
-      is Null -> {
+      is NullLiteral -> {
         buf.append(tab)
         buf.append("(nullExpr)")
       }
