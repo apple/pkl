@@ -16,37 +16,46 @@
 package org.pkl.core.newparser
 
 import java.nio.file.Path
+import kotlin.io.path.pathString
 import kotlin.io.path.readText
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatCode
+import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.pkl.core.parser.antlr.PklLexer
 import org.pkl.core.parser.antlr.PklParser
 
-@TestInstance(Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.CONCURRENT)
 interface ParserComparisonTestInterface {
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   fun compareSnippetTests() {
-    getSnippets().forEach { snippet ->
-      assertThatCode { compare(snippet) }.`as`("path: $snippet").doesNotThrowAnyException()
+    SoftAssertions.assertSoftly { softly ->
+      getSnippets()
+        .parallelStream()
+        .map { Pair(it.pathString, it.readText()) }
+        .forEach { (path, snippet) ->
+          try {
+            compare(snippet, path, softly)
+          } catch (e: ParserError) {
+            softly.fail("path: $path", e)
+          }
+        }
     }
   }
 
   fun getSnippets(): List<Path>
 
-  fun compare(path: Path) {
-    val code = path.readText()
+  fun compare(code: String, path: String? = null, softly: SoftAssertions? = null) {
     val (sexp, antlrExp) = renderBoth(code)
-    assertThat(sexp).`as`("path: $path").isEqualTo(antlrExp)
-  }
-
-  fun compare(code: String) {
-    val (sexp, antlrExp) = renderBoth(code)
-    assertThat(sexp).isEqualTo(antlrExp)
+    when {
+      (path != null && softly != null) ->
+        softly.assertThat(sexp).`as`("path: $path").isEqualTo(antlrExp)
+      else -> assertThat(sexp).isEqualTo(antlrExp)
+    }
   }
 
   fun renderBoth(code: String): Pair<String, String> = Pair(renderCode(code), renderANTLRCode(code))
