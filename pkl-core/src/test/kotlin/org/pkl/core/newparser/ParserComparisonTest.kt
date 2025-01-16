@@ -20,16 +20,10 @@ package org.pkl.core.newparser
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.extension
-import kotlin.io.path.readText
-import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CommonTokenStream
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.commons.walk
-import org.pkl.core.parser.antlr.PklLexer
-import org.pkl.core.parser.antlr.PklParser
 
-class ParserComparisonTest {
+class ParserComparisonTest : ParserComparisonTestInterface {
 
   @Test
   fun testAsPrecedence() {
@@ -59,37 +53,19 @@ class ParserComparisonTest {
     )
   }
 
-  @Test
-  fun compareSnippetTests() {
-    getSnippets().forEach { snippet ->
-      val text = snippet.readText()
-      compare(text)
-    }
+  override fun getSnippets(): List<Path> {
+    return Path("src/test/files/LanguageSnippetTests/input")
+      .walk()
+      .filter { path ->
+        val pathStr = path.toString()
+        path.extension == "pkl" &&
+          !exceptions.any { pathStr.endsWith(it) } &&
+          !regexExceptions.any { it.matches(pathStr) }
+      }
+      .toList()
   }
 
   companion object {
-    private fun compare(code: String) {
-      val sexp = renderCode(code)
-      val antlrExp = renderANTLRCode(code)
-      assertThat(sexp).isEqualTo(antlrExp)
-    }
-
-    private fun renderCode(code: String): String {
-      val lexer = Lexer(code)
-      val parser = Parser(lexer)
-      val mod = parser.parseModule() ?: return "(module)"
-      val renderer = SexpRenderer()
-      return renderer.render(mod)
-    }
-
-    private fun renderANTLRCode(code: String): String {
-      val lexer = PklLexer(ANTLRInputStream(code))
-      val parser = PklParser(CommonTokenStream(lexer))
-      val mod = parser.module()
-      val renderer = ANTLRSexpRenderer()
-      return renderer.render(mod)
-    }
-
     // tests that are not syntactically valid Pkl
     private val exceptions =
       setOf(
@@ -111,17 +87,5 @@ class ParserComparisonTest {
 
     private val regexExceptions =
       setOf(Regex(".*/errors/delimiters/.*"), Regex(".*/errors/parser\\d+\\.pkl"))
-
-    private fun getSnippets(): List<Path> {
-      return Path("src/test/files/LanguageSnippetTests/input")
-        .walk()
-        .filter { path ->
-          val pathStr = path.toString()
-          path.extension == "pkl" &&
-            !exceptions.any { pathStr.endsWith(it) } &&
-            !regexExceptions.any { it.matches(pathStr) }
-        }
-        .toList()
-    }
   }
 }
