@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -388,8 +388,7 @@ public class Lexer {
         return true;
       }
       case 'u' -> lexUnicodeEscape();
-      default ->
-        throw lexError("Invalid string escape: `" + ch + "`");
+      default -> throw lexError("Invalid string escape: `" + ch + "`");
     }
     return false;
   }
@@ -408,8 +407,7 @@ public class Lexer {
       if (!isHex(ch)) throw unexpectedIdentifier(ch);
       count++;
     }
-    if (!reachedEnd || count == 0)
-      throw lexError("Invalid or empty unicode escape");
+    if (!reachedEnd || count == 0) throw lexError("Invalid or empty unicode escape");
   }
 
   private Token lexIdent() {
@@ -634,7 +632,7 @@ public class Lexer {
     // we never back up on `\n`
     col -= amount;
   }
-  
+
   private ParserError lexError(String msg) {
     return new ParserError(msg, new Span(line, col, line, col));
   }

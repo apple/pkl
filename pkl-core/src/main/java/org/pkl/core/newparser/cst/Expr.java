@@ -1,3 +1,18 @@
+/*
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.core.newparser.cst;
 
 import java.util.List;
@@ -43,7 +58,7 @@ public sealed interface Expr {
   record UnqualifiedAccess(Ident ident, @Nullable List<Expr> args, Span span) implements Expr {}
 
   record QualifiedAccess(
-    Expr expr, Ident ident, boolean isNullable, @Nullable List<Expr> args, Span span)
+      Expr expr, Ident ident, boolean isNullable, @Nullable List<Expr> args, Span span)
       implements Expr {}
 
   record SuperAccess(Ident ident, List<Expr> args, Span span) implements Expr {}
@@ -71,9 +86,9 @@ public sealed interface Expr {
   record LogicalNot(Expr expr, Span span) implements Expr {}
 
   record BinaryOp(Expr left, Expr right, Operator op, Span span) implements Expr {}
-  
+
   record TypeCheck(Expr expr, Type type, Span span) implements Expr {}
-  
+
   record TypeCast(Expr expr, Type type, Span span) implements Expr {}
 
   /** This is a synthetic class only used at parse time. */

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,8 @@ class OperatorResolver {
     return -1;
   }
 
-  private static List<Expr> resolveOperator(List<Expr> exprs, Associativity associativity, Operator op) {
+  private static List<Expr> resolveOperator(
+      List<Expr> exprs, Associativity associativity, Operator op) {
     var res = new ArrayList<>(exprs);
 
     var i = index(res, associativity, op);
@@ -93,11 +94,12 @@ class OperatorResolver {
       var left = res.get(i - 1);
       var right = res.get(i + 1);
       var span = left.getSpan().endWith(right.getSpan());
-      var binOp = switch (op) {
-        case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).type(), span);
-        case AS -> new Expr.TypeCast(left, ((TypeExpr) right).type(), span);
-        default -> new Expr.BinaryOp(left, right, op, span);
-      };
+      var binOp =
+          switch (op) {
+            case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).type(), span);
+            case AS -> new Expr.TypeCast(left, ((TypeExpr) right).type(), span);
+            default -> new Expr.BinaryOp(left, right, op, span);
+          };
       res.remove(i - 1);
       res.remove(i - 1);
       res.remove(i - 1);

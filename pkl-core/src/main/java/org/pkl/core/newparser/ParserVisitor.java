@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -310,7 +310,7 @@ public abstract class ParserVisitor<Result> {
   public @Nullable Result visitForGenerator(ObjectMember.ForGenerator member) {
     return null;
   }
-  
+
   public @Nullable Result visitObjectMember(ObjectMember member) {
     if (member instanceof ObjectMember.ObjectElement o) return visitObjectElement(o);
     if (member instanceof ObjectMember.ObjectProperty o) return visitObjectProperty(o);
