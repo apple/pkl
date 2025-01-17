@@ -623,8 +623,7 @@ public class Parser {
           exprs = OperatorResolver.resolveOperatorsHigherThan(exprs, precedence);
         }
         case MINUS -> {
-          if (!precededBySemicolon
-              && exprs.get(exprs.size() - 1).getSpan().sameLine(spanLookahead)) {
+          if (!precededBySemicolon && !_lookahead.newLineBetween) {
             exprs.add(new OperatorExpr(op, next().span));
             exprs.add(parseExprAtom());
           } else {
@@ -639,9 +638,7 @@ public class Parser {
           var isNullable = op == Operator.QDOT;
           var ident = parseIdent();
           Pair<List<Expr>, Span> argsPair = null;
-          if (lookahead == Token.LPAREN
-              && !precededBySemicolon
-              && ident.span().sameLine(spanLookahead)) {
+          if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
             argsPair = parseArgumentList();
           }
           var lastSpan = argsPair != null ? argsPair.getSecond() : ident.span();
@@ -865,9 +862,7 @@ public class Parser {
           }
           case IDENT -> {
             var ident = parseIdent();
-            if (lookahead == Token.LPAREN
-                && !precededBySemicolon
-                && ident.span().sameLine(spanLookahead)) {
+            if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
               var args = parseArgumentList();
               yield new Expr.UnqualifiedAccess(
                   ident, args.getFirst(), ident.span().endWith(args.getSecond()));
@@ -901,9 +896,7 @@ public class Parser {
       var isNullable = next().token == Token.QDOT;
       var ident = parseIdent();
       Pair<List<Expr>, Span> argsPair = null;
-      if (lookahead == Token.LPAREN
-          && !precededBySemicolon
-          && ident.span().sameLine(spanLookahead)) {
+      if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
         argsPair = parseArgumentList();
       }
       var lastSpan = argsPair != null ? argsPair.getSecond() : ident.span();
@@ -913,9 +906,7 @@ public class Parser {
       return parseExprRest(res);
     }
     // subscript (needs to be in the same line as the expression)
-    if (lookahead == Token.LBRACK
-        && !precededBySemicolon
-        && expr.getSpan().sameLine(spanLookahead)) {
+    if (lookahead == Token.LBRACK && !precededBySemicolon && !_lookahead.newLineBetween) {
       next();
       var exp = parseExpr();
       expect(Token.RBRACK, "Expected `]`");
@@ -1050,7 +1041,7 @@ public class Parser {
       return parseTypeEnd(res, shortCircuit);
     }
     // constrained types: have to start in the same line as the type
-    if (lookahead == Token.LPAREN && type.getSpan().sameLine(spanLookahead)) {
+    if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
       next();
       var constraints = parseListOf(Token.COMMA, this::parseExpr);
       var end = expect(Token.RPAREN, "Expected `)`").span;
@@ -1227,10 +1218,10 @@ public class Parser {
       if (!modifiers().isEmpty()) {
         if (start == null) start = modifiers.get(0).span();
         end = modifiers.get(modifiers.size() - 1).span();
-        return new Span(start.beginLine(), start.beginCol(), end.endLine(), end.endCol());
+        return start.endWith(end);
       }
       if (end != null) {
-        return new Span(start.beginLine(), start.beginCol(), end.endLine(), end.endCol());
+        return start.endWith(end);
       }
       return or;
     }
@@ -1262,7 +1253,11 @@ public class Parser {
     }
     precededBySemicolon = prev == Token.SEMICOLON;
     return new FullToken(
-        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor - lexer.textOffset);
+        tk,
+        lexer.span(),
+        lexer.sCursor,
+        lexer.cursor - lexer.sCursor - lexer.textOffset,
+        lexer.newLineBetween);
   }
 
   // backtrack to the previous token
@@ -1282,7 +1277,8 @@ public class Parser {
     return builder.toString();
   }
 
-  private record FullToken(Token token, Span span, int textOffset, int textSize) {
+  private record FullToken(
+      Token token, Span span, int textOffset, int textSize, boolean newLineBetween) {
     String text(Lexer lexer) {
       return lexer.textFor(textOffset, textSize);
     }

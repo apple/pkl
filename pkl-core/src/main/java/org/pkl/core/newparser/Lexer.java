@@ -26,15 +26,13 @@ public class Lexer {
   private final int size;
   protected int cursor = 0;
   protected int sCursor = 0;
-  private int line = 1;
-  private int col = 1;
-  private int sLine = 1;
-  private int sCol = 1;
   private char lookahead;
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
   private boolean stringEnded = false;
   protected int textOffset = 0;
+  // true if there's a \n between two subsequent tokens
+  protected boolean newLineBetween = false;
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -50,7 +48,7 @@ public class Lexer {
 
   // The span of the last lexed token
   public Span span() {
-    return new Span(sLine, sCol, line, col);
+    return new Span(sCursor, cursor - sCursor);
   }
 
   // The text of the last lexed token
@@ -67,10 +65,9 @@ public class Lexer {
   }
 
   public Token next() {
-    sLine = line;
-    sCol = col;
     sCursor = cursor;
     textOffset = 0;
+    newLineBetween = false;
     return switch (state) {
       case DEFAULT -> nextDefault();
       case STRING -> nextString();
@@ -79,10 +76,12 @@ public class Lexer {
 
   private Token nextDefault() {
     var ch = nextChar();
+    // ignore spaces
     while (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r') {
-      sLine = line;
-      sCol = col;
       sCursor = cursor;
+      if (ch == '\n') {
+        newLineBetween = true;
+      }
       ch = nextChar();
     }
     return switch (ch) {
@@ -613,30 +612,20 @@ public class Lexer {
     } else {
       lookahead = source[cursor];
     }
-    if (tmp == '\n') {
-      line++;
-      col = 1;
-    } else {
-      col++;
-    }
     return tmp;
   }
 
   private void backup() {
     lookahead = source[--cursor];
-    // we never back up on `\n`
-    col--;
   }
 
   private void backup(int amount) {
     cursor -= amount;
     lookahead = source[cursor];
-    // we never back up on `\n`
-    col -= amount;
   }
 
   private ParserError lexError(String msg) {
-    return new ParserError(msg, new Span(line, col, line, col));
+    return new ParserError(msg, new Span(cursor, 1));
   }
 
   private ParserError unexpectedIdentifier(char got) {
