@@ -90,22 +90,19 @@ class OperatorResolver {
     var res = new ArrayList<>(exprs);
 
     var i = index(res, associativity, op);
-    while (i != -1) {
-      var left = res.get(i - 1);
-      var right = res.get(i + 1);
-      var span = left.getSpan().endWith(right.getSpan());
-      var binOp =
-          switch (op) {
-            case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).type(), span);
-            case AS -> new Expr.TypeCast(left, ((TypeExpr) right).type(), span);
-            default -> new Expr.BinaryOp(left, right, op, span);
-          };
-      res.remove(i - 1);
-      res.remove(i - 1);
-      res.remove(i - 1);
-      res.add(i - 1, binOp);
-      i = index(res, associativity, op);
-    }
+    var left = res.get(i - 1);
+    var right = res.get(i + 1);
+    var span = left.getSpan().endWith(right.getSpan());
+    var binOp =
+        switch (op) {
+          case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).type(), span);
+          case AS -> new Expr.TypeCast(left, ((TypeExpr) right).type(), span);
+          default -> new Expr.BinaryOp(left, right, op, span);
+        };
+    res.remove(i - 1);
+    res.remove(i - 1);
+    res.remove(i - 1);
+    res.add(i - 1, binOp);
     return res;
   }
 

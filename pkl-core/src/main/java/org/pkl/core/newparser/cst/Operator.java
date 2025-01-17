@@ -34,5 +34,5 @@ public enum Operator {
   AND,
   OR,
   PIPE,
-  NULL_COALESCE
+  NULL_COALESCE,
 }
