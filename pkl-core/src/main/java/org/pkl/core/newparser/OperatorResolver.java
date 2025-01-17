@@ -43,6 +43,7 @@ class OperatorResolver {
       case PLUS, MINUS -> 7;
       case MULT, DIV, INT_DIV, MOD -> 8;
       case POW -> 9;
+      case DOT, QDOT -> 10;
     };
   }
 

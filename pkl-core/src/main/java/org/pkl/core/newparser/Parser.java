@@ -608,6 +608,7 @@ public class Parser {
     return new ObjectMember.ForGenerator(par1, par2, expr, body, start.endWith(body.span()));
   }
 
+  @SuppressWarnings("DuplicatedCode")
   private Expr parseExpr() {
     List<Expr> exprs = new ArrayList<>();
     exprs.add(parseExprAtom());
@@ -629,6 +630,25 @@ public class Parser {
           } else {
             break loop;
           }
+        }
+        case DOT, QDOT -> {
+          // this exists just to keep backward compatibility with code as `x + y as List.distinct`
+          // which should be removed at some point
+          next();
+          var expr = exprs.remove(exprs.size() - 1);
+          var isNullable = op == Operator.QDOT;
+          var ident = parseIdent();
+          Pair<List<Expr>, Span> argsPair = null;
+          if (lookahead == Token.LPAREN
+              && !precededBySemicolon
+              && ident.span().sameLine(spanLookahead)) {
+            argsPair = parseArgumentList();
+          }
+          var lastSpan = argsPair != null ? argsPair.getSecond() : ident.span();
+          var args = argsPair != null ? argsPair.getFirst() : null;
+          exprs.add(
+              new Expr.QualifiedAccess(
+                  expr, ident, isNullable, args, expr.getSpan().endWith(lastSpan)));
         }
         default -> {
           exprs.add(new OperatorExpr(op, next().span));
@@ -661,6 +681,8 @@ public class Parser {
       case OR -> Operator.OR;
       case PIPE -> Operator.PIPE;
       case COALESCE -> Operator.NULL_COALESCE;
+      case DOT -> Operator.DOT;
+      case QDOT -> Operator.QDOT;
       default -> null;
     };
   }
@@ -858,6 +880,7 @@ public class Parser {
     return parseExprRest(expr);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   private Expr parseExprRest(Expr expr) {
     // non null
     if (lookahead == Token.NON_NULL) {

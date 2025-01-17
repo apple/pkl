@@ -721,6 +721,7 @@ class SexpRenderer {
         Operator.OR -> "(logicalOrExpr"
         Operator.PIPE -> "(pipeExpr"
         Operator.NULL_COALESCE -> "(nullCoalesceExpr"
+        else -> throw RuntimeException("Should never receive a dot operator here")
       }
     buf.append(name)
     val oldTab = increaseTab()

@@ -35,4 +35,6 @@ public enum Operator {
   OR,
   PIPE,
   NULL_COALESCE,
+  DOT,
+  QDOT,
 }
