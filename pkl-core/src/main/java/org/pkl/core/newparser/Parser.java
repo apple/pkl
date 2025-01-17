@@ -609,7 +609,7 @@ public class Parser {
   }
 
   private Expr parseExpr() {
-    var exprs = new ArrayList<Expr>();
+    List<Expr> exprs = new ArrayList<>();
     exprs.add(parseExprAtom());
     var op = getOperator();
     loop:
@@ -618,9 +618,8 @@ public class Parser {
         case IS, AS -> {
           exprs.add(new OperatorExpr(op, next().span));
           exprs.add(new Expr.TypeExpr(parseType()));
-          var expr = OperatorResolver.resolveOperators(exprs);
-          exprs.clear();
-          exprs.add(expr);
+          var precedence = OperatorResolver.getPrecedence(op);
+          exprs = OperatorResolver.resolveOperatorsHigherThan(exprs, precedence);
         }
         case MINUS -> {
           if (!precededBySemicolon
@@ -827,7 +826,7 @@ public class Parser {
             while (lookahead != Token.STRING_END) {
               if (lookahead == Token.STRING_PART) {
                 var tk = next();
-                var text = processStringPart(lexer.textFor(tk.textOffset, tk.textSize));
+                var text = lexer.textFor(tk.textOffset, tk.textSize);
                 if (!text.isEmpty()) {
                   parts.add(new Expr.StringConstant(text, tk.span));
                 }
@@ -1239,7 +1238,8 @@ public class Parser {
       tk = lexer.next();
     }
     precededBySemicolon = prev == Token.SEMICOLON;
-    return new FullToken(tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor);
+    return new FullToken(
+        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor - lexer.textOffset);
   }
 
   // backtrack to the previous token
@@ -1257,23 +1257,6 @@ public class Parser {
       builder.append(ch);
     }
     return builder.toString();
-  }
-
-  // The lexer will return strings ending with "\[#]+(" right before
-  // interpolation starts. This function will clean the text if needed.
-  public static String processStringPart(String part) {
-    if (part.length() < 2 || part.charAt(part.length() - 1) != '(') return part;
-    var i = part.length() - 2;
-    while (i >= 0 && part.charAt(i) == '#') {
-      i--;
-    }
-    if (i < 0) return part;
-    var cutoff = i;
-    if (part.charAt(i) != '\\') return part;
-    i--;
-    if (i < 0) return part.substring(0, cutoff);
-    if (part.charAt(i) == '\\') return part;
-    return part.substring(0, cutoff);
   }
 
   private record FullToken(Token token, Span span, int textOffset, int textSize) {

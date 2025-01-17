@@ -34,6 +34,7 @@ public class Lexer {
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
   private boolean stringEnded = false;
+  protected int textOffset = 0;
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -69,6 +70,7 @@ public class Lexer {
     sLine = line;
     sCol = col;
     sCursor = cursor;
+    textOffset = 0;
     return switch (state) {
       case DEFAULT -> nextDefault();
       case STRING -> nextString();
@@ -285,7 +287,6 @@ public class Lexer {
   }
 
   private void lexString(int pounds) {
-    // ##"... \##(foo)"##
     var poundsInARow = 0;
     var foundQuote = false;
     var foundBackslash = false;
@@ -385,6 +386,7 @@ public class Lexer {
         var scope = interpolationStack.getFirst();
         scope.parens++;
         state = State.DEFAULT;
+        textOffset = scope.pounds + 2;
         return true;
       }
       case 'u' -> lexUnicodeEscape();

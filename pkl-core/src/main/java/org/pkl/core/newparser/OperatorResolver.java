@@ -53,13 +53,13 @@ class OperatorResolver {
     };
   }
 
-  private static @Nullable Operator getHighestPrecedence(List<Expr> exprs) {
+  private static @Nullable Operator getHighestPrecedence(List<Expr> exprs, int min) {
     var highest = -1;
     Operator op = null;
     for (var expr : exprs) {
       if (expr instanceof OperatorExpr o) {
         var precedence = getPrecedence(o.op());
-        if (precedence > highest) {
+        if (precedence > highest && precedence >= min) {
           highest = precedence;
           op = o.op();
         }
@@ -110,19 +110,13 @@ class OperatorResolver {
   }
 
   /**
-   * Resolve all operators based on their precedence and fixity. This requires that the list has a
-   * valid form: `expr` `op` `expr` ...
+   * Resolve all operators based on their precedence and associativity. This requires that the list
+   * has a valid form: `expr` `op` `expr` ...
    */
   public static Expr resolveOperators(List<Expr> exprs) {
     if (exprs.size() == 1) return exprs.get(0);
 
-    var res = exprs;
-    var highest = getHighestPrecedence(res);
-    while (highest != null) {
-      var fixity = getAssociativity(highest);
-      res = resolveOperator(res, fixity, highest);
-      highest = getHighestPrecedence(res);
-    }
+    var res = resolveOperatorsHigherThan(exprs, 0);
     if (res.size() > 1) {
       throw new ParserError(
           "Malformed expression",
@@ -130,5 +124,17 @@ class OperatorResolver {
     }
 
     return res.get(0);
+  }
+
+  public static List<Expr> resolveOperatorsHigherThan(List<Expr> exprs, int minPrecedence) {
+    var res = exprs;
+    var highest = getHighestPrecedence(res, minPrecedence);
+    while (highest != null) {
+      var associativity = getAssociativity(highest);
+      res = resolveOperator(res, associativity, highest);
+      highest = getHighestPrecedence(res, minPrecedence);
+    }
+
+    return res;
   }
 }
