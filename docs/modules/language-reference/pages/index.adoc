@@ -5269,6 +5269,8 @@ They cannot be used as a regular identifier, and currently do not have any meani
 
 To use these names in an identifier, <<quoted-identifiers, surround them with backticks>>.
 
+For a complete list of reserved keywords, consult link:{uri-github-PklLexer}[PklLexer.g4].
+
 [[blank-identifiers]]
 === Blank Identifiers
 
