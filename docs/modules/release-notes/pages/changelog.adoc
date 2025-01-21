@@ -6,6 +6,22 @@ include::ROOT:partial$component-attributes.adoc[]
 
 xref:0.28.adoc[Release notes]
 
+[[release-0.27.2]]
+== 0.27.2 (2025-01-22)
+
+=== Fixes
+
+* Fixes issues where server mode message decoding might result in null pointer exceptions (https://github.com/apple/pkl/pull/853[#853], https://github.com/apple/pkl/pull/882[#882]).
+* Fixes an issue where the test report outputs decimal numbers using local-specific decimals (https://github.com/apple/pkl/pull/868[#868]).
+* Fixes an issue where the native executables might not run on some environments, resulting in an error like "Fatal error: Failed to create the main Isolate" (https://github.com/apple/pkl/pull/875[#875]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* link:https://github.com/HT154[@HT154]
+* link:https://github.com/StefMa[@StefMa]
+
 [[release-0.27.1]]
 == 0.27.1 (2024-12-06)
 
