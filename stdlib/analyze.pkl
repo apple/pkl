@@ -19,7 +19,7 @@
 /// These tools differentiate from [pkl:reflect][reflect] in that they parse Pkl modules, but do not
 /// execute any code within these modules.
 @Since { version = "0.27.0" }
-@ModuleInfo { minPklVersion = "0.27.0" }
+@ModuleInfo { minPklVersion = "0.27.2" }
 module pkl.analyze
 
 // used by doc comments

@@ -31,7 +31,7 @@
 ///
 /// title = "Title displayed in the header of each page"
 /// ```
-@ModuleInfo { minPklVersion = "0.27.0" }
+@ModuleInfo { minPklVersion = "0.27.2" }
 module pkl.DocsiteInfo
 
 import "pkl:reflect"
