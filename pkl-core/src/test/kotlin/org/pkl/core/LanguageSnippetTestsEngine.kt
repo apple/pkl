@@ -34,6 +34,18 @@ import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
 import org.pkl.core.util.IoUtils
 
+// @TODO: this test fails on JDK 22+, because of an output mismatch
+private val excludedOnJvm22Plus = listOf(Regex(".*analyzeInvalidHttpModule.*"))
+
+private fun currentMajorJavaVersion(): Int =
+  System.getProperty("java.version").substringBefore('.').toInt()
+
+private fun exclusionsForThisJvm(): List<Regex> =
+  when {
+    currentMajorJavaVersion() >= 22 -> excludedOnJvm22Plus
+    else -> emptyList()
+  }
+
 abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
   private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
@@ -61,6 +73,9 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     if (IoUtils.isWindows()) {
       addAll(windowsExcludedTests)
     }
+
+    // on experimental JVM versions, exclude tests which are known to be incompatible
+    addAll(exclusionsForThisJvm())
   }
 
   override val inputDir: Path = snippetsDir.resolve("input")
@@ -201,7 +216,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       Regex(".*/import1b\\.pkl"),
       // URIs get rendered slightly differently (percent-encoded vs raw)
       Regex(".*日本語_error\\.pkl"),
-    )
+    ) + exclusionsForThisJvm()
 
   /** Avoid running tests for native binaries when those native binaries have not been built. */
   override fun discover(

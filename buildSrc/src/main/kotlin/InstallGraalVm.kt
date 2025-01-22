@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ abstract class InstallGraalVm
 @Inject
 constructor(
   private val fileOperations: FileOperations,
-  private val execOperations: ExecOperations
+  private val execOperations: ExecOperations,
 ) : DefaultTask() {
   @get:Input abstract val graalVm: Property<BuildInfo.GraalVm>
 
@@ -58,10 +58,16 @@ constructor(
         if (os.isMacOsX) distroDir.resolve("Contents/Home/bin") else distroDir.resolve("bin")
 
       println("Installing native-image into $distroDir")
-      execOperations.exec {
-        val executableName = if (os.isWindows) "gu.cmd" else "gu"
-        executable = distroBinDir.resolve(executableName).toString()
-        args("install", "--no-progress", "native-image")
+      val gvmVersionMajor =
+        requireNotNull(graalVm.get().version.split(".").first().toIntOrNull()) {
+          "Invalid GraalVM JDK version: ${graalVm.get().graalVmJdkVersion}"
+        }
+      if (gvmVersionMajor < 24) {
+        execOperations.exec {
+          val executableName = if (os.isWindows) "gu.cmd" else "gu"
+          executable = distroBinDir.resolve(executableName).toString()
+          args("install", "--no-progress", "native-image")
+        }
       }
 
       println("Creating symlink ${graalVm.get().installDir} for $distroDir")

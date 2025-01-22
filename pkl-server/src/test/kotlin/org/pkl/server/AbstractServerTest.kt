@@ -25,6 +25,7 @@ import kotlin.io.path.outputStream
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -38,13 +39,18 @@ abstract class AbstractServerTest {
   companion object {
     /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
     internal const val USE_DIRECT_TRANSPORT = false
+    lateinit var executor: ExecutorService
 
-    val executor: ExecutorService =
-      if (USE_DIRECT_TRANSPORT) {
-        createDirectExecutor()
-      } else {
-        Executors.newCachedThreadPool()
-      }
+    @BeforeAll
+    @JvmStatic
+    fun beforeAll() {
+      executor =
+        if (USE_DIRECT_TRANSPORT) {
+          createDirectExecutor()
+        } else {
+          Executors.newCachedThreadPool()
+        }
+    }
 
     @AfterAll
     @JvmStatic

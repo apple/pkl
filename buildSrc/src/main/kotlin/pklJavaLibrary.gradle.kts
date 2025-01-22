@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("HttpUrlsUsage")
+@file:Suppress("HttpUrlsUsage", "unused")
 
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
   `java-library`
+  `jvm-toolchains`
   id("pklKotlinTest")
   id("com.diffplug.spotless")
 }
 
 // make sources Jar available to other subprojects
-val sourcesJarConfiguration = configurations.register("sourcesJar")
+val sourcesJarConfiguration: Provider<Configuration> = configurations.register("sourcesJar")
 
 // Version Catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
+// Build configuration.
+val info = project.extensions.getByType<BuildInfo>()
+
 java {
+  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
+
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
+
+  sourceCompatibility = jvmTarget
+  targetCompatibility = jvmTarget
+
+  toolchain {
+    languageVersion = info.jdkToolchainVersion
+    vendor = info.jdkVendor
+  }
 }
 
 artifacts {
@@ -56,7 +70,11 @@ tasks.compileKotlin { enabled = false }
 
 tasks.jar {
   manifest {
-    attributes += mapOf("Automatic-Module-Name" to "org.${project.name.replace("-", ".")}")
+    attributes +=
+      mapOf(
+        "Automatic-Module-Name" to "org.${project.name.replace("-", ".")}",
+        "Add-Exports" to info.jpmsExportsForJarManifest,
+      )
   }
 }
 
@@ -80,9 +98,48 @@ val workAroundKotlinGradlePluginBug by
     }
   }
 
+val truffleJavacArgs =
+  listOf(
+    // TODO: determine correct limits for Truffle specializations
+    // (see https://graalvm.slack.com/archives/CNQSB2DHD/p1712380902746829)
+    "-Atruffle.dsl.SuppressWarnings=truffle-limit"
+  )
+
 tasks.compileJava {
+  javaCompiler = info.javaCompiler
   dependsOn(workAroundKotlinGradlePluginBug)
-  // TODO: determine correct limits for Truffle specializations
-  // (see https://graalvm.slack.com/archives/CNQSB2DHD/p1712380902746829)
-  options.compilerArgs.add("-Atruffle.dsl.SuppressWarnings=truffle-limit")
+  options.compilerArgs.addAll(truffleJavacArgs + info.jpmsAddModulesFlags)
 }
+
+tasks.withType<JavaCompile>().configureEach {
+  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
+  javaCompiler = info.javaCompiler
+  sourceCompatibility = jvmTarget.majorVersion
+  targetCompatibility = jvmTarget.majorVersion
+}
+
+tasks.withType<JavaExec>().configureEach { jvmArgs(info.jpmsAddModulesFlags) }
+
+fun Test.configureJdkTestTask(launcher: Provider<JavaLauncher>) {
+  useJUnitPlatform()
+  javaLauncher = launcher
+  systemProperties.putAll(info.testProperties)
+  jvmArgs.addAll(info.jpmsAddModulesFlags)
+}
+
+tasks.test { configureJdkTestTask(info.javaTestLauncher) }
+
+// Prepare test tasks for each JDK version which is within the test target suite for Pkl. Each task
+// uses a pinned JDK toolchain version, and is named for the major version which is tested.
+//
+// Test tasks configured in this manner are executed manually by name, e.g. `./gradlew testJdk11`,
+// and automatically as dependencies of `check`.
+//
+// We omit the current JDK from this list because it is already tested, in effect, by the default
+// `test` task.
+//
+// Pkl subprojects may elect to further configure these tasks as needed; by default, each task
+// inherits the configuration of the default `test` task (aside from an overridden launcher).
+val jdkTestTasks = info.multiJdkTestingWith(tasks.test) { (_, jdk) -> configureJdkTestTask(jdk) }
+
+if (info.multiJdkTesting) tasks.check { dependsOn(jdkTestTasks) }

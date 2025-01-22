@@ -9,14 +9,14 @@ geantyref = "1.+"
 googleJavaFormat = "1.25.2"
 # must not use `+` because used in download URL
 # 23.1.x requires JDK 20+
-graalVm = "23.0.6"
-graalVmJdkVersion = "17.0.12"
+graalVm = "24.1.2"
+graalVmJdkVersion = "21.0.5"
 # slightly hacky but convenient place so we remember to update the checksum
-graalVmSha256-macos-x64 = "3ecac1471f3fa95a56c5b75c65db9e60ac4551f56eda09eb9da95e6049ea77d7"
-graalVmSha256-macos-aarch64 = "4cdfdc6c9395f6773efcd191b6605f1b7c8e1b78ab900ab5cff34720a3feffc5"
-graalVmSha256-linux-x64 = "b6f3dace24cf1960ec790216f4c86f00d4f43df64e4e8b548f6382f04894713f"
-graalVmSha256-linux-aarch64 = "bd991d486b92deb74337b881e0f13a764c9c1e90fc358819080f7321fa5175e8"
-graalVmSha256-windows-x64 = "8b978e56dddc0edc60db99794b56975740d9c52293b31549cfc3f7516fc18b43"
+graalVmSha256-macos-x64 = "2d9b09e28bc1bb6ff219bf62eacc4626c7740b4f1829ede9ea4450f33e9c0826"
+graalVmSha256-macos-aarch64 = "cb68cb2c796f42f37a56fcd1385d8b86cca12e0b46c5618a5ed3ec7dd2260f6f"
+graalVmSha256-linux-x64 = "c1960d4f9d278458bde1cd15115ac2f0b3240cb427d51cfeceb79dab91a7f5c9"
+graalVmSha256-linux-aarch64 = "771b308852853cf93f7a3fc429741dd17502b8c5fa91930de6af8ded461e2dc3"
+graalVmSha256-windows-x64 = "06f0edb4d7e6c0063ca0db696538652bbd3983b81f264171da2961873c5e9e6d"
 ideaExtPlugin = "1.1.9"
 javaPoet = "0.+"
 javaxInject = "1"
@@ -93,6 +93,8 @@ spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-grad
 svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
+truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVm" }
+truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
 wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
 [plugins] # ordered alphabetically

@@ -15,7 +15,13 @@
  */
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-plugins { `kotlin-dsl` }
+plugins {
+  `kotlin-dsl`
+  `jvm-toolchains`
+}
+
+// Keep this in sync with the constants in `BuildInfo.kt` (those are not addressable here).
+val toolchainVersion = 21
 
 dependencies {
   implementation(libs.downloadTaskPlugin)
@@ -29,8 +35,16 @@ dependencies {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
+  sourceCompatibility = JavaVersion.toVersion(toolchainVersion)
+  targetCompatibility = JavaVersion.toVersion(toolchainVersion)
+
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(toolchainVersion)
+    vendor = JvmVendorSpec.ADOPTIUM
+  }
 }
 
-kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
+kotlin {
+  jvmToolchain(toolchainVersion)
+  compilerOptions { jvmTarget = JvmTarget.fromTarget(toolchainVersion.toString()) }
+}

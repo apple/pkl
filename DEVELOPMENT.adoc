@@ -7,7 +7,7 @@
 
 == Setup
 
-. (mandatory) Install a JDK (any version between 17 - 21).
+. (mandatory) Install a JDK (JDK 21+ required).
 . (recommended) Install {uri-intellij}[IntelliJ IDEA] +
 To import the project into IntelliJ, go to File->Open and select the project's root directory.
 If the project is opened but not imported, look for a popup in the lower right corner
@@ -17,7 +17,7 @@ _gng_ enables to run Gradle commands with `gw` (instead of `./gradlew`) from any
 . (recommended) Set up Git ignore-revs +
 `git config blame.ignoreRevsFile .git-blame-ignore-revs`
 . (recommended) Install {uri-jenv}[jenv] and plugins +
-_jenv_ use specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 17. +
+_jenv_ use specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 21. +
 Enable _jenv_ plugins for better handling by `gradle`:
 +
 [source,shell]

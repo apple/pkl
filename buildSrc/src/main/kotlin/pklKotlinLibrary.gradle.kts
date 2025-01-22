@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 import org.gradle.accessors.dm.LibrariesForLibs
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
   id("pklJavaLibrary")
-
   kotlin("jvm")
 }
 
+// Build configuration.
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
 // Version Catalog library symbols.
@@ -37,4 +39,8 @@ dependencies {
 
 tasks.compileKotlin {
   enabled = true // disabled by pklJavaLibrary
+}
+
+tasks.withType<KotlinJvmCompile>().configureEach {
+  compilerOptions { jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString()) }
 }

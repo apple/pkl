@@ -87,7 +87,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
   }
 }
 
-fun createCompatibilityTestTask(versionInfo: GradleVersionInfo) =
+fun createCompatibilityTestTask(versionInfo: GradleVersionInfo): TaskProvider<Test> =
   createCompatibilityTestTask(versionInfo.version, versionInfo.downloadUrl)
 
 fun createCompatibilityTestTask(version: String, downloadUrl: String): TaskProvider<Test> {
