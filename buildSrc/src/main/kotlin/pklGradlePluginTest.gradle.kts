@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,20 +27,23 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
         dependsOn(
           "compatibilityTestReleases",
           "compatibilityTestCandidate",
-          "compatibilityTestNightly"
+          "compatibilityTestNightly",
         )
       }
     // releases in configured range
     "Releases" ->
       task("compatibilityTestReleases") {
         val versionInfos = GradleVersionInfo.fetchReleases()
-        val versionsToTestAgainst =
-          versionInfos.filter { versionInfo ->
-            val v = versionInfo.gradleVersion
-            !versionInfo.broken &&
-              v in gradlePluginTests.minGradleVersion..gradlePluginTests.maxGradleVersion &&
-              v !in gradlePluginTests.skippedGradleVersions
-          }
+        val allVersions =
+          versionInfos
+            .filter { versionInfo ->
+              val v = versionInfo.gradleVersion
+              !versionInfo.broken &&
+                v in gradlePluginTests.minGradleVersion..gradlePluginTests.maxGradleVersion &&
+                v !in gradlePluginTests.skippedGradleVersions
+            }
+            .sortedBy { it.gradleVersion }
+        val versionsToTestAgainst = listOf(allVersions.first(), allVersions.last())
 
         dependsOn(versionsToTestAgainst.map { createCompatibilityTestTask(it) })
       }
@@ -79,7 +82,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
     else ->
       createCompatibilityTestTask(
         taskNameSuffix,
-        "https://services.gradle.org/distributions-snapshots/gradle-$taskNameSuffix-bin.zip"
+        "https://services.gradle.org/distributions-snapshots/gradle-$taskNameSuffix-bin.zip",
       )
   }
 }
