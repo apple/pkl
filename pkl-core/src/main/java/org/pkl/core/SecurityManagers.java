@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,10 @@ public final class SecurityManagers {
       List.of(
           Pattern.compile("repl:"),
           Pattern.compile("file:"),
+
           // for evaluating URLs returned by `Class(Loader).getResource()`
           Pattern.compile("jar:file:"),
+          Pattern.compile("jar:nested:"),
           Pattern.compile("modulepath:"),
           Pattern.compile("https:"),
           Pattern.compile("pkl:"),
@@ -78,9 +80,15 @@ public final class SecurityManagers {
     return switch (uri.getScheme()) {
       case "repl" -> 40;
       case "file" -> uri.getHost() == null ? 30 : 10;
-      case "jar" ->
+      case "jar" -> {
+        if (uri.getSchemeSpecificPart().startsWith("nested:")) {
+          // treat jar:nested: URIs as same level as modulepath URIs
+          yield 20;
+        } else {
           // use trust level of embedded URL
-          getDefaultTrustLevel(URI.create(uri.toString().substring(4)));
+          yield getDefaultTrustLevel(URI.create(uri.toString().substring(4)));
+        }
+      }
       case "modulepath" -> 20;
       case "pkl" -> 0;
       default -> 10;
