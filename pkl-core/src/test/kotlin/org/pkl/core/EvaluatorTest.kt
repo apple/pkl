@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.createTempFile
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.toPath
@@ -47,7 +47,7 @@ class EvaluatorTest {
   companion object {
     private val evaluator = Evaluator.preconfigured()
 
-    private const val sourceText = "name = \"pigeon\"; age = 10 + 20"
+    @Suppress("ConstPropertyName") private const val sourceText = "name = \"pigeon\"; age = 10 + 20"
 
     private object CustomModuleKeyFactory : ModuleKeyFactory {
       override fun create(uri: URI): Optional<ModuleKey> {
@@ -275,7 +275,7 @@ class EvaluatorTest {
             SecurityManagers.defaultAllowedModules,
             SecurityManagers.defaultAllowedResources,
             SecurityManagers.defaultTrustLevels,
-            tempDir
+            tempDir,
           )
         )
         .build()
@@ -315,7 +315,7 @@ class EvaluatorTest {
       }
     """
         .trimIndent()
-    val output = evaluator.evaluateOutputFiles(ModuleSource.text(program))
+    val output = evaluator.evaluateOutputFiles(text(program))
     assertThat(output.keys).isEqualTo(setOf("foo.yml", "bar.yml", "bar/biz.yml", "bar/../bark.yml"))
     assertThat(output["foo.yml"]?.text).isEqualTo("foo: foo text")
     assertThat(output["bar.yml"]?.text).isEqualTo("bar: bar text")
@@ -361,7 +361,7 @@ class EvaluatorTest {
             ModuleKeyFactories.standardLibrary,
             ModuleKeyFactories.pkg,
             ModuleKeyFactories.projectpackage,
-            ModuleKeyFactories.file
+            ModuleKeyFactories.file,
           )
         )
       }
@@ -430,7 +430,7 @@ class EvaluatorTest {
             ModuleKeyFactories.standardLibrary,
             ModuleKeyFactories.pkg,
             ModuleKeyFactories.projectpackage,
-            ModuleKeyFactories.file
+            ModuleKeyFactories.file,
           )
         )
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,15 @@
 package org.pkl.doc
 
 import java.nio.file.Path
-import org.pkl.commons.deleteRecursively
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.deleteRecursively
 import org.pkl.core.util.json.JsonWriter
 
 // Note: we don't currently make use of persisted type alias data (needs more thought).
+@OptIn(ExperimentalPathApi::class)
 internal class RuntimeDataGenerator(
   private val descendingVersionComparator: Comparator<String>,
-  private val outputDir: Path
+  private val outputDir: Path,
 ) {
 
   private val packageVersions = mutableMapOf<PackageId, MutableSet<String>>()
@@ -95,7 +97,7 @@ internal class RuntimeDataGenerator(
           packageVersions.getOrDefault(ref.pkg, setOf()).sortedWith(descendingVersionComparator),
           { it },
           { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
         )
         writer.writeLinks(
           HtmlConstants.KNOWN_USAGES,
@@ -104,7 +106,7 @@ internal class RuntimeDataGenerator(
           },
           PackageRef::pkg,
           { it.pageUrlRelativeTo(ref) },
-          { null }
+          { null },
         )
       }
   }
@@ -122,7 +124,7 @@ internal class RuntimeDataGenerator(
           moduleVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
           { it },
           { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
         )
         writer.writeLinks(
           HtmlConstants.KNOWN_USAGES,
@@ -131,7 +133,7 @@ internal class RuntimeDataGenerator(
           },
           TypeRef::displayName,
           { it.pageUrlRelativeTo(ref) },
-          { null }
+          { null },
         )
         writer.writeLinks(
           HtmlConstants.KNOWN_SUBTYPES,
@@ -140,7 +142,7 @@ internal class RuntimeDataGenerator(
           },
           TypeRef::displayName,
           { it.pageUrlRelativeTo(ref) },
-          { null }
+          { null },
         )
       }
   }
@@ -158,7 +160,7 @@ internal class RuntimeDataGenerator(
           classVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
           { it },
           { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null }
+          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
         )
         writer.writeLinks(
           HtmlConstants.KNOWN_USAGES,
@@ -167,7 +169,7 @@ internal class RuntimeDataGenerator(
           },
           TypeRef::displayName,
           { it.pageUrlRelativeTo(ref) },
-          { null }
+          { null },
         )
         writer.writeLinks(
           HtmlConstants.KNOWN_SUBTYPES,
@@ -176,7 +178,7 @@ internal class RuntimeDataGenerator(
           },
           TypeRef::displayName,
           { it.pageUrlRelativeTo(ref) },
-          { null }
+          { null },
         )
       }
   }
@@ -191,7 +193,7 @@ internal class RuntimeDataGenerator(
     // link href
     href: (T) -> String?,
     // link CSS classes
-    classes: (T) -> String?
+    classes: (T) -> String?,
   ) {
     if (items.isEmpty()) return
 

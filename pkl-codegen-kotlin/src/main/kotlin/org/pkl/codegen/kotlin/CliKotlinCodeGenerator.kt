@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 package org.pkl.codegen.kotlin
 
 import java.io.IOException
+import kotlin.io.path.createParentDirectories
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.Closeables
 import org.pkl.core.ModuleSource

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.pkl.core.messaging.ProtocolException
 import org.pkl.server.Server
 
 class CliServer(options: CliBaseOptions) : CliCommand(options) {
-  override fun doRun() =
+  override fun doRun(): Unit =
     try {
       val server = Server.stream(System.`in`, System.out)
       server.use { it.start() }

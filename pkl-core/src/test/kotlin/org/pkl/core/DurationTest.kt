@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,6 +120,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofNanos(999999999999))
     assertThat(Duration(999999999999999.0, NANOS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofNanos(999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(9999999999999999.0, NANOS).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofNanos(9999999999999999))
 
@@ -133,6 +134,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofSeconds(999999999999))
     assertThat(Duration(999999999999999.0, SECONDS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofSeconds(999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(9999999999999999.0, SECONDS).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofSeconds(9999999999999999))
 
@@ -146,6 +148,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofMinutes(999999999999))
     assertThat(Duration(999999999999999.0, MINUTES).toJavaDuration())
       .isEqualTo(java.time.Duration.ofMinutes(999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(9999999999999999.0, MINUTES).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofMinutes(9999999999999999))
 
@@ -158,7 +161,10 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofHours(999999999999))
     assertThat(Duration(999999999999999.0, HOURS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofHours(999999999999999))
-    assertThrows<ArithmeticException> { Duration(9999999999999999.0, HOURS).toJavaDuration() }
+    assertThrows<ArithmeticException> {
+      @Suppress("FloatingPointLiteralPrecision")
+      Duration(9999999999999999.0, HOURS).toJavaDuration()
+    }
 
     assertThat(Duration(999.0, DAYS).toJavaDuration()).isEqualTo(java.time.Duration.ofDays(999))
     assertThat(Duration(999999.0, DAYS).toJavaDuration())
@@ -181,6 +187,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofNanos(-999999999999))
     assertThat(Duration(-999999999999999.0, NANOS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofNanos(-999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(-9999999999999999.0, NANOS).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofNanos(-9999999999999999))
 
@@ -194,6 +201,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofSeconds(-999999999999))
     assertThat(Duration(-999999999999999.0, SECONDS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofSeconds(-999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(-9999999999999999.0, SECONDS).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofSeconds(-9999999999999999))
 
@@ -207,6 +215,7 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofMinutes(-999999999999))
     assertThat(Duration(-999999999999999.0, MINUTES).toJavaDuration())
       .isEqualTo(java.time.Duration.ofMinutes(-999999999999999))
+    @Suppress("FloatingPointLiteralPrecision")
     assertThat(Duration(-9999999999999999.0, MINUTES).toJavaDuration())
       .isNotEqualTo(java.time.Duration.ofMinutes(-9999999999999999))
 
@@ -219,7 +228,10 @@ class DurationTest {
       .isEqualTo(java.time.Duration.ofHours(-999999999999))
     assertThat(Duration(-999999999999999.0, HOURS).toJavaDuration())
       .isEqualTo(java.time.Duration.ofHours(-999999999999999))
-    assertThrows<ArithmeticException> { Duration(-9999999999999999.0, HOURS).toJavaDuration() }
+    assertThrows<ArithmeticException> {
+      @Suppress("FloatingPointLiteralPrecision")
+      Duration(-9999999999999999.0, HOURS).toJavaDuration()
+    }
 
     assertThat(Duration(-999.0, DAYS).toJavaDuration()).isEqualTo(java.time.Duration.ofDays(-999))
     assertThat(Duration(-999999.0, DAYS).toJavaDuration())

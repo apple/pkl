@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,7 @@ package org.pkl.doc
 import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
-import kotlin.io.path.createSymbolicLinkPointingTo
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.exists
-import kotlin.io.path.isSameFileAs
-import org.pkl.commons.deleteRecursively
+import kotlin.io.path.*
 import org.pkl.core.ModuleSchema
 import org.pkl.core.PClassInfo
 import org.pkl.core.Version
@@ -33,6 +29,7 @@ import org.pkl.core.util.IoUtils
  *
  * For the high-level Pkldoc API, see [CliDocGenerator].
  */
+@OptIn(ExperimentalPathApi::class)
 class DocGenerator(
   /**
    * The documentation website to generate.
@@ -62,7 +59,7 @@ class DocGenerator(
    * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
    * files (e.g., when stdlib line numbers change).
    */
-  private val isTestMode: Boolean = false
+  private val isTestMode: Boolean = false,
 ) {
   companion object {
     internal fun List<PackageData>.current(
@@ -147,7 +144,7 @@ internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<
 
   val minPklVersion: Version? by lazy { docModules.mapNotNull { it.minPklVersion }.maxOrNull() }
 
-  val deprecation: String? = docPackageInfo.annotations.deprecation
+  @Suppress("unused") val deprecation: String? = docPackageInfo.annotations.deprecation
 
   val isUnlisted: Boolean = docPackageInfo.annotations.isUnlisted
 
@@ -181,7 +178,7 @@ internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<
         docPackageInfo.version,
         docPackageInfo.getModuleImportUri(mod.moduleName),
         docPackageInfo.getModuleSourceCode(mod.moduleName),
-        exampleModulesBySubject[mod.moduleName] ?: listOf()
+        exampleModulesBySubject[mod.moduleName] ?: listOf(),
       )
     }
   }
@@ -193,7 +190,7 @@ internal class DocModule(
   val version: String,
   val importUri: URI,
   val sourceUrl: URI?,
-  val examples: List<ModuleSchema>
+  val examples: List<ModuleSchema>,
 ) {
   val name: String
     get() = schema.moduleName
@@ -212,7 +209,7 @@ internal class DocModule(
     version?.let { Version.parse(it) }
   }
 
-  val deprecation: String? = schema.annotations.deprecation
+  @Suppress("unused") val deprecation: String? = schema.annotations.deprecation
 
   val isUnlisted: Boolean = schema.annotations.isUnlisted
 }

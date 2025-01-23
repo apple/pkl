@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     val baseDir = testProjectDir.resolve("build/generated/kotlin/foo/bar")
     val kotlinFile = baseDir.resolve("Mod.kt")
 
-    assertThat(baseDir.listDirectoryEntries().count()).isEqualTo(1)
+    assertThat(baseDir.listDirectoryEntries().size).isEqualTo(1)
     assertThat(kotlinFile).exists()
 
     val text = kotlinFile.readText()
@@ -39,11 +39,14 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
     // shading must not affect generated code
     assertThat(text).doesNotContain("org.pkl.thirdparty")
 
-    checkTextContains(text, """
+    checkTextContains(
+      text,
+      """
       |data class Mod(
       |  val other: Any?
       |)
-    """)
+    """,
+    )
 
     checkTextContains(
       text,
@@ -52,7 +55,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
       |    val name: String,
       |    val addresses: List<Address>
       |  )
-    """
+    """,
     )
 
     checkTextContains(
@@ -62,7 +65,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
       |    open val street: String,
       |    open val zip: Long
       |  )
-    """
+    """,
     )
   }
 
@@ -97,7 +100,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     val result = runTask("evalTest", true)
@@ -148,7 +151,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
   }
 
@@ -170,7 +173,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
       }
 
       other = 42
-    """
+    """,
     )
   }
 }

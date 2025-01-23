@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
@@ -106,12 +105,7 @@ class CliDocGeneratorTest {
       actualOutputFiles.map { IoUtils.toNormalizedPathString(actualOutputDir.relativize(it)) }
     }
 
-    private val binaryFileExtensions =
-      setOf(
-        "woff2",
-        "png",
-        "svg",
-      )
+    private val binaryFileExtensions = setOf("woff2", "png", "svg")
 
     private fun runDocGenerator(outputDir: Path, cacheDir: Path?) {
       CliDocGenerator(
@@ -127,10 +121,10 @@ class CliDocGeneratorTest {
                   URI("package://localhost:0/unlisted@1.0.0"),
                   URI("package://localhost:0/deprecated@1.0.0"),
                 ) + package1InputModules + package2InputModules,
-              moduleCacheDir = cacheDir
+              moduleCacheDir = cacheDir,
             ),
             outputDir = outputDir,
-            isTestMode = true
+            isTestMode = true,
           )
         )
         .run()
@@ -172,7 +166,7 @@ class CliDocGeneratorTest {
         CliDocGeneratorOptions(
           CliBaseOptions(sourceModules = listOf(descriptor1.toUri(), descriptor2.toUri())),
           outputDir = tmpOutputDir,
-          isTestMode = true
+          isTestMode = true,
         )
       )
 
@@ -192,7 +186,7 @@ class CliDocGeneratorTest {
         CliDocGeneratorOptions(
           CliBaseOptions(sourceModules = listOf(module1.toUri())),
           outputDir = tmpOutputDir,
-          isTestMode = true
+          isTestMode = true,
         )
       )
 
@@ -212,7 +206,7 @@ class CliDocGeneratorTest {
         CliDocGeneratorOptions(
           CliBaseOptions(sourceModules = listOf(descriptor1.toUri())),
           outputDir = tmpOutputDir,
-          isTestMode = true
+          isTestMode = true,
         )
       )
 
@@ -286,17 +280,14 @@ class CliDocGeneratorTest {
               sourceCode = URI.create("foo.pkl"),
               issueTracker = URI.create("https://github.com/apple/pkl/issues"),
               overview = "my overview",
-              sourceCodeUrlScheme = "https://example.com/blob/$version%{path}#L%{line}-%{endLine}"
+              sourceCodeUrlScheme = "https://example.com/blob/$version%{path}#L%{line}-%{endLine}",
             ),
-          modules = emptyList()
-        ),
+          modules = emptyList(),
+        )
       )
 
     val packages: List<PackageData> =
-      listOf(
-        createPackageData("1.2.3"),
-        createPackageData("1.3.0-SNAPSHOT"),
-      )
+      listOf(createPackageData("1.2.3"), createPackageData("1.3.0-SNAPSHOT"))
     val comparator =
       Comparator<String> { v1, v2 -> Version.parse(v1).compareTo(Version.parse(v2)) }.reversed()
 

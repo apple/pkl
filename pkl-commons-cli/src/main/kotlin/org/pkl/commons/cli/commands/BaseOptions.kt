@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,9 @@ class BaseOptions : OptionGroup() {
     fun OptionWithValues<String?, String, String>.parseExternalReader(
       delimiter: String
     ): OptionWithValues<
-      Pair<String, ExternalReader>?, Pair<String, ExternalReader>, Pair<String, ExternalReader>
+      Pair<String, ExternalReader>?,
+      Pair<String, ExternalReader>,
+      Pair<String, ExternalReader>,
     > {
       return splitPair(delimiter).convert {
         val cmd = shlex(it.second)
@@ -99,24 +101,24 @@ class BaseOptions : OptionGroup() {
   val allowedModules: List<Pattern> by
     option(
         names = arrayOf("--allowed-modules"),
-        help = "URI patterns that determine which modules can be loaded and evaluated."
+        help = "URI patterns that determine which modules can be loaded and evaluated.",
       )
       .convert("<pattern1,pattern2>") { Pattern.compile(it) }
-      .splitAll(",")
+      .splitAll()
 
   val allowedResources: List<Pattern> by
     option(
         names = arrayOf("--allowed-resources"),
-        help = "URI patterns that determine which external resources can be read."
+        help = "URI patterns that determine which external resources can be read.",
       )
       .convert("<pattern1,pattern2>") { Pattern.compile(it) }
-      .splitAll(",")
+      .splitAll()
 
   val rootDir: Path? by
     option(
         names = arrayOf("--root-dir"),
         help =
-          "Restricts access to file-based modules and resources to those located under the root directory."
+          "Restricts access to file-based modules and resources to those located under the root directory.",
       )
       .single()
       .path()
@@ -129,7 +131,7 @@ class BaseOptions : OptionGroup() {
   val workingDir: Path by
     option(
         names = arrayOf("-w", "--working-dir"),
-        help = "Base path that relative module paths are resolved against."
+        help = "Base path that relative module paths are resolved against.",
       )
       .single()
       .path()
@@ -139,7 +141,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("-p", "--property"),
         metavar = "<name=value>",
-        help = "External property to set (repeatable)."
+        help = "External property to set (repeatable).",
       )
       .associateProps()
 
@@ -148,7 +150,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("--color"),
         metavar = "<when>",
         help =
-          "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'."
+          "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'.",
       )
       .enum<Color> { it.name.lowercase() }
       .single()
@@ -162,7 +164,7 @@ class BaseOptions : OptionGroup() {
   val format: String? by
     option(
         names = arrayOf("-f", "--format"),
-        help = "Output format to generate. <${output.joinToString()}>"
+        help = "Output format to generate. <${output.joinToString()}>",
       )
       .single()
 
@@ -170,7 +172,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("-e", "--env-var"),
         metavar = "<name=value>",
-        help = "Environment variable to set (repeatable)."
+        help = "Environment variable to set (repeatable).",
       )
       .associate()
 
@@ -179,7 +181,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("--module-path"),
         metavar = "<path1${File.pathSeparator}path2>",
         help =
-          "Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs."
+          "Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs.",
       )
       .path()
       .splitAll(File.pathSeparator)
@@ -193,7 +195,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("-t", "--timeout"),
         metavar = "<number>",
-        help = "Duration, in seconds, after which evaluation of a source module will be timed out."
+        help = "Duration, in seconds, after which evaluation of a source module will be timed out.",
       )
       .single()
       .long()
@@ -203,7 +205,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--ca-certificates"),
         metavar = "<path>",
-        help = "Only trust CA certificates from the provided file(s)."
+        help = "Only trust CA certificates from the provided file(s).",
       )
       .path()
       .multiple()
@@ -212,7 +214,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--http-proxy"),
         metavar = "<address>",
-        help = "Proxy to use for HTTP(S) connections."
+        help = "Proxy to use for HTTP(S) connections.",
       )
       .single()
       .convert { URI(it) }
@@ -228,7 +230,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--http-no-proxy"),
         metavar = "<pattern1,pattern2>",
-        help = "Hostnames that should not be connected to via a proxy."
+        help = "Hostnames that should not be connected to via a proxy.",
       )
       .single()
       .split(",")
@@ -237,7 +239,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--external-module-reader"),
         metavar = "<scheme>='<executable>[ <arguments>]'",
-        help = "External reader registrations for module URI schemes"
+        help = "External reader registrations for module URI schemes",
       )
       .parseExternalReader("=")
       .multiple()
@@ -247,7 +249,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("--external-resource-reader"),
         metavar = "<scheme>='<executable>[ <arguments>]'",
-        help = "External reader registrations for resource URI schemes"
+        help = "External reader registrations for resource URI schemes",
       )
       .parseExternalReader("=")
       .multiple()
@@ -263,7 +265,7 @@ class BaseOptions : OptionGroup() {
   fun baseOptions(
     modules: List<URI>,
     projectOptions: ProjectOptions? = null,
-    testMode: Boolean = false
+    testMode: Boolean = false,
   ): CliBaseOptions {
     return CliBaseOptions(
       sourceModules = modules,

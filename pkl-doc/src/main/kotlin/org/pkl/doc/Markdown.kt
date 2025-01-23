@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ internal class MarkdownParserFactory(private val pageScope: DocScope) : InlinePa
 internal class MarkdownParserContext(
   private val docScope: DocScope,
   private val pageScope: DocScope,
-  private val delegate: InlineParserContext
+  private val delegate: InlineParserContext,
 ) : InlineParserContext {
   companion object {
     private val keywords = setOf("null", "true", "false", "this", "unknown", "nothing")
@@ -54,7 +54,7 @@ internal class MarkdownParserContext(
   }
 
   override fun <D : Any> getDefinition(type: Class<D>, label: String): D? {
-    @Suppress("UNCHECKED_CAST", "DEPRECATION")
+    @Suppress("UNCHECKED_CAST")
     return when (type) {
       LinkReferenceDefinition::class.java -> getLinkReferenceDefinition(label) as D
       else -> null

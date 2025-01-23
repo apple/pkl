@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
     packKeyValue("sha256", checksums.sha256)
   }
 
-  private fun MessagePacker.packExternalReader(spec: ExternalReader) {
+  private fun packExternalReader(spec: ExternalReader) {
     packMapHeader(1, spec.arguments)
     packKeyValue("executable", spec.executable)
     spec.arguments?.let { packKeyValue("arguments", it) }
@@ -141,7 +141,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           packer.packMapHeader(msg.externalModuleReaders.size)
           for ((scheme, spec) in msg.externalModuleReaders) {
             packer.packString(scheme)
-            packer.packExternalReader(spec)
+            packExternalReader(spec)
           }
         }
         if (msg.externalResourceReaders != null) {
@@ -149,7 +149,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           packer.packMapHeader(msg.externalResourceReaders.size)
           for ((scheme, spec) in msg.externalResourceReaders) {
             packer.packString(scheme)
-            packer.packExternalReader(spec)
+            packExternalReader(spec)
           }
         }
         return

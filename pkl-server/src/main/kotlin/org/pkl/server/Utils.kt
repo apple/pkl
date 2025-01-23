@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> =
     }
   }
 
+@Suppress("unused")
 internal fun encode(message: Message): ByteArray {
   return threadLocalEncoder.get()(message)
 }
@@ -60,6 +61,7 @@ internal fun encode(message: Message): ByteArray {
  *
  * [Future.get] will wrap any exception in [ExecutionException], which is kind of silly.
  */
+@Suppress("unused")
 fun <T> Future<T>.getUnderlying(): T =
   try {
     get()

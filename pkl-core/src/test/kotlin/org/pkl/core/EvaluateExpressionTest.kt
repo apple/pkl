@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.assertThrows
 
 class EvaluateExpressionTest {
   companion object {
-    val evaluator by lazy { Evaluator.preconfigured() }
+    private val evaluator by lazy { Evaluator.preconfigured() }
 
     @AfterAll
     @JvmStatic
@@ -64,7 +64,7 @@ class EvaluateExpressionTest {
       }
     """
           .trimIndent(),
-        "foo.bar"
+        "foo.bar",
       )
 
     assertThat(resp).isEqualTo(2L)
@@ -84,7 +84,7 @@ class EvaluateExpressionTest {
       }
     """
           .trimIndent(),
-        "output.text"
+        "output.text",
       )
 
     assertThat(result)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
 import kotlin.io.path.createFile
+import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers

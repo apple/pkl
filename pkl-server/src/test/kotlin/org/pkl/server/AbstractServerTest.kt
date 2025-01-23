@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ abstract class AbstractServerTest {
 
   companion object {
     /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
-    const val USE_DIRECT_TRANSPORT = false
+    internal const val USE_DIRECT_TRANSPORT = false
 
     val executor: ExecutorService =
       if (USE_DIRECT_TRANSPORT) {
@@ -77,7 +77,7 @@ abstract class AbstractServerTest {
         }
       """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -104,7 +104,7 @@ abstract class AbstractServerTest {
         foo = trace(1 + 2 + 3)
       """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -131,7 +131,7 @@ abstract class AbstractServerTest {
         result = foo()
       """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -153,7 +153,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = read("bahumbug:/foo.pkl").text""",
-        "res"
+        "res",
       )
     )
 
@@ -166,7 +166,7 @@ abstract class AbstractServerTest {
         readResourceMsg.requestId,
         evaluatorId,
         "my bahumbug".toByteArray(),
-        null
+        null,
       )
     )
 
@@ -192,7 +192,7 @@ abstract class AbstractServerTest {
         evaluatorId = evaluatorId,
         moduleUri = URI("repl:text"),
         moduleText = """res = read("bahumbug:/foo.pkl").text""",
-        expr = "res"
+        expr = "res",
       )
     )
 
@@ -225,7 +225,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = read("bahumbug:/foo.txt").text""",
-        "res"
+        "res",
       )
     )
 
@@ -236,7 +236,7 @@ abstract class AbstractServerTest {
         readResourceMsg.requestId,
         evaluatorId,
         byteArrayOf(),
-        "cannot read my bahumbug"
+        "cannot read my bahumbug",
       )
     )
 
@@ -258,7 +258,7 @@ abstract class AbstractServerTest {
         res = read*("bird:/**.txt").keys
       """
           .trimIndent(),
-        "res"
+        "res",
       )
     )
     val listResourcesRequest = client.receive<ListResourcesRequest>()
@@ -268,7 +268,7 @@ abstract class AbstractServerTest {
         listResourcesRequest.requestId,
         listResourcesRequest.evaluatorId,
         listOf(PathElement("foo.txt", false), PathElement("subdir", true)),
-        null
+        null,
       )
     )
     val listResourcesRequest2 = client.receive<ListResourcesRequest>()
@@ -277,10 +277,8 @@ abstract class AbstractServerTest {
       ListResourcesResponse(
         listResourcesRequest2.requestId,
         listResourcesRequest2.evaluatorId,
-        listOf(
-          PathElement("bar.txt", false),
-        ),
-        null
+        listOf(PathElement("bar.txt", false)),
+        null,
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
@@ -309,7 +307,7 @@ abstract class AbstractServerTest {
         res = read*("bird:/**.txt").keys
       """
           .trimIndent(),
-        "res"
+        "res",
       )
     )
     val listResourcesRequest = client.receive<ListResourcesRequest>()
@@ -318,7 +316,7 @@ abstract class AbstractServerTest {
         listResourcesRequest.requestId,
         listResourcesRequest.evaluatorId,
         null,
-        null
+        null,
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
@@ -345,7 +343,7 @@ abstract class AbstractServerTest {
         res = read*("bird:/**.txt").keys
       """
           .trimIndent(),
-        "res"
+        "res",
       )
     )
     val listResourcesRequest = client.receive<ListResourcesRequest>()
@@ -355,7 +353,7 @@ abstract class AbstractServerTest {
         listResourcesRequest.requestId,
         listResourcesRequest.evaluatorId,
         null,
-        "didnt work"
+        "didnt work",
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
@@ -390,7 +388,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = import("bird:/pigeon.pkl").value""",
-        "res"
+        "res",
       )
     )
 
@@ -418,7 +416,7 @@ abstract class AbstractServerTest {
         evaluatorId = evaluatorId,
         moduleUri = URI("repl:text"),
         moduleText = """res = import("bird:/pigeon.pkl")""",
-        expr = "res"
+        expr = "res",
       )
     )
 
@@ -448,7 +446,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = import("bird:/pigeon.pkl").value""",
-        "res"
+        "res",
       )
     )
 
@@ -475,7 +473,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = import*("bird:/**.pkl").keys""",
-        "res"
+        "res",
       )
     )
 
@@ -489,9 +487,9 @@ abstract class AbstractServerTest {
         listOf(
           PathElement("birds", true),
           PathElement("majesticBirds", true),
-          PathElement("Person.pkl", false)
+          PathElement("Person.pkl", false),
         ),
-        null
+        null,
       )
     )
     val listModulesMsg2 = client.receive<ListModulesRequest>()
@@ -501,11 +499,8 @@ abstract class AbstractServerTest {
       ListModulesResponse(
         listModulesMsg2.requestId,
         listModulesMsg2.evaluatorId,
-        listOf(
-          PathElement("pigeon.pkl", false),
-          PathElement("parrot.pkl", false),
-        ),
-        null
+        listOf(PathElement("pigeon.pkl", false), PathElement("parrot.pkl", false)),
+        null,
       )
     )
     val listModulesMsg3 = client.receive<ListModulesRequest>()
@@ -515,11 +510,8 @@ abstract class AbstractServerTest {
       ListModulesResponse(
         listModulesMsg3.requestId,
         listModulesMsg3.evaluatorId,
-        listOf(
-          PathElement("barnOwl.pkl", false),
-          PathElement("elfOwl.pkl", false),
-        ),
-        null
+        listOf(PathElement("barnOwl.pkl", false), PathElement("elfOwl.pkl", false)),
+        null,
       )
     )
 
@@ -550,7 +542,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = import*("bird:/**.pkl").keys""",
-        "res"
+        "res",
       )
     )
     val listModulesMsg = client.receive<ListModulesRequest>()
@@ -578,7 +570,7 @@ abstract class AbstractServerTest {
         evaluatorId,
         URI("repl:text"),
         """res = import*("bird:/**.pkl").keys""",
-        "res"
+        "res",
       )
     )
 
@@ -669,7 +661,7 @@ abstract class AbstractServerTest {
         res = buz.res
       """
           .trimIndent(),
-        "res"
+        "res",
       )
     )
     val readModuleRequest = client.receive<ReadModuleRequest>()
@@ -679,7 +671,7 @@ abstract class AbstractServerTest {
         readModuleRequest.requestId,
         readModuleRequest.evaluatorId,
         null,
-        "not here"
+        "not here",
       )
     )
 
@@ -690,7 +682,7 @@ abstract class AbstractServerTest {
         readModuleRequest2.requestId,
         readModuleRequest2.evaluatorId,
         "res = 1",
-        null
+        null,
       )
     )
 
@@ -714,15 +706,7 @@ abstract class AbstractServerTest {
     val reader = ModuleReaderSpec("bird", true, false, false)
     val evaluatorId = client.sendCreateEvaluatorRequest(moduleReaders = listOf(reader))
 
-    client.send(
-      EvaluateRequest(
-        1,
-        evaluatorId,
-        URI("bird:/pigeon.pkl"),
-        null,
-        "output.text",
-      )
-    )
+    client.send(EvaluateRequest(1, evaluatorId, URI("bird:/pigeon.pkl"), null, "output.text"))
 
     val readModuleRequest = client.receive<ReadModuleRequest>()
     assertThat(readModuleRequest.uri.toString()).isEqualTo("bird:/pigeon.pkl")
@@ -737,7 +721,7 @@ abstract class AbstractServerTest {
           fullName = firstName + " " + lastName
         """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -759,15 +743,7 @@ abstract class AbstractServerTest {
   fun `concurrent evaluations`() {
     val reader = ModuleReaderSpec("bird", true, false, false)
     val evaluatorId = client.sendCreateEvaluatorRequest(moduleReaders = listOf(reader))
-    client.send(
-      EvaluateRequest(
-        1,
-        evaluatorId,
-        URI("bird:/pigeon.pkl"),
-        null,
-        "output.text",
-      )
-    )
+    client.send(EvaluateRequest(1, evaluatorId, URI("bird:/pigeon.pkl"), null, "output.text"))
 
     client.send(EvaluateRequest(2, evaluatorId, URI("bird:/parrot.pkl"), null, "output.text"))
 
@@ -785,7 +761,7 @@ abstract class AbstractServerTest {
           fullName = firstName + " " + lastName
         """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -815,7 +791,7 @@ abstract class AbstractServerTest {
           fullName = firstName + " " + lastName
         """
           .trimIndent(),
-        null
+        null,
       )
     )
 
@@ -923,20 +899,12 @@ abstract class AbstractServerTest {
                 Project(
                   libDir.toUri().resolve("PklProject"),
                   URI("package://localhost:0/lib@5.0.0"),
-                  emptyMap()
-                )
-            )
-          )
+                  emptyMap(),
+                ),
+            ),
+          ),
       )
-    client.send(
-      EvaluateRequest(
-        1,
-        evaluatorId,
-        module.toUri(),
-        null,
-        "output.text",
-      )
-    )
+    client.send(EvaluateRequest(1, evaluatorId, module.toUri(), null, "output.text"))
     val resp2 = client.receive<EvaluateResponse>()
     assertThat(resp2.error).isNull()
     assertThat(resp2.result).isNotNull()
@@ -987,7 +955,7 @@ abstract class AbstractServerTest {
         project,
         http,
         null,
-        null
+        null,
       )
 
     send(message)

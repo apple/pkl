@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.test.ReflectionUtils.enumValues
 import org.pkl.core.*
 import org.pkl.core.util.IoUtils
 
@@ -67,7 +68,7 @@ class KotlinCodeGeneratorTest {
         "do",
         "when",
         "interface",
-        "typeof"
+        "typeof",
       )
 
     private val simpleClass: KClass<*> by lazy {
@@ -139,7 +140,7 @@ class KotlinCodeGeneratorTest {
       pklCode: String,
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
-      implementSerializable: Boolean = false
+      implementSerializable: Boolean = false,
     ): KotlinSourceCode {
 
       val module = Evaluator.preconfigured().evaluateSchema(ModuleSource.text(pklCode))
@@ -150,8 +151,8 @@ class KotlinCodeGeneratorTest {
           KotlinCodeGeneratorOptions(
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
-            implementSerializable = implementSerializable
-          )
+            implementSerializable = implementSerializable,
+          ),
         )
       return KotlinSourceCode(generator.kotlinFile)
     }
@@ -435,7 +436,7 @@ class KotlinCodeGeneratorTest {
         "digit-1" to "DIGIT_1",
         "42" to "_42",
         "àœü" to "ÀŒÜ",
-        "日本-つくば" to "日本_つくば"
+        "日本-つくば" to "日本_つくば",
       )
     val kotlinCode =
       generateKotlinCode(
@@ -445,27 +446,16 @@ class KotlinCodeGeneratorTest {
     """
           .trimIndent()
       )
-    val kotlinClass = kotlinCode.compile().getValue("MyTypeAlias").java
+    val kotlinClass = kotlinCode.compile().getValue("MyTypeAlias")
 
-    assertThat(kotlinClass.enumConstants.size)
+    assertThat(kotlinClass.enumValues().size)
       .isEqualTo(cases.size) // make sure zip doesn't drop cases
 
     assertAll(
-      "generated enum constants have correct names",
-      kotlinClass.declaredFields.zip(cases) { field, (_, kotlinName) ->
+      kotlinClass.enumValues().zip(cases) { enumValue, (pklName, kotlinName) ->
         {
-          assertThat(field.name).isEqualTo(kotlinName)
-          Unit
-        }
-      }
-    )
-
-    assertAll(
-      "toString() returns Pkl name",
-      kotlinClass.enumConstants.zip(cases) { enumConstant, (pklName, _) ->
-        {
-          assertThat(enumConstant.toString()).isEqualTo(pklName)
-          Unit
+          assertThat(enumValue.name).isEqualTo(kotlinName)
+          assertThat(enumValue.toString()).isEqualTo(pklName)
         }
       }
     )
@@ -1048,7 +1038,7 @@ class KotlinCodeGeneratorTest {
       typealias Email = String(contains("@"))
     """
           .trimIndent(),
-        generateKdoc = true
+        generateKdoc = true,
       )
 
     assertThat(kotlinCode).compilesSuccessfully().isEqualToResourceFile("Kdoc.kotlin")
@@ -1066,7 +1056,7 @@ class KotlinCodeGeneratorTest {
       class Product
     """
           .trimIndent(),
-        generateKdoc = true
+        generateKdoc = true,
       )
 
     assertThat(kotlinCode)
@@ -1428,7 +1418,7 @@ class KotlinCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        generateSpringBootConfig = true
+        generateSpringBootConfig = true,
       )
 
     assertThat(kotlinCode)
@@ -1470,7 +1460,7 @@ class KotlinCodeGeneratorTest {
           
           pigeon: Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val client =
@@ -1485,7 +1475,7 @@ class KotlinCodeGeneratorTest {
           
           parrot: library.Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val kotlinSourceFiles = generateFiles(library, client)
@@ -1520,7 +1510,7 @@ class KotlinCodeGeneratorTest {
     
           pigeon: Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val derived =
@@ -1535,7 +1525,7 @@ class KotlinCodeGeneratorTest {
           person1: Person
           person2: Person2
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val kotlinSourceFiles = generateFiles(base, derived)
@@ -1584,7 +1574,7 @@ class KotlinCodeGeneratorTest {
     
           typealias Version = "LATEST"|String
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val moduleTwo =
@@ -1597,7 +1587,7 @@ class KotlinCodeGeneratorTest {
           
           v: Version = "1.2.3"
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val kotlinSourceFiles = generateFiles(moduleOne, moduleTwo)
@@ -1638,7 +1628,7 @@ class KotlinCodeGeneratorTest {
             prop: Int
           }
         """
-          .trimIndent()
+          .trimIndent(),
       )
     val generated = generateFiles(pklModule)
     val expectedPropertyFile =
@@ -1692,7 +1682,7 @@ class KotlinCodeGeneratorTest {
       abstract class NotSerializable
     """
           .trimIndent(),
-        implementSerializable = true
+        implementSerializable = true,
       )
 
     assertThat(kotlinCode)
@@ -1731,7 +1721,7 @@ class KotlinCodeGeneratorTest {
         smallStruct,
         Regex("(i?)\\w*"),
         smallStruct,
-        enumValue
+        enumValue,
       )
 
     fun confirmSerDe(instance: Any) {
@@ -1777,7 +1767,7 @@ class KotlinCodeGeneratorTest {
           street: String
         }
       """,
-        implementSerializable = true
+        implementSerializable = true,
       )
 
     assertThat(kotlinCode)
@@ -1814,7 +1804,7 @@ class KotlinCodeGeneratorTest {
             
             someProp: String
           """
-            .trimIndent()
+            .trimIndent(),
         )
       )
     assertThat(kotlinCode).containsKey("kotlin/Foo(2a)Bar.kt")
@@ -1840,7 +1830,7 @@ class KotlinCodeGeneratorTest {
               
               bar: Int = 123
             """
-              .trimIndent()
+              .trimIndent(),
         )
         .toMutableMap()
 
@@ -1882,7 +1872,7 @@ class KotlinCodeGeneratorTest {
               
               baz: String
             """
-              .trimIndent()
+              .trimIndent(),
         )
         .toMutableMap()
 
@@ -1897,7 +1887,7 @@ class KotlinCodeGeneratorTest {
       // ---
       "kotlin/w/org/baz/Module3.kt" to listOf("package w.org.baz", "data class Module3("),
       "$MAPPER_PREFIX/org.baz.Module3.properties" to
-        listOf("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3")
+        listOf("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3"),
     )
   }
 
@@ -1909,7 +1899,7 @@ class KotlinCodeGeneratorTest {
             mapOf(
               "org.foo" to "com.foo.x",
               "org.bar.Module2" to "org.bar.RenamedModule",
-              "org.baz" to "com.baz.a.b"
+              "org.baz" to "com.baz.a.b",
             )
         )
         .generateFiles(
@@ -1944,7 +1934,7 @@ class KotlinCodeGeneratorTest {
                 owner: Module2.Group
               }
             """
-              .trimIndent()
+              .trimIndent(),
         )
 
     files.validateContents(
@@ -1961,7 +1951,7 @@ class KotlinCodeGeneratorTest {
           "package org.bar",
           "import com.foo.x.Module1",
           "object RenamedModule {",
-          "val owner: Module1.Person"
+          "val owner: Module1.Person",
         ),
       "$MAPPER_PREFIX/org.bar.Module2.properties" to
         listOf(
@@ -1974,7 +1964,7 @@ class KotlinCodeGeneratorTest {
           "package com.baz.a.b",
           "import org.bar.RenamedModule",
           "object Module3 {",
-          "val owner: RenamedModule.Group"
+          "val owner: RenamedModule.Group",
         ),
       "$MAPPER_PREFIX/org.baz.Module3.properties" to
         listOf(
@@ -2004,7 +1994,7 @@ class KotlinCodeGeneratorTest {
               
               bar: Int = 123
             """
-              .trimIndent()
+              .trimIndent(),
         )
 
     files.validateContents(
@@ -2087,7 +2077,7 @@ class KotlinCodeGeneratorTest {
         Regex("(i?)\\w*"),
         other,
         other,
-        enumValue
+        enumValue,
       )
 
     return other to propertyTypes
@@ -2099,7 +2089,7 @@ class KotlinCodeGeneratorTest {
   private class KotlinSourceCodeAssert(actual: KotlinSourceCode) :
     AbstractAssert<KotlinSourceCodeAssert, KotlinSourceCode>(
       actual,
-      KotlinSourceCodeAssert::class.java
+      KotlinSourceCodeAssert::class.java,
     ) {
     fun contains(expected: String): KotlinSourceCodeAssert {
       if (!actual.text.contains(expected)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.pkl.core.packages.PackageUri
 
 class CliPackageDownloaderTest {
   companion object {
-    val server = PackageServer()
+    private val server = PackageServer()
 
     @AfterAll
     @JvmStatic
@@ -45,15 +45,15 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris =
           listOf(
             PackageUri("package://localhost:0/birds@0.5.0"),
             PackageUri("package://localhost:0/fruit@1.0.5"),
-            PackageUri("package://localhost:0/fruit@1.1.0")
+            PackageUri("package://localhost:0/fruit@1.1.0"),
           ),
-        noTransitive = true
+        noTransitive = true,
       )
     cmd.run()
     assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()
@@ -75,7 +75,7 @@ class CliPackageDownloaderTest {
         moduleCacheDir = ".my-cache"
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val cmd =
@@ -84,10 +84,10 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             workingDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
-        noTransitive = true
+        noTransitive = true,
       )
     cmd.run()
     assertThat(tempDir.resolve(".my-cache/package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip"))
@@ -104,13 +104,13 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris =
           listOf(
-            PackageUri("package://localhost:0/birds@0.5.0::sha256:${PackageServer.BIRDS_SHA}"),
+            PackageUri("package://localhost:0/birds@0.5.0::sha256:${PackageServer.BIRDS_SHA}")
           ),
-        noTransitive = true
+        noTransitive = true,
       )
     cmd.run()
     assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()
@@ -125,13 +125,13 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris =
           listOf(
-            PackageUri("package://localhost:0/birds@0.5.0::sha256:intentionallyBogusChecksum"),
+            PackageUri("package://localhost:0/birds@0.5.0::sha256:intentionallyBogusChecksum")
           ),
-        noTransitive = true
+        noTransitive = true,
       )
     assertThatCode { cmd.run() }
       .hasMessage(
@@ -152,7 +152,7 @@ class CliPackageDownloaderTest {
       CliPackageDownloader(
         baseOptions = CliBaseOptions(workingDir = tempDir, noCache = true),
         packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
-        noTransitive = true
+        noTransitive = true,
       )
     assertThatCode { cmd.run() }
       .hasMessage("Cannot download packages because no cache directory is specified.")
@@ -166,10 +166,10 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/badChecksum@1.0.0")),
-        noTransitive = true
+        noTransitive = true,
       )
     assertThatCode { cmd.run() }
       .hasMessageStartingWith(
@@ -185,14 +185,14 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris =
           listOf(
             PackageUri("package://localhost:0/badChecksum@1.0.0"),
-            PackageUri("package://bogus.domain/notAPackage@1.0.0")
+            PackageUri("package://bogus.domain/notAPackage@1.0.0"),
           ),
-        noTransitive = true
+        noTransitive = true,
       )
     assertThatCode { cmd.run() }
       .hasMessage(
@@ -222,10 +222,10 @@ class CliPackageDownloaderTest {
           CliBaseOptions(
             moduleCacheDir = tempDir,
             caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-            testPort = server.port
+            testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
-        noTransitive = false
+        noTransitive = false,
       )
       .run()
     assertThat(tempDir.resolve("package-2/localhost(3a)0/birds@0.5.0/birds@0.5.0.zip")).exists()

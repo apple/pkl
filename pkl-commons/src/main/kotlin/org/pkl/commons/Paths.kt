@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,6 @@ import java.nio.charset.Charset
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 import java.util.stream.Stream
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteIfExists
-import kotlin.io.path.exists
-import kotlin.io.path.isSymbolicLink
 
 // not stored to avoid build-time initialization by native-image
 val currentWorkingDir: Path
@@ -40,37 +36,20 @@ fun Path.walk(maxDepth: Int = Int.MAX_VALUE, vararg options: FileVisitOption): S
 fun Path.createTempFile(
   prefix: String? = null,
   suffix: String? = null,
-  vararg attributes: FileAttribute<*>
+  vararg attributes: FileAttribute<*>,
 ): Path = Files.createTempFile(this, prefix, suffix, *attributes)
-
-@Throws(IOException::class)
-fun Path.createParentDirectories(vararg attributes: FileAttribute<*>): Path = apply {
-  // Files.createDirectories will throw a FileAlreadyExistsException
-  // if the file exists and is not a directory and symlinks are never
-  // directories
-  if (parent?.isSymbolicLink() != true) {
-    parent?.createDirectories(*attributes)
-  }
-}
 
 /** [Files.writeString] seems more efficient than [kotlin.io.path.writeText]. */
 @Throws(IOException::class)
 fun Path.writeString(
   text: String,
   charset: Charset = Charsets.UTF_8,
-  vararg options: OpenOption
+  vararg options: OpenOption,
 ): Path = Files.writeString(this, text, charset, *options)
 
 /** [Files.readString] seems more efficient than [kotlin.io.path.readText]. */
 @Throws(IOException::class)
 fun Path.readString(charset: Charset = Charsets.UTF_8): String = Files.readString(this, charset)
-
-@Throws(IOException::class)
-fun Path.deleteRecursively() {
-  if (exists()) {
-    walk().use { paths -> paths.sorted(Comparator.reverseOrder()).forEach { it.deleteIfExists() } }
-  }
-}
 
 private val isWindows by lazy { System.getProperty("os.name").contains("Windows") }
 

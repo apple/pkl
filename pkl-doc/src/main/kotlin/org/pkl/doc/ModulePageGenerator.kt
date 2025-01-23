@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ internal class ModulePageGenerator(
   docPackage: DocPackage,
   docModule: DocModule,
   pageScope: ModuleScope,
-  isTestMode: Boolean
+  isTestMode: Boolean,
 ) :
   ModuleOrClassPageGenerator<ModuleScope>(
     docsiteInfo,
     docModule,
     docModule.schema.moduleClass,
     pageScope,
-    isTestMode
+    isTestMode,
   ) {
   private val module = docModule.schema
 
@@ -61,7 +61,7 @@ internal class ModulePageGenerator(
             pageScope,
             clazz.annotations,
             isDeclaration = true,
-            collectMemberInfo(docModule)
+            collectMemberInfo(docModule),
           )
 
         renderMemberGroupLinks(
@@ -69,7 +69,7 @@ internal class ModulePageGenerator(
           Triple("Properties", "#_properties", clazz.hasListedProperty),
           Triple("Methods", "#_methods", clazz.hasListedMethod),
           Triple("Classes", "#_classes", module.hasListedClass),
-          Triple("Type Aliases", "#_type-aliases", module.hasListedTypeAlias)
+          Triple("Type Aliases", "#_type-aliases", module.hasListedTypeAlias),
         )
 
         renderAnchor("_overview")
@@ -234,13 +234,12 @@ internal class ModulePageGenerator(
                     "inherited",
                     "expandable",
                     "hidden",
-                    "collapsed"
+                    "collapsed",
                   )
                 } else setOf("member", "with-page-link")
 
               val classScope = ClassScope(clazz, pageScope.url, pageScope)
-              val memberDocs =
-                MemberDocs(clazz.docComment, classScope, clazz.annotations, isDeclaration = false)
+              val memberDocs = MemberDocs(clazz.docComment, classScope, clazz.annotations)
 
               memberDocs.renderExpandIcon(this)
               renderSelfLink(className)

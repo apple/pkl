@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.outputStream
-import org.pkl.commons.createParentDirectories
 import org.pkl.core.*
 import org.pkl.core.parser.Lexer
 import org.pkl.core.util.IoUtils
@@ -62,7 +62,7 @@ internal val List<PObject>.isUnlisted: Boolean
 internal val List<PObject>.deprecation: String?
   get() = find { it.classInfo == PClassInfo.Deprecated }?.get("message") as String?
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "unused")
 internal val List<PObject>.alsoKnownAs: List<String>?
   get() = find { it.classInfo == PClassInfo.AlsoKnownAs }?.get("names") as List<String>?
 
@@ -111,7 +111,7 @@ internal inline fun JsonWriter.array(body: JsonWriter.() -> Unit) {
 
 internal fun String.replaceSourceCodePlaceholders(
   path: String,
-  sourceLocation: Member.SourceLocation
+  sourceLocation: Member.SourceLocation,
 ): String {
   return replace("%{path}", path)
     .replace("%{line}", sourceLocation.startLine().toString())

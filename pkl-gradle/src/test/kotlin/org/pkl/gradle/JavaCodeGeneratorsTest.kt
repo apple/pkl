@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     val baseDir = testProjectDir.resolve("build/generated/java/foo/bar")
     val moduleFile = baseDir.resolve("Mod.java")
 
-    assertThat(baseDir.listDirectoryEntries().count()).isEqualTo(1)
+    assertThat(baseDir.listDirectoryEntries().size).isEqualTo(1)
     assertThat(moduleFile).exists()
 
     val text = moduleFile.readText()
@@ -44,7 +44,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       """
       |public final class Mod {
       |  public final @Nonnull Object other;
-    """
+    """,
     )
 
     checkTextContains(
@@ -54,7 +54,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       |    public final @Nonnull String name;
       |
       |    public final @Nonnull List<Address> addresses;
-    """
+    """,
     )
 
     checkTextContains(
@@ -64,7 +64,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       |    public final @Nonnull String street;
       |
       |    public final long zip;
-    """
+    """,
     )
   }
 
@@ -100,7 +100,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     val result = runTask("evalTest", true)
@@ -139,7 +139,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
   }
 
@@ -160,7 +160,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
         }
   
         other = 42
-      """
+      """,
     )
   }
 }

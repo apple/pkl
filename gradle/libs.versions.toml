@@ -29,13 +29,11 @@ jmh = "1.+"
 jmhPlugin = "0.7.2"
 jsr305 = "3.+"
 junit = "5.+"
-kotlin = "1.7.10"
+kotlin = "2.0.21"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
-# freeze until updating Kotlin version
-kotlinxHtml = "0.8.1"
-# freeze until updating Kotlin version
-kotlinxSerialization = "1.5.1"
+kotlinxHtml = "0.11.0"
+kotlinxSerialization = "1.8.0"
 ktfmt = "0.53"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
@@ -77,8 +75,7 @@ kotlinCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-comp
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
-kotlinScriptingCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-compiler-embeddable", version.ref = "kotlin" }
-kotlinScriptUtil = { group = "org.jetbrains.kotlin", name = "kotlin-script-util", version.ref = "kotlin" }
+kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlin" }
 kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }

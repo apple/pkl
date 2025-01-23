@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ package org.pkl.core
 
 import java.net.URI
 import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.http.HttpClient
@@ -36,7 +36,7 @@ class AnalyzerTest {
       listOf(ModuleKeyFactories.file, ModuleKeyFactories.standardLibrary, ModuleKeyFactories.pkg),
       null,
       null,
-      HttpClient.dummyClient()
+      HttpClient.dummyClient(),
     )
 
   @Test
@@ -62,8 +62,8 @@ class AnalyzerTest {
         setOf(
           ImportGraph.Import(URI("pkl:base")),
           ImportGraph.Import(URI("pkl:json")),
-          ImportGraph.Import(URI("pkl:xml"))
-        )
+          ImportGraph.Import(URI("pkl:xml")),
+        ),
       )
   }
 
@@ -88,8 +88,8 @@ class AnalyzerTest {
           file1 to
             setOf(ImportGraph.Import(file1), ImportGraph.Import(file2), ImportGraph.Import(file3)),
           file2 to emptySet(),
-          file3 to emptySet()
-        ),
+          file3 to emptySet(),
+        )
       )
   }
 
@@ -129,7 +129,7 @@ class AnalyzerTest {
           file1 to setOf(ImportGraph.Import(URI("package://localhost:0/birds@0.5.0#/Bird.pkl"))),
           URI("package://localhost:0/birds@0.5.0#/Bird.pkl") to
             setOf(ImportGraph.Import(URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl"))),
-          URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet()
+          URI("package://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet(),
         )
       )
   }
@@ -185,11 +185,11 @@ class AnalyzerTest {
           ModuleKeyFactories.file,
           ModuleKeyFactories.standardLibrary,
           ModuleKeyFactories.pkg,
-          ModuleKeyFactories.projectpackage
+          ModuleKeyFactories.projectpackage,
         ),
         tempDir.resolve("packages"),
         project.dependencies,
-        HttpClient.dummyClient()
+        HttpClient.dummyClient(),
       )
     val file1 =
       tempDir
@@ -209,7 +209,7 @@ class AnalyzerTest {
             setOf(ImportGraph.Import(URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl"))),
           URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl") to
             setOf(ImportGraph.Import(URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl"))),
-          URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet()
+          URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl") to emptySet(),
         )
       )
     assertThat(result.resolvedImports)
@@ -219,7 +219,7 @@ class AnalyzerTest {
           URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl") to
             URI("projectpackage://localhost:0/birds@0.5.0#/Bird.pkl"),
           URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl") to
-            URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl")
+            URI("projectpackage://localhost:0/fruit@1.0.5#/Fruit.pkl"),
         )
       )
   }
@@ -297,23 +297,23 @@ class AnalyzerTest {
           ModuleKeyFactories.file,
           ModuleKeyFactories.standardLibrary,
           ModuleKeyFactories.pkg,
-          ModuleKeyFactories.projectpackage
+          ModuleKeyFactories.projectpackage,
         ),
         tempDir.resolve("packages"),
         project.dependencies,
-        HttpClient.dummyClient()
+        HttpClient.dummyClient(),
       )
     val result = analyzer.importGraph(mainPkl.toUri())
     val birdUri = URI("projectpackage://localhost:0/birds@1.0.0#/bird.pkl")
     assertThat(result.imports)
       .isEqualTo(
-        mapOf(mainPkl.toUri() to setOf(ImportGraph.Import(birdUri)), birdUri to emptySet()),
+        mapOf(mainPkl.toUri() to setOf(ImportGraph.Import(birdUri)), birdUri to emptySet())
       )
     assertThat(result.resolvedImports)
       .isEqualTo(
         mapOf(
           mainPkl.toUri() to mainPkl.toRealPath().toUri(),
-          birdUri to birdModule.toRealPath().toUri()
+          birdUri to birdModule.toRealPath().toUri(),
         )
       )
   }

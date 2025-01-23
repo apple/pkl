@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ internal abstract class JLineFileNameCompleter : Completer {
   override fun complete(
     reader: LineReader,
     commandLine: ParsedLine,
-    candidates: MutableList<Candidate>
+    candidates: MutableList<Candidate>,
   ) {
     val buffer = commandLine.word().substring(0, commandLine.wordCursor())
     val current: Path
@@ -78,7 +78,7 @@ internal abstract class JLineFileNameCompleter : Completer {
                     null,
                     if (reader.isSet(LineReader.Option.AUTO_REMOVE_SLASH)) sep else null,
                     null,
-                    false
+                    false,
                   )
                 )
               } else {
@@ -90,7 +90,7 @@ internal abstract class JLineFileNameCompleter : Completer {
                     null,
                     null,
                     null,
-                    true
+                    true,
                   )
                 )
               }
@@ -122,7 +122,7 @@ internal abstract class JLineFileNameCompleter : Completer {
     terminal: Terminal,
     path: Path,
     resolver: StyleResolver,
-    separator: String
+    separator: String,
   ): String {
     val builder = AttributedStringBuilder()
     val name = path.fileName.toString()
@@ -162,7 +162,7 @@ internal class FileCompleter(override val userDir: Path) : JLineFileNameComplete
   override fun complete(
     reader: LineReader,
     commandLine: ParsedLine,
-    candidates: MutableList<Candidate>
+    candidates: MutableList<Candidate>,
   ) {
     val loadCmd =
       getMatchingCommands(commandLine.line()).find { it.type == Command.Load && it.ws.isNotEmpty() }
@@ -174,7 +174,7 @@ internal class FileCompleter(override val userDir: Path) : JLineFileNameComplete
 
 internal object CommandCompleter : Completer {
   private val commandCandidates: List<Candidate> =
-    Command.values().map { Candidate(":" + it.toString().lowercase()) }
+    Command.entries.map { Candidate(":" + it.toString().lowercase()) }
 
   override fun complete(reader: LineReader, line: ParsedLine, candidates: MutableList<Candidate>) {
     if (line.wordIndex() == 0) candidates.addAll(commandCandidates)

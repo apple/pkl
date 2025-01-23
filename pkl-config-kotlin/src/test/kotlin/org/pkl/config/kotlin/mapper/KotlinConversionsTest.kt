@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,19 +42,19 @@ class KotlinConversionsTest {
 
   @Test
   fun pIntToULong() {
-    assertThat(KotlinConversions.pIntToULong.converter.convert(0, mapper)).isEqualTo(0UL)
+    assertThat(KotlinConversions.pIntToULong.converter.convert(0L, mapper)).isEqualTo(0UL)
 
     assertThat(KotlinConversions.pIntToULong.converter.convert(Long.MAX_VALUE, mapper))
       .isEqualTo(Long.MAX_VALUE.toULong())
 
     assertThrows<ConversionException> {
-      KotlinConversions.pIntToULong.converter.convert(-1, mapper)
+      KotlinConversions.pIntToULong.converter.convert(-1L, mapper)
     }
   }
 
   @Test
   fun pIntToUInt() {
-    assertThat(KotlinConversions.pIntToUInt.converter.convert(0, mapper)).isEqualTo(0u)
+    assertThat(KotlinConversions.pIntToUInt.converter.convert(0L, mapper)).isEqualTo(0u)
 
     assertThat(KotlinConversions.pIntToUInt.converter.convert(UInt.MAX_VALUE.toLong(), mapper))
       .isEqualTo(UInt.MAX_VALUE)
@@ -63,12 +63,14 @@ class KotlinConversionsTest {
       KotlinConversions.pIntToUInt.converter.convert(UInt.MAX_VALUE.toLong() + 1, mapper)
     }
 
-    assertThrows<ConversionException> { KotlinConversions.pIntToUInt.converter.convert(-1, mapper) }
+    assertThrows<ConversionException> {
+      KotlinConversions.pIntToUInt.converter.convert(-1L, mapper)
+    }
   }
 
   @Test
   fun pIntToUShort() {
-    assertThat(KotlinConversions.pIntToUShort.converter.convert(0, mapper)).isEqualTo(0.toUShort())
+    assertThat(KotlinConversions.pIntToUShort.converter.convert(0L, mapper)).isEqualTo(0.toUShort())
 
     assertThat(KotlinConversions.pIntToUShort.converter.convert(UShort.MAX_VALUE.toLong(), mapper))
       .isEqualTo(UShort.MAX_VALUE)
@@ -78,7 +80,7 @@ class KotlinConversionsTest {
     }
 
     assertThrows<ConversionException> {
-      KotlinConversions.pIntToUShort.converter.convert(-1, mapper)
+      KotlinConversions.pIntToUShort.converter.convert(-1L, mapper)
     }
   }
 }

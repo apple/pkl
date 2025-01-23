@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,15 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  */
 inline fun <reified T> Config.to(): T {
   val javaType = object : JavaType<T>() {}
-  val result = `as`<T>(javaType.type)
+  // `as T?` may no longer be required after switching to JSpecify
+  val result = `as`<T>(javaType.type) as T?
   if (result == null && null !is T) {
     throw ConversionException(
       "Expected a non-null value but got `null`. " +
         "To allow null values, convert to a nullable Kotlin type, for example `String?`."
     )
   }
-  return result
+  return result as T
 }
 
 /**

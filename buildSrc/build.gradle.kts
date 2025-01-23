@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins { `kotlin-dsl` }
 
 dependencies {
@@ -31,4 +33,4 @@ java {
   targetCompatibility = JavaVersion.VERSION_17
 }
 
-kotlin { target { compilations.configureEach { kotlinOptions { jvmTarget = "17" } } } }
+kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }
