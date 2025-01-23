@@ -53,7 +53,13 @@ sourceSets {
   test {
     // Remove Gradle distribution JARs from test compile classpath.
     // This prevents a conflict between Gradle's and Pkl's Kotlin versions.
-    compileClasspath = compileClasspath.filter { !(it.path.contains("dists")) }
+    //
+    // For some reason, IntelliJ import turns pklCommonsTest into a runtime dependency
+    // if `compileClasspath` is filtered, causing "unresolved reference" errors in IntelliJ.
+    // As a workaround, don't perform filtering for IntelliJ (import).
+    if (System.getProperty("idea.sync.active") == null) {
+      compileClasspath = compileClasspath.filter { !(it.path.contains("dists")) }
+    }
   }
 }
 
