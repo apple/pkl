@@ -15,7 +15,81 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public record Annotation(QualifiedIdent name, @Nullable ObjectBody body, Span span) {}
+public class Annotation implements Node {
+  private final QualifiedIdent name;
+  private final @Nullable ObjectBody body;
+  private final Span span;
+  private Node parent;
+
+  public Annotation(QualifiedIdent name, @Nullable ObjectBody body, Span span) {
+    this.name = name;
+    this.body = body;
+    this.span = span;
+
+    name.setParent(this);
+    if (body != null) {
+      body.setParent(this);
+    }
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public QualifiedIdent getName() {
+    return name;
+  }
+
+  public @Nullable ObjectBody getBody() {
+    return body;
+  }
+
+  @Override
+  public String toString() {
+    return "Annotation{"
+        + "name="
+        + name
+        + ", body="
+        + body
+        + ", span="
+        + span
+        + ", parent="
+        + parent
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Annotation that = (Annotation) o;
+    return Objects.equals(name, that.name)
+        && Objects.equals(body, that.body)
+        && Objects.equals(span, that.span)
+        && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, body, span, parent);
+  }
+}

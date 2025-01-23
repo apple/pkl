@@ -15,9 +15,61 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public record Modifier(ModifierValue value, Span span) {
+public final class Modifier implements Node {
+  private final ModifierValue value;
+  private final Span span;
+  private Node parent;
+
+  public Modifier(ModifierValue value, Span span) {
+    this.value = value;
+    this.span = span;
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public ModifierValue getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return "Modifier{" + "value=" + value + ", span=" + span + ", parent=" + parent + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Modifier modifier = (Modifier) o;
+    return value == modifier.value
+        && Objects.equals(span, modifier.span)
+        && Objects.equals(parent, modifier.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value, span, parent);
+  }
 
   public enum ModifierValue {
     EXTERNAL,

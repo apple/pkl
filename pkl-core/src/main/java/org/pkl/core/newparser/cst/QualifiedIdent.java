@@ -16,12 +16,65 @@
 package org.pkl.core.newparser.cst;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.pkl.core.newparser.Span;
 
-public record QualifiedIdent(List<Ident> idents) {
+public final class QualifiedIdent implements Node {
+  private final List<Ident> idents;
+  private Node parent;
+
+  public QualifiedIdent(List<Ident> idents) {
+    this.idents = idents;
+
+    for (var ident : idents) {
+      ident.setParent(this);
+    }
+  }
+
   public Span span() {
     var start = idents.get(0).span();
     var end = idents.get(idents.size() - 1).span();
     return start.endWith(end);
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public List<Ident> getIdents() {
+    return idents;
+  }
+
+  public String text() {
+    return idents.stream().map(Ident::getValue).collect(Collectors.joining("."));
+  }
+
+  @Override
+  public String toString() {
+    return "QualifiedIdent{" + "idents=" + idents + ", parent=" + parent + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    QualifiedIdent that = (QualifiedIdent) o;
+    return Objects.equals(idents, that.idents) && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(idents, parent);
   }
 }

@@ -236,7 +236,7 @@ public class Parser {
         ident,
         typePars,
         type,
-        startSpan.endWith(type.getSpan()));
+        startSpan.endWith(type.span()));
   }
 
   private Clazz parseClass(EntryHeader header) {
@@ -323,7 +323,7 @@ public class Parser {
           name,
           type,
           expr,
-          start.endWith(expr.getSpan()));
+          start.endWith(expr.span()));
     }
     if (!bodies.isEmpty()) {
       return new ClassEntry.ClassPropertyBody(
@@ -343,7 +343,7 @@ public class Parser {
         header.modifiers,
         name,
         type,
-        start.endWith(type.getSpan()));
+        start.endWith(type.span()));
   }
 
   private ClassEntry.ClassMethod parseClassMethod(EntryHeader header) {
@@ -367,13 +367,13 @@ public class Parser {
     if (lookahead == Token.COLON) {
       next();
       type = parseType();
-      end = type.getSpan();
+      end = type.span();
     }
     Expr expr = null;
     if (lookahead == Token.ASSIGN) {
       next();
       expr = parseExpr();
-      end = expr.getSpan();
+      end = expr.span();
     }
     return new ClassEntry.ClassMethod(
         header.docComment,
@@ -429,7 +429,7 @@ public class Parser {
           var expr = parseExpr();
           members.add(
               new ObjectMember.ObjectProperty(
-                  new ArrayList<>(), ident, type, expr, ident.span().endWith(expr.getSpan())));
+                  new ArrayList<>(), ident, type, expr, ident.span().endWith(expr.span())));
         }
       } else {
         // member
@@ -484,7 +484,7 @@ public class Parser {
 
   private ObjectMember.ObjectElement parseObjectElement() {
     var expr = parseExpr();
-    return new ObjectMember.ObjectElement(expr, expr.getSpan());
+    return new ObjectMember.ObjectElement(expr, expr.span());
   }
 
   private ObjectMember parseObjectProperty(@Nullable List<Modifier> modifiers) {
@@ -503,7 +503,7 @@ public class Parser {
       expect(Token.ASSIGN, "Expected `=`");
       var expr = parseExpr();
       return new ObjectMember.ObjectProperty(
-          allModifiers, ident, type, expr, start.endWith(expr.getSpan()));
+          allModifiers, ident, type, expr, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
@@ -534,7 +534,7 @@ public class Parser {
     expect(Token.ASSIGN, "Expected `=`");
     var expr = parseExpr();
     return new ObjectMember.ObjectMethod(
-        modifiers, ident, params, args, type, expr, start.endWith(expr.getSpan()));
+        modifiers, ident, params, args, type, expr, start.endWith(expr.span()));
   }
 
   private ObjectMember parseMemberPredicate() {
@@ -545,7 +545,7 @@ public class Parser {
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr();
-      return new ObjectMember.MemberPredicate(pred, expr, start.endWith(expr.getSpan()));
+      return new ObjectMember.MemberPredicate(pred, expr, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
@@ -559,7 +559,7 @@ public class Parser {
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr();
-      return new ObjectMember.ObjectEntry(key, expr, start.endWith(expr.getSpan()));
+      return new ObjectMember.ObjectEntry(key, expr, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
@@ -573,7 +573,7 @@ public class Parser {
     var peek = next();
     boolean isNullable = peek.token == Token.QSPREAD;
     var expr = parseExpr();
-    return new ObjectMember.ObjectSpread(expr, isNullable, peek.span.endWith(expr.getSpan()));
+    return new ObjectMember.ObjectSpread(expr, isNullable, peek.span.endWith(expr.span()));
   }
 
   private ObjectMember.WhenGenerator parseWhenGenerator() {
@@ -645,7 +645,7 @@ public class Parser {
           var args = argsPair != null ? argsPair.getFirst() : null;
           exprs.add(
               new Expr.QualifiedAccess(
-                  expr, ident, isNullable, args, expr.getSpan().endWith(lastSpan)));
+                  expr, ident, isNullable, args, expr.span().endWith(lastSpan)));
         }
         default -> {
           exprs.add(new OperatorExpr(op, next().span));
@@ -754,14 +754,14 @@ public class Parser {
             // calling `parseExprAtom` here and not `parseExpr` because
             // unary minus has higher precendence than binary operators
             var exp = parseExprAtom();
-            yield new Expr.UnaryMinus(exp, start.endWith(exp.getSpan()));
+            yield new Expr.UnaryMinus(exp, start.endWith(exp.span()));
           }
           case NOT -> {
             var start = next().span;
             // calling `parseExprAtom` here and not `parseExpr` because
             // logical not has higher precendence than binary operators
             var exp = parseExprAtom();
-            yield new Expr.LogicalNot(exp, start.endWith(exp.getSpan()));
+            yield new Expr.LogicalNot(exp, start.endWith(exp.span()));
           }
           case LPAREN -> {
             // can be function literal or parenthesized expression
@@ -773,8 +773,7 @@ public class Parser {
                 next();
                 expect(Token.ARROW, "Expected `->`");
                 var exp = parseExpr();
-                yield new Expr.FunctionLiteral(
-                    new ArrayList<>(), exp, start.endWith(exp.getSpan()));
+                yield new Expr.FunctionLiteral(new ArrayList<>(), exp, start.endWith(exp.span()));
               }
               default -> {
                 // expression
@@ -810,7 +809,7 @@ public class Parser {
             var then = parseExpr();
             expect(Token.ELSE, "Expected `else`");
             var elseCase = parseExpr();
-            yield new Expr.If(pred, then, elseCase, start.endWith(elseCase.getSpan()));
+            yield new Expr.If(pred, then, elseCase, start.endWith(elseCase.span()));
           }
           case LET -> {
             var start = next().span();
@@ -820,7 +819,7 @@ public class Parser {
             var bindExpr = parseExpr();
             expect(Token.RPAREN, "Expected `)`");
             var exp = parseExpr();
-            yield new Expr.Let(param, bindExpr, exp, start.endWith(exp.getSpan()));
+            yield new Expr.Let(param, bindExpr, exp, start.endWith(exp.span()));
           }
           case TRUE -> new Expr.BoolLiteral(true, next().span);
           case FALSE -> new Expr.BoolLiteral(false, next().span);
@@ -880,7 +879,7 @@ public class Parser {
     // non null
     if (lookahead == Token.NON_NULL) {
       var end = next().span;
-      var res = new Expr.NonNull(expr, expr.getSpan().endWith(end));
+      var res = new Expr.NonNull(expr, expr.span().endWith(end));
       return parseExprRest(res);
     }
     // amends
@@ -889,7 +888,7 @@ public class Parser {
             || expr instanceof Expr.Amends
             || expr instanceof Expr.New)) {
       var body = parseObjectBody();
-      return parseExprRest(new Expr.Amends(expr, body, expr.getSpan().endWith(body.span())));
+      return parseExprRest(new Expr.Amends(expr, body, expr.span().endWith(body.span())));
     }
     // qualified access
     if (lookahead == Token.DOT || lookahead == Token.QDOT) {
@@ -902,7 +901,7 @@ public class Parser {
       var lastSpan = argsPair != null ? argsPair.getSecond() : ident.span();
       var args = argsPair != null ? argsPair.getFirst() : null;
       var res =
-          new Expr.QualifiedAccess(expr, ident, isNullable, args, expr.getSpan().endWith(lastSpan));
+          new Expr.QualifiedAccess(expr, ident, isNullable, args, expr.span().endWith(lastSpan));
       return parseExprRest(res);
     }
     // subscript (needs to be in the same line as the expression)
@@ -910,7 +909,7 @@ public class Parser {
       next();
       var exp = parseExpr();
       expect(Token.RBRACK, "Expected `]`");
-      var res = new Expr.Subscript(expr, exp, expr.getSpan().endWith(exp.getSpan()));
+      var res = new Expr.Subscript(expr, exp, expr.span().endWith(exp.span()));
       return parseExprRest(res);
     }
     return expr;
@@ -927,7 +926,7 @@ public class Parser {
         expect(Token.RPAREN, "Expected `)`");
         expect(Token.ARROW, "Expected `->`");
         var expr = parseExpr();
-        yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.getSpan()));
+        yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.span()));
       }
       case COLON -> {
         next();
@@ -941,7 +940,7 @@ public class Parser {
         expect(Token.RPAREN, "Expected `)`");
         expect(Token.ARROW, "Expected `->`");
         var expr = parseExpr();
-        yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.getSpan()));
+        yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.span()));
       }
       case RPAREN -> {
         // still not sure
@@ -951,7 +950,7 @@ public class Parser {
           var expr = parseExpr();
           var params = new ArrayList<Parameter>();
           params.add(new Parameter.TypedIdent(ident, null, ident.span()));
-          yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.getSpan()));
+          yield new Expr.FunctionLiteral(params, expr, start.endWith(expr.span()));
         } else {
           var exp = new Expr.UnqualifiedAccess(ident, null, ident.span());
           yield new Parenthesized(exp, start.endWith(end));
@@ -973,7 +972,7 @@ public class Parser {
     expect(Token.RPAREN, "Expected `)`");
     expect(Token.ARROW, "Expected `->`");
     var expr = parseExpr();
-    return new Expr.FunctionLiteral(params, expr, start.endWith(expr.getSpan()));
+    return new Expr.FunctionLiteral(params, expr, start.endWith(expr.span()));
   }
 
   private Type parseType() {
@@ -1007,7 +1006,7 @@ public class Parser {
       case STAR -> {
         var tk = next();
         var type = parseType(true);
-        typ = new DefaultUnionType(type, tk.span.endWith(type.getSpan()));
+        typ = new DefaultUnionType(type, tk.span.endWith(type.span()));
       }
       case IDENT -> {
         var start = spanLookahead;
@@ -1037,7 +1036,7 @@ public class Parser {
     if (lookahead == Token.QUESTION) {
       var end = spanLookahead;
       next();
-      var res = new Type.NullableType(type, type.getSpan().endWith(end));
+      var res = new Type.NullableType(type, type.span().endWith(end));
       return parseTypeEnd(res, shortCircuit);
     }
     // constrained types: have to start in the same line as the type
@@ -1045,7 +1044,7 @@ public class Parser {
       next();
       var constraints = parseListOf(Token.COMMA, this::parseExpr);
       var end = expect(Token.RPAREN, "Expected `)`").span;
-      var res = new Type.ConstrainedType(type, constraints, type.getSpan().endWith(end));
+      var res = new Type.ConstrainedType(type, constraints, type.span().endWith(end));
       return parseTypeEnd(res, shortCircuit);
     }
     // union types
@@ -1053,7 +1052,7 @@ public class Parser {
       next();
       // union types are left associative
       var right = parseType(true);
-      var res = new Type.UnionType(type, right, type.getSpan().endWith(right.getSpan()));
+      var res = new Type.UnionType(type, right, type.span().endWith(right.span()));
       return parseTypeEnd(res, false);
     }
     return type;
@@ -1147,7 +1146,7 @@ public class Parser {
     if (lookahead == Token.COLON) {
       next();
       type = parseType();
-      end = type.getSpan();
+      end = type.span();
     }
     return new Parameter.TypedIdent(ident, type, ident.span().endWith(end));
   }

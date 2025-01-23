@@ -15,10 +15,80 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public record TypeParameter(@Nullable Variance variance, Ident ident, Span span) {
+public final class TypeParameter implements Node {
+  private final @Nullable Variance variance;
+  private final Ident ident;
+  private final Span span;
+  private Node parent;
+
+  public TypeParameter(@Nullable Variance variance, Ident ident, Span span) {
+    this.variance = variance;
+    this.ident = ident;
+    this.span = span;
+
+    ident.setParent(this);
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public @Nullable Variance getVariance() {
+    return variance;
+  }
+
+  public Ident getIdent() {
+    return ident;
+  }
+
+  @Override
+  public String toString() {
+    return "TypeParameter{"
+        + "variance="
+        + variance
+        + ", ident="
+        + ident
+        + ", span="
+        + span
+        + ", parent="
+        + parent
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    TypeParameter that = (TypeParameter) o;
+    return variance == that.variance
+        && Objects.equals(ident, that.ident)
+        && Objects.equals(span, that.span)
+        && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(variance, ident, span, parent);
+  }
 
   public enum Variance {
     IN,

@@ -15,4 +15,12 @@
  */
 package org.pkl.core.newparser.cst;
 
-public sealed interface ModuleEntry extends Node permits Clazz, TypeAlias, ClassEntry {}
+import org.pkl.core.newparser.Span;
+
+public interface Node {
+  Span span();
+
+  Node parent();
+
+  void setParent(Node parent);
+}

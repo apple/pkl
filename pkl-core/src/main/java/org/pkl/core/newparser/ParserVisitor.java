@@ -17,6 +17,7 @@ package org.pkl.core.newparser;
 
 import org.pkl.core.PklBugException;
 import org.pkl.core.newparser.cst.AmendsDecl;
+import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ClassEntry;
 import org.pkl.core.newparser.cst.Clazz;
 import org.pkl.core.newparser.cst.Expr;
@@ -29,55 +30,32 @@ import org.pkl.core.newparser.cst.ModuleDecl;
 import org.pkl.core.newparser.cst.ObjectMember;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.TypeAlias;
-import org.pkl.core.util.Nullable;
 
-public abstract class ParserVisitor<Result> {
+public interface ParserVisitor<Result> {
 
-  public @Nullable Result visitUnknownType(Type.UnknownType type) {
-    return null;
-  }
+  Result visitUnknownType(Type.UnknownType type);
 
-  public @Nullable Result visitNothingType(Type.NothingType type) {
-    return null;
-  }
+  Result visitNothingType(Type.NothingType type);
 
-  public @Nullable Result visitModuleType(Type.ModuleType type) {
-    return null;
-  }
+  Result visitModuleType(Type.ModuleType type);
 
-  public @Nullable Result visitStringConstantType(Type.StringConstantType type) {
-    return null;
-  }
+  Result visitStringConstantType(Type.StringConstantType type);
 
-  public @Nullable Result visitDeclaredType(Type.DeclaredType type) {
-    return null;
-  }
+  Result visitDeclaredType(Type.DeclaredType type);
 
-  public @Nullable Result visitParenthesizedType(Type.ParenthesizedType type) {
-    return null;
-  }
+  Result visitParenthesizedType(Type.ParenthesizedType type);
 
-  public @Nullable Result visitNullableType(Type.NullableType type) {
-    return null;
-  }
+  Result visitNullableType(Type.NullableType type);
 
-  public @Nullable Result visitConstrainedType(Type.ConstrainedType type) {
-    return null;
-  }
+  Result visitConstrainedType(Type.ConstrainedType type);
 
-  public @Nullable Result visitDefaultUnionType(Type.DefaultUnionType type) {
-    return null;
-  }
+  Result visitDefaultUnionType(Type.DefaultUnionType type);
 
-  public @Nullable Result visitUnionType(Type.UnionType type) {
-    return null;
-  }
+  Result visitUnionType(Type.UnionType type);
 
-  public @Nullable Result visitFunctionType(Type.FunctionType type) {
-    return null;
-  }
+  Result visitFunctionType(Type.FunctionType type);
 
-  public @Nullable Result visitType(Type type) {
+  default Result visitType(Type type) {
     if (type instanceof Type.UnknownType t) return visitUnknownType(t);
     if (type instanceof Type.NothingType t) return visitNothingType(t);
     if (type instanceof Type.ModuleType t) return visitModuleType(t);
@@ -92,143 +70,75 @@ public abstract class ParserVisitor<Result> {
     throw PklBugException.unreachableCode();
   }
 
-  public @Nullable Result visitThisExpr(Expr.This expr) {
-    return null;
-  }
+  Result visitThisExpr(Expr.This expr);
 
-  public @Nullable Result visitOuterExpr(Expr.Outer expr) {
-    return null;
-  }
+  Result visitOuterExpr(Expr.Outer expr);
 
-  public @Nullable Result visitModuleExpr(Expr.Module expr) {
-    return null;
-  }
+  Result visitModuleExpr(Expr.Module expr);
 
-  public @Nullable Result visitNullLiteralExpr(NullLiteral expr) {
-    return null;
-  }
+  Result visitNullLiteralExpr(NullLiteral expr);
 
-  public @Nullable Result visitBoolLiteralExpr(Expr.BoolLiteral expr) {
-    return null;
-  }
+  Result visitBoolLiteralExpr(Expr.BoolLiteral expr);
 
-  public @Nullable Result visitIntLiteralExpr(Expr.IntLiteral expr) {
-    return null;
-  }
+  Result visitIntLiteralExpr(Expr.IntLiteral expr);
 
-  public @Nullable Result visitFloatLiteralExpr(Expr.FloatLiteral expr) {
-    return null;
-  }
+  Result visitFloatLiteralExpr(Expr.FloatLiteral expr);
 
-  public @Nullable Result visitThrowExpr(Expr.Throw expr) {
-    return null;
-  }
+  Result visitThrowExpr(Expr.Throw expr);
 
-  public @Nullable Result visitTraceExpr(Expr.Trace expr) {
-    return null;
-  }
+  Result visitTraceExpr(Expr.Trace expr);
 
-  public @Nullable Result visitImportExpr(Expr.ImportExpr expr) {
-    return null;
-  }
+  Result visitImportExpr(Expr.ImportExpr expr);
 
-  public @Nullable Result visitImportGlobExpr(Expr.ImportGlobExpr expr) {
-    return null;
-  }
+  Result visitImportGlobExpr(Expr.ImportGlobExpr expr);
 
-  public @Nullable Result visitReadExpr(Expr.Read expr) {
-    return null;
-  }
+  Result visitReadExpr(Expr.Read expr);
 
-  public @Nullable Result visitReadNullExpr(Expr.ReadNull expr) {
-    return null;
-  }
+  Result visitReadNullExpr(Expr.ReadNull expr);
 
-  public @Nullable Result visitReadGlobExpr(Expr.ReadGlob expr) {
-    return null;
-  }
+  Result visitReadGlobExpr(Expr.ReadGlob expr);
 
-  public @Nullable Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr) {
-    return null;
-  }
+  Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr);
 
-  public @Nullable Result visitStringConstantExpr(Expr.StringConstant expr) {
-    return null;
-  }
+  Result visitStringConstantExpr(Expr.StringConstant expr);
 
-  public @Nullable Result visitInterpolatedStringExpr(Expr.InterpolatedString expr) {
-    return null;
-  }
+  Result visitInterpolatedStringExpr(Expr.InterpolatedString expr);
 
-  public @Nullable Result visitInterpolatedMultiStringExpr(Expr.InterpolatedMultiString expr) {
-    return null;
-  }
+  Result visitInterpolatedMultiStringExpr(Expr.InterpolatedMultiString expr);
 
-  public @Nullable Result visitNewExpr(Expr.New expr) {
-    return null;
-  }
+  Result visitNewExpr(Expr.New expr);
 
-  public @Nullable Result visitAmendsExpr(Expr.Amends expr) {
-    return null;
-  }
+  Result visitAmendsExpr(Expr.Amends expr);
 
-  public @Nullable Result visitSuperAccessExpr(Expr.SuperAccess expr) {
-    return null;
-  }
+  Result visitSuperAccessExpr(Expr.SuperAccess expr);
 
-  public @Nullable Result visitSuperSubscriptExpr(Expr.SuperSubscript expr) {
-    return null;
-  }
+  Result visitSuperSubscriptExpr(Expr.SuperSubscript expr);
 
-  public @Nullable Result visitQualifiedAccessExpr(Expr.QualifiedAccess expr) {
-    return null;
-  }
+  Result visitQualifiedAccessExpr(Expr.QualifiedAccess expr);
 
-  public @Nullable Result visitSubscriptExpr(Expr.Subscript expr) {
-    return null;
-  }
+  Result visitSubscriptExpr(Expr.Subscript expr);
 
-  public @Nullable Result visitNonNullExpr(Expr.NonNull expr) {
-    return null;
-  }
+  Result visitNonNullExpr(Expr.NonNull expr);
 
-  public @Nullable Result visitUnaryMinusExpr(Expr.UnaryMinus expr) {
-    return null;
-  }
+  Result visitUnaryMinusExpr(Expr.UnaryMinus expr);
 
-  public @Nullable Result visitLogicalNotExpr(Expr.LogicalNot expr) {
-    return null;
-  }
+  Result visitLogicalNotExpr(Expr.LogicalNot expr);
 
-  public @Nullable Result visitBinaryOpExpr(Expr.BinaryOp expr) {
-    return null;
-  }
+  Result visitBinaryOpExpr(Expr.BinaryOp expr);
 
-  public @Nullable Result visitTypeCheckExpr(Expr.TypeCheck expr) {
-    return null;
-  }
+  Result visitTypeCheckExpr(Expr.TypeCheck expr);
 
-  public @Nullable Result visitTypeCastExpr(Expr.TypeCast expr) {
-    return null;
-  }
+  Result visitTypeCastExpr(Expr.TypeCast expr);
 
-  public @Nullable Result visitIfExpr(Expr.If expr) {
-    return null;
-  }
+  Result visitIfExpr(Expr.If expr);
 
-  public @Nullable Result visitLetExpr(Expr.Let expr) {
-    return null;
-  }
+  Result visitLetExpr(Expr.Let expr);
 
-  public @Nullable Result visitFunctionLiteralExpr(Expr.FunctionLiteral expr) {
-    return null;
-  }
+  Result visitFunctionLiteralExpr(Expr.FunctionLiteral expr);
 
-  public @Nullable Result visitParenthesizedExpr(Expr.Parenthesized expr) {
-    return null;
-  }
+  Result visitParenthesizedExpr(Expr.Parenthesized expr);
 
-  public @Nullable Result visitExpr(Expr expr) {
+  default Result visitExpr(Expr expr) {
     if (expr instanceof Expr.This e) return visitThisExpr(e);
     if (expr instanceof Expr.Outer e) return visitOuterExpr(e);
     if (expr instanceof Expr.Module e) return visitModuleExpr(e);
@@ -267,51 +177,29 @@ public abstract class ParserVisitor<Result> {
     throw PklBugException.unreachableCode();
   }
 
-  public @Nullable Result visitObjectProperty(ObjectMember.ObjectProperty member) {
-    return null;
-  }
+  Result visitObjectProperty(ObjectMember.ObjectProperty member);
 
-  public @Nullable Result visitObjectBodyProperty(ObjectMember.ObjectBodyProperty member) {
-    return null;
-  }
+  Result visitObjectBodyProperty(ObjectMember.ObjectBodyProperty member);
 
-  public @Nullable Result visitObjectMethod(ObjectMember.ObjectMethod member) {
-    return null;
-  }
+  Result visitObjectMethod(ObjectMember.ObjectMethod member);
 
-  public @Nullable Result visitMemberPredicate(ObjectMember.MemberPredicate member) {
-    return null;
-  }
+  Result visitMemberPredicate(ObjectMember.MemberPredicate member);
 
-  public @Nullable Result visitMemberPredicateBody(ObjectMember.MemberPredicateBody member) {
-    return null;
-  }
+  Result visitMemberPredicateBody(ObjectMember.MemberPredicateBody member);
 
-  public @Nullable Result visitObjectElement(ObjectMember.ObjectElement member) {
-    return null;
-  }
+  Result visitObjectElement(ObjectMember.ObjectElement member);
 
-  public @Nullable Result visitObjectEntry(ObjectMember.ObjectEntry member) {
-    return null;
-  }
+  Result visitObjectEntry(ObjectMember.ObjectEntry member);
 
-  public @Nullable Result visitObjectEntryBody(ObjectMember.ObjectEntryBody member) {
-    return null;
-  }
+  Result visitObjectEntryBody(ObjectMember.ObjectEntryBody member);
 
-  public @Nullable Result visitObjectSpread(ObjectMember.ObjectSpread member) {
-    return null;
-  }
+  Result visitObjectSpread(ObjectMember.ObjectSpread member);
 
-  public @Nullable Result visitWhenGenerator(ObjectMember.WhenGenerator member) {
-    return null;
-  }
+  Result visitWhenGenerator(ObjectMember.WhenGenerator member);
 
-  public @Nullable Result visitForGenerator(ObjectMember.ForGenerator member) {
-    return null;
-  }
+  Result visitForGenerator(ObjectMember.ForGenerator member);
 
-  public @Nullable Result visitObjectMember(ObjectMember member) {
+  default Result visitObjectMember(ObjectMember member) {
     if (member instanceof ObjectMember.ObjectElement o) return visitObjectElement(o);
     if (member instanceof ObjectMember.ObjectProperty o) return visitObjectProperty(o);
     if (member instanceof ObjectMember.ObjectBodyProperty o) return visitObjectBodyProperty(o);
@@ -326,51 +214,29 @@ public abstract class ParserVisitor<Result> {
     throw PklBugException.unreachableCode();
   }
 
-  public @Nullable Result visitModule(Module module) {
-    return null;
-  }
+  Result visitModule(Module module);
 
-  public @Nullable Result visitModuleDecl(ModuleDecl decl) {
-    return null;
-  }
+  Result visitModuleDecl(ModuleDecl decl);
 
-  public @Nullable Result visitExtendsDecl(ExtendsDecl decl) {
-    return null;
-  }
+  Result visitExtendsDecl(ExtendsDecl decl);
 
-  public @Nullable Result visitAmendsDecl(AmendsDecl decl) {
-    return null;
-  }
+  Result visitAmendsDecl(AmendsDecl decl);
 
-  public @Nullable Result visitImport(Import imp) {
-    return null;
-  }
+  Result visitImport(Import imp);
 
-  public @Nullable Result visitClazz(Clazz clazz) {
-    return null;
-  }
+  Result visitClazz(Clazz clazz);
 
-  public @Nullable Result visitModifier(Modifier modifier) {
-    return null;
-  }
+  Result visitModifier(Modifier modifier);
 
-  public @Nullable Result visitClassProperty(ClassEntry.ClassProperty entry) {
-    return null;
-  }
+  Result visitClassProperty(ClassEntry.ClassProperty entry);
 
-  public @Nullable Result visitClassPropertyBody(ClassEntry.ClassPropertyBody entry) {
-    return null;
-  }
+  Result visitClassPropertyBody(ClassEntry.ClassPropertyBody entry);
 
-  public @Nullable Result visitClassMethod(ClassEntry.ClassMethod entry) {
-    return null;
-  }
+  Result visitClassMethod(ClassEntry.ClassMethod entry);
 
-  public @Nullable Result visitClassPropertyExpr(ClassEntry.ClassPropertyExpr entry) {
-    return null;
-  }
+  Result visitClassPropertyExpr(ClassEntry.ClassPropertyExpr entry);
 
-  public @Nullable Result visitTypeAlias(TypeAlias typeAlias) {
-    return null;
-  }
+  Result visitTypeAlias(TypeAlias typeAlias);
+
+  Result visitAnnotation(Annotation annotation);
 }

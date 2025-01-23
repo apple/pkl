@@ -16,56 +16,527 @@
 package org.pkl.core.newparser.cst;
 
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
+@SuppressWarnings("DuplicatedCode")
 public sealed interface ClassEntry extends ModuleEntry {
 
-  record ClassProperty(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      Ident name,
-      Type type,
-      Span span)
-      implements ClassEntry {}
+  final class ClassProperty implements ClassEntry {
+    private final @Nullable DocComment docComment;
+    private final List<Annotation> annotations;
+    private final List<Modifier> modifiers;
+    private final Ident name;
+    private final Type type;
+    private final Span span;
+    private Node parent;
 
-  record ClassPropertyExpr(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      Ident name,
-      @Nullable Type type,
-      Expr expr,
-      Span span)
-      implements ClassEntry {}
+    public ClassProperty(
+        @Nullable DocComment docComment,
+        List<Annotation> annotations,
+        List<Modifier> modifiers,
+        Ident name,
+        Type type,
+        Span span) {
+      this.docComment = docComment;
+      this.annotations = annotations;
+      this.modifiers = modifiers;
+      this.name = name;
+      this.type = type;
+      this.span = span;
 
-  record ClassPropertyBody(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      Ident name,
-      List<ObjectBody> bodyList,
-      Span span)
-      implements ClassEntry {}
+      if (docComment != null) {
+        docComment.setParent(this);
+      }
+      for (var ann : annotations) {
+        ann.setParent(this);
+      }
+      for (var mod : modifiers) {
+        mod.setParent(this);
+      }
+      name.setParent(this);
+      type.setParent(this);
+    }
 
-  record ClassMethod(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      Ident name,
-      List<TypeParameter> typePars,
-      List<Parameter> args,
-      @Nullable Type returnType,
-      @Nullable Expr expr,
-      Span span)
-      implements ClassEntry {}
+    @Override
+    public Span span() {
+      return span;
+    }
 
-  default Span getSpan() {
-    if (this instanceof ClassProperty x) return x.span;
-    if (this instanceof ClassPropertyExpr x) return x.span;
-    if (this instanceof ClassPropertyBody x) return x.span;
-    if (this instanceof ClassMethod x) return x.span;
-    throw new RuntimeException("unknown class entry " + this);
+    @Override
+    public Node parent() {
+      return parent;
+    }
+
+    @Override
+    public void setParent(Node parent) {
+      this.parent = parent;
+    }
+
+    public @Nullable DocComment getDocComment() {
+      return docComment;
+    }
+
+    public List<Annotation> getAnnotations() {
+      return annotations;
+    }
+
+    public List<Modifier> getModifiers() {
+      return modifiers;
+    }
+
+    public Ident getName() {
+      return name;
+    }
+
+    public Type getType() {
+      return type;
+    }
+
+    @Override
+    public String toString() {
+      return "ClassProperty{"
+          + "docComment="
+          + docComment
+          + ", annotations="
+          + annotations
+          + ", modifiers="
+          + modifiers
+          + ", name="
+          + name
+          + ", type="
+          + type
+          + ", span="
+          + span
+          + ", parent="
+          + parent
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ClassProperty that = (ClassProperty) o;
+      return Objects.equals(docComment, that.docComment)
+          && Objects.equals(annotations, that.annotations)
+          && Objects.equals(modifiers, that.modifiers)
+          && Objects.equals(name, that.name)
+          && Objects.equals(type, that.type)
+          && Objects.equals(span, that.span)
+          && Objects.equals(parent, that.parent);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(docComment, annotations, modifiers, name, type, span, parent);
+    }
+  }
+
+  final class ClassPropertyExpr implements ClassEntry {
+    private final @Nullable DocComment docComment;
+    private final List<Annotation> annotations;
+    private final List<Modifier> modifiers;
+    private final Ident name;
+    private final @Nullable Type type;
+    private final Expr expr;
+    private final Span span;
+    private Node parent;
+
+    public ClassPropertyExpr(
+        @Nullable DocComment docComment,
+        List<Annotation> annotations,
+        List<Modifier> modifiers,
+        Ident name,
+        @Nullable Type type,
+        Expr expr,
+        Span span) {
+      this.docComment = docComment;
+      this.annotations = annotations;
+      this.modifiers = modifiers;
+      this.name = name;
+      this.type = type;
+      this.expr = expr;
+      this.span = span;
+
+      if (docComment != null) {
+        docComment.setParent(this);
+      }
+      for (var ann : annotations) {
+        ann.setParent(this);
+      }
+      for (var mod : modifiers) {
+        mod.setParent(this);
+      }
+      name.setParent(this);
+      if (type != null) {
+        type.setParent(this);
+      }
+      expr.setParent(this);
+    }
+
+    @Override
+    public Span span() {
+      return span;
+    }
+
+    @Override
+    public Node parent() {
+      return parent;
+    }
+
+    @Override
+    public void setParent(Node parent) {
+      this.parent = parent;
+    }
+
+    public @Nullable DocComment getDocComment() {
+      return docComment;
+    }
+
+    public List<Annotation> getAnnotations() {
+      return annotations;
+    }
+
+    public List<Modifier> getModifiers() {
+      return modifiers;
+    }
+
+    public Ident getName() {
+      return name;
+    }
+
+    public @Nullable Type getType() {
+      return type;
+    }
+
+    public Expr getExpr() {
+      return expr;
+    }
+
+    @Override
+    public String toString() {
+      return "ClassPropertyExpr{"
+          + "docComment="
+          + docComment
+          + ", annotations="
+          + annotations
+          + ", modifiers="
+          + modifiers
+          + ", name="
+          + name
+          + ", type="
+          + type
+          + ", expr="
+          + expr
+          + ", span="
+          + span
+          + ", parent="
+          + parent
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ClassPropertyExpr that = (ClassPropertyExpr) o;
+      return Objects.equals(docComment, that.docComment)
+          && Objects.equals(annotations, that.annotations)
+          && Objects.equals(modifiers, that.modifiers)
+          && Objects.equals(name, that.name)
+          && Objects.equals(type, that.type)
+          && Objects.equals(expr, that.expr)
+          && Objects.equals(span, that.span)
+          && Objects.equals(parent, that.parent);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(docComment, annotations, modifiers, name, type, expr, span, parent);
+    }
+  }
+
+  final class ClassPropertyBody implements ClassEntry {
+    private final @Nullable DocComment docComment;
+    private final List<Annotation> annotations;
+    private final List<Modifier> modifiers;
+    private final Ident name;
+    private final List<ObjectBody> bodyList;
+    private final Span span;
+    private Node parent;
+
+    public ClassPropertyBody(
+        @Nullable DocComment docComment,
+        List<Annotation> annotations,
+        List<Modifier> modifiers,
+        Ident name,
+        List<ObjectBody> bodyList,
+        Span span) {
+      this.docComment = docComment;
+      this.annotations = annotations;
+      this.modifiers = modifiers;
+      this.name = name;
+      this.bodyList = bodyList;
+      this.span = span;
+
+      if (docComment != null) {
+        docComment.setParent(this);
+      }
+      for (var ann : annotations) {
+        ann.setParent(this);
+      }
+      for (var mod : modifiers) {
+        mod.setParent(this);
+      }
+      name.setParent(this);
+      for (var body : bodyList) {
+        body.setParent(this);
+      }
+    }
+
+    @Override
+    public Span span() {
+      return span;
+    }
+
+    @Override
+    public Node parent() {
+      return parent;
+    }
+
+    @Override
+    public void setParent(Node parent) {
+      this.parent = parent;
+    }
+
+    public @Nullable DocComment getDocComment() {
+      return docComment;
+    }
+
+    public List<Annotation> getAnnotations() {
+      return annotations;
+    }
+
+    public List<Modifier> getModifiers() {
+      return modifiers;
+    }
+
+    public Ident getName() {
+      return name;
+    }
+
+    public List<ObjectBody> getBodyList() {
+      return bodyList;
+    }
+
+    @Override
+    public String toString() {
+      return "ClassPropertyBody{"
+          + "docComment="
+          + docComment
+          + ", annotations="
+          + annotations
+          + ", modifiers="
+          + modifiers
+          + ", name="
+          + name
+          + ", bodyList="
+          + bodyList
+          + ", span="
+          + span
+          + ", parent="
+          + parent
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ClassPropertyBody that = (ClassPropertyBody) o;
+      return Objects.equals(docComment, that.docComment)
+          && Objects.equals(annotations, that.annotations)
+          && Objects.equals(modifiers, that.modifiers)
+          && Objects.equals(name, that.name)
+          && Objects.equals(bodyList, that.bodyList)
+          && Objects.equals(span, that.span)
+          && Objects.equals(parent, that.parent);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(docComment, annotations, modifiers, name, bodyList, span, parent);
+    }
+  }
+
+  final class ClassMethod implements ClassEntry {
+    private final @Nullable DocComment docComment;
+    private final List<Annotation> annotations;
+    private final List<Modifier> modifiers;
+    private final Ident name;
+    private final List<TypeParameter> typePars;
+    private final List<Parameter> args;
+    private final @Nullable Type returnType;
+    private final @Nullable Expr expr;
+    private final Span span;
+    private Node parent;
+
+    public ClassMethod(
+        @Nullable DocComment docComment,
+        List<Annotation> annotations,
+        List<Modifier> modifiers,
+        Ident name,
+        List<TypeParameter> typePars,
+        List<Parameter> args,
+        @Nullable Type returnType,
+        @Nullable Expr expr,
+        Span span) {
+      this.docComment = docComment;
+      this.annotations = annotations;
+      this.modifiers = modifiers;
+      this.name = name;
+      this.typePars = typePars;
+      this.args = args;
+      this.returnType = returnType;
+      this.expr = expr;
+      this.span = span;
+
+      if (docComment != null) {
+        docComment.setParent(this);
+      }
+      for (var ann : annotations) {
+        ann.setParent(this);
+      }
+      for (var mod : modifiers) {
+        mod.setParent(this);
+      }
+      name.setParent(this);
+      for (var tpar : typePars) {
+        tpar.setParent(this);
+      }
+      for (var arg : args) {
+        arg.setParent(this);
+      }
+      if (returnType != null) {
+        returnType.setParent(this);
+      }
+      if (expr != null) {
+        expr.setParent(this);
+      }
+    }
+
+    @Override
+    public Span span() {
+      return span;
+    }
+
+    @Override
+    public Node parent() {
+      return parent;
+    }
+
+    @Override
+    public void setParent(Node parent) {
+      this.parent = parent;
+    }
+
+    public @Nullable DocComment getDocComment() {
+      return docComment;
+    }
+
+    public List<Annotation> getAnnotations() {
+      return annotations;
+    }
+
+    public List<Modifier> getModifiers() {
+      return modifiers;
+    }
+
+    public Ident getName() {
+      return name;
+    }
+
+    public List<TypeParameter> getTypePars() {
+      return typePars;
+    }
+
+    public List<Parameter> getArgs() {
+      return args;
+    }
+
+    public @Nullable Type getReturnType() {
+      return returnType;
+    }
+
+    public @Nullable Expr getExpr() {
+      return expr;
+    }
+
+    @Override
+    public String toString() {
+      return "ClassMethod{"
+          + "docComment="
+          + docComment
+          + ", annotations="
+          + annotations
+          + ", modifiers="
+          + modifiers
+          + ", name="
+          + name
+          + ", typePars="
+          + typePars
+          + ", args="
+          + args
+          + ", returnType="
+          + returnType
+          + ", expr="
+          + expr
+          + ", span="
+          + span
+          + ", parent="
+          + parent
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ClassMethod that = (ClassMethod) o;
+      return Objects.equals(docComment, that.docComment)
+          && Objects.equals(annotations, that.annotations)
+          && Objects.equals(modifiers, that.modifiers)
+          && Objects.equals(name, that.name)
+          && Objects.equals(typePars, that.typePars)
+          && Objects.equals(args, that.args)
+          && Objects.equals(returnType, that.returnType)
+          && Objects.equals(expr, that.expr)
+          && Objects.equals(span, that.span)
+          && Objects.equals(parent, that.parent);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(
+          docComment, annotations, modifiers, name, typePars, args, returnType, expr, span, parent);
+    }
   }
 }

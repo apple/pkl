@@ -16,8 +16,96 @@
 package org.pkl.core.newparser.cst;
 
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public record Module(
-    @Nullable ModuleDecl decl, List<Import> imports, List<ModuleEntry> entries, Span span) {}
+public final class Module implements Node {
+  private final @Nullable ModuleDecl decl;
+  private final List<Import> imports;
+  private final List<ModuleEntry> entries;
+  private final Span span;
+  private Node parent;
+
+  public Module(
+      @Nullable ModuleDecl decl, List<Import> imports, List<ModuleEntry> entries, Span span) {
+    this.decl = decl;
+    this.imports = imports;
+    this.entries = entries;
+    this.span = span;
+
+    if (decl != null) {
+      decl.setParent(this);
+    }
+    for (var imp : imports) {
+      imp.setParent(this);
+    }
+    for (var entry : entries) {
+      entry.setParent(this);
+    }
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public @Nullable ModuleDecl getDecl() {
+    return decl;
+  }
+
+  public List<Import> getImports() {
+    return imports;
+  }
+
+  public List<ModuleEntry> getEntries() {
+    return entries;
+  }
+
+  @Override
+  public String toString() {
+    return "Module{"
+        + "decl="
+        + decl
+        + ", imports="
+        + imports
+        + ", entries="
+        + entries
+        + ", span="
+        + span
+        + ", parent="
+        + parent
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Module module = (Module) o;
+    return Objects.equals(decl, module.decl)
+        && Objects.equals(imports, module.imports)
+        && Objects.equals(entries, module.entries)
+        && Objects.equals(span, module.span)
+        && Objects.equals(parent, module.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(decl, imports, entries, span, parent);
+  }
+}

@@ -15,6 +15,59 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public record DocComment(String raw, Span span) {}
+public final class DocComment implements Node {
+  private final String raw;
+  private final Span span;
+  private Node parent;
+
+  public DocComment(String raw, Span span) {
+    this.raw = raw;
+    this.span = span;
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public String getRaw() {
+    return raw;
+  }
+
+  @Override
+  public String toString() {
+    return "DocComment{" + "raw='" + raw + '\'' + ", span=" + span + ", parent=" + parent + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    DocComment that = (DocComment) o;
+    return Objects.equals(raw, that.raw)
+        && Objects.equals(span, that.span)
+        && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(raw, span, parent);
+  }
+}

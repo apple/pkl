@@ -16,6 +16,82 @@
 package org.pkl.core.newparser.cst;
 
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public record ObjectBody(List<Parameter> pars, List<ObjectMember> members, Span span) {}
+public final class ObjectBody implements Node {
+  private final List<Parameter> pars;
+  private final List<ObjectMember> members;
+  private final Span span;
+  private Node parent;
+
+  public ObjectBody(List<Parameter> pars, List<ObjectMember> members, Span span) {
+    this.pars = pars;
+    this.members = members;
+    this.span = span;
+
+    for (var par : pars) {
+      par.setParent(this);
+    }
+    for (var member : members) {
+      member.setParent(this);
+    }
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public List<Parameter> getPars() {
+    return pars;
+  }
+
+  public List<ObjectMember> getMembers() {
+    return members;
+  }
+
+  @Override
+  public String toString() {
+    return "ObjectBody{"
+        + "pars="
+        + pars
+        + ", members="
+        + members
+        + ", span="
+        + span
+        + ", parent="
+        + parent
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ObjectBody that = (ObjectBody) o;
+    return Objects.equals(pars, that.pars)
+        && Objects.equals(members, that.members)
+        && Objects.equals(span, that.span)
+        && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(pars, members, span, parent);
+  }
+}

@@ -15,6 +15,59 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public record Ident(String value, Span span) {}
+public final class Ident implements Node {
+  private final String value;
+  private final Span span;
+  private Node parent;
+
+  public Ident(String value, Span span) {
+    this.value = value;
+    this.span = span;
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  @Override
+  public String toString() {
+    return "Ident{" + "value='" + value + '\'' + ", span=" + span + ", parent=" + parent + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Ident ident = (Ident) o;
+    return Objects.equals(value, ident.value)
+        && Objects.equals(span, ident.span)
+        && Objects.equals(parent, ident.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value, span, parent);
+  }
+}

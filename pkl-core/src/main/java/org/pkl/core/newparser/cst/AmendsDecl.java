@@ -15,6 +15,59 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public record AmendsDecl(String url, Span span) {}
+public class AmendsDecl implements Node {
+  private final String url;
+  private final Span span;
+  private Node parent;
+
+  public AmendsDecl(String url, Span span) {
+    this.url = url;
+    this.span = span;
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  @Override
+  public String toString() {
+    return "AmendsDecl{" + "url='" + url + '\'' + ", span=" + span + ", parent=" + parent + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    AmendsDecl that = (AmendsDecl) o;
+    return Objects.equals(url, that.url)
+        && Objects.equals(span, that.span)
+        && Objects.equals(parent, that.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(url, span, parent);
+  }
+}

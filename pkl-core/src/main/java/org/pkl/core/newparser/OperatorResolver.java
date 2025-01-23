@@ -59,10 +59,10 @@ class OperatorResolver {
     Operator op = null;
     for (var expr : exprs) {
       if (expr instanceof OperatorExpr o) {
-        var precedence = getPrecedence(o.op());
+        var precedence = getPrecedence(o.getOp());
         if (precedence > highest && precedence >= min) {
           highest = precedence;
-          op = o.op();
+          op = o.getOp();
         }
       }
     }
@@ -72,13 +72,13 @@ class OperatorResolver {
   private static int index(List<Expr> exprs, Associativity associativity, Operator op) {
     if (associativity == Associativity.LEFT) {
       for (var i = 0; i < exprs.size(); i++) {
-        if (exprs.get(i) instanceof OperatorExpr operator && operator.op() == op) {
+        if (exprs.get(i) instanceof OperatorExpr operator && operator.getOp() == op) {
           return i;
         }
       }
     } else {
       for (var i = exprs.size() - 1; i >= 0; i--) {
-        if (exprs.get(i) instanceof OperatorExpr operator && operator.op() == op) {
+        if (exprs.get(i) instanceof OperatorExpr operator && operator.getOp() == op) {
           return i;
         }
       }
@@ -93,11 +93,11 @@ class OperatorResolver {
     var i = index(res, associativity, op);
     var left = res.get(i - 1);
     var right = res.get(i + 1);
-    var span = left.getSpan().endWith(right.getSpan());
+    var span = left.span().endWith(right.span());
     var binOp =
         switch (op) {
-          case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).type(), span);
-          case AS -> new Expr.TypeCast(left, ((TypeExpr) right).type(), span);
+          case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).getType(), span);
+          case AS -> new Expr.TypeCast(left, ((TypeExpr) right).getType(), span);
           default -> new Expr.BinaryOp(left, right, op, span);
         };
     res.remove(i - 1);
@@ -117,8 +117,7 @@ class OperatorResolver {
     var res = resolveOperatorsHigherThan(exprs, 0);
     if (res.size() > 1) {
       throw new ParserError(
-          "Malformed expression",
-          exprs.get(0).getSpan().endWith(exprs.get(exprs.size() - 1).getSpan()));
+          "Malformed expression", exprs.get(0).span().endWith(exprs.get(exprs.size() - 1).span()));
     }
 
     return res.get(0);

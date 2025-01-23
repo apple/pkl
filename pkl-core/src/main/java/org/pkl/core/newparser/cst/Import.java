@@ -15,7 +15,90 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public record Import(String url, boolean isGlob, @Nullable Ident alias, Span span) {}
+public final class Import implements Node {
+  private final String url;
+  private final boolean isGlob;
+  private final @Nullable Ident alias;
+  private final Span span;
+  private Node parent;
+
+  public Import(String url, boolean isGlob, @Nullable Ident alias, Span span) {
+    this.url = url;
+    this.isGlob = isGlob;
+    this.alias = alias;
+    this.span = span;
+
+    if (alias != null) {
+      alias.setParent(this);
+    }
+  }
+
+  @Override
+  public Span span() {
+    return span;
+  }
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  @Override
+  public void setParent(Node parent) {
+    this.parent = parent;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public boolean isGlob() {
+    return isGlob;
+  }
+
+  public @Nullable Ident getAlias() {
+    return alias;
+  }
+
+  @Override
+  public String toString() {
+    return "Import{"
+        + "url='"
+        + url
+        + '\''
+        + ", isGlob="
+        + isGlob
+        + ", alias="
+        + alias
+        + ", span="
+        + span
+        + ", parent="
+        + parent
+        + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Import anImport = (Import) o;
+    return isGlob == anImport.isGlob
+        && Objects.equals(url, anImport.url)
+        && Objects.equals(alias, anImport.alias)
+        && Objects.equals(span, anImport.span)
+        && Objects.equals(parent, anImport.parent);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(url, isGlob, alias, span, parent);
+  }
+}
