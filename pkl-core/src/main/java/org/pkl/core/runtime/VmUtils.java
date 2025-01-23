@@ -302,8 +302,8 @@ public final class VmUtils {
   }
 
   /**
-   * Copies `numberOfLocalsToCopy` locals from `sourceFrame`, starting at `firstSourceSlot`, to
-   * `targetFrame`, starting at `firstTargetSlot`.
+   * Copies {@code numberOfLocalsToCopy} locals from {@code sourceFrame}, starting at {@code
+   * firstSourceSlot}, to {@code firstSourceSlot}, starting at {@code firstTargetSlot}.
    */
   public static void copyLocals(
       VirtualFrame sourceFrame,

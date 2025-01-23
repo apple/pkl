@@ -27,14 +27,17 @@ import org.pkl.core.util.EconomicMaps;
 
 /** Data collected by {@link GeneratorObjectLiteralNode} to generate a `VmObject`. */
 public final class ObjectData {
-  // The object's members.
+  /** The object's members. */
   private final EconomicMap<Object, ObjectMember> members;
-  // The frames that were active when `members` were generated.
-  // Only a subset of members have their frames stored (`GeneratorMemberNode.isFrameStored`).
-  // Frames are stored in `owner.extraStorage` and retrieved by `RestoreForBindingsNode`
-  // when members are executed.
+
+  /**
+   * The frames that were active when `members` were generated. Only a subset of members have their
+   * frames stored ({@link GeneratorMemberNode#isFrameStored}). Frames are stored in
+   * `owner.extraStorage` and retrieved by `RestoreForBindingsNode` when members are executed
+   */
   private final EconomicMap<Object, MaterializedFrame> generatorFrames;
-  // The object's number of elements.
+
+  /** The object's number of elements. */
   private int length;
 
   ObjectData(int parentLength) {

@@ -238,7 +238,7 @@ public final class SymbolTable {
 
     private static FrameDescriptor.Builder newFrameDescriptorBuilder(FrameDescriptor descriptor) {
       var builder = FrameDescriptor.newBuilder();
-      for (int i = 0; i < descriptor.getNumberOfSlots(); i++) {
+      for (var i = 0; i < descriptor.getNumberOfSlots(); i++) {
         builder.addSlot(
             descriptor.getSlotKind(i), descriptor.getSlotName(i), descriptor.getSlotInfo(i));
       }
