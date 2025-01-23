@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,12 +38,12 @@ internal fun main(args: Array<String>) {
 }
 
 class DocCommand :
-  BaseCommand(name = "pkldoc", helpLink = Release.current().documentation().homepage(), help = "") {
+  BaseCommand(name = "pkldoc", helpLink = Release.current().documentation().homepage()) {
 
   private val modules: List<URI> by
     argument(
         name = "<modules>",
-        help = "Module paths/uris, or package uris to generate documentation for"
+        help = "Module paths/uris, or package uris to generate documentation for",
       )
       .convert { parseModuleName(it) }
       .multiple(required = true)
@@ -52,7 +52,7 @@ class DocCommand :
     option(
         names = arrayOf("-o", "--output-dir"),
         metavar = "<directory>",
-        help = "Directory where generated documentation is placed."
+        help = "Directory where generated documentation is placed.",
       )
       .path()
       .required()
@@ -61,14 +61,7 @@ class DocCommand :
 
   override fun run() {
     val options =
-      CliDocGeneratorOptions(
-        baseOptions.baseOptions(
-          modules,
-          projectOptions,
-        ),
-        outputDir,
-        true
-      )
+      CliDocGeneratorOptions(baseOptions.baseOptions(modules, projectOptions), outputDir, true)
     CliDocGenerator(options).run()
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,19 @@
 package org.pkl.doc
 
 import kotlin.io.path.bufferedWriter
+import kotlin.io.path.createParentDirectories
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.core.*
 import org.pkl.core.util.IoUtils
 
 internal abstract class PageGenerator<out S>(
   protected val docsiteInfo: DocsiteInfo,
-  protected val pageScope: S
+  protected val pageScope: S,
 ) where S : PageScope {
   private val markdownInlineParserFactory = MarkdownParserFactory(pageScope)
 
@@ -110,7 +110,7 @@ internal abstract class PageGenerator<out S>(
     packageName: String?,
     packageVersion: String?,
     moduleName: String?,
-    className: String?
+    className: String?,
   ) {
     header {
       if (docsiteInfo.title != null) {
@@ -227,11 +227,11 @@ internal abstract class PageGenerator<out S>(
   ) {
     ul {
       classes = setOf("member-group-links")
-      for ((name, _href, show) in groups) {
+      for ((name, href, show) in groups) {
         if (show) {
           li {
             a {
-              href = _href
+              this.href = href
               +name
             }
           }
@@ -280,7 +280,7 @@ internal abstract class PageGenerator<out S>(
 
   protected fun HtmlBlockTag.renderTypeAliasName(
     typeAlias: TypeAlias,
-    cssClass: String = "name-ref"
+    cssClass: String = "name-ref",
   ) {
     val moduleDocUrl = pageScope.resolveModuleNameToDocUrl(typeAlias.moduleName)
 
@@ -302,7 +302,7 @@ internal abstract class PageGenerator<out S>(
   protected fun HtmlBlockTag.renderType(
     type: PType,
     currScope: DocScope,
-    isNested: Boolean = false
+    isNested: Boolean = false,
   ) {
     when (type) {
       PType.UNKNOWN -> {
@@ -390,7 +390,7 @@ internal abstract class PageGenerator<out S>(
 
   private fun HtmlBlockTag.renderTypeVariable(
     typeVariable: PType.TypeVariable,
-    currentScope: DocScope
+    currentScope: DocScope,
   ) {
     val parameterScope = currentScope.resolveVariable(typeVariable.name) as? ParameterScope
 
@@ -634,7 +634,7 @@ internal abstract class PageGenerator<out S>(
     annotations: List<PObject>,
     /** Whether these member docs are for the main declaration at the top of a page. */
     private val isDeclaration: Boolean = false,
-    private val extraMemberInfo: Map<MemberInfoKey, HtmlBlockTag.() -> Unit> = mapOf()
+    private val extraMemberInfo: Map<MemberInfoKey, HtmlBlockTag.() -> Unit> = mapOf(),
   ) {
     init {
       markdownInlineParserFactory.docScope = docScope

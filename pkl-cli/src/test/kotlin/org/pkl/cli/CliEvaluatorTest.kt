@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ import org.pkl.core.OutputFormat
 import org.pkl.core.SecurityManagers
 import org.pkl.core.util.IoUtils
 
+@OptIn(ExperimentalPathApi::class)
 @WireMockTest(httpsEnabled = true, proxyMode = true)
 class CliEvaluatorTest {
   companion object {
@@ -88,19 +89,20 @@ class CliEvaluatorTest {
     val sourceFiles = listOf(writePklFile("test.pkl"))
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "pcf",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "pcf")
       )
 
     assertThat(outputFiles).hasSize(1)
-    checkOutputFile(outputFiles[0], "test.pcf", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.pcf",
+      """
 person {
   name = "pigeon"
   age = 30
 }
-    """)
+    """,
+    )
   }
 
   @Test
@@ -108,10 +110,7 @@ person {
     val sourceFiles = listOf(writePklFile("test.pkl"))
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "json",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "json")
       )
 
     assertThat(outputFiles).hasSize(1)
@@ -125,7 +124,7 @@ person {
     "age": 30
   }
 }
-    """
+    """,
     )
   }
 
@@ -134,18 +133,19 @@ person {
     val sourceFiles = listOf(writePklFile("test.pkl"))
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "yaml",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "yaml")
       )
 
     assertThat(outputFiles).hasSize(1)
-    checkOutputFile(outputFiles[0], "test.yaml", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.yaml",
+      """
 person:
   name: pigeon
   age: 30
-    """)
+    """,
+    )
   }
 
   @Test
@@ -153,10 +153,7 @@ person:
     val sourceFiles = listOf(writePklFile("test.pkl"))
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "plist",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "plist")
       )
 
     assertThat(outputFiles).hasSize(1)
@@ -178,7 +175,7 @@ person:
   </dict>
 </dict>
 </plist>
-    """
+    """,
     )
   }
 
@@ -187,10 +184,7 @@ person:
     val sourceFiles = listOf(writePklFile("test.pkl"))
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "xml",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "xml")
       )
 
     assertThat(outputFiles).hasSize(1)
@@ -205,7 +199,7 @@ person:
     <age>30</age>
   </person>
 </root>
-    """
+    """,
     )
   }
 
@@ -229,14 +223,11 @@ person:
       listOf(
         writePklFile("file1.pkl", "x = 1 + 1"),
         writePklFile("file2.pkl", "x = 2 + 2"),
-        writePklFile("file3.pkl", "x = 3 + 3")
+        writePklFile("file3.pkl", "x = 3 + 3"),
       )
     val outputFiles =
       evalToFiles(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = sourceFiles),
-          outputFormat = "pcf",
-        )
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "pcf")
       )
 
     assertThat(outputFiles).hasSize(3)
@@ -269,20 +260,24 @@ person:
           CliBaseOptions(
             sourceModules =
               listOf(URI("modulepath:/foo/bar/test.pkl"), URI("modulepath:/foo/bar/test2.pkl")),
-            modulePath = listOf(tempDir)
+            modulePath = listOf(tempDir),
           ),
           outputFormat = "pcf",
-          outputPath = "$tempDir/%{moduleName}.%{outputFormat}"
+          outputPath = "$tempDir/%{moduleName}.%{outputFormat}",
         )
       )
 
     assertThat(outputFiles).hasSize(2)
-    checkOutputFile(outputFiles[0], "test.pcf", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.pcf",
+      """
 person {
   name = "pigeon"
   age = 30
 }
-    """)
+    """,
+    )
     checkOutputFile(
       outputFiles[1],
       "test2.pcf",
@@ -291,7 +286,7 @@ person {
   name = "barn owl"
   age = 30
 }
-    """
+    """,
     )
   }
 
@@ -306,7 +301,7 @@ person {
   name = read("prop:name")
   age = read("prop:age").toInt()
 }
-    """
+    """,
         )
       )
 
@@ -315,19 +310,23 @@ person {
         CliEvaluatorOptions(
           CliBaseOptions(
             sourceModules = sourceFiles,
-            externalProperties = mapOf("name" to "pigeon", "age" to "30")
+            externalProperties = mapOf("name" to "pigeon", "age" to "30"),
           ),
           outputFormat = "pcf",
         )
       )
 
     assertThat(outputFiles).hasSize(1)
-    checkOutputFile(outputFiles[0], "test.pcf", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.pcf",
+      """
 person {
   name = "pigeon"
   age = 30
 }
-    """)
+    """,
+    )
   }
 
   @Test
@@ -351,21 +350,25 @@ person {
             sourceModules = listOf(file.toUri()),
             workingDir =
               if (relativePath) IoUtils.getCurrentWorkingDir().relativize(dir.parent)
-              else dir.parent
+              else dir.parent,
           ),
           outputFormat = "pcf",
-          outputPath = "baz/%{moduleName}.pcf"
+          outputPath = "baz/%{moduleName}.pcf",
         )
       )
 
     assertThat(outputFiles).hasSize(1)
     assertThat(outputFiles[0].normalize()).isEqualTo(dir.parent.resolve("baz/test.pcf"))
-    checkOutputFile(outputFiles[0], "test.pcf", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.pcf",
+      """
 person {
   name = "pigeon"
   age = 30
 }
-    """)
+    """,
+    )
   }
 
   @Test
@@ -377,17 +380,21 @@ person {
       evalToFiles(
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = listOf(URI("foo/test.pkl")), workingDir = tempDir),
-          outputFormat = "pcf"
+          outputFormat = "pcf",
         )
       )
 
     assertThat(outputFiles).hasSize(1)
-    checkOutputFile(outputFiles[0], "test.pcf", """
+    checkOutputFile(
+      outputFiles[0],
+      "test.pcf",
+      """
 person {
   name = "pigeon"
   age = 30
 }
-    """)
+    """,
+    )
   }
 
   @Test
@@ -396,10 +403,13 @@ person {
     libDir.resolve("someLib.pkl").writeString("x = 1")
 
     val pklScript =
-      writePklFile("test.pkl", """
+      writePklFile(
+        "test.pkl",
+        """
 import "modulepath:/foo/someLib.pkl"
 result = someLib.x
-    """)
+    """,
+      )
 
     val outputFiles =
       evalToFiles(
@@ -407,9 +417,9 @@ result = someLib.x
           CliBaseOptions(
             sourceModules = listOf(pklScript),
             workingDir = tempDir,
-            modulePath = listOf("lib".toPath())
+            modulePath = listOf("lib".toPath()),
           ),
-          outputFormat = "pcf"
+          outputFormat = "pcf",
         )
       )
 
@@ -427,7 +437,7 @@ result = someLib.x
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = listOf(file), workingDir = workingDir),
           outputPath = "%{moduleDir}/result.pcf",
-          outputFormat = "pcf"
+          outputFormat = "pcf",
         )
       )
     assertThat(outputFiles).hasSize(1)
@@ -449,7 +459,7 @@ result = someLib.x
       evalToFiles(
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = listOf(file), workingDir = workingDir),
-          outputFormat = "pcf"
+          outputFormat = "pcf",
         )
       )
     assertThat(outputFiles).hasSize(1)
@@ -465,10 +475,10 @@ result = someLib.x
       CliEvaluator(
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = listOf(URI("repl:text"))),
-          outputFormat = "pcf"
+          outputFormat = "pcf",
         ),
         stdin,
-        stdout
+        stdout,
       )
     evaluator.run()
     assertThat(stdout.toString().trim()).isEqualTo(defaultContents.replace("20 + 10", "30").trim())
@@ -480,11 +490,7 @@ result = someLib.x
     val module2 = writePklFile("mod2.pkl", "y = 11 + 11")
 
     val output =
-      evalToConsole(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = listOf(module1, module2)),
-        )
-      )
+      evalToConsole(CliEvaluatorOptions(CliBaseOptions(sourceModules = listOf(module1, module2))))
 
     assertThat(output).isEqualTo("x = 42\n---\ny = 22\n")
   }
@@ -498,7 +504,7 @@ result = someLib.x
           """
       function fib(n) = if (n < 2) 0 else fib(n - 1) + fib(n - 2)
       x = fib(100)
-    """
+    """,
         )
       )
 
@@ -507,7 +513,7 @@ result = someLib.x
         evalToFiles(
           CliEvaluatorOptions(
             CliBaseOptions(sourceModules = sourceFiles, timeout = Duration.ofMillis(100)),
-            outputFormat = "pcf"
+            outputFormat = "pcf",
           )
         )
       }
@@ -516,16 +522,20 @@ result = someLib.x
 
   @Test
   fun `cannot import module located outside root dir`() {
-    val sourceFiles = listOf(writePklFile("test.pkl", """
+    val sourceFiles =
+      listOf(
+        writePklFile(
+          "test.pkl",
+          """
       amends "/non/existing.pkl"
-    """))
+    """,
+        )
+      )
 
     val e =
       assertThrows<CliException> {
         evalToFiles(
-          CliEvaluatorOptions(
-            CliBaseOptions(sourceModules = sourceFiles, rootDir = tempDir),
-          )
+          CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles, rootDir = tempDir))
         )
       }
 
@@ -538,7 +548,7 @@ result = someLib.x
       listOf(
         writePklFile("test1.pkl", "x = 1"),
         writePklFile("test2.pkl", "x = 2"),
-        writePklFile("test3.pkl", "x = 3")
+        writePklFile("test3.pkl", "x = 3"),
       )
 
     val outputFile = tempDir.resolve("output.yaml")
@@ -547,7 +557,7 @@ result = someLib.x
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = sourceFiles),
         outputFile.toString(),
-        "yaml"
+        "yaml",
       )
     )
 
@@ -560,18 +570,18 @@ result = someLib.x
       listOf(
         writePklFile(
           "test0.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
         ),
         writePklFile("test1.pkl", "x = 1"),
         writePklFile(
           "test2.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
         ),
         writePklFile("test3.pkl", "x = 3"),
         writePklFile(
           "test4.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
-        )
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
+        ),
       )
 
     val outputFile = tempDir.resolve("output.yaml")
@@ -580,7 +590,7 @@ result = someLib.x
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = sourceFiles),
         outputFile.toString(),
-        "yaml"
+        "yaml",
       )
     )
 
@@ -593,7 +603,7 @@ result = someLib.x
       listOf(
         writePklFile("test1.pkl", "x = 1"),
         writePklFile("test2.pkl", "x = 2"),
-        writePklFile("test3.pkl", "x = 3")
+        writePklFile("test3.pkl", "x = 3"),
       )
 
     val outputFile = tempDir.resolve("output.pcf")
@@ -603,7 +613,7 @@ result = someLib.x
         CliBaseOptions(sourceModules = sourceFiles),
         outputFile.toString(),
         outputFormat = "pcf",
-        moduleOutputSeparator = "// my module separator"
+        moduleOutputSeparator = "// my module separator",
       )
     )
 
@@ -617,7 +627,7 @@ result = someLib.x
       // my module separator
       x = 3
       """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -627,7 +637,7 @@ result = someLib.x
       listOf(
         writePklFile("test1.pkl", "x = 1"),
         writePklFile("test2.pkl", "y = 2"),
-        writePklFile("test3.pkl", "z = 3")
+        writePklFile("test3.pkl", "z = 3"),
       )
 
     val outputFile = tempDir.resolve("output.pcf")
@@ -637,7 +647,7 @@ result = someLib.x
         CliBaseOptions(sourceModules = sourceFiles),
         outputFile.toString(),
         outputFormat = "pcf",
-        moduleOutputSeparator = ""
+        moduleOutputSeparator = "",
       )
     )
 
@@ -651,7 +661,7 @@ result = someLib.x
       
       z = 3
       """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -661,11 +671,13 @@ result = someLib.x
       listOf(
         writePklFile("test1.pkl", "x = 1"),
         writePklFile("test2.pkl", "x = 2"),
-        writePklFile("test3.pkl", "x = 3")
+        writePklFile("test3.pkl", "x = 3"),
       )
 
     val output =
-      evalToConsole(CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), null, "yaml"))
+      evalToConsole(
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "yaml")
+      )
 
     assertThat(output).isEqualTo("x: 1\n---\nx: 2\n---\nx: 3\n")
   }
@@ -676,22 +688,24 @@ result = someLib.x
       listOf(
         writePklFile(
           "test0.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
         ),
         writePklFile("test1.pkl", "x = 1"),
         writePklFile(
           "test2.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
         ),
         writePklFile("test3.pkl", "x = 3"),
         writePklFile(
           "test4.pkl",
-          "output { value = List(); renderer = new YamlRenderer { isStream = true } }"
-        )
+          "output { value = List(); renderer = new YamlRenderer { isStream = true } }",
+        ),
       )
 
     val output =
-      evalToConsole(CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), null, "yaml"))
+      evalToConsole(
+        CliEvaluatorOptions(CliBaseOptions(sourceModules = sourceFiles), outputFormat = "yaml")
+      )
 
     assertThat(output).isEqualTo("x: 1\n---\nx: 3\n")
   }
@@ -705,8 +719,7 @@ result = someLib.x
       evalToConsole(
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = sourceFiles),
-          null,
-          outputFormat.toString()
+          outputFormat = outputFormat.toString(),
         )
       )
     assertThat(output).endsWith("\n")
@@ -750,7 +763,7 @@ result = someLib.x
       """
       ["bar"] = "baz"
       """
-        .trimIndent()
+        .trimIndent(),
     )
     checkOutputFile(
       tempDir.resolve(".my-output/bar/baz.pcf"),
@@ -758,7 +771,7 @@ result = someLib.x
       """
       ["baz"] = "biz"
       """
-        .trimIndent()
+        .trimIndent(),
     )
     checkOutputFile(tempDir.resolve(".my-output/buz.txt"), "buz.txt", "buz")
   }
@@ -796,7 +809,7 @@ result = someLib.x
         }
         """
             .trimIndent(),
-        )
+        ),
       )
     val options =
       CliEvaluatorOptions(
@@ -823,7 +836,7 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
+            .trimIndent(),
         ),
         writePklFile(
           "foo.pkl",
@@ -836,7 +849,7 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
+            .trimIndent(),
         ),
       )
     val options =
@@ -849,11 +862,7 @@ result = someLib.x
 
   @Test
   fun `multiple file output writes nothing if output files is null`() {
-    val moduleUri =
-      writePklFile(
-        "test.pkl",
-        "",
-      )
+    val moduleUri = writePklFile("test.pkl", "")
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
@@ -878,12 +887,12 @@ result = someLib.x
           }
         }
       """
-          .trimIndent()
+          .trimIndent(),
       )
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-        multipleFileOutputPath = ".output"
+        multipleFileOutputPath = ".output",
       )
     assertThatCode { evalToConsole(options) }
       .hasMessageStartingWith("Output file conflict:")
@@ -904,7 +913,7 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
+            .trimIndent(),
         ),
         writePklFile(
           "test2.pkl",
@@ -915,14 +924,14 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
-        )
+            .trimIndent(),
+        ),
       )
     for (moduleUri in moduleUris) {
       val options =
         CliEvaluatorOptions(
           CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-          multipleFileOutputPath = ".output"
+          multipleFileOutputPath = ".output",
         )
       assertThatCode { evalToConsole(options) }
         .hasMessageStartingWith("Output file conflict:")
@@ -943,7 +952,7 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
+            .trimIndent(),
         ),
         writePklFile(
           "test2.pkl",
@@ -954,13 +963,13 @@ result = someLib.x
           }
         }
       """
-            .trimIndent()
-        )
+            .trimIndent(),
+        ),
       )
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = moduleUris, workingDir = tempDir),
-        multipleFileOutputPath = ".output"
+        multipleFileOutputPath = ".output",
       )
     assertThatCode { evalToConsole(options) }
       .hasMessageContaining("Output file conflict:")
@@ -980,12 +989,12 @@ result = someLib.x
         }
       }
     """
-          .trimIndent()
+          .trimIndent(),
       )
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-        multipleFileOutputPath = ".output"
+        multipleFileOutputPath = ".output",
       )
     assertThatCode { evalToConsole(options) }
       .hasMessageContaining("Output file conflict:")
@@ -1005,13 +1014,13 @@ result = someLib.x
         }
       }
     """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-        multipleFileOutputPath = ".output"
+        multipleFileOutputPath = ".output",
       )
     assertThatCode { evalToConsole(options) }
       .hasMessageContaining("Path spec `foo:bar` contains illegal character `:`.")
@@ -1030,13 +1039,13 @@ result = someLib.x
         }
       }
     """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-        multipleFileOutputPath = ".output"
+        multipleFileOutputPath = ".output",
       )
     assertThatCode { evalToConsole(options) }
       .hasMessageContaining("Path spec `foo\\bar` contains illegal character `\\`.")
@@ -1052,7 +1061,7 @@ result = someLib.x
         bar = 1
       }
     """
-          .trimIndent()
+          .trimIndent(),
       )
     val options =
       CliEvaluatorOptions(
@@ -1083,7 +1092,7 @@ result = someLib.x
       }
       person: Person = new { name = "Frodo" }
     """
-          .trimIndent()
+          .trimIndent(),
       )
     val options =
       CliEvaluatorOptions(
@@ -1105,7 +1114,7 @@ result = someLib.x
         friend { name = "Bilbo" }
       }
     """
-          .trimIndent()
+          .trimIndent(),
       )
     val options =
       CliEvaluatorOptions(
@@ -1125,7 +1134,7 @@ result = someLib.x
         """
       res = 1
     """
-          .trimIndent()
+          .trimIndent(),
       )
     writePklFile(
       "PklProject",
@@ -1134,11 +1143,11 @@ result = someLib.x
       
       package = throw("invalid project package")
     """
-        .trimIndent()
+        .trimIndent(),
     )
     val options =
       CliEvaluatorOptions(
-        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir, noProject = true),
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir, noProject = true)
       )
     val buffer = StringWriter()
     CliEvaluator(options, consoleWriter = buffer).run()
@@ -1154,7 +1163,7 @@ result = someLib.x
         """
       res = read*("env:**")
     """
-          .trimIndent()
+          .trimIndent(),
       )
     writePklFile(
       "PklProject",
@@ -1169,12 +1178,10 @@ result = someLib.x
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
     val options =
-      CliEvaluatorOptions(
-        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
-      )
+      CliEvaluatorOptions(CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir))
     val buffer = StringWriter()
     CliEvaluator(options, consoleWriter = buffer).run()
     assertThat(buffer.toString())
@@ -1200,7 +1207,7 @@ result = someLib.x
       
       res = Swallow
     """
-          .trimIndent()
+          .trimIndent(),
       )
     val buffer = StringWriter()
     val options =
@@ -1211,8 +1218,8 @@ result = someLib.x
           moduleCacheDir = tempDir,
           noCache = true,
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-          testPort = packageServer.port
-        ),
+          testPort = packageServer.port,
+        )
       )
     CliEvaluator(options, consoleWriter = buffer).run()
     assertThat(buffer.toString())
@@ -1278,7 +1285,7 @@ result = someLib.x
           sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
           httpProxy = URI("http://localhost:${wwRuntimeInfo.httpPort}"),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
-        ),
+        )
       )
     val output = evalToConsole(options)
     assertThat(output).isEqualTo("foo = 1\n")
@@ -1317,7 +1324,7 @@ result = someLib.x
           noCache = true,
           httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:")
+          allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
         )
       )
     val output = evalToConsole(options)
@@ -1340,7 +1347,7 @@ result = someLib.x
   @Test
   fun `eval http module from proxy -- configured in settings`(
     @TempDir tempDir: Path,
-    wwRuntimeInfo: WireMockRuntimeInfo
+    wwRuntimeInfo: WireMockRuntimeInfo,
   ) {
     val settingsModule =
       tempDir.writeFile(
@@ -1354,7 +1361,7 @@ result = someLib.x
         }
       }
       """
-          .trimIndent()
+          .trimIndent(),
       )
 
     stubFor(
@@ -1366,7 +1373,7 @@ result = someLib.x
           sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
           settings = settingsModule.toUri(),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
-        ),
+        )
       )
     val output = evalToConsole(options)
     assertThat(output).isEqualTo("foo = 1\n")
@@ -1375,7 +1382,7 @@ result = someLib.x
   @Test
   fun `eval http module from proxy -- configured in PklProject`(
     @TempDir tempDir: Path,
-    wwRuntimeInfo: WireMockRuntimeInfo
+    wwRuntimeInfo: WireMockRuntimeInfo,
   ) {
     tempDir.writeFile(
       "PklProject",
@@ -1390,7 +1397,7 @@ result = someLib.x
         }
       }
       """
-        .trimIndent()
+        .trimIndent(),
     )
 
     stubFor(
@@ -1401,8 +1408,8 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
-          projectDir = tempDir
-        ),
+          projectDir = tempDir,
+        )
       )
     val output = evalToConsole(options)
     assertThat(output).isEqualTo("foo = 1\n")
@@ -1411,7 +1418,7 @@ result = someLib.x
   @Test
   fun `eval http module from proxy -- PklProject beats user settings`(
     @TempDir tempDir: Path,
-    wwRuntimeInfo: WireMockRuntimeInfo
+    wwRuntimeInfo: WireMockRuntimeInfo,
   ) {
     val projectDir = tempDir.resolve("my-project")
     projectDir.writeFile(
@@ -1427,7 +1434,7 @@ result = someLib.x
         }
       }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val homeDir = tempDir.resolve("my-home")
     homeDir.writeFile(
@@ -1441,7 +1448,7 @@ result = someLib.x
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val options =
       CliEvaluatorOptions(
@@ -1449,8 +1456,8 @@ result = someLib.x
           sourceModules = listOf(URI("http://not.a.valid.host/bar.pkl")),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
           projectDir = projectDir,
-          settings = homeDir.resolve("settings.pkl").toUri()
-        ),
+          settings = homeDir.resolve("settings.pkl").toUri(),
+        )
       )
     stubFor(get(anyUrl()).willReturn(ok("result = 1")))
     val output = evalToConsole(options)
@@ -1477,14 +1484,9 @@ result = someLib.x
       importGlob = import*("./日*.pkl").keys
       importGlobFile = import*("$tempDirUri**/*.pkl").keys.map((it) -> it.replaceAll("$tempDirUri".replaceAll("///", "/"), ""))
     """
-          .trimIndent()
+          .trimIndent(),
       )
-    val output =
-      evalToConsole(
-        CliEvaluatorOptions(
-          CliBaseOptions(sourceModules = listOf(file)),
-        )
-      )
+    val output = evalToConsole(CliEvaluatorOptions(CliBaseOptions(sourceModules = listOf(file))))
 
     val tripleQuote = "\"\"\""
     assertThat(output)
@@ -1521,7 +1523,7 @@ result = someLib.x
       import "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
       
       res = Swallow
-    """
+    """,
       )
 
     val options =
@@ -1531,8 +1533,8 @@ result = someLib.x
           caCertificates = buildList { if (certsFile != null) add(certsFile) },
           workingDir = tempDir,
           noCache = true,
-          testPort = testPort
-        ),
+          testPort = testPort,
+        )
       )
     CliEvaluator(options).run()
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
   companion object {
     fun initializeTestHarness(
       moduleReaders: List<ExternalModuleReader>,
-      resourceReaders: List<ExternalResourceReader>
+      resourceReaders: List<ExternalResourceReader>,
     ): Pair<TestExternalReaderProcess, ExternalReaderRuntime> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
@@ -108,14 +108,12 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
         MessageTransports.stream(
           ExternalReaderMessagePackDecoder(rxIn),
           ExternalReaderMessagePackEncoder(txOut),
-          {}
-        )
+        ) {}
       val clientTransport =
         MessageTransports.stream(
           ExternalReaderMessagePackDecoder(txIn),
           ExternalReaderMessagePackEncoder(rxOut),
-          {}
-        )
+        ) {}
 
       val runtime = ExternalReaderRuntime(moduleReaders, resourceReaders, clientTransport)
       val proc = TestExternalReaderProcess(serverTransport)

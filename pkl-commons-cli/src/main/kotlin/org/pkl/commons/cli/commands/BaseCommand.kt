@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 
 abstract class BaseCommand(name: String, helpLink: String, help: String = "") :
-  CliktCommand(
-    name = name,
-    help = help,
-    epilog = "For more information, visit $helpLink",
-  ) {
-  val baseOptions by BaseOptions()
+  CliktCommand(name = name, help = help, epilog = "For more information, visit $helpLink") {
+  val baseOptions: BaseOptions by BaseOptions()
 }

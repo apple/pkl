@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.pkl.commons.toNormalizedPathString
 
 abstract class InputOutputTestEngine :
   HierarchicalTestEngine<InputOutputTestEngine.ExecutionContext>() {
-  protected val rootProjectDir = FileTestUtils.rootProjectDir
+  protected val rootProjectDir: Path = FileTestUtils.rootProjectDir
 
   protected abstract val testClass: KClass<*>
 
@@ -67,7 +67,7 @@ abstract class InputOutputTestEngine :
 
   override fun discover(
     discoveryRequest: EngineDiscoveryRequest,
-    uniqueId: UniqueId
+    uniqueId: UniqueId,
   ): TestDescriptor {
     val packageSelectors = discoveryRequest.getSelectorsByType(PackageSelector::class.java)
     val classSelectors = discoveryRequest.getSelectorsByType(ClassSelector::class.java)
@@ -103,7 +103,7 @@ abstract class InputOutputTestEngine :
 
   private fun doDiscover(
     dirNode: InputDirNode,
-    uniqueIdSelectors: List<UniqueIdSelector>
+    uniqueIdSelectors: List<UniqueIdSelector>,
   ): TestDescriptor {
     dirNode.inputDir.useDirectoryEntries { children ->
       for (child in children) {
@@ -128,7 +128,7 @@ abstract class InputOutputTestEngine :
           dirNode.addChild(
             doDiscover(
               InputDirNode(childId, child, DirectorySource.from(child.toFile())),
-              uniqueIdSelectors
+              uniqueIdSelectors,
             )
           )
         }
@@ -137,12 +137,13 @@ abstract class InputOutputTestEngine :
     return dirNode
   }
 
-  override fun createExecutionContext(request: ExecutionRequest) = ExecutionContext()
+  override fun createExecutionContext(request: ExecutionRequest): ExecutionContext =
+    ExecutionContext()
 
   private open inner class InputDirNode(
     uniqueId: UniqueId,
     val inputDir: Path,
-    source: TestSource
+    source: TestSource,
   ) :
     AbstractTestDescriptor(uniqueId, inputDir.fileName.toString(), source), Node<ExecutionContext> {
     override fun getType() = Type.CONTAINER
@@ -152,7 +153,7 @@ abstract class InputOutputTestEngine :
     AbstractTestDescriptor(
       uniqueId,
       inputFile.fileName.toString(),
-      FileSource.from(inputFile.toFile())
+      FileSource.from(inputFile.toFile()),
     ),
     Node<ExecutionContext> {
 
@@ -160,7 +161,7 @@ abstract class InputOutputTestEngine :
 
     override fun execute(
       context: ExecutionContext,
-      dynamicTestExecutor: DynamicTestExecutor
+      dynamicTestExecutor: DynamicTestExecutor,
     ): ExecutionContext {
 
       val (success, actualOutput) = generateOutputFor(inputFile)

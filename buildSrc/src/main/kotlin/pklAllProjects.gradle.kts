@@ -15,6 +15,7 @@
  */
 import com.diffplug.gradle.spotless.KotlinGradleExtension
 import org.gradle.accessors.dm.LibrariesForLibs
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins { id("com.diffplug.spotless") }
@@ -48,9 +49,9 @@ plugins.withType(JavaPlugin::class).configureEach {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    jvmTarget = "17"
-    freeCompilerArgs = freeCompilerArgs + listOf("-Xjsr305=strict", "-Xjvm-default=all")
+  compilerOptions {
+    jvmTarget = JvmTarget.JVM_17
+    freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all")
   }
 }
 

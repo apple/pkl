@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.pkl.codegen.java
 import com.palantir.javapoet.*
 import java.io.StringWriter
 import java.lang.Deprecated
-import java.net.URI
 import java.util.*
 import java.util.regex.Pattern
 import javax.lang.model.element.Modifier
@@ -91,13 +90,13 @@ data class JavaCodeGeneratorOptions(
    * Can be used when the class or package name in the generated source code should be different
    * from the corresponding name derived from the Pkl module declaration .
    */
-  val renames: Map<String, String> = emptyMap()
+  val renames: Map<String, String> = emptyMap(),
 )
 
 /** Entrypoint for the Java code generator API. */
 class JavaCodeGenerator(
   private val schema: ModuleSchema,
-  private val codegenOptions: JavaCodeGeneratorOptions
+  private val codegenOptions: JavaCodeGeneratorOptions,
 ) {
 
   companion object {
@@ -115,7 +114,7 @@ class JavaCodeGenerator(
     private val PMODULE = ClassName.get(PModule::class.java)
     private val PCLASS = ClassName.get(PClass::class.java)
     private val PATTERN = ClassName.get(Pattern::class.java)
-    private val URI = ClassName.get(URI::class.java)
+    private val URI = ClassName.get(java.net.URI::class.java)
     private val VERSION = ClassName.get(Version::class.java)
 
     private const val PROPERTY_PREFIX: String = "org.pkl.config.java.mapper."
@@ -241,7 +240,7 @@ class JavaCodeGenerator(
     fun addCtorParameter(
       builder: MethodSpec.Builder,
       propJavaName: String,
-      property: PClass.Property
+      property: PClass.Property,
     ) {
       val paramBuilder = ParameterSpec.builder(property.type.toJavaPoetName(), propJavaName)
       if (paramsAnnotationName != null) {
@@ -305,7 +304,7 @@ class JavaCodeGenerator(
           "if (!\$T.equals(this.$accessor, other.$accessor)) return false",
           Objects::class.java,
           propertyName,
-          propertyName
+          propertyName,
         )
       }
 
@@ -326,7 +325,7 @@ class JavaCodeGenerator(
         builder.addStatement(
           "result = 31 * result + \$T.hashCode($accessor)",
           Objects::class.java,
-          propertyName
+          propertyName,
         )
       }
 
@@ -348,7 +347,7 @@ class JavaCodeGenerator(
         appendBuilder.addStatement(
           "appendProperty(builder, \$S, this.\$N)",
           propertyName,
-          propertyName
+          propertyName,
         )
       }
 
@@ -357,7 +356,7 @@ class JavaCodeGenerator(
           "\$T builder = new \$T(\$L)",
           StringBuilder::class.java,
           StringBuilder::class.java,
-          builderSize
+          builderSize,
         )
         .addStatement("builder.append(\$T.class.getSimpleName()).append(\" {\")", javaPoetClassName)
         .addCode(appendBuilder.build())
@@ -381,7 +380,7 @@ class JavaCodeGenerator(
       annotations: Collection<PObject>,
       hasJavadoc: Boolean,
       addAnnotation: (Class<*>) -> Unit,
-      addJavadoc: (String) -> Unit
+      addJavadoc: (String) -> Unit,
     ) {
       annotations
         .firstOrNull { it.classInfo == PClassInfo.Deprecated }
@@ -417,7 +416,7 @@ class JavaCodeGenerator(
           property.annotations,
           hasJavadoc,
           { builder.addAnnotation(it) },
-          { builder.addJavadoc(it) }
+          { builder.addJavadoc(it) },
         )
         builder.addModifiers(Modifier.PUBLIC)
       }
@@ -430,7 +429,7 @@ class JavaCodeGenerator(
     fun generateGetter(
       propertyName: String,
       property: PClass.Property,
-      isOverridden: Boolean
+      isOverridden: Boolean,
     ): MethodSpec {
       val propertyType = property.type
       val isBooleanProperty =
@@ -460,7 +459,7 @@ class JavaCodeGenerator(
         property.annotations,
         hasJavadoc,
         { builder.addAnnotation(it) },
-        { builder.addJavadoc(it) }
+        { builder.addJavadoc(it) },
       )
 
       return builder.build()
@@ -479,7 +478,7 @@ class JavaCodeGenerator(
         property.annotations,
         false,
         { methodBuilder.addAnnotation(it) },
-        { methodBuilder.addJavadoc(it) }
+        { methodBuilder.addJavadoc(it) },
       )
 
       val codeBuilder = CodeBlock.builder()
@@ -535,7 +534,7 @@ class JavaCodeGenerator(
             AnnotationSpec.builder(
                 ClassName.get(
                   "org.springframework.boot.context.properties",
-                  "ConfigurationProperties"
+                  "ConfigurationProperties",
                 )
               )
               // use "value" instead of "prefix" to entice JavaPoet to generate a single-line
@@ -572,7 +571,7 @@ class JavaCodeGenerator(
         pClass.annotations,
         hasJavadoc,
         { builder.addAnnotation(it) },
-        { builder.addJavadoc(it) }
+        { builder.addJavadoc(it) },
       )
 
       if (!isModuleClass) {
@@ -632,7 +631,7 @@ class JavaCodeGenerator(
 
   private fun generateEnumTypeSpec(
     typeAlias: TypeAlias,
-    stringLiterals: Set<String>
+    stringLiterals: Set<String>,
   ): TypeSpec.Builder {
     val enumConstantToPklNames =
       stringLiterals
@@ -674,7 +673,7 @@ class JavaCodeGenerator(
     for ((enumConstantName, pklName) in enumConstantToPklNames) {
       builder.addEnumConstant(
         enumConstantName,
-        TypeSpec.anonymousClassBuilder("\$S", pklName).build()
+        TypeSpec.anonymousClassBuilder("\$S", pklName).build(),
       )
     }
 
@@ -694,7 +693,7 @@ class JavaCodeGenerator(
       .addStatement(
         "\$T lines = \$T.toString(value).split(\"\\n\")",
         ArrayTypeName.of(String::class.java),
-        Objects::class.java
+        Objects::class.java,
       )
       .addStatement("builder.append(lines[0])")
       .beginControlFlow("for (int i = 1; i < lines.length; i++)")
@@ -718,7 +717,7 @@ class JavaCodeGenerator(
 
   /** Generate `List<? extends Foo>` if `Foo` is `abstract` or `open`, to allow subclassing. */
   private fun PType.toJavaPoetTypeArgumentName(): TypeName {
-    val baseName = toJavaPoetName(nullable = false, boxed = true)
+    val baseName = toJavaPoetName(boxed = true)
     return if (this is PType.Class && (pClass.isAbstract || pClass.isOpen)) {
       WildcardTypeName.subtypeOf(baseName)
     } else {
@@ -757,7 +756,7 @@ class JavaCodeGenerator(
                   OBJECT
                 } else {
                   typeArguments[1].toJavaPoetTypeArgumentName()
-                }
+                },
               )
               .nullableIf(nullable)
           PClassInfo.Collection ->
@@ -767,7 +766,7 @@ class JavaCodeGenerator(
                   OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
-                }
+                },
               )
               .nullableIf(nullable)
           PClassInfo.List,
@@ -778,7 +777,7 @@ class JavaCodeGenerator(
                   OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
-                }
+                },
               )
               .nullableIf(nullable)
           }
@@ -789,7 +788,7 @@ class JavaCodeGenerator(
                   OBJECT
                 } else {
                   typeArguments[0].toJavaPoetTypeArgumentName()
-                }
+                },
               )
               .nullableIf(nullable)
           PClassInfo.Map,
@@ -805,7 +804,7 @@ class JavaCodeGenerator(
                   OBJECT
                 } else {
                   typeArguments[1].toJavaPoetTypeArgumentName()
-                }
+                },
               )
               .nullableIf(nullable)
           PClassInfo.Module -> PMODULE.nullableIf(nullable)
@@ -942,5 +941,5 @@ internal val javaReservedWords =
     "try",
     "void",
     "volatile",
-    "while"
+    "while",
   )

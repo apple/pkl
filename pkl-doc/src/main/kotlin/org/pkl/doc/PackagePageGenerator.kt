@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import kotlinx.html.*
 internal class PackagePageGenerator(
   docsiteInfo: DocsiteInfo,
   private val docPackage: DocPackage,
-  pageScope: PackageScope
+  pageScope: PackageScope,
 ) : MainOrPackagePageGenerator<PackageScope>(docsiteInfo, pageScope, pageScope.parent) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
@@ -50,12 +50,12 @@ internal class PackagePageGenerator(
             pageScope,
             packageInfo.annotations,
             isDeclaration = true,
-            collectMemberInfoForPackage(docPackage)
+            collectMemberInfoForPackage(docPackage),
           )
 
         renderMemberGroupLinks(
           Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Modules", "#_modules", docPackage.hasListedModule)
+          Triple("Modules", "#_modules", docPackage.hasListedModule),
         )
 
         renderAnchor("_overview")
@@ -120,8 +120,7 @@ internal class PackagePageGenerator(
               module.docComment,
               moduleScope,
               module.annotations,
-              isDeclaration = false,
-              collectMemberInfo(docModule)
+              extraMemberInfo = collectMemberInfo(docModule),
             )
 
           renderModuleOrPackage(module.moduleName, moduleScope, memberDocs)

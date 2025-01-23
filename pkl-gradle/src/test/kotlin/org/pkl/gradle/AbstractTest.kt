@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@ package org.pkl.gradle
 
 import java.net.URI
 import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.readString
-import org.pkl.commons.writeString
 
 abstract class AbstractTest {
   private val gradleVersion: String? = System.getProperty("testGradleVersion")
@@ -57,10 +57,10 @@ abstract class AbstractTest {
   }
 
   protected fun writeFile(fileName: String, contents: String): Path {
-    return testProjectDir
-      .resolve(fileName)
-      .apply { createParentDirectories() }
-      .writeString(contents.trimIndent())
+    return testProjectDir.resolve(fileName).apply {
+      createParentDirectories()
+      writeText(contents.trimIndent())
+    }
   }
 
   protected fun checkFileContents(file: Path, contents: String) {

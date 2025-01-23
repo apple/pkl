@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,11 @@ import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import java.net.URI
 
 abstract class ModulesCommand(name: String, helpLink: String, help: String = "") :
-  BaseCommand(
-    name = name,
-    help = help,
-    helpLink = helpLink,
-  ) {
+  BaseCommand(name = name, help = help, helpLink = helpLink) {
   open val modules: List<URI> by
     argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }
       .multiple(required = true)
 
-  protected val projectOptions by ProjectOptions()
+  protected val projectOptions: ProjectOptions by ProjectOptions()
 }

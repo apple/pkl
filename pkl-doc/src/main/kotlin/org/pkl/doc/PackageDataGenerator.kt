@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,10 @@ package org.pkl.doc
 import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.writer
-import kotlin.streams.toList
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.readString
 import org.pkl.commons.toUri
 import org.pkl.commons.walk
@@ -88,7 +87,7 @@ internal data class PackageRef(
   override val pkgUri: @Contextual URI?,
 
   /** The package version. */
-  override val version: String
+  override val version: String,
 ) : ElementRef() {
   override val pageUrl: URI by lazy { "$pkg/$version/index.html".toUri() }
 }
@@ -106,7 +105,7 @@ internal data class ModuleRef(
   override val version: String,
 
   /** The module path. */
-  val module: String
+  val module: String,
 ) : ElementRef() {
   override val pageUrl: URI by lazy { "$pkg/$version/$module/index.html".toUri() }
 
@@ -138,7 +137,7 @@ internal data class TypeRef(
   val type: String,
 
   /** Whether this is a type alias rather than a class. */
-  val isTypeAlias: Boolean = false
+  val isTypeAlias: Boolean = false,
 ) : ElementRef() {
 
   val id: TypeId by lazy { TypeId(pkg, module, type) }
@@ -191,7 +190,7 @@ internal class PackageData(
   val dependencies: List<DependencyData> = listOf(),
 
   /** The modules in this package. */
-  val modules: List<ModuleData> = listOf()
+  val modules: List<ModuleData> = listOf(),
 ) {
   companion object {
     val json = Json { serializersModule = serializers }
@@ -221,7 +220,7 @@ internal class PackageData(
     pkg.docPackageInfo.sourceCode,
     pkg.docPackageInfo.sourceCodeUrlScheme,
     pkg.docPackageInfo.dependencies.map { DependencyData(PackageRef(it.name, it.uri, it.version)) },
-    pkg.docModules.mapNotNull { if (it.isUnlisted) null else ModuleData(pkg, it) }
+    pkg.docModules.mapNotNull { if (it.isUnlisted) null else ModuleData(pkg, it) },
   )
 
   fun write(path: Path) {
@@ -255,7 +254,7 @@ internal class ModuleData(
   val ref: ModuleRef,
 
   /** The first paragraph of the overview documentation for this module. */
-  val summary: String? = null,
+  @Suppress("unused") val summary: String? = null,
 
   /** The deprecation message, or `null` if this module isn't deprecated. */
   val deprecation: String? = null,
@@ -270,11 +269,11 @@ internal class ModuleData(
   val classes: List<ClassData> = listOf(),
 
   /** The type aliases declared in this module. */
-  val typeAliases: List<TypeAliasData> = listOf()
+  @Suppress("unused") val typeAliases: List<TypeAliasData> = listOf(),
 ) {
   constructor(
     pkg: DocPackage,
-    module: DocModule
+    module: DocModule,
   ) : this(
     ModuleRef(pkg.name, pkg.uri, pkg.version, module.path),
     getDocCommentSummary(module.overview),
@@ -289,7 +288,7 @@ internal class ModuleData(
     },
     module.schema.typeAliases.mapNotNull {
       if (it.value.isUnlisted) null else TypeAliasData(pkg, module, it.value)
-    }
+    },
   )
 }
 
@@ -321,14 +320,14 @@ internal class ClassData(
   constructor(
     pkg: DocPackage,
     module: DocModule,
-    clazz: PClass
+    clazz: PClass,
   ) : this(
     TypeRef(pkg.name, pkg.uri, pkg.version, module.path, clazz.simpleName),
     generateSequence(clazz.superclass) { it.superclass }
       .map { pkg.docPackageInfo.getTypeRef(it) }
       .filterNotNull()
       .toList(),
-    findTypesUsedBy(clazz, pkg.docPackageInfo).toList()
+    findTypesUsedBy(clazz, pkg.docPackageInfo).toList(),
   )
 }
 
@@ -339,15 +338,15 @@ internal class TypeAliasData(
   override val ref: TypeRef,
 
   /** The types used by this type alias. */
-  override val usedTypes: List<TypeRef> = listOf()
+  override val usedTypes: List<TypeRef> = listOf(),
 ) : TypeData() {
   constructor(
     pkg: DocPackage,
     module: DocModule,
-    alias: TypeAlias
+    alias: TypeAlias,
   ) : this(
     TypeRef(pkg.name, pkg.uri, pkg.version, module.path, alias.simpleName, isTypeAlias = true),
-    findTypesUsedBy(alias, pkg.docPackageInfo).toList()
+    findTypesUsedBy(alias, pkg.docPackageInfo).toList(),
   )
 }
 
@@ -381,7 +380,7 @@ private fun findTypesUsedBy(
   type: PType,
   enclosingType: Member /* PClass|TypeAlias */,
   enclosingPackage: DocPackageInfo,
-  result: MutableSet<TypeRef>
+  result: MutableSet<TypeRef>,
 ) {
   when (type) {
     is PType.Class -> {
@@ -416,7 +415,7 @@ private fun findTypesUsedBy(
             enclosingPackage.uri,
             enclosingPackage.version,
             enclosingType.moduleName.substring(enclosingPackage.name.length + 1).replace('.', '/'),
-            PClassInfo.MODULE_CLASS_NAME
+            PClassInfo.MODULE_CLASS_NAME,
           )
         )
       }

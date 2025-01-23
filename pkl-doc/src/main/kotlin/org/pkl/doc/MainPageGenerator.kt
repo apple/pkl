@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import kotlinx.html.*
 internal class MainPageGenerator(
   docsiteInfo: DocsiteInfo,
   private val packagesData: List<PackageData>,
-  pageScope: SiteScope
+  pageScope: SiteScope,
 ) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, pageScope) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
@@ -41,7 +41,7 @@ internal class MainPageGenerator(
 
         renderMemberGroupLinks(
           Triple("Overview", "#_overview", memberDocs.isExpandable),
-          Triple("Packages", "#_packages", packagesData.isNotEmpty())
+          Triple("Packages", "#_packages", packagesData.isNotEmpty()),
         )
 
         if (docsiteInfo.overview != null) {
@@ -90,12 +90,12 @@ internal class MainPageGenerator(
         for (pkg in sortedPackages) {
           val packageScope =
             pageScope.packageScopes[pkg.ref.pkg]
-            // create scope for previously generated package
-            ?: pageScope.createEmptyPackageScope(
+              // create scope for previously generated package
+              ?: pageScope.createEmptyPackageScope(
                 pkg.ref.pkg,
                 pkg.ref.version,
                 pkg.sourceCodeUrlScheme,
-                pkg.sourceCode
+                pkg.sourceCode,
               )
 
           val memberDocs =
@@ -103,7 +103,6 @@ internal class MainPageGenerator(
               pkg.summary,
               packageScope,
               listOfNotNull(pkg.deprecation?.let { createDeprecatedAnnotation(it) }),
-              isDeclaration = false
             )
 
           renderModuleOrPackage(pkg.ref.pkg, packageScope, memberDocs)

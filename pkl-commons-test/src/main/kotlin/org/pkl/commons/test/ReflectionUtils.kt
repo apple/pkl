@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.cli
+package org.pkl.commons.test
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.Path
-import kotlin.io.path.createParentDirectories
-import org.pkl.commons.writeString
+import kotlin.reflect.KClass
 
-fun Path.writeFile(fileName: String, contents: String): Path {
-  return resolve(fileName).apply {
-    createParentDirectories()
-    writeString(contents, StandardCharsets.UTF_8)
-  }
+object ReflectionUtils {
+  // https://youtrack.jetbrains.com/issue/KT-14743/Reflection-Access-enum-values-and-valueOf-via-KClass#focus=Comments-27-1745309.0-0
+  @Suppress("UNCHECKED_CAST")
+  fun KClass<*>.enumValues(): Array<Enum<*>> = java.enumConstants as Array<Enum<*>>
 }
-
-fun Path.writeEmptyFile(fileName: String): Path = writeFile(fileName, "")

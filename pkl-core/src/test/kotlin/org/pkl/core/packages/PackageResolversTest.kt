@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.pkl.core.packages
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 import kotlin.io.path.readBytes
 import org.assertj.core.api.Assertions.assertThat
@@ -25,7 +27,6 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.pkl.commons.deleteRecursively
 import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
@@ -118,7 +119,7 @@ class PackageResolversTest {
             PathElement("catalog", true),
             PathElement("Bird.pkl", false),
             PathElement("allFruit.pkl", false),
-            PathElement("catalog.pkl", false)
+            PathElement("catalog.pkl", false),
           )
         )
     }
@@ -129,13 +130,13 @@ class PackageResolversTest {
         resolver.getBytes(
           PackageAssetUri("package://localhost:0/birds@0.5.0#/Bird.pkl"),
           false,
-          null
+          null,
         )
       val swallow =
         resolver.getBytes(
           PackageAssetUri("package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"),
           false,
-          null
+          null,
         )
       assertThat(bird).isEqualTo(packageRoot.resolve("birds@0.5.0/package/Bird.pkl").readBytes())
       assertThat(swallow)
@@ -150,12 +151,7 @@ class PackageResolversTest {
           .listElements(PackageAssetUri("package://localhost:0/birds@0.5.0#/catalog/"), null)
           .toSet()
       assertThat(elements)
-        .isEqualTo(
-          setOf(
-            PathElement("Ostrich.pkl", false),
-            PathElement("Swallow.pkl", false),
-          )
-        )
+        .isEqualTo(setOf(PathElement("Ostrich.pkl", false), PathElement("Swallow.pkl", false)))
     }
 
     @Test
@@ -174,7 +170,7 @@ class PackageResolversTest {
           .getBytes(
             PackageAssetUri("package://localhost:0/not-a-package@0.5.0#/Horse.pkl"),
             false,
-            null
+            null,
           )
           .toString(StandardCharsets.UTF_8)
       }
@@ -186,7 +182,7 @@ class PackageResolversTest {
           resolver.getBytes(
             PackageAssetUri("package://localhost:0/badPackageZipUrl@1.0.0#/Bug.pkl"),
             false,
-            null
+            null,
           )
         }
         .hasMessage(
@@ -201,7 +197,7 @@ class PackageResolversTest {
           resolver.getBytes(
             PackageAssetUri("package://localhost:0/badChecksum@1.0.0#/Bug.pkl"),
             false,
-            null
+            null,
           )
         }
       assertThat(error)
@@ -215,6 +211,7 @@ class PackageResolversTest {
     }
   }
 
+  @ExperimentalPathApi
   class DiskCachedPackageResolverTest : AbstractPackageResolverTest() {
     private val cacheDir = FileTestUtils.rootProjectDir.resolve("pkl-core/build/test-cache")
 
@@ -233,7 +230,7 @@ class PackageResolversTest {
       PackageResolvers.DiskCachedPackageResolver(
         SecurityManagers.defaultManager,
         httpClient,
-        cacheDir
+        cacheDir,
       )
   }
 

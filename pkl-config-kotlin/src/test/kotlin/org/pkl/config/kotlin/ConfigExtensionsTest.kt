@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -171,7 +171,7 @@ class ConfigExtensionsTest {
         mapOf(
           "l" to SimplePerson("lilly"),
           "b" to SimplePerson("bob"),
-          "s" to SimplePerson("susan")
+          "s" to SimplePerson("susan"),
         )
       )
   }
@@ -189,14 +189,14 @@ class ConfigExtensionsTest {
         mapOf(
           "l" to SimplePerson("lilly"),
           "b" to SimplePerson("bob"),
-          "s" to SimplePerson("susan")
+          "s" to SimplePerson("susan"),
         )
       )
   }
 
   @Test
   fun `convert enum with mangled names`() {
-    val values = MangledNameEnum.values().map { "\"$it\"" }
+    val values = MangledNameEnum.entries.map { "\"$it\"" }
     val config =
       evaluator.evaluate(
         text(
@@ -208,7 +208,7 @@ class ConfigExtensionsTest {
         )
       )
     val allEnumValues = config["allEnumValues"].to<Set<MangledNameEnum>>()
-    assertThat(allEnumValues).isEqualTo(MangledNameEnum.values().toSet())
+    assertThat(allEnumValues).isEqualTo(MangledNameEnum.entries.toSet())
   }
 
   data class SimplePerson(val name: String)
@@ -218,7 +218,7 @@ class ConfigExtensionsTest {
   enum class Hobby {
     SWIMMING,
     @Suppress("unused") SURFING,
-    READING
+    READING,
   }
 
   data class Address<out T>(val street: T)
@@ -240,7 +240,7 @@ class ConfigExtensionsTest {
   class PersonWithDefaults(
     val name: String = "Pigeon",
     val age: Int = 42,
-    val hobbies: List<String>
+    val hobbies: List<String>,
   )
 
   @Suppress("NonAsciiCharacters", "EnumEntryName")
@@ -252,6 +252,6 @@ class ConfigExtensionsTest {
     _42_FROM_INVALID_START("42-from-invalid-start"),
     __EMOJI__("❎Emoji✅✅"),
     ÀŒÜ("àœü"),
-    日本_つくば("日本-つくば")
+    日本_つくば("日本-つくば"),
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ private val cmdRegex = Regex(":(\\p{Alpha}*)(\\p{Space}*)(.*)", RegexOption.DOT_
 internal fun getMatchingCommands(input: String): List<ParsedCommand> {
   val match = cmdRegex.matchEntire(input) ?: return listOf()
   val (cmd, ws, arg) = match.destructured
-  return Command.values()
+  return Command.entries
     .filter { it.toString().lowercase().startsWith(cmd) }
     .map { ParsedCommand(it, cmd, ws, arg) }
 }
@@ -29,7 +29,7 @@ internal data class ParsedCommand(
   val type: Command,
   val cmd: String,
   val ws: String,
-  val arg: String
+  val arg: String,
 )
 
 internal enum class Command {

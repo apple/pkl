@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.pkl.codegen.kotlin
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.StringWriter
-import java.net.URI
 import java.util.*
 import org.pkl.commons.NameMapper
 import org.pkl.core.*
@@ -76,7 +75,7 @@ class KotlinCodeGenerator(
     private val PMODULE = PModule::class.asClassName()
     private val PCLASS = PClass::class.asClassName()
     private val REGEX = Regex::class.asClassName()
-    private val URI = URI::class.asClassName()
+    private val URI = java.net.URI::class.asClassName()
     private val VERSION = Version::class.asClassName()
 
     private const val PROPERTY_PREFIX: String = "org.pkl.config.java.mapper."
@@ -134,7 +133,7 @@ class KotlinCodeGenerator(
 
       fun generateCompanionRelatedCode(
         builder: TypeSpec.Builder,
-        isModuleType: Boolean = false
+        isModuleType: Boolean = false,
       ): TypeSpec.Builder {
         // ensure that at most one companion object is generated for this type
         val companionObjectBuilder: Lazy<TypeSpec.Builder> = lazy {
@@ -153,7 +152,7 @@ class KotlinCodeGenerator(
                 "serialVersionUID",
                 Long::class.java,
                 KModifier.PRIVATE,
-                KModifier.CONST
+                KModifier.CONST,
               )
               .initializer("0L")
               .build()
@@ -307,7 +306,7 @@ class KotlinCodeGenerator(
         builder.addStatement(
           "if (this.$accessor != other.$accessor) return false",
           propertyName,
-          propertyName
+          propertyName,
         )
       }
 
@@ -329,7 +328,7 @@ class KotlinCodeGenerator(
         builder.addStatement(
           "result = 31 * result + %T.hashCode($accessor)",
           Objects::class,
-          propertyName
+          propertyName,
         )
       }
 
@@ -355,14 +354,14 @@ class KotlinCodeGenerator(
               }
               add(")")
             }
-            .build()
+            .build(),
         )
         .build()
     }
 
     fun generateDeprecation(
       annotations: Collection<PObject>,
-      addAnnotation: (AnnotationSpec) -> Unit
+      addAnnotation: (AnnotationSpec) -> Unit,
     ) {
       annotations
         .firstOrNull { it.classInfo == PClassInfo.Deprecated }
@@ -511,7 +510,7 @@ class KotlinCodeGenerator(
 
   private fun generateEnumTypeSpec(
     typeAlias: TypeAlias,
-    stringLiterals: Set<String>
+    stringLiterals: Set<String>,
   ): TypeSpec.Builder {
     val enumConstantToPklNames =
       stringLiterals
@@ -545,7 +544,7 @@ class KotlinCodeGenerator(
     for ((enumConstantName, pklName) in enumConstantToPklNames) {
       builder.addEnumConstant(
         enumConstantName,
-        TypeSpec.anonymousClassBuilder().addSuperclassConstructorParameter("%S", pklName).build()
+        TypeSpec.anonymousClassBuilder().addSuperclassConstructorParameter("%S", pklName).build(),
       )
     }
 
@@ -636,7 +635,7 @@ class KotlinCodeGenerator(
           PClassInfo.Pair ->
             KOTLIN_PAIR.parameterizedBy(
               if (typeArguments.isEmpty()) ANY_NULL else typeArguments[0].toKotlinPoetName(),
-              if (typeArguments.isEmpty()) ANY_NULL else typeArguments[1].toKotlinPoetName()
+              if (typeArguments.isEmpty()) ANY_NULL else typeArguments[1].toKotlinPoetName(),
             )
           PClassInfo.Collection ->
             COLLECTION.parameterizedBy(
@@ -655,7 +654,7 @@ class KotlinCodeGenerator(
           PClassInfo.Mapping ->
             MAP.parameterizedBy(
               if (typeArguments.isEmpty()) ANY_NULL else typeArguments[0].toKotlinPoetName(),
-              if (typeArguments.isEmpty()) ANY_NULL else typeArguments[1].toKotlinPoetName()
+              if (typeArguments.isEmpty()) ANY_NULL else typeArguments[1].toKotlinPoetName(),
             )
           PClassInfo.Module -> PMODULE
           PClassInfo.Class -> PCLASS

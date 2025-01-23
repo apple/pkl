@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,7 @@ import java.security.KeyStore
 import java.util.concurrent.Executors
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
-import kotlin.io.path.inputStream
-import kotlin.io.path.isRegularFile
-import org.pkl.commons.createParentDirectories
-import org.pkl.commons.deleteRecursively
+import kotlin.io.path.*
 
 /**
  * A test HTTP server that serves the Pkl packages defined under
@@ -44,6 +41,7 @@ import org.pkl.commons.deleteRecursively
  * 4. Use port `0` in your test. `HttpClient` will replace this port with the server port.
  * 4. [Close][close] the server, for example in [AfterAll][org.junit.jupiter.api.AfterAll].
  */
+@OptIn(ExperimentalPathApi::class)
 class PackageServer : AutoCloseable {
   companion object {
     const val BIRDS_SHA = "6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e"

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@ package org.pkl.core.settings
 
 import java.net.URI
 import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
@@ -71,7 +71,7 @@ class PklSettingsTest {
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(
           URI("http://localhost:8080"),
-          listOf("example.com", "pkg.pkl-lang.org")
+          listOf("example.com", "pkg.pkl-lang.org"),
         )
       )
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
@@ -95,12 +95,7 @@ class PklSettingsTest {
 
     val settings = PklSettings.loadFromPklHomeDir(tempDir)
     val expectedHttp =
-      PklEvaluatorSettings.Http(
-        PklEvaluatorSettings.Proxy(
-          URI("http://localhost:8080"),
-          listOf(),
-        )
-      )
+      PklEvaluatorSettings.Http(PklEvaluatorSettings.Proxy(URI("http://localhost:8080"), listOf()))
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import java.io.Writer
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.currentWorkingDir
 import org.pkl.commons.writeString
 import org.pkl.core.Closeables
@@ -165,13 +165,13 @@ constructor(
                 options.moduleOutputSeparator + '\n',
                 Charsets.UTF_8,
                 StandardOpenOption.WRITE,
-                StandardOpenOption.APPEND
+                StandardOpenOption.APPEND,
               )
               outputFile.writeString(
                 output,
                 Charsets.UTF_8,
                 StandardOpenOption.WRITE,
-                StandardOpenOption.APPEND
+                StandardOpenOption.APPEND,
               )
             }
           }

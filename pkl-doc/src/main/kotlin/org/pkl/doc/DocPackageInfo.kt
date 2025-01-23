@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,14 +101,14 @@ data class DocPackageInfo(
               version = dependency["version"] as String,
               sourceCode = (dependency["sourceCode"] as String?)?.toUri(),
               sourceCodeUrlScheme = dependency["sourceCodeUrlScheme"] as String?,
-              documentation = (dependency["documentation"] as String?)?.toUri()
+              documentation = (dependency["documentation"] as String?)?.toUri(),
             )
           },
         overview = module["overview"] as String,
         overviewImports =
           (module["overviewImports"] as Map<String, String>).mapValues { it.value.toUri() },
         annotations = module["annotations"] as List<PObject>,
-        extraAttributes = module["extraAttributes"] as Map<String, String>
+        extraAttributes = module["extraAttributes"] as Map<String, String>,
       )
   }
 
@@ -122,7 +122,7 @@ data class DocPackageInfo(
           dependency.name,
           dependency.uri,
           dependency.version,
-          getModulePath(moduleName, dependency.prefix)
+          getModulePath(moduleName, dependency.prefix),
         )
       }
     }
@@ -138,7 +138,7 @@ data class DocPackageInfo(
         version,
         getModulePath(moduleName, moduleNamePrefix),
         type.simpleName,
-        isTypeAlias = type is TypeAlias
+        isTypeAlias = type is TypeAlias,
       )
     }
     for (dependency in dependencies) {
@@ -149,7 +149,7 @@ data class DocPackageInfo(
           dependency.version,
           getModulePath(moduleName, dependency.prefix),
           type.simpleName,
-          isTypeAlias = type is TypeAlias
+          isTypeAlias = type is TypeAlias,
         )
       }
     }
@@ -212,6 +212,7 @@ data class DocPackageInfo(
         }
       }
 
+    @Suppress("unused")
     internal fun getModuleSourceCode(moduleName: String): URI? =
       when {
         !moduleName.startsWith(prefix) -> null
@@ -223,7 +224,7 @@ data class DocPackageInfo(
 
     internal fun getModuleSourceCodeWithSourceLocation(
       moduleName: String,
-      sourceLocation: SourceLocation
+      sourceLocation: SourceLocation,
     ): URI? {
       return when {
         !moduleName.startsWith(prefix) -> null

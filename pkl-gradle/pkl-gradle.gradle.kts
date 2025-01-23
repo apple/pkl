@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,4 +99,6 @@ signing {
 // (Apparently, gradle-api.jar now contains metadata that causes kotlinc to enforce Gradle's Kotlin
 // version.)
 // A more robust solution would be to port plugin tests to Java.
-tasks.compileTestKotlin { kotlinOptions { freeCompilerArgs += "-Xskip-metadata-version-check" } }
+tasks.compileTestKotlin {
+  compilerOptions { freeCompilerArgs.add("-Xskip-metadata-version-check") }
+}

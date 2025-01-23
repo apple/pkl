@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,11 @@ import javax.script.ScriptException
 import kotlin.reflect.KClass
 import kotlin.text.RegexOption.MULTILINE
 import kotlin.text.RegexOption.UNIX_LINES
-import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 
 class CompilationFailedException(msg: String?, cause: Throwable? = null) :
   RuntimeException(msg, cause)
 
 object InMemoryKotlinCompiler {
-  init {
-    // prevent "Unable to load JNA library" warning
-    setIdeaIoUseFallback()
-  }
-
   // Implementation notes:
   // * all [sourceFiles] are currently combined into a single file
   // * implementation makes assumptions about structure of generated source files
@@ -43,14 +37,16 @@ object InMemoryKotlinCompiler {
         "^(data |open |enum )?class\\s+(\\w+) *(\\([^)]*\\))?.*$\\n((^  .*\\n|^$\\n)*)",
       transform: (String, String) -> Sequence<Pair<String, String>> = { name, body ->
         sequenceOf(Pair(name, prefix + name)) + body.findClasses("$prefix$name.")
-      }
+      },
     ): Sequence<Pair<String, String>> = // (simpleName1, qualifiedName1), ...
     Regex(regex, setOf(MULTILINE, UNIX_LINES)).findAll(this).flatMap {
         transform(it.groupValues[nameGroup], it.groupValues[bodyGroup].trimIndent())
       }
 
     fun String.findOuterObjects(): Sequence<Pair<String, String>> = // (simpleName, qualifiedName)
-    findClasses("", 1, 2, "^object\\s+(\\w+).*$\n((^  .*$\n|^$\n)*)") { name, body ->
+    findClasses(nameGroup = 1, bodyGroup = 2, regex = "^object\\s+(\\w+).*$\n((^  .*$\n|^$\n)*)") {
+        name,
+        body ->
         body.findClasses("$name.")
       }
 

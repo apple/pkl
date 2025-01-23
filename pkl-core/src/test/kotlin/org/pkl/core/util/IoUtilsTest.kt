@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
 import kotlin.io.path.createFile
+import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.createParentDirectories
 import org.pkl.commons.toPath
 import org.pkl.core.SecurityManager
 import org.pkl.core.module.ModuleKeyFactories
@@ -49,7 +49,7 @@ class IoUtilsTest {
         ModuleKeyFactories.pkg,
         ModuleKeyFactories.file,
         ModuleKeyFactories.standardLibrary,
-        ModuleKeyFactories.genericUrl
+        ModuleKeyFactories.genericUrl,
       )
     )
 
@@ -174,7 +174,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo.com/bar/baz.pkl?query"),
-          URI("https://foo.com/bar/qux.pkl")
+          URI("https://foo.com/bar/qux.pkl"),
         )
       )
       .isEqualTo(URI("baz.pkl?query"))
@@ -182,7 +182,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo.com/bar/baz.pkl#fragment"),
-          URI("https://foo.com/bar/qux.pkl")
+          URI("https://foo.com/bar/qux.pkl"),
         )
       )
       .isEqualTo(URI("baz.pkl#fragment"))
@@ -190,7 +190,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo.com/bar/baz.pkl?query#fragment"),
-          URI("https://foo.com/bar/qux.pkl")
+          URI("https://foo.com/bar/qux.pkl"),
         )
       )
       .isEqualTo(URI("baz.pkl?query#fragment"))
@@ -198,7 +198,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo.com/bar/baz.pkl?query#fragment"),
-          URI("https://foo.com/bar/qux.pkl?query2#fragment2")
+          URI("https://foo.com/bar/qux.pkl?query2#fragment2"),
         )
       )
       .isEqualTo(URI("baz.pkl?query#fragment"))
@@ -211,7 +211,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo.com:80/bar/baz.pkl"),
-          URI("https://bar.com:80/bar/baz.pkl")
+          URI("https://bar.com:80/bar/baz.pkl"),
         )
       )
       .isEqualTo(URI("https://foo.com:80/bar/baz.pkl"))
@@ -219,7 +219,7 @@ class IoUtilsTest {
     assertThat(
         IoUtils.relativize(
           URI("https://foo:bar@foo.com:80/bar/baz.pkl"),
-          URI("https://foo:baz@bar.com:80/bar/baz.pkl")
+          URI("https://foo:baz@bar.com:80/bar/baz.pkl"),
         )
       )
       .isEqualTo(URI("https://foo:bar@foo.com:80/bar/baz.pkl"))
@@ -282,7 +282,7 @@ class IoUtilsTest {
         "modulepath:/foo.pkl" to "foo",
         "modulepath:/foo/bar/baz.pkl" to "baz",
         "package://example.com/foo/bar@1.0.0#/baz.pkl" to "baz",
-        "package://example.com/foo/bar@1.0.0#/baz/biz/qux.pkl" to "qux"
+        "package://example.com/foo/bar@1.0.0#/baz/biz/qux.pkl" to "qux",
       )
     for ((uriStr, name) in assertions) {
       val uri = URI(uriStr)
@@ -356,7 +356,7 @@ class IoUtilsTest {
         IoUtils.resolve(
           FakeSecurityManager,
           key,
-          URI(".../core/module/NamedModuleResolversTest.pkl")
+          URI(".../core/module/NamedModuleResolversTest.pkl"),
         )
       )
       .isEqualTo(URI("modulepath:/org/pkl/core/module/NamedModuleResolversTest.pkl"))
@@ -365,7 +365,7 @@ class IoUtilsTest {
         IoUtils.resolve(
           FakeSecurityManager,
           key,
-          URI(".../org/pkl/core/module/NamedModuleResolversTest.pkl")
+          URI(".../org/pkl/core/module/NamedModuleResolversTest.pkl"),
         )
       )
       .isEqualTo(URI("modulepath:/org/pkl/core/module/NamedModuleResolversTest.pkl"))
