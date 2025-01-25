@@ -90,8 +90,6 @@ public interface ParserVisitor<Result> {
 
   Result visitImportExpr(Expr.ImportExpr expr);
 
-  Result visitImportGlobExpr(Expr.ImportGlobExpr expr);
-
   Result visitReadExpr(Expr.Read expr);
 
   Result visitReadNullExpr(Expr.ReadNull expr);
@@ -152,7 +150,6 @@ public interface ParserVisitor<Result> {
     if (expr instanceof Expr.Throw e) return visitThrowExpr(e);
     if (expr instanceof Expr.Trace e) return visitTraceExpr(e);
     if (expr instanceof Expr.ImportExpr e) return visitImportExpr(e);
-    if (expr instanceof Expr.ImportGlobExpr e) return visitImportGlobExpr(e);
     if (expr instanceof Expr.Read e) return visitReadExpr(e);
     if (expr instanceof Expr.ReadGlob e) return visitReadGlobExpr(e);
     if (expr instanceof Expr.ReadNull e) return visitReadNullExpr(e);

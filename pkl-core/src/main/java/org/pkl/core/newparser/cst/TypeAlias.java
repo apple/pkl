@@ -118,8 +118,6 @@ public final class TypeAlias implements ModuleEntry {
         + type
         + ", span="
         + span
-        + ", parent="
-        + parent
         + '}';
   }
 
@@ -138,12 +136,11 @@ public final class TypeAlias implements ModuleEntry {
         && Objects.equals(name, typeAlias.name)
         && Objects.equals(typePars, typeAlias.typePars)
         && Objects.equals(type, typeAlias.type)
-        && Objects.equals(span, typeAlias.span)
-        && Objects.equals(parent, typeAlias.parent);
+        && Objects.equals(span, typeAlias.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(docComment, annotations, modifiers, name, typePars, type, span, parent);
+    return Objects.hash(docComment, annotations, modifiers, name, typePars, type, span);
   }
 }

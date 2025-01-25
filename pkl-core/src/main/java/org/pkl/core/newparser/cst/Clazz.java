@@ -132,8 +132,6 @@ public final class Clazz implements ModuleEntry {
         + body
         + ", span="
         + span
-        + ", parent="
-        + parent
         + '}';
   }
 
@@ -153,13 +151,11 @@ public final class Clazz implements ModuleEntry {
         && Objects.equals(typePars, clazz.typePars)
         && Objects.equals(superClass, clazz.superClass)
         && Objects.equals(body, clazz.body)
-        && Objects.equals(span, clazz.span)
-        && Objects.equals(parent, clazz.parent);
+        && Objects.equals(span, clazz.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        docComment, annotations, modifiers, name, typePars, superClass, body, span, parent);
+    return Objects.hash(docComment, annotations, modifiers, name, typePars, superClass, body, span);
   }
 }

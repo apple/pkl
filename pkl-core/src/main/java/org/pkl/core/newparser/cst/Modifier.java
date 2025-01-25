@@ -49,7 +49,7 @@ public final class Modifier implements Node {
 
   @Override
   public String toString() {
-    return "Modifier{" + "value=" + value + ", span=" + span + ", parent=" + parent + '}';
+    return "Modifier{" + "value=" + value + ", span=" + span + '}';
   }
 
   @Override
@@ -61,14 +61,12 @@ public final class Modifier implements Node {
       return false;
     }
     Modifier modifier = (Modifier) o;
-    return value == modifier.value
-        && Objects.equals(span, modifier.span)
-        && Objects.equals(parent, modifier.parent);
+    return value == modifier.value && Objects.equals(span, modifier.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, span, parent);
+    return Objects.hash(value, span);
   }
 
   public enum ModifierValue {

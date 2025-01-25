@@ -46,7 +46,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "UnknownType{" + "span=" + span + ", parent=" + parent + '}';
+      return "UnknownType{" + "span=" + span + '}';
     }
 
     @Override
@@ -58,12 +58,12 @@ public sealed interface Type extends Node {
         return false;
       }
       UnknownType that = (UnknownType) o;
-      return Objects.equals(span, that.span) && Objects.equals(parent, that.parent);
+      return Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -92,7 +92,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "NothingType{" + "span=" + span + ", parent=" + parent + '}';
+      return "NothingType{" + "span=" + span + '}';
     }
 
     @Override
@@ -104,12 +104,12 @@ public sealed interface Type extends Node {
         return false;
       }
       NothingType that = (NothingType) o;
-      return Objects.equals(span, that.span) && Objects.equals(parent, that.parent);
+      return Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -138,7 +138,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "ModuleType{" + "span=" + span + ", parent=" + parent + '}';
+      return "ModuleType{" + "span=" + span + '}';
     }
 
     @Override
@@ -150,12 +150,12 @@ public sealed interface Type extends Node {
         return false;
       }
       ModuleType that = (ModuleType) o;
-      return Objects.equals(span, that.span) && Objects.equals(parent, that.parent);
+      return Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -190,15 +190,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "StringConstantType{"
-          + "str='"
-          + str
-          + '\''
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "StringConstantType{" + "str='" + str + '\'' + ", span=" + span + '}';
     }
 
     @Override
@@ -210,14 +202,12 @@ public sealed interface Type extends Node {
         return false;
       }
       StringConstantType that = (StringConstantType) o;
-      return Objects.equals(str, that.str)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(str, that.str) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(str, span, parent);
+      return Objects.hash(str, span);
     }
   }
 
@@ -263,16 +253,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "DeclaredType{"
-          + "name="
-          + name
-          + ", args="
-          + args
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "DeclaredType{" + "name=" + name + ", args=" + args + ", span=" + span + '}';
     }
 
     @Override
@@ -286,13 +267,12 @@ public sealed interface Type extends Node {
       DeclaredType that = (DeclaredType) o;
       return Objects.equals(name, that.name)
           && Objects.equals(args, that.args)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(name, args, span, parent);
+      return Objects.hash(name, args, span);
     }
   }
 
@@ -329,7 +309,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "ParenthesizedType{" + "type=" + type + ", span=" + span + ", parent=" + parent + '}';
+      return "ParenthesizedType{" + "type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -341,14 +321,12 @@ public sealed interface Type extends Node {
         return false;
       }
       ParenthesizedType that = (ParenthesizedType) o;
-      return Objects.equals(type, that.type)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, span, parent);
+      return Objects.hash(type, span);
     }
   }
 
@@ -385,7 +363,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "NullableType{" + "type=" + type + ", span=" + span + ", parent=" + parent + '}';
+      return "NullableType{" + "type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -397,14 +375,12 @@ public sealed interface Type extends Node {
         return false;
       }
       NullableType that = (NullableType) o;
-      return Objects.equals(type, that.type)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, span, parent);
+      return Objects.hash(type, span);
     }
   }
 
@@ -450,16 +426,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "ConstrainedType{"
-          + "type="
-          + type
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "ConstrainedType{" + "type=" + type + ", expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -473,13 +440,12 @@ public sealed interface Type extends Node {
       ConstrainedType that = (ConstrainedType) o;
       return Objects.equals(type, that.type)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, expr, span, parent);
+      return Objects.hash(type, expr, span);
     }
   }
 
@@ -516,7 +482,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "DefaultUnionType{" + "type=" + type + ", span=" + span + ", parent=" + parent + '}';
+      return "DefaultUnionType{" + "type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -528,14 +494,12 @@ public sealed interface Type extends Node {
         return false;
       }
       DefaultUnionType that = (DefaultUnionType) o;
-      return Objects.equals(type, that.type)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, span, parent);
+      return Objects.hash(type, span);
     }
   }
 
@@ -579,16 +543,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "UnionType{"
-          + "left="
-          + left
-          + ", right="
-          + right
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "UnionType{" + "left=" + left + ", right=" + right + ", span=" + span + '}';
     }
 
     @Override
@@ -602,13 +557,12 @@ public sealed interface Type extends Node {
       UnionType unionType = (UnionType) o;
       return Objects.equals(left, unionType.left)
           && Objects.equals(right, unionType.right)
-          && Objects.equals(span, unionType.span)
-          && Objects.equals(parent, unionType.parent);
+          && Objects.equals(span, unionType.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(left, right, span, parent);
+      return Objects.hash(left, right, span);
     }
   }
 
@@ -654,16 +608,7 @@ public sealed interface Type extends Node {
 
     @Override
     public String toString() {
-      return "FunctionType{"
-          + "args="
-          + args
-          + ", ret="
-          + ret
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "FunctionType{" + "args=" + args + ", ret=" + ret + ", span=" + span + '}';
     }
 
     @Override
@@ -677,13 +622,12 @@ public sealed interface Type extends Node {
       FunctionType that = (FunctionType) o;
       return Objects.equals(args, that.args)
           && Objects.equals(ret, that.ret)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(args, ret, span, parent);
+      return Objects.hash(args, ret, span);
     }
   }
 }

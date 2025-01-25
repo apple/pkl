@@ -63,16 +63,7 @@ public final class ObjectBody implements Node {
 
   @Override
   public String toString() {
-    return "ObjectBody{"
-        + "pars="
-        + pars
-        + ", members="
-        + members
-        + ", span="
-        + span
-        + ", parent="
-        + parent
-        + '}';
+    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
   }
 
   @Override
@@ -86,12 +77,11 @@ public final class ObjectBody implements Node {
     ObjectBody that = (ObjectBody) o;
     return Objects.equals(pars, that.pars)
         && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span, parent);
+    return Objects.hash(pars, members, span);
   }
 }

@@ -17,16 +17,17 @@ package org.pkl.core.newparser.cst;
 
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.newparser.cst.Expr.StringConstant;
 import org.pkl.core.util.Nullable;
 
 public final class Import implements Node {
-  private final String url;
+  private final StringConstant url;
   private final boolean isGlob;
   private final @Nullable Ident alias;
   private final Span span;
   private Node parent;
 
-  public Import(String url, boolean isGlob, @Nullable Ident alias, Span span) {
+  public Import(StringConstant url, boolean isGlob, @Nullable Ident alias, Span span) {
     this.url = url;
     this.isGlob = isGlob;
     this.alias = alias;
@@ -52,7 +53,7 @@ public final class Import implements Node {
     this.parent = parent;
   }
 
-  public String getUrl() {
+  public StringConstant getUrl() {
     return url;
   }
 
@@ -67,17 +68,14 @@ public final class Import implements Node {
   @Override
   public String toString() {
     return "Import{"
-        + "url='"
+        + "url="
         + url
-        + '\''
         + ", isGlob="
         + isGlob
         + ", alias="
         + alias
         + ", span="
         + span
-        + ", parent="
-        + parent
         + '}';
   }
 
@@ -93,12 +91,11 @@ public final class Import implements Node {
     return isGlob == anImport.isGlob
         && Objects.equals(url, anImport.url)
         && Objects.equals(alias, anImport.alias)
-        && Objects.equals(span, anImport.span)
-        && Objects.equals(parent, anImport.parent);
+        && Objects.equals(span, anImport.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, isGlob, alias, span, parent);
+    return Objects.hash(url, isGlob, alias, span);
   }
 }

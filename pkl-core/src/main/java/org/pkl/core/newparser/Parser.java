@@ -147,13 +147,13 @@ public class Parser {
   private ExtendsDecl parseExtendsDecl() {
     var tk = expect(Token.EXTENDS, "Expected `extends`").span;
     var url = parseStringConstant();
-    return new ExtendsDecl(url.value, tk.endWith(url.span));
+    return new ExtendsDecl(url, tk.endWith(url.span()));
   }
 
   private AmendsDecl parseAmendsDecl() {
     var tk = expect(Token.AMENDS, "noError").span;
     var url = parseStringConstant();
-    return new AmendsDecl(url.value, tk.endWith(url.span));
+    return new AmendsDecl(url, tk.endWith(url.span()));
   }
 
   private Import parseImportDecl() {
@@ -166,14 +166,14 @@ public class Parser {
       start = expect(Token.IMPORT, "Expected `import` or `import*`").span;
     }
     var str = parseStringConstant();
-    var end = str.span;
+    var end = str.span();
     Ident alias = null;
     if (lookahead == Token.AS) {
       next();
       alias = parseIdent();
       end = alias.span();
     }
-    return new Import(str.value, isGlob, alias, start.endWith(end));
+    return new Import(str, isGlob, alias, start.endWith(end));
   }
 
   private EntryHeader parseEntryHeader() {
@@ -710,14 +710,14 @@ public class Parser {
             expect(Token.LPAREN, "Expected `(`");
             var strConst = parseStringConstant();
             var end = expect(Token.RPAREN, "Expected `)`").span;
-            yield new Expr.ImportExpr(strConst.value, start.endWith(end));
+            yield new Expr.ImportExpr(strConst, false, start.endWith(end));
           }
           case IMPORT_STAR -> {
             var start = next().span;
             expect(Token.LPAREN, "Expected `(`");
             var strConst = parseStringConstant();
             var end = expect(Token.RPAREN, "Expected `)`").span;
-            yield new Expr.ImportGlobExpr(strConst.value, start.endWith(end));
+            yield new Expr.ImportExpr(strConst, true, start.endWith(end));
           }
           case READ -> {
             var start = next().span;
@@ -854,9 +854,10 @@ public class Parser {
             }
             var end = expect(Token.STRING_END, "noError").span;
             if (start.token == Token.STRING_START) {
-              yield new Expr.InterpolatedString(parts, start.span.endWith(end));
+              yield new Expr.InterpolatedString(parts, start.span, end, start.span.endWith(end));
             } else {
-              yield new Expr.InterpolatedMultiString(parts, start.span.endWith(end));
+              yield new Expr.InterpolatedMultiString(
+                  parts, start.span, end, start.span.endWith(end));
             }
           }
           case IDENT -> {
@@ -1022,7 +1023,7 @@ public class Parser {
       }
       case STRING_START -> {
         var str = parseStringConstant();
-        typ = new StringConstantType(str.value, str.span);
+        typ = new StringConstantType(str.getStr(), str.span());
       }
       default -> throw new ParserError("Invalid token for type: " + lookahead, spanLookahead);
     }
@@ -1159,7 +1160,7 @@ public class Parser {
     return new Ident(lexer.textFor(tk.textOffset, tk.textSize), tk.span);
   }
 
-  private StringConstant parseStringConstant() {
+  private Expr.StringConstant parseStringConstant() {
     var start = spanLookahead;
     expect(Token.STRING_START, "Expected string start");
     if (lookahead == Token.STRING_PART) {
@@ -1167,7 +1168,7 @@ public class Parser {
       var text = lexer.textFor(tk.textOffset, tk.textSize);
       var end = spanLookahead;
       expect(Token.STRING_END, "Expected string end");
-      return new StringConstant(text, start.endWith(end));
+      return new Expr.StringConstant(text, start.endWith(end));
     } else {
       throw new ParserError("Expected constant string", spanLookahead);
     }
@@ -1282,6 +1283,4 @@ public class Parser {
       return lexer.textFor(textOffset, textSize);
     }
   }
-
-  private record StringConstant(String value, Span span) {}
 }

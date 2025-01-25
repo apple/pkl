@@ -49,7 +49,7 @@ public final class Ident implements Node {
 
   @Override
   public String toString() {
-    return "Ident{" + "value='" + value + '\'' + ", span=" + span + ", parent=" + parent + '}';
+    return "Ident{" + "value='" + value + '\'' + ", span=" + span + '}';
   }
 
   @Override
@@ -61,13 +61,11 @@ public final class Ident implements Node {
       return false;
     }
     Ident ident = (Ident) o;
-    return Objects.equals(value, ident.value)
-        && Objects.equals(span, ident.span)
-        && Objects.equals(parent, ident.parent);
+    return Objects.equals(value, ident.value) && Objects.equals(span, ident.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, span, parent);
+    return Objects.hash(value, span);
   }
 }

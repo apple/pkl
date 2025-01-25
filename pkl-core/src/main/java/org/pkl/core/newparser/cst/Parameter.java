@@ -46,7 +46,7 @@ public sealed interface Parameter extends Node {
 
     @Override
     public String toString() {
-      return "Underscore{" + "span=" + span + ", parent=" + parent + '}';
+      return "Underscore{" + "span=" + span + '}';
     }
 
     @Override
@@ -58,12 +58,12 @@ public sealed interface Parameter extends Node {
         return false;
       }
       Underscore that = (Underscore) o;
-      return Objects.equals(span, that.span) && Objects.equals(parent, that.parent);
+      return Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -109,16 +109,7 @@ public sealed interface Parameter extends Node {
 
     @Override
     public String toString() {
-      return "TypedIdent{"
-          + "ident="
-          + ident
-          + ", type="
-          + type
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "TypedIdent{" + "ident=" + ident + ", type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -132,13 +123,12 @@ public sealed interface Parameter extends Node {
       TypedIdent that = (TypedIdent) o;
       return Objects.equals(ident, that.ident)
           && Objects.equals(type, that.type)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, type, span, parent);
+      return Objects.hash(ident, type, span);
     }
   }
 }

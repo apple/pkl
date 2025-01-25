@@ -45,6 +45,27 @@ public final class ModuleDecl implements Node {
     this.extendsUrl = extendsUrl;
     this.amendsUrl = amendsUrl;
     this.span = span;
+
+    if (docComment != null) {
+      docComment.setParent(this);
+    }
+    if (annotations != null) {
+      for (var ann : annotations) {
+        ann.setParent(this);
+      }
+    }
+    for (var mod : modifiers) {
+      mod.setParent(this);
+    }
+    if (name != null) {
+      name.setParent(this);
+    }
+    if (extendsUrl != null) {
+      extendsUrl.setParent(this);
+    }
+    if (amendsUrl != null) {
+      amendsUrl.setParent(this);
+    }
   }
 
   @Override
@@ -102,8 +123,6 @@ public final class ModuleDecl implements Node {
         + amendsUrl
         + ", span="
         + span
-        + ", parent="
-        + parent
         + '}';
   }
 
@@ -122,37 +141,11 @@ public final class ModuleDecl implements Node {
         && Objects.equals(name, that.name)
         && Objects.equals(extendsUrl, that.extendsUrl)
         && Objects.equals(amendsUrl, that.amendsUrl)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        docComment, annotations, modifiers, name, extendsUrl, amendsUrl, span, parent);
+    return Objects.hash(docComment, annotations, modifiers, name, extendsUrl, amendsUrl, span);
   }
-
-  //  public ModuleDecl {
-  //    if (docComment != null) {
-  //      docComment.parent().set(this);
-  //    }
-  //    if (annotations != null) {
-  //      for (var ann : annotations) {
-  //        ann.parent().set(this);
-  //      }
-  //    }
-  //    for (var mod : modifiers) {
-  //      mod.parent().set(this);
-  //    }
-  //    if (name != null) {
-  //      name.parent().set(this);
-  //    }
-  //    if (extendsUrl != null) {
-  //      extendsUrl.parent().set(this);
-  //    }
-  //    if (amendsUrl != null) {
-  //      amendsUrl.parent().set(this);
-  //    }
-  //  }
-
 }

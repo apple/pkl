@@ -58,16 +58,7 @@ public final class TypeParameter implements Node {
 
   @Override
   public String toString() {
-    return "TypeParameter{"
-        + "variance="
-        + variance
-        + ", ident="
-        + ident
-        + ", span="
-        + span
-        + ", parent="
-        + parent
-        + '}';
+    return "TypeParameter{" + "variance=" + variance + ", ident=" + ident + ", span=" + span + '}';
   }
 
   @Override
@@ -81,13 +72,12 @@ public final class TypeParameter implements Node {
     TypeParameter that = (TypeParameter) o;
     return variance == that.variance
         && Objects.equals(ident, that.ident)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(variance, ident, span, parent);
+    return Objects.hash(variance, ident, span);
   }
 
   public enum Variance {

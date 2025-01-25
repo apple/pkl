@@ -413,11 +413,8 @@ class SexpRenderer {
       is Trace -> renderTraceExpr(expr)
       is ImportExpr -> {
         buf.append(tab)
-        buf.append("(importExpr)")
-      }
-      is ImportGlobExpr -> {
-        buf.append(tab)
-        buf.append("(importGlobExpr)")
+        val name = if (expr.isGlob) "(importGlobExpr)" else "(importExpr)"
+        buf.append(name)
       }
       is Read -> renderReadExpr(expr)
       is ReadGlob -> renderReadGlobExpr(expr)

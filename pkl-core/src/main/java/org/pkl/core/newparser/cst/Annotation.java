@@ -61,16 +61,7 @@ public class Annotation implements Node {
 
   @Override
   public String toString() {
-    return "Annotation{"
-        + "name="
-        + name
-        + ", body="
-        + body
-        + ", span="
-        + span
-        + ", parent="
-        + parent
-        + '}';
+    return "Annotation{" + "name=" + name + ", body=" + body + ", span=" + span + '}';
   }
 
   @Override
@@ -84,12 +75,11 @@ public class Annotation implements Node {
     Annotation that = (Annotation) o;
     return Objects.equals(name, that.name)
         && Objects.equals(body, that.body)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, body, span, parent);
+    return Objects.hash(name, body, span);
   }
 }

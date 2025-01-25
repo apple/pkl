@@ -109,8 +109,6 @@ public sealed interface ClassEntry extends ModuleEntry {
           + type
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -128,13 +126,12 @@ public sealed interface ClassEntry extends ModuleEntry {
           && Objects.equals(modifiers, that.modifiers)
           && Objects.equals(name, that.name)
           && Objects.equals(type, that.type)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(docComment, annotations, modifiers, name, type, span, parent);
+      return Objects.hash(docComment, annotations, modifiers, name, type, span);
     }
   }
 
@@ -236,8 +233,6 @@ public sealed interface ClassEntry extends ModuleEntry {
           + expr
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -256,13 +251,12 @@ public sealed interface ClassEntry extends ModuleEntry {
           && Objects.equals(name, that.name)
           && Objects.equals(type, that.type)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(docComment, annotations, modifiers, name, type, expr, span, parent);
+      return Objects.hash(docComment, annotations, modifiers, name, type, expr, span);
     }
   }
 
@@ -354,8 +348,6 @@ public sealed interface ClassEntry extends ModuleEntry {
           + bodyList
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -373,13 +365,12 @@ public sealed interface ClassEntry extends ModuleEntry {
           && Objects.equals(modifiers, that.modifiers)
           && Objects.equals(name, that.name)
           && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(docComment, annotations, modifiers, name, bodyList, span, parent);
+      return Objects.hash(docComment, annotations, modifiers, name, bodyList, span);
     }
   }
 
@@ -507,8 +498,6 @@ public sealed interface ClassEntry extends ModuleEntry {
           + expr
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -529,14 +518,13 @@ public sealed interface ClassEntry extends ModuleEntry {
           && Objects.equals(args, that.args)
           && Objects.equals(returnType, that.returnType)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
       return Objects.hash(
-          docComment, annotations, modifiers, name, typePars, args, returnType, expr, span, parent);
+          docComment, annotations, modifiers, name, typePars, args, returnType, expr, span);
     }
   }
 }

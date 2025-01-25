@@ -17,13 +17,14 @@ package org.pkl.core.newparser.cst;
 
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.newparser.cst.Expr.StringConstant;
 
 public class AmendsDecl implements Node {
-  private final String url;
+  private final StringConstant url;
   private final Span span;
   private Node parent;
 
-  public AmendsDecl(String url, Span span) {
+  public AmendsDecl(StringConstant url, Span span) {
     this.url = url;
     this.span = span;
   }
@@ -43,13 +44,13 @@ public class AmendsDecl implements Node {
     this.parent = parent;
   }
 
-  public String getUrl() {
+  public StringConstant getUrl() {
     return url;
   }
 
   @Override
   public String toString() {
-    return "AmendsDecl{" + "url='" + url + '\'' + ", span=" + span + ", parent=" + parent + '}';
+    return "AmendsDecl{" + "url=" + url + ", span=" + span + '}';
   }
 
   @Override
@@ -61,13 +62,11 @@ public class AmendsDecl implements Node {
       return false;
     }
     AmendsDecl that = (AmendsDecl) o;
-    return Objects.equals(url, that.url)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+    return Objects.equals(url, that.url) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, span, parent);
+    return Objects.hash(url, span);
   }
 }

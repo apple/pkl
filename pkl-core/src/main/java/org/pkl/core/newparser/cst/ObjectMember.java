@@ -55,7 +55,7 @@ public sealed interface ObjectMember extends Node {
 
     @Override
     public String toString() {
-      return "ObjectElement{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "ObjectElement{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -67,14 +67,12 @@ public sealed interface ObjectMember extends Node {
         return false;
       }
       ObjectElement that = (ObjectElement) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -148,8 +146,6 @@ public sealed interface ObjectMember extends Node {
           + expr
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -166,13 +162,12 @@ public sealed interface ObjectMember extends Node {
           && Objects.equals(ident, that.ident)
           && Objects.equals(type, that.type)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, type, expr, span, parent);
+      return Objects.hash(modifiers, ident, type, expr, span);
     }
   }
 
@@ -237,8 +232,6 @@ public sealed interface ObjectMember extends Node {
           + bodyList
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -254,13 +247,12 @@ public sealed interface ObjectMember extends Node {
       return Objects.equals(modifiers, that.modifiers)
           && Objects.equals(ident, that.ident)
           && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, bodyList, span, parent);
+      return Objects.hash(modifiers, ident, bodyList, span);
     }
   }
 
@@ -361,8 +353,6 @@ public sealed interface ObjectMember extends Node {
           + expr
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -381,13 +371,12 @@ public sealed interface ObjectMember extends Node {
           && Objects.equals(args, that.args)
           && Objects.equals(returnType, that.returnType)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, typePars, args, returnType, expr, span, parent);
+      return Objects.hash(modifiers, ident, typePars, args, returnType, expr, span);
     }
   }
 
@@ -431,16 +420,7 @@ public sealed interface ObjectMember extends Node {
 
     @Override
     public String toString() {
-      return "MemberPredicate{"
-          + "pred="
-          + pred
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "MemberPredicate{" + "pred=" + pred + ", expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -454,13 +434,12 @@ public sealed interface ObjectMember extends Node {
       MemberPredicate that = (MemberPredicate) o;
       return Objects.equals(pred, that.pred)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(pred, expr, span, parent);
+      return Objects.hash(pred, expr, span);
     }
   }
 
@@ -513,8 +492,6 @@ public sealed interface ObjectMember extends Node {
           + bodyList
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -529,13 +506,12 @@ public sealed interface ObjectMember extends Node {
       MemberPredicateBody that = (MemberPredicateBody) o;
       return Objects.equals(key, that.key)
           && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, bodyList, span, parent);
+      return Objects.hash(key, bodyList, span);
     }
   }
 
@@ -579,16 +555,7 @@ public sealed interface ObjectMember extends Node {
 
     @Override
     public String toString() {
-      return "ObjectEntry{"
-          + "key="
-          + key
-          + ", value="
-          + value
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "ObjectEntry{" + "key=" + key + ", value=" + value + ", span=" + span + '}';
     }
 
     @Override
@@ -602,13 +569,12 @@ public sealed interface ObjectMember extends Node {
       ObjectEntry that = (ObjectEntry) o;
       return Objects.equals(key, that.key)
           && Objects.equals(value, that.value)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, value, span, parent);
+      return Objects.hash(key, value, span);
     }
   }
 
@@ -654,16 +620,7 @@ public sealed interface ObjectMember extends Node {
 
     @Override
     public String toString() {
-      return "ObjectEntryBody{"
-          + "key="
-          + key
-          + ", bodyList="
-          + bodyList
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "ObjectEntryBody{" + "key=" + key + ", bodyList=" + bodyList + ", span=" + span + '}';
     }
 
     @Override
@@ -677,13 +634,12 @@ public sealed interface ObjectMember extends Node {
       ObjectEntryBody that = (ObjectEntryBody) o;
       return Objects.equals(key, that.key)
           && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, bodyList, span, parent);
+      return Objects.hash(key, bodyList, span);
     }
   }
 
@@ -733,8 +689,6 @@ public sealed interface ObjectMember extends Node {
           + isNullable
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -749,13 +703,12 @@ public sealed interface ObjectMember extends Node {
       ObjectSpread that = (ObjectSpread) o;
       return isNullable == that.isNullable
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, isNullable, span, parent);
+      return Objects.hash(expr, isNullable, span);
     }
   }
 
@@ -817,8 +770,6 @@ public sealed interface ObjectMember extends Node {
           + elseClause
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -834,13 +785,12 @@ public sealed interface ObjectMember extends Node {
       return Objects.equals(cond, that.cond)
           && Objects.equals(body, that.body)
           && Objects.equals(elseClause, that.elseClause)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(cond, body, elseClause, span, parent);
+      return Objects.hash(cond, body, elseClause, span);
     }
   }
 
@@ -912,8 +862,6 @@ public sealed interface ObjectMember extends Node {
           + body
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -930,13 +878,12 @@ public sealed interface ObjectMember extends Node {
           && Objects.equals(p2, that.p2)
           && Objects.equals(expr, that.expr)
           && Objects.equals(body, that.body)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(p1, p2, expr, body, span, parent);
+      return Objects.hash(p1, p2, expr, body, span);
     }
   }
 }

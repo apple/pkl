@@ -83,8 +83,6 @@ public final class Module implements Node {
         + entries
         + ", span="
         + span
-        + ", parent="
-        + parent
         + '}';
   }
 
@@ -100,12 +98,11 @@ public final class Module implements Node {
     return Objects.equals(decl, module.decl)
         && Objects.equals(imports, module.imports)
         && Objects.equals(entries, module.entries)
-        && Objects.equals(span, module.span)
-        && Objects.equals(parent, module.parent);
+        && Objects.equals(span, module.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(decl, imports, entries, span, parent);
+    return Objects.hash(decl, imports, entries, span);
   }
 }

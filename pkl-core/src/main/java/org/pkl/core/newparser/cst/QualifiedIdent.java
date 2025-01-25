@@ -58,7 +58,7 @@ public final class QualifiedIdent implements Node {
 
   @Override
   public String toString() {
-    return "QualifiedIdent{" + "idents=" + idents + ", parent=" + parent + '}';
+    return "QualifiedIdent{" + "idents=" + idents + '}';
   }
 
   @Override
@@ -70,11 +70,11 @@ public final class QualifiedIdent implements Node {
       return false;
     }
     QualifiedIdent that = (QualifiedIdent) o;
-    return Objects.equals(idents, that.idents) && Objects.equals(parent, that.parent);
+    return Objects.equals(idents, that.idents);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(idents, parent);
+    return Objects.hashCode(idents);
   }
 }

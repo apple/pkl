@@ -49,7 +49,7 @@ public final class DocComment implements Node {
 
   @Override
   public String toString() {
-    return "DocComment{" + "raw='" + raw + '\'' + ", span=" + span + ", parent=" + parent + '}';
+    return "DocComment{" + "raw='" + raw + '\'' + ", span=" + span + '}';
   }
 
   @Override
@@ -61,13 +61,11 @@ public final class DocComment implements Node {
       return false;
     }
     DocComment that = (DocComment) o;
-    return Objects.equals(raw, that.raw)
-        && Objects.equals(span, that.span)
-        && Objects.equals(parent, that.parent);
+    return Objects.equals(raw, that.raw) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(raw, span, parent);
+    return Objects.hash(raw, span);
   }
 }

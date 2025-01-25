@@ -47,7 +47,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "This{" + "span=" + span + ", parent=" + parent + '}';
+      return "This{" + "span=" + span + '}';
     }
 
     @Override
@@ -59,12 +59,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       This aThis = (This) o;
-      return Objects.equals(span, aThis.span) && Objects.equals(parent, aThis.parent);
+      return Objects.equals(span, aThis.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -93,7 +93,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Outer{" + "span=" + span + ", parent=" + parent + '}';
+      return "Outer{" + "span=" + span + '}';
     }
 
     @Override
@@ -104,13 +104,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      Outer aOuter = (Outer) o;
-      return Objects.equals(span, aOuter.span) && Objects.equals(parent, aOuter.parent);
+      Outer outer = (Outer) o;
+      return Objects.equals(span, outer.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -139,7 +139,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Module{" + "span=" + span + ", parent=" + parent + '}';
+      return "Module{" + "span=" + span + '}';
     }
 
     @Override
@@ -150,13 +150,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      Module aModule = (Module) o;
-      return Objects.equals(span, aModule.span) && Objects.equals(parent, aModule.parent);
+      Module module = (Module) o;
+      return Objects.equals(span, module.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -185,7 +185,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "NullLiteral{" + "span=" + span + ", parent=" + parent + '}';
+      return "NullLiteral{" + "span=" + span + '}';
     }
 
     @Override
@@ -196,13 +196,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      NullLiteral aNullLiteral = (NullLiteral) o;
-      return Objects.equals(span, aNullLiteral.span) && Objects.equals(parent, aNullLiteral.parent);
+      NullLiteral that = (NullLiteral) o;
+      return Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(span, parent);
+      return Objects.hashCode(span);
     }
   }
 
@@ -237,7 +237,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "BoolLiteral{" + "b=" + b + ", span=" + span + ", parent=" + parent + '}';
+      return "BoolLiteral{" + "b=" + b + ", span=" + span + '}';
     }
 
     @Override
@@ -249,12 +249,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       BoolLiteral that = (BoolLiteral) o;
-      return b == that.b && Objects.equals(span, that.span) && Objects.equals(parent, that.parent);
+      return b == that.b && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(b, span, parent);
+      return Objects.hash(b, span);
     }
   }
 
@@ -289,15 +289,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "IntLiteral{"
-          + "number='"
-          + number
-          + '\''
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "IntLiteral{" + "number='" + number + '\'' + ", span=" + span + '}';
     }
 
     @Override
@@ -309,14 +301,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       IntLiteral that = (IntLiteral) o;
-      return Objects.equals(number, that.number)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(number, that.number) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(number, span, parent);
+      return Objects.hash(number, span);
     }
   }
 
@@ -351,15 +341,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "FloatLiteral{"
-          + "number='"
-          + number
-          + '\''
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "FloatLiteral{" + "number='" + number + '\'' + ", span=" + span + '}';
     }
 
     @Override
@@ -371,14 +353,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       FloatLiteral that = (FloatLiteral) o;
-      return Objects.equals(number, that.number)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(number, that.number) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(number, span, parent);
+      return Objects.hash(number, span);
     }
   }
 
@@ -413,15 +393,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "StringConstant{"
-          + "str='"
-          + str
-          + '\''
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "StringConstant{" + "str='" + str + '\'' + ", span=" + span + '}';
     }
 
     @Override
@@ -433,24 +405,27 @@ public sealed interface Expr extends Node {
         return false;
       }
       StringConstant that = (StringConstant) o;
-      return Objects.equals(str, that.str)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(str, that.str) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(str, span, parent);
+      return Objects.hash(str, span);
     }
   }
 
   final class InterpolatedString implements Expr {
     private final List<Expr> exprs;
+    private final Span startDelimiterSpan;
+    private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
-    public InterpolatedString(List<Expr> exprs, Span span) {
+    public InterpolatedString(
+        List<Expr> exprs, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       this.exprs = exprs;
+      this.startDelimiterSpan = startDelimiterSpan;
+      this.endDelimiterSpan = endDelimiterSpan;
       this.span = span;
 
       for (var expr : exprs) {
@@ -477,15 +452,25 @@ public sealed interface Expr extends Node {
       return exprs;
     }
 
+    public Span getStartDelimiterSpan() {
+      return startDelimiterSpan;
+    }
+
+    public Span getEndDelimiterSpan() {
+      return endDelimiterSpan;
+    }
+
     @Override
     public String toString() {
       return "InterpolatedString{"
-          + "exprs="
-          + exprs
-          + ", span="
+          + "span="
           + span
-          + ", parent="
-          + parent
+          + ", endDelimiterSpan="
+          + endDelimiterSpan
+          + ", startDelimiterSpan="
+          + startDelimiterSpan
+          + ", exprs="
+          + exprs
           + '}';
     }
 
@@ -499,23 +484,29 @@ public sealed interface Expr extends Node {
       }
       InterpolatedString that = (InterpolatedString) o;
       return Objects.equals(exprs, that.exprs)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
+          && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(exprs, span, parent);
+      return Objects.hash(exprs, startDelimiterSpan, endDelimiterSpan, span);
     }
   }
 
   final class InterpolatedMultiString implements Expr {
     private final List<Expr> exprs;
+    private final Span startDelimiterSpan;
+    private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
-    public InterpolatedMultiString(List<Expr> exprs, Span span) {
+    public InterpolatedMultiString(
+        List<Expr> exprs, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       this.exprs = exprs;
+      this.startDelimiterSpan = startDelimiterSpan;
+      this.endDelimiterSpan = endDelimiterSpan;
       this.span = span;
 
       for (var expr : exprs) {
@@ -542,15 +533,25 @@ public sealed interface Expr extends Node {
       return exprs;
     }
 
+    public Span getStartDelimiterSpan() {
+      return startDelimiterSpan;
+    }
+
+    public Span getEndDelimiterSpan() {
+      return endDelimiterSpan;
+    }
+
     @Override
     public String toString() {
       return "InterpolatedMultiString{"
           + "exprs="
           + exprs
+          + ", startDelimiterSpan="
+          + startDelimiterSpan
+          + ", endDelimiterSpan="
+          + endDelimiterSpan
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -564,13 +565,14 @@ public sealed interface Expr extends Node {
       }
       InterpolatedMultiString that = (InterpolatedMultiString) o;
       return Objects.equals(exprs, that.exprs)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
+          && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(exprs, span, parent);
+      return Objects.hash(exprs, startDelimiterSpan, endDelimiterSpan, span);
     }
   }
 
@@ -607,7 +609,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Throw{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "Throw{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -618,15 +620,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      Throw that = (Throw) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      Throw aThrow = (Throw) o;
+      return Objects.equals(expr, aThrow.expr) && Objects.equals(span, aThrow.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -663,7 +663,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Trace{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "Trace{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -674,25 +674,25 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      Trace that = (Trace) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      Trace trace = (Trace) o;
+      return Objects.equals(expr, trace.expr) && Objects.equals(span, trace.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
   final class ImportExpr implements Expr {
-    private final String importStr;
+    private final StringConstant importStr;
+    private final boolean isGlob;
     private final Span span;
     private Node parent;
 
-    public ImportExpr(String importStr, Span span) {
+    public ImportExpr(StringConstant importStr, boolean isGlob, Span span) {
       this.importStr = importStr;
+      this.isGlob = isGlob;
       this.span = span;
     }
 
@@ -711,20 +711,23 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
-    public String getImportStr() {
+    public StringConstant getImportStr() {
       return importStr;
+    }
+
+    public boolean isGlob() {
+      return isGlob;
     }
 
     @Override
     public String toString() {
       return "ImportExpr{"
-          + "importStr='"
-          + importStr
-          + '\''
-          + ", span="
+          + "span="
           + span
-          + ", parent="
-          + parent
+          + ", isGlob="
+          + isGlob
+          + ", importStr="
+          + importStr
           + '}';
     }
 
@@ -737,76 +740,14 @@ public sealed interface Expr extends Node {
         return false;
       }
       ImportExpr that = (ImportExpr) o;
-      return Objects.equals(importStr, that.importStr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return isGlob == that.isGlob
+          && Objects.equals(importStr, that.importStr)
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(importStr, span, parent);
-    }
-  }
-
-  final class ImportGlobExpr implements Expr {
-    private final String importStr;
-    private final Span span;
-    private Node parent;
-
-    public ImportGlobExpr(String importStr, Span span) {
-      this.importStr = importStr;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    public String getImportStr() {
-      return importStr;
-    }
-
-    @Override
-    public String toString() {
-      return "ImportGlobExpr{"
-          + "importStr='"
-          + importStr
-          + '\''
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ImportGlobExpr that = (ImportGlobExpr) o;
-      return Objects.equals(importStr, that.importStr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(importStr, span, parent);
+      return Objects.hash(importStr, isGlob, span);
     }
   }
 
@@ -843,7 +784,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Read{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "Read{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -854,15 +795,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      Read that = (Read) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      Read read = (Read) o;
+      return Objects.equals(expr, read.expr) && Objects.equals(span, read.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -899,7 +838,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "ReadGlob{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "ReadGlob{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -910,15 +849,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      ReadGlob that = (ReadGlob) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      ReadGlob readGlob = (ReadGlob) o;
+      return Objects.equals(expr, readGlob.expr) && Objects.equals(span, readGlob.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -955,7 +892,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "ReadNull{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "ReadNull{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -966,15 +903,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      ReadNull that = (ReadNull) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      ReadNull readNull = (ReadNull) o;
+      return Objects.equals(expr, readNull.expr) && Objects.equals(span, readNull.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -1022,16 +957,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "UnqualifiedAccess{"
-          + "ident="
-          + ident
-          + ", args="
-          + args
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "UnqualifiedAccess{" + "ident=" + ident + ", args=" + args + ", span=" + span + '}';
     }
 
     @Override
@@ -1045,13 +971,12 @@ public sealed interface Expr extends Node {
       UnqualifiedAccess that = (UnqualifiedAccess) o;
       return Objects.equals(ident, that.ident)
           && Objects.equals(args, that.args)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, args, span, parent);
+      return Objects.hash(ident, args, span);
     }
   }
 
@@ -1124,8 +1049,6 @@ public sealed interface Expr extends Node {
           + args
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -1142,13 +1065,12 @@ public sealed interface Expr extends Node {
           && Objects.equals(expr, that.expr)
           && Objects.equals(ident, that.ident)
           && Objects.equals(args, that.args)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, ident, isNullable, args, span, parent);
+      return Objects.hash(expr, ident, isNullable, args, span);
     }
   }
 
@@ -1194,16 +1116,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "SuperAccess{"
-          + "ident="
-          + ident
-          + ", args="
-          + args
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "SuperAccess{" + "ident=" + ident + ", args=" + args + ", span=" + span + '}';
     }
 
     @Override
@@ -1217,13 +1130,12 @@ public sealed interface Expr extends Node {
       SuperAccess that = (SuperAccess) o;
       return Objects.equals(ident, that.ident)
           && Objects.equals(args, that.args)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, args, span, parent);
+      return Objects.hash(ident, args, span);
     }
   }
 
@@ -1260,7 +1172,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "SuperSubscript{" + "arg=" + arg + ", span=" + span + ", parent=" + parent + '}';
+      return "SuperSubscript{" + "arg=" + arg + ", span=" + span + '}';
     }
 
     @Override
@@ -1272,14 +1184,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       SuperSubscript that = (SuperSubscript) o;
-      return Objects.equals(arg, that.arg)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(arg, that.arg) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(arg, span, parent);
+      return Objects.hash(arg, span);
     }
   }
 
@@ -1323,16 +1233,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Subscript{"
-          + "expr="
-          + expr
-          + ", arg="
-          + arg
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "Subscript{" + "expr=" + expr + ", arg=" + arg + ", span=" + span + '}';
     }
 
     @Override
@@ -1346,13 +1247,12 @@ public sealed interface Expr extends Node {
       Subscript subscript = (Subscript) o;
       return Objects.equals(expr, subscript.expr)
           && Objects.equals(arg, subscript.arg)
-          && Objects.equals(span, subscript.span)
-          && Objects.equals(parent, subscript.parent);
+          && Objects.equals(span, subscript.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, arg, span, parent);
+      return Objects.hash(expr, arg, span);
     }
   }
 
@@ -1403,18 +1303,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "If{"
-          + "cond="
-          + cond
-          + ", then="
-          + then
-          + ", els="
-          + els
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "If{" + "cond=" + cond + ", then=" + then + ", els=" + els + ", span=" + span + '}';
     }
 
     @Override
@@ -1429,13 +1318,12 @@ public sealed interface Expr extends Node {
       return Objects.equals(cond, anIf.cond)
           && Objects.equals(then, anIf.then)
           && Objects.equals(els, anIf.els)
-          && Objects.equals(span, anIf.span)
-          && Objects.equals(parent, anIf.parent);
+          && Objects.equals(span, anIf.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(cond, then, els, span, parent);
+      return Objects.hash(cond, then, els, span);
     }
   }
 
@@ -1495,8 +1383,6 @@ public sealed interface Expr extends Node {
           + expr
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -1512,13 +1398,12 @@ public sealed interface Expr extends Node {
       return Objects.equals(par, let.par)
           && Objects.equals(bindingExpr, let.bindingExpr)
           && Objects.equals(expr, let.expr)
-          && Objects.equals(span, let.span)
-          && Objects.equals(parent, let.parent);
+          && Objects.equals(span, let.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(par, bindingExpr, expr, span, parent);
+      return Objects.hash(par, bindingExpr, expr, span);
     }
   }
 
@@ -1564,16 +1449,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "FunctionLiteral{"
-          + "args="
-          + args
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "FunctionLiteral{" + "args=" + args + ", expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1587,13 +1463,12 @@ public sealed interface Expr extends Node {
       FunctionLiteral that = (FunctionLiteral) o;
       return Objects.equals(args, that.args)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+          && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(args, expr, span, parent);
+      return Objects.hash(args, expr, span);
     }
   }
 
@@ -1630,7 +1505,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Parenthesized{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "Parenthesized{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1642,14 +1517,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       Parenthesized that = (Parenthesized) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -1695,16 +1568,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "New{"
-          + "type="
-          + type
-          + ", body="
-          + body
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "New{" + "type=" + type + ", body=" + body + ", span=" + span + '}';
     }
 
     @Override
@@ -1718,13 +1582,12 @@ public sealed interface Expr extends Node {
       New aNew = (New) o;
       return Objects.equals(type, aNew.type)
           && Objects.equals(body, aNew.body)
-          && Objects.equals(span, aNew.span)
-          && Objects.equals(parent, aNew.parent);
+          && Objects.equals(span, aNew.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, body, span, parent);
+      return Objects.hash(type, body, span);
     }
   }
 
@@ -1768,16 +1631,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Amends{"
-          + "expr="
-          + expr
-          + ", body="
-          + body
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "Amends{" + "expr=" + expr + ", body=" + body + ", span=" + span + '}';
     }
 
     @Override
@@ -1791,13 +1645,12 @@ public sealed interface Expr extends Node {
       Amends amends = (Amends) o;
       return Objects.equals(expr, amends.expr)
           && Objects.equals(body, amends.body)
-          && Objects.equals(span, amends.span)
-          && Objects.equals(parent, amends.parent);
+          && Objects.equals(span, amends.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, body, span, parent);
+      return Objects.hash(expr, body, span);
     }
   }
 
@@ -1834,7 +1687,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "NonNull{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "NonNull{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1845,15 +1698,13 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      NonNull that = (NonNull) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      NonNull nonNull = (NonNull) o;
+      return Objects.equals(expr, nonNull.expr) && Objects.equals(span, nonNull.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -1890,7 +1741,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "UnaryMinus{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "UnaryMinus{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1902,14 +1753,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       UnaryMinus that = (UnaryMinus) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -1946,7 +1795,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "LogicalNot{" + "expr=" + expr + ", span=" + span + ", parent=" + parent + '}';
+      return "LogicalNot{" + "expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1958,14 +1807,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       LogicalNot that = (LogicalNot) o;
-      return Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, span, parent);
+      return Objects.hash(expr, span);
     }
   }
 
@@ -2024,8 +1871,6 @@ public sealed interface Expr extends Node {
           + op
           + ", span="
           + span
-          + ", parent="
-          + parent
           + '}';
     }
 
@@ -2041,13 +1886,12 @@ public sealed interface Expr extends Node {
       return Objects.equals(left, binaryOp.left)
           && Objects.equals(right, binaryOp.right)
           && op == binaryOp.op
-          && Objects.equals(span, binaryOp.span)
-          && Objects.equals(parent, binaryOp.parent);
+          && Objects.equals(span, binaryOp.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(left, right, op, span, parent);
+      return Objects.hash(left, right, op, span);
     }
   }
 
@@ -2091,16 +1935,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "TypeCheck{"
-          + "expr="
-          + expr
-          + ", type="
-          + type
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "TypeCheck{" + "expr=" + expr + ", type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -2114,13 +1949,12 @@ public sealed interface Expr extends Node {
       TypeCheck typeCheck = (TypeCheck) o;
       return Objects.equals(expr, typeCheck.expr)
           && Objects.equals(type, typeCheck.type)
-          && Objects.equals(span, typeCheck.span)
-          && Objects.equals(parent, typeCheck.parent);
+          && Objects.equals(span, typeCheck.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, type, span, parent);
+      return Objects.hash(expr, type, span);
     }
   }
 
@@ -2164,16 +1998,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "TypeCast{"
-          + "expr="
-          + expr
-          + ", type="
-          + type
-          + ", span="
-          + span
-          + ", parent="
-          + parent
-          + '}';
+      return "TypeCast{" + "expr=" + expr + ", type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -2184,16 +2009,15 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      TypeCast typeCheck = (TypeCast) o;
-      return Objects.equals(expr, typeCheck.expr)
-          && Objects.equals(type, typeCheck.type)
-          && Objects.equals(span, typeCheck.span)
-          && Objects.equals(parent, typeCheck.parent);
+      TypeCast typeCast = (TypeCast) o;
+      return Objects.equals(expr, typeCast.expr)
+          && Objects.equals(type, typeCast.type)
+          && Objects.equals(span, typeCast.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, type, span, parent);
+      return Objects.hash(expr, type, span);
     }
   }
 
@@ -2229,7 +2053,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "OperatorExpr{" + "op=" + op + ", span=" + span + ", parent=" + parent + '}';
+      return "OperatorExpr{" + "op=" + op + ", span=" + span + '}';
     }
 
     @Override
@@ -2241,14 +2065,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       OperatorExpr that = (OperatorExpr) o;
-      return op == that.op
-          && Objects.equals(span, that.span)
-          && Objects.equals(parent, that.parent);
+      return op == that.op && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(op, span, parent);
+      return Objects.hash(op, span);
     }
   }
 
@@ -2284,7 +2106,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "TypeExpr{" + "type=" + type + ", parent=" + parent + '}';
+      return "TypeExpr{" + "type=" + type + '}';
     }
 
     @Override
@@ -2296,12 +2118,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       TypeExpr typeExpr = (TypeExpr) o;
-      return Objects.equals(type, typeExpr.type) && Objects.equals(parent, typeExpr.parent);
+      return Objects.equals(type, typeExpr.type);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, parent);
+      return Objects.hashCode(type);
     }
   }
 }
