@@ -52,13 +52,13 @@ dependencies {
 
 // TODO: need to figure out how to properly generate javadoc here.
 // For now, we'll include a dummy javadoc jar.
-val javadocDummy by tasks.creating(Javadoc::class) { source = dummy.allJava }
+val javadocDummy by tasks.registering(Javadoc::class) { source = dummy.allJava }
 
 java { withJavadocJar() }
 
 val javadocJar by
   tasks.existing(Jar::class) {
-    from(javadocDummy.outputs.files)
+    from(javadocDummy.get().outputs.files)
     archiveBaseName.set("pkl-tools-all")
   }
 
