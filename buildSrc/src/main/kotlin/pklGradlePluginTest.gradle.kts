@@ -87,11 +87,11 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
   }
 }
 
-fun createCompatibilityTestTask(versionInfo: GradleVersionInfo): Task =
+fun createCompatibilityTestTask(versionInfo: GradleVersionInfo) =
   createCompatibilityTestTask(versionInfo.version, versionInfo.downloadUrl)
 
-fun createCompatibilityTestTask(version: String, downloadUrl: String): Task {
-  return tasks.create("compatibilityTest$version", Test::class.java) {
+fun createCompatibilityTestTask(version: String, downloadUrl: String): TaskProvider<Test> {
+  return tasks.register("compatibilityTest$version", Test::class.java) {
     mustRunAfter(tasks.test)
 
     maxHeapSize = tasks.test.get().maxHeapSize
