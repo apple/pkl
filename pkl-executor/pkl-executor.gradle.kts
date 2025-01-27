@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ sourceSets { main { java { srcDir("src/main/java") } } }
 val prepareHistoricalDistributions by
   tasks.registering {
     val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
-    inputs.files(pklHistoricalDistributions.files())
+    inputs.files(pklHistoricalDistributions.files)
     outputs.dir(outputDir)
     doLast {
       val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
