@@ -1,0 +1,13 @@
+// should result in only one trace per property
+class MyClass {
+  // property body only gets executed once
+  const prop = trace("hello")
+
+  // typecheck only happens once
+  const prop2: Int(let (_ = trace("hello again")) true) = 1
+
+  res: Int
+}
+
+a = new MyClass { res = 1 }
+b = (a) { res = 2 }
