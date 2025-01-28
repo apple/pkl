@@ -217,7 +217,7 @@ public final class ResolveVariableNode extends ExpressionNode {
     var descriptor = frame.getFrameDescriptor();
     // Search backwards. The for-generator implementation exploits this
     // to shadow a slot by appending a slot with the same name.
-    for (int i = descriptor.getNumberOfSlots() - 1; i >= 0; i--) {
+    for (var i = descriptor.getNumberOfSlots() - 1; i >= 0; i--) {
       var slotName = descriptor.getSlotName(i);
       if (slotName == identifier1 || slotName == identifier2) {
         return i;

@@ -41,8 +41,8 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   public GeneratorForNode(
       SourceSection sourceSection,
       FrameDescriptor generatorDescriptor,
-      // null if for-generator doesn't bind key or `keyTypeNode` is passed instead of this node
       ExpressionNode iterableNode,
+      // null if for-generator doesn't bind key or `keyTypeNode` is passed instead of this node
       @Nullable UnresolvedTypeNode unresolvedKeyTypeNode,
       // null if for-generator doesn't bind value or `valueTypeNode` is passed instead of this node
       @Nullable UnresolvedTypeNode unresolvedValueTypeNode,
