@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -40,7 +39,6 @@ import org.pkl.core.TypeParameter.Variance;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
-import org.pkl.core.ast.builder.SymbolTable.EntryScope;
 import org.pkl.core.ast.builder.SymbolTable.Scope;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.expression.generator.*;
@@ -852,20 +850,20 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorPropertyNode visitObjectProperty(ObjectPropertyContext ctx) {
-    checkHasNoForGenerator(ctx, "forGeneratorCannotGenerateProperties");
+    checkNotInsideForGenerator(ctx, "forGeneratorCannotGenerateProperties");
     var member = doVisitObjectProperty(ctx);
     return GeneratorPropertyNodeGen.create(member);
   }
 
   @Override
   public GeneratorMemberNode visitObjectMethod(ObjectMethodContext ctx) {
-    checkHasNoForGenerator(ctx, "forGeneratorCannotGenerateMethods");
+    checkNotInsideForGenerator(ctx, "forGeneratorCannotGenerateMethods");
     var member = doVisitObjectMethod(ctx);
     return GeneratorPropertyNodeGen.create(member);
   }
 
-  private void checkHasNoForGenerator(ParserRuleContext ctx, String errorMessageKey) {
-    if (symbolTable.getCurrentScope().getForGeneratorVariables().isEmpty()) {
+  private void checkNotInsideForGenerator(ParserRuleContext ctx, String errorMessageKey) {
+    if (!symbolTable.getCurrentScope().isForGeneratorScope()) {
       return;
     }
     var forExprCtx = ctx.getParent();
@@ -880,12 +878,19 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitMemberPredicate(MemberPredicateContext ctx) {
-    var keyNodeAndMember = doVisitMemberPredicate(ctx);
-    var keyNode = keyNodeAndMember.first;
-    var member = keyNodeAndMember.second;
-    insertWriteForGeneratorVarsToFrameSlotsNode(member.getMemberNode());
+    if (ctx.err1 == null && ctx.err2 == null) {
+      throw missingDelimiter("]]", ctx.k.stop.getStopIndex() + 1);
+    } else if (ctx.err1 != null
+        && (ctx.err2 == null || ctx.err1.getStartIndex() != ctx.err2.getStartIndex() - 1)) {
+      // There shouldn't be any whitespace between the first and second ']'.
+      throw wrongDelimiter("]]", "]", ctx.err1.getStartIndex());
+    }
 
-    return GeneratorPredicateMemberNodeGen.create(keyNode, member);
+    var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.k));
+    var member = doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody());
+    var isFrameStored =
+        member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
+    return GeneratorPredicateMemberNodeGen.create(keyNode, member, isFrameStored);
   }
 
   @Override
@@ -893,43 +898,23 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     var keyNodeAndMember = doVisitObjectEntry(ctx);
     var keyNode = keyNodeAndMember.first;
     var member = keyNodeAndMember.second;
-    insertWriteForGeneratorVarsToFrameSlotsNode(member.getMemberNode());
-
-    return GeneratorEntryNodeGen.create(keyNode, member);
+    var isFrameStored =
+        member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
+    return GeneratorEntryNodeGen.create(keyNode, member, isFrameStored);
   }
 
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpreadContext ctx) {
-    var scope = symbolTable.getCurrentScope();
-    var visitingIterable = scope.isVisitingIterable();
-    scope.setVisitingIterable(true);
     var expr = visitExpr(ctx.expr());
-    scope.setVisitingIterable(visitingIterable);
     return GeneratorSpreadNodeGen.create(createSourceSection(ctx), expr, ctx.QSPREAD() != null);
-  }
-
-  private void insertWriteForGeneratorVarsToFrameSlotsNode(@Nullable MemberNode memberNode) {
-    if (memberNode == null) return; // member has constant value
-
-    var descriptor = memberNode.getFrameDescriptor();
-    var forGeneratorVars = symbolTable.getCurrentScope().getForGeneratorVariables();
-    if (forGeneratorVars.isEmpty()) {
-      return; // node is not within a for generator
-    }
-    var slots = new int[forGeneratorVars.size()];
-    var i = 0;
-    for (var variable : forGeneratorVars) {
-      slots[i] = descriptor.findOrAddAuxiliarySlot(variable);
-      i++;
-    }
-    memberNode.replaceBody((bodyNode) -> new WriteForVariablesNode(slots, bodyNode));
   }
 
   @Override
   public GeneratorElementNode visitObjectElement(ObjectElementContext ctx) {
     var member = doVisitObjectElement(ctx);
-    insertWriteForGeneratorVarsToFrameSlotsNode(member.getMemberNode());
-    return GeneratorElementNodeGen.create(member);
+    var isFrameStored =
+        member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
+    return GeneratorElementNodeGen.create(member, isFrameStored);
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBodyContext ctx) {
@@ -953,18 +938,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     return new GeneratorWhenNode(sourceSection, visitExpr(ctx.e), thenNodes, elseNodes);
   }
 
-  private int pushForGeneratorVariableContext(ParameterContext ctx) {
-    var currentScope = symbolTable.getCurrentScope();
-    var slot = currentScope.pushForGeneratorVariableContext(ctx);
-    if (slot == -1) {
-      throw exceptionBuilder()
-          .evalError("duplicateDefinition", ctx.typedIdentifier().Identifier().getText())
-          .withSourceSection(createSourceSection(ctx))
-          .build();
-    }
-    return slot;
-  }
-
   private static boolean isIgnored(@Nullable ParameterContext param) {
     return param != null && param.UNDERSCORE() != null;
   }
@@ -972,53 +945,68 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public GeneratorForNode visitForGenerator(ForGeneratorContext ctx) {
     checkClosingDelimiter(ctx.err, ")", ctx.e.stop);
-    var sourceSection = createSourceSection(ctx);
-    int keyVariableSlot;
-    int valueVariableSlot;
-    UnresolvedTypeNode unresolvedKeyTypeNode;
-    UnresolvedTypeNode unresolvedValueTypeNode;
+    var keyParameter = ctx.t2 == null ? null : ctx.t1;
+    var valueParameter = ctx.t2 == null ? ctx.t1 : ctx.t2;
+    var keyTypedIdentifier = keyParameter == null ? null : keyParameter.typedIdentifier();
+    var valueTypedIdentifier = valueParameter == null ? null : valueParameter.typedIdentifier();
+    var keyIdentifier =
+        keyTypedIdentifier == null ? null : toIdentifier(keyTypedIdentifier.Identifier());
+    var valueIdentifier =
+        valueTypedIdentifier == null ? null : toIdentifier(valueTypedIdentifier.Identifier());
+    if (valueIdentifier != null && valueIdentifier == keyIdentifier) {
+      throw exceptionBuilder()
+          .evalError("duplicateDefinition", valueIdentifier)
+          .withSourceSection(createSourceSection(valueTypedIdentifier.Identifier()))
+          .build();
+    }
     var currentScope = symbolTable.getCurrentScope();
-    var ignoreT1 = isIgnored(ctx.t1);
-    var ignoreT2 = ctx.t2 == null ? ignoreT1 : isIgnored(ctx.t2);
-
-    if (ctx.t2 != null) {
-      keyVariableSlot = ignoreT1 ? -1 : pushForGeneratorVariableContext(ctx.t1);
-      valueVariableSlot = ignoreT2 ? -1 : pushForGeneratorVariableContext(ctx.t2);
-      unresolvedKeyTypeNode =
-          ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
-      unresolvedValueTypeNode =
-          ignoreT2 ? null : visitTypeAnnotation(ctx.t2.typedIdentifier().typeAnnotation());
-    } else {
-      keyVariableSlot = -1;
-      valueVariableSlot = ignoreT1 ? -1 : pushForGeneratorVariableContext(ctx.t1);
-      unresolvedKeyTypeNode = null;
-      unresolvedValueTypeNode =
-          ignoreT1 ? null : visitTypeAnnotation(ctx.t1.typedIdentifier().typeAnnotation());
+    var generatorDescriptorBuilder = currentScope.newFrameDescriptorBuilder();
+    var memberDescriptorBuilder = currentScope.newForGeneratorMemberDescriptorBuilder();
+    var keySlot = -1;
+    var valueSlot = -1;
+    if (keyIdentifier != null) {
+      keySlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
+      memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
     }
-
-    var scope = symbolTable.getCurrentScope();
-    var visitingIterable = scope.isVisitingIterable();
-    scope.setVisitingIterable(true);
+    if (valueIdentifier != null) {
+      valueSlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
+      memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
+    }
+    var unresolvedKeyTypeNode =
+        keyTypedIdentifier == null
+            ? null
+            : visitTypeAnnotation(keyTypedIdentifier.typeAnnotation());
+    var unresolvedValueTypeNode =
+        valueTypedIdentifier == null
+            ? null
+            : visitTypeAnnotation(valueTypedIdentifier.typeAnnotation());
+    // if possible, initialize immediately to avoid later insert
+    var keyTypeNode =
+        unresolvedKeyTypeNode == null && keySlot != -1
+            ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
+                .initWriteSlotNode(keySlot)
+            : null;
+    // if possible, initialize immediately to avoid later insert
+    var valueTypeNode =
+        unresolvedValueTypeNode == null && valueSlot != -1
+            ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
+                .initWriteSlotNode(valueSlot)
+            : null;
     var iterableNode = visitExpr(ctx.e);
-    scope.setVisitingIterable(visitingIterable);
-    var memberNodes = doVisitForWhenBody(ctx.objectBody());
-    if (keyVariableSlot != -1) {
-      currentScope.popForGeneratorVariable();
-    }
-    if (valueVariableSlot != -1) {
-      currentScope.popForGeneratorVariable();
-    }
-    //noinspection ConstantConditions
+    var memberNodes =
+        symbolTable.enterForGenerator(
+            generatorDescriptorBuilder,
+            memberDescriptorBuilder,
+            scope -> doVisitForWhenBody(ctx.objectBody()));
     return GeneratorForNodeGen.create(
-        sourceSection,
-        keyVariableSlot,
-        valueVariableSlot,
+        createSourceSection(ctx),
+        generatorDescriptorBuilder.build(),
         iterableNode,
         unresolvedKeyTypeNode,
         unresolvedValueTypeNode,
         memberNodes,
-        ctx.t2 != null && !ignoreT1,
-        !ignoreT2);
+        keyTypeNode,
+        valueTypeNode);
   }
 
   private void checkSpaceSeparatedObjectMembers(ObjectBodyContext objectBodyContext) {
@@ -1200,15 +1188,13 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private ObjectMember doVisitObjectElement(ObjectElementContext ctx) {
+    var isForGeneratorScope = symbolTable.getCurrentScope().isForGeneratorScope();
     return symbolTable.enterEntry(
         null,
         scope -> {
           var elementNode = visitExpr(ctx.expr());
 
-          var modifier =
-              scope.isVisitingIterable()
-                  ? VmModifier.ELEMENT | VmModifier.IS_IN_ITERABLE
-                  : VmModifier.ELEMENT;
+          var modifier = VmModifier.ELEMENT;
           var member =
               new ObjectMember(
                   createSourceSection(ctx),
@@ -1220,6 +1206,9 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           if (elementNode instanceof ConstantNode constantNode) {
             member.initConstantValue(constantNode);
           } else {
+            if (isForGeneratorScope) {
+              elementNode = new RestoreForBindingsNode(elementNode);
+            }
             member.initMemberNode(
                 ElementOrEntryNodeGen.create(
                     language, scope.buildFrameDescriptor(), member, elementNode));
@@ -1227,21 +1216,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
 
           return member;
         });
-  }
-
-  private Pair<ExpressionNode, ObjectMember> doVisitMemberPredicate(MemberPredicateContext ctx) {
-    if (ctx.err1 == null && ctx.err2 == null) {
-      throw missingDelimiter("]]", ctx.k.stop.getStopIndex() + 1);
-    } else if (ctx.err1 != null
-        && (ctx.err2 == null || ctx.err1.getStartIndex() != ctx.err2.getStartIndex() - 1)) {
-      // There shouldn't be any whitespace between the first and second ']'.
-      throw wrongDelimiter("]]", "]", ctx.err1.getStartIndex());
-    }
-
-    var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.k));
-
-    return symbolTable.enterEntry(
-        keyNode, objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody()));
   }
 
   private Pair<ExpressionNode, ObjectMember> doVisitObjectEntry(ObjectEntryContext ctx) {
@@ -1253,46 +1227,54 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     var keyNode = visitExpr(ctx.k);
-
-    return symbolTable.enterEntry(
-        keyNode, objectMemberInserter(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody()));
+    var member = doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.v, ctx.objectBody());
+    return Pair.of(keyNode, member);
   }
 
-  private Function<EntryScope, Pair<ExpressionNode, ObjectMember>> objectMemberInserter(
+  private ObjectMember doVisitObjectEntryBody(
       SourceSection sourceSection,
       ExpressionNode keyNode,
       @Nullable ExprContext valueCtx,
       List<? extends ObjectBodyContext> objectBodyCtxs) {
-    return scope -> {
-      var modifier =
-          scope.isVisitingIterable()
-              ? VmModifier.ENTRY | VmModifier.IS_IN_ITERABLE
-              : VmModifier.ENTRY;
-      var member =
-          new ObjectMember(
-              sourceSection, keyNode.getSourceSection(), modifier, null, scope.getQualifiedName());
+    var isForGeneratorScope = symbolTable.getCurrentScope().isForGeneratorScope();
+    return symbolTable.enterEntry(
+        keyNode,
+        scope -> {
+          var modifier = VmModifier.ENTRY;
+          var member =
+              new ObjectMember(
+                  sourceSection,
+                  keyNode.getSourceSection(),
+                  modifier,
+                  null,
+                  scope.getQualifiedName());
+          if (valueCtx != null) { // ["key"] = value
+            var valueNode = visitExpr(valueCtx);
+            if (valueNode instanceof ConstantNode constantNode) {
+              member.initConstantValue(constantNode);
+            } else {
+              if (isForGeneratorScope) {
+                valueNode = new RestoreForBindingsNode(valueNode);
+              }
+              member.initMemberNode(
+                  ElementOrEntryNodeGen.create(
+                      language, scope.buildFrameDescriptor(), member, valueNode));
+            }
+          } else { // ["key"] { ... }
+            var objectBody =
+                doVisitObjectBody(
+                    objectBodyCtxs,
+                    new ReadSuperEntryNode(unavailableSourceSection(), new GetMemberKeyNode()));
+            if (isForGeneratorScope) {
+              objectBody = new RestoreForBindingsNode(objectBody);
+            }
+            member.initMemberNode(
+                ElementOrEntryNodeGen.create(
+                    language, scope.buildFrameDescriptor(), member, objectBody));
+          }
 
-      if (valueCtx != null) { // ["key"] = value
-        var valueNode = visitExpr(valueCtx);
-        if (valueNode instanceof ConstantNode constantNode) {
-          member.initConstantValue(constantNode);
-        } else {
-          member.initMemberNode(
-              ElementOrEntryNodeGen.create(
-                  language, scope.buildFrameDescriptor(), member, valueNode));
-        }
-      } else { // ["key"] { ... }
-        var objectBody =
-            doVisitObjectBody(
-                objectBodyCtxs,
-                new ReadSuperEntryNode(unavailableSourceSection(), new GetMemberKeyNode()));
-        member.initMemberNode(
-            ElementOrEntryNodeGen.create(
-                language, scope.buildFrameDescriptor(), member, objectBody));
-      }
-
-      return Pair.of(keyNode, member);
-    };
+          return member;
+        });
   }
 
   @Override
@@ -1348,10 +1330,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
       result += modifier;
-    }
-
-    if (symbolTable.getCurrentScope().isVisitingIterable()) {
-      result += VmModifier.IS_IN_ITERABLE;
     }
 
     // flag modifier combinations that are never valid right away
@@ -1986,7 +1964,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
               visitArgumentList(argCtx),
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
-              symbolTable.getCurrentScope().isVisitingIterable(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -1999,7 +1976,6 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         visitArgumentList(argCtx),
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
-        symbolTable.getCurrentScope().isVisitingIterable(),
         receiver,
         GetClassNodeGen.create(null));
   }
@@ -2074,11 +2050,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
       }
 
       return InvokeSuperMethodNodeGen.create(
-          sourceSection,
-          memberName,
-          symbolTable.getCurrentScope().isVisitingIterable(),
-          visitArgumentList(argCtx),
-          needsConst);
+          sourceSection, memberName, visitArgumentList(argCtx), needsConst);
     }
 
     // superproperty call
@@ -2136,8 +2108,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
         isBaseModule,
         scope.isCustomThisScope(),
         scope.getConstLevel(),
-        scope.getConstDepth(),
-        scope.isVisitingIterable());
+        scope.getConstDepth());
   }
 
   @Override

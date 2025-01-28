@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,57 +19,50 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmListing;
-import org.pkl.core.util.EconomicMaps;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorElementNode extends GeneratorMemberNode {
   private final ObjectMember element;
 
-  protected GeneratorElementNode(ObjectMember element) {
-    super(element.getSourceSection());
+  protected GeneratorElementNode(ObjectMember element, boolean isFrameStored) {
+    super(element.getSourceSection(), isFrameStored);
     this.element = element;
   }
 
   @Specialization
   @SuppressWarnings("unused")
-  protected void evalDynamic(VmDynamic parent, ObjectData data) {
-    addElement(data);
+  protected void evalDynamic(VirtualFrame frame, VmDynamic parent, ObjectData data) {
+    data.addElement(frame, element, this);
   }
 
   @Specialization
   @SuppressWarnings("unused")
-  protected void evalListing(VmListing parent, ObjectData data) {
-    addElement(data);
+  protected void evalListing(VirtualFrame frame, VmListing parent, ObjectData data) {
+    data.addElement(frame, element, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "parent == getDynamicClass()")
-  protected void evalDynamicClass(VmClass parent, ObjectData data) {
-    addElement(data);
+  protected void evalDynamicClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addElement(frame, element, this);
   }
 
   @SuppressWarnings("unused")
   @Specialization(guards = "parent == getListingClass()")
-  protected void evalListingClass(VmClass parent, ObjectData data) {
-    addElement(data);
+  protected void evalListingClass(VirtualFrame frame, VmClass parent, ObjectData data) {
+    data.addElement(frame, element, this);
   }
 
   @Fallback
   @SuppressWarnings("unused")
-  void fallback(Object parent, ObjectData data) {
+  void fallback(VirtualFrame frame, Object parent, ObjectData data) {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().evalError("objectCannotHaveElement", parent).build();
-  }
-
-  private void addElement(ObjectData data) {
-    long index = data.length;
-    EconomicMaps.put(data.members, index, element);
-    data.length += 1;
-    data.persistForBindings(index);
   }
 }

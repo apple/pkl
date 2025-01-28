@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -129,21 +129,5 @@ public abstract class Member {
 
   public final boolean isLocalOrExternalOrAbstract() {
     return VmModifier.isLocalOrExternalOrAbstract(modifiers);
-  }
-
-  /**
-   * Tells if this member is declared inside the iterable of a for-generator, or an object spread.
-   *
-   * <p>This is {@code true} for {@code new {}} within:
-   *
-   * <pre>{@code
-   * for (x in new Listing { new {} }) {
-   *                         ^^^^^^
-   *   // etc
-   * }
-   * }</pre>
-   */
-  public boolean isInIterable() {
-    return VmModifier.isInIterable(modifiers);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,6 @@ public final class VmModifier {
   public static final int ELEMENT = 0x800;
 
   public static final int GLOB = 0x1000;
-
-  // To be removed when https://github.com/apple/pkl/issues/741 is fixed
-  public static final int IS_IN_ITERABLE = 0x100000;
 
   // modifier sets
 
@@ -135,10 +132,6 @@ public final class VmModifier {
 
   public static boolean isEntry(int modifiers) {
     return (modifiers & ENTRY) != 0;
-  }
-
-  public static boolean isInIterable(int modifiers) {
-    return (modifiers & IS_IN_ITERABLE) != 0;
   }
 
   public static boolean isType(int modifiers) {

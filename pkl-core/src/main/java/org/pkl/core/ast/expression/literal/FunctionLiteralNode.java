@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.member.FunctionNode;
 import org.pkl.core.ast.member.UnresolvedFunctionNode;
 import org.pkl.core.runtime.VmFunction;
@@ -48,7 +47,7 @@ public final class FunctionLiteralNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       functionNode = unresolvedFunctionNode.execute(frame);
       if (isCustomThisScope) {
-        customThisSlot = VmUtils.findAuxiliarySlot(frame, CustomThisScope.FRAME_SLOT_ID);
+        customThisSlot = VmUtils.findCustomThisSlot(frame);
       }
     }
 

@@ -1,0 +1,25 @@
+// https://github.com/apple/pkl/issues/741
+
+bar = new {}
+
+res1 {
+  for (i in List(1)) {
+    ...(bar) {
+      baz {
+        new { i }
+      }
+    }.baz
+  }
+}
+
+res2 {
+  for (i in List(1)) {
+    for (elem in (bar) {
+      baz {
+        new { i }
+      }
+    }.baz) {
+      elem
+    }
+  }
+}

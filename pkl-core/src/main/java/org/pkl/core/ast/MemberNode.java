@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.pkl.core.ast;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.function.Function;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
@@ -41,10 +40,6 @@ public abstract class MemberNode extends PklRootNode {
 
   public final ExpressionNode getBodyNode() {
     return bodyNode;
-  }
-
-  public final void replaceBody(Function<ExpressionNode, ExpressionNode> replacer) {
-    bodyNode = insert(replacer.apply(bodyNode));
   }
 
   protected final VmExceptionBuilder exceptionBuilder() {

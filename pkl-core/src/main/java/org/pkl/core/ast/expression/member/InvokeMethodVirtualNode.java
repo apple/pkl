@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,31 +45,27 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
   @Children private final ExpressionNode[] argumentNodes;
   private final MemberLookupMode lookupMode;
   private final boolean needsConst;
-  private final boolean isInIterable;
 
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
-      boolean needsConst,
-      boolean isInIterable) {
+      boolean needsConst) {
 
     super(sourceSection);
     this.methodName = methodName;
     this.argumentNodes = argumentNodes;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
-    this.isInIterable = isInIterable;
   }
 
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
       ExpressionNode[] argumentNodes,
-      MemberLookupMode lookupMode,
-      boolean isInIterable) {
-    this(sourceSection, methodName, argumentNodes, lookupMode, false, isInIterable);
+      MemberLookupMode lookupMode) {
+    this(sourceSection, methodName, argumentNodes, lookupMode, false);
   }
 
   /**
@@ -89,12 +85,11 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    var args = new Object[3 + argumentNodes.length];
+    var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
     args[1] = receiver;
-    args[2] = isInIterable;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[3 + i] = argumentNodes[i].executeGeneric(frame);
+      args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);
@@ -109,12 +104,11 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @SuppressWarnings("unused") VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    var args = new Object[3 + argumentNodes.length];
+    var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
     args[1] = receiver;
-    args[2] = isInIterable;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[3 + i] = argumentNodes[i].executeGeneric(frame);
+      args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(receiver.getCallTarget(), args);
@@ -130,12 +124,11 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Cached("resolveMethod(receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
-    var args = new Object[3 + argumentNodes.length];
+    var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
-    args[2] = isInIterable;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[3 + i] = argumentNodes[i].executeGeneric(frame);
+      args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);
@@ -150,12 +143,11 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     var method = resolveMethod(receiverClass);
-    var args = new Object[3 + argumentNodes.length];
+    var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
-    args[2] = isInIterable;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[3 + i] = argumentNodes[i].executeGeneric(frame);
+      args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each

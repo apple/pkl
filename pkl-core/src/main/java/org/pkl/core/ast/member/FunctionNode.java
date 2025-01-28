@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,11 +43,7 @@ public final class FunctionNode extends RegularMemberNode {
   // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
   // For other receivers, the owner is the prototype of the receiver's class.
   // The chain of enclosing owners forms a function/property's lexical scope.
-  //
-  // For function calls only, a third implicit argument is passed; whether the call came from within
-  // an iterable node or not.
-  // This is a mitigation for an existing bug (https://github.com/apple/pkl/issues/741).
-  private static final int IMPLICIT_PARAM_COUNT = 3;
+  private static final int IMPLICIT_PARAM_COUNT = 2;
 
   private final int paramCount;
   private final int totalParamCount;
@@ -112,15 +108,9 @@ public final class FunctionNode extends RegularMemberNode {
       throw wrongArgumentCount(totalArgCount - IMPLICIT_PARAM_COUNT);
     }
 
-    var isInIterable = (boolean) frame.getArguments()[2];
-
     for (var i = 0; i < parameterTypeNodes.length; i++) {
       var argument = frame.getArguments()[IMPLICIT_PARAM_COUNT + i];
-      if (isInIterable) {
-        parameterTypeNodes[i].executeEagerlyAndSet(frame, argument);
-      } else {
-        parameterTypeNodes[i].executeAndSet(frame, argument);
-      }
+      parameterTypeNodes[i].executeAndSet(frame, argument);
     }
 
     var result = bodyNode.executeGeneric(frame);

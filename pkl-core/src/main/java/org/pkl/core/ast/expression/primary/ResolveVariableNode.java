@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.builder.ConstLevel;
 import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
-import org.pkl.core.ast.frame.ReadAuxiliarySlotNode;
-import org.pkl.core.ast.frame.ReadEnclosingAuxiliarySlotNode;
 import org.pkl.core.ast.frame.ReadEnclosingFrameSlotNodeGen;
 import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
 import org.pkl.core.ast.member.Member;
@@ -34,14 +32,23 @@ import org.pkl.core.runtime.*;
 /**
  * Resolves a variable name, for example `foo` in `x = foo`.
  *
- * <p>A variable name can refer to any of the following: - a (potentially `local`) property in the
- * lexical scope - a method or lambda parameter in the lexical scope - a base module property - a
- * property accessible through `this`
+ * <p>A variable name can refer to any of the following:
+ *
+ * <ul>
+ *   <li>a method/lambda parameter or for-generator/let-expression variable in the lexical scope
+ *   <li>a (potentially `local`) property in the lexical scope
+ *   <li>a `pkl.base` module property
+ *   <li>a property accessible through `this`
+ * </ul>
  *
  * <p>This node's task is to make a one-time decision between these alternatives for the call site
  * it represents.
  */
-// TODO: Move this to parse time (required for supporting local variables, more efficient)
+// TODO: Move this to parse time
+// * more capable because more information is available
+//   and AST customization beyond replacing this node is possible
+// * useful for runtime AST transformations, for example to implement property-based testing
+// * more efficient
 //
 // TODO: In REPL, undo replace if environment changes to make the following work.
 // Perhaps instrumenting this node in REPL would be a good solution.
@@ -82,49 +89,18 @@ public final class ResolveVariableNode extends ExpressionNode {
     CompilerDirectives.transferToInterpreter();
 
     var localPropertyName = variableName.toLocalProperty();
-
-    // search the frame for auxiliary slots carrying this variable (placed by
-    // `WriteForVariablesNode`)
-    var variableSlot = VmUtils.findAuxiliarySlot(frame, localPropertyName);
-    if (variableSlot == -1) {
-      variableSlot = VmUtils.findAuxiliarySlot(frame, variableName);
-    }
-    if (variableSlot != -1) {
-      return new ReadAuxiliarySlotNode(getSourceSection(), variableSlot);
-    }
-    // search the frame for slots carrying this variable
-    variableSlot = VmUtils.findSlot(frame, localPropertyName);
-    if (variableSlot == -1) {
-      variableSlot = VmUtils.findSlot(frame, variableName);
-    }
-    if (variableSlot != -1) {
-      return ReadFrameSlotNodeGen.create(getSourceSection(), variableSlot);
-    }
-
     var currFrame = frame;
     var currOwner = VmUtils.getOwner(currFrame);
     var levelsUp = 0;
 
-    // Search lexical scope for a matching method/lambda parameter, `for` generator variable, or
-    // object property.
+    // Search lexical scope for a matching function parameter, for-generator variable, or object
+    // property.
     do {
-      var parameterSlot = VmUtils.findSlot(currFrame, variableName);
-      if (parameterSlot == -1) {
-        parameterSlot = VmUtils.findSlot(currFrame, localPropertyName);
-      }
-      if (parameterSlot != -1) {
+      var slot = findFrameSlot(currFrame, variableName, localPropertyName);
+      if (slot != -1) {
         return levelsUp == 0
-            ? ReadFrameSlotNodeGen.create(getSourceSection(), parameterSlot)
-            : ReadEnclosingFrameSlotNodeGen.create(getSourceSection(), parameterSlot, levelsUp);
-      }
-      var auxiliarySlot = VmUtils.findAuxiliarySlot(currFrame, variableName);
-      if (auxiliarySlot == -1) {
-        auxiliarySlot = VmUtils.findAuxiliarySlot(currFrame, localPropertyName);
-      }
-      if (auxiliarySlot != -1) {
-        return levelsUp == 0
-            ? new ReadAuxiliarySlotNode(getSourceSection(), auxiliarySlot)
-            : new ReadEnclosingAuxiliarySlotNode(getSourceSection(), auxiliarySlot, levelsUp);
+            ? ReadFrameSlotNodeGen.create(getSourceSection(), slot)
+            : ReadEnclosingFrameSlotNodeGen.create(getSourceSection(), slot, levelsUp);
       }
 
       var localMember = currOwner.getMember(localPropertyName);
@@ -136,8 +112,8 @@ public final class ResolveVariableNode extends ExpressionNode {
         var value = localMember.getConstantValue();
         if (value != null) {
           // This is the only code path that resolves local constant properties.
-          // Since this code path doesn't use ObjectMember.getCachedValue(),
-          // there is no point in calling localMember.setCachedValue() either.
+          // Since this code path doesn't call VmObject.getCachedValue(),
+          // there is no point in calling VmObject.setCachedValue() either.
           return new ConstantValueNode(sourceSection, value);
         }
 
@@ -235,5 +211,18 @@ public final class ResolveVariableNode extends ExpressionNode {
     if (invalid) {
       throw exceptionBuilder().evalError("propertyMustBeConst", variableName.toString()).build();
     }
+  }
+
+  private static int findFrameSlot(VirtualFrame frame, Object identifier1, Object identifier2) {
+    var descriptor = frame.getFrameDescriptor();
+    // Search backwards. The for-generator implementation exploits this
+    // to shadow a slot by appending a slot with the same name.
+    for (var i = descriptor.getNumberOfSlots() - 1; i >= 0; i--) {
+      var slotName = descriptor.getSlotName(i);
+      if (slotName == identifier1 || slotName == identifier2) {
+        return i;
+      }
+    }
+    return -1;
   }
 }

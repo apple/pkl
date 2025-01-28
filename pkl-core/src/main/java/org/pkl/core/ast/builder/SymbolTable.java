@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@ package org.pkl.core.ast.builder;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import java.util.*;
 import java.util.function.Function;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.parser.Lexer;
-import org.pkl.core.parser.antlr.PklParser.ParameterContext;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
@@ -34,8 +33,6 @@ import org.pkl.core.util.Nullable;
 
 public final class SymbolTable {
   private Scope currentScope;
-
-  public static Object FOR_GENERATOR_VARIABLE = new Object();
 
   public SymbolTable(ModuleInfo moduleInfo) {
     currentScope = new ModuleScope(moduleInfo);
@@ -99,6 +96,19 @@ public final class SymbolTable {
         nodeFactory);
   }
 
+  public <T> T enterForGenerator(
+      FrameDescriptor.Builder frameDescriptorBuilder,
+      FrameDescriptor.Builder memberDescriptorBuilder,
+      Function<ForGeneratorScope, T> nodeFactory) {
+    return doEnter(
+        new ForGeneratorScope(
+            currentScope,
+            currentScope.qualifiedName,
+            frameDescriptorBuilder,
+            memberDescriptorBuilder),
+        nodeFactory);
+  }
+
   public <T> T enterLambda(
       FrameDescriptor.Builder frameDescriptorBuilder, Function<LambdaScope, T> nodeFactory) {
 
@@ -128,9 +138,11 @@ public final class SymbolTable {
       Function<EntryScope, T> nodeFactory) {
 
     var qualifiedName = currentScope.getQualifiedName() + currentScope.getNextEntryName(keyNode);
-
-    return doEnter(
-        new EntryScope(currentScope, qualifiedName, FrameDescriptor.newBuilder()), nodeFactory);
+    var builder =
+        currentScope instanceof ForGeneratorScope forScope
+            ? forScope.memberDescriptorBuilder
+            : FrameDescriptor.newBuilder();
+    return doEnter(new EntryScope(currentScope, qualifiedName, builder), nodeFactory);
   }
 
   public <T> T enterCustomThisScope(Function<CustomThisScope, T> nodeFactory) {
@@ -166,12 +178,10 @@ public final class SymbolTable {
     private final @Nullable Scope parent;
     private final @Nullable Identifier name;
     private final String qualifiedName;
-    private final Deque<Identifier> forGeneratorVariables = new ArrayDeque<>();
     private int lambdaCount = 0;
     private int entryCount = 0;
     private final FrameDescriptor.Builder frameDescriptorBuilder;
     private final ConstLevel constLevel;
-    private boolean isVisitingIterable;
 
     private Scope(
         @Nullable Scope parent,
@@ -188,7 +198,6 @@ public final class SymbolTable {
           parent != null && parent.constLevel.biggerOrEquals(constLevel)
               ? parent.constLevel
               : constLevel;
-      this.isVisitingIterable = parent != null && parent.isVisitingIterable;
     }
 
     public final @Nullable Scope getParent() {
@@ -210,6 +219,30 @@ public final class SymbolTable {
 
     public FrameDescriptor buildFrameDescriptor() {
       return frameDescriptorBuilder.build();
+    }
+
+    /**
+     * Returns a new descriptor builder that contains the same slots as the current scope's frame
+     * descriptor.
+     */
+    public FrameDescriptor.Builder newFrameDescriptorBuilder() {
+      return newFrameDescriptorBuilder(buildFrameDescriptor());
+    }
+
+    /** Returns a new descriptor builder for a {@link GeneratorMemberNode} in the current scope. */
+    public FrameDescriptor.Builder newForGeneratorMemberDescriptorBuilder() {
+      return this instanceof ForGeneratorScope forScope
+          ? newFrameDescriptorBuilder(forScope.buildMemberDescriptor())
+          : FrameDescriptor.newBuilder();
+    }
+
+    private static FrameDescriptor.Builder newFrameDescriptorBuilder(FrameDescriptor descriptor) {
+      var builder = FrameDescriptor.newBuilder();
+      for (var i = 0; i < descriptor.getNumberOfSlots(); i++) {
+        builder.addSlot(
+            descriptor.getSlotKind(i), descriptor.getSlotName(i), descriptor.getSlotInfo(i));
+      }
+      return builder;
     }
 
     public @Nullable TypeParameter getTypeParameter(String name) {
@@ -253,35 +286,11 @@ public final class SymbolTable {
       return depth;
     }
 
-    /**
-     * Adds the for generator variable to the frame descriptor.
-     *
-     * <p>Returns {@code -1} if a for-generator variable already exists with this name.
-     */
-    public int pushForGeneratorVariableContext(ParameterContext ctx) {
-      var variable = Identifier.localProperty(ctx.typedIdentifier().Identifier().getText());
-      if (forGeneratorVariables.contains(variable)) {
-        return -1;
-      }
-      var slot =
-          frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, variable, FOR_GENERATOR_VARIABLE);
-      forGeneratorVariables.addLast(variable);
-      return slot;
-    }
-
-    public void popForGeneratorVariable() {
-      forGeneratorVariables.removeLast();
-    }
-
-    public Deque<Identifier> getForGeneratorVariables() {
-      return forGeneratorVariables;
-    }
-
     private String getNextLambdaName() {
       return "<function#" + (++skipLambdaScopes().lambdaCount) + ">";
     }
 
-    private String getNextEntryName(@Nullable ExpressionNode keyNode) {
+    protected String getNextEntryName(@Nullable ExpressionNode keyNode) {
       if (keyNode instanceof ConstantNode constantNode) {
         var value = constantNode.getValue();
         if (value instanceof String) {
@@ -336,16 +345,12 @@ public final class SymbolTable {
       return this instanceof LexicalScope;
     }
 
+    public final boolean isForGeneratorScope() {
+      return this instanceof ForGeneratorScope;
+    }
+
     public ConstLevel getConstLevel() {
       return constLevel;
-    }
-
-    public void setVisitingIterable(boolean isVisitingIterable) {
-      this.isVisitingIterable = isVisitingIterable;
-    }
-
-    public boolean isVisitingIterable() {
-      return isVisitingIterable;
     }
   }
 
@@ -410,6 +415,30 @@ public final class SymbolTable {
     public LambdaScope(
         Scope parent, String qualifiedName, FrameDescriptor.Builder frameDescriptorBuilder) {
       super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
+    }
+  }
+
+  public static final class ForGeneratorScope extends Scope implements LexicalScope {
+    private final FrameDescriptor.Builder memberDescriptorBuilder;
+
+    public ForGeneratorScope(
+        Scope parent,
+        String qualifiedName,
+        FrameDescriptor.Builder frameDescriptorBuilder,
+        FrameDescriptor.Builder memberDescriptorBuilder) {
+      super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
+      this.memberDescriptorBuilder = memberDescriptorBuilder;
+    }
+
+    public FrameDescriptor buildMemberDescriptor() {
+      return memberDescriptorBuilder.build();
+    }
+
+    @Override
+    protected String getNextEntryName(@Nullable ExpressionNode keyNode) {
+      var parent = getParent();
+      assert parent != null;
+      return parent.getNextEntryName(keyNode);
     }
   }
 

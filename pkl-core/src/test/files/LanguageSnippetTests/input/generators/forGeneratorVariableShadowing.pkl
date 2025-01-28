@@ -1,0 +1,33 @@
+examples {
+  local a = List("1", "2", "3", "4")
+  local b = List("a", "b", "c", "d")
+  
+  ["shadow key variable"] {
+    new {
+      for (key, outerValue in a) {
+        for (key, innerValue in b) {
+          List(outerValue, key, innerValue)
+        }
+      }
+    }
+  }
+  ["shadow value variable"] {
+    new {
+      for (outerKey, value in a) {
+        for (innerKey, value in b) {
+          List(outerKey, value, innerKey)
+        }
+      }
+    }
+  }
+  ["sibling for-generators can use same variable names"] {
+    new {
+      for (key, value in a) {
+        List(key,  value)
+      }
+      for (key, value in b) {
+        List(key, value)
+      }
+    }
+  }
+}

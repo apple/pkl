@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,9 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
 
   @CompilationFinal private int customThisSlot = -1;
 
-  protected GeneratorPredicateMemberNode(ExpressionNode predicateNode, ObjectMember member) {
-    super(member.getSourceSection());
+  protected GeneratorPredicateMemberNode(
+      ExpressionNode predicateNode, ObjectMember member, boolean isFrameStored) {
+    super(member.getSourceSection(), isFrameStored);
     this.predicateNode = predicateNode;
     this.member = member;
   }
@@ -110,7 +111,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
 
         try {
           var isApplicable = predicateNode.executeBoolean(frame);
-          if (isApplicable) doAdd(key, data);
+          if (isApplicable) data.addMember(frame, key, this.member, this);
         } catch (UnexpectedResultException e) {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder()
@@ -133,14 +134,5 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
       customThisSlot =
           frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
     }
-  }
-
-  private void doAdd(Object key, ObjectData data) {
-    if (EconomicMaps.put(data.members, key, member) != null) {
-      CompilerDirectives.transferToInterpreter();
-      throw duplicateDefinition(key, member);
-    }
-
-    data.persistForBindings(key);
   }
 }

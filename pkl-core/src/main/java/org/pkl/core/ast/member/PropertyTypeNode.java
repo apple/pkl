@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,24 +59,8 @@ public final class PropertyTypeNode extends PklRootNode {
     return qualifiedPropertyName;
   }
 
-  private boolean isInIterable(VirtualFrame frame) {
-    var args = frame.getArguments();
-    return args.length >= 4 && args[3] instanceof Boolean b && b;
-  }
-
   @Override
   protected Object executeImpl(VirtualFrame frame) {
-    if (isInIterable(frame)) {
-      // There is currently a bug around resolving variables within the iterable of a for
-      // generator or spread syntax (https://github.com/apple/pkl/issues/741)
-      //
-      // Normally, mappings/listings are type-checked lazily. However, this results in said
-      // bug getting widened, for any object members declared in the iterable.
-      //
-      // As a workaround for now, prevent the bug from being any worse by ensuring that these
-      // object members are eagerly typechecked.
-      return typeNode.executeEagerly(frame, frame.getArguments()[2]);
-    }
     return typeNode.execute(frame, frame.getArguments()[2]);
   }
 

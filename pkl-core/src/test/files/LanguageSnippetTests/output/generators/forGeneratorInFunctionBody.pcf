@@ -1,0 +1,12 @@
+res1 {
+  arg = "property"
+  [Pair("three", 0)] = Pair("property", "one")
+  [Pair("three", 1)] = Pair("property", "two")
+  [Pair("three", 2)] = Pair("property", "three")
+}
+res2 {
+  arg = "property"
+  [Pair("three", 0)] = Pair("property", "one")
+  [Pair("three", 1)] = Pair("property", "two")
+  [Pair("three", 2)] = Pair("property", "three")
+}
