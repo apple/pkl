@@ -81,12 +81,7 @@ dependencies {
   stagedWindowsAmd64Executable(executableDir("pkl-windows-amd64.exe"))
 }
 
-tasks.jar {
-  manifest { attributes += mapOf("Main-Class" to "org.pkl.cli.Main") }
-
-  // not required at runtime
-  exclude("org/pkl/cli/svm/**")
-}
+tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.cli.Main") } }
 
 tasks.javadoc { enabled = false }
 
@@ -157,7 +152,7 @@ tasks.check { dependsOn(testStartJavaExecutable) }
 fun Exec.configureExecutable(
   graalVm: BuildInfo.GraalVm,
   outputFile: Provider<RegularFile>,
-  extraArgs: List<String> = listOf()
+  extraArgs: List<String> = listOf(),
 ) {
   inputs
     .files(sourceSets.main.map { it.output })
@@ -240,7 +235,7 @@ val macExecutableAmd64: TaskProvider<Exec> by
     dependsOn(":installGraalVmAmd64")
     configureExecutable(
       buildInfo.graalVmAmd64,
-      layout.buildDirectory.file("executable/pkl-macos-amd64")
+      layout.buildDirectory.file("executable/pkl-macos-amd64"),
     )
   }
 
@@ -251,7 +246,7 @@ val macExecutableAarch64: TaskProvider<Exec> by
     configureExecutable(
       buildInfo.graalVmAarch64,
       layout.buildDirectory.file("executable/pkl-macos-aarch64"),
-      listOf("-H:+AllowDeprecatedBuilderClassesOnImageClasspath")
+      listOf("-H:+AllowDeprecatedBuilderClassesOnImageClasspath"),
     )
   }
 
@@ -261,7 +256,7 @@ val linuxExecutableAmd64: TaskProvider<Exec> by
     dependsOn(":installGraalVmAmd64")
     configureExecutable(
       buildInfo.graalVmAmd64,
-      layout.buildDirectory.file("executable/pkl-linux-amd64")
+      layout.buildDirectory.file("executable/pkl-linux-amd64"),
     )
   }
 
@@ -281,7 +276,7 @@ val linuxExecutableAarch64: TaskProvider<Exec> by
         // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
         // (e.g. Raspberry Pi 5, Asahi Linux)
         "-H:PageSize=65536"
-      )
+      ),
     )
   }
 
@@ -297,7 +292,7 @@ val alpineExecutableAmd64: TaskProvider<Exec> by
     configureExecutable(
       buildInfo.graalVmAmd64,
       layout.buildDirectory.file("executable/pkl-alpine-linux-amd64"),
-      listOf("--static", "--libc=musl")
+      listOf("--static", "--libc=musl"),
     )
   }
 
@@ -307,7 +302,7 @@ val windowsExecutableAmd64: TaskProvider<Exec> by
     configureExecutable(
       buildInfo.graalVmAmd64,
       layout.buildDirectory.file("executable/pkl-windows-amd64"),
-      listOf("-Dfile.encoding=UTF-8")
+      listOf("-Dfile.encoding=UTF-8"),
     )
   }
 
