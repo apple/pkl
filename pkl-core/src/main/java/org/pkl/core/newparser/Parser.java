@@ -56,28 +56,30 @@ import org.pkl.core.util.Nullable;
 
 public class Parser {
 
-  private final Lexer lexer;
+  private Lexer lexer;
   private Token lookahead;
   private Span spanLookahead;
   private boolean backtracking = false;
   private FullToken prev;
   private FullToken _lookahead;
-  private final List<Comment> comments;
+  private final List<Comment> comments = new ArrayList<>();
   private boolean precededBySemicolon = false;
 
-  public Parser(Lexer lexer) {
-    this.lexer = lexer;
-    comments = new ArrayList<>();
-    _lookahead = forceNext();
-    lookahead = _lookahead.token;
-    spanLookahead = _lookahead.span;
-  }
+  public Parser() {}
 
   public List<Comment> getComments() {
     return comments;
   }
 
-  public Module parseModule() {
+  private void init(String source) {
+    this.lexer = new Lexer(source);
+    _lookahead = forceNext();
+    lookahead = _lookahead.token;
+    spanLookahead = _lookahead.span;
+  }
+
+  public Module parseModule(String source) {
+    init(source);
     if (lookahead == Token.EOF) {
       return new Module(
           null, List.of(), List.of(), List.of(), List.of(), List.of(), new Span(0, 0));

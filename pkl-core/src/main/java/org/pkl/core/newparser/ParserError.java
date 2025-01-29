@@ -19,7 +19,7 @@ public class ParserError extends RuntimeException {
   private final Span span;
 
   public ParserError(String msg, Span span) {
-    super(String.format("Error parsing file: %s\nat %s", msg, span));
+    super(msg);
     this.span = span;
   }
 

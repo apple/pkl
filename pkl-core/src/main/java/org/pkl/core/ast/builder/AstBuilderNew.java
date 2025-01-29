@@ -403,15 +403,16 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   public UnresolvedTypeNode visitConstrainedType(ConstrainedType type) {
     var childNode = visitType(type.getType());
 
-    var exprs = type.getExpr();
-    var constraints = new TypeConstraintNode[exprs.size()];
-    for (int i = 0; i < constraints.length; i++) {
-      var expr = visitExpr(exprs.get(i));
-      constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
-    }
-
     return symbolTable.enterCustomThisScope(
-        scope -> new Constrained(createSourceSection(type), childNode, constraints));
+        scope -> {
+          var exprs = type.getExpr();
+          var constraints = new TypeConstraintNode[exprs.size()];
+          for (int i = 0; i < constraints.length; i++) {
+            var expr = visitExpr(exprs.get(i));
+            constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
+          }
+          return new Constrained(createSourceSection(type), childNode, constraints);
+        });
   }
 
   @Override
@@ -1190,6 +1191,23 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
+  public GeneratorMemberNode visitObjectMember(ObjectMemberNode member) {
+    if (member instanceof ObjectMemberNode.ObjectElement o) return visitObjectElement(o);
+    if (member instanceof ObjectMemberNode.ObjectProperty o) return visitObjectProperty(o);
+    if (member instanceof ObjectMemberNode.ObjectBodyProperty o) return visitObjectBodyProperty(o);
+    if (member instanceof ObjectMemberNode.ObjectMethod o) return visitObjectMethod(o);
+    if (member instanceof ObjectMemberNode.MemberPredicate o) return visitMemberPredicate(o);
+    if (member instanceof ObjectMemberNode.MemberPredicateBody o)
+      return visitMemberPredicateBody(o);
+    if (member instanceof ObjectMemberNode.ObjectEntry o) return visitObjectEntry(o);
+    if (member instanceof ObjectMemberNode.ObjectEntryBody o) return visitObjectEntryBody(o);
+    if (member instanceof ObjectMemberNode.ObjectSpread o) return visitObjectSpread(o);
+    if (member instanceof ObjectMemberNode.WhenGenerator o) return visitWhenGenerator(o);
+    if (member instanceof ObjectMemberNode.ForGenerator o) return visitForGenerator(o);
+    throw PklBugException.unreachableCode();
+  }
+
+  @Override
   public GeneratorPropertyNode visitObjectProperty(ObjectProperty member) {
     checkHasNoForGenerator(member, "forGeneratorCannotGenerateProperties");
     var memberNode = doVisitObjectProperty(member);
@@ -1197,21 +1215,21 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitObjectBodyProperty(ObjectBodyProperty member) {
+  public GeneratorMemberNode visitObjectBodyProperty(ObjectBodyProperty member) {
     checkHasNoForGenerator(member, "forGeneratorCannotGenerateProperties");
     var memberNode = doVisitObjectProperty(member);
     return GeneratorPropertyNodeGen.create(memberNode);
   }
 
   @Override
-  public Object visitObjectMethod(ObjectMethod memberNode) {
+  public GeneratorMemberNode visitObjectMethod(ObjectMethod memberNode) {
     checkHasNoForGenerator(memberNode, "forGeneratorCannotGenerateMethods");
     var member = doVisitObjectMethod(memberNode);
     return GeneratorPropertyNodeGen.create(member);
   }
 
   @Override
-  public Object visitMemberPredicate(MemberPredicate member) {
+  public GeneratorMemberNode visitMemberPredicate(MemberPredicate member) {
     var keyNodeAndMember = doVisitMemberPredicate(member);
     var keyNode = keyNodeAndMember.first;
     var memberNode = keyNodeAndMember.second;
@@ -1221,7 +1239,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitMemberPredicateBody(MemberPredicateBody member) {
+  public GeneratorMemberNode visitMemberPredicateBody(MemberPredicateBody member) {
     var keyNodeAndMember = doVisitMemberPredicate(member);
     var keyNode = keyNodeAndMember.first;
     var memberNode = keyNodeAndMember.second;
@@ -1231,14 +1249,14 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitObjectElement(ObjectElement member) {
+  public GeneratorMemberNode visitObjectElement(ObjectElement member) {
     var memberNode = doVisitObjectElement(member);
     insertWriteForGeneratorVarsToFrameSlotsNode(memberNode.getMemberNode());
     return GeneratorElementNodeGen.create(memberNode);
   }
 
   @Override
-  public Object visitObjectEntry(ObjectEntry member) {
+  public GeneratorMemberNode visitObjectEntry(ObjectEntry member) {
     var keyNodeAndMember = doVisitObjectEntry(member);
     var keyNode = keyNodeAndMember.first;
     var memberNode = keyNodeAndMember.second;
@@ -1248,7 +1266,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitObjectEntryBody(ObjectEntryBody member) {
+  public GeneratorMemberNode visitObjectEntryBody(ObjectEntryBody member) {
     var keyNodeAndMember = doVisitObjectEntry(member);
     var keyNode = keyNodeAndMember.first;
     var memberNode = keyNodeAndMember.second;
@@ -1258,7 +1276,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitObjectSpread(ObjectSpread member) {
+  public GeneratorMemberNode visitObjectSpread(ObjectSpread member) {
     var scope = symbolTable.getCurrentScope();
     var visitingIterable = scope.isVisitingIterable();
     scope.setVisitingIterable(true);
@@ -1268,7 +1286,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitWhenGenerator(WhenGenerator member) {
+  public GeneratorMemberNode visitWhenGenerator(WhenGenerator member) {
     var sourceSection = createSourceSection(member);
     var thenNodes = doVisitForWhenBody(member.getBody());
     var elseNodes =
@@ -1302,7 +1320,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitForGenerator(ForGenerator member) {
+  public GeneratorMemberNode visitForGenerator(ForGenerator member) {
     var sourceSection = createSourceSection(member);
     int keyVariableSlot;
     int valueVariableSlot;
@@ -2533,7 +2551,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
       List<? extends ObjectMemberNode> members) {
     var result = new GeneratorMemberNode[members.size()];
     for (var i = 0; i < result.length; i++) {
-      result[i] = (GeneratorMemberNode) visitObjectMember(members.get(i));
+      result[i] = visitObjectMember(members.get(i));
     }
     return result;
   }

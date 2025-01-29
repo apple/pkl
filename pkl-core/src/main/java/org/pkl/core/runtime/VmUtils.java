@@ -56,6 +56,7 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.newparser.ParserError;
 import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.antlr.PklParser.ExprContext;
@@ -539,6 +540,16 @@ public final class VmUtils {
         .build();
   }
 
+  // wanted to keep Parser/LexParseException API free from
+  // Truffle classes (Source), hence put this method here
+  public static VmException toVmException(ParserError e, Source source, String moduleName) {
+    return new VmExceptionBuilder()
+        .adhocEvalError(e.getMessage())
+        .withSourceSection(source.createSection(e.span().charIndex(), e.span().length()))
+        .withMemberName(moduleName)
+        .build();
+  }
+
   public static @Nullable String exportDocComment(@Nullable SourceSection docComment) {
     if (docComment == null) return null;
 
@@ -554,9 +565,6 @@ public final class VmUtils {
       }
     }
     matcher.appendTail(builder);
-    var newLength = builder.length() - 1;
-    assert builder.charAt(newLength) == '\n';
-    builder.setLength(newLength);
     return builder.toString();
   }
 

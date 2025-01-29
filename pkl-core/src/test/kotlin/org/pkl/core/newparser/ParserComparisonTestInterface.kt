@@ -62,9 +62,8 @@ interface ParserComparisonTestInterface {
 
   companion object {
     private fun renderCode(code: String): String {
-      val lexer = Lexer(code)
-      val parser = Parser(lexer)
-      val mod = parser.parseModule()
+      val parser = Parser()
+      val mod = parser.parseModule(code)
       val renderer = SexpRenderer()
       return renderer.render(mod)
     }
