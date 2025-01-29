@@ -22,7 +22,7 @@ plugins {
   signing
 }
 
-val dummy: SourceSet by sourceSets.creating
+val placeholder: SourceSet by sourceSets.creating
 
 val firstPartySourcesJars by configurations.existing
 
@@ -51,15 +51,16 @@ dependencies {
 }
 
 // TODO: need to figure out how to properly generate javadoc here.
-// For now, we'll include a dummy javadoc jar.
-val javadocDummy by tasks.registering(Javadoc::class) { source = dummy.allJava }
+// For now, we'll include a placeholder javadoc jar.
+val javadocPlaceholder by tasks.registering(Javadoc::class) { source = placeholder.allJava }
 
 java { withJavadocJar() }
 
 val javadocJar by
   tasks.existing(Jar::class) {
-    from(javadocDummy.get().outputs.files)
+    from(javadocPlaceholder)
     archiveBaseName.set("pkl-tools-all")
+    archiveClassifier.set("javadoc")
   }
 
 tasks.shadowJar { archiveBaseName.set("pkl-tools-all") }
@@ -69,8 +70,8 @@ publishing {
     named<MavenPublication>("fatJar") {
       // don't use `-all` suffix because this is the only JAR we publish
       artifactId = "pkl-tools"
-      // add dummy javadoc jar to publication
-      artifact(javadocJar.flatMap { it.archiveFile }) { classifier = "javadoc" }
+      // add placeholder javadoc jar to publication
+      artifact(javadocJar)
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-tools")
         description.set(
