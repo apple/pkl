@@ -58,8 +58,9 @@ java { withJavadocJar() }
 
 val javadocJar by
   tasks.existing(Jar::class) {
-    from(javadocDummy.get().outputs.files)
+    from(javadocDummy)
     archiveBaseName.set("pkl-tools-all")
+    archiveClassifier.set("javadoc")
   }
 
 tasks.shadowJar { archiveBaseName.set("pkl-tools-all") }
@@ -70,7 +71,7 @@ publishing {
       // don't use `-all` suffix because this is the only JAR we publish
       artifactId = "pkl-tools"
       // add dummy javadoc jar to publication
-      artifact(javadocJar.flatMap { it.archiveFile }) { classifier = "javadoc" }
+      artifact(javadocJar)
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-tools")
         description.set(
