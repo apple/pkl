@@ -254,6 +254,18 @@ public final class VmUtils {
       IndirectCallNode callNode) {
 
     final var constantValue = member.getConstantValue();
+
+    // const members only need to be executed once on the prototype, and its cached value
+    // can be re-used for all children in the amends chain.
+    if (member.isConst() && owner != receiver) {
+      assert member.isProp();
+      assert owner.isPrototype();
+      var result = readMemberOrNull(owner, memberKey, checkType, callNode);
+      assert result != null;
+      receiver.setCachedValue(memberKey, result);
+      return result;
+    }
+
     if (constantValue != null) {
       var result = constantValue;
       // for a property, Listing element, or Mapping value, do a type check
