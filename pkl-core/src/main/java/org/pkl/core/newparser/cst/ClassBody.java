@@ -19,22 +19,22 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public final class ObjectBody implements Node {
-  private final List<Parameter> pars;
-  private final List<ObjectMemberNode> members;
+public class ClassBody implements Node {
+  private final List<ClassPropertyEntry> properties;
+  private final List<ClassMethod> methods;
   private final Span span;
   private Node parent;
 
-  public ObjectBody(List<Parameter> pars, List<ObjectMemberNode> members, Span span) {
-    this.pars = pars;
-    this.members = members;
+  public ClassBody(List<ClassPropertyEntry> properties, List<ClassMethod> methods, Span span) {
+    this.properties = properties;
+    this.methods = methods;
     this.span = span;
 
-    for (var par : pars) {
-      par.setParent(this);
+    for (var prop : properties) {
+      prop.setParent(this);
     }
-    for (var member : members) {
-      member.setParent(this);
+    for (var method : methods) {
+      method.setParent(this);
     }
   }
 
@@ -53,17 +53,24 @@ public final class ObjectBody implements Node {
     this.parent = parent;
   }
 
-  public List<Parameter> getPars() {
-    return pars;
+  public List<ClassPropertyEntry> getProperties() {
+    return properties;
   }
 
-  public List<ObjectMemberNode> getMembers() {
-    return members;
+  public List<ClassMethod> getMethods() {
+    return methods;
   }
 
   @Override
   public String toString() {
-    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
+    return "ClassBody{"
+        + "properties="
+        + properties
+        + ", methods="
+        + methods
+        + ", span="
+        + span
+        + '}';
   }
 
   @Override
@@ -74,14 +81,14 @@ public final class ObjectBody implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ObjectBody that = (ObjectBody) o;
-    return Objects.equals(pars, that.pars)
-        && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span);
+    ClassBody classBody = (ClassBody) o;
+    return Objects.equals(properties, classBody.properties)
+        && Objects.equals(methods, classBody.methods)
+        && Objects.equals(span, classBody.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span);
+    return Objects.hash(properties, methods, span);
   }
 }

@@ -17,16 +17,17 @@ package org.pkl.core.newparser.cst;
 
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
-import org.pkl.core.newparser.cst.Expr.StringConstant;
 
-public class AmendsDecl implements Node {
-  private final StringConstant url;
+public class TypeAnnotation implements Node {
+  private final Type type;
   private final Span span;
   private Node parent;
 
-  public AmendsDecl(StringConstant url, Span span) {
-    this.url = url;
+  public TypeAnnotation(Type type, Span span) {
+    this.type = type;
     this.span = span;
+
+    type.setParent(this);
   }
 
   @Override
@@ -44,13 +45,13 @@ public class AmendsDecl implements Node {
     this.parent = parent;
   }
 
-  public StringConstant getUrl() {
-    return url;
+  public Type getType() {
+    return type;
   }
 
   @Override
   public String toString() {
-    return "AmendsDecl{" + "url=" + url + ", span=" + span + '}';
+    return "TypeAnnotation{" + "type=" + type + ", span=" + span + '}';
   }
 
   @Override
@@ -61,12 +62,12 @@ public class AmendsDecl implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    AmendsDecl that = (AmendsDecl) o;
-    return Objects.equals(url, that.url) && Objects.equals(span, that.span);
+    TypeAnnotation that = (TypeAnnotation) o;
+    return Objects.equals(type, that.type) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, span);
+    return Objects.hash(type, span);
   }
 }

@@ -19,6 +19,10 @@ public record Span(int charIndex, int length) {
 
   /** Returns a span that starts with this span and ends with `other`. */
   public Span endWith(Span other) {
-    return new Span(charIndex, other.charIndex - charIndex + other.length);
+    return new Span(charIndex, Math.abs(other.charIndex - charIndex) + other.length);
+  }
+
+  public int stopIndex() {
+    return charIndex + length - 1;
   }
 }

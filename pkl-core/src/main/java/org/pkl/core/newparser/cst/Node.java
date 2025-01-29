@@ -23,4 +23,8 @@ public interface Node {
   Node parent();
 
   void setParent(Node parent);
+
+  default String text(char[] source) {
+    return new String(source, span().charIndex(), span().length());
+  }
 }

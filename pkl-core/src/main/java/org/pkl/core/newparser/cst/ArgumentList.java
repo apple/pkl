@@ -19,22 +19,17 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public final class ObjectBody implements Node {
-  private final List<Parameter> pars;
-  private final List<ObjectMemberNode> members;
+public class ArgumentList implements Node {
+  private final List<Expr> args;
   private final Span span;
   private Node parent;
 
-  public ObjectBody(List<Parameter> pars, List<ObjectMemberNode> members, Span span) {
-    this.pars = pars;
-    this.members = members;
+  public ArgumentList(List<Expr> args, Span span) {
+    this.args = args;
     this.span = span;
 
-    for (var par : pars) {
-      par.setParent(this);
-    }
-    for (var member : members) {
-      member.setParent(this);
+    for (var arg : args) {
+      arg.setParent(this);
     }
   }
 
@@ -53,17 +48,13 @@ public final class ObjectBody implements Node {
     this.parent = parent;
   }
 
-  public List<Parameter> getPars() {
-    return pars;
-  }
-
-  public List<ObjectMemberNode> getMembers() {
-    return members;
+  public List<Expr> getArgs() {
+    return args;
   }
 
   @Override
   public String toString() {
-    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
+    return "ArgumentList{" + "args=" + args + ", span=" + span + '}';
   }
 
   @Override
@@ -74,14 +65,12 @@ public final class ObjectBody implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ObjectBody that = (ObjectBody) o;
-    return Objects.equals(pars, that.pars)
-        && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span);
+    ArgumentList that = (ArgumentList) o;
+    return Objects.equals(args, that.args) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span);
+    return Objects.hash(args, span);
   }
 }

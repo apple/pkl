@@ -15,27 +15,20 @@
  */
 package org.pkl.core.newparser.cst;
 
-import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.newparser.cst.Expr.StringConstant;
 
-public final class ObjectBody implements Node {
-  private final List<Parameter> pars;
-  private final List<ObjectMemberNode> members;
+public class ExtendsOrAmendsDecl implements Node {
+  private final StringConstant url;
+  private final Type type;
   private final Span span;
   private Node parent;
 
-  public ObjectBody(List<Parameter> pars, List<ObjectMemberNode> members, Span span) {
-    this.pars = pars;
-    this.members = members;
+  public ExtendsOrAmendsDecl(StringConstant url, Type type, Span span) {
+    this.url = url;
+    this.type = type;
     this.span = span;
-
-    for (var par : pars) {
-      par.setParent(this);
-    }
-    for (var member : members) {
-      member.setParent(this);
-    }
   }
 
   @Override
@@ -53,17 +46,17 @@ public final class ObjectBody implements Node {
     this.parent = parent;
   }
 
-  public List<Parameter> getPars() {
-    return pars;
+  public StringConstant getUrl() {
+    return url;
   }
 
-  public List<ObjectMemberNode> getMembers() {
-    return members;
+  public Type getType() {
+    return type;
   }
 
   @Override
   public String toString() {
-    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
+    return "AmendsDecl{" + "url=" + url + ", span=" + span + '}';
   }
 
   @Override
@@ -74,14 +67,17 @@ public final class ObjectBody implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ObjectBody that = (ObjectBody) o;
-    return Objects.equals(pars, that.pars)
-        && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span);
+    ExtendsOrAmendsDecl that = (ExtendsOrAmendsDecl) o;
+    return Objects.equals(url, that.url) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span);
+    return Objects.hash(url, span);
+  }
+
+  public enum Type {
+    EXTENDS,
+    AMENDS
   }
 }

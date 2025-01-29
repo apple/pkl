@@ -16,8 +16,14 @@
 package org.pkl.core.newparser;
 
 public class ParserError extends RuntimeException {
+  private final Span span;
 
   public ParserError(String msg, Span span) {
     super(String.format("Error parsing file: %s\nat %s", msg, span));
+    this.span = span;
+  }
+
+  public Span span() {
+    return span;
   }
 }

@@ -915,20 +915,18 @@ public sealed interface Expr extends Node {
 
   final class UnqualifiedAccess implements Expr {
     private final Ident ident;
-    private final @Nullable List<Expr> args;
+    private final @Nullable ArgumentList argumentList;
     private final Span span;
     private Node parent;
 
-    public UnqualifiedAccess(Ident ident, @Nullable List<Expr> args, Span span) {
+    public UnqualifiedAccess(Ident ident, @Nullable ArgumentList argumentList, Span span) {
       this.ident = ident;
-      this.args = args;
+      this.argumentList = argumentList;
       this.span = span;
 
       ident.setParent(this);
-      if (args != null) {
-        for (var arg : args) {
-          arg.setParent(this);
-        }
+      if (argumentList != null) {
+        argumentList.setParent(this);
       }
     }
 
@@ -951,13 +949,20 @@ public sealed interface Expr extends Node {
       return ident;
     }
 
-    public @Nullable List<Expr> getArgs() {
-      return args;
+    public @Nullable ArgumentList getArgumentList() {
+      return argumentList;
     }
 
     @Override
     public String toString() {
-      return "UnqualifiedAccess{" + "ident=" + ident + ", args=" + args + ", span=" + span + '}';
+      return "UnqualifiedAccess{"
+          + "ident="
+          + ident
+          + ", argumentList="
+          + argumentList
+          + ", span="
+          + span
+          + '}';
     }
 
     @Override
@@ -970,13 +975,13 @@ public sealed interface Expr extends Node {
       }
       UnqualifiedAccess that = (UnqualifiedAccess) o;
       return Objects.equals(ident, that.ident)
-          && Objects.equals(args, that.args)
+          && Objects.equals(argumentList, that.argumentList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, args, span);
+      return Objects.hash(ident, argumentList, span);
     }
   }
 
@@ -984,24 +989,26 @@ public sealed interface Expr extends Node {
     private final Expr expr;
     private final Ident ident;
     private final boolean isNullable;
-    private final @Nullable List<Expr> args;
+    private final @Nullable ArgumentList argumentList;
     private final Span span;
     private Node parent;
 
     public QualifiedAccess(
-        Expr expr, Ident ident, boolean isNullable, @Nullable List<Expr> args, Span span) {
+        Expr expr,
+        Ident ident,
+        boolean isNullable,
+        @Nullable ArgumentList argumentList,
+        Span span) {
       this.expr = expr;
       this.ident = ident;
       this.isNullable = isNullable;
-      this.args = args;
+      this.argumentList = argumentList;
       this.span = span;
 
       expr.setParent(this);
       ident.setParent(this);
-      if (args != null) {
-        for (var arg : args) {
-          arg.setParent(this);
-        }
+      if (argumentList != null) {
+        argumentList.setParent(this);
       }
     }
 
@@ -1032,8 +1039,8 @@ public sealed interface Expr extends Node {
       return isNullable;
     }
 
-    public @Nullable List<Expr> getArgs() {
-      return args;
+    public @Nullable ArgumentList getArgumentList() {
+      return argumentList;
     }
 
     @Override
@@ -1045,8 +1052,8 @@ public sealed interface Expr extends Node {
           + ident
           + ", isNullable="
           + isNullable
-          + ", args="
-          + args
+          + ", argumentList="
+          + argumentList
           + ", span="
           + span
           + '}';
@@ -1064,30 +1071,30 @@ public sealed interface Expr extends Node {
       return isNullable == that.isNullable
           && Objects.equals(expr, that.expr)
           && Objects.equals(ident, that.ident)
-          && Objects.equals(args, that.args)
+          && Objects.equals(argumentList, that.argumentList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, ident, isNullable, args, span);
+      return Objects.hash(expr, ident, isNullable, argumentList, span);
     }
   }
 
   final class SuperAccess implements Expr {
     private final Ident ident;
-    private final List<Expr> args;
+    private final @Nullable ArgumentList argumentList;
     private final Span span;
     private Node parent;
 
-    public SuperAccess(Ident ident, List<Expr> args, Span span) {
+    public SuperAccess(Ident ident, @Nullable ArgumentList argumentList, Span span) {
       this.ident = ident;
-      this.args = args;
+      this.argumentList = argumentList;
       this.span = span;
 
       ident.setParent(this);
-      for (var arg : args) {
-        arg.setParent(this);
+      if (argumentList != null) {
+        argumentList.setParent(this);
       }
     }
 
@@ -1110,13 +1117,20 @@ public sealed interface Expr extends Node {
       return ident;
     }
 
-    public List<Expr> getArgs() {
-      return args;
+    public @Nullable ArgumentList getArgumentList() {
+      return argumentList;
     }
 
     @Override
     public String toString() {
-      return "SuperAccess{" + "ident=" + ident + ", args=" + args + ", span=" + span + '}';
+      return "SuperAccess{"
+          + "ident="
+          + ident
+          + ", argumentList="
+          + argumentList
+          + ", span="
+          + span
+          + '}';
     }
 
     @Override
@@ -1129,13 +1143,13 @@ public sealed interface Expr extends Node {
       }
       SuperAccess that = (SuperAccess) o;
       return Objects.equals(ident, that.ident)
-          && Objects.equals(args, that.args)
+          && Objects.equals(argumentList, that.argumentList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, args, span);
+      return Objects.hash(ident, argumentList, span);
     }
   }
 
@@ -1408,19 +1422,17 @@ public sealed interface Expr extends Node {
   }
 
   final class FunctionLiteral implements Expr {
-    private final List<Parameter> args;
+    private final ParameterList parameterList;
     private final Expr expr;
     private final Span span;
     private Node parent;
 
-    public FunctionLiteral(List<Parameter> args, Expr expr, Span span) {
-      this.args = args;
+    public FunctionLiteral(ParameterList parameterList, Expr expr, Span span) {
+      this.parameterList = parameterList;
       this.expr = expr;
       this.span = span;
 
-      for (var arg : args) {
-        arg.setParent(this);
-      }
+      parameterList.setParent(this);
       expr.setParent(this);
     }
 
@@ -1439,8 +1451,8 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
-    public List<Parameter> getArgs() {
-      return args;
+    public ParameterList getParameterList() {
+      return parameterList;
     }
 
     public Expr getExpr() {
@@ -1449,7 +1461,14 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "FunctionLiteral{" + "args=" + args + ", expr=" + expr + ", span=" + span + '}';
+      return "FunctionLiteral{"
+          + "parameterList="
+          + parameterList
+          + ", expr="
+          + expr
+          + ", span="
+          + span
+          + '}';
     }
 
     @Override
@@ -1461,14 +1480,14 @@ public sealed interface Expr extends Node {
         return false;
       }
       FunctionLiteral that = (FunctionLiteral) o;
-      return Objects.equals(args, that.args)
+      return Objects.equals(parameterList, that.parameterList)
           && Objects.equals(expr, that.expr)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(args, expr, span);
+      return Objects.hash(parameterList, expr, span);
     }
   }
 
@@ -1564,6 +1583,10 @@ public sealed interface Expr extends Node {
 
     public ObjectBody getBody() {
       return body;
+    }
+
+    public Span newSpan() {
+      return new Span(span.charIndex(), 3);
     }
 
     @Override

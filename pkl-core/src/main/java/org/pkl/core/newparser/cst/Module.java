@@ -23,15 +23,27 @@ import org.pkl.core.util.Nullable;
 public final class Module implements Node {
   private final @Nullable ModuleDecl decl;
   private final List<Import> imports;
-  private final List<ModuleEntry> entries;
+  private final List<Clazz> classes;
+  private final List<TypeAlias> typeAliases;
+  private final List<ClassPropertyEntry> properties;
+  private final List<ClassMethod> methods;
   private final Span span;
   private Node parent;
 
   public Module(
-      @Nullable ModuleDecl decl, List<Import> imports, List<ModuleEntry> entries, Span span) {
+      @Nullable ModuleDecl decl,
+      List<Import> imports,
+      List<Clazz> classes,
+      List<TypeAlias> typeAliases,
+      List<ClassPropertyEntry> properties,
+      List<ClassMethod> methods,
+      Span span) {
     this.decl = decl;
     this.imports = imports;
-    this.entries = entries;
+    this.classes = classes;
+    this.typeAliases = typeAliases;
+    this.properties = properties;
+    this.methods = methods;
     this.span = span;
 
     if (decl != null) {
@@ -40,8 +52,17 @@ public final class Module implements Node {
     for (var imp : imports) {
       imp.setParent(this);
     }
-    for (var entry : entries) {
-      entry.setParent(this);
+    for (var clazz : classes) {
+      clazz.setParent(this);
+    }
+    for (var typeAlias : typeAliases) {
+      typeAlias.setParent(this);
+    }
+    for (var prop : properties) {
+      prop.setParent(this);
+    }
+    for (var method : methods) {
+      method.setParent(this);
     }
   }
 
@@ -68,8 +89,20 @@ public final class Module implements Node {
     return imports;
   }
 
-  public List<ModuleEntry> getEntries() {
-    return entries;
+  public List<Clazz> getClasses() {
+    return classes;
+  }
+
+  public List<TypeAlias> getTypeAliases() {
+    return typeAliases;
+  }
+
+  public List<ClassPropertyEntry> getProperties() {
+    return properties;
+  }
+
+  public List<ClassMethod> getMethods() {
+    return methods;
   }
 
   @Override
@@ -79,8 +112,14 @@ public final class Module implements Node {
         + decl
         + ", imports="
         + imports
-        + ", entries="
-        + entries
+        + ", classes="
+        + classes
+        + ", typeAliases="
+        + typeAliases
+        + ", properties="
+        + properties
+        + ", methods="
+        + methods
         + ", span="
         + span
         + '}';
@@ -97,12 +136,15 @@ public final class Module implements Node {
     Module module = (Module) o;
     return Objects.equals(decl, module.decl)
         && Objects.equals(imports, module.imports)
-        && Objects.equals(entries, module.entries)
+        && Objects.equals(classes, module.classes)
+        && Objects.equals(typeAliases, module.typeAliases)
+        && Objects.equals(properties, module.properties)
+        && Objects.equals(methods, module.methods)
         && Objects.equals(span, module.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(decl, imports, entries, span);
+    return Objects.hash(decl, imports, classes, typeAliases, properties, methods, span);
   }
 }

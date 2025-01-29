@@ -17,11 +17,9 @@ package org.pkl.core.newparser
 
 import org.pkl.core.newparser.cst.*
 import org.pkl.core.newparser.cst.Annotation
-import org.pkl.core.newparser.cst.ClassEntry.ClassPropertyBody
-import org.pkl.core.newparser.cst.ClassEntry.ClassPropertyExpr
 import org.pkl.core.newparser.cst.Expr.*
 import org.pkl.core.newparser.cst.Expr.Module
-import org.pkl.core.newparser.cst.ObjectMember.*
+import org.pkl.core.newparser.cst.ObjectMemberNode.*
 import org.pkl.core.newparser.cst.Parameter.TypedIdent
 import org.pkl.core.newparser.cst.Type.*
 
@@ -49,9 +47,14 @@ class SexpRenderer {
       buf.append('\n')
       renderImport(imp)
     }
-    for (entry in mod.entries) {
+    for (entry in sortModuleEntries(mod)) {
       buf.append('\n')
-      renderModuleEntry(entry)
+      when (entry) {
+        is Clazz -> renderClass(entry)
+        is TypeAlias -> renderTypeAlias(entry)
+        is ClassPropertyEntry -> renderClassPropertyEntry(entry)
+        is ClassMethod -> renderClassMethod(entry)
+      }
     }
     tab = oldTab
     buf.append(')')
@@ -65,11 +68,9 @@ class SexpRenderer {
       buf.append('\n')
       renderDocComment()
     }
-    if (decl.annotations != null) {
-      for (ann in decl.annotations!!) {
-        buf.append('\n')
-        renderAnnotation(ann)
-      }
+    for (ann in decl.annotations) {
+      buf.append('\n')
+      renderAnnotation(ann)
     }
     for (mod in decl.modifiers) {
       buf.append('\n')
@@ -79,7 +80,7 @@ class SexpRenderer {
       buf.append('\n')
       renderQualifiedIdent(decl.name!!)
     }
-    if (decl.amendsUrl !== null || decl.extendsUrl !== null) {
+    if (decl.extendsOrAmendsDecl !== null) {
       buf.append('\n')
       buf.append(tab)
       buf.append("(extendsOrAmendsClause)")
@@ -105,14 +106,6 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderModuleEntry(entry: ModuleEntry) {
-    when (entry) {
-      is Clazz -> renderClass(entry)
-      is TypeAlias -> renderTypeAlias(entry)
-      is ClassEntry -> renderClassEntry(entry)
-    }
-  }
-
   fun renderClass(clazz: Clazz) {
     buf.append(tab)
     buf.append("(clazz")
@@ -132,17 +125,33 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    for (tpar in clazz.typePars) {
+    val tparList = clazz.typeParameterList
+    if (tparList !== null) {
       buf.append('\n')
-      renderTypeParameter(tpar)
+      renderTypeParameterList(tparList)
     }
     if (clazz.superClass !== null) {
       buf.append('\n')
-      renderQualifiedIdent(clazz.superClass!!)
+      renderType(clazz.superClass!!)
     }
-    for (entry in clazz.body) {
+    if (clazz.body !== null) {
       buf.append('\n')
-      renderClassEntry(entry)
+      renderClassBody(clazz.body!!)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderClassBody(classBody: ClassBody) {
+    buf.append(tab)
+    buf.append("(classBody")
+    val oldTab = increaseTab()
+    for (entry in sortClassEntries(classBody)) {
+      buf.append('\n')
+      when (entry) {
+        is ClassPropertyEntry -> renderClassPropertyEntry(entry)
+        is ClassMethod -> renderClassMethod(entry)
+      }
     }
     buf.append(')')
     tab = oldTab
@@ -167,9 +176,9 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    for (tpar in `typealias`.typePars) {
-      buf.append('\n')
-      renderTypeParameter(tpar)
+    val tparList = `typealias`.typeParameterList
+    if (tparList !== null) {
+      renderTypeParameterList(tparList)
     }
     buf.append('\n')
     renderType(`typealias`.type)
@@ -177,97 +186,44 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderClassEntry(classEntry: ClassEntry) {
-    when (classEntry) {
-      is ClassEntry.ClassProperty -> renderClassProperty(classEntry)
-      is ClassPropertyExpr -> renderClassPropertyExpr(classEntry)
-      is ClassPropertyBody -> renderClassPropertyBody(classEntry)
-      is ClassEntry.ClassMethod -> renderClassMethod(classEntry)
-    }
-  }
-
-  fun renderClassProperty(classProperty: ClassEntry.ClassProperty) {
+  fun renderClassPropertyEntry(classEntry: ClassPropertyEntry) {
     buf.append(tab)
     buf.append("(classProperty")
     val oldTab = increaseTab()
-    if (classProperty.docComment !== null) {
+    if (classEntry.docComment() !== null) {
       buf.append('\n')
       renderDocComment()
     }
-    for (ann in classProperty.annotations) {
+    for (ann in classEntry.annotations()) {
       buf.append('\n')
       renderAnnotation(ann)
     }
-    for (mod in classProperty.modifiers) {
+    for (mod in classEntry.modifiers()) {
       buf.append('\n')
       renderModifier(mod)
     }
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    buf.append('\n')
-    renderType(classProperty.type)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderClassPropertyExpr(classPropertyExpr: ClassPropertyExpr) {
-    buf.append(tab)
-    buf.append("(classProperty")
-    val oldTab = increaseTab()
-    if (classPropertyExpr.docComment !== null) {
+    classEntry.typeAnnotation()?.let { typeAnnotation ->
       buf.append('\n')
-      renderDocComment()
+      renderTypeAnnotation(typeAnnotation)
     }
-    for (ann in classPropertyExpr.annotations) {
+    classEntry.expr()?.let { expr ->
       buf.append('\n')
-      renderAnnotation(ann)
+      renderExpr(expr)
     }
-    for (mod in classPropertyExpr.modifiers) {
-      buf.append('\n')
-      renderModifier(mod)
-    }
-    buf.append('\n')
-    buf.append(tab)
-    buf.append("(identifier)")
-    if (classPropertyExpr.type !== null) {
-      buf.append('\n')
-      renderType(classPropertyExpr.type!!)
-    }
-    buf.append('\n')
-    renderExpr(classPropertyExpr.expr)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderClassPropertyBody(classPropertyBody: ClassPropertyBody) {
-    buf.append(tab)
-    buf.append("(classProperty")
-    val oldTab = increaseTab()
-    if (classPropertyBody.docComment !== null) {
-      buf.append('\n')
-      renderDocComment()
-    }
-    for (ann in classPropertyBody.annotations) {
-      buf.append('\n')
-      renderAnnotation(ann)
-    }
-    for (mod in classPropertyBody.modifiers) {
-      buf.append('\n')
-      renderModifier(mod)
-    }
-    buf.append('\n')
-    buf.append(tab)
-    buf.append("(identifier)")
-    for (body in classPropertyBody.bodyList) {
-      buf.append('\n')
-      renderObjectBody(body)
+    classEntry.bodyList()?.let { bodyList ->
+      for (body in bodyList) {
+        buf.append('\n')
+        renderObjectBody(body)
+      }
     }
     buf.append(')')
     tab = oldTab
   }
 
-  fun renderClassMethod(classMethod: ClassEntry.ClassMethod) {
+  fun renderClassMethod(classMethod: ClassMethod) {
     buf.append(tab)
     buf.append("(classMethod")
     val oldTab = increaseTab()
@@ -286,17 +242,15 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    for (par in classMethod.typePars) {
-      buf.append('\n')
-      renderTypeParameter(par)
+    val tparList = classMethod.typeParameterList
+    if (tparList !== null) {
+      renderTypeParameterList(tparList)
     }
-    for (par in classMethod.args) {
+    buf.append('\n')
+    renderParameterList(classMethod.parameterList)
+    if (classMethod.typeAnnotation !== null) {
       buf.append('\n')
-      renderParameter(par)
-    }
-    if (classMethod.returnType != null) {
-      buf.append('\n')
-      renderType(classMethod.returnType!!)
+      renderTypeAnnotation(classMethod.typeAnnotation!!)
     }
     if (classMethod.expr != null) {
       buf.append('\n')
@@ -354,6 +308,18 @@ class SexpRenderer {
     tab = oldTab
   }
 
+  fun renderParameterList(parList: ParameterList) {
+    buf.append(tab)
+    buf.append("(parameterList")
+    val oldTab = increaseTab()
+    for (par in parList.parameters) {
+      buf.append('\n')
+      renderParameter(par)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
   fun renderParameter(par: Parameter) {
     buf.append(tab)
     if (par is TypedIdent) {
@@ -362,15 +328,27 @@ class SexpRenderer {
       buf.append('\n')
       buf.append(tab)
       buf.append("(identifier)")
-      if (par.type != null) {
+      if (par.typeAnnotation !== null) {
         buf.append('\n')
-        renderType(par.type!!)
+        renderTypeAnnotation(par.typeAnnotation!!)
       }
       buf.append(')')
       tab = oldTab
     } else {
       buf.append("(parameter)")
     }
+  }
+
+  fun renderArgumentList(argumentList: ArgumentList) {
+    buf.append(tab)
+    buf.append("(argumentList")
+    val oldTab = increaseTab()
+    for (arg in argumentList.args) {
+      buf.append('\n')
+      renderExpr(arg)
+    }
+    buf.append(')')
+    tab = oldTab
   }
 
   fun renderExpr(expr: Expr) {
@@ -522,11 +500,9 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    if (expr.args != null) {
-      for (arg in expr.args!!) {
-        buf.append('\n')
-        renderExpr(arg)
-      }
+    if (expr.argumentList !== null) {
+      buf.append('\n')
+      renderArgumentList(expr.argumentList!!)
     }
     buf.append(')')
     tab = oldTab
@@ -541,11 +517,9 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    if (expr.args != null) {
-      for (arg in expr.args!!) {
-        buf.append('\n')
-        renderExpr(arg)
-      }
+    if (expr.argumentList !== null) {
+      buf.append('\n')
+      renderArgumentList(expr.argumentList!!)
     }
     buf.append(')')
     tab = oldTab
@@ -557,9 +531,9 @@ class SexpRenderer {
     val oldTab = increaseTab()
     buf.append('\n')
     buf.append("(identifier)")
-    for (arg in expr.args) {
+    if (expr.argumentList !== null) {
       buf.append('\n')
-      renderExpr(arg)
+      renderArgumentList(expr.argumentList!!)
     }
     buf.append(')')
     tab = oldTab
@@ -619,10 +593,7 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(functionLiteralExpr")
     val oldTab = increaseTab()
-    for (par in expr.args) {
-      buf.append('\n')
-      renderParameter(par)
-    }
+    renderParameterList(expr.parameterList)
     buf.append('\n')
     renderExpr(expr.expr)
     buf.append(')')
@@ -754,6 +725,16 @@ class SexpRenderer {
     tab = oldTab
   }
 
+  fun renderTypeAnnotation(typeAnnotation: TypeAnnotation) {
+    buf.append(tab)
+    buf.append("(typeAnnotation")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderType(typeAnnotation.type)
+    buf.append(')')
+    tab = oldTab
+  }
+
   fun renderType(type: Type) {
     when (type) {
       is UnknownType -> {
@@ -866,7 +847,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderMember(member: ObjectMember) {
+  fun renderMember(member: ObjectMemberNode) {
     when (member) {
       is ObjectElement -> renderObjectElement(member)
       is ObjectProperty -> renderObjectProperty(member)
@@ -903,9 +884,9 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    if (property.type != null) {
+    if (property.typeAnnotation !== null) {
       buf.append('\n')
-      renderType(property.type!!)
+      renderTypeAnnotation(property.typeAnnotation!!)
     }
     buf.append('\n')
     renderExpr(property.expr)
@@ -917,11 +898,9 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(objectProperty")
     val oldTab = increaseTab()
-    if (property.modifiers != null) {
-      for (mod in property.modifiers) {
-        buf.append('\n')
-        renderModifier(mod)
-      }
+    for (mod in property.modifiers) {
+      buf.append('\n')
+      renderModifier(mod)
     }
     buf.append('\n')
     buf.append(tab)
@@ -945,17 +924,15 @@ class SexpRenderer {
     }
     buf.append('\n')
     buf.append("(identifier)")
-    for (par in method.typePars) {
-      buf.append('\n')
-      renderTypeParameter(par)
+    val tparList = method.typeParameterList
+    if (tparList !== null) {
+      renderTypeParameterList(tparList)
     }
-    for (arg in method.args) {
+    buf.append('\n')
+    renderParameterList(method.paramList)
+    if (method.typeAnnotation !== null) {
       buf.append('\n')
-      renderParameter(arg)
-    }
-    if (method.returnType != null) {
-      buf.append('\n')
-      renderType(method.returnType!!)
+      renderTypeAnnotation(method.typeAnnotation!!)
     }
     buf.append('\n')
     renderExpr(method.expr)
@@ -1059,6 +1036,17 @@ class SexpRenderer {
     tab = oldTab
   }
 
+  fun renderTypeParameterList(typeParameterList: TypeParameterList) {
+    buf.append(tab)
+    buf.append("(TypeParameterList\n")
+    val oldTab = increaseTab()
+    for (tpar in typeParameterList.params) {
+      buf.append('\n')
+      renderTypeParameter(tpar)
+    }
+    tab = oldTab
+  }
+
   @Suppress("UNUSED_PARAMETER")
   fun renderTypeParameter(ignored: TypeParameter?) {
     buf.append(tab)
@@ -1084,5 +1072,25 @@ class SexpRenderer {
     val old = tab
     tab += "  "
     return old
+  }
+
+  companion object {
+    private fun sortModuleEntries(mod: org.pkl.core.newparser.cst.Module): List<Node> {
+      val res = mutableListOf<Node>()
+      res += mod.classes
+      res += mod.typeAliases
+      res += mod.properties
+      res += mod.methods
+      res.sortWith(compareBy { it.span().charIndex })
+      return res
+    }
+
+    private fun sortClassEntries(body: ClassBody): List<Node> {
+      val res = mutableListOf<Node>()
+      res += body.properties
+      res += body.methods
+      res.sortWith(compareBy { it.span().charIndex })
+      return res
+    }
   }
 }

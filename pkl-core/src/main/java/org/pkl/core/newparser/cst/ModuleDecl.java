@@ -22,37 +22,32 @@ import org.pkl.core.util.Nullable;
 
 public final class ModuleDecl implements Node {
   private final @Nullable DocComment docComment;
-  private final @Nullable List<Annotation> annotations;
+  private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
   private final @Nullable QualifiedIdent name;
-  private final @Nullable ExtendsDecl extendsUrl;
-  private final @Nullable AmendsDecl amendsUrl;
+  private final @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl;
   private final Span span;
   private Node parent;
 
   public ModuleDecl(
       @Nullable DocComment docComment,
-      @Nullable List<Annotation> annotations,
+      List<Annotation> annotations,
       List<Modifier> modifiers,
       @Nullable QualifiedIdent name,
-      @Nullable ExtendsDecl extendsUrl,
-      @Nullable AmendsDecl amendsUrl,
+      @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl,
       Span span) {
     this.docComment = docComment;
     this.annotations = annotations;
     this.modifiers = modifiers;
     this.name = name;
-    this.extendsUrl = extendsUrl;
-    this.amendsUrl = amendsUrl;
+    this.extendsOrAmendsDecl = extendsOrAmendsDecl;
     this.span = span;
 
     if (docComment != null) {
       docComment.setParent(this);
     }
-    if (annotations != null) {
-      for (var ann : annotations) {
-        ann.setParent(this);
-      }
+    for (var ann : annotations) {
+      ann.setParent(this);
     }
     for (var mod : modifiers) {
       mod.setParent(this);
@@ -60,11 +55,8 @@ public final class ModuleDecl implements Node {
     if (name != null) {
       name.setParent(this);
     }
-    if (extendsUrl != null) {
-      extendsUrl.setParent(this);
-    }
-    if (amendsUrl != null) {
-      amendsUrl.setParent(this);
+    if (extendsOrAmendsDecl != null) {
+      extendsOrAmendsDecl.setParent(this);
     }
   }
 
@@ -86,7 +78,7 @@ public final class ModuleDecl implements Node {
     return docComment;
   }
 
-  public @Nullable List<Annotation> getAnnotations() {
+  public List<Annotation> getAnnotations() {
     return annotations;
   }
 
@@ -98,12 +90,21 @@ public final class ModuleDecl implements Node {
     return name;
   }
 
-  public @Nullable ExtendsDecl getExtendsUrl() {
-    return extendsUrl;
+  public @Nullable ExtendsOrAmendsDecl getExtendsOrAmendsDecl() {
+    return extendsOrAmendsDecl;
   }
 
-  public @Nullable AmendsDecl getAmendsUrl() {
-    return amendsUrl;
+  public Span headerSpan() {
+    if (!modifiers.isEmpty()) {
+      return modifiers.get(0).span().endWith(span);
+    }
+    if (name != null) {
+      return name.span().endWith(span);
+    }
+    if (extendsOrAmendsDecl != null) {
+      return extendsOrAmendsDecl.span().endWith(span);
+    }
+    return span;
   }
 
   @Override
@@ -117,10 +118,8 @@ public final class ModuleDecl implements Node {
         + modifiers
         + ", name="
         + name
-        + ", extendsUrl="
-        + extendsUrl
-        + ", amendsUrl="
-        + amendsUrl
+        + ", extendsOrAmendsDecl="
+        + extendsOrAmendsDecl
         + ", span="
         + span
         + '}';
@@ -139,13 +138,12 @@ public final class ModuleDecl implements Node {
         && Objects.equals(annotations, that.annotations)
         && Objects.equals(modifiers, that.modifiers)
         && Objects.equals(name, that.name)
-        && Objects.equals(extendsUrl, that.extendsUrl)
-        && Objects.equals(amendsUrl, that.amendsUrl)
+        && Objects.equals(extendsOrAmendsDecl, that.extendsOrAmendsDecl)
         && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(docComment, annotations, modifiers, name, extendsUrl, amendsUrl, span);
+    return Objects.hash(docComment, annotations, modifiers, name, extendsOrAmendsDecl, span);
   }
 }

@@ -15,18 +15,22 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
-import org.pkl.core.newparser.cst.Expr.StringConstant;
 
-public final class ExtendsDecl implements Node {
-  private final StringConstant url;
+public class ParameterList implements Node {
+  private final List<Parameter> parameters;
   private final Span span;
   private Node parent;
 
-  public ExtendsDecl(StringConstant url, Span span) {
-    this.url = url;
+  public ParameterList(List<Parameter> parameters, Span span) {
+    this.parameters = parameters;
     this.span = span;
+
+    for (var par : parameters) {
+      par.setParent(this);
+    }
   }
 
   @Override
@@ -44,13 +48,17 @@ public final class ExtendsDecl implements Node {
     this.parent = parent;
   }
 
-  public StringConstant getUrl() {
-    return url;
+  public Node getParent() {
+    return parent;
+  }
+
+  public List<Parameter> getParameters() {
+    return parameters;
   }
 
   @Override
   public String toString() {
-    return "ExtendsDecl{" + "url=" + url + ", span=" + span + '}';
+    return "ParameterList{" + "parameters=" + parameters + ", span=" + span + '}';
   }
 
   @Override
@@ -61,12 +69,12 @@ public final class ExtendsDecl implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ExtendsDecl that = (ExtendsDecl) o;
-    return Objects.equals(url, that.url) && Objects.equals(span, that.span);
+    ParameterList that = (ParameterList) o;
+    return Objects.equals(parameters, that.parameters) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, span);
+    return Objects.hash(parameters, span);
   }
 }

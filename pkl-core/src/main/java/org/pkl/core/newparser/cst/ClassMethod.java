@@ -20,30 +20,39 @@ import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class TypeAlias implements Node {
+public class ClassMethod implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
   private final Ident name;
   private final @Nullable TypeParameterList typeParameterList;
-  private final Type type;
+  private final ParameterList parameterList;
+  private final @Nullable TypeAnnotation typeAnnotation;
+  private final @Nullable Expr expr;
+  private final Span headerSpan;
   private final Span span;
   private Node parent;
 
-  public TypeAlias(
+  public ClassMethod(
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
       Ident name,
       @Nullable TypeParameterList typeParameterList,
-      Type type,
+      ParameterList parameterList,
+      @Nullable TypeAnnotation typeAnnotation,
+      @Nullable Expr expr,
+      Span headerSpan,
       Span span) {
     this.docComment = docComment;
     this.annotations = annotations;
     this.modifiers = modifiers;
     this.name = name;
     this.typeParameterList = typeParameterList;
-    this.type = type;
+    this.parameterList = parameterList;
+    this.typeAnnotation = typeAnnotation;
+    this.expr = expr;
+    this.headerSpan = headerSpan;
     this.span = span;
 
     if (docComment != null) {
@@ -59,7 +68,13 @@ public final class TypeAlias implements Node {
     if (typeParameterList != null) {
       typeParameterList.setParent(this);
     }
-    type.setParent(this);
+    parameterList.setParent(this);
+    if (typeAnnotation != null) {
+      typeAnnotation.setParent(this);
+    }
+    if (expr != null) {
+      expr.setParent(this);
+    }
   }
 
   @Override
@@ -97,21 +112,25 @@ public final class TypeAlias implements Node {
     return typeParameterList;
   }
 
-  public Type getType() {
-    return type;
+  public ParameterList getParameterList() {
+    return parameterList;
+  }
+
+  public @Nullable TypeAnnotation getTypeAnnotation() {
+    return typeAnnotation;
+  }
+
+  public @Nullable Expr getExpr() {
+    return expr;
   }
 
   public Span getHeaderSpan() {
-    var end = name.span();
-    if (typeParameterList != null) {
-      end = typeParameterList.span();
-    }
-    return span.endWith(end);
+    return headerSpan;
   }
 
   @Override
   public String toString() {
-    return "TypeAlias{"
+    return "ClassMethod{"
         + "docComment="
         + docComment
         + ", annotations="
@@ -122,8 +141,12 @@ public final class TypeAlias implements Node {
         + name
         + ", typeParameterList="
         + typeParameterList
-        + ", type="
-        + type
+        + ", parameterList="
+        + parameterList
+        + ", typeAnnotation="
+        + typeAnnotation
+        + ", expr="
+        + expr
         + ", span="
         + span
         + '}';
@@ -137,18 +160,29 @@ public final class TypeAlias implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    TypeAlias typeAlias = (TypeAlias) o;
-    return Objects.equals(docComment, typeAlias.docComment)
-        && Objects.equals(annotations, typeAlias.annotations)
-        && Objects.equals(modifiers, typeAlias.modifiers)
-        && Objects.equals(name, typeAlias.name)
-        && Objects.equals(typeParameterList, typeAlias.typeParameterList)
-        && Objects.equals(type, typeAlias.type)
-        && Objects.equals(span, typeAlias.span);
+    ClassMethod that = (ClassMethod) o;
+    return Objects.equals(docComment, that.docComment)
+        && Objects.equals(annotations, that.annotations)
+        && Objects.equals(modifiers, that.modifiers)
+        && Objects.equals(name, that.name)
+        && Objects.equals(typeParameterList, that.typeParameterList)
+        && Objects.equals(parameterList, that.parameterList)
+        && Objects.equals(typeAnnotation, that.typeAnnotation)
+        && Objects.equals(expr, that.expr)
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(docComment, annotations, modifiers, name, typeParameterList, type, span);
+    return Objects.hash(
+        docComment,
+        annotations,
+        modifiers,
+        name,
+        typeParameterList,
+        parameterList,
+        typeAnnotation,
+        expr,
+        span);
   }
 }

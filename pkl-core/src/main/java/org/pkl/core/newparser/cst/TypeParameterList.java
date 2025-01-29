@@ -19,22 +19,17 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
-public final class ObjectBody implements Node {
-  private final List<Parameter> pars;
-  private final List<ObjectMemberNode> members;
+public class TypeParameterList implements Node {
+  private final List<TypeParameter> params;
   private final Span span;
   private Node parent;
 
-  public ObjectBody(List<Parameter> pars, List<ObjectMemberNode> members, Span span) {
-    this.pars = pars;
-    this.members = members;
+  public TypeParameterList(List<TypeParameter> params, Span span) {
+    this.params = params;
     this.span = span;
 
-    for (var par : pars) {
+    for (var par : params) {
       par.setParent(this);
-    }
-    for (var member : members) {
-      member.setParent(this);
     }
   }
 
@@ -53,17 +48,13 @@ public final class ObjectBody implements Node {
     this.parent = parent;
   }
 
-  public List<Parameter> getPars() {
-    return pars;
-  }
-
-  public List<ObjectMemberNode> getMembers() {
-    return members;
+  public List<TypeParameter> getParams() {
+    return params;
   }
 
   @Override
   public String toString() {
-    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
+    return "TypeParameterList{params=" + params + ", span=" + span + '}';
   }
 
   @Override
@@ -74,14 +65,12 @@ public final class ObjectBody implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ObjectBody that = (ObjectBody) o;
-    return Objects.equals(pars, that.pars)
-        && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span);
+    TypeParameterList that = (TypeParameterList) o;
+    return Objects.equals(params, that.params) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span);
+    return Objects.hash(params, span);
   }
 }

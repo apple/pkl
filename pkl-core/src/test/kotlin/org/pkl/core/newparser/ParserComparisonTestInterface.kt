@@ -64,7 +64,7 @@ interface ParserComparisonTestInterface {
     private fun renderCode(code: String): String {
       val lexer = Lexer(code)
       val parser = Parser(lexer)
-      val mod = parser.parseModule() ?: return "(module)"
+      val mod = parser.parseModule()
       val renderer = SexpRenderer()
       return renderer.render(mod)
     }

@@ -69,18 +69,18 @@ public sealed interface Parameter extends Node {
 
   final class TypedIdent implements Parameter {
     private final Ident ident;
-    private final @Nullable Type type;
+    private final @Nullable TypeAnnotation typeAnnotation;
     private final Span span;
     private Node parent;
 
-    public TypedIdent(Ident ident, @Nullable Type type, Span span) {
+    public TypedIdent(Ident ident, @Nullable TypeAnnotation typeAnnotation, Span span) {
       this.ident = ident;
-      this.type = type;
+      this.typeAnnotation = typeAnnotation;
       this.span = span;
 
       ident.setParent(this);
-      if (type != null) {
-        type.setParent(this);
+      if (typeAnnotation != null) {
+        typeAnnotation.setParent(this);
       }
     }
 
@@ -103,13 +103,13 @@ public sealed interface Parameter extends Node {
       return ident;
     }
 
-    public @Nullable Type getType() {
-      return type;
+    public @Nullable TypeAnnotation getTypeAnnotation() {
+      return typeAnnotation;
     }
 
     @Override
     public String toString() {
-      return "TypedIdent{" + "ident=" + ident + ", type=" + type + ", span=" + span + '}';
+      return "TypedIdent{" + "ident=" + ident + ", type=" + typeAnnotation + ", span=" + span + '}';
     }
 
     @Override
@@ -122,13 +122,13 @@ public sealed interface Parameter extends Node {
       }
       TypedIdent that = (TypedIdent) o;
       return Objects.equals(ident, that.ident)
-          && Objects.equals(type, that.type)
+          && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, type, span);
+      return Objects.hash(ident, typeAnnotation, span);
     }
   }
 }

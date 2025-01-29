@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
@@ -57,6 +58,10 @@ public class Annotation implements Node {
 
   public @Nullable ObjectBody getBody() {
     return body;
+  }
+
+  public Type getNameAsType() {
+    return new Type.DeclaredType(name, List.of(), name.span());
   }
 
   @Override

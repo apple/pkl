@@ -20,14 +20,14 @@ import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Clazz implements ModuleEntry {
+public final class Clazz implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
   private final Ident name;
-  private final List<TypeParameter> typePars;
-  private final @Nullable QualifiedIdent superClass;
-  private final List<ClassEntry> body;
+  private final @Nullable TypeParameterList typeParameterList;
+  private final @Nullable Type superClass;
+  private final @Nullable ClassBody body;
   private final Span span;
   private Node parent;
 
@@ -36,15 +36,15 @@ public final class Clazz implements ModuleEntry {
       List<Annotation> annotations,
       List<Modifier> modifiers,
       Ident name,
-      List<TypeParameter> typePars,
-      @Nullable QualifiedIdent superClass,
-      List<ClassEntry> body,
+      @Nullable TypeParameterList typeParameterList,
+      @Nullable Type superClass,
+      @Nullable ClassBody body,
       Span span) {
     this.docComment = docComment;
     this.annotations = annotations;
     this.modifiers = modifiers;
     this.name = name;
-    this.typePars = typePars;
+    this.typeParameterList = typeParameterList;
     this.superClass = superClass;
     this.body = body;
     this.span = span;
@@ -59,14 +59,14 @@ public final class Clazz implements ModuleEntry {
       mod.setParent(this);
     }
     name.setParent(this);
-    for (var tpar : typePars) {
-      tpar.setParent(this);
+    if (typeParameterList != null) {
+      typeParameterList.setParent(this);
     }
     if (superClass != null) {
       superClass.setParent(this);
     }
-    for (var entry : body) {
-      entry.setParent(this);
+    if (body != null) {
+      body.setParent(this);
     }
   }
 
@@ -101,16 +101,28 @@ public final class Clazz implements ModuleEntry {
     return name;
   }
 
-  public List<TypeParameter> getTypePars() {
-    return typePars;
+  public @Nullable TypeParameterList getTypeParameterList() {
+    return typeParameterList;
   }
 
-  public @Nullable QualifiedIdent getSuperClass() {
+  public @Nullable Type getSuperClass() {
     return superClass;
   }
 
-  public List<ClassEntry> getBody() {
+  public @Nullable ClassBody getBody() {
     return body;
+  }
+
+  public Span getHeaderSpan() {
+    Span end;
+    if (superClass != null) {
+      end = superClass.span();
+    } else if (typeParameterList != null) {
+      end = typeParameterList.span();
+    } else {
+      end = name.span();
+    }
+    return span.endWith(end);
   }
 
   @Override
@@ -124,8 +136,8 @@ public final class Clazz implements ModuleEntry {
         + modifiers
         + ", name="
         + name
-        + ", typePars="
-        + typePars
+        + ", typeParameterList="
+        + typeParameterList
         + ", superClass="
         + superClass
         + ", body="
@@ -148,7 +160,7 @@ public final class Clazz implements ModuleEntry {
         && Objects.equals(annotations, clazz.annotations)
         && Objects.equals(modifiers, clazz.modifiers)
         && Objects.equals(name, clazz.name)
-        && Objects.equals(typePars, clazz.typePars)
+        && Objects.equals(typeParameterList, clazz.typeParameterList)
         && Objects.equals(superClass, clazz.superClass)
         && Objects.equals(body, clazz.body)
         && Objects.equals(span, clazz.span);
@@ -156,6 +168,7 @@ public final class Clazz implements ModuleEntry {
 
   @Override
   public int hashCode() {
-    return Objects.hash(docComment, annotations, modifiers, name, typePars, superClass, body, span);
+    return Objects.hash(
+        docComment, annotations, modifiers, name, typeParameterList, superClass, body, span);
   }
 }

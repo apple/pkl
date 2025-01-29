@@ -127,24 +127,31 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val typePars = header.typeParameterList()
     if (typePars != null) {
-      for (tpar in typePars.typeParameter()) {
-        buf.append('\n')
-        renderTypeParameter(tpar)
-      }
+      buf.append('\n')
+      renderTypeParameterList(typePars)
     }
     if (header.type() != null) {
       buf.append('\n')
-      val ident = (header.type() as DeclaredTypeContext).qualifiedIdentifier()
-      renderQualifiedIdent(ident)
+      renderType(header.type())
     }
     val body = clazz.classBody()
     if (body != null) {
-      for (entry in sortClassEntries(body)) {
-        buf.append('\n')
-        when (entry) {
-          is ClassPropertyContext -> renderClassProperty(entry)
-          is ClassMethodContext -> renderClassMethod(entry)
-        }
+      buf.append('\n')
+      renderClassBody(body)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderClassBody(body: ClassBodyContext) {
+    buf.append(tab)
+    buf.append("(classBody")
+    val oldTab = increaseTab()
+    for (entry in sortClassEntries(body)) {
+      buf.append('\n')
+      when (entry) {
+        is ClassPropertyContext -> renderClassProperty(entry)
+        is ClassMethodContext -> renderClassMethod(entry)
       }
     }
     buf.append(')')
@@ -173,10 +180,7 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val typePars = header.typeParameterList()
     if (typePars != null) {
-      for (tpar in typePars.typeParameter()) {
-        buf.append('\n')
-        renderTypeParameter(tpar)
-      }
+      renderTypeParameterList(typePars)
     }
     buf.append('\n')
     renderType(`typealias`.type())
@@ -205,7 +209,7 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     if (classProperty.typeAnnotation() != null) {
       buf.append('\n')
-      renderType(classProperty.typeAnnotation().type())
+      renderTypeAnnotation(classProperty.typeAnnotation())
     }
     if (classProperty.expr() != null) {
       buf.append('\n')
@@ -242,18 +246,13 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(identifier)")
     if (header.typeParameterList() != null) {
-      for (par in header.typeParameterList().typeParameter()) {
-        buf.append('\n')
-        renderTypeParameter(par)
-      }
+      renderTypeParameterList(header.typeParameterList())
     }
-    for (par in header.parameterList().parameter()) {
-      buf.append('\n')
-      renderParameter(par)
-    }
+    buf.append('\n')
+    renderParameterList(header.parameterList())
     if (header.typeAnnotation() != null) {
       buf.append('\n')
-      renderType(header.typeAnnotation().type())
+      renderTypeAnnotation(header.typeAnnotation())
     }
     if (classMethod.expr() != null) {
       buf.append('\n')
@@ -291,6 +290,17 @@ class ANTLRSexpRenderer {
     tab = oldTab
   }
 
+  fun renderTypeParameterList(typeParameterList: TypeParameterListContext) {
+    buf.append(tab)
+    buf.append("(TypeParameterList\n")
+    val oldTab = increaseTab()
+    for (tpar in typeParameterList.typeParameter()) {
+      buf.append('\n')
+      renderTypeParameter(tpar)
+    }
+    tab = oldTab
+  }
+
   @Suppress("UNUSED_PARAMETER")
   fun renderTypeParameter(tpar: TypeParameterContext?) {
     buf.append(tab)
@@ -298,6 +308,16 @@ class ANTLRSexpRenderer {
     val oldTab = increaseTab()
     buf.append(tab)
     buf.append("(identifier))")
+    tab = oldTab
+  }
+
+  fun renderTypeAnnotation(typeAnnotation: TypeAnnotationContext) {
+    buf.append(tab)
+    buf.append("(typeAnnotation")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderType(typeAnnotation.type())
+    buf.append(')')
     tab = oldTab
   }
 
@@ -416,6 +436,18 @@ class ANTLRSexpRenderer {
     tab = oldTab
   }
 
+  fun renderParameterList(parList: ParameterListContext) {
+    buf.append(tab)
+    buf.append("(parameterList")
+    val oldTab = increaseTab()
+    for (par in parList.parameter()) {
+      buf.append('\n')
+      renderParameter(par)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
   fun renderParameter(par: ParameterContext) {
     buf.append(tab)
     buf.append("(parameter")
@@ -427,7 +459,7 @@ class ANTLRSexpRenderer {
       buf.append("(identifier)")
       if (typedIdent.typeAnnotation() != null) {
         buf.append('\n')
-        renderType(typedIdent.typeAnnotation().type())
+        renderTypeAnnotation(typedIdent.typeAnnotation())
       }
     }
     buf.append(')')
@@ -487,7 +519,7 @@ class ANTLRSexpRenderer {
     val typeAnn = property.typeAnnotation()
     if (typeAnn != null) {
       buf.append('\n')
-      renderType(typeAnn.type())
+      renderTypeAnnotation(typeAnn)
     }
     if (property.expr() != null) {
       buf.append('\n')
@@ -516,19 +548,14 @@ class ANTLRSexpRenderer {
     buf.append('\n')
     buf.append("(identifier)")
     if (header.typeParameterList() != null) {
-      for (par in header.typeParameterList().typeParameter()) {
-        buf.append('\n')
-        renderTypeParameter(par)
-      }
+      renderTypeParameterList(header.typeParameterList())
     }
-    for (arg in header.parameterList().parameter()) {
-      buf.append('\n')
-      renderParameter(arg)
-    }
+    buf.append('\n')
+    renderParameterList(header.parameterList())
     val typeAnn = header.typeAnnotation()
     if (typeAnn != null) {
       buf.append('\n')
-      renderType(typeAnn.type())
+      renderTypeAnnotation(typeAnn)
     }
     buf.append('\n')
     renderExpr(method.expr())
@@ -616,6 +643,18 @@ class ANTLRSexpRenderer {
     renderExpr(generator.expr())
     buf.append('\n')
     renderObjectBody(generator.objectBody())
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderArgumentList(argumentList: ArgumentListContext) {
+    buf.append(tab)
+    buf.append("(argumentList")
+    val oldTab = increaseTab()
+    for (arg in argumentList.expr()) {
+      buf.append('\n')
+      renderExpr(arg)
+    }
     buf.append(')')
     tab = oldTab
   }
@@ -733,10 +772,8 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val args = expr.argumentList()
     if (args != null) {
-      for (arg in args.expr()) {
-        buf.append('\n')
-        renderExpr(arg)
-      }
+      buf.append('\n')
+      renderArgumentList(args)
     }
     buf.append(')')
     tab = oldTab
@@ -810,10 +847,8 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val args = expr.argumentList()
     if (args != null) {
-      for (arg in args.expr()) {
-        buf.append('\n')
-        renderExpr(arg)
-      }
+      buf.append('\n')
+      renderArgumentList(args)
     }
     buf.append(')')
     tab = oldTab
@@ -842,10 +877,8 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val args = expr.argumentList()
     if (args != null) {
-      for (arg in args.expr()) {
-        buf.append('\n')
-        renderExpr(arg)
-      }
+      buf.append('\n')
+      renderArgumentList(args)
     }
     buf.append(')')
     tab = oldTab
@@ -948,10 +981,7 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(functionLiteralExpr")
     val oldTab = increaseTab()
-    for (par in expr.parameterList().parameter()) {
-      buf.append('\n')
-      renderParameter(par)
-    }
+    renderParameterList(expr.parameterList())
     buf.append('\n')
     renderExpr(expr.expr())
     buf.append(')')

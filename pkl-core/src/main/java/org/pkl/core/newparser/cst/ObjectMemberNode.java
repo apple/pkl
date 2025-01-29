@@ -20,9 +20,9 @@ import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface ObjectMember extends Node {
+public sealed interface ObjectMemberNode extends Node {
 
-  final class ObjectElement implements ObjectMember {
+  final class ObjectElement implements ObjectMemberNode {
     private final Expr expr;
     private final Span span;
     private Node parent;
@@ -76,19 +76,23 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ObjectProperty implements ObjectMember {
+  final class ObjectProperty implements ObjectMemberNode {
     private final List<Modifier> modifiers;
     private final Ident ident;
-    private final @Nullable Type type;
+    private final @Nullable TypeAnnotation typeAnnotation;
     private final Expr expr;
     private final Span span;
     private Node parent;
 
     public ObjectProperty(
-        List<Modifier> modifiers, Ident ident, @Nullable Type type, Expr expr, Span span) {
+        List<Modifier> modifiers,
+        Ident ident,
+        @Nullable TypeAnnotation typeAnnotation,
+        Expr expr,
+        Span span) {
       this.modifiers = modifiers;
       this.ident = ident;
-      this.type = type;
+      this.typeAnnotation = typeAnnotation;
       this.expr = expr;
       this.span = span;
 
@@ -96,8 +100,8 @@ public sealed interface ObjectMember extends Node {
         mod.setParent(this);
       }
       ident.setParent(this);
-      if (type != null) {
-        type.setParent(this);
+      if (typeAnnotation != null) {
+        typeAnnotation.setParent(this);
       }
       expr.setParent(this);
     }
@@ -125,8 +129,8 @@ public sealed interface ObjectMember extends Node {
       return ident;
     }
 
-    public @Nullable Type getType() {
-      return type;
+    public @Nullable TypeAnnotation getTypeAnnotation() {
+      return typeAnnotation;
     }
 
     public Expr getExpr() {
@@ -140,8 +144,8 @@ public sealed interface ObjectMember extends Node {
           + modifiers
           + ", ident="
           + ident
-          + ", type="
-          + type
+          + ", typeAnnotation="
+          + typeAnnotation
           + ", expr="
           + expr
           + ", span="
@@ -160,18 +164,18 @@ public sealed interface ObjectMember extends Node {
       ObjectProperty that = (ObjectProperty) o;
       return Objects.equals(modifiers, that.modifiers)
           && Objects.equals(ident, that.ident)
-          && Objects.equals(type, that.type)
+          && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(expr, that.expr)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, type, expr, span);
+      return Objects.hash(modifiers, ident, typeAnnotation, expr, span);
     }
   }
 
-  final class ObjectBodyProperty implements ObjectMember {
+  final class ObjectBodyProperty implements ObjectMemberNode {
     private final List<Modifier> modifiers;
     private final Ident ident;
     private final List<ObjectBody> bodyList;
@@ -256,12 +260,12 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ObjectMethod implements ObjectMember {
+  final class ObjectMethod implements ObjectMemberNode {
     private final List<Modifier> modifiers;
     private final Ident ident;
-    private final List<TypeParameter> typePars;
-    private final List<Parameter> args;
-    private final @Nullable Type returnType;
+    private final @Nullable TypeParameterList typeParameterList;
+    private final ParameterList paramList;
+    private final @Nullable TypeAnnotation typeAnnotation;
     private final Expr expr;
     private final Span span;
     private Node parent;
@@ -269,16 +273,16 @@ public sealed interface ObjectMember extends Node {
     public ObjectMethod(
         List<Modifier> modifiers,
         Ident ident,
-        List<TypeParameter> typePars,
-        List<Parameter> args,
-        @Nullable Type returnType,
+        @Nullable TypeParameterList typeParameterList,
+        ParameterList paramList,
+        @Nullable TypeAnnotation typeAnnotation,
         Expr expr,
         Span span) {
       this.modifiers = modifiers;
       this.ident = ident;
-      this.typePars = typePars;
-      this.args = args;
-      this.returnType = returnType;
+      this.typeParameterList = typeParameterList;
+      this.paramList = paramList;
+      this.typeAnnotation = typeAnnotation;
       this.expr = expr;
       this.span = span;
 
@@ -286,14 +290,12 @@ public sealed interface ObjectMember extends Node {
         mod.setParent(this);
       }
       ident.setParent(this);
-      for (var tpar : typePars) {
-        tpar.setParent(this);
+      if (typeParameterList != null) {
+        typeParameterList.setParent(this);
       }
-      for (var arg : args) {
-        arg.setParent(this);
-      }
-      if (returnType != null) {
-        returnType.setParent(this);
+      paramList.setParent(this);
+      if (typeAnnotation != null) {
+        typeAnnotation.setParent(this);
       }
       expr.setParent(this);
     }
@@ -320,20 +322,30 @@ public sealed interface ObjectMember extends Node {
       return ident;
     }
 
-    public List<TypeParameter> getTypePars() {
-      return typePars;
+    public @Nullable TypeParameterList getTypeParameterList() {
+      return typeParameterList;
     }
 
-    public List<Parameter> getArgs() {
-      return args;
+    public ParameterList getParamList() {
+      return paramList;
     }
 
-    public @Nullable Type getReturnType() {
-      return returnType;
+    public @Nullable TypeAnnotation getTypeAnnotation() {
+      return typeAnnotation;
     }
 
     public Expr getExpr() {
       return expr;
+    }
+
+    public Span headerSpan() {
+      var end = span;
+      if (typeAnnotation != null) {
+        end = typeAnnotation.span();
+      } else {
+        end = paramList.span();
+      }
+      return span.endWith(end);
     }
 
     @Override
@@ -343,12 +355,12 @@ public sealed interface ObjectMember extends Node {
           + modifiers
           + ", ident="
           + ident
-          + ", typePars="
-          + typePars
-          + ", args="
-          + args
-          + ", returnType="
-          + returnType
+          + ", typeParameterList="
+          + typeParameterList
+          + ", paramList="
+          + paramList
+          + ", typeAnnotation="
+          + typeAnnotation
           + ", expr="
           + expr
           + ", span="
@@ -367,20 +379,21 @@ public sealed interface ObjectMember extends Node {
       ObjectMethod that = (ObjectMethod) o;
       return Objects.equals(modifiers, that.modifiers)
           && Objects.equals(ident, that.ident)
-          && Objects.equals(typePars, that.typePars)
-          && Objects.equals(args, that.args)
-          && Objects.equals(returnType, that.returnType)
+          && Objects.equals(typeParameterList, that.typeParameterList)
+          && Objects.equals(paramList, that.paramList)
+          && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(expr, that.expr)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, typePars, args, returnType, expr, span);
+      return Objects.hash(
+          modifiers, ident, typeParameterList, paramList, typeAnnotation, expr, span);
     }
   }
 
-  final class MemberPredicate implements ObjectMember {
+  final class MemberPredicate implements ObjectMemberNode {
     private final Expr pred;
     private final Expr expr;
     private final Span span;
@@ -443,7 +456,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class MemberPredicateBody implements ObjectMember {
+  final class MemberPredicateBody implements ObjectMemberNode {
     private final Expr key;
     private final List<ObjectBody> bodyList;
     private final Span span;
@@ -515,7 +528,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ObjectEntry implements ObjectMember {
+  final class ObjectEntry implements ObjectMemberNode {
     private final Expr key;
     private final Expr value;
     private final Span span;
@@ -578,7 +591,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ObjectEntryBody implements ObjectMember {
+  final class ObjectEntryBody implements ObjectMemberNode {
     private final Expr key;
     private final List<ObjectBody> bodyList;
     private final Span span;
@@ -643,7 +656,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ObjectSpread implements ObjectMember {
+  final class ObjectSpread implements ObjectMemberNode {
     private final Expr expr;
     private final boolean isNullable;
     private final Span span;
@@ -712,7 +725,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class WhenGenerator implements ObjectMember {
+  final class WhenGenerator implements ObjectMemberNode {
     private final Expr cond;
     private final ObjectBody body;
     private final @Nullable ObjectBody elseClause;
@@ -794,7 +807,7 @@ public sealed interface ObjectMember extends Node {
     }
   }
 
-  final class ForGenerator implements ObjectMember {
+  final class ForGenerator implements ObjectMemberNode {
     private final Parameter p1;
     private final @Nullable Parameter p2;
     private final Expr expr;
@@ -847,6 +860,10 @@ public sealed interface ObjectMember extends Node {
 
     public ObjectBody getBody() {
       return body;
+    }
+
+    public Span forSpan() {
+      return new Span(span.charIndex(), 3);
     }
 
     @Override

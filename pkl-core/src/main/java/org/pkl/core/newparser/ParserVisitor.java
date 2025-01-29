@@ -16,20 +16,25 @@
 package org.pkl.core.newparser;
 
 import org.pkl.core.PklBugException;
-import org.pkl.core.newparser.cst.AmendsDecl;
 import org.pkl.core.newparser.cst.Annotation;
-import org.pkl.core.newparser.cst.ClassEntry;
+import org.pkl.core.newparser.cst.ArgumentList;
+import org.pkl.core.newparser.cst.ClassMethod;
+import org.pkl.core.newparser.cst.ClassPropertyEntry;
 import org.pkl.core.newparser.cst.Clazz;
 import org.pkl.core.newparser.cst.Expr;
 import org.pkl.core.newparser.cst.Expr.NullLiteral;
-import org.pkl.core.newparser.cst.ExtendsDecl;
+import org.pkl.core.newparser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.newparser.cst.Import;
 import org.pkl.core.newparser.cst.Modifier;
 import org.pkl.core.newparser.cst.Module;
 import org.pkl.core.newparser.cst.ModuleDecl;
-import org.pkl.core.newparser.cst.ObjectMember;
+import org.pkl.core.newparser.cst.ObjectMemberNode;
+import org.pkl.core.newparser.cst.Parameter;
+import org.pkl.core.newparser.cst.ParameterList;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.TypeAlias;
+import org.pkl.core.newparser.cst.TypeAnnotation;
+import org.pkl.core.newparser.cst.TypeParameterList;
 
 public interface ParserVisitor<Result> {
 
@@ -174,40 +179,41 @@ public interface ParserVisitor<Result> {
     throw PklBugException.unreachableCode();
   }
 
-  Result visitObjectProperty(ObjectMember.ObjectProperty member);
+  Result visitObjectProperty(ObjectMemberNode.ObjectProperty member);
 
-  Result visitObjectBodyProperty(ObjectMember.ObjectBodyProperty member);
+  Result visitObjectBodyProperty(ObjectMemberNode.ObjectBodyProperty member);
 
-  Result visitObjectMethod(ObjectMember.ObjectMethod member);
+  Result visitObjectMethod(ObjectMemberNode.ObjectMethod member);
 
-  Result visitMemberPredicate(ObjectMember.MemberPredicate member);
+  Result visitMemberPredicate(ObjectMemberNode.MemberPredicate member);
 
-  Result visitMemberPredicateBody(ObjectMember.MemberPredicateBody member);
+  Result visitMemberPredicateBody(ObjectMemberNode.MemberPredicateBody member);
 
-  Result visitObjectElement(ObjectMember.ObjectElement member);
+  Result visitObjectElement(ObjectMemberNode.ObjectElement member);
 
-  Result visitObjectEntry(ObjectMember.ObjectEntry member);
+  Result visitObjectEntry(ObjectMemberNode.ObjectEntry member);
 
-  Result visitObjectEntryBody(ObjectMember.ObjectEntryBody member);
+  Result visitObjectEntryBody(ObjectMemberNode.ObjectEntryBody member);
 
-  Result visitObjectSpread(ObjectMember.ObjectSpread member);
+  Result visitObjectSpread(ObjectMemberNode.ObjectSpread member);
 
-  Result visitWhenGenerator(ObjectMember.WhenGenerator member);
+  Result visitWhenGenerator(ObjectMemberNode.WhenGenerator member);
 
-  Result visitForGenerator(ObjectMember.ForGenerator member);
+  Result visitForGenerator(ObjectMemberNode.ForGenerator member);
 
-  default Result visitObjectMember(ObjectMember member) {
-    if (member instanceof ObjectMember.ObjectElement o) return visitObjectElement(o);
-    if (member instanceof ObjectMember.ObjectProperty o) return visitObjectProperty(o);
-    if (member instanceof ObjectMember.ObjectBodyProperty o) return visitObjectBodyProperty(o);
-    if (member instanceof ObjectMember.ObjectMethod o) return visitObjectMethod(o);
-    if (member instanceof ObjectMember.MemberPredicate o) return visitMemberPredicate(o);
-    if (member instanceof ObjectMember.MemberPredicateBody o) return visitMemberPredicateBody(o);
-    if (member instanceof ObjectMember.ObjectEntry o) return visitObjectEntry(o);
-    if (member instanceof ObjectMember.ObjectEntryBody o) return visitObjectEntryBody(o);
-    if (member instanceof ObjectMember.ObjectSpread o) return visitObjectSpread(o);
-    if (member instanceof ObjectMember.WhenGenerator o) return visitWhenGenerator(o);
-    if (member instanceof ObjectMember.ForGenerator o) return visitForGenerator(o);
+  default Result visitObjectMember(ObjectMemberNode member) {
+    if (member instanceof ObjectMemberNode.ObjectElement o) return visitObjectElement(o);
+    if (member instanceof ObjectMemberNode.ObjectProperty o) return visitObjectProperty(o);
+    if (member instanceof ObjectMemberNode.ObjectBodyProperty o) return visitObjectBodyProperty(o);
+    if (member instanceof ObjectMemberNode.ObjectMethod o) return visitObjectMethod(o);
+    if (member instanceof ObjectMemberNode.MemberPredicate o) return visitMemberPredicate(o);
+    if (member instanceof ObjectMemberNode.MemberPredicateBody o)
+      return visitMemberPredicateBody(o);
+    if (member instanceof ObjectMemberNode.ObjectEntry o) return visitObjectEntry(o);
+    if (member instanceof ObjectMemberNode.ObjectEntryBody o) return visitObjectEntryBody(o);
+    if (member instanceof ObjectMemberNode.ObjectSpread o) return visitObjectSpread(o);
+    if (member instanceof ObjectMemberNode.WhenGenerator o) return visitWhenGenerator(o);
+    if (member instanceof ObjectMemberNode.ForGenerator o) return visitForGenerator(o);
     throw PklBugException.unreachableCode();
   }
 
@@ -215,9 +221,7 @@ public interface ParserVisitor<Result> {
 
   Result visitModuleDecl(ModuleDecl decl);
 
-  Result visitExtendsDecl(ExtendsDecl decl);
-
-  Result visitAmendsDecl(AmendsDecl decl);
+  Result visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl);
 
   Result visitImport(Import imp);
 
@@ -225,15 +229,21 @@ public interface ParserVisitor<Result> {
 
   Result visitModifier(Modifier modifier);
 
-  Result visitClassProperty(ClassEntry.ClassProperty entry);
+  Result visitClassPropertyEntry(ClassPropertyEntry entry);
 
-  Result visitClassPropertyBody(ClassEntry.ClassPropertyBody entry);
-
-  Result visitClassMethod(ClassEntry.ClassMethod entry);
-
-  Result visitClassPropertyExpr(ClassEntry.ClassPropertyExpr entry);
+  Result visitClassMethod(ClassMethod entry);
 
   Result visitTypeAlias(TypeAlias typeAlias);
 
   Result visitAnnotation(Annotation annotation);
+
+  Result visitParameter(Parameter param);
+
+  Result visitParameterList(ParameterList paramList);
+
+  Result visitTypeParameterList(TypeParameterList typeParameterList);
+
+  Result visitTypeAnnotation(TypeAnnotation typeAnnotation);
+
+  Result visitArgumentList(ArgumentList argumentList);
 }
