@@ -188,21 +188,12 @@ public class Parser {
     var annotations = new ArrayList<Annotation>();
     var modifiers = new ArrayList<Modifier>();
     if (lookahead == Token.DOC_COMMENT) {
-      var builder = new StringBuilder();
       var docSpanStart = spanLookahead;
-      Span docSpanEnd = null;
+      var docSpanEnd = spanLookahead;
       while (lookahead == Token.DOC_COMMENT) {
-        var tk = next();
-        if (!builder.isEmpty()) {
-          builder.append('\n');
-          docSpanEnd = tk.span;
-        }
-        builder.append(tk.text(lexer));
+        docSpanEnd = next().span;
       }
-      if (docSpanEnd == null) {
-        docSpanEnd = docSpanStart;
-      }
-      docComment = new DocComment(builder.toString(), docSpanStart.endWith(docSpanEnd));
+      docComment = new DocComment(docSpanStart.endWith(docSpanEnd));
     }
     while (lookahead == Token.AT) {
       annotations.add(parseAnnotation());

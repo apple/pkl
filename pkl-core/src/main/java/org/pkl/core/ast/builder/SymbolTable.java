@@ -24,7 +24,6 @@ import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.parser.Lexer;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;

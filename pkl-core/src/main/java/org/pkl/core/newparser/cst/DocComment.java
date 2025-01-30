@@ -19,12 +19,10 @@ import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
 public final class DocComment implements Node {
-  private final String raw;
   private final Span span;
   private Node parent;
 
-  public DocComment(String raw, Span span) {
-    this.raw = raw;
+  public DocComment(Span span) {
     this.span = span;
   }
 
@@ -43,13 +41,9 @@ public final class DocComment implements Node {
     this.parent = parent;
   }
 
-  public String getRaw() {
-    return raw;
-  }
-
   @Override
   public String toString() {
-    return "DocComment{" + "raw='" + raw + '\'' + ", span=" + span + '}';
+    return "DocComment{span=" + span + '}';
   }
 
   @Override
@@ -61,11 +55,11 @@ public final class DocComment implements Node {
       return false;
     }
     DocComment that = (DocComment) o;
-    return Objects.equals(raw, that.raw) && Objects.equals(span, that.span);
+    return Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(raw, span);
+    return Objects.hashCode(span);
   }
 }
