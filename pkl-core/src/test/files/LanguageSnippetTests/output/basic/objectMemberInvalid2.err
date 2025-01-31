@@ -1,5 +1,6 @@
 –– Pkl Error ––
-Object members must be separated by whitespace, newline, or semicolon.
+Object properties and elements must be separated by whitespace, newline, or semicolon.
+Object entries must be separated by newline or semicolon.
 
 x | res1 {foo=1bar=2}
                ^^^^^

@@ -2253,6 +2253,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
           var values = new ArrayList<ObjectMember>();
           var isConstantKeyNodes = true;
 
+          checkSpaceSeparatedObjectMembers(body);
           for (var memberCtx : objectMembers) {
             if (memberCtx instanceof ObjectProperty property) {
               addProperty(members, doVisitObjectProperty(property));
@@ -2372,6 +2373,24 @@ public class AstBuilderNew implements ParserVisitor<Object> {
               members,
               parentNode);
         });
+  }
+
+  private void checkSpaceSeparatedObjectMembers(ObjectBody objectBody) {
+    var members = objectBody.getMembers();
+    if (members.size() < 2) {
+      return;
+    }
+    var previous = members.get(0).span();
+    for (var i = 1; i < members.size(); i++) {
+      var member = members.get(i);
+      if (previous.adjacent(member.span())) {
+        throw exceptionBuilder()
+            .evalError("unseparatedObjectMembers")
+            .withSourceSection(createSourceSection(member.span()))
+            .build();
+      }
+      previous = member.span();
+    }
   }
 
   private ObjectMember doVisitObjectProperty(ObjectProperty prop) {

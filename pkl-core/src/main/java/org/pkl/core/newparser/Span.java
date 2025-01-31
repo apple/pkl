@@ -17,9 +17,14 @@ package org.pkl.core.newparser;
 
 public record Span(int charIndex, int length) {
 
-  /** Returns a span that starts with this span and ends with `other`. */
+  /** Returns a span that starts with this span and ends with {@code other}. */
   public Span endWith(Span other) {
     return new Span(charIndex, other.charIndex - charIndex + other.length);
+  }
+
+  /** Checks wheter {@code other} starts directly after this span ends */
+  public boolean adjacent(Span other) {
+    return charIndex + length == other.charIndex;
   }
 
   public int stopIndex() {
