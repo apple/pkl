@@ -213,7 +213,7 @@ adultBirdFoods {
 
 A `.pkl` file describes a _module_.
 Modules are objects that can be referred to from other modules.
-Going back to the example above, you can write `parrot` as a separate module.
+Going back to the example above, you can write `pigeon` as a separate module.
 
 [source,{pkl}]
 .pigeon.pkl
