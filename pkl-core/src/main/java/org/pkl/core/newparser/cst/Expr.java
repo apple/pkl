@@ -393,7 +393,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "StringConstant{" + "str='" + str + '\'' + ", span=" + span + '}';
+      return "StringConstant{str='" + str + '\'' + ", span=" + span + '}';
     }
 
     @Override
@@ -415,20 +415,20 @@ public sealed interface Expr extends Node {
   }
 
   final class InterpolatedString implements Expr {
-    private final List<Expr> exprs;
+    private final List<StringPart> parts;
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
     public InterpolatedString(
-        List<Expr> exprs, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
-      this.exprs = exprs;
+        List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
+      this.parts = parts;
       this.startDelimiterSpan = startDelimiterSpan;
       this.endDelimiterSpan = endDelimiterSpan;
       this.span = span;
 
-      for (var expr : exprs) {
+      for (var expr : parts) {
         expr.setParent(this);
       }
     }
@@ -448,8 +448,8 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
-    public List<Expr> getExprs() {
-      return exprs;
+    public List<StringPart> getParts() {
+      return parts;
     }
 
     public Span getStartDelimiterSpan() {
@@ -469,8 +469,8 @@ public sealed interface Expr extends Node {
           + endDelimiterSpan
           + ", startDelimiterSpan="
           + startDelimiterSpan
-          + ", exprs="
-          + exprs
+          + ", parts="
+          + parts
           + '}';
     }
 
@@ -483,7 +483,7 @@ public sealed interface Expr extends Node {
         return false;
       }
       InterpolatedString that = (InterpolatedString) o;
-      return Objects.equals(exprs, that.exprs)
+      return Objects.equals(parts, that.parts)
           && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
           && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
           && Objects.equals(span, that.span);
@@ -491,25 +491,25 @@ public sealed interface Expr extends Node {
 
     @Override
     public int hashCode() {
-      return Objects.hash(exprs, startDelimiterSpan, endDelimiterSpan, span);
+      return Objects.hash(parts, startDelimiterSpan, endDelimiterSpan, span);
     }
   }
 
   final class InterpolatedMultiString implements Expr {
-    private final List<Expr> exprs;
+    private final List<StringPart> parts;
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
     public InterpolatedMultiString(
-        List<Expr> exprs, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
-      this.exprs = exprs;
+        List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
+      this.parts = parts;
       this.startDelimiterSpan = startDelimiterSpan;
       this.endDelimiterSpan = endDelimiterSpan;
       this.span = span;
 
-      for (var expr : exprs) {
+      for (var expr : parts) {
         expr.setParent(this);
       }
     }
@@ -529,8 +529,8 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
-    public List<Expr> getExprs() {
-      return exprs;
+    public List<StringPart> getParts() {
+      return parts;
     }
 
     public Span getStartDelimiterSpan() {
@@ -544,8 +544,8 @@ public sealed interface Expr extends Node {
     @Override
     public String toString() {
       return "InterpolatedMultiString{"
-          + "exprs="
-          + exprs
+          + "parts="
+          + parts
           + ", startDelimiterSpan="
           + startDelimiterSpan
           + ", endDelimiterSpan="
@@ -564,7 +564,7 @@ public sealed interface Expr extends Node {
         return false;
       }
       InterpolatedMultiString that = (InterpolatedMultiString) o;
-      return Objects.equals(exprs, that.exprs)
+      return Objects.equals(parts, that.parts)
           && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
           && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
           && Objects.equals(span, that.span);
@@ -572,7 +572,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public int hashCode() {
-      return Objects.hash(exprs, startDelimiterSpan, endDelimiterSpan, span);
+      return Objects.hash(parts, startDelimiterSpan, endDelimiterSpan, span);
     }
   }
 

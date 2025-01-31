@@ -30,7 +30,7 @@ public class Lexer {
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
   private boolean stringEnded = false;
-  protected int textOffset = 0;
+  private boolean isEscape = false;
   // true if there's a \n between two subsequent tokens
   protected boolean newLineBetween = false;
 
@@ -66,7 +66,6 @@ public class Lexer {
 
   public Token next() {
     sCursor = cursor;
-    textOffset = 0;
     newLineBetween = false;
     return switch (state) {
       case DEFAULT -> nextDefault();
@@ -101,9 +100,9 @@ public class Lexer {
           if (scope.parens <= 0) {
             // interpolation is over. Back to string
             state = State.STRING;
-            yield next();
-          } else yield Token.RPAREN;
-        } else yield Token.RPAREN;
+          }
+        }
+        yield Token.RPAREN;
       }
       case '{' -> Token.LBRACE;
       case '}' -> Token.RBRACE;
@@ -241,6 +240,18 @@ public class Lexer {
       return Token.STRING_END;
     }
     if (lookahead == EOF) return Token.EOF;
+    if (lookahead == '\n') {
+      nextChar();
+      return Token.STRING_NEWLINE;
+    }
+    if (isEscape) {
+      isEscape = false;
+      // consume the `\#*`
+      for (var i = 0; i < scope.pounds + 1; i++) {
+        nextChar();
+      }
+      return lexEscape();
+    }
     if (scope.quotes == 1) {
       lexString(scope.pounds);
     } else {
@@ -308,7 +319,9 @@ public class Lexer {
           foundBackslash = true;
           poundsInARow = 0;
           if (pounds == poundsInARow) {
-            if (lexEscape()) return;
+            backup(pounds + 1);
+            isEscape = true;
+            return;
           }
         }
         case '#' -> {
@@ -319,7 +332,9 @@ public class Lexer {
             return;
           }
           if (foundBackslash && pounds == poundsInARow) {
-            if (lexEscape()) return;
+            backup(pounds + 1);
+            isEscape = true;
+            return;
           }
         }
         default -> {
@@ -335,7 +350,7 @@ public class Lexer {
     var poundsInARow = 0;
     var quotesInARow = 0;
     var foundBackslash = false;
-    while (lookahead != EOF) {
+    while (lookahead != EOF && lookahead != '\n') {
       var ch = nextChar();
       switch (ch) {
         case '"' -> {
@@ -353,7 +368,9 @@ public class Lexer {
           poundsInARow = 0;
           foundBackslash = true;
           if (pounds == poundsInARow) {
-            if (lexEscape()) return;
+            backup(pounds + 1);
+            isEscape = true;
+            return;
           }
         }
         case '#' -> {
@@ -364,7 +381,9 @@ public class Lexer {
             return;
           }
           if (foundBackslash && pounds == poundsInARow) {
-            if (lexEscape()) return;
+            backup(pounds + 1);
+            isEscape = true;
+            return;
           }
         }
         default -> {
@@ -376,25 +395,27 @@ public class Lexer {
     }
   }
 
-  private boolean lexEscape() {
+  private Token lexEscape() {
     if (lookahead == EOF) throw unexpectedEndOfFile();
     var ch = nextChar();
-    switch (ch) {
-      case 't', 'n', 'r', '"', '\\' -> {}
+    return switch (ch) {
+      case 'n' -> Token.STRING_ESCAPE_NEWLINE;
+      case '"' -> Token.STRING_ESCAPE_QUOTE;
+      case '\\' -> Token.STRING_ESCAPE_BACKSLASH;
+      case 't' -> Token.STRING_ESCAPE_TAB;
+      case 'r' -> Token.STRING_ESCAPE_RETURN;
       case '(' -> {
         var scope = interpolationStack.getFirst();
         scope.parens++;
         state = State.DEFAULT;
-        textOffset = scope.pounds + 2;
-        return true;
+        yield Token.INTERPOLATION_START;
       }
       case 'u' -> lexUnicodeEscape();
       default -> throw lexError("Invalid string escape: `" + ch + "`");
-    }
-    return false;
+    };
   }
 
-  private void lexUnicodeEscape() {
+  private Token lexUnicodeEscape() {
     if (lookahead != '{') throw unexpectedIdentifier(lookahead);
     nextChar();
     var count = 0;
@@ -409,6 +430,7 @@ public class Lexer {
       count++;
     }
     if (!reachedEnd || count == 0) throw lexError("Invalid or empty unicode escape");
+    return Token.STRING_ESCAPE_UNICODE;
   }
 
   private Token lexIdent() {

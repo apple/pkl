@@ -423,9 +423,14 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(interpolatedStringExpr")
     val oldTab = increaseTab()
-    for (exp in expr.exprs) {
-      buf.append('\n')
-      renderExpr(exp)
+    for (part in expr.parts) {
+      if (part is StringPart.StringInterpolation) {
+        buf.append('\n')
+        renderExpr(part.expr)
+      } else {
+        buf.append('\n').append(tab)
+        buf.append("(stringConstantExpr)")
+      }
     }
     buf.append(')')
     tab = oldTab
@@ -435,9 +440,14 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(interpolatedMultiStringExpr")
     val oldTab = increaseTab()
-    for (exp in expr.exprs) {
-      buf.append('\n')
-      renderExpr(exp)
+    for (part in expr.parts) {
+      if (part is StringPart.StringInterpolation) {
+        buf.append('\n')
+        renderExpr(part.expr)
+      } else {
+        buf.append('\n').append(tab)
+        buf.append("(stringConstantExpr)")
+      }
     }
     buf.append(')')
     tab = oldTab

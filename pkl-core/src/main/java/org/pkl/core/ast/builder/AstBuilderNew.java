@@ -223,6 +223,14 @@ import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.newparser.cst.Parameter.TypedIdent;
 import org.pkl.core.newparser.cst.ParameterList;
 import org.pkl.core.newparser.cst.QualifiedIdent;
+import org.pkl.core.newparser.cst.StringConstantPart;
+import org.pkl.core.newparser.cst.StringConstantPart.ConstantPart;
+import org.pkl.core.newparser.cst.StringConstantPart.StringEscape;
+import org.pkl.core.newparser.cst.StringConstantPart.StringNewline;
+import org.pkl.core.newparser.cst.StringConstantPart.StringUnicodeEscape;
+import org.pkl.core.newparser.cst.StringPart;
+import org.pkl.core.newparser.cst.StringPart.StringConstantParts;
+import org.pkl.core.newparser.cst.StringPart.StringInterpolation;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.Type.ConstrainedType;
 import org.pkl.core.newparser.cst.Type.DeclaredType;
@@ -714,95 +722,187 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
+  public ExpressionNode visitStringPart(StringPart spart) {
+    return doVisitStringPart(spart, spart.span());
+  }
+
+  private ExpressionNode doVisitStringPart(StringPart spart, Span span) {
+    if (spart instanceof StringInterpolation si) {
+      return ToStringNodeGen.create(createSourceSection(span), visitExpr(si.getExpr()));
+    }
+    if (spart instanceof StringConstantParts sparts) {
+      var builder = new StringBuilder();
+      for (var part : sparts.getParts()) {
+        builder.append(visitStringConstantPart(part));
+      }
+      return new ConstantValueNode(createSourceSection(span), builder.toString());
+    }
+    throw exceptionBuilder().unreachableCode().build();
+  }
+
+  @Override
+  public String visitStringConstantPart(StringConstantPart part) {
+    if (part instanceof ConstantPart cp) {
+      return cp.getStr();
+    }
+    if (part instanceof StringUnicodeEscape ue) {
+      var codePoint = parseUnicodeEscapeSequence(ue);
+      return Character.toString(codePoint);
+    }
+    if (part instanceof StringEscape se) {
+      return switch (se.getType()) {
+        case NEWLINE -> "\n";
+        case QUOTE -> "\"";
+        case BACKSLASH -> "\\";
+        case TAB -> "\t";
+        case RETURN -> "\r";
+      };
+    }
+    throw PklBugException.unreachableCode();
+  }
+
+  private int parseUnicodeEscapeSequence(StringUnicodeEscape escape) {
+    var text = escape.getEscape();
+    var lastIndex = text.length() - 1;
+    var startIndex = text.indexOf('{', 2);
+    assert startIndex != -1; // guaranteed by lexer
+    try {
+      return Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
+    } catch (NumberFormatException e) {
+      throw exceptionBuilder()
+          .evalError("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex))
+          .withSourceSection(createSourceSection(escape))
+          .build();
+    }
+  }
+
+  @Override
   public ExpressionNode visitInterpolatedStringExpr(InterpolatedString expr) {
-    var exprs = expr.getExprs();
-    if (exprs.isEmpty()) {
+    var parts = expr.getParts();
+    if (parts.isEmpty()) {
       return new ConstantValueNode(createSourceSection(expr), "");
     }
-    if (exprs.size() == 1 && exprs.get(0) instanceof StringConstant str) {
-      return new ConstantValueNode(createSourceSection(expr), str.getStr());
+    if (parts.size() == 1) {
+      return doVisitStringPart(parts.get(0), expr.span());
     }
 
-    var nodes = new ExpressionNode[exprs.size()];
+    var nodes = new ExpressionNode[parts.size()];
     for (int i = 0; i < nodes.length; i++) {
-      var exp = exprs.get(i);
-      if (exp instanceof StringConstant sc) {
-        nodes[i] = visitStringConstantExpr(sc);
-      } else {
-        nodes[i] = ToStringNodeGen.create(createSourceSection(exp), visitExpr(exp));
-      }
+      nodes[i] = visitStringPart(parts.get(i));
     }
     return new InterpolatedStringLiteralNode(createSourceSection(expr), nodes);
   }
 
   @Override
   public ExpressionNode visitInterpolatedMultiStringExpr(InterpolatedMultiString expr) {
-    var exprs = expr.getExprs();
-    if (exprs.isEmpty()) {
+    var parts = expr.getParts();
+    if (parts.isEmpty()) {
       throw exceptionBuilder()
           .evalError("stringContentMustBeginOnNewLine")
           .withSourceSection(createSourceSection(expr))
           .build();
     }
-    var firstPart = exprs.get(0);
-    if (firstPart instanceof StringConstant str && !str.getStr().startsWith("\n")
-        || !(firstPart instanceof StringConstant)) {
+    var firstPart = parts.get(0);
+    var newLineStart =
+        firstPart instanceof StringConstantParts str
+            && str.getParts().get(0) instanceof StringNewline;
+    if (!newLineStart) {
       throw exceptionBuilder()
           .evalError("stringContentMustBeginOnNewLine")
           .withSourceSection(startOf(firstPart))
           .build();
     }
 
-    var lastPart = exprs.get(exprs.size() - 1);
+    var lastPart = parts.get(parts.size() - 1);
     var commonIndent = getCommonIndent(lastPart, expr.getEndDelimiterSpan());
 
-    if (exprs.size() == 1) {
+    if (parts.size() == 1) {
+      StringConstantParts sc = (StringConstantParts) firstPart;
       return new ConstantValueNode(
           createSourceSection(expr),
-          doVisitMultiLineStringConstant((StringConstant) firstPart, commonIndent, true, true));
+          doVisitMultiLineStringParts(sc.getParts(), commonIndent, true, true));
     }
 
-    var nodes = new ExpressionNode[exprs.size()];
+    var nodes = new ExpressionNode[parts.size()];
     var lastIndex = nodes.length - 1;
 
     for (int i = 0; i <= lastIndex; i++) {
-      nodes[i] = doVisitMultiLineStringPart(exprs.get(i), commonIndent, i == 0, i == lastIndex);
+      nodes[i] = doVisitMultiLineStringPart(parts.get(i), commonIndent, i == 0, i == lastIndex);
     }
     return new InterpolatedStringLiteralNode(createSourceSection(expr), nodes);
   }
 
-  private ExpressionNode doVisitMultiLineStringPart(
-      Expr expr, String commonIndent, boolean isStringStart, boolean isStringEnd) {
-    if (expr instanceof StringConstant str) {
-      return new ConstantValueNode(
-          createSourceSection(expr),
-          doVisitMultiLineStringConstant(str, commonIndent, isStringStart, isStringEnd));
+  public ExpressionNode doVisitMultiLineStringPart(
+      StringPart spart, String commonIndent, boolean isStringStart, boolean isStringEnd) {
+    if (spart instanceof StringInterpolation si) {
+      return ToStringNodeGen.create(createSourceSection(si), visitExpr(si.getExpr()));
     }
-    return ToStringNodeGen.create(createSourceSection(expr), visitExpr(expr));
+    if (spart instanceof StringConstantParts sparts) {
+      return new ConstantValueNode(
+          createSourceSection(spart),
+          doVisitMultiLineStringParts(sparts.getParts(), commonIndent, isStringStart, isStringEnd));
+    }
+    throw PklBugException.unreachableCode();
   }
 
-  private String doVisitMultiLineStringConstant(
-      StringConstant str, String commonIndent, boolean isStringStart, boolean isStringEnd) {
-    var builder = new StringBuilder();
-    var start = isStringStart ? 1 : 0;
-    var lines = str.getStr().substring(start).lines().collect(Collectors.toList());
+  private String doVisitMultiLineStringParts(
+      List<StringConstantPart> parts,
+      String commonIndent,
+      boolean isStringStart,
+      boolean isStringEnd) {
+
+    var starIndex = isStringStart ? 1 : 0;
+    var endIndex = parts.size() - 1;
     if (isStringEnd) {
-      lines.remove(lines.size() - 1);
-    }
-    for (String line : lines) {
-      if (line.startsWith(commonIndent)) {
-        builder.append(line, commonIndent.length(), line.length());
+      if (parts.get(endIndex) instanceof StringNewline) {
+        // skip trailing newline token
+        endIndex -= 1;
       } else {
-        String actualIndent = getLeadingIndent(line);
-        if (actualIndent.length() > commonIndent.length()) {
-          actualIndent = actualIndent.substring(0, commonIndent.length());
-        }
-        throw exceptionBuilder()
-            .evalError("stringIndentationMustMatchLastLine")
-            .withSourceSection(shrinkLeft(createSourceSection(str), actualIndent.length()))
-            .build();
+        // skip trailing newline and whitespace (common indent) tokens
+        endIndex -= 2;
       }
     }
+
+    var builder = new StringBuilder();
+    var isLineStart = isStringStart;
+    for (var i = starIndex; i <= endIndex; i++) {
+      var part = parts.get(i);
+      if (part instanceof StringNewline) {
+        builder.append('\n');
+        isLineStart = true;
+      } else if (part instanceof ConstantPart cp) {
+        var text = cp.getStr();
+        if (isLineStart) {
+          if (text.startsWith(commonIndent)) {
+            builder.append(text, commonIndent.length(), text.length());
+          } else {
+            String actualIndent = getLeadingIndent(text);
+            if (actualIndent.length() > commonIndent.length()) {
+              actualIndent = actualIndent.substring(0, commonIndent.length());
+            }
+            throw exceptionBuilder()
+                .evalError("stringIndentationMustMatchLastLine")
+                .withSourceSection(shrinkLeft(createSourceSection(cp), actualIndent.length()))
+                .build();
+          }
+        } else {
+          builder.append(text);
+        }
+        isLineStart = false;
+      } else if (part instanceof StringEscape || part instanceof StringUnicodeEscape) {
+        if (isLineStart && !commonIndent.isEmpty()) {
+          throw exceptionBuilder()
+              .evalError("stringIndentationMustMatchLastLine")
+              .withSourceSection(createSourceSection(part))
+              .build();
+        }
+        builder.append(visitStringConstantPart(part));
+        isLineStart = false;
+      } else {
+        throw PklBugException.unreachableCode();
+      }
+    }
+
     return builder.toString();
   }
 
@@ -2919,33 +3019,46 @@ public class AstBuilderNew implements ParserVisitor<Object> {
         scope.getConstDepth());
   }
 
-  private String getCommonIndent(Node lastPart, Span endQuoteSpan) {
-    if (!(lastPart instanceof StringConstant str) || str.getStr().isEmpty()) {
+  private String getCommonIndent(Node lastParts, Span endQuoteSpan) {
+    if (!(lastParts instanceof StringConstantParts sparts)) {
       throw exceptionBuilder()
           .evalError("closingStringDelimiterMustBeginOnNewLine")
           .withSourceSection(startOf(endQuoteSpan))
           .build();
     }
-    var lastStr = str.getStr();
-    var foundNewline = false;
-    var indent = new StringBuilder();
-    for (var i = lastStr.length() - 1; i >= 0; i--) {
-      var ch = lastStr.charAt(i);
-      if (ch == ' ' || ch == '\t') {
-        indent.append(ch);
-      } else {
-        foundNewline = ch == '\n';
-        break;
+
+    var parts = sparts.getParts();
+    assert !parts.isEmpty();
+    var lastPart = parts.get(parts.size() - 1);
+    if (lastPart instanceof StringNewline) {
+      return "";
+    }
+
+    if (parts.size() > 1) {
+      var lastButOne = parts.get(parts.size() - 2);
+      if (lastButOne instanceof StringNewline && isIndentChars(lastPart)) {
+        return ((ConstantPart) lastPart).getStr();
       }
     }
 
-    if (foundNewline) {
-      return indent.toString();
-    }
     throw exceptionBuilder()
         .evalError("closingStringDelimiterMustBeginOnNewLine")
         .withSourceSection(startOf(endQuoteSpan))
         .build();
+  }
+
+  private static boolean isIndentChars(Node node) {
+    if (!(node instanceof ConstantPart part)) {
+      return false;
+    }
+    var text = part.getStr();
+
+    for (var i = 0; i < text.length(); i++) {
+      var ch = text.charAt(i);
+      if (ch != ' ' && ch != '\t') return false;
+    }
+
+    return true;
   }
 
   private URI resolveImport(String importUri, StringConstant ctx) {

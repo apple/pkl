@@ -42,6 +42,11 @@ import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.newparser.cst.Parameter.TypedIdent;
 import org.pkl.core.newparser.cst.ParameterList;
 import org.pkl.core.newparser.cst.QualifiedIdent;
+import org.pkl.core.newparser.cst.StringConstantPart;
+import org.pkl.core.newparser.cst.StringConstantPart.EscapeType;
+import org.pkl.core.newparser.cst.StringConstantPart.StringEscape;
+import org.pkl.core.newparser.cst.StringConstantPart.StringNewline;
+import org.pkl.core.newparser.cst.StringPart;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.Type.DeclaredType;
 import org.pkl.core.newparser.cst.Type.DefaultUnionType;
@@ -841,27 +846,59 @@ public class Parser {
           case FALSE -> new Expr.BoolLiteral(false, next().span);
           case INT, HEX, BIN, OCT -> {
             var tk = next();
-            var text = remove_(lexer.textFor(tk.textOffset, tk.textSize));
+            var text = remove_(tk.text(lexer));
             yield new Expr.IntLiteral(text, tk.span);
           }
           case FLOAT -> {
             var tk = next();
-            var text = remove_(lexer.textFor(tk.textOffset, tk.textSize));
+            var text = remove_(tk.text(lexer));
             yield new Expr.FloatLiteral(text, tk.span);
           }
           case STRING_START, STRING_MULTI_START -> {
             var start = next();
-            var parts = new ArrayList<Expr>();
+            var parts = new ArrayList<StringPart>();
+            var temp = new ArrayList<StringConstantPart>();
             while (lookahead != Token.STRING_END) {
-              if (lookahead == Token.STRING_PART) {
-                var tk = next();
-                var text = lexer.textFor(tk.textOffset, tk.textSize);
-                if (!text.isEmpty()) {
-                  parts.add(new Expr.StringConstant(text, tk.span));
+              switch (lookahead) {
+                case STRING_PART -> {
+                  var tk = next();
+                  var text = tk.text(lexer);
+                  if (!text.isEmpty()) {
+                    temp.add(new StringConstantPart.ConstantPart(text, tk.span));
+                  }
                 }
-              } else {
-                parts.add(parseExpr());
+                case STRING_NEWLINE -> temp.add(new StringNewline(next().span));
+                case STRING_ESCAPE_NEWLINE ->
+                    temp.add(new StringEscape(EscapeType.NEWLINE, next().span));
+                case STRING_ESCAPE_TAB -> temp.add(new StringEscape(EscapeType.TAB, next().span));
+                case STRING_ESCAPE_QUOTE ->
+                    temp.add(new StringEscape(EscapeType.QUOTE, next().span));
+                case STRING_ESCAPE_BACKSLASH ->
+                    temp.add(new StringEscape(EscapeType.BACKSLASH, next().span));
+                case STRING_ESCAPE_RETURN ->
+                    temp.add(new StringEscape(EscapeType.RETURN, next().span));
+                case STRING_ESCAPE_UNICODE -> {
+                  var tk = next();
+                  var text = tk.text(lexer);
+                  temp.add(new StringConstantPart.StringUnicodeEscape(text, tk.span));
+                }
+                case INTERPOLATION_START -> {
+                  var istart = next().span;
+                  if (!temp.isEmpty()) {
+                    var span = temp.get(0).span().endWith(temp.get(temp.size() - 1).span());
+                    parts.add(new StringPart.StringConstantParts(temp, span));
+                    temp = new ArrayList<>();
+                  }
+                  var exp = parseExpr();
+                  var end = expect(Token.RPAREN, "Expected `)`").span;
+                  parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
+                }
+                default -> throw new ParserError("Unexpected token", spanLookahead);
               }
+            }
+            if (!temp.isEmpty()) {
+              var span = temp.get(0).span().endWith(temp.get(temp.size() - 1).span());
+              parts.add(new StringPart.StringConstantParts(temp, span));
             }
             var end = expect(Token.STRING_END, "noError").span;
             if (start.token == Token.STRING_START) {
@@ -1192,7 +1229,8 @@ public class Parser {
       throw new ParserError("Expected identifier", spanLookahead);
     }
     var tk = next();
-    return new Ident(lexer.textFor(tk.textOffset, tk.textSize), tk.span);
+    var text = removeBackticks(tk.text(lexer));
+    return new Ident(text, tk.span);
   }
 
   private Expr.StringConstant parseStringConstant() {
@@ -1200,7 +1238,7 @@ public class Parser {
     expect(Token.STRING_START, "Expected string start");
     if (lookahead == Token.STRING_PART) {
       var tk = next();
-      var text = lexer.textFor(tk.textOffset, tk.textSize);
+      var text = tk.text(lexer);
       var end = spanLookahead;
       expect(Token.STRING_END, "Expected string end");
       return new Expr.StringConstant(text, start.endWith(end));
@@ -1295,11 +1333,7 @@ public class Parser {
     }
     precededBySemicolon = prev == Token.SEMICOLON;
     return new FullToken(
-        tk,
-        lexer.span(),
-        lexer.sCursor,
-        lexer.cursor - lexer.sCursor - lexer.textOffset,
-        lexer.newLineBetween);
+        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLineBetween);
   }
 
   // backtrack to the previous token
@@ -1317,6 +1351,14 @@ public class Parser {
       builder.append(ch);
     }
     return builder.toString();
+  }
+
+  private String removeBackticks(String text) {
+    if (!text.isEmpty() && text.charAt(0) == '`') {
+      // lexer makes sure there's a ` at the end
+      return text.substring(1, text.length() - 1);
+    }
+    return text;
   }
 
   private record FullToken(

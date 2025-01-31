@@ -31,6 +31,8 @@ import org.pkl.core.newparser.cst.ModuleDecl;
 import org.pkl.core.newparser.cst.ObjectMemberNode;
 import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.newparser.cst.ParameterList;
+import org.pkl.core.newparser.cst.StringConstantPart;
+import org.pkl.core.newparser.cst.StringPart;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.TypeAlias;
 import org.pkl.core.newparser.cst.TypeAnnotation;
@@ -246,4 +248,8 @@ public interface ParserVisitor<Result> {
   Result visitTypeAnnotation(TypeAnnotation typeAnnotation);
 
   Result visitArgumentList(ArgumentList argumentList);
+
+  Result visitStringPart(StringPart part);
+
+  Result visitStringConstantPart(StringConstantPart part);
 }
