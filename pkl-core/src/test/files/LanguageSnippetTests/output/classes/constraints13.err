@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `firstOneIsSandy` violated.
+Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+
+x | birds: Listing(firstOneIsSandy) = new {
+                   ^^^^^^^^^^^^^^^
+at constraints13#birds (file:///$snippetsDir/input/classes/constraints13.pkl)
+
+x | birds: Listing(firstOneIsSandy) = new {
+                                      ^^^^^
+at constraints13#birds (file:///$snippetsDir/input/classes/constraints13.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
