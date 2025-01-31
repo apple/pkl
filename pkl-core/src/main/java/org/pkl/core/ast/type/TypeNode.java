@@ -1394,6 +1394,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object execute(VirtualFrame frame, Object value) {
+      var context = VmContext.get(this);
+      if (context.shouldEagerTypecheck()) {
+        return executeEagerly(frame, value);
+      }
       if (!(value instanceof VmListing vmListing)) {
         throw typeMismatch(value, BaseModule.getListingClass());
       }
@@ -1460,6 +1464,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object execute(VirtualFrame frame, Object value) {
+      var context = VmContext.get(this);
+      if (context.shouldEagerTypecheck()) {
+        return executeEagerly(frame, value);
+      }
       if (!(value instanceof VmMapping vmMapping)) {
         throw typeMismatch(value, BaseModule.getMappingClass());
       }

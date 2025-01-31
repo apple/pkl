@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ public final class VmContext {
     private final ModuleCache moduleCache;
     private final @Nullable PackageResolver packageResolver;
     private final @Nullable ProjectDependenciesManager projectDependenciesManager;
+    private boolean shouldEagerTypecheck;
 
     public Holder(
         StackFrameTransformer frameTransformer,
@@ -84,6 +85,7 @@ public final class VmContext {
       moduleCache = new ModuleCache();
       this.packageResolver = packageResolver;
       this.projectDependenciesManager = projectDependenciesManager;
+      this.shouldEagerTypecheck = false;
     }
   }
 
@@ -142,5 +144,13 @@ public final class VmContext {
 
   public @Nullable ProjectDependenciesManager getProjectDependenciesManager() {
     return holder.projectDependenciesManager;
+  }
+
+  public boolean shouldEagerTypecheck() {
+    return holder.shouldEagerTypecheck;
+  }
+
+  public void setShouldEagerTypecheck(boolean flag) {
+    holder.shouldEagerTypecheck = flag;
   }
 }
