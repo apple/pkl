@@ -247,8 +247,6 @@ import org.pkl.core.newparser.cst.TypeAlias;
 import org.pkl.core.newparser.cst.TypeAnnotation;
 import org.pkl.core.newparser.cst.TypeParameterList;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.parser.antlr.PklParser.ModuleContext;
-import org.pkl.core.parser.antlr.PklParser.QualifiedAccessExprContext;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
@@ -366,7 +364,8 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public UnresolvedTypeNode visitStringConstantType(StringConstantType type) {
-    return new UnresolvedTypeNode.StringLiteral(createSourceSection(type), type.getStr());
+    return new UnresolvedTypeNode.StringLiteral(
+        createSourceSection(type), doVisitStringConstantExpr(type.getStr()));
   }
 
   @Override
@@ -442,7 +441,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
           createSourceSection(type),
           defaultIndex,
           elementTypes.stream()
-              .map(it -> ((StringConstantType) it).getStr())
+              .map(it -> doVisitStringConstantExpr(((StringConstantType) it).getStr()))
               .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
@@ -505,7 +504,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public ExpressionNode visitThisExpr(This expr) {
-    if (!(expr.parent() instanceof QualifiedAccessExprContext)) {
+    if (!(expr.parent() instanceof QualifiedAccess)) {
       var currentScope = symbolTable.getCurrentScope();
       var needsConst =
           currentScope.getConstLevel() == ConstLevel.ALL
@@ -588,14 +587,12 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
     var radix = 10;
     if (text.startsWith("0x") || text.startsWith("0b") || text.startsWith("0o")) {
-      var type = text.charAt(1);
-      if (type == 'x') {
-        radix = 16;
-      } else if (type == 'b') {
-        radix = 2;
-      } else {
-        radix = 8;
-      }
+      radix =
+          switch (text.charAt(1)) {
+            case 'x' -> 16;
+            case 'b' -> 2;
+            default -> 8;
+          };
 
       text = text.substring(2);
     }
@@ -653,7 +650,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   private AbstractImportNode doVisitImport(
       boolean isGlobImport, Node node, StringConstant importUriNode) {
     var section = createSourceSection(node);
-    var importUri = importUriNode.getStr();
+    var importUri = doVisitStringConstantExpr(importUriNode);
     if (isGlobImport && importUri.startsWith("...")) {
       throw exceptionBuilder().evalError("cannotGlobTripleDots").withSourceSection(section).build();
     }
@@ -718,7 +715,16 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public ExpressionNode visitStringConstantExpr(StringConstant expr) {
-    return new ConstantValueNode(createSourceSection(expr), expr.getStr());
+    return new ConstantValueNode(createSourceSection(expr), doVisitStringConstantExpr(expr));
+  }
+
+  private String doVisitStringConstantExpr(StringConstant expr) {
+    var sparts = expr.getStrParts();
+    var builder = new StringBuilder();
+    for (var part : sparts.getParts()) {
+      builder.append(visitStringConstantPart(part));
+    }
+    return builder.toString();
   }
 
   @Override
@@ -973,7 +979,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
     } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
       var isObjectMethod =
           parent instanceof ObjectMethod
-              || parent.parent() instanceof ModuleContext && moduleInfo.isAmend();
+              || parent.parent() instanceof Module && moduleInfo.isAmend();
       Identifier scopeName = scope.getName();
       inferredParentNode =
           isObjectMethod
@@ -1006,7 +1012,8 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public ExpressionNode visitAmendsExpr(Amends expr) {
-    // parentExpr is always New, Amends or Parenthesized. The parser makes sure of it
+    // parentExpr is always New, Amends or Parenthesized. The parser makes sure of it in
+    // `Parser.parseExprRest`
     return doVisitObjectBody(expr.getBody(), visitExpr(expr.getExpr()));
   }
 
@@ -2480,7 +2487,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
                         unavailableSourceSection(),
                         scope.getName(),
                         // Never need a const check for amends declarations. In `foo { ... }`:
-                        // 1. if `foo` is const (i.e. `const foo { ... }`, `super.foo` is required
+                        // 1. if `foo` is const, i.e. `const foo { ... }`, `super.foo` is required
                         // to be const (the const-ness of a property cannot be changed)
                         // 2. if in a const scope (i.e. `const bar = new { foo { ... } }`),
                         // `super.foo` does not reference something outside the scope.

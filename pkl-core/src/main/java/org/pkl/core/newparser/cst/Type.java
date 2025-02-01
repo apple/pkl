@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.newparser.cst.Expr.StringConstant;
 
 public sealed interface Type extends Node {
 
@@ -160,11 +161,11 @@ public sealed interface Type extends Node {
   }
 
   final class StringConstantType implements Type {
-    private final String str;
+    private final StringConstant str;
     private final Span span;
     private Node parent;
 
-    public StringConstantType(String str, Span span) {
+    public StringConstantType(StringConstant str, Span span) {
       this.str = str;
       this.span = span;
     }
@@ -184,7 +185,7 @@ public sealed interface Type extends Node {
       this.parent = parent;
     }
 
-    public String getStr() {
+    public StringConstant getStr() {
       return str;
     }
 

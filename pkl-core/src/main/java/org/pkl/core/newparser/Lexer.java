@@ -19,6 +19,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import org.pkl.core.util.ErrorMessages;
 
 public class Lexer {
 
@@ -84,7 +85,11 @@ public class Lexer {
       ch = nextChar();
     }
     return switch (ch) {
-      case EOF -> Token.EOF;
+      case EOF -> {
+        // when EOF is reached we overshot the span
+        cursor--;
+        yield Token.EOF;
+      }
       case ';' -> Token.SEMICOLON;
       case '(' -> {
         var scope = interpolationStack.peek();
@@ -240,10 +245,6 @@ public class Lexer {
       return Token.STRING_END;
     }
     if (lookahead == EOF) return Token.EOF;
-    if (lookahead == '\n') {
-      nextChar();
-      return Token.STRING_NEWLINE;
-    }
     if (isEscape) {
       isEscape = false;
       // consume the `\#*`
@@ -255,6 +256,10 @@ public class Lexer {
     if (scope.quotes == 1) {
       lexString(scope.pounds);
     } else {
+      if (lookahead == '\n') {
+        nextChar();
+        return Token.STRING_NEWLINE;
+      }
       lexMultiString(scope.pounds);
     }
     return Token.STRING_PART;
@@ -266,7 +271,12 @@ public class Lexer {
       nextChar();
       pounds++;
     }
-    if (lookahead != '"') throw unexpectedIdentifier(lookahead);
+    if (lookahead == EOF) {
+      throw lexError("Token recognition error at: `" + text() + "`", sCursor, cursor - sCursor);
+    }
+    if (lookahead != '"') {
+      throw unexpectedIdentifier(lookahead);
+    }
     nextChar();
     return lexStringStart(pounds);
   }
@@ -303,7 +313,8 @@ public class Lexer {
     while (lookahead != EOF) {
       var ch = nextChar();
       switch (ch) {
-        case '\n', '\r' -> throw unexpectedIdentifier(ch);
+        case '\n', '\r' ->
+            throw lexError(ErrorMessages.create("singleQuoteStringNewline"), cursor - 1, 1);
         case '"' -> {
           if (pounds == 0) {
             backup();
@@ -411,25 +422,25 @@ public class Lexer {
         yield Token.INTERPOLATION_START;
       }
       case 'u' -> lexUnicodeEscape();
-      default -> throw lexError("Invalid string escape: `" + ch + "`");
+      default ->
+          throw lexError(
+              ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + ch, "\\"),
+              cursor - 2,
+              2);
     };
   }
 
   private Token lexUnicodeEscape() {
     if (lookahead != '{') throw unexpectedIdentifier(lookahead);
-    nextChar();
-    var count = 0;
-    var reachedEnd = false;
-    while (lookahead != EOF && count <= 8) {
-      var ch = nextChar();
-      if (ch == '}') {
-        reachedEnd = true;
-        break;
-      }
-      if (!isHex(ch)) throw unexpectedIdentifier(ch);
-      count++;
+    do {
+      nextChar();
+    } while (lookahead != '}' && lookahead != EOF);
+    if (lookahead == '}') {
+      // consume the close bracket
+      nextChar();
+    } else {
+      throw unexpectedEndOfFile();
     }
-    if (!reachedEnd || count == 0) throw lexError("Invalid or empty unicode escape");
     return Token.STRING_ESCAPE_UNICODE;
   }
 
@@ -647,7 +658,13 @@ public class Lexer {
   }
 
   private ParserError lexError(String msg) {
-    return new ParserError(msg, new Span(cursor, 1));
+    var length = lookahead == EOF ? 0 : 1;
+    var index = lookahead == EOF ? cursor - 1 : cursor;
+    return new ParserError(msg, new Span(index, length));
+  }
+
+  private ParserError lexError(String msg, int charIndex, int length) {
+    return new ParserError(msg, new Span(charIndex, length));
   }
 
   private ParserError unexpectedIdentifier(char got) {
@@ -655,7 +672,7 @@ public class Lexer {
   }
 
   private ParserError unexpectedEndOfFile() {
-    return lexError("Unexpected end of file.");
+    return lexError(ErrorMessages.create("unexpectedEndOfFile"), cursor, 0);
   }
 
   private static final Map<String, Token> IDENTS = new HashMap<>(42);

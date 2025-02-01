@@ -18,6 +18,7 @@ package org.pkl.core.newparser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import org.pkl.core.PklBugException;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
 import org.pkl.core.newparser.cst.ClassBody;
@@ -29,6 +30,7 @@ import org.pkl.core.newparser.cst.Expr;
 import org.pkl.core.newparser.cst.Expr.NullLiteral;
 import org.pkl.core.newparser.cst.Expr.OperatorExpr;
 import org.pkl.core.newparser.cst.Expr.Parenthesized;
+import org.pkl.core.newparser.cst.Expr.StringConstant;
 import org.pkl.core.newparser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.newparser.cst.Ident;
 import org.pkl.core.newparser.cst.Import;
@@ -47,6 +49,7 @@ import org.pkl.core.newparser.cst.StringConstantPart.EscapeType;
 import org.pkl.core.newparser.cst.StringConstantPart.StringEscape;
 import org.pkl.core.newparser.cst.StringConstantPart.StringNewline;
 import org.pkl.core.newparser.cst.StringPart;
+import org.pkl.core.newparser.cst.StringPart.StringConstantParts;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.Type.DeclaredType;
 import org.pkl.core.newparser.cst.Type.DefaultUnionType;
@@ -118,8 +121,7 @@ public class Parser {
     // imports
     while (lookahead == Token.IMPORT || lookahead == Token.IMPORT_STAR) {
       if (header != null && !header.isEmpty()) {
-        throw new ParserError(
-            "Imports cannot have doc comments nor annotations or modifiers", spanLookahead);
+        throw parserError("wrongImportHeader");
       }
       var _import = parseImportDecl();
       imports.add(_import);
@@ -236,10 +238,13 @@ public class Parser {
         methods.add(node);
         return node.span();
       }
-      default ->
-          throw new ParserError(
-              "Invalid token at position. Valid ones are `typealias`, `class`, `function` or <identifier>.",
-              spanLookahead);
+      case EOF -> throw parserError("unexpectedEndOfFile");
+      default -> {
+        if (lookahead.isKeyword()) {
+          throw parserError("keywordNotAllowedHere", lookahead.name().toLowerCase());
+        }
+        throw parserError("invalidTopLevelToken");
+      }
     }
   }
 
@@ -893,6 +898,7 @@ public class Parser {
                   var end = expect(Token.RPAREN, "Expected `)`").span;
                   parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
                 }
+                case EOF -> throw parserError("unexpectedEndOfFile");
                 default -> throw new ParserError("Unexpected token", spanLookahead);
               }
             }
@@ -961,8 +967,8 @@ public class Parser {
     if (lookahead == Token.LBRACK && !precededBySemicolon && !_lookahead.newLineBetween) {
       next();
       var exp = parseExpr();
-      expect(Token.RBRACK, "Expected `]`");
-      var res = new Expr.Subscript(expr, exp, expr.span().endWith(exp.span()));
+      var end = expect(Token.RBRACK, "Expected `]`").span;
+      var res = new Expr.Subscript(expr, exp, expr.span().endWith(end));
       return parseExprRest(res);
     }
     return expr;
@@ -1078,7 +1084,7 @@ public class Parser {
       }
       case STRING_START -> {
         var str = parseStringConstant();
-        typ = new StringConstantType(str.getStr(), str.span());
+        typ = new StringConstantType(str, str.span());
       }
       default -> throw new ParserError("Invalid token for type: " + lookahead, spanLookahead);
     }
@@ -1226,6 +1232,11 @@ public class Parser {
 
   private Ident parseIdent() {
     if (lookahead != Token.IDENT) {
+      if (lookahead.isKeyword()) {
+        throw new ParserError(
+            ErrorMessages.create("keywordNotAllowedHere", lookahead.name().toLowerCase()),
+            spanLookahead);
+      }
       throw new ParserError("Expected identifier", spanLookahead);
     }
     var tk = next();
@@ -1236,15 +1247,36 @@ public class Parser {
   private Expr.StringConstant parseStringConstant() {
     var start = spanLookahead;
     expect(Token.STRING_START, "Expected string start");
-    if (lookahead == Token.STRING_PART) {
-      var tk = next();
-      var text = tk.text(lexer);
-      var end = spanLookahead;
-      expect(Token.STRING_END, "Expected string end");
-      return new Expr.StringConstant(text, start.endWith(end));
-    } else {
-      throw new ParserError("Expected constant string", spanLookahead);
+    var parts = new ArrayList<StringConstantPart>();
+    while (lookahead != Token.STRING_END) {
+      switch (lookahead) {
+        case STRING_PART -> {
+          var tk = next();
+          var text = tk.text(lexer);
+          parts.add(new StringConstantPart.ConstantPart(text, tk.span));
+        }
+        case STRING_ESCAPE_NEWLINE -> parts.add(new StringEscape(EscapeType.NEWLINE, next().span));
+        case STRING_ESCAPE_TAB -> parts.add(new StringEscape(EscapeType.TAB, next().span));
+        case STRING_ESCAPE_QUOTE -> parts.add(new StringEscape(EscapeType.QUOTE, next().span));
+        case STRING_ESCAPE_BACKSLASH ->
+            parts.add(new StringEscape(EscapeType.BACKSLASH, next().span));
+        case STRING_ESCAPE_RETURN -> parts.add(new StringEscape(EscapeType.RETURN, next().span));
+        case STRING_ESCAPE_UNICODE -> {
+          var tk = next();
+          var text = tk.text(lexer);
+          parts.add(new StringConstantPart.StringUnicodeEscape(text, tk.span));
+        }
+        case STRING_NEWLINE -> throw parserError("singleQuoteStringNewline");
+        case EOF -> throw parserError("unexpectedEndOfFile");
+        case INTERPOLATION_START -> throw parserError("interpolationInConstant");
+        // the lexer makes sure we only get the above tokens inside a string
+        default -> throw PklBugException.unreachableCode();
+      }
     }
+    var end = expect(Token.STRING_END, "Expected string end").span;
+    assert !parts.isEmpty();
+    var constSpan = parts.get(0).span().endWith(parts.get(parts.size() - 1).span());
+    return new StringConstant(new StringConstantParts(parts, constSpan), start.endWith(end));
   }
 
   private FullToken expect(Token type, String errorMsg) {
@@ -1272,6 +1304,10 @@ public class Parser {
       res.add(parseParameter());
     }
     return res;
+  }
+
+  private ParserError parserError(String messageKey, Object... args) {
+    return new ParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
 
   private record EntryHeader(

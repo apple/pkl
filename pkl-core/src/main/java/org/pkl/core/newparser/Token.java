@@ -136,4 +136,56 @@ public enum Token {
       default -> false;
     };
   }
+
+  public boolean isKeyword() {
+    return switch (this) {
+      case ABSTRACT,
+          AMENDS,
+          AS,
+          CLASS,
+          CONST,
+          ELSE,
+          EXTENDS,
+          EXTERNAL,
+          FALSE,
+          FIXED,
+          FOR,
+          FUNCTION,
+          HIDDEN,
+          IF,
+          IMPORT,
+          IMPORT_STAR,
+          IN,
+          IS,
+          LET,
+          LOCAL,
+          MODULE,
+          NEW,
+          NOTHING,
+          NULL,
+          OPEN,
+          OUT,
+          OUTER,
+          READ,
+          READ_STAR,
+          READ_QUESTION,
+          SUPER,
+          THIS,
+          THROW,
+          TRACE,
+          TRUE,
+          TYPE_ALIAS,
+          UNKNOWN,
+          WHEN,
+          PROTECTED,
+          OVERRIDE,
+          RECORD,
+          DELETE,
+          CASE,
+          SWITCH,
+          VARARG ->
+          true;
+      default -> false;
+    };
+  }
 }

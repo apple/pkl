@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.newparser.cst.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
 
 public sealed interface Expr extends Node {
@@ -363,13 +364,15 @@ public sealed interface Expr extends Node {
   }
 
   final class StringConstant implements Expr {
-    private final String str;
+    private final StringConstantParts strParts;
     private final Span span;
     private Node parent;
 
-    public StringConstant(String str, Span span) {
-      this.str = str;
+    public StringConstant(StringConstantParts strParts, Span span) {
+      this.strParts = strParts;
       this.span = span;
+
+      strParts.setParent(this);
     }
 
     @Override
@@ -387,13 +390,13 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
-    public String getStr() {
-      return str;
+    public StringConstantParts getStrParts() {
+      return strParts;
     }
 
     @Override
     public String toString() {
-      return "StringConstant{str='" + str + '\'' + ", span=" + span + '}';
+      return "StringConstant{strParts=" + strParts + ", span=" + span + '}';
     }
 
     @Override
@@ -405,12 +408,12 @@ public sealed interface Expr extends Node {
         return false;
       }
       StringConstant that = (StringConstant) o;
-      return Objects.equals(str, that.str) && Objects.equals(span, that.span);
+      return Objects.equals(strParts, that.strParts) && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(str, span);
+      return Objects.hash(strParts, span);
     }
   }
 
