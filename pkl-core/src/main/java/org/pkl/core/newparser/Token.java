@@ -177,6 +177,7 @@ public enum Token {
           TYPE_ALIAS,
           UNKNOWN,
           WHEN,
+          UNDERSCORE,
           PROTECTED,
           OVERRIDE,
           RECORD,
@@ -187,5 +188,12 @@ public enum Token {
           true;
       default -> false;
     };
+  }
+
+  public String text() {
+    if (this == UNDERSCORE) {
+      return "_";
+    }
+    return name().toLowerCase();
   }
 }

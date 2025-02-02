@@ -30,4 +30,8 @@ public record Span(int charIndex, int length) {
   public int stopIndex() {
     return charIndex + length - 1;
   }
+
+  public Span stopSpan() {
+    return new Span(charIndex + length - 1, 1);
+  }
 }

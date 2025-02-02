@@ -241,7 +241,7 @@ public class Parser {
       case EOF -> throw parserError("unexpectedEndOfFile");
       default -> {
         if (lookahead.isKeyword()) {
-          throw parserError("keywordNotAllowedHere", lookahead.name().toLowerCase());
+          throw parserError("keywordNotAllowedHere", lookahead.text());
         }
         throw parserError("invalidTopLevelToken");
       }
@@ -1234,8 +1234,7 @@ public class Parser {
     if (lookahead != Token.IDENT) {
       if (lookahead.isKeyword()) {
         throw new ParserError(
-            ErrorMessages.create("keywordNotAllowedHere", lookahead.name().toLowerCase()),
-            spanLookahead);
+            ErrorMessages.create("keywordNotAllowedHere", lookahead.text()), spanLookahead);
       }
       throw new ParserError("Expected identifier", spanLookahead);
     }

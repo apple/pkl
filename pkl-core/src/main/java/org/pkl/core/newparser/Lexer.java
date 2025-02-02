@@ -434,12 +434,12 @@ public class Lexer {
     if (lookahead != '{') throw unexpectedIdentifier(lookahead);
     do {
       nextChar();
-    } while (lookahead != '}' && lookahead != EOF);
+    } while (lookahead != '}' && lookahead != EOF && Character.isLetterOrDigit(lookahead));
     if (lookahead == '}') {
       // consume the close bracket
       nextChar();
     } else {
-      throw unexpectedEndOfFile();
+      throw lexError(ErrorMessages.create("unterminatedUnicodeEscapeSequence", text()), span());
     }
     return Token.STRING_ESCAPE_UNICODE;
   }
@@ -522,6 +522,9 @@ public class Lexer {
       return Token.FLOAT;
     } else if (lookahead == '.') {
       nextChar();
+      if (lookahead == '_') {
+        throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
+      }
       if (lookahead < 48 || lookahead > 57) {
         backup();
         return Token.INT;
@@ -568,6 +571,9 @@ public class Lexer {
   }
 
   private void lexHexNumber() {
+    if (lookahead == '_') {
+      throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
+    }
     if (!isHex(lookahead)) {
       throw unexpectedIdentifier(lookahead);
     }
@@ -577,6 +583,9 @@ public class Lexer {
   }
 
   private void lexBinNumber() {
+    if (lookahead == '_') {
+      throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
+    }
     if (!(lookahead == '0' || lookahead == '1')) {
       throw unexpectedIdentifier(lookahead);
     }
@@ -586,6 +595,9 @@ public class Lexer {
   }
 
   private void lexOctNumber() {
+    if (lookahead == '_') {
+      throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
+    }
     var ch = (int) lookahead;
     if (!(ch >= 48 && ch <= 55)) {
       throw unexpectedIdentifier((char) ch);
@@ -601,7 +613,7 @@ public class Lexer {
       nextChar();
     }
     if (lookahead == '_') {
-      throw lexError("Numbers cannot start with `_`");
+      throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
     }
     if (lookahead < 48 || lookahead > 57) {
       throw unexpectedIdentifier(lookahead);
@@ -613,7 +625,7 @@ public class Lexer {
 
   private void lexDotNumber() {
     if (lookahead == '_') {
-      throw lexError("Numbers cannot start with `_`");
+      throw lexError(ErrorMessages.create("invalidSeparatorPosition"));
     }
     while ((lookahead >= 48 && lookahead <= 57) || lookahead == '_') {
       nextChar();
@@ -665,6 +677,10 @@ public class Lexer {
 
   private ParserError lexError(String msg, int charIndex, int length) {
     return new ParserError(msg, new Span(charIndex, length));
+  }
+
+  private ParserError lexError(String msg, Span span) {
+    return new ParserError(msg, span);
   }
 
   private ParserError unexpectedIdentifier(char got) {

@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
@@ -41,6 +42,11 @@ public final class Ident implements Node {
   @Override
   public void setParent(Node parent) {
     this.parent = parent;
+  }
+
+  @Override
+  public List<Node> children() {
+    return List.of();
   }
 
   public String getValue() {

@@ -1271,7 +1271,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
     if (keyAndValueNodes.first.length % 2 != 0) {
       throw exceptionBuilder()
           .evalError("missingMapValue")
-          .withSourceSection(createSourceSection(expr))
+          .withSourceSection(createSourceSection(argList.span().stopSpan()))
           .build();
     }
 

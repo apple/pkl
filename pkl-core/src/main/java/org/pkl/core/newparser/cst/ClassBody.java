@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -51,6 +52,14 @@ public class ClassBody implements Node {
   @Override
   public void setParent(Node parent) {
     this.parent = parent;
+  }
+
+  @Override
+  public List<Node> children() {
+    var children = new ArrayList<Node>(properties.size() + methods.size());
+    children.addAll(properties);
+    children.addAll(methods);
+    return children;
   }
 
   public List<ClassPropertyEntry> getProperties() {

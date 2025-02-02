@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -90,6 +91,19 @@ public sealed interface ClassPropertyEntry extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      if (docComment != null) {
+        children.add(docComment);
+      }
+      children.addAll(annotations);
+      children.addAll(modifiers);
+      children.add(name);
+      children.add(typeAnnotation);
+      return children;
     }
 
     @Override
@@ -226,6 +240,22 @@ public sealed interface ClassPropertyEntry extends Node {
     }
 
     @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      if (docComment != null) {
+        children.add(docComment);
+      }
+      children.addAll(annotations);
+      children.addAll(modifiers);
+      children.add(name);
+      if (typeAnnotation != null) {
+        children.add(typeAnnotation);
+      }
+      children.add(expr);
+      return children;
+    }
+
+    @Override
     public @Nullable DocComment docComment() {
       return docComment;
     }
@@ -359,6 +389,19 @@ public sealed interface ClassPropertyEntry extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      if (docComment != null) {
+        children.add(docComment);
+      }
+      children.addAll(annotations);
+      children.addAll(modifiers);
+      children.add(name);
+      children.addAll(bodyList);
+      return children;
     }
 
     @Override

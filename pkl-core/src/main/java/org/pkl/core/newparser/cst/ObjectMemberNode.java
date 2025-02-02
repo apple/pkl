@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -47,6 +48,11 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
     }
 
     public Expr getExpr() {
@@ -119,6 +125,17 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(modifiers);
+      children.add(ident);
+      if (typeAnnotation != null) {
+        children.add(typeAnnotation);
+      }
+      children.add(expr);
+      return children;
     }
 
     public List<Modifier> getModifiers() {
@@ -211,6 +228,14 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(modifiers);
+      children.add(ident);
+      children.addAll(bodyList);
+      return children;
     }
 
     public List<Modifier> getModifiers() {
@@ -312,6 +337,21 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(modifiers);
+      children.add(ident);
+      if (typeParameterList != null) {
+        children.add(typeParameterList);
+      }
+      children.add(paramList);
+      if (typeAnnotation != null) {
+        children.add(typeAnnotation);
+      }
+      children.add(expr);
+      return children;
     }
 
     public List<Modifier> getModifiers() {
@@ -423,6 +463,11 @@ public sealed interface ObjectMemberNode extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(pred, expr);
+    }
+
     public Expr getPred() {
       return pred;
     }
@@ -486,6 +531,14 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(bodyList.size() + 1);
+      children.add(key);
+      children.addAll(bodyList);
+      return children;
     }
 
     public Expr getKey() {
@@ -558,6 +611,11 @@ public sealed interface ObjectMemberNode extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(key, value);
+    }
+
     public Expr getKey() {
       return key;
     }
@@ -623,6 +681,14 @@ public sealed interface ObjectMemberNode extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(bodyList.size() + 1);
+      children.add(key);
+      children.addAll(bodyList);
+      return children;
+    }
+
     public Expr getKey() {
       return key;
     }
@@ -683,6 +749,11 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
     }
 
     public Expr getExpr() {
@@ -758,6 +829,17 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      children.add(cond);
+      children.add(body);
+      if (elseClause != null) {
+        children.add(elseClause);
+      }
+      return children;
     }
 
     public Expr getCond() {
@@ -844,6 +926,18 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      children.add(p1);
+      if (p2 != null) {
+        children.add(p2);
+      }
+      children.add(expr);
+      children.add(body);
+      return children;
     }
 
     public Parameter getP1() {

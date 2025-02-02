@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.List;
 import org.pkl.core.newparser.Span;
 
 public interface Node {
@@ -23,6 +24,8 @@ public interface Node {
   Node parent();
 
   void setParent(Node parent);
+
+  List<Node> children();
 
   default String text(char[] source) {
     return new String(source, span().charIndex(), span().length());

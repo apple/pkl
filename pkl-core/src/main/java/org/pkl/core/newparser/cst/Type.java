@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -43,6 +44,11 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -92,6 +98,11 @@ public sealed interface Type extends Node {
     }
 
     @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
+    @Override
     public String toString() {
       return "NothingType{" + "span=" + span + '}';
     }
@@ -135,6 +146,11 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -183,6 +199,11 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(str);
     }
 
     public StringConstant getStr() {
@@ -242,6 +263,14 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(args.size() + 1);
+      children.add(name);
+      children.addAll(args);
+      return children;
     }
 
     public QualifiedIdent getName() {
@@ -304,6 +333,11 @@ public sealed interface Type extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(type);
+    }
+
     public Type getType() {
       return type;
     }
@@ -356,6 +390,11 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(type);
     }
 
     public Type getType() {
@@ -415,6 +454,14 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(expr.size() + 1);
+      children.add(type);
+      children.addAll(expr);
+      return children;
     }
 
     public Type getType() {
@@ -477,6 +524,11 @@ public sealed interface Type extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(type);
+    }
+
     public Type getType() {
       return type;
     }
@@ -532,6 +584,11 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(left, right);
     }
 
     public Type getLeft() {
@@ -597,6 +654,14 @@ public sealed interface Type extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>(args.size() + 1);
+      children.addAll(args);
+      children.add(ret);
+      return children;
     }
 
     public List<Type> getArgs() {

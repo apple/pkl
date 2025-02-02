@@ -52,6 +52,14 @@ public class Annotation implements Node {
     this.parent = parent;
   }
 
+  @Override
+  public List<Node> children() {
+    if (body == null) {
+      return List.of(name);
+    }
+    return List.of(name, body);
+  }
+
   public QualifiedIdent getName() {
     return name;
   }

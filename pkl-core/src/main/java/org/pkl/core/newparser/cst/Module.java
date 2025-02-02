@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -79,6 +80,20 @@ public final class Module implements Node {
   @Override
   public void setParent(Node parent) {
     this.parent = parent;
+  }
+
+  @Override
+  public List<Node> children() {
+    var children = new ArrayList<Node>();
+    if (decl != null) {
+      children.add(decl);
+    }
+    children.addAll(imports);
+    children.addAll(classes);
+    children.addAll(typeAliases);
+    children.addAll(properties);
+    children.addAll(methods);
+    return children;
   }
 
   public @Nullable ModuleDecl getDecl() {

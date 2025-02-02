@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
@@ -41,6 +42,11 @@ public sealed interface StringConstantPart extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -89,6 +95,11 @@ public sealed interface StringConstantPart extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     public String getStr() {
@@ -143,6 +154,11 @@ public sealed interface StringConstantPart extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
     public String getEscape() {
       return escape;
     }
@@ -193,6 +209,11 @@ public sealed interface StringConstantPart extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     public EscapeType getType() {

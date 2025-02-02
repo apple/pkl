@@ -15,6 +15,8 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -44,6 +46,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -93,6 +100,11 @@ public sealed interface Expr extends Node {
     }
 
     @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
+    @Override
     public String toString() {
       return "Outer{" + "span=" + span + '}';
     }
@@ -136,6 +148,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -185,6 +202,11 @@ public sealed interface Expr extends Node {
     }
 
     @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
+    @Override
     public String toString() {
       return "NullLiteral{" + "span=" + span + '}';
     }
@@ -230,6 +252,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     public boolean isB() {
@@ -284,6 +311,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
     public String getNumber() {
       return number;
     }
@@ -334,6 +366,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     public String getNumber() {
@@ -388,6 +425,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(strParts);
     }
 
     public StringConstantParts getStrParts() {
@@ -449,6 +491,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return Collections.unmodifiableList(parts);
     }
 
     public List<StringPart> getParts() {
@@ -532,6 +579,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return Collections.unmodifiableList(parts);
+    }
+
     public List<StringPart> getParts() {
       return parts;
     }
@@ -606,13 +658,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
 
     @Override
     public String toString() {
-      return "Throw{" + "expr=" + expr + ", span=" + span + '}';
+      return "Throw{expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -660,6 +717,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -697,6 +759,8 @@ public sealed interface Expr extends Node {
       this.importStr = importStr;
       this.isGlob = isGlob;
       this.span = span;
+
+      importStr.setParent(this);
     }
 
     @Override
@@ -712,6 +776,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(importStr);
     }
 
     public StringConstant getImportStr() {
@@ -781,6 +850,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -833,6 +907,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
     }
 
     public Expr getExpr() {
@@ -889,13 +968,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
 
     @Override
     public String toString() {
-      return "ReadNull{" + "expr=" + expr + ", span=" + span + '}';
+      return "ReadNull{expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -946,6 +1030,14 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      if (argumentList == null) {
+        return List.of(ident);
+      }
+      return List.of(ident, argumentList);
     }
 
     public Ident getIdent() {
@@ -1028,6 +1120,17 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      children.add(expr);
+      children.add(ident);
+      if (argumentList != null) {
+        children.add(argumentList);
+      }
+      return children;
     }
 
     public Expr getExpr() {
@@ -1116,6 +1219,16 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      children.add(ident);
+      if (argumentList != null) {
+        children.add(argumentList);
+      }
+      return children;
+    }
+
     public Ident getIdent() {
       return ident;
     }
@@ -1183,13 +1296,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(arg);
+    }
+
     public Expr getArg() {
       return arg;
     }
 
     @Override
     public String toString() {
-      return "SuperSubscript{" + "arg=" + arg + ", span=" + span + '}';
+      return "SuperSubscript{arg=" + arg + ", span=" + span + '}';
     }
 
     @Override
@@ -1240,6 +1358,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr, arg);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1250,7 +1373,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Subscript{" + "expr=" + expr + ", arg=" + arg + ", span=" + span + '}';
+      return "Subscript{expr=" + expr + ", arg=" + arg + ", span=" + span + '}';
     }
 
     @Override
@@ -1306,6 +1429,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(cond, then, els);
+    }
+
     public Expr getCond() {
       return cond;
     }
@@ -1320,7 +1448,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "If{" + "cond=" + cond + ", then=" + then + ", els=" + els + ", span=" + span + '}';
+      return "If{cond=" + cond + ", then=" + then + ", els=" + els + ", span=" + span + '}';
     }
 
     @Override
@@ -1375,6 +1503,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(par, bindingExpr, expr);
     }
 
     public Parameter getPar() {
@@ -1454,6 +1587,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(parameterList, expr);
+    }
+
     public ParameterList getParameterList() {
       return parameterList;
     }
@@ -1521,13 +1659,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
 
     @Override
     public String toString() {
-      return "Parenthesized{" + "expr=" + expr + ", span=" + span + '}';
+      return "Parenthesized{expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1580,6 +1723,14 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      if (type != null) {
+        return List.of(type, body);
+      }
+      return List.of(body);
+    }
+
     public @Nullable Type getType() {
       return type;
     }
@@ -1594,7 +1745,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "New{" + "type=" + type + ", body=" + body + ", span=" + span + '}';
+      return "New{type=" + type + ", body=" + body + ", span=" + span + '}';
     }
 
     @Override
@@ -1647,6 +1798,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr, body);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1657,7 +1813,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "Amends{" + "expr=" + expr + ", body=" + body + ", span=" + span + '}';
+      return "Amends{expr=" + expr + ", body=" + body + ", span=" + span + '}';
     }
 
     @Override
@@ -1705,6 +1861,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
     }
 
     public Expr getExpr() {
@@ -1761,13 +1922,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
 
     @Override
     public String toString() {
-      return "UnaryMinus{" + "expr=" + expr + ", span=" + span + '}';
+      return "UnaryMinus{expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1815,13 +1981,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr);
+    }
+
     public Expr getExpr() {
       return expr;
     }
 
     @Override
     public String toString() {
-      return "LogicalNot{" + "expr=" + expr + ", span=" + span + '}';
+      return "LogicalNot{expr=" + expr + ", span=" + span + '}';
     }
 
     @Override
@@ -1872,6 +2043,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(left, right);
     }
 
     public Expr getLeft() {
@@ -1951,6 +2127,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr, type);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1961,7 +2142,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "TypeCheck{" + "expr=" + expr + ", type=" + type + ", span=" + span + '}';
+      return "TypeCheck{expr=" + expr + ", type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -2014,6 +2195,11 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of(expr, type);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -2024,7 +2210,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "TypeCast{" + "expr=" + expr + ", type=" + type + ", span=" + span + '}';
+      return "TypeCast{expr=" + expr + ", type=" + type + ", span=" + span + '}';
     }
 
     @Override
@@ -2073,13 +2259,18 @@ public sealed interface Expr extends Node {
       this.parent = parent;
     }
 
+    @Override
+    public List<Node> children() {
+      return List.of();
+    }
+
     public Operator getOp() {
       return op;
     }
 
     @Override
     public String toString() {
-      return "OperatorExpr{" + "op=" + op + ", span=" + span + '}';
+      return "OperatorExpr{op=" + op + ", span=" + span + '}';
     }
 
     @Override
@@ -2124,6 +2315,11 @@ public sealed interface Expr extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of(type);
     }
 
     public Type getType() {

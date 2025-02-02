@@ -15,6 +15,7 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
@@ -48,13 +49,18 @@ public class ArgumentList implements Node {
     this.parent = parent;
   }
 
+  @Override
+  public List<Node> children() {
+    return Collections.unmodifiableList(args);
+  }
+
   public List<Expr> getArgs() {
     return args;
   }
 
   @Override
   public String toString() {
-    return "ArgumentList{" + "args=" + args + ", span=" + span + '}';
+    return "ArgumentList{args=" + args + ", span=" + span + '}';
   }
 
   @Override

@@ -15,6 +15,8 @@
  */
 package org.pkl.core.newparser.cst;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
@@ -42,6 +44,11 @@ public sealed interface Parameter extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      return List.of();
     }
 
     @Override
@@ -97,6 +104,16 @@ public sealed interface Parameter extends Node {
     @Override
     public void setParent(Node parent) {
       this.parent = parent;
+    }
+
+    @Override
+    public List<Node> children() {
+      var children = new ArrayList<Node>();
+      children.add(ident);
+      if (typeAnnotation != null) {
+        children.add(typeAnnotation);
+      }
+      return children;
     }
 
     public Ident getIdent() {
