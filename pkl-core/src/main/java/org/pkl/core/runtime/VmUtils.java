@@ -485,6 +485,14 @@ public final class VmUtils {
     }
   }
 
+  public static byte checkByte(Object n) {
+    if (n instanceof Long l && l >= 0 && l <= 255) {
+      return l.byteValue();
+    }
+    CompilerDirectives.transferToInterpreter();
+    throw new VmExceptionBuilder().evalError("expectedByte", n).build();
+  }
+
   public static Source loadSource(ResolvedModuleKey resolvedKey) {
     try {
       var text = resolvedKey.loadSource();
