@@ -18,16 +18,8 @@ package org.pkl.core.newparser
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.extension
-import kotlin.io.path.readText
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
-import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Test
 import org.pkl.commons.walk
-import org.pkl.core.parser.antlr.PklLexer
-import org.pkl.core.parser.antlr.PklParser
 
 class ParserComparisonTest : ParserComparisonTestInterface {
 
@@ -57,38 +49,6 @@ class ParserComparisonTest : ParserComparisonTestInterface {
       """
         .trimIndent()
     )
-  }
-  
-  @Test
-  fun test2() {
-    val code = """
-      foo = "onetwothree"
-    """.trimIndent()
-    val parser = Parser()
-    val mod = parser.parseModule(code)
-    println(mod)
-  }
-
-  @OptIn(ExperimentalTime::class)
-  @Test
-  fun test() {
-    val snippets = getSnippets()
-    val elapsed2 = measureTime {
-      getSnippets().forEach { snippet ->
-        val lexer = PklLexer(ANTLRInputStream(snippet.readText()))
-        val parser = PklParser(CommonTokenStream(lexer))
-        parser.module()
-      }
-    }
-    println("ANTLR elapsed: ${elapsed2.toString(DurationUnit.MILLISECONDS)}")
-
-    val elapsed = measureTime {
-      snippets.forEach { snippet ->
-        val parser = Parser()
-        parser.parseModule(snippet.readText())
-      }
-    }
-    println("New parser elapsed: $elapsed")
   }
 
   override fun getSnippets(): List<Path> {

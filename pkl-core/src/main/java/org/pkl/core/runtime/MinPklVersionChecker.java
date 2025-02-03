@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.nodes.Node;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.pkl.core.Release;
 import org.pkl.core.Version;
-import org.pkl.core.parser.antlr.PklParser.*;
+import org.pkl.core.newparser.cst.Module;
+import org.pkl.core.newparser.cst.ObjectMemberNode.ObjectProperty;
 import org.pkl.core.util.Nullable;
 
 final class MinPklVersionChecker {
@@ -44,26 +42,25 @@ final class MinPklVersionChecker {
     }
   }
 
-  static void check(String moduleName, @Nullable ParserRuleContext ctx, @Nullable Node importNode) {
-    if (!(ctx instanceof ModuleContext moduleCtx)) return;
+  static void check(
+      String moduleName, @Nullable Module mod, @Nullable Node importNode, String source) {
+    if (mod == null) return;
 
-    var moduleDeclCtx = moduleCtx.moduleDecl();
-    if (moduleDeclCtx == null) return;
+    var moduleDecl = mod.getDecl();
+    if (moduleDecl == null) return;
 
-    for (var annCtx : moduleDeclCtx.annotation()) {
-      if (!Identifier.MODULE_INFO.toString().equals(getLastIdText(annCtx.type()))) continue;
+    for (var ann : moduleDecl.getAnnotations()) {
+      if (!Identifier.MODULE_INFO.toString().equals(ann.getName().text())) continue;
 
-      var objectBodyCtx = annCtx.objectBody();
-      if (objectBodyCtx == null) continue;
+      var objectBody = ann.getBody();
+      if (objectBody == null) continue;
 
-      for (var memberCtx : objectBodyCtx.objectMember()) {
-        if (!(memberCtx instanceof ObjectPropertyContext propertyCtx)) continue;
+      for (var member : objectBody.getMembers()) {
+        if (!(member instanceof ObjectProperty prop)) continue;
 
-        if (!Identifier.MIN_PKL_VERSION.toString().equals(getText(propertyCtx.Identifier())))
-          continue;
+        if (!Identifier.MIN_PKL_VERSION.toString().equals(prop.getIdent().getValue())) continue;
 
-        var versionText = getText(propertyCtx.expr());
-        if (versionText == null) continue;
+        var versionText = prop.getExpr().text(source.toCharArray());
 
         Version version;
         try {
@@ -76,20 +73,6 @@ final class MinPklVersionChecker {
         return;
       }
     }
-  }
-
-  private static @Nullable String getText(@Nullable RuleContext ruleCtx) {
-    return ruleCtx == null ? null : ruleCtx.getText();
-  }
-
-  private static @Nullable String getLastIdText(@Nullable TypeContext typeCtx) {
-    if (!(typeCtx instanceof DeclaredTypeContext declCtx)) return null;
-    var token = declCtx.qualifiedIdentifier().Identifier;
-    return token == null ? null : token.getText();
-  }
-
-  private static @Nullable String getText(@Nullable TerminalNode idCtx) {
-    return idCtx == null ? null : idCtx.getText();
   }
 
   private static void doCheck(

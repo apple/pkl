@@ -94,56 +94,64 @@ public class Parser {
     }
     var start = spanLookahead;
     Span end = null;
-    var header = parseEntryHeader();
     QualifiedIdent moduleName = null;
     ModuleDecl moduleDecl = null;
     var imports = new ArrayList<Import>();
-
-    if (lookahead == Token.MODULE) {
-      moduleName = parseModuleNameDecl();
-      end = moduleName.span();
-    }
-    var extendsOrAmendsDecl = parseExtendsAmendsDecl();
-    if (extendsOrAmendsDecl != null) {
-      end = extendsOrAmendsDecl.span();
-    }
-    if (moduleName != null || extendsOrAmendsDecl != null) {
-      moduleDecl =
-          new ModuleDecl(
-              header.docComment,
-              header.annotations,
-              header.modifiers,
-              moduleName,
-              extendsOrAmendsDecl,
-              start.endWith(end));
-      header = null;
-    }
-    // imports
-    while (lookahead == Token.IMPORT || lookahead == Token.IMPORT_STAR) {
-      if (header != null && !header.isEmpty()) {
-        throw parserError("wrongImportHeader");
-      }
-      var _import = parseImportDecl();
-      imports.add(_import);
-      end = _import.span();
-    }
-
-    // entries
     var classes = new ArrayList<Clazz>();
     var typeAliases = new ArrayList<TypeAlias>();
     var props = new ArrayList<ClassPropertyEntry>();
     var methods = new ArrayList<ClassMethod>();
-    if (header != null && !header.isEmpty()) {
-      end = parseModuleEntry(header, classes, typeAliases, props, methods);
-    }
+    try {
+      var header = parseEntryHeader();
 
-    while (lookahead != Token.EOF) {
-      header = parseEntryHeader();
-      end = parseModuleEntry(header, classes, typeAliases, props, methods);
+      if (lookahead == Token.MODULE) {
+        moduleName = parseModuleNameDecl();
+        end = moduleName.span();
+      }
+      var extendsOrAmendsDecl = parseExtendsAmendsDecl();
+      if (extendsOrAmendsDecl != null) {
+        end = extendsOrAmendsDecl.span();
+      }
+      if (moduleName != null || extendsOrAmendsDecl != null) {
+        moduleDecl =
+            new ModuleDecl(
+                header.docComment,
+                header.annotations,
+                header.modifiers,
+                moduleName,
+                extendsOrAmendsDecl,
+                start.endWith(end));
+        header = null;
+      }
+      // imports
+      while (lookahead == Token.IMPORT || lookahead == Token.IMPORT_STAR) {
+        if (header != null && !header.isEmpty()) {
+          throw parserError("wrongImportHeader");
+        }
+        var _import = parseImportDecl();
+        imports.add(_import);
+        end = _import.span();
+      }
+
+      // entries
+      if (header != null && !header.isEmpty()) {
+        end = parseModuleEntry(header, classes, typeAliases, props, methods);
+      }
+
+      while (lookahead != Token.EOF) {
+        header = parseEntryHeader();
+        end = parseModuleEntry(header, classes, typeAliases, props, methods);
+      }
+      assert end != null;
+      return new Module(
+          moduleDecl, imports, classes, typeAliases, props, methods, start.endWith(end));
+    } catch (ParserError pe) {
+      var spanEnd = end != null ? end : start;
+      pe.setPartialParseResult(
+          new Module(
+              moduleDecl, imports, classes, typeAliases, props, methods, start.endWith(spanEnd)));
+      throw pe;
     }
-    assert end != null;
-    return new Module(
-        moduleDecl, imports, classes, typeAliases, props, methods, start.endWith(end));
   }
 
   private QualifiedIdent parseModuleNameDecl() {
@@ -944,10 +952,7 @@ public class Parser {
         var body = parseObjectBody();
         return parseExprRest(new Expr.Amends(expr, body, expr.span().endWith(body.span())));
       }
-      throw new ParserError(
-          ErrorMessages.create(
-              "unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource())),
-          expr.span());
+      throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
     }
     // qualified access
     if (lookahead == Token.DOT || lookahead == Token.QDOT) {

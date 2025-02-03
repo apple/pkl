@@ -96,12 +96,12 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
       @Nullable Node importNode) {
     var parser = new Parser();
     Module moduleContext;
+    var sourceStr = source.getCharacters().toString();
     try {
-      moduleContext = parser.parseModule(source.getCharacters().toString());
+      moduleContext = parser.parseModule(sourceStr);
     } catch (ParserError e) {
       var moduleName = IoUtils.inferModuleName(moduleKey);
-      // TODO: return a partial result to check here
-      // MinPklVersionChecker.check(moduleName, e.getPartialParseResult(), importNode);
+      MinPklVersionChecker.check(moduleName, e.getPartialParseResult(), importNode, sourceStr);
       throw VmUtils.toVmException(e, source, moduleName);
     }
 

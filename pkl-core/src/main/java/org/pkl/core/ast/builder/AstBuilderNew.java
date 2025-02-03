@@ -2467,7 +2467,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
             if (typeAnn != null) {
               throw exceptionBuilder()
                   .evalError("nonLocalObjectPropertyCannotHaveTypeAnnotation")
-                  .withSourceSection(createSourceSection(typeAnn))
+                  .withSourceSection(createSourceSection(typeAnn.getType()))
                   .build();
             }
           }

@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.newparser;
+package org.pkl.core.newparser
 
-import org.pkl.core.newparser.cst.Module;
-import org.pkl.core.util.Nullable;
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
-public class ParserError extends RuntimeException {
-  private final Span span;
-  private @Nullable Module partialParseResult;
+class SpanTest {
 
-  public ParserError(String msg, Span span) {
-    super(msg);
-    this.span = span;
-  }
+  @Test
+  fun `endWith test`() {
+    var span1 = Span(10, 20)
+    var span2 = Span(20, 20)
+    assertThat(span1.endWith(span2)).isEqualTo(Span(10, 30))
 
-  public Span span() {
-    return span;
-  }
+    span1 = Span(10, 20)
+    span2 = Span(0, 40)
+    assertThat(span1.endWith(span2)).isEqualTo(Span(10, 30))
 
-  public void setPartialParseResult(@Nullable Module partialParseResult) {
-    this.partialParseResult = partialParseResult;
-  }
+    span1 = Span(10, 30)
+    span2 = Span(20, 20)
+    assertThat(span1.endWith(span2)).isEqualTo(Span(10, 30))
 
-  public @Nullable Module getPartialParseResult() {
-    return partialParseResult;
+    span1 = Span(10, 30)
+    span2 = Span(20, 5)
+    assertThat(span1.endWith(span2)).isEqualTo(Span(10, 15))
   }
 }
