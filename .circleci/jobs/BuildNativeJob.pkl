@@ -24,7 +24,7 @@ arch: "amd64"|"aarch64"
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean = false
 
-javaVersion = "17.0"
+javaVersion = "21.0"
 
 local setupLinuxEnvironment: Config.RunStep =
   let (muslVersion = "1.2.2")

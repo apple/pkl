@@ -19,7 +19,7 @@ import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
 
 local self = this
 
-javaVersion = "17.0"
+javaVersion = "21.0"
 
 command: String
 
