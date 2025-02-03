@@ -31,3 +31,6 @@ public final class org/pkl/commons/UrisKt {
 	public static final fun toPath (Ljava/net/URI;)Ljava/nio/file/Path;
 }
 
+public abstract interface annotation class org/pkl/commons/annotations/PklExperimental : java/lang/annotation/Annotation {
+}
+
