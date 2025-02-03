@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.ByteArrayOutputStream
+import org.gradle.kotlin.dsl.support.serviceOf
+
 plugins {
   pklAllProjects
   pklKotlinLibrary
@@ -50,6 +53,9 @@ val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
 dependencies {
   compileOnly(libs.svm)
+  compileOnly(libs.truffleSvm)
+  implementation(libs.truffleRuntime)
+  compileOnly(libs.graalSdk)
 
   // CliEvaluator exposes PClass
   api(projects.pklCore)
@@ -81,7 +87,10 @@ dependencies {
   stagedWindowsAmd64Executable(executableDir("pkl-windows-amd64.exe"))
 }
 
-tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.cli.Main") } }
+tasks.jar {
+  manifest.attributes +=
+    mapOf("Main-Class" to "org.pkl.cli.Main", "Add-Exports" to buildInfo.jpmsExportsForJarManifest)
+}
 
 tasks.javadoc { enabled = false }
 
@@ -121,33 +130,95 @@ val testJavaExecutable by
         (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
   }
 
-tasks.check { dependsOn(testJavaExecutable) }
+// Setup `testJavaExecutable` tasks for multi-JDK testing.
+val testJavaExecutableOnOtherJdks =
+  if (buildInfo.multiJdkTesting) {
+    buildInfo.multiJdkTestingWith(testJavaExecutable)
+  } else {
+    emptyList()
+  }
 
-// 0.14 Java executable was broken because javaExecutable.jvmArgs wasn't commented out.
-// To catch this and similar problems, test that Java executable starts successfully.
-val testStartJavaExecutable by
-  tasks.registering(Exec::class) {
+// Prepare a run of the fat JAR, optionally with a specific Java launcher.
+private fun setupJavaExecutableRun(
+  name: String,
+  args: Array<String>,
+  launcher: Provider<JavaLauncher>? = null,
+  configurator: Exec.() -> Unit = {},
+) =
+  tasks.register(name, Exec::class) {
     dependsOn(javaExecutable)
-    val outputFile =
-      layout.buildDirectory.file(
-        "testStartJavaExecutable"
-      ) // dummy output to satisfy up-to-date check
+    val outputFile = layout.buildDirectory.file(name) // dummy output to satisfy up-to-date check
     outputs.file(outputFile)
 
-    if (buildInfo.os.isWindows) {
-      executable = "java"
-      args("-jar", javaExecutable.get().outputs.files.singleFile.toString(), "--version")
-    } else {
-      executable = javaExecutable.get().outputs.files.singleFile.toString()
-      args("--version")
-    }
+    executable =
+      when (launcher) {
+        null -> "java"
+        else -> launcher.get().executablePath.asFile.absolutePath
+      }
+
+    args("-jar", javaExecutable.get().outputs.files.singleFile.toString(), *args)
 
     doFirst { outputFile.get().asFile.delete() }
 
     doLast { outputFile.get().asFile.writeText("OK") }
+
+    configurator()
   }
 
-tasks.check { dependsOn(testStartJavaExecutable) }
+// 0.14 Java executable was broken because javaExecutable.jvmArgs wasn't commented out.
+// To catch this and similar problems, test that Java executable starts successfully.
+val testStartJavaExecutable by
+  setupJavaExecutableRun("testStartJavaExecutable", arrayOf("--version"))
+
+// Setup `testStartJavaExecutable` tasks for multi-JDK testing.
+val testStartJavaExecutableOnOtherJdks =
+  if (buildInfo.multiJdkTesting) {
+    buildInfo.jdkTestRange.map { jdkTarget ->
+      setupJavaExecutableRun(
+        "testStartJavaExecutableJdk${jdkTarget.asInt()}",
+        arrayOf("--version"),
+        serviceOf<JavaToolchainService>().launcherFor { languageVersion = jdkTarget },
+      )
+    }
+  } else {
+    emptyList()
+  }
+
+val evalTestFlags = arrayOf("eval", "./.circleci/config.pkl")
+
+fun Exec.useRootDirAndSuppressOutput() {
+  workingDir = rootProject.layout.projectDirectory.asFile
+  standardOutput = ByteArrayOutputStream() // we only care that this exec doesn't fail
+}
+
+// 0.28 Preparing for JDK21 toolchains revealed that `testStartJavaExecutable` may pass, even though
+// the evaluator fails. To catch this, we need to test the evaluator. We render the CircleCI config
+// as a realistic test of the fat JAR.
+val testEvalJavaExecutable by
+  setupJavaExecutableRun("testEvalJavaExecutable", evalTestFlags) { useRootDirAndSuppressOutput() }
+
+// Run the same evaluator tests on all configured JDK test versions.
+val testEvalJavaExecutableOnOtherJdks =
+  buildInfo.jdkTestRange.map { jdkTarget ->
+    setupJavaExecutableRun(
+      "testEvalJavaExecutableJdk${jdkTarget.asInt()}",
+      evalTestFlags,
+      serviceOf<JavaToolchainService>().launcherFor { languageVersion = jdkTarget },
+    ) {
+      useRootDirAndSuppressOutput()
+    }
+  }
+
+tasks.check {
+  dependsOn(
+    testJavaExecutable,
+    testStartJavaExecutable,
+    testJavaExecutableOnOtherJdks,
+    testStartJavaExecutableOnOtherJdks,
+    testEvalJavaExecutable,
+    testEvalJavaExecutableOnOtherJdks,
+  )
+}
 
 fun Exec.configureExecutable(
   graalVm: BuildInfo.GraalVm,
@@ -174,11 +245,13 @@ fun Exec.configureExecutable(
   executable = "${graalVm.baseDir}/bin/$nativeImageCommandName"
 
   // JARs to exclude from the class path for the native-image build.
-  val exclusions = listOf(libs.truffleApi, libs.graalSdk).map { it.get().module.name }
+  val exclusions = listOf(libs.graalSdk).map { it.get().module.name }
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
   argumentProviders.add(
     CommandLineArgumentProvider {
       buildList {
+        // must be emitted before any experimental options are used
+        add("-H:+UnlockExperimentalVMOptions")
         // currently gives a deprecation warning, but we've been told
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         add("--initialize-at-build-time=")
@@ -189,9 +262,9 @@ fun Exec.configureExecutable(
         add("-H:IncludeResources=org/jline/utils/.*")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
-        add("--macro:truffle")
         add("-H:Class=org.pkl.cli.Main")
-        add("-H:Name=${outputFile.get().asFile.name}")
+        add("-o")
+        add(outputFile.get().asFile.name)
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to
         // compensate for Truffle's own nodes)
         add("-H:MaxRuntimeCompileMethods=1800")
@@ -206,7 +279,11 @@ fun Exec.configureExecutable(
         if (!buildInfo.isReleaseBuild) {
           add("-Ob")
         }
-        add("-march=compatibility")
+        if (buildInfo.isNativeArch) {
+          add("-march=native")
+        } else {
+          add("-march=compatibility")
+        }
         // native-image rejects non-existing class path entries -> filter
         add("--class-path")
         val pathInput =

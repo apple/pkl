@@ -105,18 +105,13 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
 }
 
 local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
-  ["gradle-check-jdk17"] {
-    javaVersion = "17.0"
-    isRelease = false
-    os = "linux"
-  }
-  ["gradle-check-jdk21"] {
+  ["gradle-check"] {
     javaVersion = "21.0"
     isRelease = false
     os = "linux"
   }
-  ["gradle-check-jdk17-windows"] {
-    javaVersion = "17.0"
+  ["gradle-check-windows"] {
+    javaVersion = "21.0"
     isRelease = false
     os = "windows"
   }

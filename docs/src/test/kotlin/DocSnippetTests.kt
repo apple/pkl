@@ -150,6 +150,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
     }
   }
 
+  @Suppress("DEPRECATION")
   private fun parseAsciidoc(docDescriptor: Descriptor.Path, selectors: List<UniqueIdSelector>) {
     var line = ""
     var prevLine = ""

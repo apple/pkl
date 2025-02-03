@@ -40,8 +40,6 @@ val relocations =
   mapOf(
     // pkl-core dependencies
     "org.antlr.v4." to "org.pkl.thirdparty.antlr.v4.",
-    "com.oracle.truffle" to "org.pkl.thirdparty.truffle",
-    "org.graalvm." to "org.pkl.thirdparty.graalvm.",
     "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
     "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
     "org.msgpack." to "org.pkl.thirdparty.msgpack.",
@@ -71,7 +69,7 @@ val relocations =
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
   )
 
-val nonRelocations = listOf("com/oracle/truffle/")
+val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/")
 
 tasks.shadowJar {
   inputs.property("relocations", relocations)
@@ -85,7 +83,23 @@ tasks.shadowJar {
 
   exclude("META-INF/maven/**")
   exclude("META-INF/upgrade/**")
-  exclude("META-INF/versions/19/**")
+
+  val info = project.extensions.getByType<BuildInfo>()
+  val minimumJvmTarget = JavaVersion.toVersion(info.jvmTarget)
+
+  manifest.attributes(
+    // Certain exports need to be added to the Java modulepath for Java 17 to work properly with
+    // shaded JARs. See the following link for an explanation of this syntax:
+    // https://bugs.openjdk.org/browse/JDK-8335225
+    "Add-Exports" to info.jpmsExportsForJarManifest
+  )
+
+  // effectively, this results in calls excluding:
+  // `META-INF/versions/{18-25}/**`
+  // at the time of this writing; multi-release JARs beyond JDK 21 break the current
+  // version of the Shadow plugin, and aren't needed for Truffle's use by Pkl.
+  JavaVersionRange.startingAt(JavaLanguageVersion.of(minimumJvmTarget.majorVersion.toInt() + 1))
+    .forEach { exclude("META-INF/versions/${it.asInt()}/**") }
 
   // org.antlr.v4.runtime.misc.RuleDependencyProcessor
   exclude("META-INF/services/javax.annotation.processing.Processor")

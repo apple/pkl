@@ -47,6 +47,7 @@ fixed gradleArgs = new Listing {
   "--info"
   "--stacktrace"
   "-DtestReportsDir=${HOME}/test-results"
+  "-DpklMultiJdkTesting=true"
   when (isRelease) {
     "-DreleaseBuild=true"
   }
