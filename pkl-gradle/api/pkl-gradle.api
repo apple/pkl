@@ -1,0 +1,243 @@
+public abstract interface class org/pkl/gradle/PklAnalyzerCommands {
+	public abstract fun getImports ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public fun imports (Lorg/gradle/api/Action;)V
+}
+
+public abstract interface class org/pkl/gradle/PklExtension {
+	public fun analyzers (Lorg/gradle/api/Action;)V
+	public fun evaluators (Lorg/gradle/api/Action;)V
+	public abstract fun getAnalyzers ()Lorg/pkl/gradle/PklAnalyzerCommands;
+	public abstract fun getEvaluators ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public abstract fun getJavaCodeGenerators ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public abstract fun getKotlinCodeGenerators ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public abstract fun getPkldocGenerators ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public abstract fun getProject ()Lorg/pkl/gradle/PklProjectCommands;
+	public abstract fun getTests ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public fun javaCodeGenerators (Lorg/gradle/api/Action;)V
+	public fun kotlinCodeGenerators (Lorg/gradle/api/Action;)V
+	public fun pkldocGenerators (Lorg/gradle/api/Action;)V
+	public fun project (Lorg/gradle/api/Action;)V
+	public fun tests (Lorg/gradle/api/Action;)V
+}
+
+public class org/pkl/gradle/PklPlugin : org/gradle/api/Plugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public abstract interface class org/pkl/gradle/PklProjectCommands {
+	public abstract fun getPackagers ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public abstract fun getResolvers ()Lorg/gradle/api/NamedDomainObjectContainer;
+	public fun packagers (Lorg/gradle/api/Action;)V
+	public fun resolvers (Lorg/gradle/api/Action;)V
+}
+
+public abstract interface class org/pkl/gradle/spec/AnalyzeImportsSpec : org/pkl/gradle/spec/ModulesSpec {
+	public abstract fun getOutputFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputFormat ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/BasePklSpec {
+	public abstract fun getAllowedModules ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getAllowedResources ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getColor ()Lorg/gradle/api/provider/Property;
+	public abstract fun getEnvironmentVariables ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getEvalRootDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getEvalTimeout ()Lorg/gradle/api/provider/Property;
+	public abstract fun getExternalProperties ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getHttpNoProxy ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getHttpProxy ()Lorg/gradle/api/provider/Property;
+	public abstract fun getModuleCacheDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getModulePath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getNoCache ()Lorg/gradle/api/provider/Property;
+	public abstract fun getSettingsModule ()Lorg/gradle/api/provider/Property;
+	public abstract fun getTestPort ()Lorg/gradle/api/provider/Property;
+	public abstract fun getTransitiveModules ()Lorg/gradle/api/file/ConfigurableFileCollection;
+}
+
+public abstract interface class org/pkl/gradle/spec/CodeGenSpec : org/pkl/gradle/spec/ModulesSpec {
+	public abstract fun getGenerateSpringBootConfig ()Lorg/gradle/api/provider/Property;
+	public abstract fun getImplementSerializable ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIndent ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getRenames ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getSourceSet ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/EvalSpec : org/pkl/gradle/spec/ModulesSpec {
+	public abstract fun getExpression ()Lorg/gradle/api/provider/Property;
+	public abstract fun getModuleOutputSeparator ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMultipleFileOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOutputFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputFormat ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/JavaCodeGenSpec : org/pkl/gradle/spec/CodeGenSpec {
+	public abstract fun getGenerateGetters ()Lorg/gradle/api/provider/Property;
+	public abstract fun getGenerateJavadoc ()Lorg/gradle/api/provider/Property;
+	public abstract fun getNonNullAnnotation ()Lorg/gradle/api/provider/Property;
+	public abstract fun getParamsAnnotation ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/KotlinCodeGenSpec : org/pkl/gradle/spec/CodeGenSpec {
+	public abstract fun getGenerateKdoc ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/ModulesSpec : org/pkl/gradle/spec/BasePklSpec {
+	public abstract fun getNoProject ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOmitProjectSettings ()Lorg/gradle/api/provider/Property;
+	public abstract fun getProjectDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getSourceModules ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getTransitiveModules ()Lorg/gradle/api/file/ConfigurableFileCollection;
+}
+
+public abstract interface class org/pkl/gradle/spec/PkldocSpec : org/pkl/gradle/spec/ModulesSpec {
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public abstract interface class org/pkl/gradle/spec/ProjectPackageSpec : org/pkl/gradle/spec/BasePklSpec {
+	public abstract fun getJunitReportsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOutputPath ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOverwrite ()Lorg/gradle/api/provider/Property;
+	public abstract fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getSkipPublishCheck ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract interface class org/pkl/gradle/spec/ProjectResolveSpec : org/pkl/gradle/spec/BasePklSpec {
+	public abstract fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+}
+
+public abstract interface class org/pkl/gradle/spec/TestSpec : org/pkl/gradle/spec/ModulesSpec {
+	public abstract fun getJunitReportsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOverwrite ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/AnalyzeImportsTask : org/pkl/gradle/task/ModulesTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getOutputFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputFormat ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/BasePklTask : org/gradle/api/DefaultTask {
+	protected field cachedOptions Lorg/pkl/commons/cli/CliBaseOptions;
+	public fun <init> ()V
+	protected abstract fun doRunTask ()V
+	public abstract fun getAllowedModules ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getAllowedResources ()Lorg/gradle/api/provider/ListProperty;
+	protected fun getCliBaseOptions ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public abstract fun getColor ()Lorg/gradle/api/provider/Property;
+	public abstract fun getEnvironmentVariables ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getEvalRootDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getEvalRootDirPath ()Lorg/gradle/api/provider/Provider;
+	public abstract fun getEvalTimeout ()Lorg/gradle/api/provider/Property;
+	public abstract fun getExternalProperties ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getHttpNoProxy ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getHttpProxy ()Lorg/gradle/api/provider/Property;
+	public abstract fun getModuleCacheDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getModulePath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getNoCache ()Lorg/gradle/api/provider/Property;
+	protected abstract fun getObjects ()Lorg/gradle/api/model/ObjectFactory;
+	public fun getParsedSettingsModule ()Lorg/gradle/api/provider/Provider;
+	protected abstract fun getProviders ()Lorg/gradle/api/provider/ProviderFactory;
+	public abstract fun getSettingsModule ()Lorg/gradle/api/provider/Property;
+	public fun getSettingsModuleFile ()Lorg/gradle/api/provider/Provider;
+	public fun getSettingsModuleUri ()Lorg/gradle/api/provider/Provider;
+	protected fun getSourceModulesAsUris ()Ljava/util/List;
+	public abstract fun getTestPort ()Lorg/gradle/api/provider/Property;
+	protected fun mapAndGetOrNull (Lorg/gradle/api/provider/Provider;Ljava/util/function/Function;)Ljava/lang/Object;
+	protected fun parseModulePath ()Ljava/util/List;
+	protected fun patternsFromStrings (Ljava/util/List;)Ljava/util/List;
+	public fun runTask ()V
+}
+
+public abstract class org/pkl/gradle/task/CodeGenTask : org/pkl/gradle/task/ModulesTask {
+	public fun <init> ()V
+	public abstract fun getGenerateSpringBootConfig ()Lorg/gradle/api/provider/Property;
+	public abstract fun getImplementSerializable ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIndent ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getRenames ()Lorg/gradle/api/provider/MapProperty;
+}
+
+public abstract class org/pkl/gradle/task/EvalTask : org/pkl/gradle/task/ModulesTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public fun getEffectiveOutputDirs ()Lorg/gradle/api/file/FileCollection;
+	public fun getEffectiveOutputFiles ()Lorg/gradle/api/file/FileCollection;
+	public abstract fun getExpression ()Lorg/gradle/api/provider/Property;
+	public abstract fun getModuleOutputSeparator ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMultipleFileOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOutputFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputFormat ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/JavaCodeGenTask : org/pkl/gradle/task/CodeGenTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getGenerateGetters ()Lorg/gradle/api/provider/Property;
+	public abstract fun getGenerateJavadoc ()Lorg/gradle/api/provider/Property;
+	public abstract fun getNonNullAnnotation ()Lorg/gradle/api/provider/Property;
+	public abstract fun getParamsAnnotation ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/KotlinCodeGenTask : org/pkl/gradle/task/CodeGenTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getGenerateKdoc ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/ModulesTask : org/pkl/gradle/task/BasePklTask {
+	public fun <init> ()V
+	protected fun getCliBaseOptions ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public abstract fun getNoProject ()Lorg/gradle/api/provider/Property;
+	public abstract fun getOmitProjectSettings ()Lorg/gradle/api/provider/Property;
+	public fun getParsedSourceModules ()Lorg/gradle/api/provider/Provider;
+	public abstract fun getProjectDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getProjectDirPath ()Lorg/gradle/api/provider/Provider;
+	public fun getSourceModuleFiles ()Lorg/gradle/api/file/FileCollection;
+	public fun getSourceModuleUris ()Lorg/gradle/api/provider/Provider;
+	public abstract fun getSourceModules ()Lorg/gradle/api/provider/ListProperty;
+	protected fun getSourceModulesAsUris ()Ljava/util/List;
+	public abstract fun getTransitiveModules ()Lorg/gradle/api/provider/ListProperty;
+	public fun runTask ()V
+}
+
+public abstract class org/pkl/gradle/task/PkldocTask : org/pkl/gradle/task/ModulesTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getOutputDir ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public abstract class org/pkl/gradle/task/ProjectPackageTask : org/pkl/gradle/task/BasePklTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getJunitReportsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOutputPath ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOverwrite ()Lorg/gradle/api/provider/Property;
+	public abstract fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getSkipPublishCheck ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class org/pkl/gradle/task/ProjectResolveTask : org/pkl/gradle/task/BasePklTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getProjectPklFiles ()Lorg/gradle/api/provider/Provider;
+}
+
+public abstract class org/pkl/gradle/task/TestTask : org/pkl/gradle/task/ModulesTask {
+	public fun <init> ()V
+	protected fun doRunTask ()V
+	public abstract fun getJunitReportsDir ()Lorg/gradle/api/file/DirectoryProperty;
+	public abstract fun getOverwrite ()Lorg/gradle/api/provider/Property;
+}
+
+public class org/pkl/gradle/utils/PluginUtils {
+	public static fun parseModuleNotation (Ljava/lang/Object;)Ljava/lang/Object;
+	public static fun parseModuleNotationToUri (Ljava/lang/Object;)Ljava/net/URI;
+	public static fun parsedModuleNotationToUri (Ljava/lang/Object;)Ljava/net/URI;
+}
+

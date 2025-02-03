@@ -1,0 +1,204 @@
+public final class org/pkl/server/CloseEvaluator : org/pkl/core/messaging/Message$Client$OneWay {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/pkl/server/CloseEvaluator;
+	public static synthetic fun copy$default (Lorg/pkl/server/CloseEvaluator;JILjava/lang/Object;)Lorg/pkl/server/CloseEvaluator;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvaluatorId ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public final class org/pkl/server/CreateEvaluatorRequest : org/pkl/core/messaging/Message$Client$Request {
+	public fun <init> (JLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/time/Duration;Ljava/nio/file/Path;Ljava/nio/file/Path;Ljava/lang/String;Lorg/pkl/server/Project;Lorg/pkl/server/Http;Ljava/util/Map;Ljava/util/Map;)V
+	public final fun component10 ()Ljava/nio/file/Path;
+	public final fun component11 ()Ljava/nio/file/Path;
+	public final fun component12 ()Ljava/lang/String;
+	public final fun component13 ()Lorg/pkl/server/Project;
+	public final fun component14 ()Lorg/pkl/server/Http;
+	public final fun component15 ()Ljava/util/Map;
+	public final fun component16 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/Map;
+	public final fun component8 ()Ljava/util/Map;
+	public final fun component9 ()Ljava/time/Duration;
+	public final fun copy (JLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/time/Duration;Ljava/nio/file/Path;Ljava/nio/file/Path;Ljava/lang/String;Lorg/pkl/server/Project;Lorg/pkl/server/Http;Ljava/util/Map;Ljava/util/Map;)Lorg/pkl/server/CreateEvaluatorRequest;
+	public static synthetic fun copy$default (Lorg/pkl/server/CreateEvaluatorRequest;JLjava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/time/Duration;Ljava/nio/file/Path;Ljava/nio/file/Path;Ljava/lang/String;Lorg/pkl/server/Project;Lorg/pkl/server/Http;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/pkl/server/CreateEvaluatorRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowedModules ()Ljava/util/List;
+	public final fun getAllowedResources ()Ljava/util/List;
+	public final fun getCacheDir ()Ljava/nio/file/Path;
+	public final fun getClientModuleReaders ()Ljava/util/List;
+	public final fun getClientResourceReaders ()Ljava/util/List;
+	public final fun getEnv ()Ljava/util/Map;
+	public final fun getExternalModuleReaders ()Ljava/util/Map;
+	public final fun getExternalResourceReaders ()Ljava/util/Map;
+	public final fun getHttp ()Lorg/pkl/server/Http;
+	public final fun getModulePaths ()Ljava/util/List;
+	public final fun getOutputFormat ()Ljava/lang/String;
+	public final fun getProject ()Lorg/pkl/server/Project;
+	public final fun getProperties ()Ljava/util/Map;
+	public final fun getRootDir ()Ljava/nio/file/Path;
+	public final fun getTimeout ()Ljava/time/Duration;
+	public fun hashCode ()I
+	public fun requestId ()J
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public final class org/pkl/server/CreateEvaluatorResponse : org/pkl/core/messaging/Message$Server$Response {
+	public fun <init> (JLjava/lang/Long;Ljava/lang/String;)V
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (JLjava/lang/Long;Ljava/lang/String;)Lorg/pkl/server/CreateEvaluatorResponse;
+	public static synthetic fun copy$default (Lorg/pkl/server/CreateEvaluatorResponse;JLjava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lorg/pkl/server/CreateEvaluatorResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getEvaluatorId ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun requestId ()J
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public abstract interface class org/pkl/server/Dependency {
+	public abstract fun getPackageUri ()Ljava/net/URI;
+	public abstract fun getType ()Lorg/pkl/server/DependencyType;
+}
+
+public final class org/pkl/server/DependencyType : java/lang/Enum {
+	public static final field LOCAL Lorg/pkl/server/DependencyType;
+	public static final field REMOTE Lorg/pkl/server/DependencyType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/pkl/server/DependencyType;
+	public static fun values ()[Lorg/pkl/server/DependencyType;
+}
+
+public final class org/pkl/server/EvaluateRequest : org/pkl/core/messaging/Message$Client$Request {
+	public fun <init> (JJLjava/net/URI;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/net/URI;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (JJLjava/net/URI;Ljava/lang/String;Ljava/lang/String;)Lorg/pkl/server/EvaluateRequest;
+	public static synthetic fun copy$default (Lorg/pkl/server/EvaluateRequest;JJLjava/net/URI;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/pkl/server/EvaluateRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvaluatorId ()J
+	public final fun getExpr ()Ljava/lang/String;
+	public final fun getModuleText ()Ljava/lang/String;
+	public final fun getModuleUri ()Ljava/net/URI;
+	public fun hashCode ()I
+	public fun requestId ()J
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public final class org/pkl/server/EvaluateResponse : org/pkl/core/messaging/Message$Server$Response {
+	public fun <init> (JJ[BLjava/lang/String;)V
+	public final fun component2 ()J
+	public final fun component3 ()[B
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (JJ[BLjava/lang/String;)Lorg/pkl/server/EvaluateResponse;
+	public static synthetic fun copy$default (Lorg/pkl/server/EvaluateResponse;JJ[BLjava/lang/String;ILjava/lang/Object;)Lorg/pkl/server/EvaluateResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/String;
+	public final fun getEvaluatorId ()J
+	public final fun getResult ()[B
+	public fun hashCode ()I
+	public fun requestId ()J
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public final class org/pkl/server/Http {
+	public fun <init> ([BLorg/pkl/core/evaluatorSettings/PklEvaluatorSettings$Proxy;)V
+	public final fun component1 ()[B
+	public final fun component2 ()Lorg/pkl/core/evaluatorSettings/PklEvaluatorSettings$Proxy;
+	public final fun copy ([BLorg/pkl/core/evaluatorSettings/PklEvaluatorSettings$Proxy;)Lorg/pkl/server/Http;
+	public static synthetic fun copy$default (Lorg/pkl/server/Http;[BLorg/pkl/core/evaluatorSettings/PklEvaluatorSettings$Proxy;ILjava/lang/Object;)Lorg/pkl/server/Http;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaCertificates ()[B
+	public final fun getProxy ()Lorg/pkl/core/evaluatorSettings/PklEvaluatorSettings$Proxy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/server/LogMessage : org/pkl/core/messaging/Message$Server$OneWay {
+	public fun <init> (JILjava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()J
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (JILjava/lang/String;Ljava/lang/String;)Lorg/pkl/server/LogMessage;
+	public static synthetic fun copy$default (Lorg/pkl/server/LogMessage;JILjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/pkl/server/LogMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvaluatorId ()J
+	public final fun getFrameUri ()Ljava/lang/String;
+	public final fun getLevel ()I
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun type ()Lorg/pkl/core/messaging/Message$Type;
+}
+
+public final class org/pkl/server/Project : org/pkl/server/Dependency {
+	public fun <init> (Ljava/net/URI;Ljava/net/URI;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/net/URI;
+	public final fun component2 ()Ljava/net/URI;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/net/URI;Ljava/net/URI;Ljava/util/Map;)Lorg/pkl/server/Project;
+	public static synthetic fun copy$default (Lorg/pkl/server/Project;Ljava/net/URI;Ljava/net/URI;Ljava/util/Map;ILjava/lang/Object;)Lorg/pkl/server/Project;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDependencies ()Ljava/util/Map;
+	public fun getPackageUri ()Ljava/net/URI;
+	public final fun getProjectFileUri ()Ljava/net/URI;
+	public fun getType ()Lorg/pkl/server/DependencyType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/server/RemoteDependency : org/pkl/server/Dependency {
+	public fun <init> (Ljava/net/URI;Lorg/pkl/core/packages/Checksums;)V
+	public final fun component1 ()Ljava/net/URI;
+	public final fun component2 ()Lorg/pkl/core/packages/Checksums;
+	public final fun copy (Ljava/net/URI;Lorg/pkl/core/packages/Checksums;)Lorg/pkl/server/RemoteDependency;
+	public static synthetic fun copy$default (Lorg/pkl/server/RemoteDependency;Ljava/net/URI;Lorg/pkl/core/packages/Checksums;ILjava/lang/Object;)Lorg/pkl/server/RemoteDependency;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecksums ()Lorg/pkl/core/packages/Checksums;
+	public fun getPackageUri ()Ljava/net/URI;
+	public fun getType ()Lorg/pkl/server/DependencyType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/server/Server : java/lang/AutoCloseable {
+	public static final field Companion Lorg/pkl/server/Server$Companion;
+	public fun <init> (Lorg/pkl/core/messaging/MessageTransport;)V
+	public fun close ()V
+	public final fun start ()V
+}
+
+public final class org/pkl/server/Server$Companion {
+	public final fun stream (Ljava/io/InputStream;Ljava/io/OutputStream;)Lorg/pkl/server/Server;
+}
+
+public final class org/pkl/server/ServerMessagePackDecoder : org/pkl/core/messaging/BaseMessagePackDecoder {
+	public fun <init> (Ljava/io/InputStream;)V
+	public fun <init> (Lorg/msgpack/core/MessageUnpacker;)V
+}
+
+public final class org/pkl/server/ServerMessagePackEncoder : org/pkl/core/messaging/BaseMessagePackEncoder {
+	public fun <init> (Ljava/io/OutputStream;)V
+	public fun <init> (Lorg/msgpack/core/MessagePacker;)V
+}
+
+public final class org/pkl/server/UtilsKt {
+	public static final fun getUnderlying (Ljava/util/concurrent/Future;)Ljava/lang/Object;
+}
+

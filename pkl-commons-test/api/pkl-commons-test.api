@@ -1,0 +1,123 @@
+public final class org/pkl/commons/test/FakeHttpResponse : java/net/http/HttpResponse {
+	public static final field Companion Lorg/pkl/commons/test/FakeHttpResponse$Companion;
+	public field body Ljava/lang/Object;
+	public field headers Ljava/net/http/HttpHeaders;
+	public fun <init> ()V
+	public fun body ()Ljava/lang/Object;
+	public final fun getBody ()Ljava/lang/Object;
+	public final fun getHeaders ()Ljava/net/http/HttpHeaders;
+	public final fun getRequest ()Ljava/net/http/HttpRequest;
+	public final fun getStatusCode ()I
+	public final fun getUri ()Ljava/net/URI;
+	public final fun getVersion ()Ljava/net/http/HttpClient$Version;
+	public fun headers ()Ljava/net/http/HttpHeaders;
+	public fun previousResponse ()Ljava/util/Optional;
+	public fun request ()Ljava/net/http/HttpRequest;
+	public final fun setBody (Ljava/lang/Object;)V
+	public final fun setHeaders (Ljava/net/http/HttpHeaders;)V
+	public final fun setRequest (Ljava/net/http/HttpRequest;)V
+	public final fun setStatusCode (I)V
+	public final fun setUri (Ljava/net/URI;)V
+	public final fun setVersion (Ljava/net/http/HttpClient$Version;)V
+	public fun sslSession ()Ljava/util/Optional;
+	public fun statusCode ()I
+	public fun uri ()Ljava/net/URI;
+	public fun version ()Ljava/net/http/HttpClient$Version;
+}
+
+public final class org/pkl/commons/test/FakeHttpResponse$Companion {
+	public final fun withBody (Lkotlin/jvm/functions/Function1;)Lorg/pkl/commons/test/FakeHttpResponse;
+	public final fun withoutBody (Lkotlin/jvm/functions/Function1;)Lorg/pkl/commons/test/FakeHttpResponse;
+}
+
+public final class org/pkl/commons/test/FileTestUtils {
+	public static final field INSTANCE Lorg/pkl/commons/test/FileTestUtils;
+	public final fun getRootProjectDir ()Ljava/nio/file/Path;
+	public final fun getSelfSignedCertificate ()Ljava/nio/file/Path;
+	public final fun writeCertificateWithMissingLines (Ljava/nio/file/Path;)Ljava/nio/file/Path;
+}
+
+public final class org/pkl/commons/test/FileTestUtilsKt {
+	public static final fun listFilesRecursively (Ljava/nio/file/Path;)Ljava/util/List;
+}
+
+public final class org/pkl/commons/test/FilteringClassLoader : java/lang/ClassLoader {
+	public fun <init> (Ljava/lang/ClassLoader;Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract class org/pkl/commons/test/InputOutputTestEngine : org/junit/platform/engine/support/hierarchical/HierarchicalTestEngine {
+	public fun <init> ()V
+	protected fun afterAll ()V
+	protected fun beforeAll ()V
+	public synthetic fun createExecutionContext (Lorg/junit/platform/engine/ExecutionRequest;)Lorg/junit/platform/engine/support/hierarchical/EngineExecutionContext;
+	protected fun createExecutionContext (Lorg/junit/platform/engine/ExecutionRequest;)Lorg/pkl/commons/test/InputOutputTestEngine$ExecutionContext;
+	public fun discover (Lorg/junit/platform/engine/EngineDiscoveryRequest;Lorg/junit/platform/engine/UniqueId;)Lorg/junit/platform/engine/TestDescriptor;
+	protected abstract fun expectedOutputFileFor (Ljava/nio/file/Path;)Ljava/nio/file/Path;
+	protected abstract fun generateOutputFor (Ljava/nio/file/Path;)Lkotlin/Pair;
+	protected fun getExcludedTests ()Ljava/util/List;
+	public fun getId ()Ljava/lang/String;
+	protected fun getIncludedTests ()Ljava/util/List;
+	protected abstract fun getInputDir ()Ljava/nio/file/Path;
+	protected final fun getRootProjectDir ()Ljava/nio/file/Path;
+	protected abstract fun getTestClass ()Lkotlin/reflect/KClass;
+	protected abstract fun isInputFile ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/pkl/commons/test/InputOutputTestEngine$ExecutionContext : org/junit/platform/engine/support/hierarchical/EngineExecutionContext {
+	public fun <init> ()V
+}
+
+public final class org/pkl/commons/test/PackageServer : java/lang/AutoCloseable {
+	public static final field BIRDS_SHA Ljava/lang/String;
+	public static final field Companion Lorg/pkl/commons/test/PackageServer$Companion;
+	public static final field FRUIT_1_1_SHA Ljava/lang/String;
+	public static final field FRUIT_SHA Ljava/lang/String;
+	public fun <init> ()V
+	public fun close ()V
+	public final fun getPort ()I
+}
+
+public final class org/pkl/commons/test/PackageServer$Companion {
+	public final fun populateCacheDir (Ljava/nio/file/Path;)V
+	public final fun populateLegacyCacheDir (Ljava/nio/file/Path;)V
+}
+
+public final class org/pkl/commons/test/PklAssertionFailedError : org/opentest4j/AssertionFailedError {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/commons/test/PklExecutablePaths {
+	public static final field INSTANCE Lorg/pkl/commons/test/PklExecutablePaths;
+	public final fun getAll ()Ljava/util/List;
+	public final fun getAlpineAmd64 ()Ljava/nio/file/Path;
+	public final fun getExisting ()Ljava/util/List;
+	public final fun getFirstExisting ()Ljava/nio/file/Path;
+	public final fun getLinuxAarch64 ()Ljava/nio/file/Path;
+	public final fun getLinuxAmd64 ()Ljava/nio/file/Path;
+	public final fun getMacAarch64 ()Ljava/nio/file/Path;
+	public final fun getMacAmd64 ()Ljava/nio/file/Path;
+	public final fun getWindowsAmd64 ()Ljava/nio/file/Path;
+}
+
+public final class org/pkl/commons/test/ReflectionUtils {
+	public static final field INSTANCE Lorg/pkl/commons/test/ReflectionUtils;
+	public final fun enumValues (Lkotlin/reflect/KClass;)[Ljava/lang/Enum;
+}
+
+public final class org/pkl/commons/test/SnippetOutcome {
+	public fun <init> (Ljava/nio/file/Path;Ljava/lang/String;Z)V
+	public final fun check ()V
+	public final fun component1 ()Ljava/nio/file/Path;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/nio/file/Path;Ljava/lang/String;Z)Lorg/pkl/commons/test/SnippetOutcome;
+	public static synthetic fun copy$default (Lorg/pkl/commons/test/SnippetOutcome;Ljava/nio/file/Path;Ljava/lang/String;ZILjava/lang/Object;)Lorg/pkl/commons/test/SnippetOutcome;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActual ()Ljava/lang/String;
+	public final fun getExpectedOutFile ()Ljava/nio/file/Path;
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

@@ -1,0 +1,69 @@
+public final class org/pkl/codegen/kotlin/CliKotlinCodeGenerator : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/codegen/kotlin/CliKotlinCodeGeneratorOptions;)V
+}
+
+public final class org/pkl/codegen/kotlin/CliKotlinCodeGeneratorOptions {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Ljava/lang/String;ZZZLjava/util/Map;)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Ljava/lang/String;ZZZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun component2 ()Ljava/nio/file/Path;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Z
+	public final fun component7 ()Ljava/util/Map;
+	public final fun copy (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Ljava/lang/String;ZZZLjava/util/Map;)Lorg/pkl/codegen/kotlin/CliKotlinCodeGeneratorOptions;
+	public static synthetic fun copy$default (Lorg/pkl/codegen/kotlin/CliKotlinCodeGeneratorOptions;Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Ljava/lang/String;ZZZLjava/util/Map;ILjava/lang/Object;)Lorg/pkl/codegen/kotlin/CliKotlinCodeGeneratorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBase ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun getGenerateKdoc ()Z
+	public final fun getGenerateSpringBootConfig ()Z
+	public final fun getImplementSerializable ()Z
+	public final fun getIndent ()Ljava/lang/String;
+	public final fun getOutputDir ()Ljava/nio/file/Path;
+	public final fun getRenames ()Ljava/util/Map;
+	public fun hashCode ()I
+	public final fun toKotlinCodegenOptions ()Lorg/pkl/codegen/kotlin/KotlinCodeGeneratorOptions;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/codegen/kotlin/KotlinCodeGenerator {
+	public static final field Companion Lorg/pkl/codegen/kotlin/KotlinCodeGenerator$Companion;
+	public fun <init> (Lorg/pkl/core/ModuleSchema;Lorg/pkl/codegen/kotlin/KotlinCodeGeneratorOptions;)V
+	public final fun getKotlinFile ()Ljava/lang/String;
+	public final fun getOutput ()Ljava/util/Map;
+}
+
+public final class org/pkl/codegen/kotlin/KotlinCodeGenerator$Companion {
+}
+
+public final class org/pkl/codegen/kotlin/KotlinCodeGeneratorException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/pkl/codegen/kotlin/KotlinCodeGeneratorOptions {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZZZLjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;ZZZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;ZZZLjava/util/Map;)Lorg/pkl/codegen/kotlin/KotlinCodeGeneratorOptions;
+	public static synthetic fun copy$default (Lorg/pkl/codegen/kotlin/KotlinCodeGeneratorOptions;Ljava/lang/String;ZZZLjava/util/Map;ILjava/lang/Object;)Lorg/pkl/codegen/kotlin/KotlinCodeGeneratorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGenerateKdoc ()Z
+	public final fun getGenerateSpringBootConfig ()Z
+	public final fun getImplementSerializable ()Z
+	public final fun getIndent ()Ljava/lang/String;
+	public final fun getRenames ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/codegen/kotlin/PklKotlinCodegenCommand : org/pkl/commons/cli/commands/ModulesCommand {
+	public fun <init> ()V
+	public fun run ()V
+}
+

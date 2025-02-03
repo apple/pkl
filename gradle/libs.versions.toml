@@ -1,4 +1,5 @@
 [versions] # ordered alphabetically
+abiCheck = "0.17.0"
 antlr = "4.+"
 assertj = "3.+" 
 checksumPlugin = "1.4.0"
@@ -49,6 +50,7 @@ spotlessPlugin = "6.25.0"
 wiremock = "3.+"
 
 [libraries] # ordered alphabetically
+abiCheckPlugin = { group = "org.jetbrains.kotlinx.binary-compatibility-validator", name = "org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version.ref = "abiCheck" }
 antlr = { group = "com.tunnelvisionlabs", name = "antlr4", version.ref = "antlr" }
 antlrRuntime = { group = "com.tunnelvisionlabs", name = "antlr4-runtime", version.ref = "antlr" }
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
@@ -98,6 +100,7 @@ truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", vers
 wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
 [plugins] # ordered alphabetically
+abiCheck = { id = "org.jetbrains.kotlinx.binary-compatibility-validator" }
 checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }

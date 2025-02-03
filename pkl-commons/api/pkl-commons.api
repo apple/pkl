@@ -1,0 +1,33 @@
+public final class org/pkl/commons/NameMapper {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun map (Ljava/lang/String;)Lkotlin/Pair;
+}
+
+public final class org/pkl/commons/PathsKt {
+	public static final fun createTempFile (Ljava/nio/file/Path;Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;)Ljava/nio/file/Path;
+	public static synthetic fun createTempFile$default (Ljava/nio/file/Path;Ljava/lang/String;Ljava/lang/String;[Ljava/nio/file/attribute/FileAttribute;ILjava/lang/Object;)Ljava/nio/file/Path;
+	public static final fun getCurrentWorkingDir ()Ljava/nio/file/Path;
+	public static final fun readString (Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/lang/String;
+	public static synthetic fun readString$default (Ljava/nio/file/Path;Ljava/nio/charset/Charset;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun resolveSafely (Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;
+	public static final fun toNormalizedPathString (Ljava/nio/file/Path;)Ljava/lang/String;
+	public static final fun walk (Ljava/nio/file/Path;I[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;
+	public static synthetic fun walk$default (Ljava/nio/file/Path;I[Ljava/nio/file/FileVisitOption;ILjava/lang/Object;)Ljava/util/stream/Stream;
+	public static final fun writeString (Ljava/nio/file/Path;Ljava/lang/String;Ljava/nio/charset/Charset;[Ljava/nio/file/OpenOption;)Ljava/nio/file/Path;
+	public static synthetic fun writeString$default (Ljava/nio/file/Path;Ljava/lang/String;Ljava/nio/charset/Charset;[Ljava/nio/file/OpenOption;ILjava/lang/Object;)Ljava/nio/file/Path;
+}
+
+public final class org/pkl/commons/StringsKt {
+	public static final fun shlex (Ljava/lang/String;)Ljava/util/List;
+	public static final fun toPath (Ljava/lang/String;)Ljava/nio/file/Path;
+	public static final fun toUri (Ljava/lang/String;)Ljava/net/URI;
+}
+
+public final class org/pkl/commons/ThrowablesKt {
+	public static final fun printStackTraceToString (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+
+public final class org/pkl/commons/UrisKt {
+	public static final fun toPath (Ljava/net/URI;)Ljava/nio/file/Path;
+}
+
