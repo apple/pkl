@@ -1,0 +1,7 @@
+/// doc comment
+// line comments can appear between doc comments
+/*
+ block comments also
+*/
+/// doc continuation
+foo = 1

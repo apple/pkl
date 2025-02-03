@@ -20,16 +20,16 @@ import java.util.Objects;
 import org.pkl.core.newparser.Span;
 
 public final class DocComment implements Node {
-  private final Span span;
+  private final List<Span> spans;
   private Node parent;
 
-  public DocComment(Span span) {
-    this.span = span;
+  public DocComment(List<Span> spans) {
+    this.spans = spans;
   }
 
   @Override
   public Span span() {
-    return span;
+    return spans.get(0).endWith(spans.get(spans.size() - 1));
   }
 
   @Override
@@ -48,8 +48,18 @@ public final class DocComment implements Node {
   }
 
   @Override
+  public String text(char[] source) {
+    var builder = new StringBuilder();
+    for (var span : spans) {
+      builder.append(new String(source, span.charIndex(), span.length()));
+      builder.append('\n');
+    }
+    return builder.toString();
+  }
+
+  @Override
   public String toString() {
-    return "DocComment{span=" + span + '}';
+    return "DocComment{spans=" + spans + '}';
   }
 
   @Override
@@ -61,11 +71,11 @@ public final class DocComment implements Node {
       return false;
     }
     DocComment that = (DocComment) o;
-    return Objects.equals(span, that.span);
+    return Objects.equals(spans, that.spans);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(span);
+    return Objects.hashCode(spans);
   }
 }

@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Mismatched input: `are`. Expected one of: `{`, `=`, `:`
+Single quoted strings cannot span multiple lines.
 
-x | How are you today?
-        ^^^
+x | singleLineStringCannotSpanLines = "
+                                       ^
 at stringError1 (file:///$snippetsDir/input/basic/stringError1.pkl)

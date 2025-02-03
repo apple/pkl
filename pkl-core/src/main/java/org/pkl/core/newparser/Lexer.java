@@ -32,8 +32,8 @@ public class Lexer {
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
   private boolean stringEnded = false;
   private boolean isEscape = false;
-  // true if there's a \n between two subsequent tokens
-  protected boolean newLineBetween = false;
+  // how many newlines exist between two subsequent tokens
+  protected int newLinesBetween = 0;
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -67,7 +67,7 @@ public class Lexer {
 
   public Token next() {
     sCursor = cursor;
-    newLineBetween = false;
+    newLinesBetween = 0;
     return switch (state) {
       case DEFAULT -> nextDefault();
       case STRING -> nextString();
@@ -80,7 +80,7 @@ public class Lexer {
     while (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r') {
       sCursor = cursor;
       if (ch == '\n') {
-        newLineBetween = true;
+        newLinesBetween++;
       }
       ch = nextChar();
     }

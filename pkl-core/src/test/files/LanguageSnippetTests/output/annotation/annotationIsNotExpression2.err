@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Expected an annotation class.
+Invalid token at position. Expected class, typealias, method or property.
 
 x | @Ann1|Ann2
-     ^^^^^^^^^
+         ^
 at annotationIsNotExpression2 (file:///$snippetsDir/input/annotation/annotationIsNotExpression2.pkl)

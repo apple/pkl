@@ -34,4 +34,8 @@ public record Span(int charIndex, int length) {
   public Span stopSpan() {
     return new Span(charIndex + length - 1, 1);
   }
+
+  public Span move(int amount) {
+    return new Span(charIndex + amount, length);
+  }
 }

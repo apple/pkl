@@ -155,7 +155,7 @@ public class Parser {
   }
 
   private QualifiedIdent parseModuleNameDecl() {
-    expect(Token.MODULE, "Expected `module`");
+    expect(Token.MODULE, "unexpectedToken", "module");
     return parseQualifiedIdent();
   }
 
@@ -185,7 +185,7 @@ public class Parser {
       start = next().span;
       isGlob = true;
     } else {
-      start = expect(Token.IMPORT, "Expected `import` or `import*`").span;
+      start = expect(Token.IMPORT, "unexpectedToken2", "import", "import*").span;
     }
     var str = parseStringConstant();
     var end = str.span();
@@ -203,12 +203,7 @@ public class Parser {
     var annotations = new ArrayList<Annotation>();
     var modifiers = new ArrayList<Modifier>();
     if (lookahead == Token.DOC_COMMENT) {
-      var docSpanStart = spanLookahead;
-      var docSpanEnd = spanLookahead;
-      while (lookahead == Token.DOC_COMMENT) {
-        docSpanEnd = next().span;
-      }
-      docComment = new DocComment(docSpanStart.endWith(docSpanEnd));
+      docComment = parseDocComment();
     }
     while (lookahead == Token.AT) {
       annotations.add(parseAnnotation());
@@ -217,6 +212,27 @@ public class Parser {
       modifiers.add(parseModifier());
     }
     return new EntryHeader(docComment, annotations, modifiers);
+  }
+
+  private DocComment parseDocComment() {
+    var spans = new ArrayList<Span>();
+    spans.add(nextComment().span);
+    while (lookahead == Token.DOC_COMMENT
+        || lookahead == Token.LINE_COMMENT
+        || lookahead == Token.BLOCK_COMMENT) {
+      var next = nextComment();
+      // newlines are not allowed in doc comments
+      if (next.newLinesBetween > 1) {
+        if (next.token == Token.DOC_COMMENT) {
+          backtrack();
+        }
+        break;
+      }
+      if (next.token == Token.DOC_COMMENT) {
+        spans.add(next.span);
+      }
+    }
+    return new DocComment(spans);
   }
 
   private Span parseModuleEntry(
@@ -257,14 +273,14 @@ public class Parser {
   }
 
   private TypeAlias parseTypeAlias(EntryHeader header) {
-    var start = expect(Token.TYPE_ALIAS, "Expected `typealias`").span;
+    var start = expect(Token.TYPE_ALIAS, "unexpectedToken", "typealias").span;
     var startSpan = header.span(start);
     var ident = parseIdent();
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
       typePars = parseTypeParameterList();
     }
-    expect(Token.ASSIGN, "Expected `=`");
+    expect(Token.ASSIGN, "unexpectedToken", "=");
     var type = parseType();
     return new TypeAlias(
         header.docComment,
@@ -277,7 +293,7 @@ public class Parser {
   }
 
   private Clazz parseClass(EntryHeader header) {
-    var start = expect(Token.CLASS, "Expected `class`").span;
+    var start = expect(Token.CLASS, "unexpectedToken", "class").span;
     var startSpan = header.span(start);
     var name = parseIdent();
     TypeParameterList typePars = null;
@@ -318,10 +334,10 @@ public class Parser {
   }
 
   private ClassBody parseClassBody() {
-    var start = expect(Token.LBRACE, "Expected `{`").span;
+    var start = expect(Token.LBRACE, "missingDelimiter", "{").span;
     var props = new ArrayList<ClassPropertyEntry>();
     var methods = new ArrayList<ClassMethod>();
-    while (lookahead != Token.RBRACE) {
+    while (lookahead != Token.RBRACE && lookahead != Token.EOF) {
       var entryHeader = parseEntryHeader();
       if (lookahead == Token.FUNCTION) {
         methods.add(parseClassMethod(entryHeader));
@@ -329,7 +345,11 @@ public class Parser {
         props.add(parseClassProperty(entryHeader));
       }
     }
-    var end = expect(Token.RBRACE, "Expected `}`").span;
+    if (lookahead == Token.EOF) {
+      throw new ParserError(
+          ErrorMessages.create("missingDelimiter", "}"), prev.span.stopSpan().move(1));
+    }
+    var end = expect(Token.RBRACE, "missingDelimiter", "}").span;
     return new ClassBody(props, methods, start.endWith(end));
   }
 
@@ -385,7 +405,7 @@ public class Parser {
   }
 
   private ClassMethod parseClassMethod(EntryHeader header) {
-    var func = expect(Token.FUNCTION, "Expected `function` keyword").span;
+    var func = expect(Token.FUNCTION, "unexpectedToken", "function").span;
     var start = header.span(func);
     var headerSpanStart = header.modifierSpan(func);
     var name = parseIdent();
@@ -422,7 +442,7 @@ public class Parser {
   }
 
   private ObjectBody parseObjectBody() {
-    var start = expect(Token.LBRACE, "Expected `{`").span;
+    var start = expect(Token.LBRACE, "unexpectedToken", "{").span;
     List<Parameter> params = new ArrayList<>();
     List<ObjectMemberNode> members = new ArrayList<>();
     if (lookahead == Token.RBRACE) {
@@ -430,7 +450,7 @@ public class Parser {
     } else if (lookahead == Token.UNDERSCORE) {
       // it's a parameter
       params = parseListOfParameter(Token.COMMA);
-      expect(Token.ARROW, "Expected `->`");
+      expect(Token.ARROW, "unexpectedToken2", ",", "->");
     } else if (lookahead == Token.IDENT) {
       // not sure what it is yet
       var ident = parseIdent();
@@ -442,7 +462,7 @@ public class Parser {
         // it's a parameter
         backtrack();
         params.addAll(parseListOfParameter(Token.COMMA));
-        expect(Token.ARROW, "Expected `->`");
+        expect(Token.ARROW, "unexpectedToken2", ",", "->");
       } else if (lookahead == Token.COLON) {
         // still not sure
         var colon = next().span;
@@ -453,14 +473,14 @@ public class Parser {
           next();
           params.add(new Parameter.TypedIdent(ident, typeAnnotation, ident.span()));
           params.addAll(parseListOfParameter(Token.COMMA));
-          expect(Token.ARROW, "Expected `->`");
+          expect(Token.ARROW, "unexpectedToken2", ",", "->");
         } else if (lookahead == Token.ARROW) {
           // it's a parameter
           next();
           params.add(new Parameter.TypedIdent(ident, typeAnnotation, ident.span()));
         } else {
           // it's a member
-          expect(Token.ASSIGN, "Expected `=`");
+          expect(Token.ASSIGN, "unexpectedToken", "=");
           var expr = parseExpr();
           members.add(
               new ObjectMemberNode.ObjectProperty(
@@ -480,7 +500,7 @@ public class Parser {
     while (lookahead != Token.RBRACE) {
       members.add(parseObjectMember());
     }
-    var end = expect(Token.RBRACE, "Expected `}`").span;
+    var end = expect(Token.RBRACE, "unexpectedToken", "}").span;
     return new ObjectBody(params, members, start.endWith(end));
   }
 
@@ -538,7 +558,7 @@ public class Parser {
       typeAnnotation = parseTypeAnnotation();
     }
     if (typeAnnotation != null || lookahead == Token.ASSIGN) {
-      expect(Token.ASSIGN, "Expected `=`");
+      expect(Token.ASSIGN, "unexpectedToken", "=");
       var expr = parseExpr();
       return new ObjectMemberNode.ObjectProperty(
           allModifiers, ident, typeAnnotation, expr, start.endWith(expr.span()));
@@ -550,7 +570,7 @@ public class Parser {
 
   private ObjectMemberNode.ObjectMethod parseObjectMethod(List<Modifier> modifiers) {
     var start = spanLookahead;
-    expect(Token.FUNCTION, "Expected `function`");
+    expect(Token.FUNCTION, "unexpectedToken", "function");
     var ident = parseIdent();
     TypeParameterList params = null;
     if (lookahead == Token.LT) {
@@ -561,7 +581,7 @@ public class Parser {
     if (lookahead == Token.COLON) {
       typeAnnotation = parseTypeAnnotation();
     }
-    expect(Token.ASSIGN, "Expected `=`");
+    expect(Token.ASSIGN, "unexpectedToken", "=");
     var expr = parseExpr();
     return new ObjectMemberNode.ObjectMethod(
         modifiers, ident, params, args, typeAnnotation, expr, start.endWith(expr.span()));
@@ -570,8 +590,8 @@ public class Parser {
   private ObjectMemberNode parseMemberPredicate() {
     var start = next().span;
     var pred = parseExpr();
-    var firstBrack = expect(Token.RBRACK, "Expected `]]`").span;
-    var secondbrack = expect(Token.RBRACK, "Expected `]]`").span;
+    var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]").span;
+    var secondbrack = expect(Token.RBRACK, "wrongDelimiter", "]]", "]").span;
     if (firstBrack.charIndex() != secondbrack.charIndex() - 1) {
       // There shouldn't be any whitespace between the first and second ']'.
       throw new ParserError(ErrorMessages.create("wrongDelimiter", "]]", "]"), firstBrack);
@@ -587,9 +607,9 @@ public class Parser {
   }
 
   private ObjectMemberNode parseObjectEntry() {
-    var start = expect(Token.LBRACK, "Expected `[`").span;
+    var start = expect(Token.LBRACK, "unexpectedToken", "[").span;
     var key = parseExpr();
-    expect(Token.RBRACK, "Expected `]`");
+    expect(Token.RBRACK, "unexpectedToken", "]");
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr();
@@ -602,7 +622,7 @@ public class Parser {
 
   private ObjectMemberNode.ObjectSpread parseObjectSpread() {
     if (lookahead != Token.SPREAD && lookahead != Token.QSPREAD) {
-      throw new ParserError("Expected `...` or `...?`", spanLookahead);
+      throw parserError("unexpectedToken2", "...", "...?");
     }
     var peek = next();
     boolean isNullable = peek.token == Token.QSPREAD;
@@ -611,10 +631,10 @@ public class Parser {
   }
 
   private ObjectMemberNode.WhenGenerator parseWhenGenerator() {
-    var start = expect(Token.WHEN, "Expected `when`").span;
-    expect(Token.LPAREN, "Expected `(`");
+    var start = expect(Token.WHEN, "unexpectedToken", "when").span;
+    expect(Token.LPAREN, "unexpectedToken", "(");
     var pred = parseExpr();
-    expect(Token.RPAREN, "Expected `)`");
+    expect(Token.RPAREN, "unexpectedToken", ")");
     var body = parseObjectBody();
     var end = body.span();
     ObjectBody elseBody = null;
@@ -627,17 +647,17 @@ public class Parser {
   }
 
   private ObjectMemberNode.ForGenerator parseForGenerator() {
-    var start = expect(Token.FOR, "Expected `for`").span;
-    expect(Token.LPAREN, "Expected `(`");
+    var start = expect(Token.FOR, "unexpectedToken", "for").span;
+    expect(Token.LPAREN, "unexpectedToken", "(");
     var par1 = parseParameter();
     Parameter par2 = null;
     if (lookahead == Token.COMMA) {
       next();
       par2 = parseParameter();
     }
-    expect(Token.IN, "Expected `in`");
+    expect(Token.IN, "unexpectedToken", "in");
     var expr = parseExpr();
-    expect(Token.RPAREN, "Expected `)`");
+    expect(Token.RPAREN, "unexpectedToken", ")");
     var body = parseObjectBody();
     return new ObjectMemberNode.ForGenerator(par1, par2, expr, body, start.endWith(body.span()));
   }
@@ -657,7 +677,7 @@ public class Parser {
           exprs = OperatorResolver.resolveOperatorsHigherThan(exprs, precedence);
         }
         case MINUS -> {
-          if (!precededBySemicolon && !_lookahead.newLineBetween) {
+          if (!precededBySemicolon && _lookahead.newLinesBetween == 0) {
             exprs.add(new OperatorExpr(op, next().span));
             exprs.add(parseExprAtom());
           } else {
@@ -672,7 +692,9 @@ public class Parser {
           var isNullable = op == Operator.QDOT;
           var ident = parseIdent();
           ArgumentList argumentList = null;
-          if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
+          if (lookahead == Token.LPAREN
+              && !precededBySemicolon
+              && _lookahead.newLinesBetween == 0) {
             argumentList = parseArgumentList();
           }
           var lastSpan = argumentList != null ? argumentList.span() : ident.span();
@@ -726,51 +748,51 @@ public class Parser {
           case NULL -> new NullLiteral(next().span);
           case THROW -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.Throw(exp, start.endWith(end));
           }
           case TRACE -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.Trace(exp, start.endWith(end));
           }
           case IMPORT -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var strConst = parseStringConstant();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.ImportExpr(strConst, false, start.endWith(end));
           }
           case IMPORT_STAR -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var strConst = parseStringConstant();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.ImportExpr(strConst, true, start.endWith(end));
           }
           case READ -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.Read(exp, start.endWith(end));
           }
           case READ_STAR -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.ReadGlob(exp, start.endWith(end));
           }
           case READ_QUESTION -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr();
-            var end = expect(Token.RPAREN, "Expected `)`").span;
+            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.ReadNull(exp, start.endWith(end));
           }
           case NEW -> {
@@ -805,14 +827,14 @@ public class Parser {
               case RPAREN -> {
                 var endParen = next().span;
                 var paramList = new ParameterList(List.of(), start.endWith(endParen));
-                expect(Token.ARROW, "Expected `->`");
+                expect(Token.ARROW, "unexpectedToken", "->");
                 var exp = parseExpr();
                 yield new Expr.FunctionLiteral(paramList, exp, start.endWith(exp.span()));
               }
               default -> {
                 // expression
                 var exp = parseExpr();
-                var end = expect(Token.RPAREN, "Expected `)`").span;
+                var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
                 yield new Parenthesized(exp, start.endWith(end));
               }
             };
@@ -829,29 +851,29 @@ public class Parser {
                 yield new Expr.SuperAccess(ident, null, start.endWith(ident.span()));
               }
             } else {
-              expect(Token.LBRACK, "Expected `[`");
+              expect(Token.LBRACK, "unexpectedToken", "[");
               var exp = parseExpr();
-              var end = expect(Token.RBRACK, "Expected `]`").span;
+              var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
               yield new Expr.SuperSubscript(exp, start.endWith(end));
             }
           }
           case IF -> {
             var start = next().span;
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var pred = parseExpr();
-            expect(Token.RPAREN, "Expected `)`");
+            expect(Token.RPAREN, "unexpectedToken", ")");
             var then = parseExpr();
-            expect(Token.ELSE, "Expected `else`");
+            expect(Token.ELSE, "unexpectedToken", "else");
             var elseCase = parseExpr();
             yield new Expr.If(pred, then, elseCase, start.endWith(elseCase.span()));
           }
           case LET -> {
             var start = next().span();
-            expect(Token.LPAREN, "Expected `(`");
+            expect(Token.LPAREN, "unexpectedToken", "(");
             var param = parseParameter();
-            expect(Token.ASSIGN, "Expected `=`");
+            expect(Token.ASSIGN, "unexpectedToken", "=");
             var bindExpr = parseExpr();
-            expect(Token.RPAREN, "Expected `)`");
+            expect(Token.RPAREN, "unexpectedToken", ")");
             var exp = parseExpr();
             yield new Expr.Let(param, bindExpr, exp, start.endWith(exp.span()));
           }
@@ -903,7 +925,7 @@ public class Parser {
                     temp = new ArrayList<>();
                   }
                   var exp = parseExpr();
-                  var end = expect(Token.RPAREN, "Expected `)`").span;
+                  var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
                   parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
                 }
                 case EOF -> throw parserError("unexpectedEndOfFile");
@@ -924,7 +946,9 @@ public class Parser {
           }
           case IDENT -> {
             var ident = parseIdent();
-            if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
+            if (lookahead == Token.LPAREN
+                && !precededBySemicolon
+                && _lookahead.newLinesBetween == 0) {
               var args = parseArgumentList();
               yield new Expr.UnqualifiedAccess(ident, args, ident.span().endWith(args.span()));
             } else {
@@ -959,7 +983,7 @@ public class Parser {
       var isNullable = next().token == Token.QDOT;
       var ident = parseIdent();
       ArgumentList argumentList = null;
-      if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
+      if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
         argumentList = parseArgumentList();
       }
       var lastSpan = argumentList != null ? argumentList.span() : ident.span();
@@ -969,16 +993,17 @@ public class Parser {
       return parseExprRest(res);
     }
     // subscript (needs to be in the same line as the expression)
-    if (lookahead == Token.LBRACK && !precededBySemicolon && !_lookahead.newLineBetween) {
+    if (lookahead == Token.LBRACK && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
       next();
       var exp = parseExpr();
-      var end = expect(Token.RBRACK, "Expected `]`").span;
+      var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
       var res = new Expr.Subscript(expr, exp, expr.span().endWith(end));
       return parseExprRest(res);
     }
     return expr;
   }
 
+  @SuppressWarnings("DuplicatedCode")
   private Expr parseFunctionLiteralOrParenthesized(Span start) {
     var ident = parseIdent();
     return switch (lookahead) {
@@ -987,9 +1012,9 @@ public class Parser {
         var params = new ArrayList<Parameter>();
         params.add(new Parameter.TypedIdent(ident, null, ident.span()));
         params.addAll(parseListOfParameter(Token.COMMA));
-        var endParen = expect(Token.RPAREN, "Expected `)`").span;
+        var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         var paramList = new ParameterList(params, start.endWith(endParen));
-        expect(Token.ARROW, "Expected `->`");
+        expect(Token.ARROW, "unexpectedToken", "->");
         var expr = parseExpr();
         yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
       }
@@ -1001,9 +1026,9 @@ public class Parser {
           next();
           params.addAll(parseListOfParameter(Token.COMMA));
         }
-        var endParen = expect(Token.RPAREN, "Expected `)`").span;
+        var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         var paramList = new ParameterList(params, start.endWith(endParen));
-        expect(Token.ARROW, "Expected `->`");
+        expect(Token.ARROW, "unexpectedToken", "->");
         var expr = parseExpr();
         yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
       }
@@ -1026,7 +1051,7 @@ public class Parser {
         // this is an expression
         backtrack();
         var expr = parseExpr();
-        var end = expect(Token.RPAREN, "Expected `)`").span;
+        var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
         yield new Parenthesized(expr, start.endWith(end));
       }
     };
@@ -1035,9 +1060,9 @@ public class Parser {
   private Expr.FunctionLiteral parseFunctionLiteral(Span start) {
     // the open parens is already parsed
     var params = parseListOfParameter(Token.COMMA);
-    var endParen = expect(Token.RPAREN, "Expected `)`").span;
+    var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     var paramList = new ParameterList(params, start.endWith(endParen));
-    expect(Token.ARROW, "Expected `->`");
+    expect(Token.ARROW, "unexpectedToken", "->");
     var expr = parseExpr();
     return new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
   }
@@ -1060,10 +1085,10 @@ public class Parser {
           end = next().span;
         } else {
           types.addAll(parseListOf(Token.COMMA, this::parseType));
-          end = expect(Token.RPAREN, "Expected `)`").span;
+          end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         }
         if (lookahead == Token.ARROW || types.size() > 1) {
-          expect(Token.ARROW, "Expected `->`");
+          expect(Token.ARROW, "unexpectedToken", "->");
           var ret = parseType();
           typ = new Type.FunctionType(types, ret, tk.span.endWith(end));
         } else {
@@ -1083,7 +1108,7 @@ public class Parser {
         if (lookahead == Token.LT) {
           next();
           types.addAll(parseListOf(Token.COMMA, this::parseType));
-          end = expect(Token.GT, "Expected `>`").span;
+          end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
         }
         typ = new DeclaredType(name, types, start.endWith(end));
       }
@@ -1107,10 +1132,10 @@ public class Parser {
       return parseTypeEnd(res, shortCircuit);
     }
     // constrained types: have to start in the same line as the type
-    if (lookahead == Token.LPAREN && !precededBySemicolon && !_lookahead.newLineBetween) {
+    if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
       next();
       var constraints = parseListOf(Token.COMMA, this::parseExpr);
-      var end = expect(Token.RPAREN, "Expected `)`").span;
+      var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
       var res = new Type.ConstrainedType(type, constraints, type.span().endWith(end));
       return parseTypeEnd(res, shortCircuit);
     }
@@ -1167,14 +1192,14 @@ public class Parser {
   }
 
   private ParameterList parseParameterList() {
-    var start = expect(Token.LPAREN, "Expected `(`").span;
+    var start = expect(Token.LPAREN, "unexpectedToken", "(").span;
     Span end;
     List<Parameter> args = new ArrayList<>();
     if (lookahead == Token.RPAREN) {
       end = next().span;
     } else {
       args = parseListOfParameter(Token.COMMA);
-      end = expect(Token.RPAREN, "Expected `)`").span;
+      end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     }
     return new ParameterList(args, start.endWith(end));
   }
@@ -1188,19 +1213,19 @@ public class Parser {
   }
 
   private TypeParameterList parseTypeParameterList() {
-    var start = expect(Token.LT, "Expected `<`").span;
+    var start = expect(Token.LT, "unexpectedToken", "<").span;
     var pars = parseListOf(Token.COMMA, this::parseTypeParameter);
-    var end = expect(Token.GT, "Expected `>`").span;
+    var end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
     return new TypeParameterList(pars, start.endWith(end));
   }
 
   private ArgumentList parseArgumentList() {
-    var start = expect(Token.LPAREN, "Expected `(").span;
+    var start = expect(Token.LPAREN, "unexpectedToken", "(").span;
     if (lookahead == Token.RPAREN) {
       return new ArgumentList(new ArrayList<>(), start.endWith(next().span));
     }
     var exprs = parseListOf(Token.COMMA, this::parseExpr);
-    var end = expect(Token.RPAREN, "Expected `)`").span;
+    var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     return new ArgumentList(exprs, start.endWith(end));
   }
 
@@ -1230,7 +1255,7 @@ public class Parser {
   }
 
   private TypeAnnotation parseTypeAnnotation() {
-    var start = expect(Token.COLON, "Expected `:`").span;
+    var start = expect(Token.COLON, "unexpectedToken", ":").span;
     var type = parseType();
     return new TypeAnnotation(type, start.endWith(type.span()));
   }
@@ -1250,7 +1275,7 @@ public class Parser {
 
   private Expr.StringConstant parseStringConstant() {
     var start = spanLookahead;
-    expect(Token.STRING_START, "Expected string start");
+    expect(Token.STRING_START, "unexpectedToken", "\"");
     var parts = new ArrayList<StringConstantPart>();
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
@@ -1277,15 +1302,15 @@ public class Parser {
         default -> throw PklBugException.unreachableCode();
       }
     }
-    var end = expect(Token.STRING_END, "Expected string end").span;
+    var end = expect(Token.STRING_END, "missingDelimiter", "\"").span;
     assert !parts.isEmpty();
     var constSpan = parts.get(0).span().endWith(parts.get(parts.size() - 1).span());
     return new StringConstant(new StringConstantParts(parts, constSpan), start.endWith(end));
   }
 
-  private FullToken expect(Token type, String errorMsg) {
+  private FullToken expect(Token type, String errorKey, Object... messageArgs) {
     if (lookahead != type) {
-      throw new ParserError(errorMsg, spanLookahead);
+      throw new ParserError(ErrorMessages.create(errorKey, messageArgs), spanLookahead);
     }
     return next();
   }
@@ -1373,7 +1398,27 @@ public class Parser {
     }
     precededBySemicolon = prev == Token.SEMICOLON;
     return new FullToken(
-        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLineBetween);
+        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLinesBetween);
+  }
+
+  // Like next, but don't ignore comments
+  private FullToken nextComment() {
+    prev = _lookahead;
+    _lookahead = forceNextComment();
+    lookahead = _lookahead.token;
+    spanLookahead = _lookahead.span;
+    return prev;
+  }
+
+  private FullToken forceNextComment() {
+    var tk = lexer.next();
+    var prev = tk;
+    while (tk == Token.SEMICOLON) {
+      tk = lexer.next();
+    }
+    precededBySemicolon = prev == Token.SEMICOLON;
+    return new FullToken(
+        tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLinesBetween);
   }
 
   // backtrack to the previous token
@@ -1402,7 +1447,7 @@ public class Parser {
   }
 
   private record FullToken(
-      Token token, Span span, int textOffset, int textSize, boolean newLineBetween) {
+      Token token, Span span, int textOffset, int textSize, int newLinesBetween) {
     String text(Lexer lexer) {
       return lexer.textFor(textOffset, textSize);
     }
