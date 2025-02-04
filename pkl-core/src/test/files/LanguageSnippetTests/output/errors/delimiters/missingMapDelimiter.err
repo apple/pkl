@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token. Expected `,` or `)`.
 
 x | map = Map("one", 1, "two", 2
                                 ^
-at missingMapDelimiter#map (file:///$snippetsDir/input/errors/delimiters/missingMapDelimiter.pkl)
+at missingMapDelimiter (file:///$snippetsDir/input/errors/delimiters/missingMapDelimiter.pkl)

@@ -672,7 +672,7 @@ public class Parser {
   private Expr parseExpr() {
     return parseExpr(null);
   }
-  
+
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExpr(@Nullable String expectation) {
     List<Expr> exprs = new ArrayList<>();
@@ -1089,10 +1089,14 @@ public class Parser {
   }
 
   private Type parseType() {
-    return parseType(false);
+    return parseType(false, null);
   }
 
-  private Type parseType(boolean shortCircuit) {
+  private Type parseType(@Nullable String expectation) {
+    return parseType(false, expectation);
+  }
+
+  private Type parseType(boolean shortCircuit, @Nullable String expectation) {
     Type typ;
     switch (lookahead) {
       case UNKNOWN -> typ = new Type.UnknownType(next().span);
@@ -1105,12 +1109,12 @@ public class Parser {
         if (lookahead == Token.RPAREN) {
           end = next().span;
         } else {
-          types.addAll(parseListOf(Token.COMMA, this::parseType));
+          types.addAll(parseListOf(Token.COMMA, () -> parseType(")")));
           end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         }
         if (lookahead == Token.ARROW || types.size() > 1) {
           expect(Token.ARROW, "unexpectedToken", "->");
-          var ret = parseType();
+          var ret = parseType(expectation);
           typ = new Type.FunctionType(types, ret, tk.span.endWith(end));
         } else {
           typ = new ParenthesizedType(types.get(0), tk.span.endWith(end));
@@ -1118,7 +1122,7 @@ public class Parser {
       }
       case STAR -> {
         var tk = next();
-        var type = parseType(true);
+        var type = parseType(true, expectation);
         typ = new DefaultUnionType(type, tk.span.endWith(type.span()));
       }
       case IDENT -> {
@@ -1128,7 +1132,7 @@ public class Parser {
         var end = name.span();
         if (lookahead == Token.LT) {
           next();
-          types.addAll(parseListOf(Token.COMMA, this::parseType));
+          types.addAll(parseListOf(Token.COMMA, () -> parseType(">")));
           end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
         }
         typ = new DeclaredType(name, types, start.endWith(end));
@@ -1137,36 +1141,41 @@ public class Parser {
         var str = parseStringConstant();
         typ = new StringConstantType(str, str.span());
       }
-      default -> throw parserError("unexpectedTokenForType");
+      default -> {
+        if (expectation != null) {
+          throw parserError("unexpectedToken", expectation);
+        }
+        throw parserError("unexpectedTokenForType");
+      }
     }
 
     if (typ instanceof Type.FunctionType) return typ;
-    return parseTypeEnd(typ, shortCircuit);
+    return parseTypeEnd(typ, shortCircuit, expectation);
   }
 
-  private Type parseTypeEnd(Type type, boolean shortCircuit) {
+  private Type parseTypeEnd(Type type, boolean shortCircuit, @Nullable String expectation) {
     // nullable types
     if (lookahead == Token.QUESTION) {
       var end = spanLookahead;
       next();
       var res = new Type.NullableType(type, type.span().endWith(end));
-      return parseTypeEnd(res, shortCircuit);
+      return parseTypeEnd(res, shortCircuit, expectation);
     }
     // constrained types: have to start in the same line as the type
     if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
       next();
-      var constraints = parseListOf(Token.COMMA, this::parseExpr);
+      var constraints = parseListOf(Token.COMMA, () -> parseExpr(")"));
       var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
       var res = new Type.ConstrainedType(type, constraints, type.span().endWith(end));
-      return parseTypeEnd(res, shortCircuit);
+      return parseTypeEnd(res, shortCircuit, expectation);
     }
     // union types
     if (lookahead == Token.UNION && !shortCircuit) {
       next();
       // union types are left associative
-      var right = parseType(true);
+      var right = parseType(true, expectation);
       var res = new Type.UnionType(type, right, type.span().endWith(right.span()));
-      return parseTypeEnd(res, false);
+      return parseTypeEnd(res, false, expectation);
     }
     return type;
   }
@@ -1336,6 +1345,11 @@ public class Parser {
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {
     if (lookahead != type) {
+      if (lookahead == Token.EOF || _lookahead.newLinesBetween > 0) {
+        // don't point at the EOF or the next line, but at the end of the last token
+        throw new ParserError(
+            ErrorMessages.create(errorKey, messageArgs), prev.span.stopSpan().move(1));
+      }
       throw new ParserError(ErrorMessages.create(errorKey, messageArgs), spanLookahead);
     }
     return next();

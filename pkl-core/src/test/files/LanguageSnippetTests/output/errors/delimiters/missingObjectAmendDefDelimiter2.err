@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `}` delimiter.
+Unexpected end of file.
 
 x | }
      ^
-at missingObjectAmendDefDelimiter2#foo (file:///$snippetsDir/input/errors/delimiters/missingObjectAmendDefDelimiter2.pkl)
+at missingObjectAmendDefDelimiter2 (file:///$snippetsDir/input/errors/delimiters/missingObjectAmendDefDelimiter2.pkl)

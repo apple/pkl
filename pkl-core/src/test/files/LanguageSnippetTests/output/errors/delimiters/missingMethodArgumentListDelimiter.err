@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token. Expected `,` or `)`.
 
 x | res1 = "abc".substring(0, 1 + "def"
                                        ^
-at missingMethodArgumentListDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingMethodArgumentListDelimiter.pkl)
+at missingMethodArgumentListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingMethodArgumentListDelimiter.pkl)

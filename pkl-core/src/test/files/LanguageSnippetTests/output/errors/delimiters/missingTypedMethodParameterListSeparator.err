@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `,` separator.
+Unexpected token. Expected `,` or `)`.
 
 x | function foo(arg1: String arg2: String) = arg1 + arg2
-                             ^
+                              ^^^^
 at missingTypedMethodParameterListSeparator (file:///$snippetsDir/input/errors/delimiters/missingTypedMethodParameterListSeparator.pkl)

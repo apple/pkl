@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token. Expected `)`.
 
 x | x = 3 * (1 + 2
                   ^
-at missingParenthesizedExprDelimiter#x (file:///$snippetsDir/input/errors/delimiters/missingParenthesizedExprDelimiter.pkl)
+at missingParenthesizedExprDelimiter (file:///$snippetsDir/input/errors/delimiters/missingParenthesizedExprDelimiter.pkl)

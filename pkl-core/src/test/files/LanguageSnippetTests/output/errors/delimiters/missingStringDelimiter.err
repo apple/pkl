@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `"` delimiter.
+Single quoted strings cannot span multiple lines.
 
 x | res1 = "abc
                ^
-at missingStringDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingStringDelimiter.pkl)
+at missingStringDelimiter (file:///$snippetsDir/input/errors/delimiters/missingStringDelimiter.pkl)

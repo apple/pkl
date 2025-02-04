@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token. Expected `,` or `)`.
 
 x | l = List("one", "two"
                          ^
-at missingListDelimiter#l (file:///$snippetsDir/input/errors/delimiters/missingListDelimiter.pkl)
+at missingListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingListDelimiter.pkl)
