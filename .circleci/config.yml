@@ -11,6 +11,17 @@ jobs:
         name: Installing Rosetta 2
     - run:
         command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
@@ -22,6 +33,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -107,6 +119,17 @@ jobs:
     - checkout
     - run:
         command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
@@ -118,6 +141,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -300,6 +324,17 @@ jobs:
         name: Installing Rosetta 2
     - run:
         command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
         name: gradle buildNative
@@ -311,6 +346,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -396,6 +432,17 @@ jobs:
     - checkout
     - run:
         command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
         name: gradle buildNative
@@ -407,6 +454,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
