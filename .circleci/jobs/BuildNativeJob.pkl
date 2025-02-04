@@ -87,6 +87,34 @@ local setupLinuxEnvironment: Config.RunStep =
       }.join("\n\n")
     }
 
+local setupMacEnvironment: Config.RunStep =
+  let (muslVersion = "1.2.2")
+  let (zlibVersion = "1.2.13")
+    new {
+      name = "Set up environment"
+      shell = "#!/bin/bash -exo pipefail"
+      command = new Listing {
+        #"""
+        # install jdk
+        curl -Lf \
+         https://github.com/adoptium/temurin\#(module.majorJdkVersion)-binaries/releases/download/\#(module.jdkGitHubReleaseName)/OpenJDK\#(module.majorJdkVersion)U-jdk_\#(if (arch == "amd64") "x64" else "aarch64")_mac_hotspot_\#(module.jdkVersionAlt).tar.gz -o /tmp/jdk.tar.gz
+
+        mkdir $HOME/jdk \
+          && cd $HOME/jdk \
+          && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+        export JAVA_ROOT="/Library/Java/JavaVirtualMachines/jdk-\#(module.majorJdkVersion).jdk"
+        export JAVA_HOME="$JAVA_ROOT/Contents/Home"
+        export PATH="$JAVA_HOME/bin:$PATH"
+        mv $HOME/jdk $JAVA_ROOT
+        /usr/libexec/java_home -V
+        java -version
+        mkdir -p $HOME/.gradle
+        echo "org.gradle.java.home=$JAVA_HOME" >> $HOME/.gradle/gradle.properties
+        """#
+      }.join("\n\n")
+    }
+
 steps {
   when (os == "linux") {
     new Config.RestoreCacheStep {
@@ -102,13 +130,16 @@ steps {
       }
     }
   }
-  when (os == "macOS" && arch == "amd64") {
-    new Config.RunStep {
-      name = "Installing Rosetta 2"
-      command = """
-        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-        """
+  when (os == "macOS") {
+    when (arch == "amd64") {
+      new Config.RunStep {
+        name = "Installing Rosetta 2"
+        command = """
+          /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+          """
+      }
     }
+    setupMacEnvironment
   }
   new Config.RunStep {
     name = "gradle buildNative"
