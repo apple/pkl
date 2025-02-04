@@ -184,7 +184,7 @@ val testStartJavaExecutableOnOtherJdks =
     emptyList()
   }
 
-val evalTestFlags = arrayOf("eval", "./.circleci/config.pkl")
+val evalTestFlags = arrayOf("eval", "-x", "1 + 1", "pkl:base")
 
 fun Exec.useRootDirAndSuppressOutput() {
   workingDir = rootProject.layout.projectDirectory.asFile
