@@ -41,7 +41,7 @@ interface ParserComparisonTestInterface {
           try {
             compare(snippet, path, softly)
           } catch (e: ParserError) {
-            softly.fail("path: $path", e)
+            softly.fail("path: $path. Message: ${e.message}", e)
           }
         }
     }
