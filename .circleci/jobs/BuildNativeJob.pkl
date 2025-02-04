@@ -160,7 +160,7 @@ job {
     }
     resource_class = "macos.m1.large.gen1"
     environment {
-      ["JAVA_HOME"] = "~/jdk/Contents/Home"
+      ["JAVA_HOME"] = "/Users/distiller/jdk/Contents/Home"
     }
   }
   when (os == "linux") {
