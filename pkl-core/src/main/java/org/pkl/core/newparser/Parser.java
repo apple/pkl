@@ -16,8 +16,10 @@
 package org.pkl.core.newparser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.pkl.core.PklBugException;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
@@ -35,6 +37,7 @@ import org.pkl.core.newparser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.newparser.cst.Ident;
 import org.pkl.core.newparser.cst.Import;
 import org.pkl.core.newparser.cst.Modifier;
+import org.pkl.core.newparser.cst.Modifier.ModifierValue;
 import org.pkl.core.newparser.cst.Module;
 import org.pkl.core.newparser.cst.ModuleDecl;
 import org.pkl.core.newparser.cst.ObjectBody;
@@ -367,7 +370,7 @@ public class Parser {
       expr = parseExpr();
     } else if (lookahead == Token.LBRACE) {
       if (typeAnnotation != null) {
-        throw new ParserError("Expected expression but got object body", spanLookahead);
+        throw parserError("typeAnnotationInAmends");
       }
       while (lookahead == Token.LBRACE) {
         bodies.add(parseObjectBody());
@@ -393,7 +396,7 @@ public class Parser {
           start.endWith(bodies.get(bodies.size() - 1).span()));
     }
     if (typeAnnotation == null) {
-      throw new ParserError("Expected type annotation, assignment or amending", spanLookahead);
+      throw new ParserError(ErrorMessages.create("invalidProperty"), name.span());
     }
     return new ClassPropertyEntry.ClassProperty(
         header.docComment,
@@ -902,6 +905,7 @@ public class Parser {
                     temp.add(new StringConstantPart.ConstantPart(text, tk.span));
                   }
                 }
+                // lexer makes sure we don't get newlines in single quoted strings
                 case STRING_NEWLINE -> temp.add(new StringNewline(next().span));
                 case STRING_ESCAPE_NEWLINE ->
                     temp.add(new StringEscape(EscapeType.NEWLINE, next().span));
@@ -929,7 +933,8 @@ public class Parser {
                   parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
                 }
                 case EOF -> throw parserError("unexpectedEndOfFile");
-                default -> throw new ParserError("Unexpected token", spanLookahead);
+                // the lexer makes sure we only get the above tokens inside a string
+                default -> throw PklBugException.unreachableCode();
               }
             }
             if (!temp.isEmpty()) {
@@ -955,7 +960,7 @@ public class Parser {
               yield new Expr.UnqualifiedAccess(ident, null, ident.span());
             }
           }
-          default -> throw new ParserError("Invalid token for expression", spanLookahead);
+          default -> throw parserError("unexpectedTokenForExpression");
         };
     return parseExprRest(expr);
   }
@@ -1116,7 +1121,7 @@ public class Parser {
         var str = parseStringConstant();
         typ = new StringConstantType(str, str.span());
       }
-      default -> throw new ParserError("Invalid token for type: " + lookahead, spanLookahead);
+      default -> throw parserError("unexpectedTokenForType");
     }
 
     if (typ instanceof Type.FunctionType) return typ;
@@ -1179,7 +1184,13 @@ public class Parser {
       case HIDDEN -> new Modifier(Modifier.ModifierValue.HIDDEN, next().span);
       case FIXED -> new Modifier(Modifier.ModifierValue.FIXED, next().span);
       case CONST -> new Modifier(Modifier.ModifierValue.CONST, next().span);
-      default -> throw new ParserError("Expected modifier but got " + lookahead, spanLookahead);
+      default -> {
+        var modifierNames =
+            Arrays.stream(ModifierValue.values())
+                .map((m) -> "`" + m.name().toLowerCase() + "`")
+                .collect(Collectors.joining(", "));
+        throw parserError("unexpectedTokenMany", modifierNames);
+      }
     };
   }
 
@@ -1263,10 +1274,9 @@ public class Parser {
   private Ident parseIdent() {
     if (lookahead != Token.IDENT) {
       if (lookahead.isKeyword()) {
-        throw new ParserError(
-            ErrorMessages.create("keywordNotAllowedHere", lookahead.text()), spanLookahead);
+        throw parserError("keywordNotAllowedHere", lookahead.text());
       }
-      throw new ParserError("Expected identifier", spanLookahead);
+      throw parserError("unexpectedToken", "identifier");
     }
     var tk = next();
     var text = removeBackticks(tk.text(lexer));
