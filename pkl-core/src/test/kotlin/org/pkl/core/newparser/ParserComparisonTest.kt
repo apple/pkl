@@ -55,7 +55,7 @@ class ParserComparisonTest : ParserComparisonTestInterface {
     return Path("src/test/files/LanguageSnippetTests/input")
       .walk()
       .filter { path ->
-        val pathStr = path.toString()
+        val pathStr = path.toString().replace("\\", "/")
         path.extension == "pkl" &&
           !exceptions.any { pathStr.endsWith(it) } &&
           !regexExceptions.any { it.matches(pathStr) }
