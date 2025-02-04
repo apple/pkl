@@ -18,15 +18,6 @@ jobs:
           mkdir $HOME/jdk \
             && cd $HOME/jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          export JAVA_ROOT="/Library/Java/JavaVirtualMachines/jdk-21.jdk"
-          export JAVA_HOME="$JAVA_ROOT/Contents/Home"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          mv $HOME/jdk $JAVA_ROOT
-          /usr/libexec/java_home -V
-          java -version
-          mkdir -p $HOME/.gradle
-          echo "org.gradle.java.home=$JAVA_HOME" >> $HOME/.gradle/gradle.properties
         name: Set up environment
         shell: '#!/bin/bash -exo pipefail'
     - run:
@@ -42,6 +33,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: ~/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -134,15 +126,6 @@ jobs:
           mkdir $HOME/jdk \
             && cd $HOME/jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          export JAVA_ROOT="/Library/Java/JavaVirtualMachines/jdk-21.jdk"
-          export JAVA_HOME="$JAVA_ROOT/Contents/Home"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          mv $HOME/jdk $JAVA_ROOT
-          /usr/libexec/java_home -V
-          java -version
-          mkdir -p $HOME/.gradle
-          echo "org.gradle.java.home=$JAVA_HOME" >> $HOME/.gradle/gradle.properties
         name: Set up environment
         shell: '#!/bin/bash -exo pipefail'
     - run:
@@ -158,6 +141,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: ~/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -347,15 +331,6 @@ jobs:
           mkdir $HOME/jdk \
             && cd $HOME/jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          export JAVA_ROOT="/Library/Java/JavaVirtualMachines/jdk-21.jdk"
-          export JAVA_HOME="$JAVA_ROOT/Contents/Home"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          mv $HOME/jdk $JAVA_ROOT
-          /usr/libexec/java_home -V
-          java -version
-          mkdir -p $HOME/.gradle
-          echo "org.gradle.java.home=$JAVA_HOME" >> $HOME/.gradle/gradle.properties
         name: Set up environment
         shell: '#!/bin/bash -exo pipefail'
     - run:
@@ -371,6 +346,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: ~/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -463,15 +439,6 @@ jobs:
           mkdir $HOME/jdk \
             && cd $HOME/jdk \
             && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
-
-          export JAVA_ROOT="/Library/Java/JavaVirtualMachines/jdk-21.jdk"
-          export JAVA_HOME="$JAVA_ROOT/Contents/Home"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          mv $HOME/jdk $JAVA_ROOT
-          /usr/libexec/java_home -V
-          java -version
-          mkdir -p $HOME/.gradle
-          echo "org.gradle.java.home=$JAVA_HOME" >> $HOME/.gradle/gradle.properties
         name: Set up environment
         shell: '#!/bin/bash -exo pipefail'
     - run:
@@ -487,6 +454,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+      JAVA_HOME: ~/jdk/Contents/Home
     resource_class: macos.m1.large.gen1
     macos:
       xcode: 15.3.0
@@ -816,6 +784,9 @@ workflows:
     - gradle-check-windows:
         requires:
         - hold
+    - pkl-cli-macOS-aarch64-snapshot:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -824,6 +795,7 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - pkl-cli-macOS-aarch64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -836,6 +808,7 @@ workflows:
         requires:
         - gradle-check
         - gradle-check-windows
+        - pkl-cli-macOS-aarch64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -863,6 +836,12 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-windows:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-aarch64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -920,6 +899,7 @@ workflows:
         requires:
         - gradle-check
         - gradle-check-windows
+        - pkl-cli-macOS-aarch64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -957,6 +937,7 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - pkl-cli-macOS-aarch64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
