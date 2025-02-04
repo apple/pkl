@@ -74,6 +74,7 @@ public class Parser {
   private FullToken prev;
   private FullToken _lookahead;
   private final List<Comment> comments = new ArrayList<>();
+  private @Nullable String shebang;
   private boolean precededBySemicolon = false;
 
   public Parser() {}
@@ -234,6 +235,9 @@ public class Parser {
       if (next.token == Token.DOC_COMMENT) {
         spans.add(next.span);
       }
+    }
+    while (lookahead == Token.LINE_COMMENT || lookahead == Token.BLOCK_COMMENT) {
+      nextComment();
     }
     return new DocComment(spans);
   }
@@ -1434,8 +1438,13 @@ public class Parser {
   private FullToken forceNext() {
     var tk = lexer.next();
     var prev = tk;
-    while (tk == Token.LINE_COMMENT || tk == Token.BLOCK_COMMENT || tk == Token.SEMICOLON) {
-      if (tk != Token.SEMICOLON) {
+    while (tk == Token.LINE_COMMENT
+        || tk == Token.BLOCK_COMMENT
+        || tk == Token.SEMICOLON
+        || tk == Token.SHEBANG) {
+      if (tk == Token.SHEBANG && shebang == null) {
+        shebang = tk.text();
+      } else if (tk != Token.SEMICOLON) {
         comments.add(new Comment(lexer.text(), tk, lexer.span()));
       }
       prev = tk;

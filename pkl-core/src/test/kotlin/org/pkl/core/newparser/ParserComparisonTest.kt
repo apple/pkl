@@ -81,6 +81,8 @@ class ParserComparisonTest : ParserComparisonTestInterface {
         "errors/keywordNotAllowedHere4.pkl",
         "errors/moduleWithHighMinPklVersionAndParseErrors.pkl",
         "errors/underscore.pkl",
+        "spacesBetweenDocComments.pkl",
+        "lineCommentBetween.pkl",
       )
 
     private val regexExceptions =

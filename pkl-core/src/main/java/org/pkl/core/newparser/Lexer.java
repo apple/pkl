@@ -224,7 +224,13 @@ public class Lexer {
       }
       case '/' -> lexSlash();
       case '"' -> lexStringStart(0);
-      case '#' -> lexStringStartPounds();
+      case '#' -> {
+        if (lookahead == '!') {
+          yield lexShebang();
+        } else {
+          yield lexStringStartPounds();
+        }
+      }
       default -> {
         if (Character.isDigit(ch)) {
           yield lexNumber(ch);
@@ -256,6 +262,13 @@ public class Lexer {
     if (scope.quotes == 1) {
       lexString(scope.pounds);
     } else {
+      if (lookahead == '\r') {
+        nextChar();
+        if (lookahead == '\n') {
+          nextChar();
+        }
+        return Token.STRING_NEWLINE;
+      }
       if (lookahead == '\n') {
         nextChar();
         return Token.STRING_NEWLINE;
@@ -361,7 +374,7 @@ public class Lexer {
     var poundsInARow = 0;
     var quotesInARow = 0;
     var foundBackslash = false;
-    while (lookahead != EOF && lookahead != '\n') {
+    while (lookahead != EOF && lookahead != '\n' && lookahead != '\r') {
       var ch = nextChar();
       switch (ch) {
         case '"' -> {
@@ -636,6 +649,13 @@ public class Lexer {
       nextChar();
       lexExponent();
     }
+  }
+
+  private Token lexShebang() {
+    do {
+      nextChar();
+    } while (lookahead != '\n' && lookahead != '\r' && lookahead != EOF);
+    return Token.SHEBANG;
   }
 
   private boolean isHex(char ch) {
