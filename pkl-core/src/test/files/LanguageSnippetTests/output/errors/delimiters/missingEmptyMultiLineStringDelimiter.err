@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Extraneous input: `<EOF>`. Expected one of: MLEndQuote, MLInterpolation, MLUnicodeEscape, MLCharacterEscape, MLNewline, MLCharacters
+Unexpected end of file.
 
 x | res2 = 42
              ^

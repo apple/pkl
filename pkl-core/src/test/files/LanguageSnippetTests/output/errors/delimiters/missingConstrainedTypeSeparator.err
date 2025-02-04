@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `,` separator.
+Unexpected token. Expected `,` or `)`.
 
 x | x: Int(isPositive this > 10)
-                     ^
-at missingConstrainedTypeSeparator#x (file:///$snippetsDir/input/errors/delimiters/missingConstrainedTypeSeparator.pkl)
+                      ^^^^
+at missingConstrainedTypeSeparator (file:///$snippetsDir/input/errors/delimiters/missingConstrainedTypeSeparator.pkl)
