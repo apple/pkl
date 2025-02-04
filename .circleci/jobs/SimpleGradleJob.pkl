@@ -23,7 +23,7 @@ command: String
 
 os = "linux"
 
-javaVersion = "17.0"
+javaVersion = "21.0"
 
 steps {
   new Config.RunStep {
