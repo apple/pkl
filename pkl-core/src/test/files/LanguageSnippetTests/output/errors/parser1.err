@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Token recognition error at: `#`
+Unexpected end of file.
 
 x | res1 = 9#
             ^

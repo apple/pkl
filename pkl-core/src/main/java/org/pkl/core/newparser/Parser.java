@@ -598,10 +598,15 @@ public class Parser {
     var start = next().span;
     var pred = parseExpr("]]");
     var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]").span;
-    var secondbrack = expect(Token.RBRACK, "wrongDelimiter", "]]", "]").span;
+    Span secondbrack;
+    if (lookahead != Token.RBRACK) {
+      throw new ParserError(ErrorMessages.create("unexpectedToken", "]]"), firstBrack);
+    } else {
+      secondbrack = next().span;
+    }
     if (firstBrack.charIndex() != secondbrack.charIndex() - 1) {
       // There shouldn't be any whitespace between the first and second ']'.
-      throw new ParserError(ErrorMessages.create("wrongDelimiter", "]]", "]"), firstBrack);
+      throw new ParserError(ErrorMessages.create("unexpectedToken", "]]"), firstBrack);
     }
     if (lookahead == Token.ASSIGN) {
       next();
@@ -810,7 +815,7 @@ public class Parser {
             var start = next().span;
             Type type = null;
             if (lookahead != Token.LBRACE) {
-              type = parseType();
+              type = parseType("{");
             }
             var body = parseObjectBody();
             yield new Expr.New(type, body, start.endWith(body.span()));

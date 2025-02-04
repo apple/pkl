@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Expected delimiter `]]`, but got `]`.
+Unexpected token. Expected `]]`.
 
 x | [[name == "Pigeon"] { age = 42 }
                       ^
-at unbalancedEntryBrackets1#res (file:///$snippetsDir/input/errors/delimiters/unbalancedEntryBrackets1.pkl)
+at unbalancedEntryBrackets1 (file:///$snippetsDir/input/errors/delimiters/unbalancedEntryBrackets1.pkl)
