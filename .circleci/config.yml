@@ -784,30 +784,6 @@ workflows:
     - gradle-check-windows:
         requires:
         - hold
-    - bench:
-        requires:
-        - hold
-    - gradle-compatibility:
-        requires:
-        - hold
-    - pkl-cli-macOS-amd64-snapshot:
-        requires:
-        - hold
-    - pkl-cli-linux-amd64-snapshot:
-        requires:
-        - hold
-    - pkl-cli-macOS-aarch64-snapshot:
-        requires:
-        - hold
-    - pkl-cli-linux-aarch64-snapshot:
-        requires:
-        - hold
-    - pkl-cli-linux-alpine-amd64-snapshot:
-        requires:
-        - hold
-    - pkl-cli-windows-amd64-snapshot:
-        requires:
-        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -872,37 +848,37 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-macOS-amd64-snapshot:
+    - pkl-cli-macOS-amd64-release:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-linux-amd64-snapshot:
+    - pkl-cli-linux-amd64-release:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-macOS-aarch64-snapshot:
+    - pkl-cli-macOS-aarch64-release:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-linux-aarch64-snapshot:
+    - pkl-cli-linux-aarch64-release:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-linux-alpine-amd64-snapshot:
+    - pkl-cli-linux-alpine-amd64-release:
         filters:
           branches:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - pkl-cli-windows-amd64-snapshot:
+    - pkl-cli-windows-amd64-release:
         filters:
           branches:
             ignore: /.*/
@@ -914,12 +890,12 @@ workflows:
         - gradle-check-windows
         - bench
         - gradle-compatibility
-        - pkl-cli-macOS-amd64-snapshot
-        - pkl-cli-linux-amd64-snapshot
-        - pkl-cli-macOS-aarch64-snapshot
-        - pkl-cli-linux-aarch64-snapshot
-        - pkl-cli-linux-alpine-amd64-snapshot
-        - pkl-cli-windows-amd64-snapshot
+        - pkl-cli-macOS-amd64-release
+        - pkl-cli-linux-amd64-release
+        - pkl-cli-macOS-aarch64-release
+        - pkl-cli-linux-aarch64-release
+        - pkl-cli-linux-alpine-amd64-release
+        - pkl-cli-windows-amd64-release
         context: pkl-github-release
         filters:
           branches:
@@ -951,12 +927,12 @@ workflows:
     - gradle-check-windows
     - bench
     - gradle-compatibility
-    - pkl-cli-macOS-amd64-snapshot
-    - pkl-cli-linux-amd64-snapshot
-    - pkl-cli-macOS-aarch64-snapshot
-    - pkl-cli-linux-aarch64-snapshot
-    - pkl-cli-linux-alpine-amd64-snapshot
-    - pkl-cli-windows-amd64-snapshot
+    - pkl-cli-macOS-amd64-release
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-macOS-aarch64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-linux-alpine-amd64-release
+    - pkl-cli-windows-amd64-release
     when:
       matches:
         value: << pipeline.git.branch >>
