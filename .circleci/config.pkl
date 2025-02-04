@@ -22,7 +22,9 @@ import "jobs/DeployJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
 local prbJobs: Listing<String> = (gradleCheckJobs.keys.toListing()) {
-  "pkl-cli-macOS-aarch64-snapshot"
+  "bench"
+  "gradle-compatibility"
+  ...buildNativeJobs.keys.filter((it) -> it.endsWith("snapshot"))
 }
 
 local buildAndTestJobs = (prbJobs) {

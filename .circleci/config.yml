@@ -784,7 +784,28 @@ workflows:
     - gradle-check-windows:
         requires:
         - hold
+    - bench:
+        requires:
+        - hold
+    - gradle-compatibility:
+        requires:
+        - hold
+    - pkl-cli-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-amd64-snapshot:
+        requires:
+        - hold
     - pkl-cli-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-windows-amd64-snapshot:
         requires:
         - hold
     when:
@@ -795,7 +816,14 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
     - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
@@ -808,7 +836,14 @@ workflows:
         requires:
         - gradle-check
         - gradle-check-windows
+        - bench
+        - gradle-compatibility
+        - pkl-cli-macOS-amd64-snapshot
+        - pkl-cli-linux-amd64-snapshot
         - pkl-cli-macOS-aarch64-snapshot
+        - pkl-cli-linux-aarch64-snapshot
+        - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
@@ -841,7 +876,49 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - bench:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - gradle-compatibility:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - pkl-cli-macOS-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -899,7 +976,14 @@ workflows:
         requires:
         - gradle-check
         - gradle-check-windows
+        - bench
+        - gradle-compatibility
+        - pkl-cli-macOS-amd64-snapshot
+        - pkl-cli-linux-amd64-snapshot
         - pkl-cli-macOS-aarch64-snapshot
+        - pkl-cli-linux-aarch64-snapshot
+        - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -937,7 +1021,14 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
     - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
