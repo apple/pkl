@@ -27,7 +27,7 @@ import java.util.Map;
  * heap.". The cause of this error is the use of {@link org.graalvm.polyglot.Context} in the
  * (intentionally) statically reachable class {@link org.pkl.core.runtime.StdLibModule}.
  *
- * <p>A cleaner solution would be to have a separate {@link org.pkl.core.ast.builder.AstBuilder} for
+ * <p>A cleaner solution would be to have a separate {@link org.pkl.core.ast.builder.AstBuilderNew} for
  * stdlib modules that produces a fully initialized module object without executing any Truffle
  * nodes.
  *
