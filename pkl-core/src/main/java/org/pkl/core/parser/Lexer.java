@@ -17,9 +17,8 @@ package org.pkl.core.parser;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
 import org.pkl.core.util.ErrorMessages;
 
 public class Lexer {
@@ -466,7 +465,7 @@ public class Lexer {
     }
 
     var identStr = text();
-    var ident = IDENTS.getOrDefault(identStr, Token.IDENT);
+    var ident = getKeywordOrIdent(identStr);
     return switch (ident) {
       case IMPORT -> {
         if (lookahead == '*') {
@@ -722,7 +721,7 @@ public class Lexer {
   public static boolean isRegularIdentifier(String identifier) {
     if (identifier.isEmpty()) return false;
 
-    if (IDENTS.containsKey(identifier)) return false;
+    if (isKeyword(identifier)) return false;
 
     var firstCp = identifier.codePointAt(0);
     return (firstCp == '$' || firstCp == '_' || Character.isUnicodeIdentifierStart(firstCp))
@@ -737,53 +736,80 @@ public class Lexer {
     return isRegularIdentifier(identifier) ? identifier : "`" + identifier + "`";
   }
 
-  private static final Map<String, Token> IDENTS = new HashMap<>(42);
+  @SuppressWarnings("SuspiciousArrayMethodCall")
+  private static boolean isKeyword(String text) {
+    var index = Arrays.binarySearch(KEYWORDS, text);
+    return index >= 0;
+  }
+
+  @SuppressWarnings("SuspiciousArrayMethodCall")
+  private static Token getKeywordOrIdent(String text) {
+    var index = Arrays.binarySearch(KEYWORDS, text);
+    if (index < 0) return Token.IDENT;
+    return KEYWORDS[index].token;
+  }
+
+  private static final KeywordEntry[] KEYWORDS = new KeywordEntry[43];
+
+  private static class KeywordEntry implements Comparable<String> {
+    protected final String name;
+    protected final Token token;
+
+    public KeywordEntry(String name, Token token) {
+      this.name = name;
+      this.token = token;
+    }
+
+    @Override
+    public int compareTo(String o) {
+      return name.compareTo(o);
+    }
+  }
 
   static {
-    IDENTS.put("_", Token.UNDERSCORE);
-    IDENTS.put("abstract", Token.ABSTRACT);
-    IDENTS.put("amends", Token.AMENDS);
-    IDENTS.put("as", Token.AS);
-    IDENTS.put("class", Token.CLASS);
-    IDENTS.put("const", Token.CONST);
-    IDENTS.put("else", Token.ELSE);
-    IDENTS.put("extends", Token.EXTENDS);
-    IDENTS.put("external", Token.EXTERNAL);
-    IDENTS.put("false", Token.FALSE);
-    IDENTS.put("fixed", Token.FIXED);
-    IDENTS.put("for", Token.FOR);
-    IDENTS.put("function", Token.FUNCTION);
-    IDENTS.put("hidden", Token.HIDDEN);
-    IDENTS.put("if", Token.IF);
-    IDENTS.put("import", Token.IMPORT);
-    IDENTS.put("in", Token.IN);
-    IDENTS.put("is", Token.IS);
-    IDENTS.put("let", Token.LET);
-    IDENTS.put("local", Token.LOCAL);
-    IDENTS.put("module", Token.MODULE);
-    IDENTS.put("new", Token.NEW);
-    IDENTS.put("nothing", Token.NOTHING);
-    IDENTS.put("null", Token.NULL);
-    IDENTS.put("open", Token.OPEN);
-    IDENTS.put("out", Token.OUT);
-    IDENTS.put("outer", Token.OUTER);
-    IDENTS.put("read", Token.READ);
-    IDENTS.put("super", Token.SUPER);
-    IDENTS.put("this", Token.THIS);
-    IDENTS.put("throw", Token.THROW);
-    IDENTS.put("trace", Token.TRACE);
-    IDENTS.put("true", Token.TRUE);
-    IDENTS.put("typealias", Token.TYPE_ALIAS);
-    IDENTS.put("unknown", Token.UNKNOWN);
-    IDENTS.put("when", Token.WHEN);
-    // reserved
-    IDENTS.put("protected", Token.PROTECTED);
-    IDENTS.put("override", Token.OVERRIDE);
-    IDENTS.put("record", Token.RECORD);
-    IDENTS.put("delete", Token.DELETE);
-    IDENTS.put("case", Token.CASE);
-    IDENTS.put("switch", Token.SWITCH);
-    IDENTS.put("vararg", Token.VARARG);
+    KEYWORDS[0] = new KeywordEntry("_", Token.UNDERSCORE);
+    KEYWORDS[1] = new KeywordEntry("abstract", Token.ABSTRACT);
+    KEYWORDS[2] = new KeywordEntry("amends", Token.AMENDS);
+    KEYWORDS[3] = new KeywordEntry("as", Token.AS);
+    KEYWORDS[4] = new KeywordEntry("case", Token.CASE);
+    KEYWORDS[5] = new KeywordEntry("class", Token.CLASS);
+    KEYWORDS[6] = new KeywordEntry("const", Token.CONST);
+    KEYWORDS[7] = new KeywordEntry("delete", Token.DELETE);
+    KEYWORDS[8] = new KeywordEntry("else", Token.ELSE);
+    KEYWORDS[9] = new KeywordEntry("extends", Token.EXTENDS);
+    KEYWORDS[10] = new KeywordEntry("external", Token.EXTERNAL);
+    KEYWORDS[11] = new KeywordEntry("false", Token.FALSE);
+    KEYWORDS[12] = new KeywordEntry("fixed", Token.FIXED);
+    KEYWORDS[13] = new KeywordEntry("for", Token.FOR);
+    KEYWORDS[14] = new KeywordEntry("function", Token.FUNCTION);
+    KEYWORDS[15] = new KeywordEntry("hidden", Token.HIDDEN);
+    KEYWORDS[16] = new KeywordEntry("if", Token.IF);
+    KEYWORDS[17] = new KeywordEntry("import", Token.IMPORT);
+    KEYWORDS[18] = new KeywordEntry("in", Token.IN);
+    KEYWORDS[19] = new KeywordEntry("is", Token.IS);
+    KEYWORDS[20] = new KeywordEntry("let", Token.LET);
+    KEYWORDS[21] = new KeywordEntry("local", Token.LOCAL);
+    KEYWORDS[22] = new KeywordEntry("module", Token.MODULE);
+    KEYWORDS[23] = new KeywordEntry("new", Token.NEW);
+    KEYWORDS[24] = new KeywordEntry("nothing", Token.NOTHING);
+    KEYWORDS[25] = new KeywordEntry("null", Token.NULL);
+    KEYWORDS[26] = new KeywordEntry("open", Token.OPEN);
+    KEYWORDS[27] = new KeywordEntry("out", Token.OUT);
+    KEYWORDS[28] = new KeywordEntry("outer", Token.OUTER);
+    KEYWORDS[29] = new KeywordEntry("override", Token.OVERRIDE);
+    KEYWORDS[30] = new KeywordEntry("protected", Token.PROTECTED);
+    KEYWORDS[31] = new KeywordEntry("read", Token.READ);
+    KEYWORDS[32] = new KeywordEntry("record", Token.RECORD);
+    KEYWORDS[33] = new KeywordEntry("super", Token.SUPER);
+    KEYWORDS[34] = new KeywordEntry("switch", Token.SWITCH);
+    KEYWORDS[35] = new KeywordEntry("this", Token.THIS);
+    KEYWORDS[36] = new KeywordEntry("throw", Token.THROW);
+    KEYWORDS[37] = new KeywordEntry("trace", Token.TRACE);
+    KEYWORDS[38] = new KeywordEntry("true", Token.TRUE);
+    KEYWORDS[39] = new KeywordEntry("typealias", Token.TYPE_ALIAS);
+    KEYWORDS[40] = new KeywordEntry("unknown", Token.UNKNOWN);
+    KEYWORDS[41] = new KeywordEntry("vararg", Token.VARARG);
+    KEYWORDS[42] = new KeywordEntry("when", Token.WHEN);
   }
 
   private static class InterpolationScope {
