@@ -1,5 +1,7 @@
 = Release Notes
 
+The Pkl team aims to release a new version of Pkl in February, June, and October of each year.
+
 * xref:0.27.adoc[0.27 Release Notes]
 * xref:0.26.adoc[0.26 Release Notes]
 * xref:0.25.adoc[0.25 Release Notes]

@@ -38,6 +38,8 @@
 
 * xref:ROOT:examples.adoc[Examples]
 
+* xref:ROOT:evolution-and-roadmap.adoc[Evolution and Roadmap]
+
 * xref:release-notes:index.adoc[Release Notes]
 ** xref:release-notes:0.27.adoc[0.27 Release Notes]
 ** xref:release-notes:0.26.adoc[0.26 Release Notes]
