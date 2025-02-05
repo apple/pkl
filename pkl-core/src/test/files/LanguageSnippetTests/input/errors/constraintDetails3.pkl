@@ -1,0 +1,10 @@
+// typechecks within child frames should also be eagerly checked
+foo: Listing(toList().every((it: Listing<Bird>) -> it[0].name == "Bob")) = new {
+  new Listing {
+    new Bird {
+      name = "Sandy"
+    }
+  }
+}
+
+class Bird { name: String }

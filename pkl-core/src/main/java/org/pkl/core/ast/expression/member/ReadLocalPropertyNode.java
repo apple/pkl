@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
     var result = objReceiver.getCachedValue(property);
 
     if (result == null) {
-      result = callNode.call(objReceiver, owner, property.getName());
+      result = callNode.call(VmUtils.getMarkers(frame), objReceiver, owner, property.getName());
       objReceiver.setCachedValue(property, result);
     }
 

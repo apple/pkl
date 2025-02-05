@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.lambda.ApplyVmFunction5Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction5NodeGen;
 import org.pkl.core.runtime.VmFunction;
@@ -29,8 +30,14 @@ public final class Function5Nodes {
 
     @Specialization
     protected Object eval(
-        VmFunction self, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5) {
-      return applyLambdaNode.execute(self, arg1, arg2, arg3, arg4, arg5);
+        VirtualFrame frame,
+        VmFunction self,
+        Object arg1,
+        Object arg2,
+        Object arg3,
+        Object arg4,
+        Object arg5) {
+      return applyLambdaNode.execute(frame, self, arg1, arg2, arg3, arg4, arg5);
     }
   }
 }

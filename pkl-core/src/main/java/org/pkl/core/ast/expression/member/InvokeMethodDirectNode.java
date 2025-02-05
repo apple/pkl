@@ -22,6 +22,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 
 /** A non-virtual ("direct") method call. */
 public final class InvokeMethodDirectNode extends ExpressionNode {
@@ -48,11 +49,12 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
   @Override
   @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiverNode.executeGeneric(frame);
-    args[1] = owner;
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = receiverNode.executeGeneric(frame);
+    args[2] = owner;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);

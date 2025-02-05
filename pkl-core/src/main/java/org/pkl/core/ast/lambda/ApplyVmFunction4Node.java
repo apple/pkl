@@ -18,17 +18,20 @@ package org.pkl.core.ast.lambda;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 public abstract class ApplyVmFunction4Node extends PklNode {
   public abstract Object execute(
-      VmFunction function, Object arg1, Object arg2, Object arg3, Object arg4);
+      VirtualFrame frame, VmFunction function, Object arg1, Object arg2, Object arg3, Object arg4);
 
   @Specialization(guards = "function.getCallTarget() == cachedCallTarget")
   protected Object evalDirect(
+      VirtualFrame frame,
       VmFunction function,
       Object arg1,
       Object arg2,
@@ -38,11 +41,13 @@ public abstract class ApplyVmFunction4Node extends PklNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function, arg1, arg2, arg3, arg4);
+    return callNode.call(
+        VmUtils.getMarkers(frame), function.getThisValue(), function, arg1, arg2, arg3, arg4);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
+      VirtualFrame frame,
       VmFunction function,
       Object arg1,
       Object arg2,
@@ -51,6 +56,13 @@ public abstract class ApplyVmFunction4Node extends PklNode {
       @Cached("create()") IndirectCallNode callNode) {
 
     return callNode.call(
-        function.getCallTarget(), function.getThisValue(), function, arg1, arg2, arg3, arg4);
+        function.getCallTarget(),
+        VmUtils.getMarkers(frame),
+        function.getThisValue(),
+        function,
+        arg1,
+        arg2,
+        arg3,
+        arg4);
   }
 }

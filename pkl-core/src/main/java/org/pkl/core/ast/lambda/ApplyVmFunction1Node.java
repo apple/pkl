@@ -20,49 +20,52 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmCollection;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 @NodeChild("functionNode")
 @NodeChild("argumentNode")
 public abstract class ApplyVmFunction1Node extends ExpressionNode {
-  public abstract Object execute(VmFunction function, Object arg1);
+  public abstract Object execute(VirtualFrame frame, VmFunction function, Object arg1);
 
   public static ApplyVmFunction1Node create() {
     //noinspection ConstantConditions
     return ApplyVmFunction1NodeGen.create(null, null);
   }
 
-  public final boolean executeBoolean(VmFunction function, Object arg1) {
-    var result = execute(function, arg1);
+  public final boolean executeBoolean(VirtualFrame frame, VmFunction function, Object arg1) {
+    var result = execute(frame, function, arg1);
     if (result instanceof Boolean b) return b;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getBooleanClass()).build();
   }
 
-  public final String executeString(VmFunction function, Object arg1) {
-    var result = execute(function, arg1);
+  public final String executeString(VirtualFrame frame, VmFunction function, Object arg1) {
+    var result = execute(frame, function, arg1);
     if (result instanceof String string) return string;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getStringClass()).build();
   }
 
-  public final Long executeInt(VmFunction function, Object arg1) {
-    var result = execute(function, arg1);
+  public final Long executeInt(VirtualFrame frame, VmFunction function, Object arg1) {
+    var result = execute(frame, function, arg1);
     if (result instanceof Long l) return l;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getIntClass()).build();
   }
 
-  public final VmCollection executeCollection(VmFunction function, Object arg1) {
-    var result = execute(function, arg1);
+  public final VmCollection executeCollection(
+      VirtualFrame frame, VmFunction function, Object arg1) {
+    var result = execute(frame, function, arg1);
     if (result instanceof VmCollection collection) return collection;
 
     CompilerDirectives.transferToInterpreter();
@@ -71,19 +74,28 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
   @Specialization(guards = "function.getCallTarget() == cachedCallTarget")
   protected Object evalDirect(
+      VirtualFrame frame,
       VmFunction function,
       Object arg1,
       @SuppressWarnings("unused") @Cached("function.getCallTarget()")
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function, arg1);
+    return callNode.call(VmUtils.getMarkers(frame), function.getThisValue(), function, arg1);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
-      VmFunction function, Object arg1, @Cached("create()") IndirectCallNode callNode) {
+      VirtualFrame frame,
+      VmFunction function,
+      Object arg1,
+      @Cached("create()") IndirectCallNode callNode) {
 
-    return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1);
+    return callNode.call(
+        function.getCallTarget(),
+        VmUtils.getMarkers(frame),
+        function.getThisValue(),
+        function,
+        arg1);
   }
 }

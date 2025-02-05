@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,8 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
     var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
-        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
+        ? receiver.executeTypeCasts(
+            result, VmUtils.getOwner(frame), VmUtils.getMarkers(frame), callNode, null, null)
         : result;
   }
 
@@ -62,7 +63,8 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
     var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
-        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
+        ? receiver.executeTypeCasts(
+            result, VmUtils.getOwner(frame), VmUtils.getMarkers(frame), callNode, null, null)
         : result;
   }
 

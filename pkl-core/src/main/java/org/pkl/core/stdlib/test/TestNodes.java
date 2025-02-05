@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.test;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.stream.Collectors;
 import org.pkl.core.ast.lambda.ApplyVmFunction0Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction0NodeGen;
@@ -37,9 +38,10 @@ public final class TestNodes {
     @Child private ApplyVmFunction0Node applyLambdaNode = ApplyVmFunction0NodeGen.create();
 
     @Specialization
-    protected String eval(@SuppressWarnings("unused") VmTyped self, VmFunction function) {
+    protected String eval(
+        VirtualFrame frame, @SuppressWarnings("unused") VmTyped self, VmFunction function) {
       try {
-        applyLambdaNode.execute(function);
+        applyLambdaNode.execute(frame, function);
       } catch (VmException e) {
         return render(e);
       }
@@ -52,9 +54,10 @@ public final class TestNodes {
     @Child private ApplyVmFunction0Node applyLambdaNode = ApplyVmFunction0NodeGen.create();
 
     @Specialization
-    protected Object eval(@SuppressWarnings("unused") VmTyped self, VmFunction function) {
+    protected Object eval(
+        VirtualFrame frame, @SuppressWarnings("unused") VmTyped self, VmFunction function) {
       try {
-        applyLambdaNode.execute(function);
+        applyLambdaNode.execute(frame, function);
       } catch (VmException e) {
         return render(e);
       }

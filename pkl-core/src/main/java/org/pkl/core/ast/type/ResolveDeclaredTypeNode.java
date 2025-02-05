@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
  */
 package org.pkl.core.ast.type;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
 
 public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
@@ -44,7 +46,7 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
   }
 
   protected VmTyped getImport(
-      VmTyped module, Identifier importName, SourceSection importNameSection) {
+      VirtualFrame frame, VmTyped module, Identifier importName, SourceSection importNameSection) {
     assert importName.isLocalProp();
 
     var member = module.getMember(importName);
@@ -72,14 +74,16 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     assert member.getConstantValue() == null;
     var result = module.getCachedValue(importName);
     if (result == null) {
-      result = callNode.call(member.getCallTarget(), module, module, importName);
+      result =
+          callNode.call(
+              member.getCallTarget(), VmUtils.getMarkers(frame), module, module, importName);
       module.setCachedValue(importName, result);
     }
     return (VmTyped) result;
   }
 
   protected @Nullable Object getType(
-      VmTyped module, Identifier typeName, SourceSection typeNameSection) {
+      VirtualFrame frame, VmTyped module, Identifier typeName, SourceSection typeNameSection) {
     var member = module.getMember(typeName);
     if (member == null) return null;
 
@@ -93,7 +97,9 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     assert member.getConstantValue() == null;
     var result = module.getCachedValue(typeName);
     if (result == null) {
-      result = callNode.call(member.getCallTarget(), module, module, typeName);
+      result =
+          callNode.call(
+              member.getCallTarget(), VmUtils.getMarkers(frame), module, module, typeName);
       module.setCachedValue(typeName, result);
     }
     return result;

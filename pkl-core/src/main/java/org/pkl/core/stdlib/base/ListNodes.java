@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
@@ -191,11 +192,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmPair eval(VmList self, VmFunction function) {
+    protected VmPair eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder1 = self.builder();
       var builder2 = self.builder();
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) {
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) {
           builder1.add(elem);
         } else {
           builder2.add(elem);
@@ -217,9 +218,9 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) return elem;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return elem;
       }
 
       CompilerDirectives.transferToInterpreter();
@@ -234,9 +235,9 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) return elem;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return elem;
       }
       return VmNull.withoutDefault();
     }
@@ -246,11 +247,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       var iterator = self.reverseIterator();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (applyLambdaNode.executeBoolean(function, elem)) return elem;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return elem;
       }
 
       CompilerDirectives.transferToInterpreter();
@@ -265,11 +266,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       var iterator = self.reverseIterator();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (applyLambdaNode.executeBoolean(function, elem)) return elem;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return elem;
       }
       return VmNull.withoutDefault();
     }
@@ -325,10 +326,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected long eval(VmList self, VmFunction function) {
+    protected long eval(VirtualFrame frame, VmList self, VmFunction function) {
       long idx = 0;
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) return idx;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return idx;
         idx += 1;
       }
 
@@ -344,10 +345,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       long idx = 0;
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) return idx;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return idx;
         idx += 1;
       }
       return VmNull.withoutDefault();
@@ -358,12 +359,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected long eval(VmList self, VmFunction function) {
+    protected long eval(VirtualFrame frame, VmList self, VmFunction function) {
       var idx = self.getLength();
       var iter = self.reverseIterator();
       while (iter.hasNext()) {
         idx -= 1;
-        if (applyLambdaNode.executeBoolean(function, iter.next())) return idx;
+        if (applyLambdaNode.executeBoolean(frame, function, iter.next())) return idx;
       }
 
       CompilerDirectives.transferToInterpreter();
@@ -378,12 +379,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       var idx = self.getLength();
       var iter = self.reverseIterator();
       while (iter.hasNext()) {
         idx -= 1;
-        if (applyLambdaNode.executeBoolean(function, iter.next())) {
+        if (applyLambdaNode.executeBoolean(frame, function, iter.next())) {
           return (long) idx;
         }
       }
@@ -395,9 +396,9 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmList self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmList self, VmFunction function) {
       for (var elem : self) {
-        if (!applyLambdaNode.executeBoolean(function, elem)) return false;
+        if (!applyLambdaNode.executeBoolean(frame, function, elem)) return false;
       }
       return true;
     }
@@ -407,9 +408,9 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmList self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmList self, VmFunction function) {
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) return true;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) return true;
       }
       return false;
     }
@@ -419,10 +420,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) {
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) {
           builder.add(elem);
         }
       }
@@ -448,12 +449,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       long index = 0;
 
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, index++, elem)) {
+        if (applyLambdaNode.executeBoolean(frame, function, index++, elem)) {
           builder.add(elem);
         }
       }
@@ -496,11 +497,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmList self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmList self, VmFunction function) {
       var visited = EconomicSets.create();
 
       for (var elem : self) {
-        if (!EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) return false;
+        if (!EconomicSets.add(visited, applyLambdaNode.execute(frame, function, elem)))
+          return false;
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -527,12 +529,13 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       var visited = EconomicSets.create();
 
       for (var elem : self) {
-        if (EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) builder.add(elem);
+        if (EconomicSets.add(visited, applyLambdaNode.execute(frame, function, elem)))
+          builder.add(elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -544,10 +547,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       for (var elem : self) {
-        builder.add(applyLambdaNode.execute(function, elem));
+        builder.add(applyLambdaNode.execute(frame, function, elem));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -558,10 +561,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       for (var elem : self) {
-        var newValue = applyLambdaNode.execute(function, elem);
+        var newValue = applyLambdaNode.execute(frame, function, elem);
         if (newValue instanceof VmNull) continue;
         builder.add(newValue);
       }
@@ -574,12 +577,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       long index = 0;
 
       for (var elem : self) {
-        builder.add(applyLambdaNode.execute(function, index++, elem));
+        builder.add(applyLambdaNode.execute(frame, function, index++, elem));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -590,10 +593,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       for (var elem : self) {
-        builder.addAll(applyLambdaNode.executeCollection(function, elem));
+        builder.addAll(applyLambdaNode.executeCollection(frame, function, elem));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -604,12 +607,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       long index = 0;
 
       for (var elem : self) {
-        builder.addAll(applyLambdaNode.executeCollection(function, index++, elem));
+        builder.addAll(applyLambdaNode.executeCollection(frame, function, index++, elem));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -634,10 +637,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = self.builder();
       for (var elem : self) {
-        if (!applyLambdaNode.executeBoolean(function, elem)) {
+        if (!applyLambdaNode.executeBoolean(frame, function, elem)) {
           return builder.build();
         }
         builder.add(elem);
@@ -657,11 +660,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var idx = self.getLength();
       var iter = self.reverseIterator();
       while (iter.hasNext()) {
-        if (!applyLambdaNode.executeBoolean(function, iter.next())) break;
+        if (!applyLambdaNode.executeBoolean(frame, function, iter.next())) break;
         idx -= 1;
       }
       return self.drop(idx);
@@ -679,10 +682,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var idx = 0;
       for (var elem : self) {
-        if (!applyLambdaNode.executeBoolean(function, elem)) break;
+        if (!applyLambdaNode.executeBoolean(frame, function, elem)) break;
         idx += 1;
       }
       return self.drop(idx);
@@ -700,11 +703,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
       var idx = self.getLength();
       var iter = self.reverseIterator();
       while (iter.hasNext()) {
-        if (!applyLambdaNode.executeBoolean(function, iter.next())) break;
+        if (!applyLambdaNode.executeBoolean(frame, function, iter.next())) break;
         idx -= 1;
       }
       return self.take(idx);
@@ -715,12 +718,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, Object initial, VmFunction function) {
       var iter = self.iterator();
       var result = initial;
       while (iter.hasNext()) {
         var elem = iter.next();
-        result = applyLambdaNode.execute(function, result, elem);
+        result = applyLambdaNode.execute(frame, function, result, elem);
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result;
@@ -731,12 +734,12 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, Object initial, VmFunction function) {
       var iter = self.reverseIterator();
       var result = initial;
       while (iter.hasNext()) {
         var elem = iter.next();
-        result = applyLambdaNode.execute(function, elem, result);
+        result = applyLambdaNode.execute(frame, function, elem, result);
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result;
@@ -747,14 +750,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, Object initial, VmFunction function) {
       var iter = self.iterator();
       var result = initial;
       long index = 0;
 
       while (iter.hasNext()) {
         var elem = iter.next();
-        result = applyLambdaNode.execute(function, index++, result, elem);
+        result = applyLambdaNode.execute(frame, function, index++, result, elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -766,14 +769,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        result = applyLambdaNode.execute(function, result, elem);
+        result = applyLambdaNode.execute(frame, function, result, elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -785,14 +788,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        result = applyLambdaNode.execute(function, result, elem);
+        result = applyLambdaNode.execute(frame, function, result, elem);
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -804,11 +807,11 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       var builder = VmMap.builder();
 
       for (Object elem : self) {
-        var key = applyLambdaNode.execute(function, elem);
+        var key = applyLambdaNode.execute(frame, function, elem);
         var value = builder.get(key);
         var newValue = value == null ? VmList.of(elem) : ((VmList) value).add(elem);
         builder.add(key, newValue);
@@ -826,7 +829,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -834,7 +837,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -851,7 +854,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -859,7 +862,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -876,7 +879,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -884,7 +887,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -901,7 +904,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -909,7 +912,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -928,17 +931,17 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
       var result = iterator.next();
-      var resultValue = applyLambdaNode.execute(function, result);
+      var resultValue = applyLambdaNode.execute(frame, function, result);
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        var elemValue = applyLambdaNode.execute(frame, function, elem);
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -958,17 +961,17 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
       var result = iterator.next();
-      var resultValue = applyLambdaNode.execute(function, result);
+      var resultValue = applyLambdaNode.execute(frame, function, result);
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        var elemValue = applyLambdaNode.execute(frame, function, elem);
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -988,17 +991,17 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
       var result = iterator.next();
-      var resultValue = applyLambdaNode.execute(function, result);
+      var resultValue = applyLambdaNode.execute(frame, function, result);
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        var elemValue = applyLambdaNode.execute(frame, function, elem);
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -1018,17 +1021,17 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
       var result = iterator.next();
-      var resultValue = applyLambdaNode.execute(function, result);
+      var resultValue = applyLambdaNode.execute(frame, function, result);
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        var elemValue = applyLambdaNode.execute(frame, function, elem);
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -1043,14 +1046,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var cmpResult = applyLambdaNode.executeBoolean(function, elem, result);
+        var cmpResult = applyLambdaNode.executeBoolean(frame, function, elem, result);
         if (cmpResult) {
           result = elem;
         }
@@ -1065,14 +1068,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var cmpResult = applyLambdaNode.executeBoolean(function, result, elem);
+        var cmpResult = applyLambdaNode.executeBoolean(frame, function, result, elem);
         if (cmpResult) {
           result = elem;
         }
@@ -1087,14 +1090,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var cmpResult = applyLambdaNode.executeBoolean(function, elem, result);
+        var cmpResult = applyLambdaNode.executeBoolean(frame, function, elem, result);
         if (cmpResult) {
           result = elem;
         }
@@ -1109,14 +1112,14 @@ public final class ListNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
       var result = iterator.next();
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        var cmpResult = applyLambdaNode.executeBoolean(function, result, elem);
+        var cmpResult = applyLambdaNode.executeBoolean(frame, function, result, elem);
         if (cmpResult) {
           result = elem;
         }
@@ -1131,8 +1134,8 @@ public final class ListNodes {
     @Child private CompareNode compareNode = new CompareNode();
 
     @Specialization
-    protected VmList eval(VmList self) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareNode, null));
+    protected VmList eval(VirtualFrame frame, VmList self) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareNode, null));
     }
   }
 
@@ -1140,8 +1143,8 @@ public final class ListNodes {
     @Child private CompareByNode compareByNode = new CompareByNode();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction selector) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareByNode, selector));
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction selector) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareByNode, selector));
     }
   }
 
@@ -1149,8 +1152,8 @@ public final class ListNodes {
     @Child private CompareWithNode compareWithNode = new CompareWithNode();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareWithNode, function));
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareWithNode, function));
     }
   }
 
@@ -1224,10 +1227,10 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected long eval(VmList self, VmFunction function) {
+    protected long eval(VirtualFrame frame, VmList self, VmFunction function) {
       long count = 0;
       for (var elem : self) {
-        if (applyLambdaNode.executeBoolean(function, elem)) count += 1;
+        if (applyLambdaNode.executeBoolean(frame, function, elem)) count += 1;
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return count;
@@ -1274,12 +1277,13 @@ public final class ListNodes {
     @Child private ApplyVmFunction1Node applyValueExtractorNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmMap eval(VmList self, VmFunction keyExtractor, VmFunction valueExtractor) {
+    protected VmMap eval(
+        VirtualFrame frame, VmList self, VmFunction keyExtractor, VmFunction valueExtractor) {
       var builder = VmMap.builder();
 
       for (var elem : self) {
-        var key = applyKeyExtractorNode.execute(keyExtractor, elem);
-        var value = applyValueExtractorNode.execute(valueExtractor, elem);
+        var key = applyKeyExtractorNode.execute(frame, keyExtractor, elem);
+        var value = applyValueExtractorNode.execute(frame, valueExtractor, elem);
         builder.add(key, value);
       }
 

@@ -27,7 +27,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.runtime.BaseModule;
-import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmUtils;
 
@@ -63,16 +62,8 @@ public abstract class TypeConstraintNode extends PklNode {
     initConstraintSlot(frame);
 
     var value = frame.getAuxiliarySlot(customThisSlot);
-    var result = applyNode.executeBoolean(function, value);
+    var result = applyNode.executeBoolean(frame, function, value);
     if (!result) {
-      var context = VmContext.get(this);
-      try {
-        context.setShouldEagerTypecheck(true);
-        // execute a second time so that we update the object itself
-        applyNode.execute(function, value);
-      } finally {
-        context.setShouldEagerTypecheck(false);
-      }
       throw new VmTypeMismatchException.Constraint(sourceSection, value);
     }
   }

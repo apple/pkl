@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.ast.expression.binary;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
@@ -30,7 +31,7 @@ public abstract class PipeNode extends BinaryExpressionNode {
   }
 
   @Specialization
-  protected Object eval(Object left, VmFunction right) {
-    return applyFunctionNode.execute(right, left);
+  protected Object eval(VirtualFrame frame, Object left, VmFunction right) {
+    return applyFunctionNode.execute(frame, right, left);
   }
 }

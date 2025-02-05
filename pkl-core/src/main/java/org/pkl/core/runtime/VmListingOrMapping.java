@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import java.util.EnumSet;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -59,6 +60,7 @@ public abstract class VmListingOrMapping extends VmObject {
   public final Object executeTypeCasts(
       Object value,
       VmObjectLike owner,
+      EnumSet<FrameMarker> frameMarkers,
       IndirectCallNode callNode,
       // if non-null, a stack frame for this member is inserted if a type cast fails
       @Nullable ObjectMember member,
@@ -71,11 +73,12 @@ public abstract class VmListingOrMapping extends VmObject {
         this == owner
             ? value
             : ((VmListingOrMapping) parent)
-                .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
+                .executeTypeCasts(
+                    value, owner, frameMarkers, callNode, member, newNextTypeCastNode);
     if (typeCastNode == null || typeCastNode == nextTypeCastNode) return result;
     var callTarget = typeCastNode.getCallTarget();
     try {
-      return callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+      return callNode.call(callTarget, frameMarkers, typeCheckReceiver, typeCheckOwner, result);
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       if (member != null) {
@@ -108,7 +111,8 @@ public abstract class VmListingOrMapping extends VmObject {
       var callNode = IndirectCallNode.getUncached();
       var callTarget = typeCastNode.getCallTarget();
       try {
-        result = callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+        result =
+            callNode.call(callTarget, FrameMarkers.NONE, typeCheckReceiver, typeCheckOwner, result);
       } catch (VmException e) {
         var member = VmUtils.findMember(parent, key);
         assert member != null; // already found the member's cached value

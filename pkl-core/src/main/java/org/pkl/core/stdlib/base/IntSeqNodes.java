@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import org.pkl.core.ast.lambda.*;
@@ -65,11 +66,11 @@ public final class IntSeqNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmIntSeq self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmIntSeq self, Object initial, VmFunction function) {
       var result = initial;
       var iter = self.iterator();
       while (iter.hasNext()) {
-        result = applyLambdaNode.execute(function, result, iter.nextLong());
+        result = applyLambdaNode.execute(frame, function, result, iter.nextLong());
       }
       reportLoopCount(this, self.getLength());
       return result;
@@ -80,11 +81,11 @@ public final class IntSeqNodes {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmList eval(VmIntSeq self, VmFunction function) {
+    protected VmList eval(VirtualFrame frame, VmIntSeq self, VmFunction function) {
       var builder = VmList.EMPTY.builder();
       var iterator = self.iterator();
       while (iterator.hasNext()) {
-        builder.add(applyLambdaNode.execute(function, iterator.nextLong()));
+        builder.add(applyLambdaNode.execute(frame, function, iterator.nextLong()));
       }
       reportLoopCount(this, self.getLength());
       return builder.build();

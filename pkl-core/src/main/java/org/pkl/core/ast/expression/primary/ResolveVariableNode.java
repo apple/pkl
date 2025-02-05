@@ -164,7 +164,8 @@ public final class ResolveVariableNode extends ExpressionNode {
           return new ConstantValueNode(sourceSection, constantValue);
         }
 
-        var computedValue = member.getCallTarget().call(baseModule, baseModule);
+        var computedValue =
+            member.getCallTarget().call(VmUtils.getMarkers(frame), baseModule, baseModule);
         baseModule.setCachedValue(variableName, computedValue);
         return new ConstantValueNode(sourceSection, computedValue);
       }
