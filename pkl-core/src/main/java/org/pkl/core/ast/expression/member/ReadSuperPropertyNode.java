@@ -66,7 +66,7 @@ public final class ReadSuperPropertyNode extends ExpressionNode {
       // caching the result of a super call is tricky (function of both receiver and owner)
       return callNode.call(
           property.getCallTarget(),
-          FrameMarkers.SKIP_TYPECHECK,
+          FrameMarkers.withSkipTypecheck(VmUtils.getMarkers(frame)),
           // TODO: should the marker only turn off constraint checking, not overall type checking?
           receiver,
           owner,

@@ -2525,10 +2525,7 @@ public abstract class TypeNode extends PklNode {
       var ret = childNode.execute(frame, value);
 
       var frameMarkers = VmUtils.getMarkers(frame);
-      var isEagerTypecheck = frameMarkers.contains(FrameMarker.EAGER_TYPECHECK_MARKER);
-      if (!isEagerTypecheck) {
-        frameMarkers.add(FrameMarker.EAGER_TYPECHECK_MARKER);
-      }
+      var isNotEagerTypecheck = frameMarkers.add(FrameMarker.EAGER_TYPECHECK);
       try {
         frame.setAuxiliarySlot(customThisSlot, value);
         for (var node : constraintNodes) {
@@ -2536,8 +2533,8 @@ public abstract class TypeNode extends PklNode {
         }
         return ret;
       } finally {
-        if (!isEagerTypecheck) {
-          frameMarkers.remove(FrameMarker.EAGER_TYPECHECK_MARKER);
+        if (isNotEagerTypecheck) {
+          frameMarkers.remove(FrameMarker.EAGER_TYPECHECK);
         }
       }
     }

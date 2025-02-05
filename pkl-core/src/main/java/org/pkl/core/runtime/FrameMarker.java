@@ -15,7 +15,12 @@
  */
 package org.pkl.core.runtime;
 
+/**
+ * Markers to influence how execution works within a call stack.
+ *
+ * <p>Markers get passed down from parent frame to child frame.
+ */
 public enum FrameMarker {
-  SKIP_TYPECHECK_MARKER,
-  EAGER_TYPECHECK_MARKER
+  SKIP_TYPECHECK,
+  EAGER_TYPECHECK
 }

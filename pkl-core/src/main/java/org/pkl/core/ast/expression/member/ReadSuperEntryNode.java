@@ -18,7 +18,6 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.EnumSet;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
@@ -59,12 +58,10 @@ public class ReadSuperEntryNode extends ExpressionNode {
       var constantValue = member.getConstantValue();
       if (constantValue != null) return constantValue; // TODO: type check
 
-      var markers = EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
-      markers.addAll(VmUtils.getMarkers(frame));
       // caching the result of a super call is tricky (function of both receiver and owner)
       return callNode.call(
           member.getCallTarget(),
-          markers,
+          FrameMarkers.withSkipTypecheck(VmUtils.getMarkers(frame)),
           // TODO: should the marker only turn off constraint checking, not overall type checking?
           receiver,
           owner,

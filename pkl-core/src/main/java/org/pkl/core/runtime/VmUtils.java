@@ -313,7 +313,7 @@ public final class VmUtils {
               result =
                   callNode.call(
                       callTarget,
-                      frameMarkers.add(FrameMarker.SKIP_TYPECHECK_MARKER),
+                      FrameMarkers.withSkipTypecheck(frameMarkers),
                       receiver,
                       property.getOwner(),
                       constantValue);
@@ -342,9 +342,9 @@ public final class VmUtils {
     if (checkType) {
       result = callNode.call(callTarget, frameMarkers, receiver, owner, memberKey);
     } else {
-      var newMarkers = EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
-      newMarkers.addAll(frameMarkers);
-      result = callNode.call(callTarget, newMarkers, receiver, owner, memberKey);
+      result =
+          callNode.call(
+              callTarget, FrameMarkers.withSkipTypecheck(frameMarkers), receiver, owner, memberKey);
     }
     receiver.setCachedValue(memberKey, result);
     return result;
@@ -958,11 +958,11 @@ public final class VmUtils {
    */
   public static boolean shouldRunTypeCheck(VirtualFrame frame) {
     var markers = getMarkers(frame);
-    return !markers.contains(FrameMarker.SKIP_TYPECHECK_MARKER);
+    return !markers.contains(FrameMarker.SKIP_TYPECHECK);
   }
 
   public static boolean shouldRunEagerTypeCheck(VirtualFrame frame) {
     var markers = getMarkers(frame);
-    return markers.contains(FrameMarker.EAGER_TYPECHECK_MARKER);
+    return markers.contains(FrameMarker.EAGER_TYPECHECK);
   }
 }

@@ -20,8 +20,11 @@ import java.util.EnumSet;
 public final class FrameMarkers {
   private FrameMarkers() {}
 
-  public static final EnumSet<FrameMarker> SKIP_TYPECHECK =
-      EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
-
   public static final EnumSet<FrameMarker> NONE = EnumSet.noneOf(FrameMarker.class);
+
+  public static EnumSet<FrameMarker> withSkipTypecheck(EnumSet<FrameMarker> frameMarkers) {
+    var newMarkers = EnumSet.copyOf(frameMarkers);
+    newMarkers.add(FrameMarker.SKIP_TYPECHECK);
+    return newMarkers;
+  }
 }
