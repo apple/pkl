@@ -1,7 +1,6 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.27.2=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
