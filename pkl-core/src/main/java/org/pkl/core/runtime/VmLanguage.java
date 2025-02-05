@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
 import com.oracle.truffle.api.nodes.Node;
@@ -56,7 +55,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
     throw new UnsupportedOperationException("parse");
   }
 
-  @TruffleBoundary
   public VmTyped loadModule(ModuleKey moduleKey) {
     var context = VmContext.get(null);
 
@@ -71,7 +69,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             null);
   }
 
-  @TruffleBoundary
   public VmTyped loadModule(ModuleKey moduleKey, @Nullable Node importNode) {
     var context = VmContext.get(null);
 
@@ -86,7 +83,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             importNode);
   }
 
-  @TruffleBoundary
   void initializeModule(
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
