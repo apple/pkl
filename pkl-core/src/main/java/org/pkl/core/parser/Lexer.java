@@ -751,15 +751,7 @@ public class Lexer {
 
   private static final KeywordEntry[] KEYWORDS = new KeywordEntry[43];
 
-  private static class KeywordEntry implements Comparable<String> {
-    protected final String name;
-    protected final Token token;
-
-    public KeywordEntry(String name, Token token) {
-      this.name = name;
-      this.token = token;
-    }
-
+  private record KeywordEntry(String name, Token token) implements Comparable<String> {
     @Override
     public int compareTo(String o) {
       return name.compareTo(o);
