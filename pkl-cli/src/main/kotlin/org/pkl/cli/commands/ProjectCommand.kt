@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,119 +31,117 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.TestOptions
 import org.pkl.commons.cli.commands.single
 
-class ProjectCommand(helpLink: String) :
+private const val NEWLINE = '\u0085'
+
+object ProjectCommand :
   NoOpCliktCommand(
     name = "project",
     help = "Run commands related to projects",
-    epilog = "For more information, visit $helpLink"
+    epilog = "For more information, visit $helpLink",
   ) {
   init {
-    subcommands(ResolveCommand(helpLink), PackageCommand(helpLink))
+    subcommands(ResolveCommand, PackageCommand)
   }
+}
 
-  companion object {
-    class ResolveCommand(helpLink: String) :
-      BaseCommand(
-        name = "resolve",
-        helpLink = helpLink,
-        help =
-          """
-        Resolve dependencies for project(s)
-        
-        This command takes the `dependencies` of `PklProject`s, and writes the
-        resolved versions to `PklProject.deps.json` files.
-        
-        Examples:
+object ResolveCommand :
+  BaseCommand(
+    name = "resolve",
+    helpLink = helpLink,
+    help =
+      """
+    Resolve dependencies for project(s)
+    
+    This command takes the `dependencies` of `PklProject`s, and writes the
+    resolved versions to `PklProject.deps.json` files.
+    
+    Examples:
 
-        ```
-        # Search the current working directory for a project, and resolve its dependencies.
-        $ pkl project resolve
+    ```
+    # Search the current working directory for a project, and resolve its dependencies.
+    $ pkl project resolve
 
-        # Resolve dependencies for all projects within the `packages/` directory.
-        $ pkl project resolve packages/*/
-        ```
-        """,
-      ) {
-      private val projectDirs: List<Path> by
-        argument("<dir>", "The project directories to resolve dependencies for").path().multiple()
+    # Resolve dependencies for all projects within the `packages/` directory.
+    $ pkl project resolve packages/*/
+    ```
+    """,
+  ) {
+  private val projectDirs: List<Path> by
+    argument("<dir>", "The project directories to resolve dependencies for").path().multiple()
 
-      override fun run() {
-        CliProjectResolver(baseOptions.baseOptions(emptyList()), projectDirs).run()
-      }
-    }
+  override fun run() {
+    CliProjectResolver(baseOptions.baseOptions(emptyList()), projectDirs).run()
+  }
+}
 
-    private const val NEWLINE = '\u0085'
+object PackageCommand :
+  BaseCommand(
+    name = "package",
+    helpLink = helpLink,
+    help =
+      """
+      Verify package(s), and prepare package artifacts to be published.
 
-    class PackageCommand(helpLink: String) :
-      BaseCommand(
-        name = "package",
-        helpLink = helpLink,
-        help =
-          """
-          Verify package(s), and prepare package artifacts to be published.
-  
-          This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
-          Additionally, it verifies that all imports resolve to paths that are local to the project.
-  
-          Finally, this command writes the following artifacts into the output directory specified by the output path.
-  
-            - `name@version` - dependency metadata$NEWLINE
-            - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
-            - `name@version.zip` - package archive$NEWLINE
-            - `name@version.zip.sha256` - package archive's SHA-256 checksum
-  
-          The output path option accepts the following placeholders:
-  
-            - %{name}: The display name of the package$NEWLINE
-            - %{version}: The version of the package
-  
-          If a project has local project dependencies, the depended upon project directories must also
-          be included as arguments to this command.
-  
-          Examples:
-  
-          ```
-          # Search the current working directory for a project, and package it.
-          $ pkl project package
-  
-          # Package all projects within the `packages/` directory.
-          $ pkl project package packages/*/
-          ```
-          """
-            .trimIndent(),
-      ) {
-      private val testOptions by TestOptions()
+      This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
+      Additionally, it verifies that all imports resolve to paths that are local to the project.
 
-      private val projectDirs: List<Path> by
-        argument("<dir>", "The project directories to package").path().multiple()
+      Finally, this command writes the following artifacts into the output directory specified by the output path.
 
-      private val outputPath: String by
-        option(
-            names = arrayOf("--output-path"),
-            help = "The directory to write artifacts to",
-            metavar = "<path>"
-          )
-          .single()
-          .default(".out/%{name}@%{version}")
+        - `name@version` - dependency metadata$NEWLINE
+        - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
+        - `name@version.zip` - package archive$NEWLINE
+        - `name@version.zip.sha256` - package archive's SHA-256 checksum
 
-      private val skipPublishCheck: Boolean by
-        option(
-            names = arrayOf("--skip-publish-check"),
-            help = "Skip checking if a package has already been published with different contents",
-          )
-          .single()
-          .flag()
+      The output path option accepts the following placeholders:
 
-      override fun run() {
-        CliProjectPackager(
-            baseOptions.baseOptions(emptyList()),
-            projectDirs,
-            testOptions.cliTestOptions,
-            outputPath,
-            skipPublishCheck
-          )
-          .run()
-      }
-    }
+        - %{name}: The display name of the package$NEWLINE
+        - %{version}: The version of the package
+
+      If a project has local project dependencies, the depended upon project directories must also
+      be included as arguments to this command.
+
+      Examples:
+
+      ```
+      # Search the current working directory for a project, and package it.
+      $ pkl project package
+
+      # Package all projects within the `packages/` directory.
+      $ pkl project package packages/*/
+      ```
+      """
+        .trimIndent(),
+  ) {
+  private val testOptions by TestOptions()
+
+  private val projectDirs: List<Path> by
+    argument("<dir>", "The project directories to package").path().multiple()
+
+  private val outputPath: String by
+    option(
+        names = arrayOf("--output-path"),
+        help = "The directory to write artifacts to",
+        metavar = "<path>",
+      )
+      .single()
+      .default(".out/%{name}@%{version}")
+
+  private val skipPublishCheck: Boolean by
+    option(
+        names = arrayOf("--skip-publish-check"),
+        help = "Skip checking if a package has already been published with different contents",
+      )
+      .single()
+      .flag()
+
+  override fun run() {
+    CliProjectPackager(
+        baseOptions.baseOptions(emptyList()),
+        projectDirs,
+        testOptions.cliTestOptions,
+        outputPath,
+        skipPublishCheck,
+      )
+      .run()
   }
 }

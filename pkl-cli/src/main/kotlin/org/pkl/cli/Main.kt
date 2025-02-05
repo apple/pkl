@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,10 @@
 
 package org.pkl.cli
 
-import com.github.ajalt.clikt.core.subcommands
 import org.pkl.cli.commands.*
 import org.pkl.commons.cli.cliMain
-import org.pkl.core.Release
 
 /** Main method of the Pkl CLI (command-line evaluator and REPL). */
 internal fun main(args: Array<String>) {
-  cliMain {
-    val version = Release.current().versionInfo()
-    val helpLink = "${Release.current().documentation().homepage()}pkl-cli/index.html#usage"
-    RootCommand("pkl", version, helpLink)
-      .subcommands(
-        EvalCommand(helpLink),
-        ReplCommand(helpLink),
-        ServerCommand(helpLink),
-        TestCommand(helpLink),
-        ProjectCommand(helpLink),
-        DownloadPackageCommand(helpLink),
-        AnalyzeCommand(helpLink),
-      )
-      .main(args)
-  }
+  cliMain { RootCommand.main(args) }
 }

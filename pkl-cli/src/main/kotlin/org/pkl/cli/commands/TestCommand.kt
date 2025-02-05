@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.TestOptions
 
-class TestCommand(helpLink: String) :
+object TestCommand :
   BaseCommand(name = "test", help = "Run tests within the given module(s)", helpLink = helpLink) {
   val modules: List<URI> by
     argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
@@ -40,7 +40,7 @@ class TestCommand(helpLink: String) :
   override fun run() {
     CliTestRunner(
         options = baseOptions.baseOptions(modules, projectOptions),
-        testOptions = testOptions.cliTestOptions
+        testOptions = testOptions.cliTestOptions,
       )
       .run()
   }

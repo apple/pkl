@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.single
 import org.pkl.core.packages.PackageUri
 
-class DownloadPackageCommand(helpLink: String) :
+object DownloadPackageCommand :
   BaseCommand(
     name = "download-package",
     helpLink = helpLink,
@@ -44,7 +44,7 @@ class DownloadPackageCommand(helpLink: String) :
     $ pkl download-package package://example.com/package1@1.0.0 package://example.com/package2@1.0.0 
     ```
   """
-        .trimIndent()
+        .trimIndent(),
   ) {
   private val projectOptions by ProjectOptions()
 
@@ -56,7 +56,7 @@ class DownloadPackageCommand(helpLink: String) :
   private val noTransitive: Boolean by
     option(
         names = arrayOf("--no-transitive"),
-        help = "Skip downloading transitive dependencies of a package"
+        help = "Skip downloading transitive dependencies of a package",
       )
       .single()
       .flag()
@@ -65,7 +65,7 @@ class DownloadPackageCommand(helpLink: String) :
     CliPackageDownloader(
         baseOptions.baseOptions(emptyList(), projectOptions),
         packageUris,
-        noTransitive
+        noTransitive,
       )
       .run()
   }

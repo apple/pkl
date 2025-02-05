@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,9 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.cli.CliException
 
 class CliMainTest {
-
-  private val docCommand = DocCommand()
-
   @Test
   fun `CLI run test`() {
-    val e = assertThrows<CliException> { docCommand.parse(arrayOf("foo", "--output-dir", "/tmp")) }
+    val e = assertThrows<CliException> { DocCommand.parse(arrayOf("foo", "--output-dir", "/tmp")) }
     assertThat(e)
       .hasMessageContaining("must contain at least one module named `doc-package-info.pkl`")
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,42 +25,40 @@ import org.pkl.cli.CliImportAnalyzerOptions
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
-class AnalyzeCommand(helpLink: String) :
+object AnalyzeCommand :
   NoOpCliktCommand(
     name = "analyze",
     help = "Commands related to static analysis",
-    epilog = "For more information, visit $helpLink"
+    epilog = "For more information, visit $helpLink",
   ) {
   init {
-    subcommands(AnalyzeImportsCommand(helpLink))
+    subcommands(AnalyzeImportsCommand)
   }
+}
 
-  companion object {
-    class AnalyzeImportsCommand(helpLink: String) :
-      ModulesCommand(
-        name = "imports",
-        helpLink = helpLink,
-        help = "Prints the graph of modules imported by the input module(s)."
-      ) {
+object AnalyzeImportsCommand :
+  ModulesCommand(
+    name = "imports",
+    helpLink = helpLink,
+    help = "Prints the graph of modules imported by the input module(s).",
+  ) {
 
-      private val outputPath: Path? by
-        option(
-            names = arrayOf("-o", "--output-path"),
-            metavar = "<path>",
-            help = "File path where the output file is placed."
-          )
-          .path()
-          .single()
+  private val outputPath: Path? by
+    option(
+        names = arrayOf("-o", "--output-path"),
+        metavar = "<path>",
+        help = "File path where the output file is placed.",
+      )
+      .path()
+      .single()
 
-      override fun run() {
-        val options =
-          CliImportAnalyzerOptions(
-            base = baseOptions.baseOptions(modules, projectOptions),
-            outputFormat = baseOptions.format,
-            outputPath = outputPath
-          )
-        CliImportAnalyzer(options).run()
-      }
-    }
+  override fun run() {
+    val options =
+      CliImportAnalyzerOptions(
+        base = baseOptions.baseOptions(modules, projectOptions),
+        outputFormat = baseOptions.format,
+        outputPath = outputPath,
+      )
+    CliImportAnalyzer(options).run()
   }
 }
