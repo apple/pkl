@@ -159,7 +159,7 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.parser.AbstractAstBuilderNew;
+import org.pkl.core.parser.AbstractAstBuilder;
 import org.pkl.core.parser.Span;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
@@ -273,7 +273,7 @@ import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 @SuppressWarnings("DataFlowIssue")
-public class AstBuilderNew extends AbstractAstBuilderNew<Object> {
+public class AstBuilder extends AbstractAstBuilder<Object> {
   private final VmLanguage language;
   private final ModuleInfo moduleInfo;
 
@@ -285,7 +285,7 @@ public class AstBuilderNew extends AbstractAstBuilderNew<Object> {
   private final SymbolTable symbolTable;
   private final boolean isMethodReturnTypeChecked;
 
-  public AstBuilderNew(
+  public AstBuilder(
       Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
     super(source);
     this.language = language;
@@ -300,7 +300,7 @@ public class AstBuilderNew extends AbstractAstBuilderNew<Object> {
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
   }
 
-  public static AstBuilderNew create(
+  public static AstBuilder create(
       Source source,
       VmLanguage language,
       Module ctx,
@@ -343,7 +343,7 @@ public class AstBuilderNew extends AbstractAstBuilderNew<Object> {
               isAmend);
     }
 
-    return new AstBuilderNew(source, language, moduleInfo, moduleResolver);
+    return new AstBuilder(source, language, moduleInfo, moduleResolver);
   }
 
   @Override

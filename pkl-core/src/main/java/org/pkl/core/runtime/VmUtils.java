@@ -46,7 +46,7 @@ import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.builder.AstBuilderNew;
+import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
@@ -874,7 +874,7 @@ public final class VmUtils {
             resolvedModule,
             false);
     var language = VmLanguage.get(null);
-    var builder = new AstBuilderNew(source, language, moduleInfo, moduleResolver);
+    var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
     var parsedExpression = parseExpressionNode(expression, source);
     var exprNode = builder.visitExpr(parsedExpression);
     assert exprNode != null;

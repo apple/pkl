@@ -20,7 +20,7 @@ import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
-import org.pkl.core.ast.builder.AstBuilderNew;
+import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.Parser;
@@ -102,7 +102,7 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
     }
 
     var builder =
-        AstBuilderNew.create(
+        AstBuilder.create(
             source, this, moduleContext, moduleKey, resolvedModuleKey, moduleResolver);
     var moduleNode = builder.visitModule(moduleContext);
     moduleNode.getCallTarget().call(emptyModule, emptyModule);

@@ -28,7 +28,7 @@ import org.graalvm.polyglot.Context;
 import org.pkl.core.*;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.ast.*;
-import org.pkl.core.ast.builder.AstBuilderNew;
+import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
@@ -169,7 +169,7 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings("StatementWithEmptyBody")
+  @SuppressWarnings({"StatementWithEmptyBody", "DataFlowIssue"})
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -201,7 +201,7 @@ public class ReplServer implements AutoCloseable {
     }
 
     var builder =
-        new AstBuilderNew(
+        new AstBuilder(
             VmUtils.loadSource(resolved),
             language,
             replState.module.getModuleInfo(),

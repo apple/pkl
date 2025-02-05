@@ -108,13 +108,13 @@ import org.pkl.core.parser.cst.TypeParameterList;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
 
-public abstract class AbstractAstBuilderNew<T> implements ParserVisitor<T> {
+public abstract class AbstractAstBuilder<T> implements ParserVisitor<T> {
 
   protected final Source source;
 
   protected abstract VmExceptionBuilder exceptionBuilder();
 
-  protected AbstractAstBuilderNew(Source source) {
+  protected AbstractAstBuilder(Source source) {
     this.source = source;
   }
 

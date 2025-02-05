@@ -24,7 +24,7 @@ import java.util.List;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.AbstractAstBuilderNew;
+import org.pkl.core.parser.AbstractAstBuilder;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
 import org.pkl.core.parser.cst.Expr;
@@ -53,7 +53,7 @@ import org.pkl.core.util.Nullable;
  *   <li>read expressions
  * </ul>
  */
-public class ImportsAndReadsParser extends AbstractAstBuilderNew<@Nullable List<Entry>> {
+public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Entry>> {
 
   public record Entry(
       boolean isModule,
