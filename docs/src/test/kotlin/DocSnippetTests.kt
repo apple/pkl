@@ -16,15 +16,14 @@ import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
 import org.pkl.core.module.ModuleKeyFactories
-import org.pkl.core.parser.LexParseException
-import org.pkl.core.parser.Parser
-import org.pkl.core.parser.antlr.PklParser
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
 import org.pkl.core.util.IoUtils
-import org.antlr.v4.runtime.ParserRuleContext
 import org.pkl.core.http.HttpClient
+import org.pkl.core.newparser.Parser
+import org.pkl.core.newparser.ParserError
+import org.pkl.core.newparser.cst.ClassPropertyEntry
 import org.pkl.core.resource.ResourceReaders
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
@@ -303,7 +302,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
 
       override fun getType() = Type.TEST
 
-      private val parsed: ParserRuleContext by lazy {
+      private val parsed: org.pkl.core.newparser.cst.Node by lazy {
         when (language) {
           "pkl" -> Parser().parseModule(code)
           "pkl-expr" -> Parser().parseExpressionInput(code)
@@ -318,7 +317,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
             if (expectError) {
               throw AssertionError("Expected a parse error, but got none.")
             }
-          } catch (e: LexParseException) {
+          } catch (e: ParserError) {
             if (!expectError) {
               throw AssertionError(e.message)
             }
@@ -335,7 +334,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           )
         )
 
-        val properties = parsed.children.filterIsInstance<PklParser.ClassPropertyContext>()
+        val properties = parsed.children().filterIsInstance<ClassPropertyEntry>()
 
         val responses = mutableListOf<ReplResponse>()
 
@@ -344,7 +343,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           responses.addAll(context.replServer.handleRequest(
             ReplRequest.Eval(
               "snippet",
-              prop.Identifier().text,
+              prop.name().value,
               false,
               true
             )

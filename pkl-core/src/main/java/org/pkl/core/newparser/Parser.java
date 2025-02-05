@@ -40,6 +40,7 @@ import org.pkl.core.newparser.cst.Modifier;
 import org.pkl.core.newparser.cst.Modifier.ModifierValue;
 import org.pkl.core.newparser.cst.Module;
 import org.pkl.core.newparser.cst.ModuleDecl;
+import org.pkl.core.newparser.cst.Node;
 import org.pkl.core.newparser.cst.ObjectBody;
 import org.pkl.core.newparser.cst.ObjectMemberNode;
 import org.pkl.core.newparser.cst.Operator;
@@ -47,6 +48,7 @@ import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.newparser.cst.Parameter.TypedIdent;
 import org.pkl.core.newparser.cst.ParameterList;
 import org.pkl.core.newparser.cst.QualifiedIdent;
+import org.pkl.core.newparser.cst.ReplInput;
 import org.pkl.core.newparser.cst.StringConstantPart;
 import org.pkl.core.newparser.cst.StringConstantPart.EscapeType;
 import org.pkl.core.newparser.cst.StringConstantPart.StringEscape;
@@ -98,7 +100,6 @@ public class Parser {
     }
     var start = spanLookahead;
     Span end = null;
-    QualifiedIdent moduleName = null;
     ModuleDecl moduleDecl = null;
     var imports = new ArrayList<Import>();
     var classes = new ArrayList<Clazz>();
@@ -108,29 +109,15 @@ public class Parser {
     try {
       var header = parseEntryHeader();
 
-      if (lookahead == Token.MODULE) {
-        moduleName = parseModuleNameDecl();
-        end = moduleName.span();
-      }
-      var extendsOrAmendsDecl = parseExtendsAmendsDecl();
-      if (extendsOrAmendsDecl != null) {
-        end = extendsOrAmendsDecl.span();
-      }
-      if (moduleName != null || extendsOrAmendsDecl != null) {
-        moduleDecl =
-            new ModuleDecl(
-                header.docComment,
-                header.annotations,
-                header.modifiers,
-                moduleName,
-                extendsOrAmendsDecl,
-                start.endWith(end));
+      moduleDecl = parseModuleDecl(header);
+      if (moduleDecl != null) {
+        end = moduleDecl.span();
         header = null;
       }
       // imports
       while (lookahead == Token.IMPORT || lookahead == Token.IMPORT_STAR) {
-        if (header != null && !header.isEmpty()) {
-          throw parserError("wrongImportHeader");
+        if (header != null && header.isNotEmpty()) {
+          throw parserError("wrongHeaders", "Imports");
         }
         var _import = parseImportDecl();
         imports.add(_import);
@@ -138,7 +125,7 @@ public class Parser {
       }
 
       // entries
-      if (header != null && !header.isEmpty()) {
+      if (header != null && header.isNotEmpty()) {
         end = parseModuleEntry(header, classes, typeAliases, props, methods);
       }
 
@@ -158,9 +145,82 @@ public class Parser {
     }
   }
 
-  private QualifiedIdent parseModuleNameDecl() {
-    expect(Token.MODULE, "unexpectedToken", "module");
-    return parseQualifiedIdent();
+  public Expr parseExpressionInput(String source) {
+    init(source);
+    var expr = parseExpr();
+    expect(Token.EOF, "unexpectedToken", "end of file");
+    return expr;
+  }
+
+  public ReplInput parseReplInput(String source) {
+    init(source);
+    var nodes = new ArrayList<Node>();
+    while (lookahead != Token.EOF) {
+      var header = parseEntryHeader();
+      switch (lookahead) {
+        case IMPORT, IMPORT_STAR -> {
+          ensureEmptyHeaders(header, "Imports");
+          nodes.add(parseImportDecl());
+        }
+        case MODULE, AMENDS, EXTENDS -> nodes.add(parseModuleDecl(header));
+        case CLASS -> nodes.add(parseClass(header));
+        case TYPE_ALIAS -> nodes.add(parseTypeAlias(header));
+        case FUNCTION -> nodes.add(parseClassMethod(header));
+        case IDENT -> {
+          next();
+          switch (lookahead) {
+            case COLON, ASSIGN, LBRACE -> {
+              backtrack();
+              nodes.add(parseClassProperty(header));
+            }
+            default -> {
+              backtrack();
+              ensureEmptyHeaders(header, "Expressions");
+              nodes.add(parseExpr());
+            }
+          }
+        }
+        default -> {
+          ensureEmptyHeaders(header, "Expressions");
+          nodes.add(parseExpr());
+        }
+      }
+    }
+    Span span;
+    if (nodes.isEmpty()) {
+      span = new Span(0, 0);
+    } else {
+      span = nodes.get(0).span().endWith(nodes.get(nodes.size() - 1).span());
+    }
+    return new ReplInput(nodes, span);
+  }
+
+  private @Nullable ModuleDecl parseModuleDecl(EntryHeader header) {
+    QualifiedIdent moduleName = null;
+    Span start = null;
+    Span end = null;
+    if (lookahead == Token.MODULE) {
+      start = expect(Token.MODULE, "unexpectedToken", "module").span;
+      moduleName = parseQualifiedIdent();
+      end = moduleName.span();
+    }
+    var extendsOrAmendsDecl = parseExtendsAmendsDecl();
+    if (extendsOrAmendsDecl != null) {
+      if (start == null) {
+        start = extendsOrAmendsDecl.span();
+      }
+      end = extendsOrAmendsDecl.span();
+    }
+    if (moduleName != null || extendsOrAmendsDecl != null) {
+      return new ModuleDecl(
+          header.docComment,
+          header.annotations,
+          header.modifiers,
+          moduleName,
+          extendsOrAmendsDecl,
+          start.endWith(end));
+    }
+    return null;
   }
 
   private QualifiedIdent parseQualifiedIdent() {
@@ -1390,9 +1450,8 @@ public class Parser {
 
   private record EntryHeader(
       @Nullable DocComment docComment, List<Annotation> annotations, List<Modifier> modifiers) {
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    boolean isEmpty() {
-      return docComment == null && annotations.isEmpty() && modifiers.isEmpty();
+    boolean isNotEmpty() {
+      return !(docComment == null && annotations.isEmpty() && modifiers.isEmpty());
     }
 
     Span span(Span or) {
@@ -1480,6 +1539,13 @@ public class Parser {
     lookahead = prev.token;
     spanLookahead = prev.span;
     backtracking = true;
+  }
+
+  private void ensureEmptyHeaders(EntryHeader header, String messageArg) {
+    if (header.isNotEmpty()) {
+      throw new ParserError(
+          ErrorMessages.create("wrongHeaders", messageArg), header.span(spanLookahead));
+    }
   }
 
   private String remove_(String number) {

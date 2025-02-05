@@ -17,10 +17,12 @@ package org.pkl.core.newparser.cst;
 
 import java.util.List;
 import org.pkl.core.newparser.Span;
+import org.pkl.core.util.Nullable;
 
 public interface Node {
   Span span();
 
+  @Nullable
   Node parent();
 
   void setParent(Node parent);

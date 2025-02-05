@@ -73,7 +73,7 @@ public final class Module implements Node {
   }
 
   @Override
-  public Node parent() {
+  public @Nullable Node parent() {
     return parent;
   }
 

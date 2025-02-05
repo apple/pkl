@@ -46,7 +46,7 @@ import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.builder.AstBuilder;
+import org.pkl.core.ast.builder.AstBuilderNew;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
@@ -56,10 +56,10 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.newparser.Parser;
 import org.pkl.core.newparser.ParserError;
+import org.pkl.core.newparser.cst.Expr;
 import org.pkl.core.parser.LexParseException;
-import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.antlr.PklParser.ExprContext;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
@@ -507,7 +507,7 @@ public final class VmUtils {
   }
 
   public static VmException toVmException(
-      LexParseException e, String text, URI moduleUri, String moduleName) {
+      ParserError e, String text, URI moduleUri, String moduleName) {
     var source =
         Source.newBuilder("pkl", text, moduleName)
             .mimeType(VmLanguage.MIME_TYPE)
@@ -540,7 +540,7 @@ public final class VmUtils {
         .build();
   }
 
-  // wanted to keep Parser/LexParseException API free from
+  // wanted to keep Parser/ParserError API free from
   // Truffle classes (Source), hence put this method here
   public static VmException toVmException(ParserError e, Source source, String moduleName) {
     return new VmExceptionBuilder()
@@ -865,10 +865,10 @@ public final class VmUtils {
         section.getEndColumn());
   }
 
-  private static ExprContext parseExpressionContext(String expression, Source source) {
+  private static Expr parseExpressionNode(String expression, Source source) {
     try {
-      return new Parser().parseExpressionInput(expression).expr();
-    } catch (LexParseException e) {
+      return new Parser().parseExpressionInput(expression);
+    } catch (ParserError e) {
       throw VmUtils.toVmException(e, source, REPL_TEXT);
     }
   }
@@ -898,9 +898,9 @@ public final class VmUtils {
             resolvedModule,
             false);
     var language = VmLanguage.get(null);
-    var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
-    var exprContext = parseExpressionContext(expression, source);
-    var exprNode = (ExpressionNode) exprContext.accept(builder);
+    var builder = new AstBuilderNew(source, language, moduleInfo, moduleResolver);
+    var parsedExpression = parseExpressionNode(expression, source);
+    var exprNode = builder.visitExpr(parsedExpression);
     var rootNode =
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
