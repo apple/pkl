@@ -18,9 +18,16 @@ package org.pkl.core.newparser.cst;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public sealed interface StringPart extends Node {
+
+  @Override
+  default <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitStringPart(this);
+  }
+
   final class StringConstantParts implements StringPart {
     private final List<StringConstantPart> parts;
     private final Span span;

@@ -221,7 +221,7 @@ public class ReplServer implements AutoCloseable {
             evaluateMemberDef(replState, property, forceResults, results);
           }
         } else if (tree instanceof Clazz clazz) {
-          addStaticModuleProperty(builder.visitClazz(clazz));
+          addStaticModuleProperty(builder.visitClass(clazz));
         } else if (tree instanceof org.pkl.core.newparser.cst.TypeAlias typeAlias) {
           addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
         } else if (tree instanceof org.pkl.core.newparser.cst.ClassMethod classMethod) {

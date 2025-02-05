@@ -158,7 +158,7 @@ import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.newparser.ParserVisitor;
+import org.pkl.core.newparser.AbstractParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
@@ -204,7 +204,6 @@ import org.pkl.core.newparser.cst.Import;
 import org.pkl.core.newparser.cst.Modifier;
 import org.pkl.core.newparser.cst.Modifier.ModifierValue;
 import org.pkl.core.newparser.cst.Module;
-import org.pkl.core.newparser.cst.ModuleDecl;
 import org.pkl.core.newparser.cst.Node;
 import org.pkl.core.newparser.cst.ObjectBody;
 import org.pkl.core.newparser.cst.ObjectMemberNode;
@@ -273,7 +272,7 @@ import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
-public class AstBuilderNew implements ParserVisitor<Object> {
+public class AstBuilderNew extends AbstractParserVisitor<Object> {
   protected final Source source;
   private final VmLanguage language;
   private final ModuleInfo moduleInfo;
@@ -1297,19 +1296,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectMember(ObjectMemberNode member) {
-    if (member instanceof ObjectMemberNode.ObjectElement o) return visitObjectElement(o);
-    if (member instanceof ObjectMemberNode.ObjectProperty o) return visitObjectProperty(o);
-    if (member instanceof ObjectMemberNode.ObjectBodyProperty o) return visitObjectBodyProperty(o);
-    if (member instanceof ObjectMemberNode.ObjectMethod o) return visitObjectMethod(o);
-    if (member instanceof ObjectMemberNode.MemberPredicate o) return visitMemberPredicate(o);
-    if (member instanceof ObjectMemberNode.MemberPredicateBody o)
-      return visitMemberPredicateBody(o);
-    if (member instanceof ObjectMemberNode.ObjectEntry o) return visitObjectEntry(o);
-    if (member instanceof ObjectMemberNode.ObjectEntryBody o) return visitObjectEntryBody(o);
-    if (member instanceof ObjectMemberNode.ObjectSpread o) return visitObjectSpread(o);
-    if (member instanceof ObjectMemberNode.WhenGenerator o) return visitWhenGenerator(o);
-    if (member instanceof ObjectMemberNode.ForGenerator o) return visitForGenerator(o);
-    throw PklBugException.unreachableCode();
+    return (GeneratorMemberNode) member.accept(this);
   }
 
   @Override
@@ -1610,7 +1597,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
     }
 
     for (var clazz : classes) {
-      ObjectMember member = visitClazz(clazz);
+      ObjectMember member = visitClass(clazz);
 
       if (moduleInfo.isAmend() && !member.isLocal()) {
         throw exceptionBuilder()
@@ -1658,18 +1645,6 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public Object visitModuleDecl(ModuleDecl decl) {
-    // visitModule should handle this
-    throw PklBugException.unreachableCode();
-  }
-
-  @Override
-  public Object visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl) {
-    // visitModule should handle this
-    throw PklBugException.unreachableCode();
-  }
-
-  @Override
   public ObjectMember visitImport(Import imp) {
     var importNode = doVisitImport(imp.isGlob(), imp, imp.getUrl());
     var moduleKey = moduleResolver.resolve(importNode.getImportUri());
@@ -1703,7 +1678,7 @@ public class AstBuilderNew implements ParserVisitor<Object> {
   }
 
   @Override
-  public ObjectMember visitClazz(Clazz clazz) {
+  public ObjectMember visitClass(Clazz clazz) {
     var sourceSection = createSourceSection(clazz);
     var headerSection = createSourceSection(clazz.getHeaderSpan());
 
@@ -2089,69 +2064,12 @@ public class AstBuilderNew implements ParserVisitor<Object> {
 
   @Override
   public UnresolvedTypeNode visitType(Type type) {
-    if (type instanceof Type.UnknownType t) return visitUnknownType(t);
-    else if (type instanceof Type.NothingType t) return visitNothingType(t);
-    else if (type instanceof Type.ModuleType t) return visitModuleType(t);
-    else if (type instanceof Type.StringConstantType t) return visitStringConstantType(t);
-    else if (type instanceof Type.DeclaredType t) return visitDeclaredType(t);
-    else if (type instanceof Type.ParenthesizedType t) return visitParenthesizedType(t);
-    else if (type instanceof Type.NullableType t) return visitNullableType(t);
-    else if (type instanceof Type.ConstrainedType t) return visitConstrainedType(t);
-    else if (type instanceof Type.DefaultUnionType t) return visitDefaultUnionType(t);
-    else if (type instanceof Type.UnionType t) return visitUnionType(t);
-    else if (type instanceof Type.FunctionType t) return visitFunctionType(t);
-    else throw PklBugException.unreachableCode();
+    return (UnresolvedTypeNode) type.accept(this);
   }
 
   @Override
   public ExpressionNode visitExpr(Expr expr) {
-    if (expr instanceof Expr.This e) return visitThisExpr(e);
-    if (expr instanceof Expr.Outer e) return visitOuterExpr(e);
-    if (expr instanceof Expr.Module e) return visitModuleExpr(e);
-    if (expr instanceof Expr.NullLiteral e) return visitNullLiteralExpr(e);
-    if (expr instanceof Expr.BoolLiteral e) return visitBoolLiteralExpr(e);
-    if (expr instanceof Expr.IntLiteral e) return visitIntLiteralExpr(e);
-    if (expr instanceof Expr.FloatLiteral e) return visitFloatLiteralExpr(e);
-    if (expr instanceof Expr.StringConstant e) return visitStringConstantExpr(e);
-    if (expr instanceof Expr.InterpolatedString e) return visitInterpolatedStringExpr(e);
-    if (expr instanceof Expr.InterpolatedMultiString e) return visitInterpolatedMultiStringExpr(e);
-    if (expr instanceof Expr.Throw e) return visitThrowExpr(e);
-    if (expr instanceof Expr.Trace e) return visitTraceExpr(e);
-    if (expr instanceof Expr.ImportExpr e) return visitImportExpr(e);
-    if (expr instanceof Expr.Read e) return visitReadExpr(e);
-    if (expr instanceof Expr.ReadGlob e) return visitReadGlobExpr(e);
-    if (expr instanceof Expr.ReadNull e) return visitReadNullExpr(e);
-    if (expr instanceof Expr.UnqualifiedAccess e) return visitUnqualifiedAccessExpr(e);
-    if (expr instanceof Expr.QualifiedAccess e) return visitQualifiedAccessExpr(e);
-    if (expr instanceof Expr.SuperAccess e) return visitSuperAccessExpr(e);
-    if (expr instanceof Expr.SuperSubscript e) return visitSuperSubscriptExpr(e);
-    if (expr instanceof Expr.NonNull e) return visitNonNullExpr(e);
-    if (expr instanceof Expr.UnaryMinus e) return visitUnaryMinusExpr(e);
-    if (expr instanceof Expr.LogicalNot e) return visitLogicalNotExpr(e);
-    if (expr instanceof Expr.If e) return visitIfExpr(e);
-    if (expr instanceof Expr.Let e) return visitLetExpr(e);
-    if (expr instanceof Expr.FunctionLiteral e) return visitFunctionLiteralExpr(e);
-    if (expr instanceof Expr.Parenthesized e) return visitParenthesizedExpr(e);
-    if (expr instanceof Expr.New e) return visitNewExpr(e);
-    if (expr instanceof Expr.Amends e) return visitAmendsExpr(e);
-    if (expr instanceof Expr.BinaryOp e) return visitBinaryOpExpr(e);
-    if (expr instanceof Expr.Subscript e) return visitSubscriptExpr(e);
-    if (expr instanceof Expr.TypeCast e) return visitTypeCastExpr(e);
-    if (expr instanceof Expr.TypeCheck e) return visitTypeCheckExpr(e);
-    // OperatorExpr and TypeExpr should never be reached here
-    throw PklBugException.unreachableCode();
-  }
-
-  @Override
-  public Object visitParameter(Parameter param) {
-    // should never be called
-    throw PklBugException.unreachableCode();
-  }
-
-  @Override
-  public Object visitParameterList(ParameterList paramList) {
-    // should never be called
-    throw PklBugException.unreachableCode();
+    return (ExpressionNode) expr.accept(this);
   }
 
   @Override

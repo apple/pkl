@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public class ArgumentList implements Node {
@@ -52,6 +53,11 @@ public class ArgumentList implements Node {
   @Override
   public List<Node> children() {
     return Collections.unmodifiableList(args);
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitArgumentList(this);
   }
 
   public List<Expr> getArgs() {

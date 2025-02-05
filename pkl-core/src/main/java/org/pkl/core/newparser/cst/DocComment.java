@@ -17,6 +17,7 @@ package org.pkl.core.newparser.cst;
 
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public final class DocComment implements Node {
@@ -45,6 +46,11 @@ public final class DocComment implements Node {
   @Override
   public List<Node> children() {
     return List.of();
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitDocComment(this);
   }
 
   @Override

@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
@@ -46,6 +47,11 @@ public class ReplInput implements Node {
   @Override
   public List<Node> children() {
     return Collections.unmodifiableList(nodes);
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitReplInput(this);
   }
 
   public List<Node> getNodes() {

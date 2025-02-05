@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
@@ -90,6 +91,11 @@ public final class ModuleDecl implements Node {
       children.add(extendsOrAmendsDecl);
     }
     return children;
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitModuleDecl(this);
   }
 
   public @Nullable DocComment getDocComment() {

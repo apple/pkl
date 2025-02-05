@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
@@ -53,6 +54,11 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectElement(this);
     }
 
     public Expr getExpr() {
@@ -136,6 +142,11 @@ public sealed interface ObjectMemberNode extends Node {
       }
       children.add(expr);
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectProperty(this);
     }
 
     public List<Modifier> getModifiers() {
@@ -236,6 +247,11 @@ public sealed interface ObjectMemberNode extends Node {
       children.add(ident);
       children.addAll(bodyList);
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectBodyProperty(this);
     }
 
     public List<Modifier> getModifiers() {
@@ -354,6 +370,11 @@ public sealed interface ObjectMemberNode extends Node {
       return children;
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectMethod(this);
+    }
+
     public List<Modifier> getModifiers() {
       return modifiers;
     }
@@ -468,6 +489,11 @@ public sealed interface ObjectMemberNode extends Node {
       return List.of(pred, expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitMemberPredicate(this);
+    }
+
     public Expr getPred() {
       return pred;
     }
@@ -539,6 +565,11 @@ public sealed interface ObjectMemberNode extends Node {
       children.add(key);
       children.addAll(bodyList);
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitMemberPredicateBody(this);
     }
 
     public Expr getKey() {
@@ -616,6 +647,11 @@ public sealed interface ObjectMemberNode extends Node {
       return List.of(key, value);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectEntry(this);
+    }
+
     public Expr getKey() {
       return key;
     }
@@ -689,6 +725,11 @@ public sealed interface ObjectMemberNode extends Node {
       return children;
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectEntryBody(this);
+    }
+
     public Expr getKey() {
       return key;
     }
@@ -754,6 +795,11 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitObjectSpread(this);
     }
 
     public Expr getExpr() {
@@ -840,6 +886,11 @@ public sealed interface ObjectMemberNode extends Node {
         children.add(elseClause);
       }
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitWhenGenerator(this);
     }
 
     public Expr getCond() {
@@ -938,6 +989,11 @@ public sealed interface ObjectMemberNode extends Node {
       children.add(expr);
       children.add(body);
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitForGenerator(this);
     }
 
     public Parameter getP1() {

@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public final class QualifiedIdent implements Node {
@@ -52,6 +53,11 @@ public final class QualifiedIdent implements Node {
   @Override
   public List<Node> children() {
     return Collections.unmodifiableList(idents);
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitQualifiedIdent(this);
   }
 
   public List<Ident> getIdents() {

@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.PklBugException;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.newparser.cst.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
@@ -51,6 +53,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitThisExpr(this);
     }
 
     @Override
@@ -105,6 +112,11 @@ public sealed interface Expr extends Node {
     }
 
     @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitOuterExpr(this);
+    }
+
+    @Override
     public String toString() {
       return "Outer{" + "span=" + span + '}';
     }
@@ -153,6 +165,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitModuleExpr(this);
     }
 
     @Override
@@ -207,6 +224,11 @@ public sealed interface Expr extends Node {
     }
 
     @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitNullLiteralExpr(this);
+    }
+
+    @Override
     public String toString() {
       return "NullLiteral{" + "span=" + span + '}';
     }
@@ -257,6 +279,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitBoolLiteralExpr(this);
     }
 
     public boolean isB() {
@@ -316,6 +343,11 @@ public sealed interface Expr extends Node {
       return List.of();
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitIntLiteralExpr(this);
+    }
+
     public String getNumber() {
       return number;
     }
@@ -371,6 +403,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitFloatLiteralExpr(this);
     }
 
     public String getNumber() {
@@ -430,6 +467,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(strParts);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitStringConstantExpr(this);
     }
 
     public StringConstantParts getStrParts() {
@@ -496,6 +538,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return Collections.unmodifiableList(parts);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitInterpolatedStringExpr(this);
     }
 
     public List<StringPart> getParts() {
@@ -584,6 +631,11 @@ public sealed interface Expr extends Node {
       return Collections.unmodifiableList(parts);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitInterpolatedMultiStringExpr(this);
+    }
+
     public List<StringPart> getParts() {
       return parts;
     }
@@ -663,6 +715,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitThrowExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -720,6 +777,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitTraceExpr(this);
     }
 
     public Expr getExpr() {
@@ -781,6 +843,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(importStr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitImportExpr(this);
     }
 
     public StringConstant getImportStr() {
@@ -855,6 +922,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitReadExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -914,6 +986,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitReadGlobExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -971,6 +1048,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitReadNullExpr(this);
     }
 
     public Expr getExpr() {
@@ -1038,6 +1120,11 @@ public sealed interface Expr extends Node {
         return List.of(ident);
       }
       return List.of(ident, argumentList);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitUnqualifiedAccessExpr(this);
     }
 
     public Ident getIdent() {
@@ -1131,6 +1218,11 @@ public sealed interface Expr extends Node {
         children.add(argumentList);
       }
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitQualifiedAccessExpr(this);
     }
 
     public Expr getExpr() {
@@ -1229,6 +1321,11 @@ public sealed interface Expr extends Node {
       return children;
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitSuperAccessExpr(this);
+    }
+
     public Ident getIdent() {
       return ident;
     }
@@ -1301,6 +1398,11 @@ public sealed interface Expr extends Node {
       return List.of(arg);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitSuperSubscriptExpr(this);
+    }
+
     public Expr getArg() {
       return arg;
     }
@@ -1361,6 +1463,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr, arg);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitSubscriptExpr(this);
     }
 
     public Expr getExpr() {
@@ -1432,6 +1539,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(cond, then, els);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitIfExpr(this);
     }
 
     public Expr getCond() {
@@ -1508,6 +1620,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(par, bindingExpr, expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitLetExpr(this);
     }
 
     public Parameter getPar() {
@@ -1592,6 +1709,11 @@ public sealed interface Expr extends Node {
       return List.of(parameterList, expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitFunctionLiteralExpr(this);
+    }
+
     public ParameterList getParameterList() {
       return parameterList;
     }
@@ -1664,6 +1786,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitParenthesizedExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1729,6 +1856,11 @@ public sealed interface Expr extends Node {
         return List.of(type, body);
       }
       return List.of(body);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitNewExpr(this);
     }
 
     public @Nullable Type getType() {
@@ -1803,6 +1935,11 @@ public sealed interface Expr extends Node {
       return List.of(expr, body);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitAmendsExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1868,6 +2005,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitNonNullExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1927,6 +2069,11 @@ public sealed interface Expr extends Node {
       return List.of(expr);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitUnaryMinusExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -1984,6 +2131,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(expr);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitLogicalNotExpr(this);
     }
 
     public Expr getExpr() {
@@ -2048,6 +2200,11 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(left, right);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitBinaryOpExpr(this);
     }
 
     public Expr getLeft() {
@@ -2132,6 +2289,11 @@ public sealed interface Expr extends Node {
       return List.of(expr, type);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitTypeCheckExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -2200,6 +2362,11 @@ public sealed interface Expr extends Node {
       return List.of(expr, type);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitTypeCastExpr(this);
+    }
+
     public Expr getExpr() {
       return expr;
     }
@@ -2264,6 +2431,12 @@ public sealed interface Expr extends Node {
       return List.of();
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      // should never be called
+      throw PklBugException.unreachableCode();
+    }
+
     public Operator getOp() {
       return op;
     }
@@ -2320,6 +2493,12 @@ public sealed interface Expr extends Node {
     @Override
     public List<Node> children() {
       return List.of(type);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      // should never be called
+      throw PklBugException.unreachableCode();
     }
 
     public Type getType() {

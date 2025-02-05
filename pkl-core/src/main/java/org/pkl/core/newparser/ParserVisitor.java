@@ -18,24 +18,31 @@ package org.pkl.core.newparser;
 import org.pkl.core.PklBugException;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
+import org.pkl.core.newparser.cst.ClassBody;
 import org.pkl.core.newparser.cst.ClassMethod;
 import org.pkl.core.newparser.cst.ClassPropertyEntry;
 import org.pkl.core.newparser.cst.Clazz;
+import org.pkl.core.newparser.cst.DocComment;
 import org.pkl.core.newparser.cst.Expr;
 import org.pkl.core.newparser.cst.Expr.NullLiteral;
 import org.pkl.core.newparser.cst.ExtendsOrAmendsDecl;
+import org.pkl.core.newparser.cst.Ident;
 import org.pkl.core.newparser.cst.Import;
 import org.pkl.core.newparser.cst.Modifier;
 import org.pkl.core.newparser.cst.Module;
 import org.pkl.core.newparser.cst.ModuleDecl;
+import org.pkl.core.newparser.cst.ObjectBody;
 import org.pkl.core.newparser.cst.ObjectMemberNode;
 import org.pkl.core.newparser.cst.Parameter;
 import org.pkl.core.newparser.cst.ParameterList;
+import org.pkl.core.newparser.cst.QualifiedIdent;
+import org.pkl.core.newparser.cst.ReplInput;
 import org.pkl.core.newparser.cst.StringConstantPart;
 import org.pkl.core.newparser.cst.StringPart;
 import org.pkl.core.newparser.cst.Type;
 import org.pkl.core.newparser.cst.TypeAlias;
 import org.pkl.core.newparser.cst.TypeAnnotation;
+import org.pkl.core.newparser.cst.TypeParameter;
 import org.pkl.core.newparser.cst.TypeParameterList;
 
 public interface ParserVisitor<Result> {
@@ -227,13 +234,15 @@ public interface ParserVisitor<Result> {
 
   Result visitImport(Import imp);
 
-  Result visitClazz(Clazz clazz);
+  Result visitClass(Clazz clazz);
 
   Result visitModifier(Modifier modifier);
 
   Result visitClassPropertyEntry(ClassPropertyEntry entry);
 
   Result visitClassMethod(ClassMethod entry);
+
+  Result visitClassBody(ClassBody classBody);
 
   Result visitTypeAlias(TypeAlias typeAlias);
 
@@ -242,6 +251,8 @@ public interface ParserVisitor<Result> {
   Result visitParameter(Parameter param);
 
   Result visitParameterList(ParameterList paramList);
+
+  Result visitTypeParameter(TypeParameter typeParameter);
 
   Result visitTypeParameterList(TypeParameterList typeParameterList);
 
@@ -252,4 +263,14 @@ public interface ParserVisitor<Result> {
   Result visitStringPart(StringPart part);
 
   Result visitStringConstantPart(StringConstantPart part);
+
+  Result visitDocComment(DocComment docComment);
+
+  Result visitIdent(Ident ident);
+
+  Result visitQualifiedIdent(QualifiedIdent qualifiedIdent);
+
+  Result visitObjectBody(ObjectBody objectBody);
+
+  Result visitReplInput(ReplInput replInput);
 }

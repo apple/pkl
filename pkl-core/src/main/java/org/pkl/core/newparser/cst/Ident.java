@@ -17,6 +17,7 @@ package org.pkl.core.newparser.cst;
 
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public final class Ident implements Node {
@@ -47,6 +48,11 @@ public final class Ident implements Node {
   @Override
   public List<Node> children() {
     return List.of();
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitIdent(this);
   }
 
   public String getValue() {

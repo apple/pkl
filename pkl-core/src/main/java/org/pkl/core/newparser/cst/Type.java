@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.newparser.cst.Expr.StringConstant;
 
@@ -49,6 +50,11 @@ public sealed interface Type extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitUnknownType(this);
     }
 
     @Override
@@ -103,6 +109,11 @@ public sealed interface Type extends Node {
     }
 
     @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitNothingType(this);
+    }
+
+    @Override
     public String toString() {
       return "NothingType{" + "span=" + span + '}';
     }
@@ -151,6 +162,11 @@ public sealed interface Type extends Node {
     @Override
     public List<Node> children() {
       return List.of();
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitModuleType(this);
     }
 
     @Override
@@ -204,6 +220,11 @@ public sealed interface Type extends Node {
     @Override
     public List<Node> children() {
       return List.of(str);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitStringConstantType(this);
     }
 
     public StringConstant getStr() {
@@ -273,6 +294,11 @@ public sealed interface Type extends Node {
       return children;
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitDeclaredType(this);
+    }
+
     public QualifiedIdent getName() {
       return name;
     }
@@ -338,6 +364,11 @@ public sealed interface Type extends Node {
       return List.of(type);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitParenthesizedType(this);
+    }
+
     public Type getType() {
       return type;
     }
@@ -395,6 +426,11 @@ public sealed interface Type extends Node {
     @Override
     public List<Node> children() {
       return List.of(type);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitNullableType(this);
     }
 
     public Type getType() {
@@ -464,6 +500,11 @@ public sealed interface Type extends Node {
       return children;
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitConstrainedType(this);
+    }
+
     public Type getType() {
       return type;
     }
@@ -529,6 +570,11 @@ public sealed interface Type extends Node {
       return List.of(type);
     }
 
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitDefaultUnionType(this);
+    }
+
     public Type getType() {
       return type;
     }
@@ -589,6 +635,11 @@ public sealed interface Type extends Node {
     @Override
     public List<Node> children() {
       return List.of(left, right);
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitUnionType(this);
     }
 
     public Type getLeft() {
@@ -662,6 +713,11 @@ public sealed interface Type extends Node {
       children.addAll(args);
       children.add(ret);
       return children;
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
+      return visitor.visitFunctionType(this);
     }
 
     public List<Type> getArgs() {

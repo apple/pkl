@@ -17,6 +17,7 @@ package org.pkl.core.newparser.cst;
 
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.util.Nullable;
 
@@ -52,6 +53,11 @@ public final class TypeParameter implements Node {
   @Override
   public List<Node> children() {
     return List.of(ident);
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitTypeParameter(this);
   }
 
   public @Nullable Variance getVariance() {

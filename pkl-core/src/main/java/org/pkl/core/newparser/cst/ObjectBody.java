@@ -18,6 +18,7 @@ package org.pkl.core.newparser.cst;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public final class ObjectBody implements Node {
@@ -60,6 +61,11 @@ public final class ObjectBody implements Node {
     children.addAll(pars);
     children.addAll(members);
     return children;
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitObjectBody(this);
   }
 
   public List<Parameter> getPars() {

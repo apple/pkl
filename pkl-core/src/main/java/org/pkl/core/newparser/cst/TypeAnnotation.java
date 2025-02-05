@@ -17,6 +17,7 @@ package org.pkl.core.newparser.cst;
 
 import java.util.List;
 import java.util.Objects;
+import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 
 public class TypeAnnotation implements Node {
@@ -49,6 +50,11 @@ public class TypeAnnotation implements Node {
   @Override
   public List<Node> children() {
     return List.of(type);
+  }
+
+  @Override
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitTypeAnnotation(this);
   }
 
   public Type getType() {
