@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ import org.pkl.core.Release
 
 /** Main method for the Kotlin code generator CLI. */
 internal fun main(args: Array<String>) {
-  cliMain { PklKotlinCodegenCommand().main(args) }
+  cliMain { PklKotlinCodegenCommand.main(args) }
 }
 
-class PklKotlinCodegenCommand :
+object PklKotlinCodegenCommand :
   ModulesCommand(
     name = "pkl-codegen-kotlin",
     helpLink = Release.current().documentation().homepage(),
@@ -46,7 +46,7 @@ class PklKotlinCodegenCommand :
     option(
         names = arrayOf("-o", "--output-dir"),
         metavar = "<path>",
-        help = "The directory where generated source code is placed."
+        help = "The directory where generated source code is placed.",
       )
       .path()
       .default(defaults.outputDir)
@@ -55,28 +55,28 @@ class PklKotlinCodegenCommand :
     option(
         names = arrayOf("--indent"),
         metavar = "<chars>",
-        help = "The characters to use for indenting generated source code."
+        help = "The characters to use for indenting generated source code.",
       )
       .default(defaults.indent)
 
   private val generateKdoc: Boolean by
     option(
         names = arrayOf("--generate-kdoc"),
-        help = "Whether to preserve Pkl doc comments by generating corresponding KDoc comments."
+        help = "Whether to preserve Pkl doc comments by generating corresponding KDoc comments.",
       )
       .flag()
 
   private val generateSpringboot: Boolean by
     option(
         names = arrayOf("--generate-spring-boot"),
-        help = "Whether to generate config classes for use with Spring Boot."
+        help = "Whether to generate config classes for use with Spring Boot.",
       )
       .flag()
 
   private val implementSerializable: Boolean by
     option(
         names = arrayOf("--implement-serializable"),
-        help = "Whether to generate classes that implement java.io.Serializable."
+        help = "Whether to generate classes that implement java.io.Serializable.",
       )
       .flag()
 
@@ -91,7 +91,7 @@ class PklKotlinCodegenCommand :
             With this option, you can override or modify the default names, renaming entire
             classes or just their packages.
           """
-            .trimIndent()
+            .trimIndent(),
       )
       .associate()
 
@@ -104,7 +104,7 @@ class PklKotlinCodegenCommand :
         generateKdoc = generateKdoc,
         generateSpringBootConfig = generateSpringboot,
         implementSerializable = implementSerializable,
-        renames = renames
+        renames = renames,
       )
     CliKotlinCodeGenerator(options).run()
   }

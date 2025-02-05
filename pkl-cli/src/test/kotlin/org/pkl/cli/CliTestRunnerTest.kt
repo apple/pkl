@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,16 @@
 package org.pkl.cli
 
 import com.github.ajalt.clikt.core.MissingArgument
-import com.github.ajalt.clikt.core.subcommands
 import java.io.StringWriter
 import java.io.Writer
 import java.net.URI
 import java.nio.file.Path
-import java.util.Locale
+import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.cli.commands.EvalCommand
 import org.pkl.cli.commands.RootCommand
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
@@ -35,7 +33,6 @@ import org.pkl.commons.cli.CliTestOptions
 import org.pkl.commons.readString
 import org.pkl.commons.toUri
 import org.pkl.commons.writeString
-import org.pkl.core.Release
 
 class CliTestRunnerTest {
   @Test
@@ -381,7 +378,7 @@ class CliTestRunnerTest {
     val opts =
       CliBaseOptions(
         sourceModules = listOf(input.toUri(), input2.toUri()),
-        settings = URI("pkl:settings")
+        settings = URI("pkl:settings"),
       )
     val testOpts = CliTestOptions(junitDir = tempDir)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
@@ -391,12 +388,7 @@ class CliTestRunnerTest {
   @Test
   fun `no source modules specified has same message as pkl eval`() {
     val e1 = assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
-    val e2 =
-      assertThrows<MissingArgument> {
-        val rootCommand =
-          RootCommand("pkl", Release.current().versionInfo(), "").subcommands(EvalCommand(""))
-        rootCommand.parse(listOf("eval"))
-      }
+    val e2 = assertThrows<MissingArgument> { RootCommand.parse(listOf("eval")) }
     assertThat(e1).hasMessageContaining("Missing argument \"<modules>\"")
     assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
   }

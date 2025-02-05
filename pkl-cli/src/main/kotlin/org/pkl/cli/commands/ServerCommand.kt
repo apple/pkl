@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import com.github.ajalt.clikt.core.CliktCommand
 import org.pkl.cli.CliServer
 import org.pkl.commons.cli.CliBaseOptions
 
-class ServerCommand(helpLink: String) :
+object ServerCommand :
   CliktCommand(
     name = "server",
     help = "Run as a server that communicates over standard input/output",
-    epilog = "For more information, visit $helpLink"
+    epilog = "For more information, visit $helpLink",
   ) {
 
   override fun run() {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,17 +24,13 @@ import org.pkl.cli.CliEvaluatorOptions
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
-class EvalCommand(helpLink: String) :
-  ModulesCommand(
-    name = "eval",
-    help = "Render pkl module(s)",
-    helpLink = helpLink,
-  ) {
+object EvalCommand :
+  ModulesCommand(name = "eval", help = "Render pkl module(s)", helpLink = helpLink) {
   private val outputPath: String? by
     option(
         names = arrayOf("-o", "--output-path"),
         metavar = "<path>",
-        help = "File path where the output file is placed."
+        help = "File path where the output file is placed.",
       )
       .single()
 
@@ -43,7 +39,7 @@ class EvalCommand(helpLink: String) :
         names = arrayOf("--module-output-separator"),
         metavar = "<string>",
         help =
-          "Separator to use when multiple module outputs are written to the same file. (default: ---)"
+          "Separator to use when multiple module outputs are written to the same file. (default: ---)",
       )
       .single()
       .default("---")
@@ -52,7 +48,7 @@ class EvalCommand(helpLink: String) :
     option(
         names = arrayOf("-x", "--expression"),
         metavar = "<expression>",
-        help = "Expression to be evaluated within the module."
+        help = "Expression to be evaluated within the module.",
       )
       .single()
 
@@ -60,7 +56,7 @@ class EvalCommand(helpLink: String) :
     option(
         names = arrayOf("-m", "--multiple-file-output-path"),
         metavar = "<path>",
-        help = "Directory where a module's multiple file output is placed."
+        help = "Directory where a module's multiple file output is placed.",
       )
       .single()
       .validate {
@@ -81,7 +77,7 @@ class EvalCommand(helpLink: String) :
         outputFormat = baseOptions.format,
         moduleOutputSeparator = moduleOutputSeparator,
         multipleFileOutputPath = multipleFileOutputPath,
-        expression = expression ?: CliEvaluatorOptions.defaults.expression
+        expression = expression ?: CliEvaluatorOptions.defaults.expression,
       )
     CliEvaluator(options).run()
   }
