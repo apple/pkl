@@ -15,7 +15,6 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -56,14 +55,6 @@ public final class VmFunction extends VmObjectLike {
   // this method
   public Object apply(Object arg1) {
     return getCallTarget().call(thisValue, this, arg1);
-  }
-
-  public String applyString(Object arg1) {
-    var result = apply(arg1);
-    if (result instanceof String string) return string;
-
-    CompilerDirectives.transferToInterpreter();
-    throw new VmExceptionBuilder().typeMismatch(result, BaseModule.getStringClass()).build();
   }
 
   // if call site is a node, use ApplyVmFunction2Node.execute() or DirectCallNode.call() instead of
