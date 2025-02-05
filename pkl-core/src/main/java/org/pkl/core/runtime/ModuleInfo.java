@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ public final class ModuleInfo {
           if (propertyDef.isClass()) {
             var clazz = (VmClass) module.getCachedValue(propertyDef.getName());
             if (clazz == null) {
-              clazz = (VmClass) propertyDef.getCallTarget().call(module, module);
+              clazz = (VmClass) propertyDef.getCallTarget().call(FrameMarkers.NONE, module, module);
             }
             classes.put(clazz.getSimpleName(), clazz.export());
             continue;
@@ -151,7 +151,8 @@ public final class ModuleInfo {
           if (propertyDef.isTypeAlias()) {
             var typeAlias = (VmTypeAlias) module.getCachedValue(propertyDef.getName());
             if (typeAlias == null) {
-              typeAlias = (VmTypeAlias) propertyDef.getCallTarget().call(module, module);
+              typeAlias =
+                  (VmTypeAlias) propertyDef.getCallTarget().call(FrameMarkers.NONE, module, module);
             }
             typeAliases.put(typeAlias.getSimpleName(), typeAlias.export());
           }

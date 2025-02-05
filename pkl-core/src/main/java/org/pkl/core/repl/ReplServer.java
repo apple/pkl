@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -262,7 +262,8 @@ public class ReplServer implements AutoCloseable {
 
     var property =
         (ClassProperty)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
+            callNode.call(
+                resolveNode.getCallTarget(), FrameMarkers.NONE, replState.module, replState.module);
 
     replState.module.getVmClass().addProperty(property);
     return property.getInitializer();
@@ -283,7 +284,8 @@ public class ReplServer implements AutoCloseable {
 
     var method =
         (ClassMethod)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
+            callNode.call(
+                resolveNode.getCallTarget(), FrameMarkers.NONE, replState.module, replState.module);
 
     replState.module.getVmClass().addMethod(method);
   }
@@ -295,7 +297,9 @@ public class ReplServer implements AutoCloseable {
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
 
-    var result = callNode.call(rootNode.getCallTarget(), replState.module, replState.module);
+    var result =
+        callNode.call(
+            rootNode.getCallTarget(), FrameMarkers.NONE, replState.module, replState.module);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);
@@ -307,7 +311,8 @@ public class ReplServer implements AutoCloseable {
     var result =
         memberDef.getConstantValue() != null
             ? memberDef.getConstantValue()
-            : callNode.call(memberDef.getCallTarget(), replState.module, replState.module);
+            : callNode.call(
+                memberDef.getCallTarget(), FrameMarkers.NONE, replState.module, replState.module);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);

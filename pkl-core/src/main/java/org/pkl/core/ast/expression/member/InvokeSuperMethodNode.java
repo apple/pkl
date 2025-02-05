@@ -54,11 +54,12 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
       @Cached(value = "findSupermethod(frame)", neverDefault = true) ClassMethod supermethod,
       @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = VmUtils.getReceiverOrNull(frame);
-    args[1] = supermethod.getOwner();
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = VmUtils.getReceiverOrNull(frame);
+    args[2] = supermethod.getOwner();
     for (int i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);

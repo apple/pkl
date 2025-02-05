@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Type constraint `let (myself: Listing<Bird> = this)
+    myself[0].name == "Sandy"` violated.
+Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+
+x | let (myself: Listing<Bird> = this)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at constraintDetails2#birds (file:///$snippetsDir/input/errors/constraintDetails2.pkl)
+
+x | new {
+    ^^^^^
+at constraintDetails2#birds (file:///$snippetsDir/input/errors/constraintDetails2.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

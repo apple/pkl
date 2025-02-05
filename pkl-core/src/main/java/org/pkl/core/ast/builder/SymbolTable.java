@@ -485,7 +485,7 @@ public final class SymbolTable {
   /**
    * A scope where {@code this} has a special meaning (type constraint, object member predicate).
    *
-   * <p>Technically, a scope where {@code this} isn't {@code frame.getArguments()[0]}, but the value
+   * <p>Technically, a scope where {@code this} isn't {@code frame.getArguments()[1]}, but the value
    * at an auxiliary slot identified by {@link CustomThisScope#FRAME_SLOT_ID}.
    */
   public static final class CustomThisScope extends Scope {

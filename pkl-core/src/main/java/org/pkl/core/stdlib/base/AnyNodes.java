@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,8 @@ public final class AnyNodes {
     }
 
     @Specialization(guards = "isNonNull(self)")
-    protected Object eval(Object self, VmFunction function) {
-      return applyLambdaNode.execute(function, self);
+    protected Object eval(VirtualFrame frame, Object self, VmFunction function) {
+      return applyLambdaNode.execute(frame, function, self);
     }
 
     protected static boolean isNonNull(Object obj) {

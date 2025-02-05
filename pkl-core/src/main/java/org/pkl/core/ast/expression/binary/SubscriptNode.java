@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
@@ -73,9 +74,12 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VmListing listing, long index, @Exclusive @Cached("create()") IndirectCallNode callNode) {
+      VirtualFrame frame,
+      VmListing listing,
+      long index,
+      @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    var result = VmUtils.readMemberOrNull(listing, index, callNode);
+    var result = VmUtils.readMemberOrNull(listing, VmUtils.getMarkers(frame), index, callNode);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();
@@ -86,20 +90,27 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VmMapping mapping, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
+      VirtualFrame frame,
+      VmMapping mapping,
+      Object key,
+      @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    return readMember(mapping, key, callNode);
+    return readMember(frame, mapping, key, callNode);
   }
 
   @Specialization
   protected Object eval(
-      VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
+      VirtualFrame frame,
+      VmDynamic dynamic,
+      Object key,
+      @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    return readMember(dynamic, key, callNode);
+    return readMember(frame, dynamic, key, callNode);
   }
 
-  private Object readMember(VmObject object, Object key, IndirectCallNode callNode) {
-    var result = VmUtils.readMemberOrNull(object, key, callNode);
+  private Object readMember(
+      VirtualFrame frame, VmObject object, Object key, IndirectCallNode callNode) {
+    var result = VmUtils.readMemberOrNull(object, VmUtils.getMarkers(frame), key, callNode);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();

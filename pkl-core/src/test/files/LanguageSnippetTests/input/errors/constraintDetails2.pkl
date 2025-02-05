@@ -1,0 +1,11 @@
+// Error message should include `new Bird { name = "Bob" }`
+birds: Listing(
+  let (myself: Listing<Bird> = this)
+    myself[0].name == "Sandy"
+) = 
+  new {
+    new Bird { name = "Bob" }
+    new Bird { name = "Bob" }
+  }
+
+class Bird { name: String }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,18 +40,18 @@ public final class ResolveSimpleDeclaredTypeNode extends ResolveDeclaredTypeNode
     var enclosingModule = getEnclosingModule(VmUtils.getOwner(frame));
 
     // search enclosing module for local class/type alias or module import
-    var result = getType(enclosingModule, localTypeName, sourceSection);
+    var result = getType(frame, enclosingModule, localTypeName, sourceSection);
     if (result != null) return result;
 
     // search module hierarchy
     var currModule = enclosingModule;
     do {
-      result = getType(currModule, typeName, sourceSection);
+      result = getType(frame, currModule, typeName, sourceSection);
       if (result != null) return result;
 
       // search base module (after enclosing module, before parent modules)
       if (!isBaseModule && currModule == enclosingModule) {
-        result = getType(BaseModule.getModule(), typeName, sourceSection);
+        result = getType(frame, BaseModule.getModule(), typeName, sourceSection);
         if (result != null) return result;
       }
 

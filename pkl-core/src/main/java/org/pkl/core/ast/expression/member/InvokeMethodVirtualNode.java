@@ -34,6 +34,7 @@ import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 /** A virtual method call. */
 @SuppressWarnings("DuplicatedCode")
@@ -85,11 +86,12 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = receiver.getThisValue();
+    args[2] = receiver;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);
@@ -104,11 +106,12 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @SuppressWarnings("unused") VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = receiver.getThisValue();
+    args[2] = receiver;
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(receiver.getCallTarget(), args);
@@ -124,11 +127,12 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Cached("resolveMethod(receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
 
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = receiver;
+    args[2] = method.getOwner();
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     return callNode.call(args);
@@ -143,11 +147,12 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     var method = resolveMethod(receiverClass);
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
+    var args = new Object[3 + argumentNodes.length];
+    args[0] = VmUtils.getMarkers(frame);
+    args[1] = receiver;
+    args[2] = method.getOwner();
     for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      args[3 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each

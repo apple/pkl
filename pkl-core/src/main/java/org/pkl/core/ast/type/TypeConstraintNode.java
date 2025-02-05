@@ -62,7 +62,7 @@ public abstract class TypeConstraintNode extends PklNode {
     initConstraintSlot(frame);
 
     var value = frame.getAuxiliarySlot(customThisSlot);
-    var result = applyNode.executeBoolean(function, value);
+    var result = applyNode.executeBoolean(frame, function, value);
     if (!result) {
       throw new VmTypeMismatchException.Constraint(sourceSection, value);
     }

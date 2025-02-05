@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.*;
@@ -75,10 +76,10 @@ public final class ListingNodes {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmListing self, VmFunction selector) {
+    protected boolean eval(VirtualFrame frame, VmListing self, VmFunction selector) {
       var visitedValues = CollectionUtils.newHashSet();
       return self.forceAndIterateMemberValues(
-          (key, member, value) -> visitedValues.add(applyNode.execute(selector, value)));
+          (key, member, value) -> visitedValues.add(applyNode.execute(frame, selector, value)));
     }
   }
 
@@ -156,13 +157,13 @@ public final class ListingNodes {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmListing eval(VmListing self, VmFunction selector) {
+    protected VmListing eval(VirtualFrame frame, VmListing self, VmFunction selector) {
       var visitedValues = CollectionUtils.newHashSet();
       var builder = new VmObjectBuilder();
 
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
-            if (visitedValues.add(applyNode.execute(selector, value))) {
+            if (visitedValues.add(applyNode.execute(frame, selector, value))) {
               builder.addElement(value);
             }
             return true;
@@ -176,14 +177,14 @@ public final class ListingNodes {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmListing self, VmFunction predicate) {
+    protected boolean eval(VirtualFrame frame, VmListing self, VmFunction predicate) {
       var result = new MutableBoolean(true);
       self.iterateMemberValues(
           (key, member, value) -> {
             if (value == null) {
               value = VmUtils.readMember(self, key);
             }
-            result.set(applyNode.executeBoolean(predicate, value));
+            result.set(applyNode.executeBoolean(frame, predicate, value));
             return result.get();
           });
       return result.get();
@@ -194,14 +195,14 @@ public final class ListingNodes {
     @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected boolean eval(VmListing self, VmFunction predicate) {
+    protected boolean eval(VirtualFrame frame, VmListing self, VmFunction predicate) {
       var result = new MutableBoolean(false);
       self.iterateMemberValues(
           (key, member, value) -> {
             if (value == null) {
               value = VmUtils.readMember(self, key);
             }
-            result.set(applyNode.executeBoolean(predicate, value));
+            result.set(applyNode.executeBoolean(frame, predicate, value));
             return !result.get();
           });
       return result.get();
@@ -229,11 +230,11 @@ public final class ListingNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected Object eval(VmListing self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmListing self, Object initial, VmFunction function) {
       var result = new MutableReference<>(initial);
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
-            result.set(applyLambdaNode.execute(function, result.get(), value));
+            result.set(applyLambdaNode.execute(frame, function, result.get(), value));
             return true;
           });
       LoopNode.reportLoopCount(this, self.getLength());
@@ -245,13 +246,14 @@ public final class ListingNodes {
     @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
 
     @Specialization
-    protected Object eval(VmListing self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmListing self, Object initial, VmFunction function) {
       var index = new MutableLong(0);
       var result = new MutableReference<>(initial);
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             result.set(
-                applyLambdaNode.execute(function, index.getAndIncrement(), result.get(), value));
+                applyLambdaNode.execute(
+                    frame, function, index.getAndIncrement(), result.get(), value));
             return true;
           });
       LoopNode.reportLoopCount(this, self.getLength());

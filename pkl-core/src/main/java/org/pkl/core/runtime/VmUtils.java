@@ -63,9 +63,6 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmUtils {
-  /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
-  public static final Object SKIP_TYPECHECK_MARKER = new Object();
-
   public static final String REPL_TEXT = "repl:text";
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
@@ -97,7 +94,8 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static MaterializedFrame createEmptyMaterializedFrame() {
-    return Truffle.getRuntime().createMaterializedFrame(new Object[] {null, null});
+    return Truffle.getRuntime()
+        .createMaterializedFrame(new Object[] {FrameMarkers.NONE, null, null});
   }
 
   public static Context createContext(Runnable initializer) {
@@ -124,9 +122,14 @@ public final class VmUtils {
     return text.lines().map(line -> indent + line).collect(Collectors.joining("\n"));
   }
 
+  @SuppressWarnings("unchecked")
+  public static EnumSet<FrameMarker> getMarkers(Frame frame) {
+    return (EnumSet<FrameMarker>) frame.getArguments()[0];
+  }
+
   /** Returns the receiver of the message that was dispatched to the currently executing code. */
   public static @Nullable Object getReceiverOrNull(Frame frame) {
-    return frame.getArguments()[0];
+    return frame.getArguments()[1];
   }
 
   /** Returns the receiver of the message that was dispatched to the currently executing code. */
@@ -146,7 +149,7 @@ public final class VmUtils {
 
   /** Returns the owner of the currently executing code. */
   public static @Nullable VmObjectLike getOwnerOrNull(Frame frame) {
-    return (VmObjectLike) frame.getArguments()[1];
+    return (VmObjectLike) frame.getArguments()[2];
   }
 
   /** Returns the owner of the currently executing code. */
@@ -158,7 +161,7 @@ public final class VmUtils {
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
   public static Object getMemberKey(Frame frame) {
-    return frame.getArguments()[2];
+    return frame.getArguments()[3];
   }
 
   public static ModuleInfo getModuleInfo(VmObjectLike composite) {
@@ -177,7 +180,7 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static Object readMember(VmObjectLike receiver, Object memberKey) {
-    var result = readMemberOrNull(receiver, memberKey);
+    var result = readMemberOrNull(receiver, FrameMarkers.NONE, memberKey);
     if (result != null) return result;
 
     throw new VmExceptionBuilder().cannotFindMember(receiver, memberKey).build();
@@ -185,19 +188,34 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver, Object memberKey, boolean checkType) {
-    return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached());
+      VmObjectLike receiver,
+      EnumSet<FrameMarker> frameMarkers,
+      Object memberKey,
+      boolean checkType) {
+    return readMemberOrNull(
+        receiver, frameMarkers, memberKey, checkType, IndirectCallNode.getUncached());
   }
 
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
-    return readMemberOrNull(receiver, memberKey, true, callNode);
+      VmObjectLike receiver,
+      EnumSet<FrameMarker> frameMarkers,
+      Object memberKey,
+      IndirectCallNode callNode) {
+    return readMemberOrNull(receiver, frameMarkers, memberKey, true, callNode);
   }
 
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
-    return readMemberOrNull(receiver, memberKey, true, IndirectCallNode.getUncached());
+    return readMemberOrNull(
+        receiver, FrameMarkers.NONE, memberKey, true, IndirectCallNode.getUncached());
+  }
+
+  @TruffleBoundary
+  public static @Nullable Object readMemberOrNull(
+      VmObjectLike receiver, EnumSet<FrameMarker> frameMarkers, Object memberKey) {
+    return readMemberOrNull(
+        receiver, frameMarkers, memberKey, true, IndirectCallNode.getUncached());
   }
 
   /**
@@ -206,14 +224,22 @@ public final class VmUtils {
    */
   @TruffleBoundary
   public static Object doReadMember(
-      VmObjectLike receiver, VmObjectLike owner, Object memberKey, ObjectMember member) {
-    return doReadMember(receiver, owner, memberKey, member, true, IndirectCallNode.getUncached());
+      VmObjectLike receiver,
+      VmObjectLike owner,
+      EnumSet<FrameMarker> frameMarkers,
+      Object memberKey,
+      ObjectMember member) {
+    return doReadMember(
+        receiver, owner, frameMarkers, memberKey, member, true, IndirectCallNode.getUncached());
   }
 
   @TruffleBoundary
   public static Object readMember(
-      VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
-    var result = readMemberOrNull(receiver, memberKey, true, callNode);
+      VmObjectLike receiver,
+      EnumSet<FrameMarker> frameMarkers,
+      Object memberKey,
+      IndirectCallNode callNode) {
+    var result = readMemberOrNull(receiver, frameMarkers, memberKey, true, callNode);
     if (result != null) return result;
 
     throw new VmExceptionBuilder()
@@ -224,7 +250,11 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver, Object memberKey, boolean checkType, IndirectCallNode callNode) {
+      VmObjectLike receiver,
+      EnumSet<FrameMarker> frameMarkers,
+      Object memberKey,
+      boolean checkType,
+      IndirectCallNode callNode) {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
@@ -234,7 +264,7 @@ public final class VmUtils {
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
       var member = owner.getMember(memberKey);
       if (member == null) continue;
-      return doReadMember(receiver, owner, memberKey, member, checkType, callNode);
+      return doReadMember(receiver, owner, frameMarkers, memberKey, member, checkType, callNode);
     }
 
     return null;
@@ -248,6 +278,7 @@ public final class VmUtils {
   public static Object doReadMember(
       VmObjectLike receiver,
       VmObjectLike owner,
+      EnumSet<FrameMarker> frameMarkers,
       Object memberKey,
       ObjectMember member,
       boolean checkType,
@@ -260,7 +291,7 @@ public final class VmUtils {
     if (member.isConst() && owner != receiver) {
       assert member.isProp();
       assert owner.isPrototype();
-      var result = readMemberOrNull(owner, memberKey, checkType, callNode);
+      var result = readMemberOrNull(owner, frameMarkers, memberKey, checkType, callNode);
       assert result != null;
       receiver.setCachedValue(memberKey, result);
       return result;
@@ -275,15 +306,17 @@ public final class VmUtils {
           var callTarget = property.getTypeNode().getCallTarget();
           try {
             if (checkType) {
-              result = callNode.call(callTarget, receiver, property.getOwner(), constantValue);
+              result =
+                  callNode.call(
+                      callTarget, frameMarkers, receiver, property.getOwner(), constantValue);
             } else {
               result =
                   callNode.call(
                       callTarget,
+                      frameMarkers.add(FrameMarker.SKIP_TYPECHECK_MARKER),
                       receiver,
                       property.getOwner(),
-                      constantValue,
-                      VmUtils.SKIP_TYPECHECK_MARKER);
+                      constantValue);
             }
           } catch (VmException e) {
             CompilerDirectives.transferToInterpreter();
@@ -295,7 +328,9 @@ public final class VmUtils {
           && owner instanceof VmListingOrMapping) {
         // `owner instanceof VmListingOrMapping` guards against
         // PropertiesRenderer amending VmDynamic with VmListing (hack?)
-        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member, null);
+        result =
+            listingOrMapping.executeTypeCasts(
+                constantValue, owner, frameMarkers, callNode, member, null);
       }
 
       receiver.setCachedValue(memberKey, result);
@@ -305,9 +340,11 @@ public final class VmUtils {
     var callTarget = member.getCallTarget();
     Object result;
     if (checkType) {
-      result = callNode.call(callTarget, receiver, owner, memberKey);
+      result = callNode.call(callTarget, frameMarkers, receiver, owner, memberKey);
     } else {
-      result = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
+      var newMarkers = EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
+      newMarkers.addAll(frameMarkers);
+      result = callNode.call(callTarget, newMarkers, receiver, owner, memberKey);
     }
     receiver.setCachedValue(memberKey, result);
     return result;
@@ -897,7 +934,7 @@ public final class VmUtils {
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
     var callNode = Truffle.getRuntime().createIndirectCallNode();
-    return callNode.call(rootNode.getCallTarget(), module, module);
+    return callNode.call(rootNode.getCallTarget(), FrameMarkers.NONE, module, module);
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
@@ -916,12 +953,16 @@ public final class VmUtils {
    * If true, the value computed by this node is not the final value exposed to user code but will
    * still be amended.
    *
-   * <p>Used to disable type check for to-be-amended properties. See {@link
-   * org.pkl.core.runtime.VmUtils#SKIP_TYPECHECK_MARKER}. IDEA: might be more appropriate to only
-   * skip constraints check
+   * <p>Used to disable type check for to-be-amended properties. IDEA: might be more appropriate to
+   * only skip constraints check
    */
   public static boolean shouldRunTypeCheck(VirtualFrame frame) {
-    return frame.getArguments().length != 4
-        || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
+    var markers = getMarkers(frame);
+    return !markers.contains(FrameMarker.SKIP_TYPECHECK_MARKER);
+  }
+
+  public static boolean shouldRunEagerTypeCheck(VirtualFrame frame) {
+    var markers = getMarkers(frame);
+    return markers.contains(FrameMarker.EAGER_TYPECHECK_MARKER);
   }
 }

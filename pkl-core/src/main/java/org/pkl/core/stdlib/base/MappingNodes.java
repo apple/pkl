@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.HashSet;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
@@ -109,8 +110,8 @@ public final class MappingNodes {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
     @Specialization
-    protected Object eval(VmMapping self, Object key) {
-      return VmNull.lift(VmUtils.readMemberOrNull(self, key, callNode));
+    protected Object eval(VirtualFrame frame, VmMapping self, Object key) {
+      return VmNull.lift(VmUtils.readMemberOrNull(self, VmUtils.getMarkers(frame), key, callNode));
     }
   }
 
@@ -118,11 +119,11 @@ public final class MappingNodes {
     @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
 
     @Specialization
-    protected Object eval(VmMapping self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmMapping self, Object initial, VmFunction function) {
       var result = new MutableReference<>(initial);
       self.forceAndIterateMemberValues(
           (key, def, value) -> {
-            result.set(applyLambdaNode.execute(function, result.get(), key, value));
+            result.set(applyLambdaNode.execute(frame, function, result.get(), key, value));
             return true;
           });
       return result.get();
@@ -133,14 +134,14 @@ public final class MappingNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMapping self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmMapping self, VmFunction function) {
       var result = new MutableBoolean(true);
       self.iterateMemberValues(
           (key, member, value) -> {
             if (value == null) {
               value = VmUtils.readMember(self, key);
             }
-            result.set(applyLambdaNode.executeBoolean(function, key, value));
+            result.set(applyLambdaNode.executeBoolean(frame, function, key, value));
             return result.get();
           });
       return result.get();
@@ -151,14 +152,14 @@ public final class MappingNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMapping self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmMapping self, VmFunction function) {
       var result = new MutableBoolean(false);
       self.iterateMemberValues(
           (key, member, value) -> {
             if (value == null) {
               value = VmUtils.readMember(self, key);
             }
-            result.set(applyLambdaNode.executeBoolean(function, key, value));
+            result.set(applyLambdaNode.executeBoolean(frame, function, key, value));
             return !result.get();
           });
       return result.get();

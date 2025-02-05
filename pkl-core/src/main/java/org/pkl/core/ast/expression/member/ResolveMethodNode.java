@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.EnumSet;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
@@ -72,11 +73,12 @@ public final class ResolveMethodNode extends ExpressionNode {
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    return replace(doResolve(VmUtils.getOwner(frame))).executeGeneric(frame);
+    return replace(doResolve(VmUtils.getMarkers(frame), VmUtils.getOwner(frame)))
+        .executeGeneric(frame);
   }
 
   @TruffleBoundary
-  private ExpressionNode doResolve(VmObjectLike initialOwner) {
+  private ExpressionNode doResolve(EnumSet<FrameMarker> frameMarkers, VmObjectLike initialOwner) {
     var levelsUp = 0;
     Identifier localMethodName = methodName.toLocalMethod();
 
@@ -119,7 +121,7 @@ public final class ResolveMethodNode extends ExpressionNode {
           var methodCallTarget =
               // TODO: is it OK to pass owner as receiver here?
               // (calls LocalMethodNode, which only resolves types)
-              (CallTarget) localMethod.getCallTarget().call(currOwner, currOwner);
+              (CallTarget) localMethod.getCallTarget().call(frameMarkers, currOwner, currOwner);
 
           return new InvokeMethodLexicalNode(
               sourceSection, methodCallTarget, levelsUp, argumentNodes);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,11 +66,11 @@ public final class ReadSuperPropertyNode extends ExpressionNode {
       // caching the result of a super call is tricky (function of both receiver and owner)
       return callNode.call(
           property.getCallTarget(),
+          FrameMarkers.SKIP_TYPECHECK,
           // TODO: should the marker only turn off constraint checking, not overall type checking?
           receiver,
           owner,
-          propertyName,
-          VmUtils.SKIP_TYPECHECK_MARKER);
+          propertyName);
     }
 
     // TODO: refine when to return VmDynamic.empty() and when to fail

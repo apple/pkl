@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.internal.BlackholeNode;
 import org.pkl.core.ast.internal.BlackholeNodeGen;
+import org.pkl.core.runtime.FrameMarkers;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTyped;
@@ -51,7 +52,8 @@ public final class MicrobenchmarkNodes {
               new FrameDescriptor(),
               (ExpressionNode) codeMemberNode.getBodyNode().deepCopy());
       var callTarget = runIterationsNode.getCallTarget();
-      return runBenchmark(self, (iterations) -> callTarget.call(self, self, iterations));
+      return runBenchmark(
+          self, (iterations) -> callTarget.call(FrameMarkers.NONE, self, self, iterations));
     }
   }
 
@@ -82,7 +84,7 @@ public final class MicrobenchmarkNodes {
 
     @Override
     protected @Nullable Object executeImpl(VirtualFrame frame) {
-      var repetitions = (long) frame.getArguments()[2];
+      var repetitions = (long) frame.getArguments()[3];
       for (long i = 0; i < repetitions; i++) {
         blackholeNode.executeGeneric(frame);
       }

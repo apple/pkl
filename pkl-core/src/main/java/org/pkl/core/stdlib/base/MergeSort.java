@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.stdlib.base.CollectionNodes.SortComparatorNode;
 import org.pkl.core.util.Nullable;
@@ -26,7 +27,10 @@ final class MergeSort {
   private MergeSort() {}
 
   public static Object[] sort(
-      Object[] array, SortComparatorNode comparator, @Nullable VmFunction function) {
+      VirtualFrame frame,
+      Object[] array,
+      SortComparatorNode comparator,
+      @Nullable VmFunction function) {
 
     var length = array.length;
     var temp = new Object[length];
@@ -35,14 +39,14 @@ final class MergeSort {
 
     for (var start = 0; start < length; start += INITIAL_MERGE_SORT_STRIDE) {
       var end = Math.min(start + INITIAL_MERGE_SORT_STRIDE, length);
-      insertionSort(array, start, end, comparator, function);
+      insertionSort(frame, array, start, end, comparator, function);
     }
 
     for (var stride = INITIAL_MERGE_SORT_STRIDE; stride < length; stride *= 2) {
       for (var start = 0; start < length - stride; start += stride + stride) {
         var end = Math.min(start + stride + stride, length);
         var mid = start + stride; // start of second half
-        merge(array, temp, start, mid, end, comparator, function);
+        merge(frame, array, temp, start, mid, end, comparator, function);
       }
     }
 
@@ -50,6 +54,7 @@ final class MergeSort {
   }
 
   private static void merge(
+      VirtualFrame frame,
       Object[] array,
       Object[] temp,
       int start,
@@ -58,7 +63,7 @@ final class MergeSort {
       SortComparatorNode comparator,
       @Nullable VmFunction function) {
 
-    if (comparator.executeWith(array[mid - 1], array[mid], function)) {
+    if (comparator.executeWith(frame, array[mid - 1], array[mid], function)) {
       return; // already sorted
     }
 
@@ -70,12 +75,13 @@ final class MergeSort {
     for (var k = start; k < end; k++) {
       if (i >= mid) array[k] = temp[j++];
       else if (j >= end) array[k] = temp[i++];
-      else if (comparator.executeWith(temp[j], temp[i], function)) array[k] = temp[j++];
+      else if (comparator.executeWith(frame, temp[j], temp[i], function)) array[k] = temp[j++];
       else array[k] = temp[i++];
     }
   }
 
   private static void insertionSort(
+      VirtualFrame frame,
       Object[] array,
       int start,
       int end,
@@ -83,7 +89,9 @@ final class MergeSort {
       @Nullable VmFunction function) {
 
     for (var i = start; i < end; i++) {
-      for (var j = i; j > start && comparator.executeWith(array[j], array[j - 1], function); j--) {
+      for (var j = i;
+          j > start && comparator.executeWith(frame, array[j], array[j - 1], function);
+          j--) {
         Object swap = array[j];
         array[j] = array[j - 1];
         array[j - 1] = swap;
