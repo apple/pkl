@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.*;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.util.ByteArrayUtils;
@@ -573,6 +574,8 @@ public final class StringNodes {
   }
 
   public abstract static class replaceFirstMapped extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
+
     @Specialization
     @TruffleBoundary
     protected String eval(String self, String pattern, VmFunction mapper) {
@@ -588,12 +591,14 @@ public final class StringNodes {
     private String doEval(String self, Matcher matcher, VmFunction mapper) {
       if (!matcher.find()) return self;
       return self.substring(0, matcher.start())
-          + applyMapper(matcher, mapper)
+          + applyMapper(applyLambdaNode, matcher, mapper)
           + self.substring(matcher.end());
     }
   }
 
   public abstract static class replaceLastMapped extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
+
     @Specialization
     @TruffleBoundary
     protected String eval(String self, String pattern, VmFunction mapper) {
@@ -610,12 +615,14 @@ public final class StringNodes {
       return !findLast(matcher)
           ? self
           : self.substring(0, matcher.start())
-              + applyMapper(matcher, mapper)
+              + applyMapper(applyLambdaNode, matcher, mapper)
               + self.substring(matcher.end());
     }
   }
 
   public abstract static class replaceAllMapped extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
+
     @Specialization
     @TruffleBoundary
     protected String eval(String self, String pattern, VmFunction mapper) {
@@ -634,7 +641,7 @@ public final class StringNodes {
       var buffer = new StringBuilder();
 
       do {
-        matcher.appendReplacement(buffer, applyMapper(matcher, mapper));
+        matcher.appendReplacement(buffer, applyMapper(applyLambdaNode, matcher, mapper));
       } while (matcher.find());
 
       matcher.appendTail(buffer);
@@ -944,10 +951,11 @@ public final class StringNodes {
    * (i.e. the previous `find` returned `true`). The string returned is safe as a drop-in
    * replacement.
    */
-  private static String applyMapper(Matcher matcher, VmFunction mapper) {
+  private static String applyMapper(
+      ApplyVmFunction1Node applyNode, Matcher matcher, VmFunction mapper) {
     // -1 indicates regex match instead of group match (see comments in RegexMatchNodes)
     var regexMatch = RegexMatchFactory.create(Pair.of(matcher.toMatchResult(), -1));
-    var replacement = mapper.applyString(regexMatch);
+    var replacement = applyNode.executeString(mapper, regexMatch);
     return Matcher.quoteReplacement(replacement);
   }
 

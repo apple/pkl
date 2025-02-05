@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 
 /**
@@ -29,6 +31,7 @@ import org.pkl.core.runtime.*;
 public class ReadSuperEntryNode extends ExpressionNode {
   @Child private ExpressionNode keyNode;
   @Child private IndirectCallNode callNode = IndirectCallNode.create();
+  @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
 
   public ReadSuperEntryNode(SourceSection sourceSection, ExpressionNode keyNode) {
     super(sourceSection);
@@ -69,6 +72,6 @@ public class ReadSuperEntryNode extends ExpressionNode {
     var defaultFunction =
         (VmFunction) VmUtils.readMemberOrNull(receiver, Identifier.DEFAULT, callNode);
     assert defaultFunction != null;
-    return defaultFunction.apply(key);
+    return applyLambdaNode.execute(defaultFunction, key);
   }
 }
