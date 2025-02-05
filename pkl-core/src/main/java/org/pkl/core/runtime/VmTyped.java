@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public final class VmTyped extends VmObject {
         var className = member.getName();
         var clazz = (VmClass) getCachedValue(className);
         if (clazz == null) {
-          clazz = (VmClass) VmUtils.doReadMember(this, this, className, member);
+          clazz = (VmClass) VmUtils.doReadMember(this, this, FrameMarkers.NONE, className, member);
         }
         builder.add(className.toString(), clazz.getMirror());
       }
@@ -140,7 +140,9 @@ public final class VmTyped extends VmObject {
         var typeAliasName = member.getName();
         var typeAlias = (VmTypeAlias) getCachedValue(typeAliasName);
         if (typeAlias == null) {
-          typeAlias = (VmTypeAlias) VmUtils.doReadMember(this, this, typeAliasName, member);
+          typeAlias =
+              (VmTypeAlias)
+                  VmUtils.doReadMember(this, this, FrameMarkers.NONE, typeAliasName, member);
         }
         builder.add(typeAliasName.toString(), typeAlias.getMirror());
       }

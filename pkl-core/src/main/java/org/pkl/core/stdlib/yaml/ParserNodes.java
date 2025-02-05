@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.yaml;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -56,14 +57,21 @@ public final class ParserNodes {
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
-      var uri = (String) VmUtils.readMember(resource, Identifier.URI, callNode);
+        VirtualFrame frame,
+        VmTyped self,
+        VmTyped resource,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text =
+          (String)
+              VmUtils.readMember(resource, VmUtils.getMarkers(frame), Identifier.TEXT, callNode);
+      var uri =
+          (String)
+              VmUtils.readMember(resource, VmUtils.getMarkers(frame), Identifier.URI, callNode);
       return doParse(self, text, uri);
     }
 
+    @TruffleBoundary
     private Object doParse(VmTyped self, String text, String uri) {
       var converter = createConverter(self);
       var load = createLoad(self, text, uri, converter);
@@ -92,14 +100,21 @@ public final class ParserNodes {
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
-      var uri = (String) VmUtils.readMember(resource, Identifier.URI, callNode);
+        VirtualFrame frame,
+        VmTyped self,
+        VmTyped resource,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text =
+          (String)
+              VmUtils.readMember(resource, VmUtils.getMarkers(frame), Identifier.TEXT, callNode);
+      var uri =
+          (String)
+              VmUtils.readMember(resource, VmUtils.getMarkers(frame), Identifier.URI, callNode);
       return doParseAll(self, text, uri);
     }
 
+    @TruffleBoundary
     private VmList doParseAll(VmTyped self, String text, String uri) {
       var converter = createConverter(self);
       var load = createLoad(self, text, uri, converter);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public final class DelegateToExtraStorageObjOrParentNode extends ExpressionNode 
     var owner = VmUtils.getOwner(frame);
     var delegate = (VmObjectLike) owner.getExtraStorage();
     var memberKey = VmUtils.getMemberKey(frame);
-    var result = VmUtils.readMemberOrNull(delegate, memberKey);
+    var result = VmUtils.readMemberOrNull(delegate, VmUtils.getMarkers(frame), memberKey);
     if (result != null) return result;
     var parent = owner.getParent();
     assert parent != null;

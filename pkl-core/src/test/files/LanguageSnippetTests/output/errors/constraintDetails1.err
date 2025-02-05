@@ -4,11 +4,11 @@ Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
 x | birds: Listing(firstOneIsSandy) = new {
                    ^^^^^^^^^^^^^^^
-at constraints13#birds (file:///$snippetsDir/input/classes/constraints13.pkl)
+at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
 
 x | birds: Listing(firstOneIsSandy) = new {
                                       ^^^^^
-at constraints13#birds (file:///$snippetsDir/input/classes/constraints13.pkl)
+at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
 
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.json;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.*;
 import org.graalvm.collections.EconomicMap;
@@ -43,13 +44,18 @@ public final class ParserNodes {
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
+        VirtualFrame frame,
+        VmTyped self,
+        VmTyped resource,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text =
+          (String)
+              VmUtils.readMember(resource, VmUtils.getMarkers(frame), Identifier.TEXT, callNode);
       return doParse(self, text);
     }
 
+    @TruffleBoundary
     private Object doParse(VmTyped self, String text) {
       var converter = createConverter(self);
       var useMapping = (boolean) VmUtils.readMember(self, Identifier.USE_MAPPING);

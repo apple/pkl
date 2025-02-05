@@ -70,6 +70,6 @@ public final class LetExprNode extends ExpressionNode {
 
     var value = valueNode.executeGeneric(frame);
 
-    return callNode.call(function.getThisValue(), function, value);
+    return callNode.call(VmUtils.getMarkers(frame), function.getThisValue(), function, value);
   }
 }

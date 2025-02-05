@@ -102,7 +102,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
             value = constantValue;
           } else {
             var callTarget = member.getCallTarget();
-            value = callTarget.call(parent, owner, key);
+            value = callTarget.call(VmUtils.getMarkers(frame), parent, owner, key);
           }
           owner.setCachedValue(key, value);
         }

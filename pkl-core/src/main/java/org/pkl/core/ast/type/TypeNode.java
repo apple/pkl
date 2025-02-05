@@ -1394,8 +1394,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object execute(VirtualFrame frame, Object value) {
-      var context = VmContext.get(this);
-      if (context.shouldEagerTypecheck()) {
+      if (VmUtils.shouldRunEagerTypeCheck(frame)) {
         return executeEagerly(frame, value);
       }
       if (!(value instanceof VmListing vmListing)) {
@@ -1464,8 +1463,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object execute(VirtualFrame frame, Object value) {
-      var context = VmContext.get(this);
-      if (context.shouldEagerTypecheck()) {
+      if (VmUtils.shouldRunEagerTypeCheck(frame)) {
         return executeEagerly(frame, value);
       }
       if (!(value instanceof VmMapping vmMapping)) {
@@ -1695,7 +1693,7 @@ public abstract class TypeNode extends PklNode {
               memberValue = member.getConstantValue();
               if (memberValue == null) {
                 var callTarget = member.getCallTarget();
-                memberValue = callTarget.call(object, owner, memberKey);
+                memberValue = callTarget.call(VmUtils.getMarkers(frame), object, owner, memberKey);
               }
               object.setCachedValue(memberKey, memberValue);
             }
@@ -2489,19 +2487,17 @@ public abstract class TypeNode extends PklNode {
     // If mutating receiver and owner can't be avoided, it would be safer
     // to have VmObjectLike store them directly instead of storing enclosingFrame.
     private static void setReceiver(Frame frame, Object receiver) {
-      frame.getArguments()[0] = receiver;
+      frame.getArguments()[1] = receiver;
     }
 
     private static void setOwner(Frame frame, VmObjectLike owner) {
-      frame.getArguments()[1] = owner;
+      frame.getArguments()[2] = owner;
     }
   }
 
   public static final class ConstrainedTypeNode extends TypeNode {
     @Child private TypeNode childNode;
     @Children private final TypeConstraintNode[] constraintNodes;
-
-    @CompilationFinal private int customThisSlot = -1;
 
     public ConstrainedTypeNode(
         SourceSection sourceSection, TypeNode childNode, TypeConstraintNode[] constraintNodes) {
@@ -2523,20 +2519,27 @@ public abstract class TypeNode extends PklNode {
 
     @ExplodeLoop
     public Object execute(VirtualFrame frame, Object value) {
-      if (customThisSlot == -1) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-        customThisSlot =
-            frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
-      }
+      var customThisSlot =
+          frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
 
       var ret = childNode.execute(frame, value);
 
-      frame.setAuxiliarySlot(customThisSlot, value);
-      for (var node : constraintNodes) {
-        node.execute(frame);
+      var frameMarkers = VmUtils.getMarkers(frame);
+      var isEagerTypecheck = frameMarkers.contains(FrameMarker.EAGER_TYPECHECK_MARKER);
+      if (!isEagerTypecheck) {
+        frameMarkers.add(FrameMarker.EAGER_TYPECHECK_MARKER);
       }
-      return ret;
+      try {
+        frame.setAuxiliarySlot(customThisSlot, value);
+        for (var node : constraintNodes) {
+          node.execute(frame);
+        }
+        return ret;
+      } finally {
+        if (!isEagerTypecheck) {
+          frameMarkers.remove(FrameMarker.EAGER_TYPECHECK_MARKER);
+        }
+      }
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -36,13 +37,13 @@ public final class StringNodes {
   public abstract static class TakeDropWhile extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
-    protected int findOffset(String string, VmFunction function) {
+    protected int findOffset(VirtualFrame frame, String string, VmFunction function) {
       var length = string.length();
       var offset = 0;
 
       while (offset < length) {
         var codePoint = codePointAt(string, offset);
-        if (!applyLambdaNode.executeBoolean(function, codePoint)) break;
+        if (!applyLambdaNode.executeBoolean(frame, function, codePoint)) break;
         offset += codePoint.length();
       }
 
@@ -72,13 +73,13 @@ public final class StringNodes {
   public abstract static class TakeDropLastWhile extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
-    protected int findOffset(String string, VmFunction function) {
+    protected int findOffset(VirtualFrame frame, String string, VmFunction function) {
       var length = string.length();
       var offset = length;
 
       while (offset > 0) {
         var codePoint = codePointBefore(string, offset);
-        if (!applyLambdaNode.executeBoolean(function, codePoint)) break;
+        if (!applyLambdaNode.executeBoolean(frame, function, codePoint)) break;
         offset -= codePoint.length();
       }
 
@@ -414,8 +415,8 @@ public final class StringNodes {
 
   public abstract static class takeWhile extends TakeDropWhile {
     @Specialization
-    protected String eval(String self, VmFunction function) {
-      return substringUntil(self, findOffset(self, function));
+    protected String eval(VirtualFrame frame, String self, VmFunction function) {
+      return substringUntil(self, findOffset(frame, self, function));
     }
   }
 
@@ -431,8 +432,8 @@ public final class StringNodes {
 
   public abstract static class takeLastWhile extends TakeDropLastWhile {
     @Specialization
-    protected String eval(String self, VmFunction function) {
-      return substringFrom(self, findOffset(self, function));
+    protected String eval(VirtualFrame frame, String self, VmFunction function) {
+      return substringFrom(self, findOffset(frame, self, function));
     }
   }
 
@@ -448,8 +449,8 @@ public final class StringNodes {
 
   public abstract static class dropWhile extends TakeDropWhile {
     @Specialization
-    protected String eval(String self, VmFunction function) {
-      var idx = findOffset(self, function);
+    protected String eval(VirtualFrame frame, String self, VmFunction function) {
+      var idx = findOffset(frame, self, function);
       return substringFrom(self, idx);
     }
   }
@@ -466,8 +467,8 @@ public final class StringNodes {
 
   public abstract static class dropLastWhile extends TakeDropLastWhile {
     @Specialization
-    protected String eval(String self, VmFunction function) {
-      var idx = findOffset(self, function);
+    protected String eval(VirtualFrame frame, String self, VmFunction function) {
+      var idx = findOffset(frame, self, function);
       return substringUntil(self, idx);
     }
   }

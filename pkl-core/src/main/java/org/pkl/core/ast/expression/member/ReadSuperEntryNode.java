@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,10 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.EnumSet;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 
 /**
@@ -29,6 +32,7 @@ import org.pkl.core.runtime.*;
 public class ReadSuperEntryNode extends ExpressionNode {
   @Child private ExpressionNode keyNode;
   @Child private IndirectCallNode callNode = IndirectCallNode.create();
+  @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1NodeGen.create();
 
   public ReadSuperEntryNode(SourceSection sourceSection, ExpressionNode keyNode) {
     super(sourceSection);
@@ -55,20 +59,24 @@ public class ReadSuperEntryNode extends ExpressionNode {
       var constantValue = member.getConstantValue();
       if (constantValue != null) return constantValue; // TODO: type check
 
+      var markers = EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
+      markers.addAll(VmUtils.getMarkers(frame));
       // caching the result of a super call is tricky (function of both receiver and owner)
       return callNode.call(
           member.getCallTarget(),
+          markers,
           // TODO: should the marker only turn off constraint checking, not overall type checking?
           receiver,
           owner,
-          key,
-          VmUtils.SKIP_TYPECHECK_MARKER);
+          key);
     }
 
     // not found -> apply lambda contained in `default` property
     var defaultFunction =
-        (VmFunction) VmUtils.readMemberOrNull(receiver, Identifier.DEFAULT, callNode);
+        (VmFunction)
+            VmUtils.readMemberOrNull(
+                receiver, VmUtils.getMarkers(frame), Identifier.DEFAULT, callNode);
     assert defaultFunction != null;
-    return defaultFunction.apply(key);
+    return applyLambdaNode.execute(frame, defaultFunction, key);
   }
 }

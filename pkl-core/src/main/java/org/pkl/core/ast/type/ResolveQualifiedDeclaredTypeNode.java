@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,12 +48,12 @@ public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeN
     CompilerDirectives.transferToInterpreter();
 
     var enclosingModule = getEnclosingModule(VmUtils.getOwner(frame));
-    var importedModule = getImport(enclosingModule, moduleName, moduleNameSection);
+    var importedModule = getImport(frame, enclosingModule, moduleName, moduleNameSection);
 
     // search module hierarchy
     // (type declared in base module is accessible through extending and amending modules)
     for (var currModule = importedModule; currModule != null; currModule = currModule.getParent()) {
-      var result = getType(currModule, typeName, sourceSection);
+      var result = getType(frame, currModule, typeName, sourceSection);
       if (result != null) return result;
     }
 

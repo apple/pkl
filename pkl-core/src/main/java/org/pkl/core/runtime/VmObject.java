@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,7 +174,7 @@ public abstract class VmObject extends VmObjectLike {
           var memberValue = getCachedValue(memberKey);
           if (memberValue == null) {
             try {
-              memberValue = VmUtils.doReadMember(this, owner, memberKey, member);
+              memberValue = VmUtils.doReadMember(this, owner, FrameMarkers.NONE, memberKey, member);
             } catch (VmUndefinedValueException e) {
               if (!allowUndefinedValues) throw e;
               continue;

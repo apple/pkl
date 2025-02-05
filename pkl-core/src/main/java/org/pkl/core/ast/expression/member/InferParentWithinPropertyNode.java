@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
@@ -35,13 +36,15 @@ public abstract class InferParentWithinPropertyNode extends ExpressionNode {
   }
 
   @Specialization(guards = "!owner.isPrototype()")
-  protected Object evalTypedObject(VmTyped owner) {
+  protected Object evalTypedObject(VirtualFrame frame, VmTyped owner) {
     if (isLocalProperty) {
       return getLocalPropertyDefaultValue(owner);
     }
 
     try {
-      var result = VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false);
+      var result =
+          VmUtils.readMemberOrNull(
+              owner.getPrototype(), VmUtils.getMarkers(frame), ownPropertyName, false);
       assert result != null : "every property has a default";
       return result;
     } catch (VmUndefinedValueException e) {

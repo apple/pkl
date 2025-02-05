@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -49,8 +50,8 @@ public final class DynamicNodes {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
     @Specialization
-    protected Object eval(VmDynamic self, String name) {
-      return VmUtils.readMember(self, Identifier.get(name), callNode);
+    protected Object eval(VirtualFrame frame, VmDynamic self, String name) {
+      return VmUtils.readMember(self, VmUtils.getMarkers(frame), Identifier.get(name), callNode);
     }
   }
 
@@ -58,8 +59,10 @@ public final class DynamicNodes {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
     @Specialization
-    protected Object eval(VmDynamic self, String name) {
-      return VmNull.lift(VmUtils.readMemberOrNull(self, Identifier.get(name), callNode));
+    protected Object eval(VirtualFrame frame, VmDynamic self, String name) {
+      return VmNull.lift(
+          VmUtils.readMemberOrNull(
+              self, VmUtils.getMarkers(frame), Identifier.get(name), callNode));
     }
   }
 

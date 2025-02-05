@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.util.Map;
 import org.pkl.core.ast.lambda.*;
@@ -105,12 +106,12 @@ public final class MapNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmMap eval(VmMap self, VmFunction function) {
+    protected VmMap eval(VirtualFrame frame, VmMap self, VmFunction function) {
       var builder = VmMap.builder();
       for (var entry : self) {
         var key = VmUtils.getKey(entry);
         var value = VmUtils.getValue(entry);
-        if (applyLambdaNode.executeBoolean(function, key, value)) {
+        if (applyLambdaNode.executeBoolean(frame, function, key, value)) {
           builder.add(key, value);
         }
       }
@@ -123,12 +124,12 @@ public final class MapNodes {
     @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
 
     @Specialization
-    protected Object eval(VmMap self, Object initial, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmMap self, Object initial, VmFunction function) {
       var result = new MutableReference<>(initial);
       for (var entry : self) {
         result.set(
             applyLambdaNode.execute(
-                function, result.get(), VmUtils.getKey(entry), VmUtils.getValue(entry)));
+                frame, function, result.get(), VmUtils.getKey(entry), VmUtils.getValue(entry)));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result.get();
@@ -139,11 +140,12 @@ public final class MapNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmMap eval(VmMap self, VmFunction function) {
+    protected VmMap eval(VirtualFrame frame, VmMap self, VmFunction function) {
       var builder = VmMap.builder();
       for (var entry : self) {
         var pair =
-            applyLambdaNode.executePair(function, VmUtils.getKey(entry), VmUtils.getValue(entry));
+            applyLambdaNode.executePair(
+                frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry));
         builder.add(pair.getFirst(), pair.getSecond());
       }
       LoopNode.reportLoopCount(this, self.getLength());
@@ -154,11 +156,14 @@ public final class MapNodes {
   public abstract static class mapKeys extends ExternalMethod1Node {
     @Specialization
     protected VmMap eval(
-        VmMap self, VmFunction function, @Cached("create()") ApplyVmFunction2Node applyNode) {
+        VirtualFrame frame,
+        VmMap self,
+        VmFunction function,
+        @Cached("create()") ApplyVmFunction2Node applyNode) {
       var builder = VmMap.builder();
       for (var entry : self) {
         builder.add(
-            applyNode.execute(function, VmUtils.getKey(entry), VmUtils.getValue(entry)),
+            applyNode.execute(frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry)),
             VmUtils.getValue(entry));
       }
       LoopNode.reportLoopCount(this, self.getLength());
@@ -169,12 +174,15 @@ public final class MapNodes {
   public abstract static class mapValues extends ExternalMethod1Node {
     @Specialization
     protected VmMap eval(
-        VmMap self, VmFunction function, @Cached("create()") ApplyVmFunction2Node applyNode) {
+        VirtualFrame frame,
+        VmMap self,
+        VmFunction function,
+        @Cached("create()") ApplyVmFunction2Node applyNode) {
       var builder = VmMap.builder();
       for (var entry : self) {
         builder.add(
             VmUtils.getKey(entry),
-            applyNode.execute(function, VmUtils.getKey(entry), VmUtils.getValue(entry)));
+            applyNode.execute(frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry)));
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
@@ -185,11 +193,12 @@ public final class MapNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected VmMap eval(VmMap self, VmFunction function) {
+    protected VmMap eval(VirtualFrame frame, VmMap self, VmFunction function) {
       var builder = VmMap.builder();
       for (var entry : self) {
         VmMap flatMapResult =
-            applyLambdaNode.executeMap(function, VmUtils.getKey(entry), VmUtils.getValue(entry));
+            applyLambdaNode.executeMap(
+                frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry));
 
         for (Map.Entry<Object, Object> flatMapEntry : flatMapResult) {
           builder.add(VmUtils.getKey(flatMapEntry), VmUtils.getValue(flatMapEntry));
@@ -204,10 +213,10 @@ public final class MapNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMap self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmMap self, VmFunction function) {
       for (var entry : self) {
         if (!applyLambdaNode.executeBoolean(
-            function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return false;
+            frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return false;
       }
       return true;
     }
@@ -217,10 +226,10 @@ public final class MapNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMap self, VmFunction function) {
+    protected boolean eval(VirtualFrame frame, VmMap self, VmFunction function) {
       for (var entry : self) {
         if (applyLambdaNode.executeBoolean(
-            function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return true;
+            frame, function, VmUtils.getKey(entry), VmUtils.getValue(entry))) return true;
       }
       return false;
     }

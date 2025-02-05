@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.ast.expression.binary;
+package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
+import java.util.EnumSet;
 
-public abstract class ComparatorNode extends BinaryExpressionNode {
-  public ComparatorNode(SourceSection sourceSection) {
-    super(sourceSection);
-  }
+public final class FrameMarkers {
+  private FrameMarkers() {}
 
-  public abstract boolean executeWith(VirtualFrame frame, Object left, Object right);
+  public static final EnumSet<FrameMarker> SKIP_TYPECHECK =
+      EnumSet.of(FrameMarker.SKIP_TYPECHECK_MARKER);
+
+  public static final EnumSet<FrameMarker> NONE = EnumSet.noneOf(FrameMarker.class);
 }

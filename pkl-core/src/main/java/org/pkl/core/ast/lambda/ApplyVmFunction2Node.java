@@ -19,48 +19,52 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.*;
 
 public abstract class ApplyVmFunction2Node extends PklNode {
-  public abstract Object execute(VmFunction function, Object arg1, Object arg2);
+  public abstract Object execute(VirtualFrame frame, VmFunction function, Object arg1, Object arg2);
 
-  public final boolean executeBoolean(VmFunction function, Object arg1, Object arg2) {
-    var result = execute(function, arg1, arg2);
+  public final boolean executeBoolean(
+      VirtualFrame frame, VmFunction function, Object arg1, Object arg2) {
+    var result = execute(frame, function, arg1, arg2);
     if (result instanceof Boolean b) return b;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getBooleanClass()).build();
   }
 
-  public final VmCollection executeCollection(VmFunction function, Object arg1, Object arg2) {
-    var result = execute(function, arg1, arg2);
+  public final VmCollection executeCollection(
+      VirtualFrame frame, VmFunction function, Object arg1, Object arg2) {
+    var result = execute(frame, function, arg1, arg2);
     if (result instanceof VmCollection collection) return collection;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getCollectionClass()).build();
   }
 
-  public final VmMap executeMap(VmFunction function, Object arg1, Object arg2) {
-    var result = execute(function, arg1, arg2);
+  public final VmMap executeMap(VirtualFrame frame, VmFunction function, Object arg1, Object arg2) {
+    var result = execute(frame, function, arg1, arg2);
     if (result instanceof VmMap map) return map;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getMapClass()).build();
   }
 
-  public final Long executeInt(VmFunction function, Object arg1, Object arg2) {
-    var result = execute(function, arg1, arg2);
+  public final Long executeInt(VirtualFrame frame, VmFunction function, Object arg1, Object arg2) {
+    var result = execute(frame, function, arg1, arg2);
     if (result instanceof Long l) return l;
 
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().typeMismatch(result, BaseModule.getIntClass()).build();
   }
 
-  public final VmPair executePair(VmFunction function, Object arg1, Object arg2) {
-    var result = execute(function, arg1, arg2);
+  public final VmPair executePair(
+      VirtualFrame frame, VmFunction function, Object arg1, Object arg2) {
+    var result = execute(frame, function, arg1, arg2);
     if (result instanceof VmPair pair) return pair;
 
     CompilerDirectives.transferToInterpreter();
@@ -69,6 +73,7 @@ public abstract class ApplyVmFunction2Node extends PklNode {
 
   @Specialization(guards = "function.getCallTarget() == cachedCallTarget")
   protected Object evalDirect(
+      VirtualFrame frame,
       VmFunction function,
       Object arg1,
       Object arg2,
@@ -76,16 +81,23 @@ public abstract class ApplyVmFunction2Node extends PklNode {
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
 
-    return callNode.call(function.getThisValue(), function, arg1, arg2);
+    return callNode.call(VmUtils.getMarkers(frame), function.getThisValue(), function, arg1, arg2);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
+      VirtualFrame frame,
       VmFunction function,
       Object arg1,
       Object arg2,
       @Cached("create()") IndirectCallNode callNode) {
 
-    return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1, arg2);
+    return callNode.call(
+        function.getCallTarget(),
+        VmUtils.getMarkers(frame),
+        function.getThisValue(),
+        function,
+        arg1,
+        arg2);
   }
 }

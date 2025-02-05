@@ -16,9 +16,11 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 
 public final class FunctionNodes {
@@ -28,14 +30,15 @@ public final class FunctionNodes {
     @Child private IndirectCallNode callNode = IndirectCallNode.create();
 
     @Specialization
-    protected Object eval(VmFunction self, VmList argList) {
+    protected Object eval(VirtualFrame frame, VmFunction self, VmList argList) {
       var argCount = argList.getLength();
 
-      var args = new Object[2 + argCount];
-      args[0] = self.getThisValue();
-      args[1] = self;
+      var args = new Object[3 + argCount];
+      args[0] = VmUtils.getMarkers(frame);
+      args[1] = self.getThisValue();
+      args[2] = self;
 
-      var i = 2;
+      var i = 3;
       for (var arg : argList) {
         args[i++] = arg;
       }
