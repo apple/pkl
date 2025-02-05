@@ -89,7 +89,7 @@ public final class TypeAlias implements Node {
     children.addAll(annotations);
     children.addAll(modifiers);
     children.add(name);
-    if (docComment != null) {
+    if (typeParameterList != null) {
       children.add(typeParameterList);
     }
     children.add(type);

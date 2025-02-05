@@ -158,7 +158,7 @@ import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.newparser.AbstractParserVisitor;
+import org.pkl.core.newparser.AbstractAstBuilderNew;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
@@ -272,8 +272,8 @@ import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
-public class AstBuilderNew extends AbstractParserVisitor<Object> {
-  protected final Source source;
+@SuppressWarnings("DataFlowIssue")
+public class AstBuilderNew extends AbstractAstBuilderNew<Object> {
   private final VmLanguage language;
   private final ModuleInfo moduleInfo;
 
@@ -287,7 +287,7 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
 
   public AstBuilderNew(
       Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
-    this.source = source;
+    super(source);
     this.language = language;
     this.moduleInfo = moduleInfo;
 
@@ -717,15 +717,6 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
     return new ConstantValueNode(createSourceSection(expr), doVisitStringConstantExpr(expr));
   }
 
-  private String doVisitStringConstantExpr(StringConstant expr) {
-    var sparts = expr.getStrParts();
-    var builder = new StringBuilder();
-    for (var part : sparts.getParts()) {
-      builder.append(visitStringConstantPart(part));
-    }
-    return builder.toString();
-  }
-
   @Override
   public ExpressionNode visitStringPart(StringPart spart) {
     return doVisitStringPart(spart, spart.span());
@@ -738,47 +729,11 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
     if (spart instanceof StringConstantParts sparts) {
       var builder = new StringBuilder();
       for (var part : sparts.getParts()) {
-        builder.append(visitStringConstantPart(part));
+        builder.append(doVisitStringConstantPart(part));
       }
       return new ConstantValueNode(createSourceSection(span), builder.toString());
     }
     throw exceptionBuilder().unreachableCode().build();
-  }
-
-  @Override
-  public String visitStringConstantPart(StringConstantPart part) {
-    if (part instanceof ConstantPart cp) {
-      return cp.getStr();
-    }
-    if (part instanceof StringUnicodeEscape ue) {
-      var codePoint = parseUnicodeEscapeSequence(ue);
-      return Character.toString(codePoint);
-    }
-    if (part instanceof StringEscape se) {
-      return switch (se.getType()) {
-        case NEWLINE -> "\n";
-        case QUOTE -> "\"";
-        case BACKSLASH -> "\\";
-        case TAB -> "\t";
-        case RETURN -> "\r";
-      };
-    }
-    throw PklBugException.unreachableCode();
-  }
-
-  private int parseUnicodeEscapeSequence(StringUnicodeEscape escape) {
-    var text = escape.getEscape();
-    var lastIndex = text.length() - 1;
-    var startIndex = text.indexOf('{', 2);
-    assert startIndex != -1; // guaranteed by lexer
-    try {
-      return Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
-    } catch (NumberFormatException e) {
-      throw exceptionBuilder()
-          .evalError("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex))
-          .withSourceSection(createSourceSection(escape))
-          .build();
-    }
   }
 
   @Override
@@ -901,7 +856,7 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
               .withSourceSection(createSourceSection(part))
               .build();
         }
-        builder.append(visitStringConstantPart(part));
+        builder.append(doVisitStringConstantPart(part));
         isLineStart = false;
       } else {
         throw PklBugException.unreachableCode();
@@ -1646,7 +1601,7 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
 
   @Override
   public ObjectMember visitImport(Import imp) {
-    var importNode = doVisitImport(imp.isGlob(), imp, imp.getUrl());
+    var importNode = doVisitImport(imp.isGlob(), imp, imp.getImportStr());
     var moduleKey = moduleResolver.resolve(importNode.getImportUri());
     var importName =
         Identifier.property(
@@ -2900,46 +2855,6 @@ public class AstBuilderNew extends AbstractParserVisitor<Object> {
   protected VmExceptionBuilder exceptionBuilder() {
     return new VmExceptionBuilder()
         .withMemberName(symbolTable.getCurrentScope().getQualifiedName());
-  }
-
-  private @Nullable SourceSection createSourceSection(@Nullable Node node) {
-    return node == null
-        ? null
-        : source.createSection(node.span().charIndex(), node.span().length());
-  }
-
-  private SourceSection createSourceSection(Span span) {
-    return source.createSection(span.charIndex(), span.length());
-  }
-
-  protected final SourceSection createSourceSection(
-      List<? extends Modifier> modifiers, ModifierValue symbol) {
-
-    var modifierCtx =
-        modifiers.stream().filter(mod -> mod.getValue() == symbol).findFirst().orElseThrow();
-
-    return createSourceSection(modifierCtx);
-  }
-
-  protected static @Nullable SourceSection createSourceSection(Source source, @Nullable Node node) {
-    if (node == null) return null;
-    return createSourceSection(source, node.span());
-  }
-
-  protected static SourceSection createSourceSection(Source source, Span span) {
-    return source.createSection(span.charIndex(), span.length());
-  }
-
-  private SourceSection startOf(Node node) {
-    return startOf(node.span());
-  }
-
-  private SourceSection startOf(Span span) {
-    return source.createSection(span.charIndex(), 1);
-  }
-
-  private SourceSection shrinkLeft(SourceSection section, int length) {
-    return source.createSection(section.getCharIndex() + length, section.getCharLength() - length);
   }
 
   private @Nullable SymbolTable.Scope getParentLexicalScope() {

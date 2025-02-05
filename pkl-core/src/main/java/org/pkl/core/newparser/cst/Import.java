@@ -23,14 +23,14 @@ import org.pkl.core.newparser.cst.Expr.StringConstant;
 import org.pkl.core.util.Nullable;
 
 public final class Import implements Node {
-  private final StringConstant url;
+  private final StringConstant importStr;
   private final boolean isGlob;
   private final @Nullable Ident alias;
   private final Span span;
   private Node parent;
 
-  public Import(StringConstant url, boolean isGlob, @Nullable Ident alias, Span span) {
-    this.url = url;
+  public Import(StringConstant importStr, boolean isGlob, @Nullable Ident alias, Span span) {
+    this.importStr = importStr;
     this.isGlob = isGlob;
     this.alias = alias;
     this.span = span;
@@ -57,16 +57,16 @@ public final class Import implements Node {
 
   @Override
   public List<Node> children() {
-    return List.of(url);
+    return List.of(importStr);
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitImport(this);
   }
 
-  public StringConstant getUrl() {
-    return url;
+  public StringConstant getImportStr() {
+    return importStr;
   }
 
   public boolean isGlob() {
@@ -80,8 +80,8 @@ public final class Import implements Node {
   @Override
   public String toString() {
     return "Import{"
-        + "url="
-        + url
+        + "importStr="
+        + importStr
         + ", isGlob="
         + isGlob
         + ", alias="
@@ -101,13 +101,13 @@ public final class Import implements Node {
     }
     Import anImport = (Import) o;
     return isGlob == anImport.isGlob
-        && Objects.equals(url, anImport.url)
+        && Objects.equals(importStr, anImport.importStr)
         && Objects.equals(alias, anImport.alias)
         && Objects.equals(span, anImport.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, isGlob, alias, span);
+    return Objects.hash(importStr, isGlob, alias, span);
   }
 }

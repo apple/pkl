@@ -15,7 +15,6 @@
  */
 package org.pkl.core.newparser;
 
-import org.pkl.core.PklBugException;
 import org.pkl.core.newparser.cst.Annotation;
 import org.pkl.core.newparser.cst.ArgumentList;
 import org.pkl.core.newparser.cst.ClassBody;
@@ -44,233 +43,253 @@ import org.pkl.core.newparser.cst.TypeAlias;
 import org.pkl.core.newparser.cst.TypeAnnotation;
 import org.pkl.core.newparser.cst.TypeParameter;
 import org.pkl.core.newparser.cst.TypeParameterList;
+import org.pkl.core.util.Nullable;
 
 public interface ParserVisitor<Result> {
 
+  @Nullable
   Result visitUnknownType(Type.UnknownType type);
 
+  @Nullable
   Result visitNothingType(Type.NothingType type);
 
+  @Nullable
   Result visitModuleType(Type.ModuleType type);
 
+  @Nullable
   Result visitStringConstantType(Type.StringConstantType type);
 
+  @Nullable
   Result visitDeclaredType(Type.DeclaredType type);
 
+  @Nullable
   Result visitParenthesizedType(Type.ParenthesizedType type);
 
+  @Nullable
   Result visitNullableType(Type.NullableType type);
 
+  @Nullable
   Result visitConstrainedType(Type.ConstrainedType type);
 
+  @Nullable
   Result visitDefaultUnionType(Type.DefaultUnionType type);
 
+  @Nullable
   Result visitUnionType(Type.UnionType type);
 
+  @Nullable
   Result visitFunctionType(Type.FunctionType type);
 
-  default Result visitType(Type type) {
-    if (type instanceof Type.UnknownType t) return visitUnknownType(t);
-    if (type instanceof Type.NothingType t) return visitNothingType(t);
-    if (type instanceof Type.ModuleType t) return visitModuleType(t);
-    if (type instanceof Type.StringConstantType t) return visitStringConstantType(t);
-    if (type instanceof Type.DeclaredType t) return visitDeclaredType(t);
-    if (type instanceof Type.ParenthesizedType t) return visitParenthesizedType(t);
-    if (type instanceof Type.NullableType t) return visitNullableType(t);
-    if (type instanceof Type.ConstrainedType t) return visitConstrainedType(t);
-    if (type instanceof Type.DefaultUnionType t) return visitDefaultUnionType(t);
-    if (type instanceof Type.UnionType t) return visitUnionType(t);
-    if (type instanceof Type.FunctionType t) return visitFunctionType(t);
-    throw PklBugException.unreachableCode();
-  }
+  @Nullable
+  Result visitType(Type type);
 
+  @Nullable
   Result visitThisExpr(Expr.This expr);
 
+  @Nullable
   Result visitOuterExpr(Expr.Outer expr);
 
+  @Nullable
   Result visitModuleExpr(Expr.Module expr);
 
+  @Nullable
   Result visitNullLiteralExpr(NullLiteral expr);
 
+  @Nullable
   Result visitBoolLiteralExpr(Expr.BoolLiteral expr);
 
+  @Nullable
   Result visitIntLiteralExpr(Expr.IntLiteral expr);
 
+  @Nullable
   Result visitFloatLiteralExpr(Expr.FloatLiteral expr);
 
+  @Nullable
   Result visitThrowExpr(Expr.Throw expr);
 
+  @Nullable
   Result visitTraceExpr(Expr.Trace expr);
 
+  @Nullable
   Result visitImportExpr(Expr.ImportExpr expr);
 
+  @Nullable
   Result visitReadExpr(Expr.Read expr);
 
+  @Nullable
   Result visitReadNullExpr(Expr.ReadNull expr);
 
+  @Nullable
   Result visitReadGlobExpr(Expr.ReadGlob expr);
 
+  @Nullable
   Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr);
 
+  @Nullable
   Result visitStringConstantExpr(Expr.StringConstant expr);
 
+  @Nullable
   Result visitInterpolatedStringExpr(Expr.InterpolatedString expr);
 
+  @Nullable
   Result visitInterpolatedMultiStringExpr(Expr.InterpolatedMultiString expr);
 
+  @Nullable
   Result visitNewExpr(Expr.New expr);
 
+  @Nullable
   Result visitAmendsExpr(Expr.Amends expr);
 
+  @Nullable
   Result visitSuperAccessExpr(Expr.SuperAccess expr);
 
+  @Nullable
   Result visitSuperSubscriptExpr(Expr.SuperSubscript expr);
 
+  @Nullable
   Result visitQualifiedAccessExpr(Expr.QualifiedAccess expr);
 
+  @Nullable
   Result visitSubscriptExpr(Expr.Subscript expr);
 
+  @Nullable
   Result visitNonNullExpr(Expr.NonNull expr);
 
+  @Nullable
   Result visitUnaryMinusExpr(Expr.UnaryMinus expr);
 
+  @Nullable
   Result visitLogicalNotExpr(Expr.LogicalNot expr);
 
+  @Nullable
   Result visitBinaryOpExpr(Expr.BinaryOp expr);
 
+  @Nullable
   Result visitTypeCheckExpr(Expr.TypeCheck expr);
 
+  @Nullable
   Result visitTypeCastExpr(Expr.TypeCast expr);
 
+  @Nullable
   Result visitIfExpr(Expr.If expr);
 
+  @Nullable
   Result visitLetExpr(Expr.Let expr);
 
+  @Nullable
   Result visitFunctionLiteralExpr(Expr.FunctionLiteral expr);
 
+  @Nullable
   Result visitParenthesizedExpr(Expr.Parenthesized expr);
 
-  default Result visitExpr(Expr expr) {
-    if (expr instanceof Expr.This e) return visitThisExpr(e);
-    if (expr instanceof Expr.Outer e) return visitOuterExpr(e);
-    if (expr instanceof Expr.Module e) return visitModuleExpr(e);
-    if (expr instanceof Expr.NullLiteral e) return visitNullLiteralExpr(e);
-    if (expr instanceof Expr.BoolLiteral e) return visitBoolLiteralExpr(e);
-    if (expr instanceof Expr.IntLiteral e) return visitIntLiteralExpr(e);
-    if (expr instanceof Expr.FloatLiteral e) return visitFloatLiteralExpr(e);
-    if (expr instanceof Expr.StringConstant e) return visitStringConstantExpr(e);
-    if (expr instanceof Expr.InterpolatedString e) return visitInterpolatedStringExpr(e);
-    if (expr instanceof Expr.InterpolatedMultiString e) return visitInterpolatedMultiStringExpr(e);
-    if (expr instanceof Expr.Throw e) return visitThrowExpr(e);
-    if (expr instanceof Expr.Trace e) return visitTraceExpr(e);
-    if (expr instanceof Expr.ImportExpr e) return visitImportExpr(e);
-    if (expr instanceof Expr.Read e) return visitReadExpr(e);
-    if (expr instanceof Expr.ReadGlob e) return visitReadGlobExpr(e);
-    if (expr instanceof Expr.ReadNull e) return visitReadNullExpr(e);
-    if (expr instanceof Expr.UnqualifiedAccess e) return visitUnqualifiedAccessExpr(e);
-    if (expr instanceof Expr.QualifiedAccess e) return visitQualifiedAccessExpr(e);
-    if (expr instanceof Expr.SuperAccess e) return visitSuperAccessExpr(e);
-    if (expr instanceof Expr.SuperSubscript e) return visitSuperSubscriptExpr(e);
-    if (expr instanceof Expr.NonNull e) return visitNonNullExpr(e);
-    if (expr instanceof Expr.UnaryMinus e) return visitUnaryMinusExpr(e);
-    if (expr instanceof Expr.LogicalNot e) return visitLogicalNotExpr(e);
-    if (expr instanceof Expr.If e) return visitIfExpr(e);
-    if (expr instanceof Expr.Let e) return visitLetExpr(e);
-    if (expr instanceof Expr.FunctionLiteral e) return visitFunctionLiteralExpr(e);
-    if (expr instanceof Expr.Parenthesized e) return visitParenthesizedExpr(e);
-    if (expr instanceof Expr.New e) return visitNewExpr(e);
-    if (expr instanceof Expr.Amends e) return visitAmendsExpr(e);
-    if (expr instanceof Expr.BinaryOp e) return visitBinaryOpExpr(e);
-    if (expr instanceof Expr.Subscript e) return visitSubscriptExpr(e);
-    if (expr instanceof Expr.TypeCast e) return visitTypeCastExpr(e);
-    if (expr instanceof Expr.TypeCheck e) return visitTypeCheckExpr(e);
-    // OperatorExpr and TypeExpr should never be reached here
-    throw PklBugException.unreachableCode();
-  }
+  @Nullable
+  Result visitExpr(Expr expr);
 
+  @Nullable
   Result visitObjectProperty(ObjectMemberNode.ObjectProperty member);
 
+  @Nullable
   Result visitObjectBodyProperty(ObjectMemberNode.ObjectBodyProperty member);
 
+  @Nullable
   Result visitObjectMethod(ObjectMemberNode.ObjectMethod member);
 
+  @Nullable
   Result visitMemberPredicate(ObjectMemberNode.MemberPredicate member);
 
+  @Nullable
   Result visitMemberPredicateBody(ObjectMemberNode.MemberPredicateBody member);
 
+  @Nullable
   Result visitObjectElement(ObjectMemberNode.ObjectElement member);
 
+  @Nullable
   Result visitObjectEntry(ObjectMemberNode.ObjectEntry member);
 
+  @Nullable
   Result visitObjectEntryBody(ObjectMemberNode.ObjectEntryBody member);
 
+  @Nullable
   Result visitObjectSpread(ObjectMemberNode.ObjectSpread member);
 
+  @Nullable
   Result visitWhenGenerator(ObjectMemberNode.WhenGenerator member);
 
+  @Nullable
   Result visitForGenerator(ObjectMemberNode.ForGenerator member);
 
-  default Result visitObjectMember(ObjectMemberNode member) {
-    if (member instanceof ObjectMemberNode.ObjectElement o) return visitObjectElement(o);
-    if (member instanceof ObjectMemberNode.ObjectProperty o) return visitObjectProperty(o);
-    if (member instanceof ObjectMemberNode.ObjectBodyProperty o) return visitObjectBodyProperty(o);
-    if (member instanceof ObjectMemberNode.ObjectMethod o) return visitObjectMethod(o);
-    if (member instanceof ObjectMemberNode.MemberPredicate o) return visitMemberPredicate(o);
-    if (member instanceof ObjectMemberNode.MemberPredicateBody o)
-      return visitMemberPredicateBody(o);
-    if (member instanceof ObjectMemberNode.ObjectEntry o) return visitObjectEntry(o);
-    if (member instanceof ObjectMemberNode.ObjectEntryBody o) return visitObjectEntryBody(o);
-    if (member instanceof ObjectMemberNode.ObjectSpread o) return visitObjectSpread(o);
-    if (member instanceof ObjectMemberNode.WhenGenerator o) return visitWhenGenerator(o);
-    if (member instanceof ObjectMemberNode.ForGenerator o) return visitForGenerator(o);
-    throw PklBugException.unreachableCode();
-  }
+  @Nullable
+  Result visitObjectMember(ObjectMemberNode member);
 
+  @Nullable
   Result visitModule(Module module);
 
+  @Nullable
   Result visitModuleDecl(ModuleDecl decl);
 
+  @Nullable
   Result visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl);
 
+  @Nullable
   Result visitImport(Import imp);
 
+  @Nullable
   Result visitClass(Clazz clazz);
 
+  @Nullable
   Result visitModifier(Modifier modifier);
 
+  @Nullable
   Result visitClassPropertyEntry(ClassPropertyEntry entry);
 
+  @Nullable
   Result visitClassMethod(ClassMethod entry);
 
+  @Nullable
   Result visitClassBody(ClassBody classBody);
 
+  @Nullable
   Result visitTypeAlias(TypeAlias typeAlias);
 
+  @Nullable
   Result visitAnnotation(Annotation annotation);
 
+  @Nullable
   Result visitParameter(Parameter param);
 
+  @Nullable
   Result visitParameterList(ParameterList paramList);
 
+  @Nullable
   Result visitTypeParameter(TypeParameter typeParameter);
 
+  @Nullable
   Result visitTypeParameterList(TypeParameterList typeParameterList);
 
+  @Nullable
   Result visitTypeAnnotation(TypeAnnotation typeAnnotation);
 
+  @Nullable
   Result visitArgumentList(ArgumentList argumentList);
 
+  @Nullable
   Result visitStringPart(StringPart part);
 
+  @Nullable
   Result visitStringConstantPart(StringConstantPart part);
 
+  @Nullable
   Result visitDocComment(DocComment docComment);
 
+  @Nullable
   Result visitIdent(Ident ident);
 
+  @Nullable
   Result visitQualifiedIdent(QualifiedIdent qualifiedIdent);
 
+  @Nullable
   Result visitObjectBody(ObjectBody objectBody);
 
+  @Nullable
   Result visitReplInput(ReplInput replInput);
 }

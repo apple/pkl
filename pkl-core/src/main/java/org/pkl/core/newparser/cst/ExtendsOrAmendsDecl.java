@@ -20,6 +20,7 @@ import java.util.Objects;
 import org.pkl.core.newparser.ParserVisitor;
 import org.pkl.core.newparser.Span;
 import org.pkl.core.newparser.cst.Expr.StringConstant;
+import org.pkl.core.util.Nullable;
 
 public class ExtendsOrAmendsDecl implements Node {
   private final StringConstant url;
@@ -54,7 +55,7 @@ public class ExtendsOrAmendsDecl implements Node {
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitExtendsOrAmendsDecl(this);
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ class ImportsAndReadsParserTest {
           "qux/*.pkl",
           "/some/dir/chown.txt",
           "/some/dir/chowner.txt",
-          "/some/dir/*.txt"
+          "/some/dir/*.txt",
         )
       )
   }
@@ -82,10 +82,10 @@ class ImportsAndReadsParserTest {
       .hasMessage(
         """
           –– Pkl Error ––
-          Mismatched input: `<EOF>`. Expected one of: `{`, `=`, `:`
-
+          Invalid property definition. Expected type annotation, assignment or amending.
+          
           1 | not valid Pkl syntax
-                                  ^
+              ^^^
           at text (repl:text)
 
         """

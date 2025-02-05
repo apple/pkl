@@ -30,7 +30,7 @@ public interface Node {
 
   List<Node> children();
 
-  <T> T accept(ParserVisitor<? extends T> visitor);
+  <T> @Nullable T accept(ParserVisitor<? extends T> visitor);
 
   default String text(char[] source) {
     return new String(source, span().charIndex(), span().length());

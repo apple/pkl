@@ -98,7 +98,7 @@ public final class Module implements Node {
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitModule(this);
   }
 
