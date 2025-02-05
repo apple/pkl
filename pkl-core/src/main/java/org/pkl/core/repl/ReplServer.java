@@ -34,15 +34,15 @@ import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
-import org.pkl.core.newparser.Parser;
-import org.pkl.core.newparser.ParserError;
-import org.pkl.core.newparser.cst.ClassPropertyEntry;
-import org.pkl.core.newparser.cst.Clazz;
-import org.pkl.core.newparser.cst.Expr;
-import org.pkl.core.newparser.cst.Import;
-import org.pkl.core.newparser.cst.ModuleDecl;
-import org.pkl.core.newparser.cst.ReplInput;
 import org.pkl.core.packages.PackageResolver;
+import org.pkl.core.parser.Parser;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.cst.ClassPropertyEntry;
+import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.Expr;
+import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ModuleDecl;
+import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.repl.ReplRequest.Eval;
 import org.pkl.core.repl.ReplRequest.Load;
@@ -222,9 +222,9 @@ public class ReplServer implements AutoCloseable {
           }
         } else if (tree instanceof Clazz clazz) {
           addStaticModuleProperty(builder.visitClass(clazz));
-        } else if (tree instanceof org.pkl.core.newparser.cst.TypeAlias typeAlias) {
+        } else if (tree instanceof org.pkl.core.parser.cst.TypeAlias typeAlias) {
           addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
-        } else if (tree instanceof org.pkl.core.newparser.cst.ClassMethod classMethod) {
+        } else if (tree instanceof org.pkl.core.parser.cst.ClassMethod classMethod) {
           addModuleMethodDef(builder.visitClassMethod(classMethod));
         } else if (tree instanceof ModuleDecl) {
           // do nothing for now

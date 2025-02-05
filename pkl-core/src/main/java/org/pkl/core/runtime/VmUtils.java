@@ -56,10 +56,9 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.newparser.Parser;
-import org.pkl.core.newparser.ParserError;
-import org.pkl.core.newparser.cst.Expr;
-import org.pkl.core.parser.LexParseException;
+import org.pkl.core.parser.Parser;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
@@ -517,29 +516,6 @@ public final class VmUtils {
     return toVmException(e, source, moduleName);
   }
 
-  // wanted to keep Parser/LexParseException API free from
-  // Truffle classes (Source), hence put this method here
-  public static VmException toVmException(LexParseException e, Source source, String moduleName) {
-    int lineStartOffset;
-    try {
-      lineStartOffset = source.getLineStartOffset(e.getLine());
-    } catch (IllegalArgumentException iae) {
-      // work around the fact that antlr and truffle disagree on how many lines a file that is
-      // ending in a newline has
-      lineStartOffset = source.getLineStartOffset(e.getLine() - 1);
-    }
-
-    return new VmExceptionBuilder()
-        .adhocEvalError(e.getMessage())
-        .withSourceSection(
-            source.createSection(
-                // compute char offset manually to work around
-                // https://github.com/graalvm/truffle/issues/184
-                lineStartOffset + e.getColumn() - 1, e.getLength()))
-        .withMemberName(moduleName)
-        .build();
-  }
-
   // wanted to keep Parser/ParserError API free from
   // Truffle classes (Source), hence put this method here
   public static VmException toVmException(ParserError e, Source source, String moduleName) {
@@ -901,6 +877,7 @@ public final class VmUtils {
     var builder = new AstBuilderNew(source, language, moduleInfo, moduleResolver);
     var parsedExpression = parseExpressionNode(expression, source);
     var exprNode = builder.visitExpr(parsedExpression);
+    assert exprNode != null;
     var rootNode =
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);

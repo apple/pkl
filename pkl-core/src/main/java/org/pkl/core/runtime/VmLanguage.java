@@ -24,9 +24,9 @@ import com.oracle.truffle.api.source.Source;
 import org.pkl.core.ast.builder.AstBuilderNew;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.newparser.Parser;
-import org.pkl.core.newparser.ParserError;
-import org.pkl.core.newparser.cst.Module;
+import org.pkl.core.parser.Parser;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.cst.Module;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 

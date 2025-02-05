@@ -17,7 +17,6 @@ package org.pkl.core.parser;
 
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
-import org.pkl.core.newparser.Parser;
 
 @SuppressWarnings("unused")
 @Warmup(iterations = 5, time = 2)
