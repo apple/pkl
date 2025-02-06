@@ -15,10 +15,6 @@
  */
 package org.pkl.core.parser;
 
-import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.api.source.SourceSection;
-import java.util.List;
-import org.pkl.core.PklBugException;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
 import org.pkl.core.parser.cst.ClassBody;
@@ -64,7 +60,6 @@ import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Ident;
 import org.pkl.core.parser.cst.Import;
 import org.pkl.core.parser.cst.Modifier;
-import org.pkl.core.parser.cst.Modifier.ModifierValue;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.Node;
 import org.pkl.core.parser.cst.ObjectBody;
@@ -85,9 +80,6 @@ import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdent;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.parser.cst.StringConstantPart;
-import org.pkl.core.parser.cst.StringConstantPart.ConstantPart;
-import org.pkl.core.parser.cst.StringConstantPart.StringEscape;
-import org.pkl.core.parser.cst.StringConstantPart.StringUnicodeEscape;
 import org.pkl.core.parser.cst.StringPart;
 import org.pkl.core.parser.cst.Type;
 import org.pkl.core.parser.cst.Type.ConstrainedType;
@@ -105,18 +97,9 @@ import org.pkl.core.parser.cst.TypeAlias;
 import org.pkl.core.parser.cst.TypeAnnotation;
 import org.pkl.core.parser.cst.TypeParameter;
 import org.pkl.core.parser.cst.TypeParameterList;
-import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
 
-public abstract class AbstractAstBuilder<T> implements ParserVisitor<T> {
-
-  protected final Source source;
-
-  protected abstract VmExceptionBuilder exceptionBuilder();
-
-  protected AbstractAstBuilder(Source source) {
-    this.source = source;
-  }
+public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitUnknownType(UnknownType type) {
@@ -542,93 +525,5 @@ public abstract class AbstractAstBuilder<T> implements ParserVisitor<T> {
 
   protected @Nullable T aggregateResult(@Nullable T result, @Nullable T nextResult) {
     return nextResult;
-  }
-
-  protected String doVisitStringConstantExpr(StringConstant expr) {
-    return doVisitStringConstantExpr(expr.getStrParts().getParts());
-  }
-
-  protected String doVisitStringConstantExpr(List<StringConstantPart> strs) {
-    var builder = new StringBuilder();
-    for (var part : strs) {
-      builder.append(doVisitStringConstantPart(part));
-    }
-    return builder.toString();
-  }
-
-  protected String doVisitStringConstantPart(StringConstantPart part) {
-    if (part instanceof ConstantPart cp) {
-      return cp.getStr();
-    }
-    if (part instanceof StringUnicodeEscape ue) {
-      var codePoint = parseUnicodeEscapeSequence(ue);
-      return Character.toString(codePoint);
-    }
-    if (part instanceof StringEscape se) {
-      return switch (se.getType()) {
-        case NEWLINE -> "\n";
-        case QUOTE -> "\"";
-        case BACKSLASH -> "\\";
-        case TAB -> "\t";
-        case RETURN -> "\r";
-      };
-    }
-    throw PklBugException.unreachableCode();
-  }
-
-  protected int parseUnicodeEscapeSequence(StringUnicodeEscape escape) {
-    var text = escape.getEscape();
-    var lastIndex = text.length() - 1;
-    var startIndex = text.indexOf('{', 2);
-    assert startIndex != -1; // guaranteed by lexer
-    try {
-      return Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
-    } catch (NumberFormatException e) {
-      throw exceptionBuilder()
-          .evalError("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex))
-          .withSourceSection(createSourceSection(escape))
-          .build();
-    }
-  }
-
-  protected @Nullable SourceSection createSourceSection(@Nullable Node node) {
-    return node == null
-        ? null
-        : source.createSection(node.span().charIndex(), node.span().length());
-  }
-
-  protected SourceSection createSourceSection(Span span) {
-    return source.createSection(span.charIndex(), span.length());
-  }
-
-  @SuppressWarnings("DataFlowIssue")
-  protected final SourceSection createSourceSection(
-      List<? extends Modifier> modifiers, ModifierValue symbol) {
-
-    var modifierCtx =
-        modifiers.stream().filter(mod -> mod.getValue() == symbol).findFirst().orElseThrow();
-
-    return createSourceSection(modifierCtx);
-  }
-
-  protected static @Nullable SourceSection createSourceSection(Source source, @Nullable Node node) {
-    if (node == null) return null;
-    return createSourceSection(source, node.span());
-  }
-
-  protected static SourceSection createSourceSection(Source source, Span span) {
-    return source.createSection(span.charIndex(), span.length());
-  }
-
-  protected SourceSection startOf(Node node) {
-    return startOf(node.span());
-  }
-
-  protected SourceSection startOf(Span span) {
-    return source.createSection(span.charIndex(), 1);
-  }
-
-  protected SourceSection shrinkLeft(SourceSection section, int length) {
-    return source.createSection(section.getCharIndex() + length, section.getCharLength() - length);
   }
 }

@@ -159,7 +159,6 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.parser.AbstractAstBuilder;
 import org.pkl.core.parser.Span;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
