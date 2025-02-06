@@ -64,11 +64,8 @@ import org.pkl.core.parser.cst.ObjectBody;
 import org.pkl.core.parser.cst.ObjectMemberNode;
 import org.pkl.core.parser.cst.ObjectMemberNode.ForGenerator;
 import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicate;
-import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicateBody;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectBodyProperty;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectElement;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntry;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntryBody;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectMethod;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
@@ -352,14 +349,13 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
     if (member.getTypeAnnotation() != null) {
       res = aggregateResult(res, visitTypeAnnotation(member.getTypeAnnotation()));
     }
-    return aggregateResult(res, visitExpr(member.getExpr()));
-  }
-
-  @Override
-  public T visitObjectBodyProperty(ObjectBodyProperty member) {
-    var res = visitNodes(member.getModifiers());
-    res = aggregateResult(res, visitIdentifier(member.getIdentifier()));
-    return aggregateResult(res, visitNodes(member.getBodyList()));
+    if (member.getExpr() != null) {
+      res = aggregateResult(res, visitExpr(member.getExpr()));
+    }
+    if (member.getBodyList() != null) {
+      res = aggregateResult(res, visitNodes(member.getBodyList()));
+    }
+    return res;
   }
 
   @Override
@@ -378,12 +374,14 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitMemberPredicate(MemberPredicate member) {
-    return aggregateResult(visitExpr(member.getPred()), visitExpr(member.getExpr()));
-  }
-
-  @Override
-  public T visitMemberPredicateBody(MemberPredicateBody member) {
-    return aggregateResult(visitExpr(member.getKey()), visitNodes(member.getBodyList()));
+    var res = visitExpr(member.getPred());
+    if (member.getExpr() != null) {
+      res = aggregateResult(res, visitExpr(member.getExpr()));
+    }
+    if (member.getBodyList() != null) {
+      res = aggregateResult(res, visitNodes(member.getBodyList()));
+    }
+    return res;
   }
 
   @Override
@@ -393,12 +391,14 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitObjectEntry(ObjectEntry member) {
-    return aggregateResult(visitExpr(member.getKey()), visitExpr(member.getValue()));
-  }
-
-  @Override
-  public T visitObjectEntryBody(ObjectEntryBody member) {
-    return aggregateResult(visitExpr(member.getKey()), visitNodes(member.getBodyList()));
+    var res = visitExpr(member.getKey());
+    if (member.getValue() != null) {
+      res = aggregateResult(res, visitExpr(member.getValue()));
+    }
+    if (member.getBodyList() != null) {
+      res = aggregateResult(res, visitNodes(member.getBodyList()));
+    }
+    return res;
   }
 
   @Override

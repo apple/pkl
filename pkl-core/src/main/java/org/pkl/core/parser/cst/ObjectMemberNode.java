@@ -92,7 +92,8 @@ public sealed interface ObjectMemberNode extends Node {
     private final List<Modifier> modifiers;
     private final Identifier identifier;
     private final @Nullable TypeAnnotation typeAnnotation;
-    private final Expr expr;
+    private final @Nullable Expr expr;
+    private final @Nullable List<ObjectBody> bodyList;
     private final Span span;
     private Node parent;
 
@@ -100,12 +101,14 @@ public sealed interface ObjectMemberNode extends Node {
         List<Modifier> modifiers,
         Identifier identifier,
         @Nullable TypeAnnotation typeAnnotation,
-        Expr expr,
+        @Nullable Expr expr,
+        @Nullable List<ObjectBody> bodyList,
         Span span) {
       this.modifiers = modifiers;
       this.identifier = identifier;
       this.typeAnnotation = typeAnnotation;
       this.expr = expr;
+      this.bodyList = bodyList;
       this.span = span;
 
       for (var mod : modifiers) {
@@ -115,7 +118,14 @@ public sealed interface ObjectMemberNode extends Node {
       if (typeAnnotation != null) {
         typeAnnotation.setParent(this);
       }
-      expr.setParent(this);
+      if (expr != null) {
+        expr.setParent(this);
+      }
+      if (bodyList != null) {
+        for (var body : bodyList) {
+          body.setParent(this);
+        }
+      }
     }
 
     @Override
@@ -140,7 +150,12 @@ public sealed interface ObjectMemberNode extends Node {
       if (typeAnnotation != null) {
         children.add(typeAnnotation);
       }
-      children.add(expr);
+      if (expr != null) {
+        children.add(expr);
+      }
+      if (bodyList != null) {
+        children.addAll(bodyList);
+      }
       return children;
     }
 
@@ -161,8 +176,12 @@ public sealed interface ObjectMemberNode extends Node {
       return typeAnnotation;
     }
 
-    public Expr getExpr() {
+    public @Nullable Expr getExpr() {
       return expr;
+    }
+
+    public @Nullable List<ObjectBody> getBodyList() {
+      return bodyList;
     }
 
     @Override
@@ -176,6 +195,8 @@ public sealed interface ObjectMemberNode extends Node {
           + typeAnnotation
           + ", expr="
           + expr
+          + ", bodyList="
+          + bodyList
           + ", span="
           + span
           + '}';
@@ -194,110 +215,13 @@ public sealed interface ObjectMemberNode extends Node {
           && Objects.equals(identifier, that.identifier)
           && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(modifiers, identifier, typeAnnotation, expr, span);
-    }
-  }
-
-  final class ObjectBodyProperty implements ObjectMemberNode {
-    private final List<Modifier> modifiers;
-    private final Identifier identifier;
-    private final List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
-
-    public ObjectBodyProperty(
-        List<Modifier> modifiers, Identifier identifier, List<ObjectBody> bodyList, Span span) {
-      this.modifiers = modifiers;
-      this.identifier = identifier;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      for (var mod : modifiers) {
-        mod.setParent(this);
-      }
-      identifier.setParent(this);
-      for (var body : bodyList) {
-        body.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(modifiers);
-      children.add(identifier);
-      children.addAll(bodyList);
-      return children;
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitObjectBodyProperty(this);
-    }
-
-    public List<Modifier> getModifiers() {
-      return modifiers;
-    }
-
-    public Identifier getIdentifier() {
-      return identifier;
-    }
-
-    public List<ObjectBody> getBodyList() {
-      return bodyList;
-    }
-
-    @Override
-    public String toString() {
-      return "ObjectBodyProperty{"
-          + "modifiers="
-          + modifiers
-          + ", identifier="
-          + identifier
-          + ", bodyList="
-          + bodyList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectBodyProperty that = (ObjectBodyProperty) o;
-      return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(identifier, that.identifier)
           && Objects.equals(bodyList, that.bodyList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, identifier, bodyList, span);
+      return Objects.hash(modifiers, identifier, typeAnnotation, expr, bodyList, span);
     }
   }
 
@@ -454,19 +378,30 @@ public sealed interface ObjectMemberNode extends Node {
     }
   }
 
+  @SuppressWarnings("DuplicatedCode")
   final class MemberPredicate implements ObjectMemberNode {
     private final Expr pred;
-    private final Expr expr;
+    private final @Nullable Expr expr;
+    private final @Nullable List<ObjectBody> bodyList;
     private final Span span;
     private Node parent;
 
-    public MemberPredicate(Expr pred, Expr expr, Span span) {
+    public MemberPredicate(
+        Expr pred, @Nullable Expr expr, @Nullable List<ObjectBody> bodyList, Span span) {
       this.pred = pred;
       this.expr = expr;
+      this.bodyList = bodyList;
       this.span = span;
 
       pred.setParent(this);
-      expr.setParent(this);
+      if (expr != null) {
+        expr.setParent(this);
+      }
+      if (bodyList != null) {
+        for (var body : bodyList) {
+          body.setParent(this);
+        }
+      }
     }
 
     @Override
@@ -486,7 +421,15 @@ public sealed interface ObjectMemberNode extends Node {
 
     @Override
     public List<Node> children() {
-      return List.of(pred, expr);
+      var children = new ArrayList<Node>();
+      children.add(pred);
+      if (expr != null) {
+        children.add(expr);
+      }
+      if (bodyList != null) {
+        children.addAll(bodyList);
+      }
+      return children;
     }
 
     @Override
@@ -498,93 +441,21 @@ public sealed interface ObjectMemberNode extends Node {
       return pred;
     }
 
-    public Expr getExpr() {
+    public @Nullable Expr getExpr() {
       return expr;
     }
 
-    @Override
-    public String toString() {
-      return "MemberPredicate{" + "pred=" + pred + ", expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      MemberPredicate that = (MemberPredicate) o;
-      return Objects.equals(pred, that.pred)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(pred, expr, span);
-    }
-  }
-
-  final class MemberPredicateBody implements ObjectMemberNode {
-    private final Expr key;
-    private final List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
-
-    public MemberPredicateBody(Expr key, List<ObjectBody> bodyList, Span span) {
-      this.key = key;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      key.setParent(this);
-      for (var body : bodyList) {
-        body.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(bodyList.size() + 1);
-      children.add(key);
-      children.addAll(bodyList);
-      return children;
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitMemberPredicateBody(this);
-    }
-
-    public Expr getKey() {
-      return key;
-    }
-
-    public List<ObjectBody> getBodyList() {
+    public @Nullable List<ObjectBody> getBodyList() {
       return bodyList;
     }
 
     @Override
     public String toString() {
-      return "MemberPredicateBody{"
-          + "key="
-          + key
+      return "MemberPredicate{"
+          + "pred="
+          + pred
+          + ", expr="
+          + expr
           + ", bodyList="
           + bodyList
           + ", span="
@@ -600,31 +471,42 @@ public sealed interface ObjectMemberNode extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      MemberPredicateBody that = (MemberPredicateBody) o;
-      return Objects.equals(key, that.key)
+      MemberPredicate that = (MemberPredicate) o;
+      return Objects.equals(pred, that.pred)
+          && Objects.equals(expr, that.expr)
           && Objects.equals(bodyList, that.bodyList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, bodyList, span);
+      return Objects.hash(pred, expr, bodyList, span);
     }
   }
 
   final class ObjectEntry implements ObjectMemberNode {
     private final Expr key;
-    private final Expr value;
+    private final @Nullable Expr value;
+    private final @Nullable List<ObjectBody> bodyList;
     private final Span span;
     private Node parent;
 
-    public ObjectEntry(Expr key, Expr value, Span span) {
+    public ObjectEntry(
+        Expr key, @Nullable Expr value, @Nullable List<ObjectBody> bodyList, Span span) {
       this.key = key;
       this.value = value;
+      this.bodyList = bodyList;
       this.span = span;
 
       key.setParent(this);
-      value.setParent(this);
+      if (value != null) {
+        value.setParent(this);
+      }
+      if (bodyList != null) {
+        for (var body : bodyList) {
+          body.setParent(this);
+        }
+      }
     }
 
     @Override
@@ -644,7 +526,15 @@ public sealed interface ObjectMemberNode extends Node {
 
     @Override
     public List<Node> children() {
-      return List.of(key, value);
+      var children = new ArrayList<Node>();
+      children.add(key);
+      if (value != null) {
+        children.add(value);
+      }
+      if (bodyList != null) {
+        children.addAll(bodyList);
+      }
+      return children;
     }
 
     @Override
@@ -656,13 +546,26 @@ public sealed interface ObjectMemberNode extends Node {
       return key;
     }
 
-    public Expr getValue() {
+    public @Nullable Expr getValue() {
       return value;
+    }
+
+    public @Nullable List<ObjectBody> getBodyList() {
+      return bodyList;
     }
 
     @Override
     public String toString() {
-      return "ObjectEntry{" + "key=" + key + ", value=" + value + ", span=" + span + '}';
+      return "ObjectEntry{"
+          + "key="
+          + key
+          + ", value="
+          + value
+          + ", bodyList="
+          + bodyList
+          + ", span="
+          + span
+          + '}';
     }
 
     @Override
@@ -676,90 +579,13 @@ public sealed interface ObjectMemberNode extends Node {
       ObjectEntry that = (ObjectEntry) o;
       return Objects.equals(key, that.key)
           && Objects.equals(value, that.value)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(key, value, span);
-    }
-  }
-
-  final class ObjectEntryBody implements ObjectMemberNode {
-    private final Expr key;
-    private final List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
-
-    public ObjectEntryBody(Expr key, List<ObjectBody> bodyList, Span span) {
-      this.key = key;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      key.setParent(this);
-      for (var body : bodyList) {
-        body.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(bodyList.size() + 1);
-      children.add(key);
-      children.addAll(bodyList);
-      return children;
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitObjectEntryBody(this);
-    }
-
-    public Expr getKey() {
-      return key;
-    }
-
-    public List<ObjectBody> getBodyList() {
-      return bodyList;
-    }
-
-    @Override
-    public String toString() {
-      return "ObjectEntryBody{" + "key=" + key + ", bodyList=" + bodyList + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectEntryBody that = (ObjectEntryBody) o;
-      return Objects.equals(key, that.key)
           && Objects.equals(bodyList, that.bodyList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(key, bodyList, span);
+      return Objects.hash(key, value, bodyList, span);
     }
   }
 

@@ -186,25 +186,16 @@ public interface ParserVisitor<Result> {
   Result visitObjectProperty(ObjectMemberNode.ObjectProperty member);
 
   @Nullable
-  Result visitObjectBodyProperty(ObjectMemberNode.ObjectBodyProperty member);
-
-  @Nullable
   Result visitObjectMethod(ObjectMemberNode.ObjectMethod member);
 
   @Nullable
   Result visitMemberPredicate(ObjectMemberNode.MemberPredicate member);
 
   @Nullable
-  Result visitMemberPredicateBody(ObjectMemberNode.MemberPredicateBody member);
-
-  @Nullable
   Result visitObjectElement(ObjectMemberNode.ObjectElement member);
 
   @Nullable
   Result visitObjectEntry(ObjectMemberNode.ObjectEntry member);
-
-  @Nullable
-  Result visitObjectEntryBody(ObjectMemberNode.ObjectEntryBody member);
 
   @Nullable
   Result visitObjectSpread(ObjectMemberNode.ObjectSpread member);

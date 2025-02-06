@@ -845,12 +845,9 @@ class SexpRenderer {
     when (member) {
       is ObjectElement -> renderObjectElement(member)
       is ObjectProperty -> renderObjectProperty(member)
-      is ObjectBodyProperty -> renderObjectBodyProperty(member)
       is ObjectMethod -> renderObjectMethod(member)
       is MemberPredicate -> renderMemberPredicate(member)
-      is MemberPredicateBody -> renderMemberPredicateBody(member)
       is ObjectEntry -> renderObjectEntry(member)
-      is ObjectEntryBody -> renderObjectEntryBody(member)
       is ObjectSpread -> renderObjectSpread(member)
       is WhenGenerator -> renderWhenGenerator(member)
       is ForGenerator -> renderForGenerator(member)
@@ -882,26 +879,15 @@ class SexpRenderer {
       buf.append('\n')
       renderTypeAnnotation(property.typeAnnotation!!)
     }
-    buf.append('\n')
-    renderExpr(property.expr)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderObjectBodyProperty(property: ObjectBodyProperty) {
-    buf.append(tab)
-    buf.append("(objectProperty")
-    val oldTab = increaseTab()
-    for (mod in property.modifiers) {
+    property.expr?.let {
       buf.append('\n')
-      renderModifier(mod)
+      renderExpr(it)
     }
-    buf.append('\n')
-    buf.append(tab)
-    buf.append("(identifier)")
-    for (body in property.bodyList) {
-      buf.append('\n')
-      renderObjectBody(body)
+    property.bodyList?.let { bodies ->
+      for (body in bodies) {
+        buf.append('\n')
+        renderObjectBody(body)
+      }
     }
     buf.append(')')
     tab = oldTab
@@ -940,21 +926,15 @@ class SexpRenderer {
     val oldTab = increaseTab()
     buf.append('\n')
     renderExpr(predicate.pred)
-    buf.append('\n')
-    renderExpr(predicate.expr)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderMemberPredicateBody(predicate: MemberPredicateBody) {
-    buf.append(tab)
-    buf.append("(memberPredicate")
-    val oldTab = increaseTab()
-    buf.append('\n')
-    renderExpr(predicate.key)
-    for (body in predicate.bodyList) {
+    predicate.expr?.let { expr ->
       buf.append('\n')
-      renderObjectBody(body)
+      renderExpr(expr)
+    }
+    predicate.bodyList?.let { bodyList ->
+      for (body in bodyList) {
+        buf.append('\n')
+        renderObjectBody(body)
+      }
     }
     buf.append(')')
     tab = oldTab
@@ -966,21 +946,15 @@ class SexpRenderer {
     val oldTab = increaseTab()
     buf.append('\n')
     renderExpr(entry.key)
-    buf.append('\n')
-    renderExpr(entry.value)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderObjectEntryBody(entry: ObjectEntryBody) {
-    buf.append(tab)
-    buf.append("(objectEntry")
-    val oldTab = increaseTab()
-    buf.append('\n')
-    renderExpr(entry.key)
-    for (body in entry.bodyList) {
+    entry.value?.let { value ->
       buf.append('\n')
-      renderObjectBody(body)
+      renderExpr(value)
+    }
+    entry.bodyList?.let { bodyList ->
+      for (body in bodyList) {
+        buf.append('\n')
+        renderObjectBody(body)
+      }
     }
     buf.append(')')
     tab = oldTab

@@ -204,11 +204,8 @@ import org.pkl.core.parser.cst.ObjectBody;
 import org.pkl.core.parser.cst.ObjectMemberNode;
 import org.pkl.core.parser.cst.ObjectMemberNode.ForGenerator;
 import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicate;
-import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicateBody;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectBodyProperty;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectElement;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntry;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntryBody;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectMethod;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
@@ -904,9 +901,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     assert scope != null;
 
-    if (parent instanceof ClassProperty
-        || parent instanceof ObjectProperty
-        || parent instanceof ObjectBodyProperty) {
+    if (parent instanceof ClassProperty || parent instanceof ObjectProperty) {
       inferredParentNode =
           InferParentWithinPropertyNodeGen.create(
               createSourceSection(expr.newSpan()),
@@ -1254,13 +1249,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public GeneratorMemberNode visitObjectBodyProperty(ObjectBodyProperty member) {
-    checkNotInsideForGenerator(member, "forGeneratorCannotGenerateProperties");
-    var memberNode = doVisitObjectProperty(member);
-    return GeneratorPropertyNodeGen.create(memberNode);
-  }
-
-  @Override
   public GeneratorMemberNode visitObjectMethod(ObjectMethod memberNode) {
     checkNotInsideForGenerator(memberNode, "forGeneratorCannotGenerateMethods");
     var member = doVisitObjectMethod(memberNode);
@@ -1271,16 +1259,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
     var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred()));
     var member =
-        doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), List.of());
-    var isFrameStored =
-        member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
-    return GeneratorPredicateMemberNodeGen.create(keyNode, member, isFrameStored);
-  }
-
-  @Override
-  public GeneratorMemberNode visitMemberPredicateBody(MemberPredicateBody ctx) {
-    var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getKey()));
-    var member = doVisitObjectEntryBody(createSourceSection(ctx), keyNode, null, ctx.getBodyList());
+        doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
     var isFrameStored =
         member.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
     return GeneratorPredicateMemberNodeGen.create(keyNode, member, isFrameStored);
@@ -1296,17 +1275,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectEntry(ObjectEntry member) {
-    var keyNodeAndMember = doVisitObjectEntry(member);
-    var keyNode = keyNodeAndMember.first;
-    var memberNode = keyNodeAndMember.second;
-    var isFrameStored =
-        memberNode.getMemberNode() != null && symbolTable.getCurrentScope().isForGeneratorScope();
-
-    return GeneratorEntryNodeGen.create(keyNode, memberNode, isFrameStored);
-  }
-
-  @Override
-  public GeneratorMemberNode visitObjectEntryBody(ObjectEntryBody member) {
     var keyNodeAndMember = doVisitObjectEntry(member);
     var keyNode = keyNodeAndMember.first;
     var memberNode = keyNodeAndMember.second;
@@ -2144,20 +2112,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               addProperty(members, doVisitObjectProperty(property));
               continue;
             }
-            if (memberCtx instanceof ObjectBodyProperty property) {
-              addProperty(members, doVisitObjectProperty(property));
-              continue;
-            }
 
             if (memberCtx instanceof ObjectEntry entry) {
-              var keyAndValue = doVisitObjectEntry(entry);
-              var key = keyAndValue.first;
-              keyNodes.add(key);
-              isConstantKeyNodes = isConstantKeyNodes && key instanceof ConstantNode;
-              values.add(keyAndValue.second);
-              continue;
-            }
-            if (memberCtx instanceof ObjectEntryBody entry) {
               var keyAndValue = doVisitObjectEntry(entry);
               var key = keyAndValue.first;
               keyNodes.add(key);
@@ -2180,7 +2136,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             assert memberCtx instanceof ForGenerator
                 || memberCtx instanceof WhenGenerator
                 || memberCtx instanceof MemberPredicate
-                || memberCtx instanceof MemberPredicateBody
                 || memberCtx instanceof ObjectSpread;
             // bail out and create GeneratorObjectLiteralNode instead
             // (but can't we easily reuse members/elements/keyNodes/values?)
@@ -2279,18 +2234,31 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private ObjectMember doVisitObjectProperty(ObjectProperty prop) {
+    var modifierNodes = prop.getModifiers();
+    var propertyName = prop.getIdentifier();
+    var modifiers =
+        doVisitModifiers(
+            modifierNodes, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier");
+    if (VmModifier.isConst(modifiers) && !VmModifier.isLocal(modifiers)) {
+      @SuppressWarnings("OptionalGetWithoutIsPresent")
+      var constModifierCtx =
+          modifierNodes.stream()
+              .filter((it) -> it.getValue() == ModifierValue.CONST)
+              .findFirst()
+              .get();
+      throw exceptionBuilder()
+          .evalError("invalidConstObjectMemberModifier")
+          .withSourceSection(createSourceSection(constModifierCtx))
+          .build();
+    }
     return doVisitObjectProperty(
-        prop,
-        prop.getModifiers(),
-        prop.getIdentifier(),
+        createSourceSection(prop),
+        createSourceSection(propertyName),
+        modifiers,
+        propertyName.getValue(),
         prop.getTypeAnnotation(),
         prop.getExpr(),
-        null);
-  }
-
-  private ObjectMember doVisitObjectProperty(ObjectBodyProperty prop) {
-    return doVisitObjectProperty(
-        prop, prop.getModifiers(), prop.getIdentifier(), null, null, prop.getBodyList());
+        prop.getBodyList());
   }
 
   private ObjectMember doVisitObjectProperty(
@@ -2408,15 +2376,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var keyNode = visitExpr(entry.getKey());
 
     var member =
-        doVisitObjectEntryBody(createSourceSection(entry), keyNode, entry.getValue(), List.of());
-    return Pair.of(keyNode, member);
-  }
-
-  private Pair<ExpressionNode, ObjectMember> doVisitObjectEntry(ObjectEntryBody entry) {
-    var keyNode = visitExpr(entry.getKey());
-
-    var member =
-        doVisitObjectEntryBody(createSourceSection(entry), keyNode, null, entry.getBodyList());
+        doVisitObjectEntryBody(
+            createSourceSection(entry), keyNode, entry.getValue(), entry.getBodyList());
     return Pair.of(keyNode, member);
   }
 
@@ -2741,7 +2702,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       SourceSection sourceSection,
       ExpressionNode keyNode,
       @Nullable Expr valueCtx,
-      List<? extends ObjectBody> objectBodyCtxs) {
+      @Nullable List<? extends ObjectBody> objectBodyCtxs) {
     var isForGeneratorScope = symbolTable.getCurrentScope().isForGeneratorScope();
     return symbolTable.enterEntry(
         keyNode,

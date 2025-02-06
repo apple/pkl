@@ -557,6 +557,7 @@ public class Parser {
                   identifier,
                   typeAnnotation,
                   expr,
+                  null,
                   identifier.span().endWith(expr.span())));
         }
       } else {
@@ -634,12 +635,12 @@ public class Parser {
       expect(Token.ASSIGN, "unexpectedToken", "=");
       var expr = parseExpr("}");
       return new ObjectMemberNode.ObjectProperty(
-          allModifiers, identifier, typeAnnotation, expr, start.endWith(expr.span()));
+          allModifiers, identifier, typeAnnotation, expr, null, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    return new ObjectMemberNode.ObjectBodyProperty(
-        allModifiers, identifier, bodies, start.endWith(end));
+    return new ObjectMemberNode.ObjectProperty(
+        allModifiers, identifier, null, null, bodies, start.endWith(end));
   }
 
   private ObjectMemberNode.ObjectMethod parseObjectMethod(List<Modifier> modifiers) {
@@ -678,11 +679,11 @@ public class Parser {
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr("}");
-      return new ObjectMemberNode.MemberPredicate(pred, expr, start.endWith(expr.span()));
+      return new ObjectMemberNode.MemberPredicate(pred, expr, null, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    return new ObjectMemberNode.MemberPredicateBody(pred, bodies, start.endWith(end));
+    return new ObjectMemberNode.MemberPredicate(pred, null, bodies, start.endWith(end));
   }
 
   private ObjectMemberNode parseObjectEntry() {
@@ -692,11 +693,11 @@ public class Parser {
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr("}");
-      return new ObjectMemberNode.ObjectEntry(key, expr, start.endWith(expr.span()));
+      return new ObjectMemberNode.ObjectEntry(key, expr, null, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    return new ObjectMemberNode.ObjectEntryBody(key, bodies, start.endWith(end));
+    return new ObjectMemberNode.ObjectEntry(key, null, bodies, start.endWith(end));
   }
 
   private ObjectMemberNode.ObjectSpread parseObjectSpread() {
