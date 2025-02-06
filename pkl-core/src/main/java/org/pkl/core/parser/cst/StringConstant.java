@@ -19,25 +19,19 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
+import org.pkl.core.parser.cst.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
 
-public final class Import implements Node {
-  private final StringConstant importStr;
-  private final boolean isGlob;
-  private final @Nullable Identifier alias;
+public class StringConstant implements Node {
+  private final StringConstantParts strParts;
   private final Span span;
   private Node parent;
 
-  public Import(StringConstant importStr, boolean isGlob, @Nullable Identifier alias, Span span) {
-    this.importStr = importStr;
-    this.isGlob = isGlob;
-    this.alias = alias;
+  public StringConstant(StringConstantParts strParts, Span span) {
+    this.strParts = strParts;
     this.span = span;
 
-    importStr.setParent(this);
-    if (alias != null) {
-      alias.setParent(this);
-    }
+    strParts.setParent(this);
   }
 
   @Override
@@ -57,41 +51,21 @@ public final class Import implements Node {
 
   @Override
   public List<Node> children() {
-    if (alias != null) {
-      return List.of(importStr, alias);
-    }
-    return List.of(importStr);
+    return List.of(strParts);
   }
 
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitImport(this);
+    return visitor.visitStringConstant(this);
   }
 
-  public StringConstant getImportStr() {
-    return importStr;
-  }
-
-  public boolean isGlob() {
-    return isGlob;
-  }
-
-  public @Nullable Identifier getAlias() {
-    return alias;
+  public StringConstantParts getStrParts() {
+    return strParts;
   }
 
   @Override
   public String toString() {
-    return "Import{"
-        + "importStr="
-        + importStr
-        + ", isGlob="
-        + isGlob
-        + ", alias="
-        + alias
-        + ", span="
-        + span
-        + '}';
+    return "StringConstant{strParts=" + strParts + ", span=" + span + '}';
   }
 
   @Override
@@ -102,15 +76,12 @@ public final class Import implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Import anImport = (Import) o;
-    return isGlob == anImport.isGlob
-        && Objects.equals(importStr, anImport.importStr)
-        && Objects.equals(alias, anImport.alias)
-        && Objects.equals(span, anImport.span);
+    StringConstant that = (StringConstant) o;
+    return Objects.equals(strParts, that.strParts) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(importStr, isGlob, alias, span);
+    return Objects.hash(strParts, span);
   }
 }

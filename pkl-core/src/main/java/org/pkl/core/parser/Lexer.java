@@ -746,7 +746,7 @@ public class Lexer {
     return KEYWORDS[index].token;
   }
 
-  private static final KeywordEntry[] KEYWORDS = {
+  protected static final KeywordEntry[] KEYWORDS = {
     new KeywordEntry("_", Token.UNDERSCORE),
     new KeywordEntry("abstract", Token.ABSTRACT),
     new KeywordEntry("amends", Token.AMENDS),
@@ -792,7 +792,7 @@ public class Lexer {
     new KeywordEntry("when", Token.WHEN)
   };
 
-  private record KeywordEntry(String name, Token token) implements Comparable<String> {
+  protected record KeywordEntry(String name, Token token) implements Comparable<String> {
     @Override
     public int compareTo(String o) {
       return name.compareTo(o);

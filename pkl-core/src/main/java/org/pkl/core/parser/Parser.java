@@ -29,11 +29,12 @@ import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
 import org.pkl.core.parser.cst.Expr.OperatorExpr;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.ReadType;
-import org.pkl.core.parser.cst.Expr.StringConstant;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -50,6 +51,7 @@ import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
+import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.EscapeType;
 import org.pkl.core.parser.cst.StringConstantPart.StringEscape;
@@ -1013,10 +1015,9 @@ public class Parser {
             }
             var end = expect(Token.STRING_END, "noError").span;
             if (start.token == Token.STRING_START) {
-              yield new Expr.InterpolatedString(parts, start.span, end, start.span.endWith(end));
+              yield new SingleLineStringLiteral(parts, start.span, end, start.span.endWith(end));
             } else {
-              yield new Expr.InterpolatedMultiString(
-                  parts, start.span, end, start.span.endWith(end));
+              yield new MultiLineStringLiteral(parts, start.span, end, start.span.endWith(end));
             }
           }
           case IDENTIFIER -> {
@@ -1371,7 +1372,7 @@ public class Parser {
     return new Identifier(text, tk.span);
   }
 
-  private Expr.StringConstant parseStringConstant() {
+  private StringConstant parseStringConstant() {
     var start = spanLookahead;
     expect(Token.STRING_START, "unexpectedToken", "\"");
     var parts = new ArrayList<StringConstantPart>();

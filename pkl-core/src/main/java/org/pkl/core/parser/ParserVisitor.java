@@ -23,7 +23,9 @@ import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -36,6 +38,7 @@ import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
+import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringPart;
 import org.pkl.core.parser.cst.Type;
@@ -120,13 +123,13 @@ public interface ParserVisitor<Result> {
   Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr);
 
   @Nullable
-  Result visitStringConstantExpr(Expr.StringConstant expr);
+  Result visitStringConstant(StringConstant expr);
 
   @Nullable
-  Result visitInterpolatedStringExpr(Expr.InterpolatedString expr);
+  Result visitSingleLineStringLiteral(SingleLineStringLiteral expr);
 
   @Nullable
-  Result visitInterpolatedMultiStringExpr(Expr.InterpolatedMultiString expr);
+  Result visitMultiLineStringLiteral(MultiLineStringLiteral expr);
 
   @Nullable
   Result visitNewExpr(Expr.New expr);

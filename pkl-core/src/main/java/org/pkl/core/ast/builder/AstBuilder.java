@@ -172,10 +172,9 @@ import org.pkl.core.parser.cst.Expr.FunctionLiteral;
 import org.pkl.core.parser.cst.Expr.If;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
 import org.pkl.core.parser.cst.Expr.IntLiteral;
-import org.pkl.core.parser.cst.Expr.InterpolatedMultiString;
-import org.pkl.core.parser.cst.Expr.InterpolatedString;
 import org.pkl.core.parser.cst.Expr.Let;
 import org.pkl.core.parser.cst.Expr.LogicalNot;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.New;
 import org.pkl.core.parser.cst.Expr.NonNull;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
@@ -183,7 +182,7 @@ import org.pkl.core.parser.cst.Expr.Outer;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.QualifiedAccess;
 import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.StringConstant;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.Subscript;
 import org.pkl.core.parser.cst.Expr.SuperAccess;
 import org.pkl.core.parser.cst.Expr.SuperSubscript;
@@ -218,6 +217,7 @@ import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
+import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.ConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.StringEscape;
@@ -358,7 +358,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitStringConstantType(StringConstantType type) {
     return new UnresolvedTypeNode.StringLiteral(
-        createSourceSection(type), doVisitStringConstantExpr(type.getStr()));
+        createSourceSection(type), doVisitStringConstant(type.getStr()));
   }
 
   @Override
@@ -435,7 +435,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           createSourceSection(type),
           defaultIndex,
           elementTypes.stream()
-              .map(it -> doVisitStringConstantExpr(((StringConstantType) it).getStr()))
+              .map(it -> doVisitStringConstant(((StringConstantType) it).getStr()))
               .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
@@ -644,7 +644,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private AbstractImportNode doVisitImport(
       boolean isGlobImport, Node node, StringConstant importUriNode) {
     var section = createSourceSection(node);
-    var importUri = doVisitStringConstantExpr(importUriNode);
+    var importUri = doVisitStringConstant(importUriNode);
     if (isGlobImport && importUri.startsWith("...")) {
       throw exceptionBuilder().evalError("cannotGlobTripleDots").withSourceSection(section).build();
     }
@@ -704,8 +704,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitStringConstantExpr(StringConstant expr) {
-    return new ConstantValueNode(createSourceSection(expr), doVisitStringConstantExpr(expr));
+  public ExpressionNode visitStringConstant(StringConstant expr) {
+    return new ConstantValueNode(createSourceSection(expr), doVisitStringConstant(expr));
   }
 
   @Override
@@ -728,7 +728,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitInterpolatedStringExpr(InterpolatedString expr) {
+  public ExpressionNode visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
     var parts = expr.getParts();
     if (parts.isEmpty()) {
       return new ConstantValueNode(createSourceSection(expr), "");
@@ -745,7 +745,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitInterpolatedMultiStringExpr(InterpolatedMultiString expr) {
+  public ExpressionNode visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
     var parts = expr.getParts();
     if (parts.isEmpty()) {
       throw exceptionBuilder()

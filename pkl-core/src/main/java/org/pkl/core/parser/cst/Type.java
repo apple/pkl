@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.util.Nullable;
 
 public sealed interface Type extends Node {

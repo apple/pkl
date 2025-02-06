@@ -30,6 +30,7 @@ import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
 import org.pkl.core.parser.cst.Expr.Read;
 import org.pkl.core.parser.cst.Expr.ReadType;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl.Type;
 import org.pkl.core.parser.cst.Import;
@@ -87,7 +88,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public @Nullable List<Entry> visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl) {
-    var importStr = doVisitStringConstantExpr(decl.getUrl());
+    var importStr = doVisitStringConstant(decl.getUrl());
     var sourceSection = createSourceSection(decl.getUrl());
     assert sourceSection != null;
     return Collections.singletonList(
@@ -102,7 +103,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public List<Entry> visitImport(Import imp) {
-    var importStr = doVisitStringConstantExpr(imp.getImportStr());
+    var importStr = doVisitStringConstant(imp.getImportStr());
     var sourceSection = createSourceSection(imp.getImportStr());
     assert sourceSection != null;
     return Collections.singletonList(
@@ -111,7 +112,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public List<Entry> visitImportExpr(ImportExpr expr) {
-    var importStr = doVisitStringConstantExpr(expr.getImportStr());
+    var importStr = doVisitStringConstant(expr.getImportStr());
     var sourceSection = createSourceSection(expr.getImportStr());
     assert sourceSection != null;
     return Collections.singletonList(
@@ -125,7 +126,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @SuppressWarnings("DataFlowIssue")
   public List<Entry> doVisitReadExpr(Expr expr, boolean isGlob) {
-    if (!(expr instanceof Expr.InterpolatedString slStr)) {
+    if (!(expr instanceof SingleLineStringLiteral slStr)) {
       return Collections.emptyList();
     }
     // best-effort approach; only collect read expressions that are string constants.
@@ -136,7 +137,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     } else if (singleParts.size() == 1
         && singleParts.get(0) instanceof StringConstantParts cparts
         && !cparts.getParts().isEmpty()) {
-      importString = doVisitStringConstantExpr(cparts.getParts());
+      importString = doVisitStringConstant(cparts.getParts());
     } else {
       return Collections.emptyList();
     }

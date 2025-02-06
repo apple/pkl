@@ -21,10 +21,10 @@ import java.util.List;
 import org.pkl.core.PklBugException;
 import org.pkl.core.parser.BaseParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Modifier.ModifierValue;
 import org.pkl.core.parser.cst.Node;
+import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.ConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.StringEscape;
@@ -42,11 +42,11 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
     this.source = source;
   }
 
-  protected String doVisitStringConstantExpr(StringConstant expr) {
-    return doVisitStringConstantExpr(expr.getStrParts().getParts());
+  protected String doVisitStringConstant(StringConstant expr) {
+    return doVisitStringConstant(expr.getStrParts().getParts());
   }
 
-  protected String doVisitStringConstantExpr(List<StringConstantPart> strs) {
+  protected String doVisitStringConstant(List<StringConstantPart> strs) {
     var builder = new StringBuilder();
     for (var part : strs) {
       builder.append(doVisitStringConstantPart(part));

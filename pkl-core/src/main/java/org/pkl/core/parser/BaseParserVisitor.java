@@ -31,11 +31,10 @@ import org.pkl.core.parser.cst.Expr.FunctionLiteral;
 import org.pkl.core.parser.cst.Expr.If;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
 import org.pkl.core.parser.cst.Expr.IntLiteral;
-import org.pkl.core.parser.cst.Expr.InterpolatedMultiString;
-import org.pkl.core.parser.cst.Expr.InterpolatedString;
 import org.pkl.core.parser.cst.Expr.Let;
 import org.pkl.core.parser.cst.Expr.LogicalNot;
 import org.pkl.core.parser.cst.Expr.Module;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.New;
 import org.pkl.core.parser.cst.Expr.NonNull;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
@@ -43,7 +42,7 @@ import org.pkl.core.parser.cst.Expr.Outer;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.QualifiedAccess;
 import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.StringConstant;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
 import org.pkl.core.parser.cst.Expr.Subscript;
 import org.pkl.core.parser.cst.Expr.SuperAccess;
 import org.pkl.core.parser.cst.Expr.SuperSubscript;
@@ -77,6 +76,7 @@ import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
+import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringPart;
 import org.pkl.core.parser.cst.Type;
@@ -220,17 +220,17 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitStringConstantExpr(StringConstant expr) {
+  public T visitStringConstant(StringConstant expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitInterpolatedStringExpr(InterpolatedString expr) {
+  public T visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitInterpolatedMultiStringExpr(InterpolatedMultiString expr) {
+  public T visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
     return visitChildren(expr);
   }
 

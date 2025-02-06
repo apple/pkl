@@ -22,7 +22,6 @@ import java.util.Objects;
 import org.pkl.core.PklBugException;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.cst.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
 
 public sealed interface Expr extends Node {
@@ -437,78 +436,14 @@ public sealed interface Expr extends Node {
     }
   }
 
-  final class StringConstant implements Expr {
-    private final StringConstantParts strParts;
-    private final Span span;
-    private Node parent;
-
-    public StringConstant(StringConstantParts strParts, Span span) {
-      this.strParts = strParts;
-      this.span = span;
-
-      strParts.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(strParts);
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitStringConstantExpr(this);
-    }
-
-    public StringConstantParts getStrParts() {
-      return strParts;
-    }
-
-    @Override
-    public String toString() {
-      return "StringConstant{strParts=" + strParts + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      StringConstant that = (StringConstant) o;
-      return Objects.equals(strParts, that.strParts) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(strParts, span);
-    }
-  }
-
-  final class InterpolatedString implements Expr {
+  final class SingleLineStringLiteral implements Expr {
     private final List<StringPart> parts;
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
-    public InterpolatedString(
+    public SingleLineStringLiteral(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       this.parts = parts;
       this.startDelimiterSpan = startDelimiterSpan;
@@ -542,7 +477,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitInterpolatedStringExpr(this);
+      return visitor.visitSingleLineStringLiteral(this);
     }
 
     public List<StringPart> getParts() {
@@ -559,7 +494,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "InterpolatedString{"
+      return "SingleLineStringLiteral{"
           + "span="
           + span
           + ", endDelimiterSpan="
@@ -579,7 +514,7 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      InterpolatedString that = (InterpolatedString) o;
+      SingleLineStringLiteral that = (SingleLineStringLiteral) o;
       return Objects.equals(parts, that.parts)
           && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
           && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
@@ -592,14 +527,14 @@ public sealed interface Expr extends Node {
     }
   }
 
-  final class InterpolatedMultiString implements Expr {
+  final class MultiLineStringLiteral implements Expr {
     private final List<StringPart> parts;
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
     private final Span span;
     private Node parent;
 
-    public InterpolatedMultiString(
+    public MultiLineStringLiteral(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       this.parts = parts;
       this.startDelimiterSpan = startDelimiterSpan;
@@ -633,7 +568,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitInterpolatedMultiStringExpr(this);
+      return visitor.visitMultiLineStringLiteral(this);
     }
 
     public List<StringPart> getParts() {
@@ -650,7 +585,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "InterpolatedMultiString{"
+      return "MultiLineStringLiteral{"
           + "parts="
           + parts
           + ", startDelimiterSpan="
@@ -670,7 +605,7 @@ public sealed interface Expr extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      InterpolatedMultiString that = (InterpolatedMultiString) o;
+      MultiLineStringLiteral that = (MultiLineStringLiteral) o;
       return Objects.equals(parts, that.parts)
           && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
           && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)

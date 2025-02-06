@@ -385,8 +385,8 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(stringConstantExpr)")
       }
-      is InterpolatedString -> renderInterpolatedStringExpr(expr)
-      is InterpolatedMultiString -> renderInterpolatedMultiStringExpr(expr)
+      is SingleLineStringLiteral -> renderSingleLineStringLiteral(expr)
+      is MultiLineStringLiteral -> renderMultiLineStringLiteral(expr)
       is Throw -> renderThrowExpr(expr)
       is Trace -> renderTraceExpr(expr)
       is ImportExpr -> {
@@ -417,7 +417,7 @@ class SexpRenderer {
     }
   }
 
-  fun renderInterpolatedStringExpr(expr: InterpolatedString) {
+  fun renderSingleLineStringLiteral(expr: SingleLineStringLiteral) {
     buf.append(tab)
     buf.append("(interpolatedStringExpr")
     val oldTab = increaseTab()
@@ -434,7 +434,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderInterpolatedMultiStringExpr(expr: InterpolatedMultiString) {
+  fun renderMultiLineStringLiteral(expr: MultiLineStringLiteral) {
     buf.append(tab)
     buf.append("(interpolatedMultiStringExpr")
     val oldTab = increaseTab()
