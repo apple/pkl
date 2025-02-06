@@ -17,10 +17,10 @@ package org.pkl.core.parser;
 
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
+import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassBody;
 import org.pkl.core.parser.cst.ClassMethod;
-import org.pkl.core.parser.cst.ClassPropertyEntry;
-import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
@@ -234,13 +234,13 @@ public interface ParserVisitor<Result> {
   Result visitImport(Import imp);
 
   @Nullable
-  Result visitClass(Clazz clazz);
+  Result visitClass(Class clazz);
 
   @Nullable
   Result visitModifier(Modifier modifier);
 
   @Nullable
-  Result visitClassPropertyEntry(ClassPropertyEntry entry);
+  Result visitClassProperty(ClassProperty entry);
 
   @Nullable
   Result visitClassMethod(ClassMethod entry);

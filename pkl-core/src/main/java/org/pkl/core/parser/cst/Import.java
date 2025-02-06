@@ -35,6 +35,7 @@ public final class Import implements Node {
     this.alias = alias;
     this.span = span;
 
+    importStr.setParent(this);
     if (alias != null) {
       alias.setParent(this);
     }
@@ -57,6 +58,9 @@ public final class Import implements Node {
 
   @Override
   public List<Node> children() {
+    if (alias != null) {
+      return List.of(importStr, alias);
+    }
     return List.of(importStr);
   }
 

@@ -17,10 +17,10 @@ package org.pkl.core.parser;
 
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
+import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassBody;
 import org.pkl.core.parser.cst.ClassMethod;
-import org.pkl.core.parser.cst.ClassPropertyEntry;
-import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.Amends;
@@ -412,7 +412,7 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitClass(Clazz clazz) {
+  public T visitClass(Class clazz) {
     return visitChildren(clazz);
   }
 
@@ -422,7 +422,7 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitClassPropertyEntry(ClassPropertyEntry entry) {
+  public T visitClassProperty(ClassProperty entry) {
     return visitChildren(entry);
   }
 

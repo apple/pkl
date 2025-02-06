@@ -23,12 +23,12 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public class ClassBody implements Node {
-  private final List<ClassPropertyEntry> properties;
+  private final List<ClassProperty> properties;
   private final List<ClassMethod> methods;
   private final Span span;
   private Node parent;
 
-  public ClassBody(List<ClassPropertyEntry> properties, List<ClassMethod> methods, Span span) {
+  public ClassBody(List<ClassProperty> properties, List<ClassMethod> methods, Span span) {
     this.properties = properties;
     this.methods = methods;
     this.span = span;
@@ -69,7 +69,7 @@ public class ClassBody implements Node {
     return visitor.visitClassBody(this);
   }
 
-  public List<ClassPropertyEntry> getProperties() {
+  public List<ClassProperty> getProperties() {
     return properties;
   }
 

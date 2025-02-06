@@ -50,9 +50,9 @@ class SexpRenderer {
     for (entry in sortModuleEntries(mod)) {
       buf.append('\n')
       when (entry) {
-        is Clazz -> renderClass(entry)
+        is Class -> renderClass(entry)
         is TypeAlias -> renderTypeAlias(entry)
-        is ClassPropertyEntry -> renderClassPropertyEntry(entry)
+        is ClassProperty -> renderClassPropertyEntry(entry)
         is ClassMethod -> renderClassMethod(entry)
       }
     }
@@ -106,7 +106,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderClass(clazz: Clazz) {
+  fun renderClass(clazz: Class) {
     buf.append(tab)
     buf.append("(clazz")
     val oldTab = increaseTab()
@@ -149,7 +149,7 @@ class SexpRenderer {
     for (entry in sortClassEntries(classBody)) {
       buf.append('\n')
       when (entry) {
-        is ClassPropertyEntry -> renderClassPropertyEntry(entry)
+        is ClassProperty -> renderClassPropertyEntry(entry)
         is ClassMethod -> renderClassMethod(entry)
       }
     }
@@ -186,34 +186,34 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderClassPropertyEntry(classEntry: ClassPropertyEntry) {
+  fun renderClassPropertyEntry(classEntry: ClassProperty) {
     buf.append(tab)
     buf.append("(classProperty")
     val oldTab = increaseTab()
-    if (classEntry.docComment() !== null) {
+    if (classEntry.docComment !== null) {
       buf.append('\n')
       renderDocComment()
     }
-    for (ann in classEntry.annotations()) {
+    for (ann in classEntry.annotations) {
       buf.append('\n')
       renderAnnotation(ann)
     }
-    for (mod in classEntry.modifiers()) {
+    for (mod in classEntry.modifiers) {
       buf.append('\n')
       renderModifier(mod)
     }
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
-    classEntry.typeAnnotation()?.let { typeAnnotation ->
+    classEntry.typeAnnotation?.let { typeAnnotation ->
       buf.append('\n')
       renderTypeAnnotation(typeAnnotation)
     }
-    classEntry.expr()?.let { expr ->
+    classEntry.expr?.let { expr ->
       buf.append('\n')
       renderExpr(expr)
     }
-    classEntry.bodyList()?.let { bodyList ->
+    classEntry.bodyList?.let { bodyList ->
       for (body in bodyList) {
         buf.append('\n')
         renderObjectBody(body)

@@ -25,9 +25,9 @@ import org.pkl.core.util.Nullable;
 public final class Module implements Node {
   private final @Nullable ModuleDecl decl;
   private final List<Import> imports;
-  private final List<Clazz> classes;
+  private final List<Class> classes;
   private final List<TypeAlias> typeAliases;
-  private final List<ClassPropertyEntry> properties;
+  private final List<ClassProperty> properties;
   private final List<ClassMethod> methods;
   private final Span span;
   private Node parent;
@@ -35,9 +35,9 @@ public final class Module implements Node {
   public Module(
       @Nullable ModuleDecl decl,
       List<Import> imports,
-      List<Clazz> classes,
+      List<Class> classes,
       List<TypeAlias> typeAliases,
-      List<ClassPropertyEntry> properties,
+      List<ClassProperty> properties,
       List<ClassMethod> methods,
       Span span) {
     this.decl = decl;
@@ -110,7 +110,7 @@ public final class Module implements Node {
     return imports;
   }
 
-  public List<Clazz> getClasses() {
+  public List<Class> getClasses() {
     return classes;
   }
 
@@ -118,7 +118,7 @@ public final class Module implements Node {
     return typeAliases;
   }
 
-  public List<ClassPropertyEntry> getProperties() {
+  public List<ClassProperty> getProperties() {
     return properties;
   }
 

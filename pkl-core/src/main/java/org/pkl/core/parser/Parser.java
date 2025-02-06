@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 import org.pkl.core.PklBugException;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
+import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassBody;
 import org.pkl.core.parser.cst.ClassMethod;
-import org.pkl.core.parser.cst.ClassPropertyEntry;
-import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
@@ -96,9 +96,9 @@ public class Parser {
     Span end = null;
     ModuleDecl moduleDecl = null;
     var imports = new ArrayList<Import>();
-    var classes = new ArrayList<Clazz>();
+    var classes = new ArrayList<Class>();
     var typeAliases = new ArrayList<TypeAlias>();
-    var props = new ArrayList<ClassPropertyEntry>();
+    var props = new ArrayList<ClassProperty>();
     var methods = new ArrayList<ClassMethod>();
     try {
       var header = parseEntryHeader();
@@ -298,9 +298,9 @@ public class Parser {
 
   private Span parseModuleEntry(
       EntryHeader header,
-      List<Clazz> classes,
+      List<Class> classes,
       List<TypeAlias> typeAliases,
-      List<ClassPropertyEntry> properties,
+      List<ClassProperty> properties,
       List<ClassMethod> methods) {
     switch (lookahead) {
       case IDENTIFIER -> {
@@ -353,7 +353,7 @@ public class Parser {
         startSpan.endWith(type.span()));
   }
 
-  private Clazz parseClass(EntryHeader header) {
+  private Class parseClass(EntryHeader header) {
     var start = expect(Token.CLASS, "unexpectedToken", "class").span;
     var startSpan = header.span(start);
     var name = parseIdentifier();
@@ -372,7 +372,7 @@ public class Parser {
 
     if (lookahead == Token.LBRACE) {
       var body = parseClassBody();
-      return new Clazz(
+      return new Class(
           header.docComment,
           header.annotations,
           header.modifiers,
@@ -382,7 +382,7 @@ public class Parser {
           body,
           startSpan.endWith(body.span()));
     } else {
-      return new Clazz(
+      return new Class(
           header.docComment,
           header.annotations,
           header.modifiers,
@@ -396,7 +396,7 @@ public class Parser {
 
   private ClassBody parseClassBody() {
     var start = expect(Token.LBRACE, "missingDelimiter", "{").span;
-    var props = new ArrayList<ClassPropertyEntry>();
+    var props = new ArrayList<ClassProperty>();
     var methods = new ArrayList<ClassMethod>();
     while (lookahead != Token.RBRACE && lookahead != Token.EOF) {
       var entryHeader = parseEntryHeader();
@@ -414,7 +414,7 @@ public class Parser {
     return new ClassBody(props, methods, start.endWith(end));
   }
 
-  private ClassPropertyEntry parseClassProperty(EntryHeader header) {
+  private ClassProperty parseClassProperty(EntryHeader header) {
     var name = parseIdentifier();
     var start = header.span(name.span());
     TypeAnnotation typeAnnotation = null;
@@ -435,33 +435,38 @@ public class Parser {
       }
     }
     if (expr != null) {
-      return new ClassPropertyEntry.ClassPropertyExpr(
+      return new ClassProperty(
           header.docComment,
           header.annotations,
           header.modifiers,
           name,
           typeAnnotation,
           expr,
+          null,
           start.endWith(expr.span()));
     }
     if (!bodies.isEmpty()) {
-      return new ClassPropertyEntry.ClassPropertyBody(
+      return new ClassProperty(
           header.docComment,
           header.annotations,
           header.modifiers,
           name,
+          null,
+          null,
           bodies,
           start.endWith(bodies.get(bodies.size() - 1).span()));
     }
     if (typeAnnotation == null) {
       throw new ParserError(ErrorMessages.create("invalidProperty"), name.span());
     }
-    return new ClassPropertyEntry.ClassProperty(
+    return new ClassProperty(
         header.docComment,
         header.annotations,
         header.modifiers,
         name,
         typeAnnotation,
+        null,
+        null,
         start.endWith(typeAnnotation.span()));
   }
 

@@ -162,9 +162,9 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.parser.Span;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
+import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassMethod;
-import org.pkl.core.parser.cst.ClassPropertyEntry;
-import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.Amends;
 import org.pkl.core.parser.cst.Expr.BinaryOp;
@@ -912,7 +912,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     assert scope != null;
 
-    if (parent instanceof ClassPropertyEntry
+    if (parent instanceof ClassProperty
         || parent instanceof ObjectProperty
         || parent instanceof ObjectBodyProperty) {
       inferredParentNode =
@@ -1539,9 +1539,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private EconomicMap<Object, ObjectMember> doVisitModuleProperties(
       List<Import> imports,
-      List<Clazz> classes,
+      List<Class> classes,
       List<TypeAlias> typeAliases,
-      List<ClassPropertyEntry> properties,
+      List<ClassProperty> properties,
       Set<String> propertyNames,
       ModuleInfo moduleInfo) {
 
@@ -1585,13 +1585,17 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     for (var ctx : properties) {
       var member =
           doVisitObjectProperty(
-              ctx, ctx.modifiers(), ctx.name(), ctx.typeAnnotation(), ctx.expr(), ctx.bodyList());
+              ctx,
+              ctx.getModifiers(),
+              ctx.getName(),
+              ctx.getTypeAnnotation(),
+              ctx.getExpr(),
+              ctx.getBodyList());
 
-      if (moduleInfo.isAmend() && !member.isLocal() && ctx.typeAnnotation() != null) {
-        //noinspection DataFlowIssue
+      if (moduleInfo.isAmend() && !member.isLocal() && ctx.getTypeAnnotation() != null) {
         throw exceptionBuilder()
             .evalError("nonLocalObjectPropertyCannotHaveTypeAnnotation")
-            .withSourceSection(createSourceSection(ctx.typeAnnotation().getType()))
+            .withSourceSection(createSourceSection(ctx.getTypeAnnotation().getType()))
             .build();
       }
 
@@ -1636,7 +1640,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ObjectMember visitClass(Clazz clazz) {
+  public ObjectMember visitClass(Class clazz) {
     var sourceSection = createSourceSection(clazz);
     var headerSection = createSourceSection(clazz.getHeaderSpan());
 
@@ -1644,7 +1648,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var typeParameters = visitTypeParameterList(clazz.getTypeParameterList());
 
-    List<ClassPropertyEntry> properties = bodyNode != null ? bodyNode.getProperties() : List.of();
+    List<ClassProperty> properties = bodyNode != null ? bodyNode.getProperties() : List.of();
     List<ClassMethod> methods = bodyNode != null ? bodyNode.getMethods() : List.of();
 
     var modifiers =
@@ -1746,11 +1750,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private UnresolvedPropertyNode[] doVisitClassProperties(
-      List<ClassPropertyEntry> propertyContexts, Set<String> propertyNames) {
+      List<ClassProperty> propertyContexts, Set<String> propertyNames) {
     var propertyNodes = new UnresolvedPropertyNode[propertyContexts.size()];
 
     for (var i = 0; i < propertyNodes.length; i++) {
-      var propertyNode = visitClassPropertyEntry(propertyContexts.get(i));
+      var propertyNode = visitClassProperty(propertyContexts.get(i));
       checkDuplicateMember(propertyNode.getName(), propertyNode.getHeaderSection(), propertyNames);
       propertyNodes[i] = propertyNode;
     }
@@ -1772,14 +1776,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public UnresolvedPropertyNode visitClassPropertyEntry(ClassPropertyEntry entry) {
-    var docCom = entry.docComment();
-    var annotations = entry.annotations();
-    var modifierList = entry.modifiers();
-    var name = entry.name();
-    var typeAnnotation = entry.typeAnnotation();
-    var expr = entry.expr();
-    var objectBodies = entry.bodyList();
+  public UnresolvedPropertyNode visitClassProperty(ClassProperty entry) {
+    var docCom = entry.getDocComment();
+    var annotations = entry.getAnnotations();
+    var modifierList = entry.getModifiers();
+    var name = entry.getName();
+    var typeAnnotation = entry.getTypeAnnotation();
+    var expr = entry.getExpr();
+    var objectBodies = entry.getBodyList();
     var docComment = createSourceSection(docCom);
     var annotationNodes = doVisitAnnotations(annotations);
     var sourceSection = createSourceSection(entry);

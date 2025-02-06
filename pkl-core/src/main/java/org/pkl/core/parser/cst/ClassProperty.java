@@ -22,53 +22,56 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Clazz implements Node {
+@SuppressWarnings("DuplicatedCode")
+public final class ClassProperty implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
   private final Identifier name;
-  private final @Nullable TypeParameterList typeParameterList;
-  private final @Nullable Type superClass;
-  private final @Nullable ClassBody body;
+  private final @Nullable TypeAnnotation typeAnnotation;
+  private final @Nullable Expr expr;
+  private final @Nullable List<ObjectBody> bodyList;
   private final Span span;
   private Node parent;
 
-  public Clazz(
+  public ClassProperty(
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
       Identifier name,
-      @Nullable TypeParameterList typeParameterList,
-      @Nullable Type superClass,
-      @Nullable ClassBody body,
+      @Nullable TypeAnnotation typeAnnotation,
+      @Nullable Expr expr,
+      @Nullable List<ObjectBody> bodyList,
       Span span) {
     this.docComment = docComment;
     this.annotations = annotations;
     this.modifiers = modifiers;
     this.name = name;
-    this.typeParameterList = typeParameterList;
-    this.superClass = superClass;
-    this.body = body;
+    this.typeAnnotation = typeAnnotation;
+    this.expr = expr;
+    this.bodyList = bodyList;
     this.span = span;
 
     if (docComment != null) {
       docComment.setParent(this);
     }
-    for (var ann : annotations) {
-      ann.setParent(this);
+    for (var annotation : annotations) {
+      annotation.setParent(this);
     }
-    for (var mod : modifiers) {
-      mod.setParent(this);
+    for (var modifier : modifiers) {
+      modifier.setParent(this);
     }
     name.setParent(this);
-    if (typeParameterList != null) {
-      typeParameterList.setParent(this);
+    if (typeAnnotation != null) {
+      typeAnnotation.setParent(this);
     }
-    if (superClass != null) {
-      superClass.setParent(this);
+    if (expr != null) {
+      expr.setParent(this);
     }
-    if (body != null) {
-      body.setParent(this);
+    if (bodyList != null) {
+      for (var body : bodyList) {
+        body.setParent(this);
+      }
     }
   }
 
@@ -78,7 +81,7 @@ public final class Clazz implements Node {
   }
 
   @Override
-  public Node parent() {
+  public @Nullable Node parent() {
     return parent;
   }
 
@@ -87,7 +90,6 @@ public final class Clazz implements Node {
     this.parent = parent;
   }
 
-  @SuppressWarnings("DuplicatedCode")
   @Override
   public List<Node> children() {
     var children = new ArrayList<Node>();
@@ -96,22 +98,21 @@ public final class Clazz implements Node {
     }
     children.addAll(annotations);
     children.addAll(modifiers);
-    children.add(name);
-    if (typeParameterList != null) {
-      children.add(typeParameterList);
+    if (typeAnnotation != null) {
+      children.add(typeAnnotation);
     }
-    if (superClass != null) {
-      children.add(superClass);
+    if (expr != null) {
+      children.add(expr);
     }
-    if (body != null) {
-      children.add(body);
+    if (bodyList != null) {
+      children.addAll(bodyList);
     }
     return children;
   }
 
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitClass(this);
+    return visitor.visitClassProperty(this);
   }
 
   public @Nullable DocComment getDocComment() {
@@ -130,33 +131,21 @@ public final class Clazz implements Node {
     return name;
   }
 
-  public @Nullable TypeParameterList getTypeParameterList() {
-    return typeParameterList;
+  public @Nullable TypeAnnotation getTypeAnnotation() {
+    return typeAnnotation;
   }
 
-  public @Nullable Type getSuperClass() {
-    return superClass;
+  public @Nullable Expr getExpr() {
+    return expr;
   }
 
-  public @Nullable ClassBody getBody() {
-    return body;
-  }
-
-  public Span getHeaderSpan() {
-    Span end;
-    if (superClass != null) {
-      end = superClass.span();
-    } else if (typeParameterList != null) {
-      end = typeParameterList.span();
-    } else {
-      end = name.span();
-    }
-    return span.endWith(end);
+  public @Nullable List<ObjectBody> getBodyList() {
+    return bodyList;
   }
 
   @Override
   public String toString() {
-    return "Clazz{"
+    return "ClassProperty{"
         + "docComment="
         + docComment
         + ", annotations="
@@ -165,12 +154,12 @@ public final class Clazz implements Node {
         + modifiers
         + ", name="
         + name
-        + ", typeParameterList="
-        + typeParameterList
-        + ", superClass="
-        + superClass
-        + ", body="
-        + body
+        + ", typeAnnotation="
+        + typeAnnotation
+        + ", expr="
+        + expr
+        + ", bodyList="
+        + bodyList
         + ", span="
         + span
         + '}';
@@ -184,20 +173,20 @@ public final class Clazz implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Clazz clazz = (Clazz) o;
-    return Objects.equals(docComment, clazz.docComment)
-        && Objects.equals(annotations, clazz.annotations)
-        && Objects.equals(modifiers, clazz.modifiers)
-        && Objects.equals(name, clazz.name)
-        && Objects.equals(typeParameterList, clazz.typeParameterList)
-        && Objects.equals(superClass, clazz.superClass)
-        && Objects.equals(body, clazz.body)
-        && Objects.equals(span, clazz.span);
+    ClassProperty that = (ClassProperty) o;
+    return Objects.equals(docComment, that.docComment)
+        && Objects.equals(annotations, that.annotations)
+        && Objects.equals(modifiers, that.modifiers)
+        && Objects.equals(name, that.name)
+        && Objects.equals(typeAnnotation, that.typeAnnotation)
+        && Objects.equals(expr, that.expr)
+        && Objects.equals(bodyList, that.bodyList)
+        && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        docComment, annotations, modifiers, name, typeParameterList, superClass, body, span);
+        docComment, annotations, modifiers, name, typeAnnotation, expr, bodyList, span);
   }
 }

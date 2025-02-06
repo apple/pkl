@@ -37,8 +37,8 @@ import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.cst.ClassPropertyEntry;
-import org.pkl.core.parser.cst.Clazz;
+import org.pkl.core.parser.cst.Class;
+import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Import;
 import org.pkl.core.parser.cst.ModuleDecl;
@@ -214,13 +214,13 @@ public class ReplServer implements AutoCloseable {
           evaluateExpr(replState, exprNode, forceResults, results);
         } else if (tree instanceof Import importClause) {
           addStaticModuleProperty(builder.visitImport(importClause));
-        } else if (tree instanceof ClassPropertyEntry classProperty) {
-          var propertyNode = builder.visitClassPropertyEntry(classProperty);
+        } else if (tree instanceof ClassProperty classProperty) {
+          var propertyNode = builder.visitClassProperty(classProperty);
           var property = addModuleProperty(propertyNode);
           if (evalDefinitions) {
             evaluateMemberDef(replState, property, forceResults, results);
           }
-        } else if (tree instanceof Clazz clazz) {
+        } else if (tree instanceof Class clazz) {
           addStaticModuleProperty(builder.visitClass(clazz));
         } else if (tree instanceof org.pkl.core.parser.cst.TypeAlias typeAlias) {
           addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
@@ -258,7 +258,7 @@ public class ReplServer implements AutoCloseable {
             language, new FrameDescriptor(), propertyNode, replState.module.getVmClass());
 
     var property =
-        (ClassProperty)
+        (org.pkl.core.ast.member.ClassProperty)
             callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
 
     replState.module.getVmClass().addProperty(property);
@@ -394,7 +394,7 @@ public class ReplServer implements AutoCloseable {
   }
 
   private VmTyped createReplModule(
-      Iterable<ClassProperty> propertyDefs,
+      Iterable<org.pkl.core.ast.member.ClassProperty> propertyDefs,
       Iterable<ClassMethod> methodDefs,
       UnmodifiableEconomicMap<Object, ObjectMember> moduleMembers,
       @Nullable VmTyped parent) {

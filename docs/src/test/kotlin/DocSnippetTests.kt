@@ -23,7 +23,7 @@ import org.pkl.core.util.IoUtils
 import org.pkl.core.http.HttpClient
 import org.pkl.core.parser.Parser
 import org.pkl.core.parser.ParserError
-import org.pkl.core.parser.cst.ClassPropertyEntry
+import org.pkl.core.parser.cst.ClassProperty
 import org.pkl.core.resource.ResourceReaders
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
@@ -334,7 +334,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           )
         )
 
-        val properties = parsed.children().filterIsInstance<ClassPropertyEntry>()
+        val properties = parsed.children().filterIsInstance<ClassProperty>()
 
         val responses = mutableListOf<ReplResponse>()
 
@@ -343,7 +343,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           responses.addAll(context.replServer.handleRequest(
             ReplRequest.Eval(
               "snippet",
-              prop.name().value,
+              prop.name.value,
               false,
               true
             )
