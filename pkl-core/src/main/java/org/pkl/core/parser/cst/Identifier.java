@@ -21,12 +21,12 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Ident implements Node {
+public final class Identifier implements Node {
   private final String value;
   private final Span span;
   private Node parent;
 
-  public Ident(String value, Span span) {
+  public Identifier(String value, Span span) {
     this.value = value;
     this.span = span;
   }
@@ -53,7 +53,7 @@ public final class Ident implements Node {
 
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitIdent(this);
+    return visitor.visitIdentifier(this);
   }
 
   public String getValue() {
@@ -62,7 +62,7 @@ public final class Ident implements Node {
 
   @Override
   public String toString() {
-    return "Ident{" + "value='" + value + '\'' + ", span=" + span + '}';
+    return "Identifier{value='" + value + '\'' + ", span=" + span + '}';
   }
 
   @Override
@@ -73,8 +73,8 @@ public final class Ident implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Ident ident = (Ident) o;
-    return Objects.equals(value, ident.value) && Objects.equals(span, ident.span);
+    Identifier identifier = (Identifier) o;
+    return Objects.equals(value, identifier.value) && Objects.equals(span, identifier.span);
   }
 
   @Override

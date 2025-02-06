@@ -26,7 +26,7 @@ public final class TypeAlias implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
-  private final Ident name;
+  private final Identifier name;
   private final @Nullable TypeParameterList typeParameterList;
   private final Type type;
   private final Span span;
@@ -36,7 +36,7 @@ public final class TypeAlias implements Node {
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
-      Ident name,
+      Identifier name,
       @Nullable TypeParameterList typeParameterList,
       Type type,
       Span span) {
@@ -113,7 +113,7 @@ public final class TypeAlias implements Node {
     return modifiers;
   }
 
-  public Ident getName() {
+  public Identifier getName() {
     return name;
   }
 

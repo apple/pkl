@@ -32,7 +32,7 @@ public sealed interface ClassPropertyEntry extends Node {
 
   List<Modifier> modifiers();
 
-  Ident name();
+  Identifier name();
 
   @Nullable
   TypeAnnotation typeAnnotation();
@@ -52,7 +52,7 @@ public sealed interface ClassPropertyEntry extends Node {
     private final @Nullable DocComment docComment;
     private final List<Annotation> annotations;
     private final List<Modifier> modifiers;
-    private final Ident name;
+    private final Identifier name;
     private final TypeAnnotation typeAnnotation;
     private final Span span;
     private Node parent;
@@ -61,7 +61,7 @@ public sealed interface ClassPropertyEntry extends Node {
         @Nullable DocComment docComment,
         List<Annotation> annotations,
         List<Modifier> modifiers,
-        Ident name,
+        Identifier name,
         TypeAnnotation typeAnnotation,
         Span span) {
       this.docComment = docComment;
@@ -128,7 +128,7 @@ public sealed interface ClassPropertyEntry extends Node {
     }
 
     @Override
-    public Ident name() {
+    public Identifier name() {
       return name;
     }
 
@@ -192,7 +192,7 @@ public sealed interface ClassPropertyEntry extends Node {
     private final @Nullable DocComment docComment;
     private final List<Annotation> annotations;
     private final List<Modifier> modifiers;
-    private final Ident name;
+    private final Identifier name;
     private final @Nullable TypeAnnotation typeAnnotation;
     private final Expr expr;
     private final Span span;
@@ -202,7 +202,7 @@ public sealed interface ClassPropertyEntry extends Node {
         @Nullable DocComment docComment,
         List<Annotation> annotations,
         List<Modifier> modifiers,
-        Ident name,
+        Identifier name,
         @Nullable TypeAnnotation typeAnnotation,
         Expr expr,
         Span span) {
@@ -277,7 +277,7 @@ public sealed interface ClassPropertyEntry extends Node {
     }
 
     @Override
-    public Ident name() {
+    public Identifier name() {
       return name;
     }
 
@@ -348,7 +348,7 @@ public sealed interface ClassPropertyEntry extends Node {
     private final @Nullable DocComment docComment;
     private final List<Annotation> annotations;
     private final List<Modifier> modifiers;
-    private final Ident name;
+    private final Identifier name;
     private final List<ObjectBody> bodyList;
     private final Span span;
     private Node parent;
@@ -357,7 +357,7 @@ public sealed interface ClassPropertyEntry extends Node {
         @Nullable DocComment docComment,
         List<Annotation> annotations,
         List<Modifier> modifiers,
-        Ident name,
+        Identifier name,
         List<ObjectBody> bodyList,
         Span span) {
       this.docComment = docComment;
@@ -426,7 +426,7 @@ public sealed interface ClassPropertyEntry extends Node {
     }
 
     @Override
-    public Ident name() {
+    public Identifier name() {
       return name;
     }
 

@@ -25,11 +25,11 @@ import org.pkl.core.util.Nullable;
 public final class Import implements Node {
   private final StringConstant importStr;
   private final boolean isGlob;
-  private final @Nullable Ident alias;
+  private final @Nullable Identifier alias;
   private final Span span;
   private Node parent;
 
-  public Import(StringConstant importStr, boolean isGlob, @Nullable Ident alias, Span span) {
+  public Import(StringConstant importStr, boolean isGlob, @Nullable Identifier alias, Span span) {
     this.importStr = importStr;
     this.isGlob = isGlob;
     this.alias = alias;
@@ -73,7 +73,7 @@ public final class Import implements Node {
     return isGlob;
   }
 
-  public @Nullable Ident getAlias() {
+  public @Nullable Identifier getAlias() {
     return alias;
   }
 

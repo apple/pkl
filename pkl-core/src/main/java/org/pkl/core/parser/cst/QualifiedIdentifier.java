@@ -23,21 +23,21 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class QualifiedIdent implements Node {
-  private final List<Ident> idents;
+public final class QualifiedIdentifier implements Node {
+  private final List<Identifier> identifiers;
   private Node parent;
 
-  public QualifiedIdent(List<Ident> idents) {
-    this.idents = idents;
+  public QualifiedIdentifier(List<Identifier> identifiers) {
+    this.identifiers = identifiers;
 
-    for (var ident : idents) {
-      ident.setParent(this);
+    for (var identifier : identifiers) {
+      identifier.setParent(this);
     }
   }
 
   public Span span() {
-    var start = idents.get(0).span();
-    var end = idents.get(idents.size() - 1).span();
+    var start = identifiers.get(0).span();
+    var end = identifiers.get(identifiers.size() - 1).span();
     return start.endWith(end);
   }
 
@@ -53,25 +53,25 @@ public final class QualifiedIdent implements Node {
 
   @Override
   public List<Node> children() {
-    return Collections.unmodifiableList(idents);
+    return Collections.unmodifiableList(identifiers);
   }
 
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitQualifiedIdent(this);
+    return visitor.visitQualifiedIdentifier(this);
   }
 
-  public List<Ident> getIdents() {
-    return idents;
+  public List<Identifier> getIdentifiers() {
+    return identifiers;
   }
 
   public String text() {
-    return idents.stream().map(Ident::getValue).collect(Collectors.joining("."));
+    return identifiers.stream().map(Identifier::getValue).collect(Collectors.joining("."));
   }
 
   @Override
   public String toString() {
-    return "QualifiedIdent{" + "idents=" + idents + '}';
+    return "QualifiedIdentifier{identifiers=" + identifiers + '}';
   }
 
   @Override
@@ -82,12 +82,12 @@ public final class QualifiedIdent implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    QualifiedIdent that = (QualifiedIdent) o;
-    return Objects.equals(idents, that.idents);
+    QualifiedIdentifier that = (QualifiedIdentifier) o;
+    return Objects.equals(identifiers, that.identifiers);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(idents);
+    return Objects.hashCode(identifiers);
   }
 }

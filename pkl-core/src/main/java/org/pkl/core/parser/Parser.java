@@ -34,7 +34,7 @@ import org.pkl.core.parser.cst.Expr.OperatorExpr;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
-import org.pkl.core.parser.cst.Ident;
+import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Modifier.ModifierValue;
@@ -45,9 +45,9 @@ import org.pkl.core.parser.cst.ObjectBody;
 import org.pkl.core.parser.cst.ObjectMemberNode;
 import org.pkl.core.parser.cst.Operator;
 import org.pkl.core.parser.cst.Parameter;
-import org.pkl.core.parser.cst.Parameter.TypedIdent;
+import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
 import org.pkl.core.parser.cst.ParameterList;
-import org.pkl.core.parser.cst.QualifiedIdent;
+import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringConstantPart.EscapeType;
@@ -166,7 +166,7 @@ public class Parser {
         case CLASS -> nodes.add(parseClass(header));
         case TYPE_ALIAS -> nodes.add(parseTypeAlias(header));
         case FUNCTION -> nodes.add(parseClassMethod(header));
-        case IDENT -> {
+        case IDENTIFIER -> {
           next();
           switch (lookahead) {
             case COLON, ASSIGN, LBRACE -> {
@@ -196,12 +196,12 @@ public class Parser {
   }
 
   private @Nullable ModuleDecl parseModuleDecl(EntryHeader header) {
-    QualifiedIdent moduleName = null;
+    QualifiedIdentifier moduleName = null;
     Span start = null;
     Span end = null;
     if (lookahead == Token.MODULE) {
       start = expect(Token.MODULE, "unexpectedToken", "module").span;
-      moduleName = parseQualifiedIdent();
+      moduleName = parseQualifiedIdentifier();
       end = moduleName.span();
     }
     var extendsOrAmendsDecl = parseExtendsAmendsDecl();
@@ -223,9 +223,9 @@ public class Parser {
     return null;
   }
 
-  private QualifiedIdent parseQualifiedIdent() {
-    var idents = parseListOf(Token.DOT, this::parseIdent);
-    return new QualifiedIdent(idents);
+  private QualifiedIdentifier parseQualifiedIdentifier() {
+    var idents = parseListOf(Token.DOT, this::parseIdentifier);
+    return new QualifiedIdentifier(idents);
   }
 
   private @Nullable ExtendsOrAmendsDecl parseExtendsAmendsDecl() {
@@ -253,10 +253,10 @@ public class Parser {
     }
     var str = parseStringConstant();
     var end = str.span();
-    Ident alias = null;
+    Identifier alias = null;
     if (lookahead == Token.AS) {
       next();
-      alias = parseIdent();
+      alias = parseIdentifier();
       end = alias.span();
     }
     return new Import(str, isGlob, alias, start.endWith(end));
@@ -309,7 +309,7 @@ public class Parser {
       List<ClassPropertyEntry> properties,
       List<ClassMethod> methods) {
     switch (lookahead) {
-      case IDENT -> {
+      case IDENTIFIER -> {
         var node = parseClassProperty(header);
         properties.add(node);
         return node.span();
@@ -342,7 +342,7 @@ public class Parser {
   private TypeAlias parseTypeAlias(EntryHeader header) {
     var start = expect(Token.TYPE_ALIAS, "unexpectedToken", "typealias").span;
     var startSpan = header.span(start);
-    var ident = parseIdent();
+    var identifier = parseIdentifier();
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
       typePars = parseTypeParameterList();
@@ -353,7 +353,7 @@ public class Parser {
         header.docComment,
         header.annotations,
         header.modifiers,
-        ident,
+        identifier,
         typePars,
         type,
         startSpan.endWith(type.span()));
@@ -362,7 +362,7 @@ public class Parser {
   private Clazz parseClass(EntryHeader header) {
     var start = expect(Token.CLASS, "unexpectedToken", "class").span;
     var startSpan = header.span(start);
-    var name = parseIdent();
+    var name = parseIdentifier();
     TypeParameterList typePars = null;
     var end = name.span();
     if (lookahead == Token.LT) {
@@ -421,7 +421,7 @@ public class Parser {
   }
 
   private ClassPropertyEntry parseClassProperty(EntryHeader header) {
-    var name = parseIdent();
+    var name = parseIdentifier();
     var start = header.span(name.span());
     TypeAnnotation typeAnnotation = null;
     Expr expr = null;
@@ -475,7 +475,7 @@ public class Parser {
     var func = expect(Token.FUNCTION, "unexpectedToken", "function").span;
     var start = header.span(func);
     var headerSpanStart = header.modifierSpan(func);
-    var name = parseIdent();
+    var name = parseIdentifier();
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
       typePars = parseTypeParameterList();
@@ -518,13 +518,13 @@ public class Parser {
       // it's a parameter
       params = parseListOfParameter(Token.COMMA);
       expect(Token.ARROW, "unexpectedToken2", ",", "->");
-    } else if (lookahead == Token.IDENT) {
+    } else if (lookahead == Token.IDENTIFIER) {
       // not sure what it is yet
-      var ident = parseIdent();
+      var identifier = parseIdentifier();
       if (lookahead == Token.ARROW) {
         // it's a parameter
         next();
-        params.add(new TypedIdent(ident, null, ident.span()));
+        params.add(new TypedIdentifier(identifier, null, identifier.span()));
       } else if (lookahead == Token.COMMA) {
         // it's a parameter
         backtrack();
@@ -538,13 +538,13 @@ public class Parser {
         if (lookahead == Token.COMMA) {
           // it's a parameter
           next();
-          params.add(new Parameter.TypedIdent(ident, typeAnnotation, ident.span()));
+          params.add(new TypedIdentifier(identifier, typeAnnotation, identifier.span()));
           params.addAll(parseListOfParameter(Token.COMMA));
           expect(Token.ARROW, "unexpectedToken2", ",", "->");
         } else if (lookahead == Token.ARROW) {
           // it's a parameter
           next();
-          params.add(new Parameter.TypedIdent(ident, typeAnnotation, ident.span()));
+          params.add(new TypedIdentifier(identifier, typeAnnotation, identifier.span()));
         } else {
           // it's a member
           expect(Token.ASSIGN, "unexpectedToken", "=");
@@ -552,10 +552,10 @@ public class Parser {
           members.add(
               new ObjectMemberNode.ObjectProperty(
                   new ArrayList<>(),
-                  ident,
+                  identifier,
                   typeAnnotation,
                   expr,
-                  ident.span().endWith(expr.span())));
+                  identifier.span().endWith(expr.span())));
         }
       } else {
         // member
@@ -573,7 +573,7 @@ public class Parser {
 
   private ObjectMemberNode parseObjectMember() {
     return switch (lookahead) {
-      case IDENT -> {
+      case IDENTIFIER -> {
         next();
         if (lookahead == Token.LBRACE || lookahead == Token.COLON || lookahead == Token.ASSIGN) {
           // it's an objectProperty
@@ -623,7 +623,7 @@ public class Parser {
     if (allModifiers == null) {
       allModifiers = parseModifierList();
     }
-    var ident = parseIdent();
+    var identifier = parseIdentifier();
     TypeAnnotation typeAnnotation = null;
     if (lookahead == Token.COLON) {
       typeAnnotation = parseTypeAnnotation();
@@ -632,17 +632,18 @@ public class Parser {
       expect(Token.ASSIGN, "unexpectedToken", "=");
       var expr = parseExpr("}");
       return new ObjectMemberNode.ObjectProperty(
-          allModifiers, ident, typeAnnotation, expr, start.endWith(expr.span()));
+          allModifiers, identifier, typeAnnotation, expr, start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    return new ObjectMemberNode.ObjectBodyProperty(allModifiers, ident, bodies, start.endWith(end));
+    return new ObjectMemberNode.ObjectBodyProperty(
+        allModifiers, identifier, bodies, start.endWith(end));
   }
 
   private ObjectMemberNode.ObjectMethod parseObjectMethod(List<Modifier> modifiers) {
     var start = spanLookahead;
     expect(Token.FUNCTION, "unexpectedToken", "function");
-    var ident = parseIdent();
+    var identifier = parseIdentifier();
     TypeParameterList params = null;
     if (lookahead == Token.LT) {
       params = parseTypeParameterList();
@@ -655,7 +656,7 @@ public class Parser {
     expect(Token.ASSIGN, "unexpectedToken", "=");
     var expr = parseExpr("}");
     return new ObjectMemberNode.ObjectMethod(
-        modifiers, ident, params, args, typeAnnotation, expr, start.endWith(expr.span()));
+        modifiers, identifier, params, args, typeAnnotation, expr, start.endWith(expr.span()));
   }
 
   private ObjectMemberNode parseMemberPredicate() {
@@ -770,17 +771,17 @@ public class Parser {
           next();
           var expr = exprs.remove(exprs.size() - 1);
           var isNullable = op == Operator.QDOT;
-          var ident = parseIdent();
+          var identifier = parseIdentifier();
           ArgumentList argumentList = null;
           if (lookahead == Token.LPAREN
               && !precededBySemicolon
               && _lookahead.newLinesBetween == 0) {
             argumentList = parseArgumentList();
           }
-          var lastSpan = argumentList != null ? argumentList.span() : ident.span();
+          var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
           exprs.add(
               new Expr.QualifiedAccess(
-                  expr, ident, isNullable, argumentList, expr.span().endWith(lastSpan)));
+                  expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan)));
         }
         default -> {
           exprs.add(new OperatorExpr(op, next().span));
@@ -903,7 +904,7 @@ public class Parser {
             var start = next().span;
             yield switch (lookahead) {
               case UNDERSCORE -> parseFunctionLiteral(start);
-              case IDENT -> parseFunctionLiteralOrParenthesized(start);
+              case IDENTIFIER -> parseFunctionLiteralOrParenthesized(start);
               case RPAREN -> {
                 var endParen = next().span;
                 var paramList = new ParameterList(List.of(), start.endWith(endParen));
@@ -923,12 +924,12 @@ public class Parser {
             var start = next().span;
             if (lookahead == Token.DOT) {
               next();
-              var ident = parseIdent();
+              var identifier = parseIdentifier();
               if (lookahead == Token.LPAREN) {
                 var args = parseArgumentList();
-                yield new Expr.SuperAccess(ident, args, start.endWith(args.span()));
+                yield new Expr.SuperAccess(identifier, args, start.endWith(args.span()));
               } else {
-                yield new Expr.SuperAccess(ident, null, start.endWith(ident.span()));
+                yield new Expr.SuperAccess(identifier, null, start.endWith(identifier.span()));
               }
             } else {
               expect(Token.LBRACK, "unexpectedToken", "[");
@@ -1026,15 +1027,16 @@ public class Parser {
                   parts, start.span, end, start.span.endWith(end));
             }
           }
-          case IDENT -> {
-            var ident = parseIdent();
+          case IDENTIFIER -> {
+            var identifier = parseIdentifier();
             if (lookahead == Token.LPAREN
                 && !precededBySemicolon
                 && _lookahead.newLinesBetween == 0) {
               var args = parseArgumentList();
-              yield new Expr.UnqualifiedAccess(ident, args, ident.span().endWith(args.span()));
+              yield new Expr.UnqualifiedAccess(
+                  identifier, args, identifier.span().endWith(args.span()));
             } else {
-              yield new Expr.UnqualifiedAccess(ident, null, ident.span());
+              yield new Expr.UnqualifiedAccess(identifier, null, identifier.span());
             }
           }
           case EOF ->
@@ -1071,15 +1073,15 @@ public class Parser {
     // qualified access
     if (lookahead == Token.DOT || lookahead == Token.QDOT) {
       var isNullable = next().token == Token.QDOT;
-      var ident = parseIdent();
+      var identifier = parseIdentifier();
       ArgumentList argumentList = null;
       if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
         argumentList = parseArgumentList();
       }
-      var lastSpan = argumentList != null ? argumentList.span() : ident.span();
+      var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
       var res =
           new Expr.QualifiedAccess(
-              expr, ident, isNullable, argumentList, expr.span().endWith(lastSpan));
+              expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan));
       return parseExprRest(res);
     }
     // subscript (needs to be in the same line as the expression)
@@ -1095,12 +1097,12 @@ public class Parser {
 
   @SuppressWarnings("DuplicatedCode")
   private Expr parseFunctionLiteralOrParenthesized(Span start) {
-    var ident = parseIdent();
+    var identifier = parseIdentifier();
     return switch (lookahead) {
       case COMMA -> {
         next();
         var params = new ArrayList<Parameter>();
-        params.add(new Parameter.TypedIdent(ident, null, ident.span()));
+        params.add(new TypedIdentifier(identifier, null, identifier.span()));
         params.addAll(parseListOfParameter(Token.COMMA));
         var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         var paramList = new ParameterList(params, start.endWith(endParen));
@@ -1111,7 +1113,7 @@ public class Parser {
       case COLON -> {
         var typeAnnotation = parseTypeAnnotation();
         var params = new ArrayList<Parameter>();
-        params.add(new Parameter.TypedIdent(ident, typeAnnotation, ident.span()));
+        params.add(new TypedIdentifier(identifier, typeAnnotation, identifier.span()));
         if (lookahead == Token.COMMA) {
           next();
           params.addAll(parseListOfParameter(Token.COMMA));
@@ -1129,11 +1131,11 @@ public class Parser {
           next();
           var expr = parseExpr();
           var params = new ArrayList<Parameter>();
-          params.add(new Parameter.TypedIdent(ident, null, ident.span()));
+          params.add(new TypedIdentifier(identifier, null, identifier.span()));
           var paramList = new ParameterList(params, start.endWith(end));
           yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
         } else {
-          var exp = new Expr.UnqualifiedAccess(ident, null, ident.span());
+          var exp = new Expr.UnqualifiedAccess(identifier, null, identifier.span());
           yield new Parenthesized(exp, start.endWith(end));
         }
       }
@@ -1194,9 +1196,9 @@ public class Parser {
         var type = parseType(true, expectation);
         typ = new DefaultUnionType(type, tk.span.endWith(type.span()));
       }
-      case IDENT -> {
+      case IDENTIFIER -> {
         var start = spanLookahead;
-        var name = parseQualifiedIdent();
+        var name = parseQualifiedIdentifier();
         var types = new ArrayList<Type>();
         var end = name.span();
         if (lookahead == Token.LT) {
@@ -1251,7 +1253,7 @@ public class Parser {
 
   private Annotation parseAnnotation() {
     var start = next().span;
-    var name = parseQualifiedIdent();
+    var name = parseQualifiedIdentifier();
     ObjectBody body = null;
     var end = name.span();
     if (lookahead == Token.LBRACE) {
@@ -1344,19 +1346,19 @@ public class Parser {
       next();
       variance = TypeParameter.Variance.OUT;
     }
-    var ident = parseIdent();
-    return new TypeParameter(variance, ident, start.endWith(ident.span()));
+    var identifier = parseIdentifier();
+    return new TypeParameter(variance, identifier, start.endWith(identifier.span()));
   }
 
-  private Parameter.TypedIdent parseTypedIdentifier() {
-    var ident = parseIdent();
+  private TypedIdentifier parseTypedIdentifier() {
+    var identifier = parseIdentifier();
     TypeAnnotation typeAnnotation = null;
-    var end = ident.span();
+    var end = identifier.span();
     if (lookahead == Token.COLON) {
       typeAnnotation = parseTypeAnnotation();
       end = typeAnnotation.span();
     }
-    return new Parameter.TypedIdent(ident, typeAnnotation, ident.span().endWith(end));
+    return new TypedIdentifier(identifier, typeAnnotation, identifier.span().endWith(end));
   }
 
   private TypeAnnotation parseTypeAnnotation() {
@@ -1365,8 +1367,8 @@ public class Parser {
     return new TypeAnnotation(type, start.endWith(type.span()));
   }
 
-  private Ident parseIdent() {
-    if (lookahead != Token.IDENT) {
+  private Identifier parseIdentifier() {
+    if (lookahead != Token.IDENTIFIER) {
       if (lookahead.isKeyword()) {
         throw parserError("keywordNotAllowedHere", lookahead.text());
       }
@@ -1374,7 +1376,7 @@ public class Parser {
     }
     var tk = next();
     var text = removeBackticks(tk.text(lexer));
-    return new Ident(text, tk.span);
+    return new Identifier(text, tk.span);
   }
 
   private Expr.StringConstant parseStringConstant() {

@@ -23,16 +23,16 @@ import org.pkl.core.util.Nullable;
 
 public final class TypeParameter implements Node {
   private final @Nullable Variance variance;
-  private final Ident ident;
+  private final Identifier identifier;
   private final Span span;
   private Node parent;
 
-  public TypeParameter(@Nullable Variance variance, Ident ident, Span span) {
+  public TypeParameter(@Nullable Variance variance, Identifier identifier, Span span) {
     this.variance = variance;
-    this.ident = ident;
+    this.identifier = identifier;
     this.span = span;
 
-    ident.setParent(this);
+    identifier.setParent(this);
   }
 
   @Override
@@ -52,7 +52,7 @@ public final class TypeParameter implements Node {
 
   @Override
   public List<Node> children() {
-    return List.of(ident);
+    return List.of(identifier);
   }
 
   @Override
@@ -64,13 +64,20 @@ public final class TypeParameter implements Node {
     return variance;
   }
 
-  public Ident getIdent() {
-    return ident;
+  public Identifier getIdentifier() {
+    return identifier;
   }
 
   @Override
   public String toString() {
-    return "TypeParameter{" + "variance=" + variance + ", ident=" + ident + ", span=" + span + '}';
+    return "TypeParameter{"
+        + "variance="
+        + variance
+        + ", identifier="
+        + identifier
+        + ", span="
+        + span
+        + '}';
   }
 
   @Override
@@ -83,13 +90,13 @@ public final class TypeParameter implements Node {
     }
     TypeParameter that = (TypeParameter) o;
     return variance == that.variance
-        && Objects.equals(ident, that.ident)
+        && Objects.equals(identifier, that.identifier)
         && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(variance, ident, span);
+    return Objects.hash(variance, identifier, span);
   }
 
   public enum Variance {

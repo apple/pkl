@@ -25,7 +25,7 @@ import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
-import org.pkl.core.parser.cst.Ident;
+import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Module;
@@ -34,7 +34,7 @@ import org.pkl.core.parser.cst.ObjectBody;
 import org.pkl.core.parser.cst.ObjectMemberNode;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
-import org.pkl.core.parser.cst.QualifiedIdent;
+import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringPart;
@@ -282,10 +282,10 @@ public interface ParserVisitor<Result> {
   Result visitDocComment(DocComment docComment);
 
   @Nullable
-  Result visitIdent(Ident ident);
+  Result visitIdentifier(Identifier identifier);
 
   @Nullable
-  Result visitQualifiedIdent(QualifiedIdent qualifiedIdent);
+  Result visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier);
 
   @Nullable
   Result visitObjectBody(ObjectBody objectBody);

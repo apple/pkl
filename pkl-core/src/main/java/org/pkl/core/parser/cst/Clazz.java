@@ -26,7 +26,7 @@ public final class Clazz implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
-  private final Ident name;
+  private final Identifier name;
   private final @Nullable TypeParameterList typeParameterList;
   private final @Nullable Type superClass;
   private final @Nullable ClassBody body;
@@ -37,7 +37,7 @@ public final class Clazz implements Node {
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
-      Ident name,
+      Identifier name,
       @Nullable TypeParameterList typeParameterList,
       @Nullable Type superClass,
       @Nullable ClassBody body,
@@ -126,7 +126,7 @@ public final class Clazz implements Node {
     return modifiers;
   }
 
-  public Ident getName() {
+  public Identifier getName() {
     return name;
   }
 

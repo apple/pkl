@@ -22,12 +22,12 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public class Annotation implements Node {
-  private final QualifiedIdent name;
+  private final QualifiedIdentifier name;
   private final @Nullable ObjectBody body;
   private final Span span;
   private Node parent;
 
-  public Annotation(QualifiedIdent name, @Nullable ObjectBody body, Span span) {
+  public Annotation(QualifiedIdentifier name, @Nullable ObjectBody body, Span span) {
     this.name = name;
     this.body = body;
     this.span = span;
@@ -66,7 +66,7 @@ public class Annotation implements Node {
     return visitor.visitAnnotation(this);
   }
 
-  public QualifiedIdent getName() {
+  public QualifiedIdentifier getName() {
     return name;
   }
 

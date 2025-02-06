@@ -26,7 +26,7 @@ public final class ModuleDecl implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
-  private final @Nullable QualifiedIdent name;
+  private final @Nullable QualifiedIdentifier name;
   private final @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl;
   private final Span span;
   private Node parent;
@@ -35,7 +35,7 @@ public final class ModuleDecl implements Node {
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
-      @Nullable QualifiedIdent name,
+      @Nullable QualifiedIdentifier name,
       @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl,
       Span span) {
     this.docComment = docComment;
@@ -110,7 +110,7 @@ public final class ModuleDecl implements Node {
     return modifiers;
   }
 
-  public @Nullable QualifiedIdent getName() {
+  public @Nullable QualifiedIdentifier getName() {
     return name;
   }
 

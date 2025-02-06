@@ -80,18 +80,19 @@ public sealed interface Parameter extends Node {
     }
   }
 
-  final class TypedIdent implements Parameter {
-    private final Ident ident;
+  final class TypedIdentifier implements Parameter {
+    private final Identifier identifier;
     private final @Nullable TypeAnnotation typeAnnotation;
     private final Span span;
     private Node parent;
 
-    public TypedIdent(Ident ident, @Nullable TypeAnnotation typeAnnotation, Span span) {
-      this.ident = ident;
+    public TypedIdentifier(
+        Identifier identifier, @Nullable TypeAnnotation typeAnnotation, Span span) {
+      this.identifier = identifier;
       this.typeAnnotation = typeAnnotation;
       this.span = span;
 
-      ident.setParent(this);
+      identifier.setParent(this);
       if (typeAnnotation != null) {
         typeAnnotation.setParent(this);
       }
@@ -115,15 +116,15 @@ public sealed interface Parameter extends Node {
     @Override
     public List<Node> children() {
       var children = new ArrayList<Node>();
-      children.add(ident);
+      children.add(identifier);
       if (typeAnnotation != null) {
         children.add(typeAnnotation);
       }
       return children;
     }
 
-    public Ident getIdent() {
-      return ident;
+    public Identifier getIdentifier() {
+      return identifier;
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
@@ -132,7 +133,14 @@ public sealed interface Parameter extends Node {
 
     @Override
     public String toString() {
-      return "TypedIdent{" + "ident=" + ident + ", type=" + typeAnnotation + ", span=" + span + '}';
+      return "TypedIdentifier{"
+          + "identifier="
+          + identifier
+          + ", type="
+          + typeAnnotation
+          + ", span="
+          + span
+          + '}';
     }
 
     @Override
@@ -143,15 +151,15 @@ public sealed interface Parameter extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      TypedIdent that = (TypedIdent) o;
-      return Objects.equals(ident, that.ident)
+      TypedIdentifier that = (TypedIdentifier) o;
+      return Objects.equals(identifier, that.identifier)
           && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(ident, typeAnnotation, span);
+      return Objects.hash(identifier, typeAnnotation, span);
     }
   }
 }

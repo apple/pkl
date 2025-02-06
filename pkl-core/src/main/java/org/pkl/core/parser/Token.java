@@ -113,7 +113,7 @@ public enum Token {
   BIN,
   OCT,
   HEX,
-  IDENT,
+  IDENTIFIER,
   LINE_COMMENT,
   BLOCK_COMMENT,
   DOC_COMMENT,

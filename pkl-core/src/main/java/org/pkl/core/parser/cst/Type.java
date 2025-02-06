@@ -256,12 +256,12 @@ public sealed interface Type extends Node {
   }
 
   final class DeclaredType implements Type {
-    private final QualifiedIdent name;
+    private final QualifiedIdentifier name;
     private final List<Type> args;
     private final Span span;
     private Node parent;
 
-    public DeclaredType(QualifiedIdent name, List<Type> args, Span span) {
+    public DeclaredType(QualifiedIdentifier name, List<Type> args, Span span) {
       this.name = name;
       this.args = args;
       this.span = span;
@@ -300,7 +300,7 @@ public sealed interface Type extends Node {
       return visitor.visitDeclaredType(this);
     }
 
-    public QualifiedIdent getName() {
+    public QualifiedIdentifier getName() {
       return name;
     }
 

@@ -58,7 +58,8 @@ final class MinPklVersionChecker {
       for (var member : objectBody.getMembers()) {
         if (!(member instanceof ObjectProperty prop)) continue;
 
-        if (!Identifier.MIN_PKL_VERSION.toString().equals(prop.getIdent().getValue())) continue;
+        if (!Identifier.MIN_PKL_VERSION.toString().equals(prop.getIdentifier().getValue()))
+          continue;
 
         var versionText = prop.getExpr().text(source.toCharArray());
 

@@ -57,7 +57,7 @@ import org.pkl.core.parser.cst.Expr.TypeCheck;
 import org.pkl.core.parser.cst.Expr.UnaryMinus;
 import org.pkl.core.parser.cst.Expr.UnqualifiedAccess;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
-import org.pkl.core.parser.cst.Ident;
+import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.ModuleDecl;
@@ -77,7 +77,7 @@ import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
 import org.pkl.core.parser.cst.ObjectMemberNode.WhenGenerator;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
-import org.pkl.core.parser.cst.QualifiedIdent;
+import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringPart;
@@ -487,13 +487,13 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitIdent(Ident ident) {
-    return visitChildren(ident);
+  public T visitIdentifier(Identifier identifier) {
+    return visitChildren(identifier);
   }
 
   @Override
-  public T visitQualifiedIdent(QualifiedIdent qualifiedIdent) {
-    return visitChildren(qualifiedIdent);
+  public T visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier) {
+    return visitChildren(qualifiedIdentifier);
   }
 
   @Override

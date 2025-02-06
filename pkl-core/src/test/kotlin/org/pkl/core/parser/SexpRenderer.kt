@@ -20,7 +20,7 @@ import org.pkl.core.parser.cst.Annotation
 import org.pkl.core.parser.cst.Expr.*
 import org.pkl.core.parser.cst.Expr.Module
 import org.pkl.core.parser.cst.ObjectMemberNode.*
-import org.pkl.core.parser.cst.Parameter.TypedIdent
+import org.pkl.core.parser.cst.Parameter.TypedIdentifier
 import org.pkl.core.parser.cst.Type.*
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -279,11 +279,11 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderQualifiedIdent(name: QualifiedIdent) {
+  fun renderQualifiedIdent(name: QualifiedIdentifier) {
     buf.append(tab)
     buf.append("(qualifiedIdentifier")
     val oldTab = increaseTab()
-    for (i in name.idents.indices) {
+    for (i in name.identifiers.indices) {
       buf.append('\n')
       buf.append(tab)
       buf.append("(identifier)")
@@ -322,7 +322,7 @@ class SexpRenderer {
 
   fun renderParameter(par: Parameter) {
     buf.append(tab)
-    if (par is TypedIdent) {
+    if (par is TypedIdentifier) {
       buf.append("(parameter")
       val oldTab = increaseTab()
       buf.append('\n')

@@ -90,7 +90,7 @@ public sealed interface ObjectMemberNode extends Node {
 
   final class ObjectProperty implements ObjectMemberNode {
     private final List<Modifier> modifiers;
-    private final Ident ident;
+    private final Identifier identifier;
     private final @Nullable TypeAnnotation typeAnnotation;
     private final Expr expr;
     private final Span span;
@@ -98,12 +98,12 @@ public sealed interface ObjectMemberNode extends Node {
 
     public ObjectProperty(
         List<Modifier> modifiers,
-        Ident ident,
+        Identifier identifier,
         @Nullable TypeAnnotation typeAnnotation,
         Expr expr,
         Span span) {
       this.modifiers = modifiers;
-      this.ident = ident;
+      this.identifier = identifier;
       this.typeAnnotation = typeAnnotation;
       this.expr = expr;
       this.span = span;
@@ -111,7 +111,7 @@ public sealed interface ObjectMemberNode extends Node {
       for (var mod : modifiers) {
         mod.setParent(this);
       }
-      ident.setParent(this);
+      identifier.setParent(this);
       if (typeAnnotation != null) {
         typeAnnotation.setParent(this);
       }
@@ -136,7 +136,7 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public List<Node> children() {
       var children = new ArrayList<Node>(modifiers);
-      children.add(ident);
+      children.add(identifier);
       if (typeAnnotation != null) {
         children.add(typeAnnotation);
       }
@@ -153,8 +153,8 @@ public sealed interface ObjectMemberNode extends Node {
       return modifiers;
     }
 
-    public Ident getIdent() {
-      return ident;
+    public Identifier getIdentifier() {
+      return identifier;
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
@@ -170,8 +170,8 @@ public sealed interface ObjectMemberNode extends Node {
       return "ObjectProperty{"
           + "modifiers="
           + modifiers
-          + ", ident="
-          + ident
+          + ", identifier="
+          + identifier
           + ", typeAnnotation="
           + typeAnnotation
           + ", expr="
@@ -191,7 +191,7 @@ public sealed interface ObjectMemberNode extends Node {
       }
       ObjectProperty that = (ObjectProperty) o;
       return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(ident, that.ident)
+          && Objects.equals(identifier, that.identifier)
           && Objects.equals(typeAnnotation, that.typeAnnotation)
           && Objects.equals(expr, that.expr)
           && Objects.equals(span, that.span);
@@ -199,28 +199,28 @@ public sealed interface ObjectMemberNode extends Node {
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, typeAnnotation, expr, span);
+      return Objects.hash(modifiers, identifier, typeAnnotation, expr, span);
     }
   }
 
   final class ObjectBodyProperty implements ObjectMemberNode {
     private final List<Modifier> modifiers;
-    private final Ident ident;
+    private final Identifier identifier;
     private final List<ObjectBody> bodyList;
     private final Span span;
     private Node parent;
 
     public ObjectBodyProperty(
-        List<Modifier> modifiers, Ident ident, List<ObjectBody> bodyList, Span span) {
+        List<Modifier> modifiers, Identifier identifier, List<ObjectBody> bodyList, Span span) {
       this.modifiers = modifiers;
-      this.ident = ident;
+      this.identifier = identifier;
       this.bodyList = bodyList;
       this.span = span;
 
       for (var mod : modifiers) {
         mod.setParent(this);
       }
-      ident.setParent(this);
+      identifier.setParent(this);
       for (var body : bodyList) {
         body.setParent(this);
       }
@@ -244,7 +244,7 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public List<Node> children() {
       var children = new ArrayList<Node>(modifiers);
-      children.add(ident);
+      children.add(identifier);
       children.addAll(bodyList);
       return children;
     }
@@ -258,8 +258,8 @@ public sealed interface ObjectMemberNode extends Node {
       return modifiers;
     }
 
-    public Ident getIdent() {
-      return ident;
+    public Identifier getIdentifier() {
+      return identifier;
     }
 
     public List<ObjectBody> getBodyList() {
@@ -271,8 +271,8 @@ public sealed interface ObjectMemberNode extends Node {
       return "ObjectBodyProperty{"
           + "modifiers="
           + modifiers
-          + ", ident="
-          + ident
+          + ", identifier="
+          + identifier
           + ", bodyList="
           + bodyList
           + ", span="
@@ -290,20 +290,20 @@ public sealed interface ObjectMemberNode extends Node {
       }
       ObjectBodyProperty that = (ObjectBodyProperty) o;
       return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(ident, that.ident)
+          && Objects.equals(identifier, that.identifier)
           && Objects.equals(bodyList, that.bodyList)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(modifiers, ident, bodyList, span);
+      return Objects.hash(modifiers, identifier, bodyList, span);
     }
   }
 
   final class ObjectMethod implements ObjectMemberNode {
     private final List<Modifier> modifiers;
-    private final Ident ident;
+    private final Identifier identifier;
     private final @Nullable TypeParameterList typeParameterList;
     private final ParameterList paramList;
     private final @Nullable TypeAnnotation typeAnnotation;
@@ -313,14 +313,14 @@ public sealed interface ObjectMemberNode extends Node {
 
     public ObjectMethod(
         List<Modifier> modifiers,
-        Ident ident,
+        Identifier identifier,
         @Nullable TypeParameterList typeParameterList,
         ParameterList paramList,
         @Nullable TypeAnnotation typeAnnotation,
         Expr expr,
         Span span) {
       this.modifiers = modifiers;
-      this.ident = ident;
+      this.identifier = identifier;
       this.typeParameterList = typeParameterList;
       this.paramList = paramList;
       this.typeAnnotation = typeAnnotation;
@@ -330,7 +330,7 @@ public sealed interface ObjectMemberNode extends Node {
       for (var mod : modifiers) {
         mod.setParent(this);
       }
-      ident.setParent(this);
+      identifier.setParent(this);
       if (typeParameterList != null) {
         typeParameterList.setParent(this);
       }
@@ -358,7 +358,7 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public List<Node> children() {
       var children = new ArrayList<Node>(modifiers);
-      children.add(ident);
+      children.add(identifier);
       if (typeParameterList != null) {
         children.add(typeParameterList);
       }
@@ -379,8 +379,8 @@ public sealed interface ObjectMemberNode extends Node {
       return modifiers;
     }
 
-    public Ident getIdent() {
-      return ident;
+    public Identifier getIdentifier() {
+      return identifier;
     }
 
     public @Nullable TypeParameterList getTypeParameterList() {
@@ -414,8 +414,8 @@ public sealed interface ObjectMemberNode extends Node {
       return "ObjectMethod{"
           + "modifiers="
           + modifiers
-          + ", ident="
-          + ident
+          + ", identifier="
+          + identifier
           + ", typeParameterList="
           + typeParameterList
           + ", paramList="
@@ -439,7 +439,7 @@ public sealed interface ObjectMemberNode extends Node {
       }
       ObjectMethod that = (ObjectMethod) o;
       return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(ident, that.ident)
+          && Objects.equals(identifier, that.identifier)
           && Objects.equals(typeParameterList, that.typeParameterList)
           && Objects.equals(paramList, that.paramList)
           && Objects.equals(typeAnnotation, that.typeAnnotation)
@@ -450,7 +450,7 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public int hashCode() {
       return Objects.hash(
-          modifiers, ident, typeParameterList, paramList, typeAnnotation, expr, span);
+          modifiers, identifier, typeParameterList, paramList, typeAnnotation, expr, span);
     }
   }
 

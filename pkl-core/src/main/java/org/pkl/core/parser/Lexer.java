@@ -218,8 +218,8 @@ public class Lexer {
         }
       }
       case '`' -> {
-        lexQuotedIdent();
-        yield Token.IDENT;
+        lexQuotedIdentifier();
+        yield Token.IDENTIFIER;
       }
       case '/' -> lexSlash();
       case '"' -> lexStringStart(0);
@@ -234,7 +234,7 @@ public class Lexer {
         if (Character.isDigit(ch)) {
           yield lexNumber(ch);
         } else if (isIdentifierStart(ch)) {
-          yield lexIdent();
+          yield lexIdentifier();
         } else throw lexError("invalidCharacter", ch);
       }
     };
@@ -458,14 +458,14 @@ public class Lexer {
     return Token.STRING_ESCAPE_UNICODE;
   }
 
-  private Token lexIdent() {
+  private Token lexIdentifier() {
     while (isIdentifierPart(lookahead)) {
       nextChar();
     }
 
-    var identStr = text();
-    var ident = getKeywordOrIdent(identStr);
-    return switch (ident) {
+    var identifierStr = text();
+    var identifier = getKeywordOrIdentifier(identifierStr);
+    return switch (identifier) {
       case IMPORT -> {
         if (lookahead == '*') {
           nextChar();
@@ -484,11 +484,11 @@ public class Lexer {
             }
             default -> Token.READ;
           };
-      default -> ident;
+      default -> identifier;
     };
   }
 
-  private void lexQuotedIdent() {
+  private void lexQuotedIdentifier() {
     while (lookahead != '`' && lookahead != '\n' && lookahead != '\r') {
       nextChar();
     }
@@ -740,9 +740,9 @@ public class Lexer {
   }
 
   @SuppressWarnings("SuspiciousArrayMethodCall")
-  private static Token getKeywordOrIdent(String text) {
+  private static Token getKeywordOrIdentifier(String text) {
     var index = Arrays.binarySearch(KEYWORDS, text);
-    if (index < 0) return Token.IDENT;
+    if (index < 0) return Token.IDENTIFIER;
     return KEYWORDS[index].token;
   }
 

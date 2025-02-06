@@ -26,7 +26,7 @@ public class ClassMethod implements Node {
   private final @Nullable DocComment docComment;
   private final List<Annotation> annotations;
   private final List<Modifier> modifiers;
-  private final Ident name;
+  private final Identifier name;
   private final @Nullable TypeParameterList typeParameterList;
   private final ParameterList parameterList;
   private final @Nullable TypeAnnotation typeAnnotation;
@@ -39,7 +39,7 @@ public class ClassMethod implements Node {
       @Nullable DocComment docComment,
       List<Annotation> annotations,
       List<Modifier> modifiers,
-      Ident name,
+      Identifier name,
       @Nullable TypeParameterList typeParameterList,
       ParameterList parameterList,
       @Nullable TypeAnnotation typeAnnotation,
@@ -134,7 +134,7 @@ public class ClassMethod implements Node {
     return modifiers;
   }
 
-  public Ident getName() {
+  public Identifier getName() {
     return name;
   }
 
