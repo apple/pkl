@@ -395,8 +395,6 @@ class SexpRenderer {
         buf.append(name)
       }
       is Read -> renderReadExpr(expr)
-      is ReadGlob -> renderReadGlobExpr(expr)
-      is ReadNull -> renderReadNullExpr(expr)
       is UnqualifiedAccess -> renderUnqualifiedAccessExpr(expr)
       is QualifiedAccess -> renderQualifiedAccessExpr(expr)
       is SuperAccess -> renderSuperAccessExpr(expr)
@@ -474,28 +472,14 @@ class SexpRenderer {
   }
 
   fun renderReadExpr(expr: Read) {
+    val name =
+      when (expr.readType) {
+        ReadType.READ -> "(readExpr"
+        ReadType.GLOB -> "(readGlobExpr"
+        ReadType.NULL -> "(readNullExpr"
+      }
     buf.append(tab)
-    buf.append("(readExpr")
-    val oldTab = increaseTab()
-    buf.append('\n')
-    renderExpr(expr.expr)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderReadGlobExpr(expr: ReadGlob) {
-    buf.append(tab)
-    buf.append("(readGlobExpr")
-    val oldTab = increaseTab()
-    buf.append('\n')
-    renderExpr(expr.expr)
-    buf.append(')')
-    tab = oldTab
-  }
-
-  fun renderReadNullExpr(expr: ReadNull) {
-    buf.append(tab)
-    buf.append("(readNullExpr")
+    buf.append(name)
     val oldTab = increaseTab()
     buf.append('\n')
     renderExpr(expr.expr)

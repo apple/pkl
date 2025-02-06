@@ -117,12 +117,6 @@ public interface ParserVisitor<Result> {
   Result visitReadExpr(Expr.Read expr);
 
   @Nullable
-  Result visitReadNullExpr(Expr.ReadNull expr);
-
-  @Nullable
-  Result visitReadGlobExpr(Expr.ReadGlob expr);
-
-  @Nullable
   Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr);
 
   @Nullable

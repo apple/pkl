@@ -29,8 +29,7 @@ import org.pkl.core.parser.ParserError;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
 import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.ReadGlob;
-import org.pkl.core.parser.cst.Expr.ReadNull;
+import org.pkl.core.parser.cst.Expr.ReadType;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl.Type;
 import org.pkl.core.parser.cst.Import;
@@ -121,17 +120,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public @Nullable List<Entry> visitReadExpr(Read expr) {
-    return doVisitReadExpr(expr.getExpr(), false);
-  }
-
-  @Override
-  public @Nullable List<Entry> visitReadGlobExpr(ReadGlob expr) {
-    return doVisitReadExpr(expr.getExpr(), true);
-  }
-
-  @Override
-  public @Nullable List<Entry> visitReadNullExpr(ReadNull expr) {
-    return doVisitReadExpr(expr.getExpr(), false);
+    return doVisitReadExpr(expr.getExpr(), expr.getReadType() == ReadType.GLOB);
   }
 
   @SuppressWarnings("DataFlowIssue")

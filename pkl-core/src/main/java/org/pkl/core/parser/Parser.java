@@ -32,6 +32,7 @@ import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.NullLiteral;
 import org.pkl.core.parser.cst.Expr.OperatorExpr;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
+import org.pkl.core.parser.cst.Expr.ReadType;
 import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
@@ -854,26 +855,18 @@ public class Parser {
             var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
             yield new Expr.ImportExpr(strConst, true, start.endWith(end));
           }
-          case READ -> {
+          case READ, READ_STAR, READ_QUESTION -> {
+            var readType =
+                switch (lookahead) {
+                  case READ_QUESTION -> ReadType.NULL;
+                  case READ_STAR -> ReadType.GLOB;
+                  default -> ReadType.READ;
+                };
             var start = next().span;
             expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr(")");
             var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.Read(exp, start.endWith(end));
-          }
-          case READ_STAR -> {
-            var start = next().span;
-            expect(Token.LPAREN, "unexpectedToken", "(");
-            var exp = parseExpr(")");
-            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.ReadGlob(exp, start.endWith(end));
-          }
-          case READ_QUESTION -> {
-            var start = next().span;
-            expect(Token.LPAREN, "unexpectedToken", "(");
-            var exp = parseExpr(")");
-            var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.ReadNull(exp, start.endWith(end));
+            yield new Expr.Read(exp, readType, start.endWith(end));
           }
           case NEW -> {
             var start = next().span;

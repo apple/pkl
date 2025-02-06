@@ -43,8 +43,6 @@ import org.pkl.core.parser.cst.Expr.Outer;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.QualifiedAccess;
 import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.ReadGlob;
-import org.pkl.core.parser.cst.Expr.ReadNull;
 import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.parser.cst.Expr.Subscript;
 import org.pkl.core.parser.cst.Expr.SuperAccess;
@@ -213,16 +211,6 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitReadExpr(Read expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitReadNullExpr(ReadNull expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitReadGlobExpr(ReadGlob expr) {
     return visitChildren(expr);
   }
 

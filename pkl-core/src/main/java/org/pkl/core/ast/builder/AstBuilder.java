@@ -113,17 +113,15 @@ import org.pkl.core.ast.expression.primary.ResolveVariableNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.expression.ternary.IfElseNode;
 import org.pkl.core.ast.expression.unary.AbstractImportNode;
+import org.pkl.core.ast.expression.unary.AbstractReadNode;
 import org.pkl.core.ast.expression.unary.ImportGlobNode;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.expression.unary.LogicalNotNodeGen;
 import org.pkl.core.ast.expression.unary.NonNullNode;
 import org.pkl.core.ast.expression.unary.NullPropagatingOperationNode;
 import org.pkl.core.ast.expression.unary.PropagateNullReceiverNodeGen;
-import org.pkl.core.ast.expression.unary.ReadGlobNode;
 import org.pkl.core.ast.expression.unary.ReadGlobNodeGen;
-import org.pkl.core.ast.expression.unary.ReadNode;
 import org.pkl.core.ast.expression.unary.ReadNodeGen;
-import org.pkl.core.ast.expression.unary.ReadOrNullNode;
 import org.pkl.core.ast.expression.unary.ReadOrNullNodeGen;
 import org.pkl.core.ast.expression.unary.ThrowNodeGen;
 import org.pkl.core.ast.expression.unary.TraceNode;
@@ -185,8 +183,6 @@ import org.pkl.core.parser.cst.Expr.Outer;
 import org.pkl.core.parser.cst.Expr.Parenthesized;
 import org.pkl.core.parser.cst.Expr.QualifiedAccess;
 import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.ReadGlob;
-import org.pkl.core.parser.cst.Expr.ReadNull;
 import org.pkl.core.parser.cst.Expr.StringConstant;
 import org.pkl.core.parser.cst.Expr.Subscript;
 import org.pkl.core.parser.cst.Expr.SuperAccess;
@@ -660,19 +656,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ReadNode visitReadExpr(Read expr) {
-    return ReadNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
-  }
-
-  @Override
-  public ReadOrNullNode visitReadNullExpr(ReadNull expr) {
-    return ReadOrNullNodeGen.create(
-        createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
-  }
-
-  @Override
-  public ReadGlobNode visitReadGlobExpr(ReadGlob expr) {
-    return ReadGlobNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
+  public AbstractReadNode visitReadExpr(Read expr) {
+    return switch (expr.getReadType()) {
+      case READ ->
+          ReadNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
+      case NULL ->
+          ReadOrNullNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
+      case GLOB ->
+          ReadGlobNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
+    };
   }
 
   @Override

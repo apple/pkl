@@ -892,11 +892,13 @@ public sealed interface Expr extends Node {
 
   final class Read implements Expr {
     private final Expr expr;
+    private final ReadType readType;
     private final Span span;
     private Node parent;
 
-    public Read(Expr expr, Span span) {
+    public Read(Expr expr, ReadType readType, Span span) {
       this.expr = expr;
+      this.readType = readType;
       this.span = span;
 
       expr.setParent(this);
@@ -931,6 +933,10 @@ public sealed interface Expr extends Node {
       return expr;
     }
 
+    public ReadType getReadType() {
+      return readType;
+    }
+
     @Override
     public String toString() {
       return "Read{" + "expr=" + expr + ", span=" + span + '}';
@@ -954,132 +960,10 @@ public sealed interface Expr extends Node {
     }
   }
 
-  final class ReadGlob implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
-    public ReadGlob(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitReadGlobExpr(this);
-    }
-
-    public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "ReadGlob{" + "expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ReadGlob readGlob = (ReadGlob) o;
-      return Objects.equals(expr, readGlob.expr) && Objects.equals(span, readGlob.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
-    }
-  }
-
-  final class ReadNull implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
-    public ReadNull(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitReadNullExpr(this);
-    }
-
-    public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "ReadNull{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ReadNull readNull = (ReadNull) o;
-      return Objects.equals(expr, readNull.expr) && Objects.equals(span, readNull.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
-    }
+  enum ReadType {
+    READ,
+    GLOB,
+    NULL
   }
 
   final class UnqualifiedAccess implements Expr {
