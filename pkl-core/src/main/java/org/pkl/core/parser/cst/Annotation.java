@@ -22,17 +22,17 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public class Annotation implements Node {
-  private final QualifiedIdentifier name;
+  private final Type type;
   private final @Nullable ObjectBody body;
   private final Span span;
   private Node parent;
 
-  public Annotation(QualifiedIdentifier name, @Nullable ObjectBody body, Span span) {
-    this.name = name;
+  public Annotation(Type type, @Nullable ObjectBody body, Span span) {
+    this.type = type;
     this.body = body;
     this.span = span;
 
-    name.setParent(this);
+    type.setParent(this);
     if (body != null) {
       body.setParent(this);
     }
@@ -56,9 +56,9 @@ public class Annotation implements Node {
   @Override
   public List<Node> children() {
     if (body == null) {
-      return List.of(name);
+      return List.of(type);
     }
-    return List.of(name, body);
+    return List.of(type, body);
   }
 
   @Override
@@ -66,21 +66,17 @@ public class Annotation implements Node {
     return visitor.visitAnnotation(this);
   }
 
-  public QualifiedIdentifier getName() {
-    return name;
+  public Type getType() {
+    return type;
   }
 
   public @Nullable ObjectBody getBody() {
     return body;
   }
 
-  public Type getNameAsType() {
-    return new Type.DeclaredType(name, List.of(), name.span());
-  }
-
   @Override
   public String toString() {
-    return "Annotation{" + "name=" + name + ", body=" + body + ", span=" + span + '}';
+    return "Annotation{type=" + type + ", body=" + body + ", span=" + span + '}';
   }
 
   @Override
@@ -92,13 +88,13 @@ public class Annotation implements Node {
       return false;
     }
     Annotation that = (Annotation) o;
-    return Objects.equals(name, that.name)
+    return Objects.equals(type, that.type)
         && Objects.equals(body, that.body)
         && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, body, span);
+    return Objects.hash(type, body, span);
   }
 }

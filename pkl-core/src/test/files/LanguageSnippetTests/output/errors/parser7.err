@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `identifier`.
+Unexpected token. Expected a type.
 
 x | res1 = a@11
              ^^

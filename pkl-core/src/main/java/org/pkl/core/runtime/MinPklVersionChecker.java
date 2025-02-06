@@ -20,6 +20,8 @@ import org.pkl.core.Release;
 import org.pkl.core.Version;
 import org.pkl.core.parser.cst.Module;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
+import org.pkl.core.parser.cst.Type;
+import org.pkl.core.parser.cst.Type.DeclaredType;
 import org.pkl.core.util.Nullable;
 
 final class MinPklVersionChecker {
@@ -50,7 +52,7 @@ final class MinPklVersionChecker {
     if (moduleDecl == null) return;
 
     for (var ann : moduleDecl.getAnnotations()) {
-      if (!Identifier.MODULE_INFO.toString().equals(ann.getName().text())) continue;
+      if (!Identifier.MODULE_INFO.toString().equals(getLastIdText(ann.getType()))) continue;
 
       var objectBody = ann.getBody();
       if (objectBody == null) continue;
@@ -85,5 +87,11 @@ final class MinPklVersionChecker {
         .withOptionalLocation(importNode)
         .evalError("incompatiblePklVersion", moduleName, requiredVersion, currentVersion)
         .build();
+  }
+
+  private static @Nullable String getLastIdText(@Nullable Type type) {
+    if (!(type instanceof DeclaredType declType)) return null;
+    var identifiers = declType.getName().getIdentifiers();
+    return identifiers.get(identifiers.size() - 1).getValue();
   }
 }

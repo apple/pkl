@@ -2000,7 +2000,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitAnnotation(Annotation annotation) {
-    var verifyNode = new CheckIsAnnotationClassNode(visitType(annotation.getNameAsType()));
+    var verifyNode = new CheckIsAnnotationClassNode(visitType(annotation.getType()));
 
     var bodyCtx = annotation.getBody();
     if (bodyCtx == null) {

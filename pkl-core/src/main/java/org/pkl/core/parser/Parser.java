@@ -101,7 +101,7 @@ public class Parser {
     var props = new ArrayList<ClassProperty>();
     var methods = new ArrayList<ClassMethod>();
     try {
-      var header = parseEntryHeader();
+      var header = parseMemberHeader();
 
       moduleDecl = parseModuleDecl(header);
       if (moduleDecl != null) {
@@ -120,12 +120,12 @@ public class Parser {
 
       // entries
       if (header != null && header.isNotEmpty()) {
-        end = parseModuleEntry(header, classes, typeAliases, props, methods);
+        end = parseModuleMember(header, classes, typeAliases, props, methods);
       }
 
       while (lookahead != Token.EOF) {
-        header = parseEntryHeader();
-        end = parseModuleEntry(header, classes, typeAliases, props, methods);
+        header = parseMemberHeader();
+        end = parseModuleMember(header, classes, typeAliases, props, methods);
       }
       assert end != null;
       return new Module(
@@ -150,7 +150,7 @@ public class Parser {
     init(source);
     var nodes = new ArrayList<Node>();
     while (lookahead != Token.EOF) {
-      var header = parseEntryHeader();
+      var header = parseMemberHeader();
       switch (lookahead) {
         case IMPORT, IMPORT_STAR -> {
           ensureEmptyHeaders(header, "Imports");
@@ -189,7 +189,7 @@ public class Parser {
     return new ReplInput(nodes, span);
   }
 
-  private @Nullable ModuleDecl parseModuleDecl(EntryHeader header) {
+  private @Nullable ModuleDecl parseModuleDecl(MemberHeader header) {
     QualifiedIdentifier moduleName = null;
     Span start = null;
     Span end = null;
@@ -256,7 +256,7 @@ public class Parser {
     return new Import(str, isGlob, alias, start.endWith(end));
   }
 
-  private EntryHeader parseEntryHeader() {
+  private MemberHeader parseMemberHeader() {
     DocComment docComment = null;
     var annotations = new ArrayList<Annotation>();
     var modifiers = new ArrayList<Modifier>();
@@ -269,7 +269,7 @@ public class Parser {
     while (lookahead.isModifier()) {
       modifiers.add(parseModifier());
     }
-    return new EntryHeader(docComment, annotations, modifiers);
+    return new MemberHeader(docComment, annotations, modifiers);
   }
 
   private DocComment parseDocComment() {
@@ -296,8 +296,8 @@ public class Parser {
     return new DocComment(spans);
   }
 
-  private Span parseModuleEntry(
-      EntryHeader header,
+  private Span parseModuleMember(
+      MemberHeader header,
       List<Class> classes,
       List<TypeAlias> typeAliases,
       List<ClassProperty> properties,
@@ -333,7 +333,7 @@ public class Parser {
     }
   }
 
-  private TypeAlias parseTypeAlias(EntryHeader header) {
+  private TypeAlias parseTypeAlias(MemberHeader header) {
     var start = expect(Token.TYPE_ALIAS, "unexpectedToken", "typealias").span;
     var startSpan = header.span(start);
     var identifier = parseIdentifier();
@@ -353,7 +353,7 @@ public class Parser {
         startSpan.endWith(type.span()));
   }
 
-  private Class parseClass(EntryHeader header) {
+  private Class parseClass(MemberHeader header) {
     var start = expect(Token.CLASS, "unexpectedToken", "class").span;
     var startSpan = header.span(start);
     var name = parseIdentifier();
@@ -399,7 +399,7 @@ public class Parser {
     var props = new ArrayList<ClassProperty>();
     var methods = new ArrayList<ClassMethod>();
     while (lookahead != Token.RBRACE && lookahead != Token.EOF) {
-      var entryHeader = parseEntryHeader();
+      var entryHeader = parseMemberHeader();
       if (lookahead == Token.FUNCTION) {
         methods.add(parseClassMethod(entryHeader));
       } else {
@@ -414,7 +414,7 @@ public class Parser {
     return new ClassBody(props, methods, start.endWith(end));
   }
 
-  private ClassProperty parseClassProperty(EntryHeader header) {
+  private ClassProperty parseClassProperty(MemberHeader header) {
     var name = parseIdentifier();
     var start = header.span(name.span());
     TypeAnnotation typeAnnotation = null;
@@ -470,7 +470,7 @@ public class Parser {
         start.endWith(typeAnnotation.span()));
   }
 
-  private ClassMethod parseClassMethod(EntryHeader header) {
+  private ClassMethod parseClassMethod(MemberHeader header) {
     var func = expect(Token.FUNCTION, "unexpectedToken", "function").span;
     var start = header.span(func);
     var headerSpanStart = header.modifierSpan(func);
@@ -1252,14 +1252,14 @@ public class Parser {
 
   private Annotation parseAnnotation() {
     var start = next().span;
-    var name = parseQualifiedIdentifier();
+    var type = parseType();
     ObjectBody body = null;
-    var end = name.span();
+    var end = type.span();
     if (lookahead == Token.LBRACE) {
       body = parseObjectBody();
       end = body.span();
     }
-    return new Annotation(name, body, start.endWith(end));
+    return new Annotation(type, body, start.endWith(end));
   }
 
   private Parameter parseParameter() {
@@ -1449,7 +1449,7 @@ public class Parser {
     return new ParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
 
-  private record EntryHeader(
+  private record MemberHeader(
       @Nullable DocComment docComment, List<Annotation> annotations, List<Modifier> modifiers) {
     boolean isNotEmpty() {
       return !(docComment == null && annotations.isEmpty() && modifiers.isEmpty());
@@ -1536,7 +1536,7 @@ public class Parser {
     backtracking = true;
   }
 
-  private void ensureEmptyHeaders(EntryHeader header, String messageArg) {
+  private void ensureEmptyHeaders(MemberHeader header, String messageArg) {
     if (header.isNotEmpty()) {
       throw new ParserError(
           ErrorMessages.create("wrongHeaders", messageArg), header.span(spanLookahead));

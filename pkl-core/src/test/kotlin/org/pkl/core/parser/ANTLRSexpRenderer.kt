@@ -267,8 +267,7 @@ class ANTLRSexpRenderer {
     buf.append("(annotation")
     val oldTab = increaseTab()
     buf.append('\n')
-    val name = (ann.type() as DeclaredTypeContext).qualifiedIdentifier()
-    renderQualifiedIdent(name)
+    renderType(ann.type())
     if (ann.objectBody() != null) {
       buf.append('\n')
       renderObjectBody(ann.objectBody())

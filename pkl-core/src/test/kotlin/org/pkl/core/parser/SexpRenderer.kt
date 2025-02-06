@@ -270,7 +270,7 @@ class SexpRenderer {
     buf.append("(annotation")
     val oldTab = increaseTab()
     buf.append('\n')
-    renderQualifiedIdent(ann.name)
+    renderType(ann.type)
     if (ann.body !== null) {
       buf.append('\n')
       renderObjectBody(ann.body!!)
