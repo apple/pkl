@@ -75,15 +75,9 @@ public class Parser {
   private boolean backtracking = false;
   private FullToken prev;
   private FullToken _lookahead;
-  private final List<Comment> comments = new ArrayList<>();
-  private @Nullable String shebang;
   private boolean precededBySemicolon = false;
 
   public Parser() {}
-
-  public List<Comment> getComments() {
-    return comments;
-  }
 
   private void init(String source) {
     this.lexer = new Lexer(source);
@@ -1498,20 +1492,14 @@ public class Parser {
 
   private FullToken forceNext() {
     var tk = lexer.next();
-    var prev = tk;
+    precededBySemicolon = false;
     while (tk == Token.LINE_COMMENT
         || tk == Token.BLOCK_COMMENT
         || tk == Token.SEMICOLON
         || tk == Token.SHEBANG) {
-      if (tk == Token.SHEBANG && shebang == null) {
-        shebang = tk.text();
-      } else if (tk != Token.SEMICOLON) {
-        comments.add(new Comment(lexer.text(), tk, lexer.span()));
-      }
-      prev = tk;
+      precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
       tk = lexer.next();
     }
-    precededBySemicolon = prev == Token.SEMICOLON;
     return new FullToken(
         tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLinesBetween);
   }
@@ -1527,11 +1515,11 @@ public class Parser {
 
   private FullToken forceNextComment() {
     var tk = lexer.next();
-    var prev = tk;
+    precededBySemicolon = false;
     while (tk == Token.SEMICOLON) {
+      precededBySemicolon = true;
       tk = lexer.next();
     }
-    precededBySemicolon = prev == Token.SEMICOLON;
     return new FullToken(
         tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLinesBetween);
   }
