@@ -1405,19 +1405,19 @@ public sealed interface Expr extends Node {
   }
 
   final class Let implements Expr {
-    private final Parameter par;
+    private final Parameter parameter;
     private final Expr bindingExpr;
     private final Expr expr;
     private final Span span;
     private Node parent;
 
-    public Let(Parameter par, Expr bindingExpr, Expr expr, Span span) {
-      this.par = par;
+    public Let(Parameter parameter, Expr bindingExpr, Expr expr, Span span) {
+      this.parameter = parameter;
       this.bindingExpr = bindingExpr;
       this.expr = expr;
       this.span = span;
 
-      par.setParent(this);
+      parameter.setParent(this);
       bindingExpr.setParent(this);
       expr.setParent(this);
     }
@@ -1439,7 +1439,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public List<Node> children() {
-      return List.of(par, bindingExpr, expr);
+      return List.of(parameter, bindingExpr, expr);
     }
 
     @Override
@@ -1447,8 +1447,8 @@ public sealed interface Expr extends Node {
       return visitor.visitLetExpr(this);
     }
 
-    public Parameter getPar() {
-      return par;
+    public Parameter getParameter() {
+      return parameter;
     }
 
     public Expr getBindingExpr() {
@@ -1462,8 +1462,8 @@ public sealed interface Expr extends Node {
     @Override
     public String toString() {
       return "Let{"
-          + "par="
-          + par
+          + "parameter="
+          + parameter
           + ", bindingExpr="
           + bindingExpr
           + ", expr="
@@ -1482,7 +1482,7 @@ public sealed interface Expr extends Node {
         return false;
       }
       Let let = (Let) o;
-      return Objects.equals(par, let.par)
+      return Objects.equals(parameter, let.parameter)
           && Objects.equals(bindingExpr, let.bindingExpr)
           && Objects.equals(expr, let.expr)
           && Objects.equals(span, let.span);
@@ -1490,7 +1490,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public int hashCode() {
-      return Objects.hash(par, bindingExpr, expr, span);
+      return Objects.hash(parameter, bindingExpr, expr, span);
     }
   }
 

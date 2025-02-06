@@ -15,6 +15,7 @@
  */
 package org.pkl.core.parser;
 
+import java.util.List;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
 import org.pkl.core.parser.cst.Class;
@@ -73,12 +74,15 @@ import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
 import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
 import org.pkl.core.parser.cst.ObjectMemberNode.WhenGenerator;
 import org.pkl.core.parser.cst.Parameter;
+import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.parser.cst.StringConstant;
 import org.pkl.core.parser.cst.StringConstantPart;
 import org.pkl.core.parser.cst.StringPart;
+import org.pkl.core.parser.cst.StringPart.StringConstantParts;
+import org.pkl.core.parser.cst.StringPart.StringInterpolation;
 import org.pkl.core.parser.cst.Type;
 import org.pkl.core.parser.cst.Type.ConstrainedType;
 import org.pkl.core.parser.cst.Type.DeclaredType;
@@ -97,61 +101,63 @@ import org.pkl.core.parser.cst.TypeParameter;
 import org.pkl.core.parser.cst.TypeParameterList;
 import org.pkl.core.util.Nullable;
 
+@SuppressWarnings("DuplicatedCode")
 public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
-  public T visitUnknownType(UnknownType type) {
-    return visitChildren(type);
+  public @Nullable T visitUnknownType(UnknownType type) {
+    return null;
   }
 
   @Override
-  public T visitNothingType(NothingType type) {
-    return visitChildren(type);
+  public @Nullable T visitNothingType(NothingType type) {
+    return null;
   }
 
   @Override
-  public T visitModuleType(ModuleType type) {
-    return visitChildren(type);
+  public @Nullable T visitModuleType(ModuleType type) {
+    return null;
   }
 
   @Override
   public T visitStringConstantType(StringConstantType type) {
-    return visitChildren(type);
+    return visitStringConstant(type.getStr());
   }
 
   @Override
   public T visitDeclaredType(DeclaredType type) {
-    return visitChildren(type);
+    return aggregateResult(visitQualifiedIdentifier(type.getName()), visitNodes(type.getArgs()));
   }
 
   @Override
   public T visitParenthesizedType(ParenthesizedType type) {
-    return visitChildren(type);
+    return visitType(type.getType());
   }
 
   @Override
   public T visitNullableType(NullableType type) {
-    return visitChildren(type);
+    return visitType(type.getType());
   }
 
   @Override
   public T visitConstrainedType(ConstrainedType type) {
-    return visitChildren(type);
+    var res = visitType(type.getType());
+    return aggregateResult(res, visitNodes(type.getExprs()));
   }
 
   @Override
   public T visitDefaultUnionType(DefaultUnionType type) {
-    return visitChildren(type);
+    return visitType(type.getType());
   }
 
   @Override
   public T visitUnionType(UnionType type) {
-    return visitChildren(type);
+    return aggregateResult(visitType(type.getLeft()), visitType(type.getRight()));
   }
 
   @Override
   public T visitFunctionType(FunctionType type) {
-    return visitChildren(type);
+    return aggregateResult(visitNodes(type.getArgs()), visitType(type.getRet()));
   }
 
   @Override
@@ -160,158 +166,178 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitThisExpr(This expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitOuterExpr(Outer expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitModuleExpr(Module expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitNullLiteralExpr(NullLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitBoolLiteralExpr(BoolLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitIntLiteralExpr(IntLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitFloatLiteralExpr(FloatLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitThrowExpr(Throw expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitTraceExpr(Trace expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitImportExpr(ImportExpr expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitReadExpr(Read expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitUnqualifiedAccessExpr(UnqualifiedAccess expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitStringConstant(StringConstant expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitNewExpr(New expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitAmendsExpr(Amends expr) {
+  public @Nullable T visitThisExpr(This expr) {
     return null;
   }
 
   @Override
+  public @Nullable T visitOuterExpr(Outer expr) {
+    return null;
+  }
+
+  @Override
+  public T visitModuleExpr(Module expr) {
+    return null;
+  }
+
+  @Override
+  public T visitNullLiteralExpr(NullLiteral expr) {
+    return null;
+  }
+
+  @Override
+  public T visitBoolLiteralExpr(BoolLiteral expr) {
+    return null;
+  }
+
+  @Override
+  public T visitIntLiteralExpr(IntLiteral expr) {
+    return null;
+  }
+
+  @Override
+  public T visitFloatLiteralExpr(FloatLiteral expr) {
+    return null;
+  }
+
+  @Override
+  public T visitThrowExpr(Throw expr) {
+    return visitExpr(expr.getExpr());
+  }
+
+  @Override
+  public T visitTraceExpr(Trace expr) {
+    return visitExpr(expr.getExpr());
+  }
+
+  @Override
+  public T visitImportExpr(ImportExpr expr) {
+    return visitStringConstant(expr.getImportStr());
+  }
+
+  @Override
+  public T visitReadExpr(Read expr) {
+    return visitExpr(expr.getExpr());
+  }
+
+  @Override
+  public T visitUnqualifiedAccessExpr(UnqualifiedAccess expr) {
+    var argList = expr.getArgumentList();
+    if (argList != null) {
+      return aggregateResult(visitIdentifier(expr.getIdentifier()), visitArgumentList(argList));
+    }
+    return visitIdentifier(expr.getIdentifier());
+  }
+
+  @Override
+  public T visitStringConstant(StringConstant expr) {
+    return visitNodes(expr.getStrParts().getParts());
+  }
+
+  @Override
+  public T visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
+    return visitNodes(expr.getParts());
+  }
+
+  @Override
+  public T visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
+    return visitNodes(expr.getParts());
+  }
+
+  @Override
+  public T visitNewExpr(New expr) {
+    var type = expr.getType();
+    if (type != null) {
+      return aggregateResult(visitType(type), visitObjectBody(expr.getBody()));
+    }
+    return visitObjectBody(expr.getBody());
+  }
+
+  @Override
+  public T visitAmendsExpr(Amends expr) {
+    return aggregateResult(visitExpr(expr.getExpr()), visitObjectBody(expr.getBody()));
+  }
+
+  @Override
   public T visitSuperAccessExpr(SuperAccess expr) {
-    return visitChildren(expr);
+    var args = expr.getArgumentList();
+    if (args != null) {
+      return aggregateResult(visitIdentifier(expr.getIdentifier()), visitArgumentList(args));
+    }
+    return visitIdentifier(expr.getIdentifier());
   }
 
   @Override
   public T visitSuperSubscriptExpr(SuperSubscript expr) {
-    return visitChildren(expr);
+    return visitExpr(expr.getArg());
   }
 
   @Override
   public T visitQualifiedAccessExpr(QualifiedAccess expr) {
-    return visitChildren(expr);
+    var res = aggregateResult(visitExpr(expr.getExpr()), visitIdentifier(expr.getIdentifier()));
+    if (expr.getArgumentList() != null) {
+      return aggregateResult(res, visitArgumentList(expr.getArgumentList()));
+    }
+    return res;
   }
 
   @Override
   public T visitSubscriptExpr(Subscript expr) {
-    return visitChildren(expr);
+    return aggregateResult(visitExpr(expr.getExpr()), visitExpr(expr.getArg()));
   }
 
   @Override
   public T visitNonNullExpr(NonNull expr) {
-    return visitChildren(expr);
+    return visitExpr(expr.getExpr());
   }
 
   @Override
   public T visitUnaryMinusExpr(UnaryMinus expr) {
-    return visitChildren(expr);
+    return visitExpr(expr.getExpr());
   }
 
   @Override
   public T visitLogicalNotExpr(LogicalNot expr) {
-    return visitChildren(expr);
+    return visitExpr(expr.getExpr());
   }
 
   @Override
   public T visitBinaryOpExpr(BinaryOp expr) {
-    return visitChildren(expr);
+    return aggregateResult(visitExpr(expr.getLeft()), visitExpr(expr.getRight()));
   }
 
   @Override
   public T visitTypeCheckExpr(TypeCheck expr) {
-    return visitChildren(expr);
+    return aggregateResult(visitExpr(expr.getExpr()), visitType(expr.getType()));
   }
 
   @Override
   public T visitTypeCastExpr(TypeCast expr) {
-    return visitChildren(expr);
+    return aggregateResult(visitExpr(expr.getExpr()), visitType(expr.getType()));
   }
 
   @Override
   public T visitIfExpr(If expr) {
-    return visitChildren(expr);
+    return aggregateResult(
+        aggregateResult(visitExpr(expr.getCond()), visitExpr(expr.getThen())),
+        visitExpr(expr.getEls()));
   }
 
   @Override
   public T visitLetExpr(Let expr) {
-    return visitChildren(expr);
+    return aggregateResult(
+        aggregateResult(visitParameter(expr.getParameter()), visitExpr(expr.getBindingExpr())),
+        visitExpr(expr.getExpr()));
   }
 
   @Override
   public T visitFunctionLiteralExpr(FunctionLiteral expr) {
-    return visitChildren(expr);
+    return aggregateResult(visitParameterList(expr.getParameterList()), visitExpr(expr.getExpr()));
   }
 
   @Override
   public T visitParenthesizedExpr(Parenthesized expr) {
-    return visitChildren(expr);
+    return visitExpr(expr.getExpr());
   }
 
   @Override
@@ -321,57 +347,82 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitObjectProperty(ObjectProperty member) {
-    return visitChildren(member);
+    var res = visitNodes(member.getModifiers());
+    res = aggregateResult(res, visitIdentifier(member.getIdentifier()));
+    if (member.getTypeAnnotation() != null) {
+      res = aggregateResult(res, visitTypeAnnotation(member.getTypeAnnotation()));
+    }
+    return aggregateResult(res, visitExpr(member.getExpr()));
   }
 
   @Override
   public T visitObjectBodyProperty(ObjectBodyProperty member) {
-    return visitChildren(member);
+    var res = visitNodes(member.getModifiers());
+    res = aggregateResult(res, visitIdentifier(member.getIdentifier()));
+    return aggregateResult(res, visitNodes(member.getBodyList()));
   }
 
   @Override
   public T visitObjectMethod(ObjectMethod member) {
-    return visitChildren(member);
+    var res = visitNodes(member.getModifiers());
+    res = aggregateResult(res, visitIdentifier(member.getIdentifier()));
+    if (member.getTypeParameterList() != null) {
+      res = aggregateResult(res, visitTypeParameterList(member.getTypeParameterList()));
+    }
+    res = aggregateResult(res, visitParameterList(member.getParamList()));
+    if (member.getTypeAnnotation() != null) {
+      res = aggregateResult(res, visitTypeAnnotation(member.getTypeAnnotation()));
+    }
+    return aggregateResult(res, visitExpr(member.getExpr()));
   }
 
   @Override
   public T visitMemberPredicate(MemberPredicate member) {
-    return visitChildren(member);
+    return aggregateResult(visitExpr(member.getPred()), visitExpr(member.getExpr()));
   }
 
   @Override
   public T visitMemberPredicateBody(MemberPredicateBody member) {
-    return visitChildren(member);
+    return aggregateResult(visitExpr(member.getKey()), visitNodes(member.getBodyList()));
   }
 
   @Override
   public T visitObjectElement(ObjectElement member) {
-    return visitChildren(member);
+    return visitExpr(member.getExpr());
   }
 
   @Override
   public T visitObjectEntry(ObjectEntry member) {
-    return visitChildren(member);
+    return aggregateResult(visitExpr(member.getKey()), visitExpr(member.getValue()));
   }
 
   @Override
   public T visitObjectEntryBody(ObjectEntryBody member) {
-    return visitChildren(member);
+    return aggregateResult(visitExpr(member.getKey()), visitNodes(member.getBodyList()));
   }
 
   @Override
   public T visitObjectSpread(ObjectSpread member) {
-    return visitChildren(member);
+    return visitExpr(member.getExpr());
   }
 
   @Override
   public T visitWhenGenerator(WhenGenerator member) {
-    return visitChildren(member);
+    var res = aggregateResult(visitExpr(member.getCond()), visitObjectBody(member.getBody()));
+    if (member.getElseClause() != null) {
+      return aggregateResult(res, visitObjectBody(member.getElseClause()));
+    }
+    return res;
   }
 
   @Override
   public T visitForGenerator(ForGenerator member) {
-    return visitChildren(member);
+    var res = visitParameter(member.getP1());
+    if (member.getP2() != null) {
+      res = aggregateResult(res, visitParameter(member.getP2()));
+    }
+    res = aggregateResult(res, visitExpr(member.getExpr()));
+    return aggregateResult(res, visitObjectBody(member.getBody()));
   }
 
   @Override
@@ -381,127 +432,229 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitModule(org.pkl.core.parser.cst.Module module) {
-    return visitChildren(module);
+    T res = null;
+    if (module.getDecl() != null) {
+      res = visitModuleDecl(module.getDecl());
+    }
+    res = aggregateResult(res, visitNodes(module.getImports()));
+    res = aggregateResult(res, visitNodes(module.getClasses()));
+    res = aggregateResult(res, visitNodes(module.getTypeAliases()));
+    res = aggregateResult(res, visitNodes(module.getProperties()));
+    return aggregateResult(res, visitNodes(module.getMethods()));
   }
 
   @Override
   public T visitModuleDecl(ModuleDecl decl) {
-    return visitChildren(decl);
+    T res = null;
+    if (decl.getDocComment() != null) {
+      res = visitDocComment(decl.getDocComment());
+    }
+    res = aggregateResult(res, visitNodes(decl.getAnnotations()));
+    res = aggregateResult(res, visitNodes(decl.getModifiers()));
+    if (decl.getName() != null) {
+      res = aggregateResult(res, visitQualifiedIdentifier(decl.getName()));
+    }
+    if (decl.getExtendsOrAmendsDecl() != null) {
+      res = aggregateResult(res, visitExtendsOrAmendsDecl(decl.getExtendsOrAmendsDecl()));
+    }
+    return res;
   }
 
   @Override
   public T visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl) {
-    return visitChildren(decl);
+    return visitStringConstant(decl.getUrl());
   }
 
   @Override
   public T visitImport(Import imp) {
-    return visitChildren(imp);
+    var res = visitStringConstant(imp.getImportStr());
+    if (imp.getAlias() != null) {
+      return aggregateResult(res, visitIdentifier(imp.getAlias()));
+    }
+    return res;
   }
 
   @Override
   public T visitClass(Class clazz) {
-    return visitChildren(clazz);
+    T res = null;
+    if (clazz.getDocComment() != null) {
+      res = visitDocComment(clazz.getDocComment());
+    }
+    res = aggregateResult(res, visitNodes(clazz.getAnnotations()));
+    res = aggregateResult(res, visitNodes(clazz.getModifiers()));
+    res = aggregateResult(res, visitIdentifier(clazz.getName()));
+    if (clazz.getTypeParameterList() != null) {
+      res = visitTypeParameterList(clazz.getTypeParameterList());
+    }
+    if (clazz.getSuperClass() != null) {
+      res = visitType(clazz.getSuperClass());
+    }
+    if (clazz.getBody() != null) {
+      res = visitClassBody(clazz.getBody());
+    }
+    return res;
   }
 
   @Override
   public T visitModifier(Modifier modifier) {
-    return visitChildren(modifier);
+    return null;
   }
 
   @Override
-  public T visitClassProperty(ClassProperty entry) {
-    return visitChildren(entry);
+  public T visitClassProperty(ClassProperty prop) {
+    T res = null;
+    if (prop.getDocComment() != null) {
+      res = visitDocComment(prop.getDocComment());
+    }
+    res = aggregateResult(res, visitNodes(prop.getAnnotations()));
+    res = aggregateResult(res, visitNodes(prop.getModifiers()));
+    res = aggregateResult(res, visitIdentifier(prop.getName()));
+    if (prop.getTypeAnnotation() != null) {
+      res = aggregateResult(res, visitTypeAnnotation(prop.getTypeAnnotation()));
+    }
+    if (prop.getExpr() != null) {
+      res = visitExpr(prop.getExpr());
+    }
+    if (prop.getBodyList() != null) {
+      res = visitNodes(prop.getBodyList());
+    }
+    return res;
   }
 
   @Override
-  public T visitClassMethod(ClassMethod entry) {
-    return visitChildren(entry);
+  public T visitClassMethod(ClassMethod method) {
+    T res = null;
+    if (method.getDocComment() != null) {
+      res = visitDocComment(method.getDocComment());
+    }
+    res = aggregateResult(res, visitNodes(method.getAnnotations()));
+    res = aggregateResult(res, visitNodes(method.getModifiers()));
+    res = aggregateResult(res, visitIdentifier(method.getName()));
+    if (method.getTypeParameterList() != null) {
+      res = aggregateResult(res, visitTypeParameterList(method.getTypeParameterList()));
+    }
+    res = aggregateResult(res, visitParameterList(method.getParameterList()));
+    if (method.getTypeAnnotation() != null) {
+      res = aggregateResult(res, visitTypeAnnotation(method.getTypeAnnotation()));
+    }
+    if (method.getExpr() != null) {
+      res = aggregateResult(res, visitExpr(method.getExpr()));
+    }
+    return res;
   }
 
   @Override
   public T visitTypeAlias(TypeAlias typeAlias) {
-    return visitChildren(typeAlias);
+    T res = null;
+    if (typeAlias.getDocComment() != null) {
+      res = visitDocComment(typeAlias.getDocComment());
+    }
+    res = aggregateResult(res, visitNodes(typeAlias.getAnnotations()));
+    res = aggregateResult(res, visitNodes(typeAlias.getModifiers()));
+    res = aggregateResult(res, visitIdentifier(typeAlias.getName()));
+    if (typeAlias.getTypeParameterList() != null) {
+      res = aggregateResult(res, visitTypeParameterList(typeAlias.getTypeParameterList()));
+    }
+    return aggregateResult(res, visitType(typeAlias.getType()));
   }
 
   @Override
   public T visitAnnotation(Annotation annotation) {
-    return visitChildren(annotation);
+    if (annotation.getBody() != null) {
+      return aggregateResult(
+          visitType(annotation.getType()), visitObjectBody(annotation.getBody()));
+    }
+    return visitType(annotation.getType());
   }
 
   @Override
   public T visitParameter(Parameter param) {
-    return visitChildren(param);
+    if (param instanceof TypedIdentifier typedIdentifier) {
+      if (typedIdentifier.getTypeAnnotation() != null) {
+        return aggregateResult(
+            visitIdentifier(typedIdentifier.getIdentifier()),
+            visitTypeAnnotation(typedIdentifier.getTypeAnnotation()));
+      }
+      return visitIdentifier(typedIdentifier.getIdentifier());
+    }
+    return null;
   }
 
   @Override
   public T visitParameterList(ParameterList paramList) {
-    return visitChildren(paramList);
+    return visitNodes(paramList.getParameters());
   }
 
   @Override
   public T visitTypeParameterList(TypeParameterList typeParameterList) {
-    return visitChildren(typeParameterList);
+    return visitNodes(typeParameterList.getParameters());
   }
 
   @Override
   public T visitTypeAnnotation(TypeAnnotation typeAnnotation) {
-    return visitChildren(typeAnnotation);
+    return visitType(typeAnnotation.getType());
   }
 
   @Override
   public T visitArgumentList(ArgumentList argumentList) {
-    return visitChildren(argumentList);
+    return visitNodes(argumentList.getArguments());
   }
 
   @Override
   public T visitStringPart(StringPart part) {
-    return visitChildren(part);
+    if (part instanceof StringInterpolation stringInterpolation) {
+      return visitExpr(stringInterpolation.getExpr());
+    } else if (part instanceof StringConstantParts stringConstantParts) {
+      return visitNodes(stringConstantParts.getParts());
+    }
+    return null;
   }
 
   @Override
   public T visitStringConstantPart(StringConstantPart part) {
-    return visitChildren(part);
+    return null;
   }
 
   @Override
   public T visitClassBody(ClassBody classBody) {
-    return visitChildren(classBody);
+    return aggregateResult(
+        visitNodes(classBody.getProperties()), visitNodes(classBody.getMethods()));
   }
 
   @Override
   public T visitDocComment(DocComment docComment) {
-    return visitChildren(docComment);
+    return null;
   }
 
   @Override
   public T visitIdentifier(Identifier identifier) {
-    return visitChildren(identifier);
+    return null;
   }
 
   @Override
   public T visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier) {
-    return visitChildren(qualifiedIdentifier);
+    return visitNodes(qualifiedIdentifier.getIdentifiers());
   }
 
   @Override
   public T visitObjectBody(ObjectBody objectBody) {
-    return visitChildren(objectBody);
+    return aggregateResult(
+        visitNodes(objectBody.getParameters()), visitNodes(objectBody.getMembers()));
   }
 
   @Override
   public T visitTypeParameter(TypeParameter typeParameter) {
-    return visitChildren(typeParameter);
+    return visitIdentifier(typeParameter.getIdentifier());
   }
 
   @Override
   public T visitReplInput(ReplInput replInput) {
-    return visitChildren(replInput);
+    return visitNodes(replInput.getNodes());
   }
 
-  private @Nullable T visitChildren(Node node) {
+  private @Nullable T visitNodes(List<? extends Node> nodes) {
     T result = defaultValue();
-    for (var child : node.children()) {
+    for (var child : nodes) {
       result = aggregateResult(result, child.accept(this));
     }
     return result;

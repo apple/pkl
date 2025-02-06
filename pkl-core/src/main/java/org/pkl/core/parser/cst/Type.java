@@ -462,17 +462,17 @@ public sealed interface Type extends Node {
 
   final class ConstrainedType implements Type {
     private final Type type;
-    private final List<Expr> expr;
+    private final List<Expr> exprs;
     private final Span span;
     private Node parent;
 
-    public ConstrainedType(Type type, List<Expr> expr, Span span) {
+    public ConstrainedType(Type type, List<Expr> exprs, Span span) {
       this.type = type;
-      this.expr = expr;
+      this.exprs = exprs;
       this.span = span;
 
       type.setParent(this);
-      for (var exp : expr) {
+      for (var exp : exprs) {
         exp.setParent(this);
       }
     }
@@ -494,9 +494,9 @@ public sealed interface Type extends Node {
 
     @Override
     public List<Node> children() {
-      var children = new ArrayList<Node>(expr.size() + 1);
+      var children = new ArrayList<Node>(exprs.size() + 1);
       children.add(type);
-      children.addAll(expr);
+      children.addAll(exprs);
       return children;
     }
 
@@ -509,13 +509,13 @@ public sealed interface Type extends Node {
       return type;
     }
 
-    public List<Expr> getExpr() {
-      return expr;
+    public List<Expr> getExprs() {
+      return exprs;
     }
 
     @Override
     public String toString() {
-      return "ConstrainedType{" + "type=" + type + ", expr=" + expr + ", span=" + span + '}';
+      return "ConstrainedType{" + "type=" + type + ", exprs=" + exprs + ", span=" + span + '}';
     }
 
     @Override
@@ -528,13 +528,13 @@ public sealed interface Type extends Node {
       }
       ConstrainedType that = (ConstrainedType) o;
       return Objects.equals(type, that.type)
-          && Objects.equals(expr, that.expr)
+          && Objects.equals(exprs, that.exprs)
           && Objects.equals(span, that.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(type, expr, span);
+      return Objects.hash(type, exprs, span);
     }
   }
 

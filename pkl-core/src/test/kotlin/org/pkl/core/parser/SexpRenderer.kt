@@ -343,7 +343,7 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(argumentList")
     val oldTab = increaseTab()
-    for (arg in argumentList.args) {
+    for (arg in argumentList.arguments) {
       buf.append('\n')
       renderExpr(arg)
     }
@@ -574,7 +574,7 @@ class SexpRenderer {
     buf.append("(letExpr")
     val oldTab = increaseTab()
     buf.append('\n')
-    renderParameter(expr.par)
+    renderParameter(expr.parameter)
     buf.append('\n')
     renderExpr(expr.bindingExpr)
     buf.append('\n')
@@ -797,7 +797,7 @@ class SexpRenderer {
     val oldTab = increaseTab()
     buf.append('\n')
     renderType(type.type)
-    for (expr in type.expr) {
+    for (expr in type.exprs) {
       buf.append('\n')
       renderExpr(expr)
     }
@@ -1034,7 +1034,7 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(TypeParameterList\n")
     val oldTab = increaseTab()
-    for (tpar in typeParameterList.params) {
+    for (tpar in typeParameterList.parameters) {
       buf.append('\n')
       renderTypeParameter(tpar)
     }

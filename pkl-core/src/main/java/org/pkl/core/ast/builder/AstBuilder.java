@@ -404,7 +404,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     return symbolTable.enterCustomThisScope(
         scope -> {
-          var exprs = type.getExpr();
+          var exprs = type.getExprs();
           var constraints = new TypeConstraintNode[exprs.size()];
           for (int i = 0; i < constraints.length; i++) {
             var expr = visitExpr(exprs.get(i));
@@ -1110,7 +1110,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public ExpressionNode visitLetExpr(Let letExpr) {
     var sourceSection = createSourceSection(letExpr);
-    var parameter = letExpr.getPar();
+    var parameter = letExpr.getParameter();
     var frameBuilder = FrameDescriptor.newBuilder();
     UnresolvedTypeNode[] typeNodes;
     if (parameter instanceof TypedIdentifier par) {
@@ -1228,7 +1228,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private Pair<ExpressionNode[], Boolean> createCollectionArgumentNodes(ArgumentList exprs) {
-    var args = exprs.getArgs();
+    var args = exprs.getArguments();
     var elementNodes = new ExpressionNode[args.size()];
     var isConstantNodes = true;
 
@@ -2037,11 +2037,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (!(ctx.parent() instanceof TypeAlias) && !isStdLibModule) {
       throw exceptionBuilder()
           .evalError("cannotDeclareTypeParameter")
-          .withSourceSection(createSourceSection(ctx.getParams().get(0)))
+          .withSourceSection(createSourceSection(ctx.getParameters().get(0)))
           .build();
     }
 
-    var params = ctx.getParams();
+    var params = ctx.getParameters();
     var size = params.size();
     var result = new ArrayList<TypeParameter>(size);
     for (var i = 0; i < size; i++) {
@@ -2076,7 +2076,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode[] visitArgumentList(ArgumentList argumentList) {
-    var args = argumentList.getArgs();
+    var args = argumentList.getArguments();
     var res = new ExpressionNode[args.size()];
     for (int i = 0; i < res.length; i++) {
       res[i] = visitExpr(args.get(i));

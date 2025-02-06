@@ -23,15 +23,15 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public class TypeParameterList implements Node {
-  private final List<TypeParameter> params;
+  private final List<TypeParameter> parameters;
   private final Span span;
   private Node parent;
 
-  public TypeParameterList(List<TypeParameter> params, Span span) {
-    this.params = params;
+  public TypeParameterList(List<TypeParameter> parameters, Span span) {
+    this.parameters = parameters;
     this.span = span;
 
-    for (var par : params) {
+    for (var par : parameters) {
       par.setParent(this);
     }
   }
@@ -53,7 +53,7 @@ public class TypeParameterList implements Node {
 
   @Override
   public List<Node> children() {
-    return Collections.unmodifiableList(params);
+    return Collections.unmodifiableList(parameters);
   }
 
   @Override
@@ -61,13 +61,13 @@ public class TypeParameterList implements Node {
     return visitor.visitTypeParameterList(this);
   }
 
-  public List<TypeParameter> getParams() {
-    return params;
+  public List<TypeParameter> getParameters() {
+    return parameters;
   }
 
   @Override
   public String toString() {
-    return "TypeParameterList{params=" + params + ", span=" + span + '}';
+    return "TypeParameterList{parameters=" + parameters + ", span=" + span + '}';
   }
 
   @Override
@@ -79,11 +79,11 @@ public class TypeParameterList implements Node {
       return false;
     }
     TypeParameterList that = (TypeParameterList) o;
-    return Objects.equals(params, that.params) && Objects.equals(span, that.span);
+    return Objects.equals(parameters, that.parameters) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(params, span);
+    return Objects.hash(parameters, span);
   }
 }

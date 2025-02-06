@@ -23,15 +23,15 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public class ArgumentList implements Node {
-  private final List<Expr> args;
+  private final List<Expr> arguments;
   private final Span span;
   private Node parent;
 
-  public ArgumentList(List<Expr> args, Span span) {
-    this.args = args;
+  public ArgumentList(List<Expr> arguments, Span span) {
+    this.arguments = arguments;
     this.span = span;
 
-    for (var arg : args) {
+    for (var arg : arguments) {
       arg.setParent(this);
     }
   }
@@ -53,7 +53,7 @@ public class ArgumentList implements Node {
 
   @Override
   public List<Node> children() {
-    return Collections.unmodifiableList(args);
+    return Collections.unmodifiableList(arguments);
   }
 
   @Override
@@ -61,13 +61,13 @@ public class ArgumentList implements Node {
     return visitor.visitArgumentList(this);
   }
 
-  public List<Expr> getArgs() {
-    return args;
+  public List<Expr> getArguments() {
+    return arguments;
   }
 
   @Override
   public String toString() {
-    return "ArgumentList{args=" + args + ", span=" + span + '}';
+    return "ArgumentList{arguments=" + arguments + ", span=" + span + '}';
   }
 
   @Override
@@ -79,11 +79,11 @@ public class ArgumentList implements Node {
       return false;
     }
     ArgumentList that = (ArgumentList) o;
-    return Objects.equals(args, that.args) && Objects.equals(span, that.span);
+    return Objects.equals(arguments, that.arguments) && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(args, span);
+    return Objects.hash(arguments, span);
   }
 }
