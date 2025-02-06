@@ -23,17 +23,17 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 public final class ObjectBody implements Node {
-  private final List<Parameter> pars;
+  private final List<Parameter> parameters;
   private final List<ObjectMemberNode> members;
   private final Span span;
   private Node parent;
 
-  public ObjectBody(List<Parameter> pars, List<ObjectMemberNode> members, Span span) {
-    this.pars = pars;
+  public ObjectBody(List<Parameter> parameters, List<ObjectMemberNode> members, Span span) {
+    this.parameters = parameters;
     this.members = members;
     this.span = span;
 
-    for (var par : pars) {
+    for (var par : parameters) {
       par.setParent(this);
     }
     for (var member : members) {
@@ -58,8 +58,8 @@ public final class ObjectBody implements Node {
 
   @Override
   public List<Node> children() {
-    var children = new ArrayList<Node>(pars.size() + members.size());
-    children.addAll(pars);
+    var children = new ArrayList<Node>(parameters.size() + members.size());
+    children.addAll(parameters);
     children.addAll(members);
     return children;
   }
@@ -69,8 +69,8 @@ public final class ObjectBody implements Node {
     return visitor.visitObjectBody(this);
   }
 
-  public List<Parameter> getPars() {
-    return pars;
+  public List<Parameter> getParameters() {
+    return parameters;
   }
 
   public List<ObjectMemberNode> getMembers() {
@@ -79,7 +79,7 @@ public final class ObjectBody implements Node {
 
   @Override
   public String toString() {
-    return "ObjectBody{" + "pars=" + pars + ", members=" + members + ", span=" + span + '}';
+    return "ObjectBody{parameters=" + parameters + ", members=" + members + ", span=" + span + '}';
   }
 
   @Override
@@ -91,13 +91,13 @@ public final class ObjectBody implements Node {
       return false;
     }
     ObjectBody that = (ObjectBody) o;
-    return Objects.equals(pars, that.pars)
+    return Objects.equals(parameters, that.parameters)
         && Objects.equals(members, that.members)
         && Objects.equals(span, that.span);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pars, members, span);
+    return Objects.hash(parameters, members, span);
   }
 }

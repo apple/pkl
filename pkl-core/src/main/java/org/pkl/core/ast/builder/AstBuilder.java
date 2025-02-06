@@ -1343,10 +1343,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBody body) {
-    if (!body.getPars().isEmpty()) {
+    if (!body.getParameters().isEmpty()) {
       throw exceptionBuilder()
           .evalError("forWhenBodyCannotHaveParameters")
-          .withSourceSection(createSourceSection(body.getPars().get(0)))
+          .withSourceSection(createSourceSection(body.getParameters().get(0)))
           .build();
     }
     return doVisitGeneratorMemberNodes(body.getMembers());
@@ -2697,7 +2697,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private UnresolvedTypeNode[] doVisitParameterTypes(ObjectBody body) {
-    return doVisitParameterTypes(body.getPars());
+    return doVisitParameterTypes(body.getParameters());
   }
 
   private UnresolvedTypeNode[] doVisitParameterTypes(ParameterList paramList) {
@@ -2809,10 +2809,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private @Nullable FrameDescriptor.Builder createFrameDescriptorBuilder(ObjectBody body) {
-    if (body.getPars().isEmpty()) return null;
+    if (body.getParameters().isEmpty()) return null;
 
-    var builder = FrameDescriptor.newBuilder(body.getPars().size());
-    for (var param : body.getPars()) {
+    var builder = FrameDescriptor.newBuilder(body.getParameters().size());
+    for (var param : body.getParameters()) {
       Identifier ident = null;
       if (param instanceof Parameter.TypedIdent tident) {
         ident = toIdentifier(tident.getIdent().getValue());

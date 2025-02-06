@@ -296,7 +296,7 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(objectBody")
     val oldTab = increaseTab()
-    for (par in body.pars) {
+    for (par in body.parameters) {
       buf.append('\n')
       renderParameter(par)
     }
