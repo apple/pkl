@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,24 +82,30 @@ class BaseCommandTest {
         "scheme3=reader3",
         "--external-module-reader",
         "scheme4=reader4 with args",
+        "--external-module-reader",
+        "scheme+ext=reader5 with args",
         "--external-resource-reader",
         "scheme1=reader1",
         "--external-resource-reader",
-        "scheme2=reader2 with args"
+        "scheme2=reader2 with args",
+        "--external-resource-reader",
+        "scheme+ext=reader5 with args",
       )
     )
     assertThat(cmd.baseOptions.externalModuleReaders)
       .isEqualTo(
         mapOf(
           "scheme3" to ExternalReader("reader3", emptyList()),
-          "scheme4" to ExternalReader("reader4", listOf("with", "args"))
+          "scheme4" to ExternalReader("reader4", listOf("with", "args")),
+          "scheme+ext" to ExternalReader("reader5", listOf("with", "args")),
         )
       )
     assertThat(cmd.baseOptions.externalResourceReaders)
       .isEqualTo(
         mapOf(
           "scheme1" to ExternalReader("reader1", emptyList()),
-          "scheme2" to ExternalReader("reader2", listOf("with", "args"))
+          "scheme2" to ExternalReader("reader2", listOf("with", "args")),
+          "scheme+ext" to ExternalReader("reader5", listOf("with", "args")),
         )
       )
   }
