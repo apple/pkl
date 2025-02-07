@@ -15,211 +15,54 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface Type extends Node {
+@SuppressWarnings("ALL")
+public abstract sealed class Type extends AbstractNode {
 
-  final class UnknownType implements Type {
-    private final Span span;
-    private Node parent;
+  public Type(Span span, @Nullable List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
 
+  public static final class UnknownType extends Type {
     public UnknownType(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitUnknownType(this);
     }
-
-    @Override
-    public String toString() {
-      return "UnknownType{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      UnknownType that = (UnknownType) o;
-      return Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class NothingType implements Type {
-    private final Span span;
-    private Node parent;
-
+  public static final class NothingType extends Type {
     public NothingType(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNothingType(this);
     }
-
-    @Override
-    public String toString() {
-      return "NothingType{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      NothingType that = (NothingType) o;
-      return Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class ModuleType implements Type {
-    private final Span span;
-    private Node parent;
-
+  public static final class ModuleType extends Type {
     public ModuleType(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitModuleType(this);
     }
-
-    @Override
-    public String toString() {
-      return "ModuleType{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ModuleType that = (ModuleType) o;
-      return Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class StringConstantType implements Type {
-    private final StringConstant str;
-    private final Span span;
-    private Node parent;
-
+  public static final class StringConstantType extends Type {
     public StringConstantType(StringConstant str, Span span) {
-      this.str = str;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(str);
+      super(span, List.of(str));
     }
 
     @Override
@@ -228,70 +71,13 @@ public sealed interface Type extends Node {
     }
 
     public StringConstant getStr() {
-      return str;
-    }
-
-    @Override
-    public String toString() {
-      return "StringConstantType{" + "str='" + str + '\'' + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      StringConstantType that = (StringConstantType) o;
-      return Objects.equals(str, that.str) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(str, span);
+      return (StringConstant) children.get(0);
     }
   }
 
-  final class DeclaredType implements Type {
-    private final QualifiedIdentifier name;
-    private final List<Type> args;
-    private final Span span;
-    private Node parent;
-
-    public DeclaredType(QualifiedIdentifier name, List<Type> args, Span span) {
-      this.name = name;
-      this.args = args;
-      this.span = span;
-
-      name.setParent(this);
-      for (var arg : args) {
-        arg.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(args.size() + 1);
-      children.add(name);
-      children.addAll(args);
-      return children;
+  public static final class DeclaredType extends Type {
+    public DeclaredType(List<Node> nodes, Span span) {
+      super(span, nodes);
     }
 
     @Override
@@ -300,68 +86,17 @@ public sealed interface Type extends Node {
     }
 
     public QualifiedIdentifier getName() {
-      return name;
+      return (QualifiedIdentifier) children.get(0);
     }
 
     public List<Type> getArgs() {
-      return args;
-    }
-
-    @Override
-    public String toString() {
-      return "DeclaredType{" + "name=" + name + ", args=" + args + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      DeclaredType that = (DeclaredType) o;
-      return Objects.equals(name, that.name)
-          && Objects.equals(args, that.args)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(name, args, span);
+      return (List<Type>) children.subList(1, children.size());
     }
   }
 
-  final class ParenthesizedType implements Type {
-    private final Type type;
-    private final Span span;
-    private Node parent;
-
+  public static final class ParenthesizedType extends Type {
     public ParenthesizedType(Type type, Span span) {
-      this.type = type;
-      this.span = span;
-
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(type);
+      super(span, List.of(type));
     }
 
     @Override
@@ -370,62 +105,13 @@ public sealed interface Type extends Node {
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "ParenthesizedType{" + "type=" + type + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ParenthesizedType that = (ParenthesizedType) o;
-      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, span);
+      return (Type) children.get(0);
     }
   }
 
-  final class NullableType implements Type {
-    private final Type type;
-    private final Span span;
-    private Node parent;
-
+  public static final class NullableType extends Type {
     public NullableType(Type type, Span span) {
-      this.type = type;
-      this.span = span;
-
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(type);
+      super(span, List.of(type));
     }
 
     @Override
@@ -434,70 +120,13 @@ public sealed interface Type extends Node {
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "NullableType{" + "type=" + type + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      NullableType that = (NullableType) o;
-      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, span);
+      return (Type) children.get(0);
     }
   }
 
-  final class ConstrainedType implements Type {
-    private final Type type;
-    private final List<Expr> exprs;
-    private final Span span;
-    private Node parent;
-
-    public ConstrainedType(Type type, List<Expr> exprs, Span span) {
-      this.type = type;
-      this.exprs = exprs;
-      this.span = span;
-
-      type.setParent(this);
-      for (var exp : exprs) {
-        exp.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(exprs.size() + 1);
-      children.add(type);
-      children.addAll(exprs);
-      return children;
+  public static final class ConstrainedType extends Type {
+    public ConstrainedType(List<Node> nodes, Span span) {
+      super(span, nodes);
     }
 
     @Override
@@ -506,68 +135,17 @@ public sealed interface Type extends Node {
     }
 
     public Type getType() {
-      return type;
+      return (Type) children.get(0);
     }
 
     public List<Expr> getExprs() {
-      return exprs;
-    }
-
-    @Override
-    public String toString() {
-      return "ConstrainedType{" + "type=" + type + ", exprs=" + exprs + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ConstrainedType that = (ConstrainedType) o;
-      return Objects.equals(type, that.type)
-          && Objects.equals(exprs, that.exprs)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, exprs, span);
+      return (List<Expr>) children.subList(1, children.size());
     }
   }
 
-  final class DefaultUnionType implements Type {
-    private final Type type;
-    private final Span span;
-    private Node parent;
-
+  public static final class DefaultUnionType extends Type {
     public DefaultUnionType(Type type, Span span) {
-      this.type = type;
-      this.span = span;
-
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(type);
+      super(span, List.of(type));
     }
 
     @Override
@@ -576,65 +154,13 @@ public sealed interface Type extends Node {
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "DefaultUnionType{" + "type=" + type + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      DefaultUnionType that = (DefaultUnionType) o;
-      return Objects.equals(type, that.type) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, span);
+      return (Type) children.get(0);
     }
   }
 
-  final class UnionType implements Type {
-    private final Type left;
-    private final Type right;
-    private final Span span;
-    private Node parent;
-
+  public static final class UnionType extends Type {
     public UnionType(Type left, Type right, Span span) {
-      this.left = left;
-      this.right = right;
-      this.span = span;
-
-      left.setParent(this);
-      right.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(left, right);
+      super(span, List.of(left, right));
     }
 
     @Override
@@ -643,76 +169,17 @@ public sealed interface Type extends Node {
     }
 
     public Type getLeft() {
-      return left;
+      return (Type) children.get(0);
     }
 
     public Type getRight() {
-      return right;
-    }
-
-    @Override
-    public String toString() {
-      return "UnionType{" + "left=" + left + ", right=" + right + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      UnionType unionType = (UnionType) o;
-      return Objects.equals(left, unionType.left)
-          && Objects.equals(right, unionType.right)
-          && Objects.equals(span, unionType.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(left, right, span);
+      return (Type) children.get(1);
     }
   }
 
-  final class FunctionType implements Type {
-    private final List<Type> args;
-    private final Type ret;
-    private final Span span;
-    private Node parent;
-
-    public FunctionType(List<Type> args, Type ret, Span span) {
-      this.args = args;
-      this.ret = ret;
-      this.span = span;
-
-      for (var arg : args) {
-        arg.setParent(this);
-      }
-      ret.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(args.size() + 1);
-      children.addAll(args);
-      children.add(ret);
-      return children;
+  public static final class FunctionType extends Type {
+    public FunctionType(List<Node> children, Span span) {
+      super(span, children);
     }
 
     @Override
@@ -721,35 +188,11 @@ public sealed interface Type extends Node {
     }
 
     public List<Type> getArgs() {
-      return args;
+      return (List<Type>) children.subList(0, children.size() - 1);
     }
 
     public Type getRet() {
-      return ret;
-    }
-
-    @Override
-    public String toString() {
-      return "FunctionType{" + "args=" + args + ", ret=" + ret + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      FunctionType that = (FunctionType) o;
-      return Objects.equals(args, that.args)
-          && Objects.equals(ret, that.ret)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(args, ret, span);
+      return (Type) children.get(children.size() - 1);
     }
   }
 }

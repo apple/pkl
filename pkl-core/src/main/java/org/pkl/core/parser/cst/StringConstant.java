@@ -16,42 +16,14 @@
 package org.pkl.core.parser.cst;
 
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.parser.cst.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
 
-public class StringConstant implements Node {
-  private final StringConstantParts strParts;
-  private final Span span;
-  private Node parent;
-
+public class StringConstant extends AbstractNode {
   public StringConstant(StringConstantParts strParts, Span span) {
-    this.strParts = strParts;
-    this.span = span;
-
-    strParts.setParent(this);
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of(strParts);
+    super(span, List.of(strParts));
   }
 
   @Override
@@ -60,28 +32,7 @@ public class StringConstant implements Node {
   }
 
   public StringConstantParts getStrParts() {
-    return strParts;
-  }
-
-  @Override
-  public String toString() {
-    return "StringConstant{strParts=" + strParts + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    StringConstant that = (StringConstant) o;
-    return Objects.equals(strParts, that.strParts) && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(strParts, span);
+    assert children != null;
+    return (StringConstantParts) children.get(0);
   }
 }

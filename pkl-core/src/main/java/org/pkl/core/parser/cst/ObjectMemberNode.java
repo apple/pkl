@@ -15,45 +15,23 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface ObjectMemberNode extends Node {
+@SuppressWarnings("ALL")
+public abstract sealed class ObjectMemberNode extends AbstractNode {
 
-  final class ObjectElement implements ObjectMemberNode {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
+  public ObjectMemberNode(Span span, @Nullable List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
 
+  public static final class ObjectElement extends ObjectMemberNode {
     public ObjectElement(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -62,101 +40,16 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "ObjectElement{" + "expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectElement that = (ObjectElement) o;
-      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class ObjectProperty implements ObjectMemberNode {
-    private final List<Modifier> modifiers;
-    private final Identifier identifier;
-    private final @Nullable TypeAnnotation typeAnnotation;
-    private final @Nullable Expr expr;
-    private final @Nullable List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
+  public static final class ObjectProperty extends ObjectMemberNode {
+    private final int identifierOffset;
 
-    public ObjectProperty(
-        List<Modifier> modifiers,
-        Identifier identifier,
-        @Nullable TypeAnnotation typeAnnotation,
-        @Nullable Expr expr,
-        @Nullable List<ObjectBody> bodyList,
-        Span span) {
-      this.modifiers = modifiers;
-      this.identifier = identifier;
-      this.typeAnnotation = typeAnnotation;
-      this.expr = expr;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      for (var mod : modifiers) {
-        mod.setParent(this);
-      }
-      identifier.setParent(this);
-      if (typeAnnotation != null) {
-        typeAnnotation.setParent(this);
-      }
-      if (expr != null) {
-        expr.setParent(this);
-      }
-      if (bodyList != null) {
-        for (var body : bodyList) {
-          body.setParent(this);
-        }
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(modifiers);
-      children.add(identifier);
-      if (typeAnnotation != null) {
-        children.add(typeAnnotation);
-      }
-      if (expr != null) {
-        children.add(expr);
-      }
-      if (bodyList != null) {
-        children.addAll(bodyList);
-      }
-      return children;
+    public ObjectProperty(List<Node> nodes, int identifierOffset, Span span) {
+      super(span, nodes);
+      this.identifierOffset = identifierOffset;
     }
 
     @Override
@@ -165,133 +58,32 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public List<Modifier> getModifiers() {
-      return modifiers;
+      return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(identifierOffset);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      return typeAnnotation;
+      return (TypeAnnotation) children.get(identifierOffset + 1);
     }
 
     public @Nullable Expr getExpr() {
-      return expr;
+      return (Expr) children.get(identifierOffset + 2);
     }
 
     public @Nullable List<ObjectBody> getBodyList() {
-      return bodyList;
-    }
-
-    @Override
-    public String toString() {
-      return "ObjectProperty{"
-          + "modifiers="
-          + modifiers
-          + ", identifier="
-          + identifier
-          + ", typeAnnotation="
-          + typeAnnotation
-          + ", expr="
-          + expr
-          + ", bodyList="
-          + bodyList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectProperty that = (ObjectProperty) o;
-      return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(identifier, that.identifier)
-          && Objects.equals(typeAnnotation, that.typeAnnotation)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(modifiers, identifier, typeAnnotation, expr, bodyList, span);
+      return (List<ObjectBody>) children.subList(identifierOffset + 3, children.size());
     }
   }
 
-  final class ObjectMethod implements ObjectMemberNode {
-    private final List<Modifier> modifiers;
-    private final Identifier identifier;
-    private final @Nullable TypeParameterList typeParameterList;
-    private final ParameterList paramList;
-    private final @Nullable TypeAnnotation typeAnnotation;
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
+  public static final class ObjectMethod extends ObjectMemberNode {
+    private final int identifierOffset;
 
-    public ObjectMethod(
-        List<Modifier> modifiers,
-        Identifier identifier,
-        @Nullable TypeParameterList typeParameterList,
-        ParameterList paramList,
-        @Nullable TypeAnnotation typeAnnotation,
-        Expr expr,
-        Span span) {
-      this.modifiers = modifiers;
-      this.identifier = identifier;
-      this.typeParameterList = typeParameterList;
-      this.paramList = paramList;
-      this.typeAnnotation = typeAnnotation;
-      this.expr = expr;
-      this.span = span;
-
-      for (var mod : modifiers) {
-        mod.setParent(this);
-      }
-      identifier.setParent(this);
-      if (typeParameterList != null) {
-        typeParameterList.setParent(this);
-      }
-      paramList.setParent(this);
-      if (typeAnnotation != null) {
-        typeAnnotation.setParent(this);
-      }
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>(modifiers);
-      children.add(identifier);
-      if (typeParameterList != null) {
-        children.add(typeParameterList);
-      }
-      children.add(paramList);
-      if (typeAnnotation != null) {
-        children.add(typeAnnotation);
-      }
-      children.add(expr);
-      return children;
+    public ObjectMethod(List<Node> nodes, int identifierOffset, Span span) {
+      super(span, nodes);
+      this.identifierOffset = identifierOffset;
     }
 
     @Override
@@ -300,136 +92,44 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public List<Modifier> getModifiers() {
-      return modifiers;
+      return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(identifierOffset);
     }
 
     public @Nullable TypeParameterList getTypeParameterList() {
-      return typeParameterList;
+      return (TypeParameterList) children.get(identifierOffset + 1);
     }
 
     public ParameterList getParamList() {
-      return paramList;
+      return (ParameterList) children.get(identifierOffset + 2);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      return typeAnnotation;
+      return (TypeAnnotation) children.get(identifierOffset + 3);
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(identifierOffset + 4);
     }
 
     public Span headerSpan() {
-      var end = span;
-      if (typeAnnotation != null) {
-        end = typeAnnotation.span();
+      Span end;
+      var typeAnnotation = children.get(identifierOffset + 3);
+      if (typeAnnotation == null) {
+        end = children.get(identifierOffset + 2).span();
       } else {
-        end = paramList.span();
+        end = typeAnnotation.span();
       }
       return span.endWith(end);
     }
-
-    @Override
-    public String toString() {
-      return "ObjectMethod{"
-          + "modifiers="
-          + modifiers
-          + ", identifier="
-          + identifier
-          + ", typeParameterList="
-          + typeParameterList
-          + ", paramList="
-          + paramList
-          + ", typeAnnotation="
-          + typeAnnotation
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectMethod that = (ObjectMethod) o;
-      return Objects.equals(modifiers, that.modifiers)
-          && Objects.equals(identifier, that.identifier)
-          && Objects.equals(typeParameterList, that.typeParameterList)
-          && Objects.equals(paramList, that.paramList)
-          && Objects.equals(typeAnnotation, that.typeAnnotation)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(
-          modifiers, identifier, typeParameterList, paramList, typeAnnotation, expr, span);
-    }
   }
 
-  @SuppressWarnings("DuplicatedCode")
-  final class MemberPredicate implements ObjectMemberNode {
-    private final Expr pred;
-    private final @Nullable Expr expr;
-    private final @Nullable List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
-
-    public MemberPredicate(
-        Expr pred, @Nullable Expr expr, @Nullable List<ObjectBody> bodyList, Span span) {
-      this.pred = pred;
-      this.expr = expr;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      pred.setParent(this);
-      if (expr != null) {
-        expr.setParent(this);
-      }
-      if (bodyList != null) {
-        for (var body : bodyList) {
-          body.setParent(this);
-        }
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(pred);
-      if (expr != null) {
-        children.add(expr);
-      }
-      if (bodyList != null) {
-        children.addAll(bodyList);
-      }
-      return children;
+  public static final class MemberPredicate extends ObjectMemberNode {
+    public MemberPredicate(List<Node> nodes, Span span) {
+      super(span, nodes);
     }
 
     @Override
@@ -438,103 +138,21 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Expr getPred() {
-      return pred;
+      return (Expr) children.get(0);
     }
 
     public @Nullable Expr getExpr() {
-      return expr;
+      return (Expr) children.get(1);
     }
 
-    public @Nullable List<ObjectBody> getBodyList() {
-      return bodyList;
-    }
-
-    @Override
-    public String toString() {
-      return "MemberPredicate{"
-          + "pred="
-          + pred
-          + ", expr="
-          + expr
-          + ", bodyList="
-          + bodyList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      MemberPredicate that = (MemberPredicate) o;
-      return Objects.equals(pred, that.pred)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(pred, expr, bodyList, span);
+    public List<ObjectBody> getBodyList() {
+      return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
 
-  final class ObjectEntry implements ObjectMemberNode {
-    private final Expr key;
-    private final @Nullable Expr value;
-    private final @Nullable List<ObjectBody> bodyList;
-    private final Span span;
-    private Node parent;
-
-    public ObjectEntry(
-        Expr key, @Nullable Expr value, @Nullable List<ObjectBody> bodyList, Span span) {
-      this.key = key;
-      this.value = value;
-      this.bodyList = bodyList;
-      this.span = span;
-
-      key.setParent(this);
-      if (value != null) {
-        value.setParent(this);
-      }
-      if (bodyList != null) {
-        for (var body : bodyList) {
-          body.setParent(this);
-        }
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(key);
-      if (value != null) {
-        children.add(value);
-      }
-      if (bodyList != null) {
-        children.addAll(bodyList);
-      }
-      return children;
+  public static final class ObjectEntry extends ObjectMemberNode {
+    public ObjectEntry(List<Node> nodes, Span span) {
+      super(span, nodes);
     }
 
     @Override
@@ -543,84 +161,24 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Expr getKey() {
-      return key;
+      return (Expr) children.get(0);
     }
 
     public @Nullable Expr getValue() {
-      return value;
+      return (Expr) children.get(1);
     }
 
-    public @Nullable List<ObjectBody> getBodyList() {
-      return bodyList;
-    }
-
-    @Override
-    public String toString() {
-      return "ObjectEntry{"
-          + "key="
-          + key
-          + ", value="
-          + value
-          + ", bodyList="
-          + bodyList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ObjectEntry that = (ObjectEntry) o;
-      return Objects.equals(key, that.key)
-          && Objects.equals(value, that.value)
-          && Objects.equals(bodyList, that.bodyList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(key, value, bodyList, span);
+    public List<ObjectBody> getBodyList() {
+      return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
 
-  final class ObjectSpread implements ObjectMemberNode {
-    private final Expr expr;
+  public static final class ObjectSpread extends ObjectMemberNode {
     private final boolean isNullable;
-    private final Span span;
-    private Node parent;
 
     public ObjectSpread(Expr expr, boolean isNullable, Span span) {
-      this.expr = expr;
+      super(span, List.of(expr));
       this.isNullable = isNullable;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
     }
 
     @Override
@@ -629,7 +187,7 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public boolean isNullable() {
@@ -639,12 +197,12 @@ public sealed interface ObjectMemberNode extends Node {
     @Override
     public String toString() {
       return "ObjectSpread{"
-          + "expr="
-          + expr
-          + ", isNullable="
+          + "isNullable="
           + isNullable
           + ", span="
           + span
+          + ", children="
+          + children
           + '}';
     }
 
@@ -656,62 +214,22 @@ public sealed interface ObjectMemberNode extends Node {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
+      if (!super.equals(o)) {
+        return false;
+      }
       ObjectSpread that = (ObjectSpread) o;
-      return isNullable == that.isNullable
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span);
+      return isNullable == that.isNullable;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(expr, isNullable, span);
+      return Objects.hash(super.hashCode(), isNullable);
     }
   }
 
-  final class WhenGenerator implements ObjectMemberNode {
-    private final Expr cond;
-    private final ObjectBody body;
-    private final @Nullable ObjectBody elseClause;
-    private final Span span;
-    private Node parent;
-
+  public static final class WhenGenerator extends ObjectMemberNode {
     public WhenGenerator(Expr cond, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
-      this.cond = cond;
-      this.body = body;
-      this.elseClause = elseClause;
-      this.span = span;
-
-      cond.setParent(this);
-      body.setParent(this);
-      if (elseClause != null) {
-        elseClause.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(cond);
-      children.add(body);
-      if (elseClause != null) {
-        children.add(elseClause);
-      }
-      return children;
+      super(span, Arrays.asList(cond, body, elseClause));
     }
 
     @Override
@@ -720,101 +238,22 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Expr getCond() {
-      return cond;
+      return (Expr) children.get(0);
     }
 
     public ObjectBody getBody() {
-      return body;
+      return (ObjectBody) children.get(1);
     }
 
     public @Nullable ObjectBody getElseClause() {
-      return elseClause;
-    }
-
-    @Override
-    public String toString() {
-      return "WhenGenerator{"
-          + "cond="
-          + cond
-          + ", body="
-          + body
-          + ", elseClause="
-          + elseClause
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      WhenGenerator that = (WhenGenerator) o;
-      return Objects.equals(cond, that.cond)
-          && Objects.equals(body, that.body)
-          && Objects.equals(elseClause, that.elseClause)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(cond, body, elseClause, span);
+      return (ObjectBody) children.get(2);
     }
   }
 
-  final class ForGenerator implements ObjectMemberNode {
-    private final Parameter p1;
-    private final @Nullable Parameter p2;
-    private final Expr expr;
-    private final ObjectBody body;
-    private final Span span;
-    private Node parent;
-
+  public static final class ForGenerator extends ObjectMemberNode {
     public ForGenerator(
         Parameter p1, @Nullable Parameter p2, Expr expr, ObjectBody body, Span span) {
-      this.p1 = p1;
-      this.p2 = p2;
-      this.expr = expr;
-      this.body = body;
-      this.span = span;
-
-      p1.setParent(this);
-      if (p2 != null) {
-        p2.setParent(this);
-      }
-      expr.setParent(this);
-      body.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(p1);
-      if (p2 != null) {
-        children.add(p2);
-      }
-      children.add(expr);
-      children.add(body);
-      return children;
+      super(span, Arrays.asList(p1, p2, expr, body));
     }
 
     @Override
@@ -823,60 +262,23 @@ public sealed interface ObjectMemberNode extends Node {
     }
 
     public Parameter getP1() {
-      return p1;
+      return (Parameter) children.get(0);
     }
 
     public @Nullable Parameter getP2() {
-      return p2;
+      return (Parameter) children.get(1);
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(2);
     }
 
     public ObjectBody getBody() {
-      return body;
+      return (ObjectBody) children.get(3);
     }
 
     public Span forSpan() {
       return new Span(span.charIndex(), 3);
-    }
-
-    @Override
-    public String toString() {
-      return "ForGenerator{"
-          + "p1="
-          + p1
-          + ", p2="
-          + p2
-          + ", expr="
-          + expr
-          + ", body="
-          + body
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ForGenerator that = (ForGenerator) o;
-      return Objects.equals(p1, that.p1)
-          && Objects.equals(p2, that.p2)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(body, that.body)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(p1, p2, expr, body, span);
     }
   }
 }

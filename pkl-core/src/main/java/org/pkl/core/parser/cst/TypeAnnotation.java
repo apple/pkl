@@ -16,41 +16,13 @@
 package org.pkl.core.parser.cst;
 
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class TypeAnnotation implements Node {
-  private final Type type;
-  private final Span span;
-  private Node parent;
-
+public class TypeAnnotation extends AbstractNode {
   public TypeAnnotation(Type type, Span span) {
-    this.type = type;
-    this.span = span;
-
-    type.setParent(this);
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of(type);
+    super(span, List.of(type));
   }
 
   @Override
@@ -59,28 +31,7 @@ public class TypeAnnotation implements Node {
   }
 
   public Type getType() {
-    return type;
-  }
-
-  @Override
-  public String toString() {
-    return "TypeAnnotation{" + "type=" + type + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    TypeAnnotation that = (TypeAnnotation) o;
-    return Objects.equals(type, that.type) && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, span);
+    assert children != null;
+    return (Type) children.get(0);
   }
 }

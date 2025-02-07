@@ -17,51 +17,14 @@ package org.pkl.core.parser.cst;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ClassBody implements Node {
-  private final List<ClassProperty> properties;
-  private final List<ClassMethod> methods;
-  private final Span span;
-  private Node parent;
+public class ClassBody extends AbstractNode {
 
-  public ClassBody(List<ClassProperty> properties, List<ClassMethod> methods, Span span) {
-    this.properties = properties;
-    this.methods = methods;
-    this.span = span;
-
-    for (var prop : properties) {
-      prop.setParent(this);
-    }
-    for (var method : methods) {
-      method.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    var children = new ArrayList<Node>(properties.size() + methods.size());
-    children.addAll(properties);
-    children.addAll(methods);
-    return children;
+  public ClassBody(List<Node> nodes, Span span) {
+    super(span, nodes);
   }
 
   @Override
@@ -70,41 +33,24 @@ public class ClassBody implements Node {
   }
 
   public List<ClassProperty> getProperties() {
-    return properties;
+    var props = new ArrayList<ClassProperty>();
+    assert children != null;
+    for (var child : children) {
+      if (child instanceof ClassProperty prop) {
+        props.add(prop);
+      }
+    }
+    return props;
   }
 
   public List<ClassMethod> getMethods() {
+    var methods = new ArrayList<ClassMethod>();
+    assert children != null;
+    for (var child : children) {
+      if (child instanceof ClassMethod method) {
+        methods.add(method);
+      }
+    }
     return methods;
-  }
-
-  @Override
-  public String toString() {
-    return "ClassBody{"
-        + "properties="
-        + properties
-        + ", methods="
-        + methods
-        + ", span="
-        + span
-        + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ClassBody classBody = (ClassBody) o;
-    return Objects.equals(properties, classBody.properties)
-        && Objects.equals(methods, classBody.methods)
-        && Objects.equals(span, classBody.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(properties, methods, span);
   }
 }

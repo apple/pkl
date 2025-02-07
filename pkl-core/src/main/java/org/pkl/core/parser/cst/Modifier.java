@@ -15,40 +15,17 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Modifier implements Node {
+public final class Modifier extends AbstractNode {
   private final ModifierValue value;
-  private final Span span;
-  private Node parent;
 
   public Modifier(ModifierValue value, Span span) {
+    super(span, null);
     this.value = value;
-    this.span = span;
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of();
   }
 
   @Override
@@ -62,9 +39,10 @@ public final class Modifier implements Node {
 
   @Override
   public String toString() {
-    return "Modifier{" + "value=" + value + ", span=" + span + '}';
+    return "Modifier{value=" + value + ", span=" + span + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {

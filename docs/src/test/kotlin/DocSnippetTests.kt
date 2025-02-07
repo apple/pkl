@@ -334,7 +334,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           )
         )
 
-        val properties = parsed.children().filterIsInstance<ClassProperty>()
+        val properties = parsed.children()?.filterIsInstance<ClassProperty>() ?: emptyList()
 
         val responses = mutableListOf<ReplResponse>()
 

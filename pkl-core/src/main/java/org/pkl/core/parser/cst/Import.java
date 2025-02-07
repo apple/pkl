@@ -15,52 +15,19 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Import implements Node {
-  private final StringConstant importStr;
+@SuppressWarnings("DataFlowIssue")
+public final class Import extends AbstractNode {
   private final boolean isGlob;
-  private final @Nullable Identifier alias;
-  private final Span span;
-  private Node parent;
 
   public Import(StringConstant importStr, boolean isGlob, @Nullable Identifier alias, Span span) {
-    this.importStr = importStr;
+    super(span, Arrays.asList(importStr, alias));
     this.isGlob = isGlob;
-    this.alias = alias;
-    this.span = span;
-
-    importStr.setParent(this);
-    if (alias != null) {
-      alias.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    if (alias != null) {
-      return List.of(importStr, alias);
-    }
-    return List.of(importStr);
   }
 
   @Override
@@ -69,7 +36,7 @@ public final class Import implements Node {
   }
 
   public StringConstant getImportStr() {
-    return importStr;
+    return (StringConstant) children.get(0);
   }
 
   public boolean isGlob() {
@@ -77,23 +44,15 @@ public final class Import implements Node {
   }
 
   public @Nullable Identifier getAlias() {
-    return alias;
+    return (Identifier) children.get(1);
   }
 
   @Override
   public String toString() {
-    return "Import{"
-        + "importStr="
-        + importStr
-        + ", isGlob="
-        + isGlob
-        + ", alias="
-        + alias
-        + ", span="
-        + span
-        + '}';
+    return "Import{isGlob=" + isGlob + ", span=" + span + ", children=" + children + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -102,15 +61,15 @@ public final class Import implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    if (!super.equals(o)) {
+      return false;
+    }
     Import anImport = (Import) o;
-    return isGlob == anImport.isGlob
-        && Objects.equals(importStr, anImport.importStr)
-        && Objects.equals(alias, anImport.alias)
-        && Objects.equals(span, anImport.span);
+    return isGlob == anImport.isGlob;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(importStr, isGlob, alias, span);
+    return Objects.hash(super.hashCode(), isGlob);
   }
 }

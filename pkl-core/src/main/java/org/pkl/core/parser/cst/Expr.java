@@ -15,8 +15,7 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.PklBugException;
@@ -24,260 +23,63 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface Expr extends Node {
+@SuppressWarnings("ALL")
+public abstract sealed class Expr extends AbstractNode {
 
-  final class This implements Expr {
-    private final Span span;
-    private Node parent;
+  public Expr(Span span, @Nullable List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
 
+  public static final class This extends Expr {
     public This(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitThisExpr(this);
     }
-
-    @Override
-    public String toString() {
-      return "This{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      This aThis = (This) o;
-      return Objects.equals(span, aThis.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class Outer implements Expr {
-    private final Span span;
-    private Node parent;
-
+  public static final class Outer extends Expr {
     public Outer(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitOuterExpr(this);
     }
-
-    @Override
-    public String toString() {
-      return "Outer{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Outer outer = (Outer) o;
-      return Objects.equals(span, outer.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class Module implements Expr {
-    private final Span span;
-    private Node parent;
-
+  public static final class Module extends Expr {
     public Module(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitModuleExpr(this);
     }
-
-    @Override
-    public String toString() {
-      return "Module{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Module module = (Module) o;
-      return Objects.equals(span, module.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class NullLiteral implements Expr {
-    private final Span span;
-    private Node parent;
-
+  public static final class NullLiteral extends Expr {
     public NullLiteral(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
+      super(span, null);
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNullLiteralExpr(this);
     }
-
-    @Override
-    public String toString() {
-      return "NullLiteral{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      NullLiteral that = (NullLiteral) o;
-      return Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
-    }
   }
 
-  final class BoolLiteral implements Expr {
+  public static final class BoolLiteral extends Expr {
     private final boolean b;
-    private final Span span;
-    private Node parent;
 
     public BoolLiteral(boolean b, Span span) {
+      super(span, null);
       this.b = b;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
     }
 
     @Override
@@ -288,58 +90,14 @@ public sealed interface Expr extends Node {
     public boolean isB() {
       return b;
     }
-
-    @Override
-    public String toString() {
-      return "BoolLiteral{" + "b=" + b + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      BoolLiteral that = (BoolLiteral) o;
-      return b == that.b && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(b, span);
-    }
   }
 
-  final class IntLiteral implements Expr {
+  public static final class IntLiteral extends Expr {
     private final String number;
-    private final Span span;
-    private Node parent;
 
     public IntLiteral(String number, Span span) {
+      super(span, null);
       this.number = number;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
     }
 
     @Override
@@ -350,58 +108,14 @@ public sealed interface Expr extends Node {
     public String getNumber() {
       return number;
     }
-
-    @Override
-    public String toString() {
-      return "IntLiteral{" + "number='" + number + '\'' + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      IntLiteral that = (IntLiteral) o;
-      return Objects.equals(number, that.number) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(number, span);
-    }
   }
 
-  final class FloatLiteral implements Expr {
+  public static final class FloatLiteral extends Expr {
     private final String number;
-    private final Span span;
-    private Node parent;
 
     public FloatLiteral(String number, Span span) {
+      super(span, null);
       this.number = number;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
     }
 
     @Override
@@ -412,67 +126,17 @@ public sealed interface Expr extends Node {
     public String getNumber() {
       return number;
     }
-
-    @Override
-    public String toString() {
-      return "FloatLiteral{" + "number='" + number + '\'' + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      FloatLiteral that = (FloatLiteral) o;
-      return Objects.equals(number, that.number) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(number, span);
-    }
   }
 
-  final class SingleLineStringLiteral implements Expr {
-    private final List<StringPart> parts;
+  public static final class SingleLineStringLiteral extends Expr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
-    private final Span span;
-    private Node parent;
 
     public SingleLineStringLiteral(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
-      this.parts = parts;
+      super(span, parts);
       this.startDelimiterSpan = startDelimiterSpan;
       this.endDelimiterSpan = endDelimiterSpan;
-      this.span = span;
-
-      for (var expr : parts) {
-        expr.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return Collections.unmodifiableList(parts);
     }
 
     @Override
@@ -481,7 +145,8 @@ public sealed interface Expr extends Node {
     }
 
     public List<StringPart> getParts() {
-      return parts;
+      assert children != null;
+      return (List<StringPart>) children;
     }
 
     public Span getStartDelimiterSpan() {
@@ -491,79 +156,17 @@ public sealed interface Expr extends Node {
     public Span getEndDelimiterSpan() {
       return endDelimiterSpan;
     }
-
-    @Override
-    public String toString() {
-      return "SingleLineStringLiteral{"
-          + "span="
-          + span
-          + ", endDelimiterSpan="
-          + endDelimiterSpan
-          + ", startDelimiterSpan="
-          + startDelimiterSpan
-          + ", parts="
-          + parts
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      SingleLineStringLiteral that = (SingleLineStringLiteral) o;
-      return Objects.equals(parts, that.parts)
-          && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
-          && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(parts, startDelimiterSpan, endDelimiterSpan, span);
-    }
   }
 
-  final class MultiLineStringLiteral implements Expr {
-    private final List<StringPart> parts;
+  public static final class MultiLineStringLiteral extends Expr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
-    private final Span span;
-    private Node parent;
 
     public MultiLineStringLiteral(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
-      this.parts = parts;
+      super(span, parts);
       this.startDelimiterSpan = startDelimiterSpan;
       this.endDelimiterSpan = endDelimiterSpan;
-      this.span = span;
-
-      for (var expr : parts) {
-        expr.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return Collections.unmodifiableList(parts);
     }
 
     @Override
@@ -572,7 +175,7 @@ public sealed interface Expr extends Node {
     }
 
     public List<StringPart> getParts() {
-      return parts;
+      return (List<StringPart>) children;
     }
 
     public Span getStartDelimiterSpan() {
@@ -582,72 +185,11 @@ public sealed interface Expr extends Node {
     public Span getEndDelimiterSpan() {
       return endDelimiterSpan;
     }
-
-    @Override
-    public String toString() {
-      return "MultiLineStringLiteral{"
-          + "parts="
-          + parts
-          + ", startDelimiterSpan="
-          + startDelimiterSpan
-          + ", endDelimiterSpan="
-          + endDelimiterSpan
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      MultiLineStringLiteral that = (MultiLineStringLiteral) o;
-      return Objects.equals(parts, that.parts)
-          && Objects.equals(startDelimiterSpan, that.startDelimiterSpan)
-          && Objects.equals(endDelimiterSpan, that.endDelimiterSpan)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(parts, startDelimiterSpan, endDelimiterSpan, span);
-    }
   }
 
-  final class Throw implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class Throw extends Expr {
     public Throw(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -656,62 +198,13 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "Throw{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Throw aThrow = (Throw) o;
-      return Objects.equals(expr, aThrow.expr) && Objects.equals(span, aThrow.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class Trace implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class Trace extends Expr {
     public Trace(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -720,64 +213,16 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "Trace{" + "expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Trace trace = (Trace) o;
-      return Objects.equals(expr, trace.expr) && Objects.equals(span, trace.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class ImportExpr implements Expr {
-    private final StringConstant importStr;
+  public static final class ImportExpr extends Expr {
     private final boolean isGlob;
-    private final Span span;
-    private Node parent;
 
     public ImportExpr(StringConstant importStr, boolean isGlob, Span span) {
-      this.importStr = importStr;
+      super(span, List.of(importStr));
       this.isGlob = isGlob;
-      this.span = span;
-
-      importStr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(importStr);
     }
 
     @Override
@@ -786,77 +231,20 @@ public sealed interface Expr extends Node {
     }
 
     public StringConstant getImportStr() {
-      return importStr;
+      return (StringConstant) children.get(0);
     }
 
     public boolean isGlob() {
       return isGlob;
     }
-
-    @Override
-    public String toString() {
-      return "ImportExpr{"
-          + "span="
-          + span
-          + ", isGlob="
-          + isGlob
-          + ", importStr="
-          + importStr
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      ImportExpr that = (ImportExpr) o;
-      return isGlob == that.isGlob
-          && Objects.equals(importStr, that.importStr)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(importStr, isGlob, span);
-    }
   }
 
-  final class Read implements Expr {
-    private final Expr expr;
+  public static final class Read extends Expr {
     private final ReadType readType;
-    private final Span span;
-    private Node parent;
 
     public Read(Expr expr, ReadType readType, Span span) {
-      this.expr = expr;
+      super(span, List.of(expr));
       this.readType = readType;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
     }
 
     @Override
@@ -865,81 +253,24 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public ReadType getReadType() {
       return readType;
     }
-
-    @Override
-    public String toString() {
-      return "Read{" + "expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Read read = (Read) o;
-      return Objects.equals(expr, read.expr) && Objects.equals(span, read.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
-    }
   }
 
-  enum ReadType {
+  public enum ReadType {
     READ,
     GLOB,
     NULL
   }
 
-  final class UnqualifiedAccess implements Expr {
-    private final Identifier identifier;
-    private final @Nullable ArgumentList argumentList;
-    private final Span span;
-    private Node parent;
-
+  public static final class UnqualifiedAccess extends Expr {
     public UnqualifiedAccess(
         Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
-      this.identifier = identifier;
-      this.argumentList = argumentList;
-      this.span = span;
-
-      identifier.setParent(this);
-      if (argumentList != null) {
-        argumentList.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      if (argumentList == null) {
-        return List.of(identifier);
-      }
-      return List.of(identifier, argumentList);
+      super(span, Arrays.asList(identifier, argumentList));
     }
 
     @Override
@@ -948,52 +279,16 @@ public sealed interface Expr extends Node {
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(0);
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      return argumentList;
-    }
-
-    @Override
-    public String toString() {
-      return "UnqualifiedAccess{"
-          + "identifier="
-          + identifier
-          + ", argumentList="
-          + argumentList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      UnqualifiedAccess that = (UnqualifiedAccess) o;
-      return Objects.equals(identifier, that.identifier)
-          && Objects.equals(argumentList, that.argumentList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(identifier, argumentList, span);
+      return (ArgumentList) children.get(1);
     }
   }
 
-  final class QualifiedAccess implements Expr {
-    private final Expr expr;
-    private final Identifier identifier;
+  public static final class QualifiedAccess extends Expr {
     private final boolean isNullable;
-    private final @Nullable ArgumentList argumentList;
-    private final Span span;
-    private Node parent;
 
     public QualifiedAccess(
         Expr expr,
@@ -1001,43 +296,8 @@ public sealed interface Expr extends Node {
         boolean isNullable,
         @Nullable ArgumentList argumentList,
         Span span) {
-      this.expr = expr;
-      this.identifier = identifier;
+      super(span, Arrays.asList(expr, identifier, argumentList));
       this.isNullable = isNullable;
-      this.argumentList = argumentList;
-      this.span = span;
-
-      expr.setParent(this);
-      identifier.setParent(this);
-      if (argumentList != null) {
-        argumentList.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(expr);
-      children.add(identifier);
-      if (argumentList != null) {
-        children.add(argumentList);
-      }
-      return children;
     }
 
     @Override
@@ -1046,11 +306,11 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(1);
     }
 
     public boolean isNullable() {
@@ -1058,87 +318,13 @@ public sealed interface Expr extends Node {
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      return argumentList;
-    }
-
-    @Override
-    public String toString() {
-      return "QualifiedAccess{"
-          + "expr="
-          + expr
-          + ", identifier="
-          + identifier
-          + ", isNullable="
-          + isNullable
-          + ", argumentList="
-          + argumentList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      QualifiedAccess that = (QualifiedAccess) o;
-      return isNullable == that.isNullable
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(identifier, that.identifier)
-          && Objects.equals(argumentList, that.argumentList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, identifier, isNullable, argumentList, span);
+      return (ArgumentList) children.get(2);
     }
   }
 
-  final class SuperAccess implements Expr {
-    private final Identifier identifier;
-    private final @Nullable ArgumentList argumentList;
-    private final Span span;
-    private Node parent;
-
+  public static final class SuperAccess extends Expr {
     public SuperAccess(Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
-      this.identifier = identifier;
-      this.argumentList = argumentList;
-      this.span = span;
-
-      identifier.setParent(this);
-      if (argumentList != null) {
-        argumentList.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(identifier);
-      if (argumentList != null) {
-        children.add(argumentList);
-      }
-      return children;
+      super(span, Arrays.asList(identifier, argumentList));
     }
 
     @Override
@@ -1147,75 +333,17 @@ public sealed interface Expr extends Node {
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(0);
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      return argumentList;
-    }
-
-    @Override
-    public String toString() {
-      return "SuperAccess{"
-          + "identifier="
-          + identifier
-          + ", argumentList="
-          + argumentList
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      SuperAccess that = (SuperAccess) o;
-      return Objects.equals(identifier, that.identifier)
-          && Objects.equals(argumentList, that.argumentList)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(identifier, argumentList, span);
+      return (ArgumentList) children.get(1);
     }
   }
 
-  final class SuperSubscript implements Expr {
-    private final Expr arg;
-    private final Span span;
-    private Node parent;
-
+  public static final class SuperSubscript extends Expr {
     public SuperSubscript(Expr arg, Span span) {
-      this.arg = arg;
-      this.span = span;
-
-      arg.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(arg);
+      super(span, List.of(arg));
     }
 
     @Override
@@ -1224,65 +352,13 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getArg() {
-      return arg;
-    }
-
-    @Override
-    public String toString() {
-      return "SuperSubscript{arg=" + arg + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      SuperSubscript that = (SuperSubscript) o;
-      return Objects.equals(arg, that.arg) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(arg, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class Subscript implements Expr {
-    private final Expr expr;
-    private final Expr arg;
-    private final Span span;
-    private Node parent;
-
+  public static final class Subscript extends Expr {
     public Subscript(Expr expr, Expr arg, Span span) {
-      this.expr = expr;
-      this.arg = arg;
-      this.span = span;
-
-      expr.setParent(this);
-      arg.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr, arg);
+      super(span, List.of(expr, arg));
     }
 
     @Override
@@ -1291,74 +367,17 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public Expr getArg() {
-      return arg;
-    }
-
-    @Override
-    public String toString() {
-      return "Subscript{expr=" + expr + ", arg=" + arg + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Subscript subscript = (Subscript) o;
-      return Objects.equals(expr, subscript.expr)
-          && Objects.equals(arg, subscript.arg)
-          && Objects.equals(span, subscript.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, arg, span);
+      return (Expr) children.get(1);
     }
   }
 
-  final class If implements Expr {
-    private final Expr cond;
-    private final Expr then;
-    private final Expr els;
-    private final Span span;
-    private Node parent;
-
+  public static final class If extends Expr {
     public If(Expr cond, Expr then, Expr els, Span span) {
-      this.cond = cond;
-      this.then = then;
-      this.els = els;
-      this.span = span;
-
-      cond.setParent(this);
-      then.setParent(this);
-      els.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(cond, then, els);
+      super(span, List.of(cond, then, els));
     }
 
     @Override
@@ -1367,79 +386,21 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getCond() {
-      return cond;
+      return (Expr) children.get(0);
     }
 
     public Expr getThen() {
-      return then;
+      return (Expr) children.get(1);
     }
 
     public Expr getEls() {
-      return els;
-    }
-
-    @Override
-    public String toString() {
-      return "If{cond=" + cond + ", then=" + then + ", els=" + els + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      If anIf = (If) o;
-      return Objects.equals(cond, anIf.cond)
-          && Objects.equals(then, anIf.then)
-          && Objects.equals(els, anIf.els)
-          && Objects.equals(span, anIf.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(cond, then, els, span);
+      return (Expr) children.get(2);
     }
   }
 
-  final class Let implements Expr {
-    private final Parameter parameter;
-    private final Expr bindingExpr;
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class Let extends Expr {
     public Let(Parameter parameter, Expr bindingExpr, Expr expr, Span span) {
-      this.parameter = parameter;
-      this.bindingExpr = bindingExpr;
-      this.expr = expr;
-      this.span = span;
-
-      parameter.setParent(this);
-      bindingExpr.setParent(this);
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(parameter, bindingExpr, expr);
+      super(span, List.of(parameter, bindingExpr, expr));
     }
 
     @Override
@@ -1448,85 +409,21 @@ public sealed interface Expr extends Node {
     }
 
     public Parameter getParameter() {
-      return parameter;
+      return (Parameter) children.get(0);
     }
 
     public Expr getBindingExpr() {
-      return bindingExpr;
+      return (Expr) children.get(1);
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "Let{"
-          + "parameter="
-          + parameter
-          + ", bindingExpr="
-          + bindingExpr
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Let let = (Let) o;
-      return Objects.equals(parameter, let.parameter)
-          && Objects.equals(bindingExpr, let.bindingExpr)
-          && Objects.equals(expr, let.expr)
-          && Objects.equals(span, let.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(parameter, bindingExpr, expr, span);
+      return (Expr) children.get(2);
     }
   }
 
-  final class FunctionLiteral implements Expr {
-    private final ParameterList parameterList;
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class FunctionLiteral extends Expr {
     public FunctionLiteral(ParameterList parameterList, Expr expr, Span span) {
-      this.parameterList = parameterList;
-      this.expr = expr;
-      this.span = span;
-
-      parameterList.setParent(this);
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(parameterList, expr);
+      super(span, List.of(parameterList, expr));
     }
 
     @Override
@@ -1535,75 +432,17 @@ public sealed interface Expr extends Node {
     }
 
     public ParameterList getParameterList() {
-      return parameterList;
+      return (ParameterList) children.get(0);
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "FunctionLiteral{"
-          + "parameterList="
-          + parameterList
-          + ", expr="
-          + expr
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      FunctionLiteral that = (FunctionLiteral) o;
-      return Objects.equals(parameterList, that.parameterList)
-          && Objects.equals(expr, that.expr)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(parameterList, expr, span);
+      return (Expr) children.get(1);
     }
   }
 
-  final class Parenthesized implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class Parenthesized extends Expr {
     public Parenthesized(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -1612,70 +451,13 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "Parenthesized{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Parenthesized that = (Parenthesized) o;
-      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class New implements Expr {
-    private final @Nullable Type type;
-    private final ObjectBody body;
-    private final Span span;
-    private Node parent;
-
+  public static final class New extends Expr {
     public New(@Nullable Type type, ObjectBody body, Span span) {
-      this.type = type;
-      this.body = body;
-      this.span = span;
-
-      if (type != null) {
-        type.setParent(this);
-      }
-      body.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      if (type != null) {
-        return List.of(type, body);
-      }
-      return List.of(body);
+      super(span, Arrays.asList(type, body));
     }
 
     @Override
@@ -1684,75 +466,21 @@ public sealed interface Expr extends Node {
     }
 
     public @Nullable Type getType() {
-      return type;
+      return (Type) children.get(0);
     }
 
     public ObjectBody getBody() {
-      return body;
+      return (ObjectBody) children.get(1);
     }
 
     public Span newSpan() {
       return new Span(span.charIndex(), 3);
     }
-
-    @Override
-    public String toString() {
-      return "New{type=" + type + ", body=" + body + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      New aNew = (New) o;
-      return Objects.equals(type, aNew.type)
-          && Objects.equals(body, aNew.body)
-          && Objects.equals(span, aNew.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(type, body, span);
-    }
   }
 
-  final class Amends implements Expr {
-    private final Expr expr;
-    private final ObjectBody body;
-    private final Span span;
-    private Node parent;
-
+  public static final class Amends extends Expr {
     public Amends(Expr expr, ObjectBody body, Span span) {
-      this.expr = expr;
-      this.body = body;
-      this.span = span;
-
-      expr.setParent(this);
-      body.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr, body);
+      super(span, List.of(expr, body));
     }
 
     @Override
@@ -1761,68 +489,17 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public ObjectBody getBody() {
-      return body;
-    }
-
-    @Override
-    public String toString() {
-      return "Amends{expr=" + expr + ", body=" + body + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Amends amends = (Amends) o;
-      return Objects.equals(expr, amends.expr)
-          && Objects.equals(body, amends.body)
-          && Objects.equals(span, amends.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, body, span);
+      return (ObjectBody) children.get(1);
     }
   }
 
-  final class NonNull implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class NonNull extends Expr {
     public NonNull(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -1831,62 +508,13 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "NonNull{" + "expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      NonNull nonNull = (NonNull) o;
-      return Objects.equals(expr, nonNull.expr) && Objects.equals(span, nonNull.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class UnaryMinus implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class UnaryMinus extends Expr {
     public UnaryMinus(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -1895,62 +523,13 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "UnaryMinus{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      UnaryMinus that = (UnaryMinus) o;
-      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class LogicalNot implements Expr {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class LogicalNot extends Expr {
     public LogicalNot(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     @Override
@@ -1959,67 +538,16 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "LogicalNot{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      LogicalNot that = (LogicalNot) o;
-      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 
-  final class BinaryOp implements Expr {
-    private final Expr left;
-    private final Expr right;
+  public static final class BinaryOp extends Expr {
     private final Operator op;
-    private final Span span;
-    private Node parent;
 
     public BinaryOp(Expr left, Expr right, Operator op, Span span) {
-      this.left = left;
-      this.right = right;
+      super(span, List.of(left, right));
       this.op = op;
-      this.span = span;
-
-      left.setParent(this);
-      right.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(left, right);
     }
 
     @Override
@@ -2028,11 +556,11 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getLeft() {
-      return left;
+      return (Expr) children.get(0);
     }
 
     public Expr getRight() {
-      return right;
+      return (Expr) children.get(1);
     }
 
     public Operator getOp() {
@@ -2041,16 +569,7 @@ public sealed interface Expr extends Node {
 
     @Override
     public String toString() {
-      return "BinaryOp{"
-          + "left="
-          + left
-          + ", right="
-          + right
-          + ", op="
-          + op
-          + ", span="
-          + span
-          + '}';
+      return "BinaryOp{" + "children=" + children + ", op=" + op + ", span=" + span + '}';
     }
 
     @Override
@@ -2062,51 +581,20 @@ public sealed interface Expr extends Node {
         return false;
       }
       BinaryOp binaryOp = (BinaryOp) o;
-      return Objects.equals(left, binaryOp.left)
-          && Objects.equals(right, binaryOp.right)
+      return Objects.deepEquals(children, binaryOp.children)
           && op == binaryOp.op
           && Objects.equals(span, binaryOp.span);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(left, right, op, span);
+      return Objects.hash(children, op, span);
     }
   }
 
-  final class TypeCheck implements Expr {
-    private final Expr expr;
-    private final Type type;
-    private final Span span;
-    private Node parent;
-
+  public static final class TypeCheck extends Expr {
     public TypeCheck(Expr expr, Type type, Span span) {
-      this.expr = expr;
-      this.type = type;
-      this.span = span;
-
-      expr.setParent(this);
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr, type);
+      super(span, List.of(expr, type));
     }
 
     @Override
@@ -2115,71 +603,17 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "TypeCheck{expr=" + expr + ", type=" + type + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      TypeCheck typeCheck = (TypeCheck) o;
-      return Objects.equals(expr, typeCheck.expr)
-          && Objects.equals(type, typeCheck.type)
-          && Objects.equals(span, typeCheck.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, type, span);
+      return (Type) children.get(1);
     }
   }
 
-  final class TypeCast implements Expr {
-    private final Expr expr;
-    private final Type type;
-    private final Span span;
-    private Node parent;
-
+  public static final class TypeCast extends Expr {
     public TypeCast(Expr expr, Type type, Span span) {
-      this.expr = expr;
-      this.type = type;
-      this.span = span;
-
-      expr.setParent(this);
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr, type);
+      super(span, List.of(expr, type));
     }
 
     @Override
@@ -2188,67 +622,21 @@ public sealed interface Expr extends Node {
     }
 
     public Expr getExpr() {
-      return expr;
+      return (Expr) children.get(0);
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "TypeCast{expr=" + expr + ", type=" + type + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      TypeCast typeCast = (TypeCast) o;
-      return Objects.equals(expr, typeCast.expr)
-          && Objects.equals(type, typeCast.type)
-          && Objects.equals(span, typeCast.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, type, span);
+      return (Type) children.get(1);
     }
   }
 
   /** This is a synthetic class only used at parse time. */
-  final class OperatorExpr implements Expr {
+  public static final class OperatorExpr extends Expr {
     private final Operator op;
-    private final Span span;
-    private Node parent;
 
     public OperatorExpr(Operator op, Span span) {
+      super(span, null);
       this.op = op;
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
     }
 
     @Override
@@ -2285,34 +673,9 @@ public sealed interface Expr extends Node {
   }
 
   /** This is a synthetic class only used at parse time. */
-  final class TypeExpr implements Expr {
-    private final Type type;
-    private Node parent;
-
+  public static final class TypeExpr extends Expr {
     public TypeExpr(Type type) {
-      this.type = type;
-
-      type.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return type.span();
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(type);
+      super(type.span(), List.of(type));
     }
 
     @Override
@@ -2322,29 +685,7 @@ public sealed interface Expr extends Node {
     }
 
     public Type getType() {
-      return type;
-    }
-
-    @Override
-    public String toString() {
-      return "TypeExpr{" + "type=" + type + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      TypeExpr typeExpr = (TypeExpr) o;
-      return Objects.equals(type, typeExpr.type);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(type);
+      return (Type) children.get(0);
     }
   }
 }

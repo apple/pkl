@@ -15,53 +15,18 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class ObjectBody implements Node {
-  private final List<Parameter> parameters;
-  private final List<ObjectMemberNode> members;
-  private final Span span;
-  private Node parent;
+@SuppressWarnings({"unchecked", "DataFlowIssue"})
+public final class ObjectBody extends AbstractNode {
+  private final int membersOffset;
 
-  public ObjectBody(List<Parameter> parameters, List<ObjectMemberNode> members, Span span) {
-    this.parameters = parameters;
-    this.members = members;
-    this.span = span;
-
-    for (var par : parameters) {
-      par.setParent(this);
-    }
-    for (var member : members) {
-      member.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    var children = new ArrayList<Node>(parameters.size() + members.size());
-    children.addAll(parameters);
-    children.addAll(members);
-    return children;
+  public ObjectBody(List<Node> nodes, int membersOffset, Span span) {
+    super(span, nodes);
+    this.membersOffset = membersOffset;
   }
 
   @Override
@@ -70,34 +35,10 @@ public final class ObjectBody implements Node {
   }
 
   public List<Parameter> getParameters() {
-    return parameters;
+    return (List<Parameter>) children.subList(0, membersOffset);
   }
 
   public List<ObjectMemberNode> getMembers() {
-    return members;
-  }
-
-  @Override
-  public String toString() {
-    return "ObjectBody{parameters=" + parameters + ", members=" + members + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ObjectBody that = (ObjectBody) o;
-    return Objects.equals(parameters, that.parameters)
-        && Objects.equals(members, that.members)
-        && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(parameters, members, span);
+    return (List<ObjectMemberNode>) children.subList(membersOffset, children.size());
   }
 }

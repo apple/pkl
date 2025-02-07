@@ -15,151 +15,42 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface Parameter extends Node {
+@SuppressWarnings("ALL")
+public abstract sealed class Parameter extends AbstractNode {
+
+  public Parameter(Span span, @Nullable List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
 
   @Override
-  default <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitParameter(this);
   }
 
-  final class Underscore implements Parameter {
-    private final Span span;
-    private Node parent;
-
+  public static final class Underscore extends Parameter {
     public Underscore(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of();
-    }
-
-    @Override
-    public String toString() {
-      return "Underscore{" + "span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Underscore that = (Underscore) o;
-      return Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(span);
+      super(span, null);
     }
   }
 
-  final class TypedIdentifier implements Parameter {
-    private final Identifier identifier;
-    private final @Nullable TypeAnnotation typeAnnotation;
-    private final Span span;
-    private Node parent;
-
+  public static final class TypedIdentifier extends Parameter {
     public TypedIdentifier(
         Identifier identifier, @Nullable TypeAnnotation typeAnnotation, Span span) {
-      this.identifier = identifier;
-      this.typeAnnotation = typeAnnotation;
-      this.span = span;
-
-      identifier.setParent(this);
-      if (typeAnnotation != null) {
-        typeAnnotation.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      var children = new ArrayList<Node>();
-      children.add(identifier);
-      if (typeAnnotation != null) {
-        children.add(typeAnnotation);
-      }
-      return children;
+      super(span, Arrays.asList(identifier, typeAnnotation));
     }
 
     public Identifier getIdentifier() {
-      return identifier;
+      return (Identifier) children.get(0);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      return typeAnnotation;
-    }
-
-    @Override
-    public String toString() {
-      return "TypedIdentifier{"
-          + "identifier="
-          + identifier
-          + ", type="
-          + typeAnnotation
-          + ", span="
-          + span
-          + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      TypedIdentifier that = (TypedIdentifier) o;
-      return Objects.equals(identifier, that.identifier)
-          && Objects.equals(typeAnnotation, that.typeAnnotation)
-          && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(identifier, typeAnnotation, span);
+      return (TypeAnnotation) children.get(1);
     }
   }
 }

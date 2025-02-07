@@ -21,36 +21,12 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ExtendsOrAmendsDecl implements Node {
-  private final StringConstant url;
+public class ExtendsOrAmendsDecl extends AbstractNode {
   private final Type type;
-  private final Span span;
-  private Node parent;
 
   public ExtendsOrAmendsDecl(StringConstant url, Type type, Span span) {
-    this.url = url;
+    super(span, List.of(url));
     this.type = type;
-    this.span = span;
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of(url);
   }
 
   @Override
@@ -59,7 +35,8 @@ public class ExtendsOrAmendsDecl implements Node {
   }
 
   public StringConstant getUrl() {
-    return url;
+    assert children != null;
+    return (StringConstant) children.get(0);
   }
 
   public Type getType() {
@@ -68,9 +45,17 @@ public class ExtendsOrAmendsDecl implements Node {
 
   @Override
   public String toString() {
-    return "AmendsDecl{" + "url=" + url + ", span=" + span + '}';
+    return "ExtendsOrAmendsDecl{"
+        + "type="
+        + type
+        + ", span="
+        + span
+        + ", children="
+        + children
+        + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -79,13 +64,16 @@ public class ExtendsOrAmendsDecl implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    if (!super.equals(o)) {
+      return false;
+    }
     ExtendsOrAmendsDecl that = (ExtendsOrAmendsDecl) o;
-    return Objects.equals(url, that.url) && Objects.equals(span, that.span);
+    return type == that.type;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(url, span);
+    return Objects.hash(super.hashCode(), type);
   }
 
   public enum Type {

@@ -17,84 +17,14 @@ package org.pkl.core.parser.cst;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Module implements Node {
-  private final @Nullable ModuleDecl decl;
-  private final List<Import> imports;
-  private final List<Class> classes;
-  private final List<TypeAlias> typeAliases;
-  private final List<ClassProperty> properties;
-  private final List<ClassMethod> methods;
-  private final Span span;
-  private Node parent;
-
-  public Module(
-      @Nullable ModuleDecl decl,
-      List<Import> imports,
-      List<Class> classes,
-      List<TypeAlias> typeAliases,
-      List<ClassProperty> properties,
-      List<ClassMethod> methods,
-      Span span) {
-    this.decl = decl;
-    this.imports = imports;
-    this.classes = classes;
-    this.typeAliases = typeAliases;
-    this.properties = properties;
-    this.methods = methods;
-    this.span = span;
-
-    if (decl != null) {
-      decl.setParent(this);
-    }
-    for (var imp : imports) {
-      imp.setParent(this);
-    }
-    for (var clazz : classes) {
-      clazz.setParent(this);
-    }
-    for (var typeAlias : typeAliases) {
-      typeAlias.setParent(this);
-    }
-    for (var prop : properties) {
-      prop.setParent(this);
-    }
-    for (var method : methods) {
-      method.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public @Nullable Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    var children = new ArrayList<Node>();
-    if (decl != null) {
-      children.add(decl);
-    }
-    children.addAll(imports);
-    children.addAll(classes);
-    children.addAll(typeAliases);
-    children.addAll(properties);
-    children.addAll(methods);
-    return children;
+@SuppressWarnings("DataFlowIssue")
+public final class Module extends AbstractNode {
+  public Module(List<Node> nodes, Span span) {
+    super(span, nodes);
   }
 
   @Override
@@ -103,69 +33,61 @@ public final class Module implements Node {
   }
 
   public @Nullable ModuleDecl getDecl() {
-    return decl;
+    return (ModuleDecl) children.get(0);
   }
 
   public List<Import> getImports() {
-    return imports;
+    if (children.size() < 2) return List.of();
+    var res = new ArrayList<Import>();
+    for (int i = 1; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child instanceof Import imp) {
+        res.add(imp);
+      } else {
+        // imports are sequential
+        break;
+      }
+    }
+    return res;
   }
 
   public List<Class> getClasses() {
-    return classes;
+    var res = new ArrayList<Class>();
+    for (var child : children) {
+      if (child instanceof Class clazz) {
+        res.add(clazz);
+      }
+    }
+    return res;
   }
 
   public List<TypeAlias> getTypeAliases() {
-    return typeAliases;
+    var res = new ArrayList<TypeAlias>();
+    for (var child : children) {
+      if (child instanceof TypeAlias typeAlias) {
+        res.add(typeAlias);
+      }
+    }
+    return res;
   }
 
   public List<ClassProperty> getProperties() {
-    return properties;
+    var res = new ArrayList<ClassProperty>();
+    for (var child : children) {
+      if (child instanceof ClassProperty classProperty) {
+        res.add(classProperty);
+      }
+    }
+    return res;
   }
 
   public List<ClassMethod> getMethods() {
-    return methods;
-  }
-
-  @Override
-  public String toString() {
-    return "Module{"
-        + "decl="
-        + decl
-        + ", imports="
-        + imports
-        + ", classes="
-        + classes
-        + ", typeAliases="
-        + typeAliases
-        + ", properties="
-        + properties
-        + ", methods="
-        + methods
-        + ", span="
-        + span
-        + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    var res = new ArrayList<ClassMethod>();
+    for (var child : children) {
+      if (child instanceof ClassMethod classMethod) {
+        res.add(classMethod);
+      }
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Module module = (Module) o;
-    return Objects.equals(decl, module.decl)
-        && Objects.equals(imports, module.imports)
-        && Objects.equals(classes, module.classes)
-        && Objects.equals(typeAliases, module.typeAliases)
-        && Objects.equals(properties, module.properties)
-        && Objects.equals(methods, module.methods)
-        && Objects.equals(span, module.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(decl, imports, classes, typeAliases, properties, methods, span);
+    return res;
   }
 }

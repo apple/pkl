@@ -15,45 +15,14 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class TypeParameterList implements Node {
-  private final List<TypeParameter> parameters;
-  private final Span span;
-  private Node parent;
-
+public class TypeParameterList extends AbstractNode {
   public TypeParameterList(List<TypeParameter> parameters, Span span) {
-    this.parameters = parameters;
-    this.span = span;
-
-    for (var par : parameters) {
-      par.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return Collections.unmodifiableList(parameters);
+    super(span, parameters);
   }
 
   @Override
@@ -61,29 +30,9 @@ public class TypeParameterList implements Node {
     return visitor.visitTypeParameterList(this);
   }
 
+  @SuppressWarnings("unchecked")
   public List<TypeParameter> getParameters() {
-    return parameters;
-  }
-
-  @Override
-  public String toString() {
-    return "TypeParameterList{parameters=" + parameters + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    TypeParameterList that = (TypeParameterList) o;
-    return Objects.equals(parameters, that.parameters) && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(parameters, span);
+    assert children != null;
+    return (List<TypeParameter>) children;
   }
 }

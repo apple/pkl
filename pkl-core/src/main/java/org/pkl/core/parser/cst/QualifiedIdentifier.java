@@ -15,45 +15,15 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.pkl.core.parser.ParserVisitor;
-import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class QualifiedIdentifier implements Node {
-  private final List<Identifier> identifiers;
-  private Node parent;
-
+public final class QualifiedIdentifier extends AbstractNode {
   public QualifiedIdentifier(List<Identifier> identifiers) {
-    this.identifiers = identifiers;
-
-    for (var identifier : identifiers) {
-      identifier.setParent(this);
-    }
-  }
-
-  public Span span() {
-    var start = identifiers.get(0).span();
-    var end = identifiers.get(identifiers.size() - 1).span();
-    return start.endWith(end);
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return Collections.unmodifiableList(identifiers);
+    super(
+        identifiers.get(0).span.endWith(identifiers.get(identifiers.size() - 1).span), identifiers);
   }
 
   @Override
@@ -61,33 +31,12 @@ public final class QualifiedIdentifier implements Node {
     return visitor.visitQualifiedIdentifier(this);
   }
 
+  @SuppressWarnings({"unchecked", "DataFlowIssue"})
   public List<Identifier> getIdentifiers() {
-    return identifiers;
+    return (List<Identifier>) children;
   }
 
   public String text() {
-    return identifiers.stream().map(Identifier::getValue).collect(Collectors.joining("."));
-  }
-
-  @Override
-  public String toString() {
-    return "QualifiedIdentifier{identifiers=" + identifiers + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    QualifiedIdentifier that = (QualifiedIdentifier) o;
-    return Objects.equals(identifiers, that.identifiers);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(identifiers);
+    return getIdentifiers().stream().map(Identifier::getValue).collect(Collectors.joining("."));
   }
 }

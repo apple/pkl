@@ -15,137 +15,40 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public sealed interface StringPart extends Node {
+@SuppressWarnings("ALL")
+public abstract sealed class StringPart extends AbstractNode {
+
+  public StringPart(Span span, @Nullable List<? extends @Nullable Node> children) {
+    super(span, children);
+  }
 
   @Override
-  default <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitStringPart(this);
   }
 
-  final class StringConstantParts implements StringPart {
-    private final List<StringConstantPart> parts;
-    private final Span span;
-    private Node parent;
-
+  public static final class StringConstantParts extends StringPart {
     public StringConstantParts(List<StringConstantPart> parts, Span span) {
-      this.parts = parts;
-      this.span = span;
-
-      for (var part : parts) {
-        part.setParent(this);
-      }
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return Collections.unmodifiableList(parts);
+      super(span, parts);
     }
 
     public List<StringConstantPart> getParts() {
-      return parts;
-    }
-
-    @Override
-    public String toString() {
-      return "StringConstantParts{parts=" + parts + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      StringConstantParts that = (StringConstantParts) o;
-      return Objects.equals(parts, that.parts) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(parts, span);
+      return (List<StringConstantPart>) children;
     }
   }
 
-  final class StringInterpolation implements StringPart {
-    private final Expr expr;
-    private final Span span;
-    private Node parent;
-
+  public static final class StringInterpolation extends StringPart {
     public StringInterpolation(Expr expr, Span span) {
-      this.expr = expr;
-      this.span = span;
-
-      expr.setParent(this);
-    }
-
-    @Override
-    public Span span() {
-      return span;
-    }
-
-    @Override
-    public Node parent() {
-      return parent;
-    }
-
-    @Override
-    public void setParent(Node parent) {
-      this.parent = parent;
-    }
-
-    @Override
-    public List<Node> children() {
-      return List.of(expr);
+      super(span, List.of(expr));
     }
 
     public Expr getExpr() {
-      return expr;
-    }
-
-    @Override
-    public String toString() {
-      return "StringInterpolation{expr=" + expr + ", span=" + span + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      StringInterpolation that = (StringInterpolation) o;
-      return Objects.equals(expr, that.expr) && Objects.equals(span, that.span);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(expr, span);
+      return (Expr) children.get(0);
     }
   }
 }

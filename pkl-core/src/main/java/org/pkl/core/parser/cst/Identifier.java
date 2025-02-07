@@ -15,40 +15,17 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class Identifier implements Node {
+public final class Identifier extends AbstractNode {
   private final String value;
-  private final Span span;
-  private Node parent;
 
   public Identifier(String value, Span span) {
+    super(span, null);
     this.value = value;
-    this.span = span;
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of();
   }
 
   @Override
@@ -65,6 +42,7 @@ public final class Identifier implements Node {
     return "Identifier{value='" + value + '\'' + ", span=" + span + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {

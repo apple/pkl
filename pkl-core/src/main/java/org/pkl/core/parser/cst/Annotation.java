@@ -16,49 +16,13 @@
 package org.pkl.core.parser.cst;
 
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class Annotation implements Node {
-  private final Type type;
-  private final @Nullable ObjectBody body;
-  private final Span span;
-  private Node parent;
-
-  public Annotation(Type type, @Nullable ObjectBody body, Span span) {
-    this.type = type;
-    this.body = body;
-    this.span = span;
-
-    type.setParent(this);
-    if (body != null) {
-      body.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    if (body == null) {
-      return List.of(type);
-    }
-    return List.of(type, body);
+public class Annotation extends AbstractNode {
+  public Annotation(List<Node> nodes, Span span) {
+    super(span, nodes);
   }
 
   @Override
@@ -67,34 +31,12 @@ public class Annotation implements Node {
   }
 
   public Type getType() {
-    return type;
+    assert children != null;
+    return (Type) children.get(0);
   }
 
   public @Nullable ObjectBody getBody() {
-    return body;
-  }
-
-  @Override
-  public String toString() {
-    return "Annotation{type=" + type + ", body=" + body + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Annotation that = (Annotation) o;
-    return Objects.equals(type, that.type)
-        && Objects.equals(body, that.body)
-        && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, body, span);
+    assert children != null;
+    return (ObjectBody) children.get(1);
   }
 }

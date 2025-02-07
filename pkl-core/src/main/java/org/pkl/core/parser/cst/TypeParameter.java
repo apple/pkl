@@ -21,38 +21,12 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class TypeParameter implements Node {
+public final class TypeParameter extends AbstractNode {
   private final @Nullable Variance variance;
-  private final Identifier identifier;
-  private final Span span;
-  private Node parent;
 
   public TypeParameter(@Nullable Variance variance, Identifier identifier, Span span) {
+    super(span, List.of(identifier));
     this.variance = variance;
-    this.identifier = identifier;
-    this.span = span;
-
-    identifier.setParent(this);
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of(identifier);
   }
 
   @Override
@@ -65,7 +39,8 @@ public final class TypeParameter implements Node {
   }
 
   public Identifier getIdentifier() {
-    return identifier;
+    assert children != null;
+    return (Identifier) children.get(0);
   }
 
   @Override
@@ -73,8 +48,8 @@ public final class TypeParameter implements Node {
     return "TypeParameter{"
         + "variance="
         + variance
-        + ", identifier="
-        + identifier
+        + ", children="
+        + children
         + ", span="
         + span
         + '}';
@@ -88,15 +63,16 @@ public final class TypeParameter implements Node {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    if (!super.equals(o)) {
+      return false;
+    }
     TypeParameter that = (TypeParameter) o;
-    return variance == that.variance
-        && Objects.equals(identifier, that.identifier)
-        && Objects.equals(span, that.span);
+    return variance == that.variance;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(variance, identifier, span);
+    return Objects.hash(super.hashCode(), variance);
   }
 
   public enum Variance {

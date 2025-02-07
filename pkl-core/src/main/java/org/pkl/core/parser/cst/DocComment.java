@@ -16,37 +16,21 @@
 package org.pkl.core.parser.cst;
 
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class DocComment implements Node {
+public final class DocComment extends AbstractNode {
   private final List<Span> spans;
-  private Node parent;
 
   public DocComment(List<Span> spans) {
+    super(spans.get(0).endWith(spans.get(spans.size() - 1)), null);
     this.spans = spans;
   }
 
   @Override
   public Span span() {
     return spans.get(0).endWith(spans.get(spans.size() - 1));
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return List.of();
   }
 
   @Override
@@ -62,27 +46,5 @@ public final class DocComment implements Node {
       builder.append('\n');
     }
     return builder.toString();
-  }
-
-  @Override
-  public String toString() {
-    return "DocComment{spans=" + spans + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    DocComment that = (DocComment) o;
-    return Objects.equals(spans, that.spans);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(spans);
   }
 }

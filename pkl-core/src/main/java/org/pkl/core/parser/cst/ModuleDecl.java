@@ -15,82 +15,20 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public final class ModuleDecl implements Node {
-  private final @Nullable DocComment docComment;
-  private final List<Annotation> annotations;
-  private final List<Modifier> modifiers;
-  private final @Nullable QualifiedIdentifier name;
-  private final @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl;
-  private final Span span;
-  private Node parent;
+@SuppressWarnings({"DataFlowIssue", "unchecked"})
+public final class ModuleDecl extends AbstractNode {
+  private final int modifiersOffset;
+  private final int nameOffset;
 
-  public ModuleDecl(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      @Nullable QualifiedIdentifier name,
-      @Nullable ExtendsOrAmendsDecl extendsOrAmendsDecl,
-      Span span) {
-    this.docComment = docComment;
-    this.annotations = annotations;
-    this.modifiers = modifiers;
-    this.name = name;
-    this.extendsOrAmendsDecl = extendsOrAmendsDecl;
-    this.span = span;
-
-    if (docComment != null) {
-      docComment.setParent(this);
-    }
-    for (var ann : annotations) {
-      ann.setParent(this);
-    }
-    for (var mod : modifiers) {
-      mod.setParent(this);
-    }
-    if (name != null) {
-      name.setParent(this);
-    }
-    if (extendsOrAmendsDecl != null) {
-      extendsOrAmendsDecl.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    var children = new ArrayList<Node>();
-    if (docComment != null) {
-      children.add(docComment);
-    }
-    children.addAll(annotations);
-    children.addAll(modifiers);
-    if (name != null) {
-      children.add(name);
-    }
-    if (extendsOrAmendsDecl != null) {
-      children.add(extendsOrAmendsDecl);
-    }
-    return children;
+  public ModuleDecl(List<Node> nodes, int modifiersOffset, int nameOffset, Span span) {
+    super(span, nodes);
+    this.modifiersOffset = modifiersOffset;
+    this.nameOffset = nameOffset;
   }
 
   @Override
@@ -99,75 +37,37 @@ public final class ModuleDecl implements Node {
   }
 
   public @Nullable DocComment getDocComment() {
-    return docComment;
+    return (DocComment) children.get(0);
   }
 
   public List<Annotation> getAnnotations() {
-    return annotations;
+    return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   public List<Modifier> getModifiers() {
-    return modifiers;
+    return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public @Nullable QualifiedIdentifier getName() {
-    return name;
+    return (QualifiedIdentifier) children.get(nameOffset);
   }
 
   public @Nullable ExtendsOrAmendsDecl getExtendsOrAmendsDecl() {
-    return extendsOrAmendsDecl;
+    return (ExtendsOrAmendsDecl) children.get(nameOffset + 1);
   }
 
   public Span headerSpan() {
-    if (!modifiers.isEmpty()) {
-      return modifiers.get(0).span().endWith(span);
+    Span start = null;
+    Span end = null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        if (start == null) {
+          start = child.span();
+        }
+        end = child.span();
+      }
     }
-    if (name != null) {
-      return name.span().endWith(span);
-    }
-    if (extendsOrAmendsDecl != null) {
-      return extendsOrAmendsDecl.span().endWith(span);
-    }
-    return span;
-  }
-
-  @Override
-  public String toString() {
-    return "ModuleDecl{"
-        + "docComment="
-        + docComment
-        + ", annotations="
-        + annotations
-        + ", modifiers="
-        + modifiers
-        + ", name="
-        + name
-        + ", extendsOrAmendsDecl="
-        + extendsOrAmendsDecl
-        + ", span="
-        + span
-        + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ModuleDecl that = (ModuleDecl) o;
-    return Objects.equals(docComment, that.docComment)
-        && Objects.equals(annotations, that.annotations)
-        && Objects.equals(modifiers, that.modifiers)
-        && Objects.equals(name, that.name)
-        && Objects.equals(extendsOrAmendsDecl, that.extendsOrAmendsDecl)
-        && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(docComment, annotations, modifiers, name, extendsOrAmendsDecl, span);
+    return start.endWith(end);
   }
 }

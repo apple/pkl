@@ -28,7 +28,8 @@ public interface Node {
 
   void setParent(Node parent);
 
-  List<Node> children();
+  @Nullable
+  List<? extends @Nullable Node> children();
 
   <T> @Nullable T accept(ParserVisitor<? extends T> visitor);
 

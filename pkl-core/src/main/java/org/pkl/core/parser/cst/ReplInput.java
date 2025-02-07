@@ -15,38 +15,14 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ReplInput implements Node {
-  private final List<Node> nodes;
-  private final Span span;
-
+public class ReplInput extends AbstractNode {
   public ReplInput(List<Node> nodes, Span span) {
-    this.nodes = nodes;
-    this.span = span;
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public @Nullable Node parent() {
-    return null;
-  }
-
-  @Override
-  public void setParent(Node parent) {}
-
-  @Override
-  public List<Node> children() {
-    return Collections.unmodifiableList(nodes);
+    super(span, nodes);
   }
 
   @Override
@@ -54,29 +30,9 @@ public class ReplInput implements Node {
     return visitor.visitReplInput(this);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Node> getNodes() {
-    return nodes;
-  }
-
-  @Override
-  public String toString() {
-    return "ReplInput{nodes=" + nodes + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ReplInput replInput = (ReplInput) o;
-    return Objects.equals(nodes, replInput.nodes) && Objects.equals(span, replInput.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(nodes, span);
+    assert children != null;
+    return (List<Node>) children;
   }
 }

@@ -15,45 +15,16 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ArgumentList implements Node {
-  private final List<Expr> arguments;
-  private final Span span;
-  private Node parent;
+@SuppressWarnings("unchecked")
+public class ArgumentList extends AbstractNode {
 
   public ArgumentList(List<Expr> arguments, Span span) {
-    this.arguments = arguments;
-    this.span = span;
-
-    for (var arg : arguments) {
-      arg.setParent(this);
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    return Collections.unmodifiableList(arguments);
+    super(span, arguments);
   }
 
   @Override
@@ -62,28 +33,7 @@ public class ArgumentList implements Node {
   }
 
   public List<Expr> getArguments() {
-    return arguments;
-  }
-
-  @Override
-  public String toString() {
-    return "ArgumentList{arguments=" + arguments + ", span=" + span + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ArgumentList that = (ArgumentList) o;
-    return Objects.equals(arguments, that.arguments) && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(arguments, span);
+    assert children != null;
+    return (List<Expr>) children;
   }
 }

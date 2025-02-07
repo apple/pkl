@@ -15,99 +15,20 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("DuplicatedCode")
-public final class ClassProperty implements Node {
-  private final @Nullable DocComment docComment;
-  private final List<Annotation> annotations;
-  private final List<Modifier> modifiers;
-  private final Identifier name;
-  private final @Nullable TypeAnnotation typeAnnotation;
-  private final @Nullable Expr expr;
-  private final @Nullable List<ObjectBody> bodyList;
-  private final Span span;
-  private Node parent;
+@SuppressWarnings({"DuplicatedCode", "unchecked"})
+public final class ClassProperty extends AbstractNode {
+  private final int modifiersOffset;
+  private final int nameOffset;
 
-  public ClassProperty(
-      @Nullable DocComment docComment,
-      List<Annotation> annotations,
-      List<Modifier> modifiers,
-      Identifier name,
-      @Nullable TypeAnnotation typeAnnotation,
-      @Nullable Expr expr,
-      @Nullable List<ObjectBody> bodyList,
-      Span span) {
-    this.docComment = docComment;
-    this.annotations = annotations;
-    this.modifiers = modifiers;
-    this.name = name;
-    this.typeAnnotation = typeAnnotation;
-    this.expr = expr;
-    this.bodyList = bodyList;
-    this.span = span;
-
-    if (docComment != null) {
-      docComment.setParent(this);
-    }
-    for (var annotation : annotations) {
-      annotation.setParent(this);
-    }
-    for (var modifier : modifiers) {
-      modifier.setParent(this);
-    }
-    name.setParent(this);
-    if (typeAnnotation != null) {
-      typeAnnotation.setParent(this);
-    }
-    if (expr != null) {
-      expr.setParent(this);
-    }
-    if (bodyList != null) {
-      for (var body : bodyList) {
-        body.setParent(this);
-      }
-    }
-  }
-
-  @Override
-  public Span span() {
-    return span;
-  }
-
-  @Override
-  public @Nullable Node parent() {
-    return parent;
-  }
-
-  @Override
-  public void setParent(Node parent) {
-    this.parent = parent;
-  }
-
-  @Override
-  public List<Node> children() {
-    var children = new ArrayList<Node>();
-    if (docComment != null) {
-      children.add(docComment);
-    }
-    children.addAll(annotations);
-    children.addAll(modifiers);
-    if (typeAnnotation != null) {
-      children.add(typeAnnotation);
-    }
-    if (expr != null) {
-      children.add(expr);
-    }
-    if (bodyList != null) {
-      children.addAll(bodyList);
-    }
-    return children;
+  public ClassProperty(List<Node> nodes, int modifiersOffset, int nameOffset, Span span) {
+    super(span, nodes);
+    this.modifiersOffset = modifiersOffset;
+    this.nameOffset = nameOffset;
   }
 
   @Override
@@ -116,77 +37,37 @@ public final class ClassProperty implements Node {
   }
 
   public @Nullable DocComment getDocComment() {
-    return docComment;
+    assert children != null;
+    return (DocComment) children.get(0);
   }
 
   public List<Annotation> getAnnotations() {
-    return annotations;
+    assert children != null;
+    return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   public List<Modifier> getModifiers() {
-    return modifiers;
+    assert children != null;
+    return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public Identifier getName() {
-    return name;
+    assert children != null;
+    return (Identifier) children.get(nameOffset);
   }
 
   public @Nullable TypeAnnotation getTypeAnnotation() {
-    return typeAnnotation;
+    assert children != null;
+    return (TypeAnnotation) children.get(nameOffset + 1);
   }
 
   public @Nullable Expr getExpr() {
-    return expr;
+    assert children != null;
+    return (Expr) children.get(nameOffset + 2);
   }
 
-  public @Nullable List<ObjectBody> getBodyList() {
-    return bodyList;
-  }
-
-  @Override
-  public String toString() {
-    return "ClassProperty{"
-        + "docComment="
-        + docComment
-        + ", annotations="
-        + annotations
-        + ", modifiers="
-        + modifiers
-        + ", name="
-        + name
-        + ", typeAnnotation="
-        + typeAnnotation
-        + ", expr="
-        + expr
-        + ", bodyList="
-        + bodyList
-        + ", span="
-        + span
-        + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ClassProperty that = (ClassProperty) o;
-    return Objects.equals(docComment, that.docComment)
-        && Objects.equals(annotations, that.annotations)
-        && Objects.equals(modifiers, that.modifiers)
-        && Objects.equals(name, that.name)
-        && Objects.equals(typeAnnotation, that.typeAnnotation)
-        && Objects.equals(expr, that.expr)
-        && Objects.equals(bodyList, that.bodyList)
-        && Objects.equals(span, that.span);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        docComment, annotations, modifiers, name, typeAnnotation, expr, bodyList, span);
+  public List<ObjectBody> getBodyList() {
+    assert children != null;
+    return (List<ObjectBody>) children.subList(nameOffset + 3, children.size());
   }
 }
