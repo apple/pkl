@@ -164,35 +164,36 @@ import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Expr.Amends;
-import org.pkl.core.parser.cst.Expr.BinaryOp;
-import org.pkl.core.parser.cst.Expr.BoolLiteral;
-import org.pkl.core.parser.cst.Expr.FloatLiteral;
-import org.pkl.core.parser.cst.Expr.FunctionLiteral;
-import org.pkl.core.parser.cst.Expr.If;
+import org.pkl.core.parser.cst.Expr.AmendsExpr;
+import org.pkl.core.parser.cst.Expr.BinaryOperatorExpr;
+import org.pkl.core.parser.cst.Expr.BoolLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FloatLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FunctionLiteralExpr;
+import org.pkl.core.parser.cst.Expr.IfExpr;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
-import org.pkl.core.parser.cst.Expr.IntLiteral;
-import org.pkl.core.parser.cst.Expr.Let;
-import org.pkl.core.parser.cst.Expr.LogicalNot;
-import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.New;
-import org.pkl.core.parser.cst.Expr.NonNull;
-import org.pkl.core.parser.cst.Expr.NullLiteral;
-import org.pkl.core.parser.cst.Expr.Outer;
-import org.pkl.core.parser.cst.Expr.Parenthesized;
-import org.pkl.core.parser.cst.Expr.QualifiedAccess;
-import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.Subscript;
-import org.pkl.core.parser.cst.Expr.SuperAccess;
-import org.pkl.core.parser.cst.Expr.SuperSubscript;
-import org.pkl.core.parser.cst.Expr.This;
-import org.pkl.core.parser.cst.Expr.Throw;
-import org.pkl.core.parser.cst.Expr.Trace;
-import org.pkl.core.parser.cst.Expr.TypeCast;
-import org.pkl.core.parser.cst.Expr.TypeCheck;
-import org.pkl.core.parser.cst.Expr.UnaryMinus;
-import org.pkl.core.parser.cst.Expr.UnqualifiedAccess;
+import org.pkl.core.parser.cst.Expr.IntLiteralExpr;
+import org.pkl.core.parser.cst.Expr.LetExpr;
+import org.pkl.core.parser.cst.Expr.LogicalNotExpr;
+import org.pkl.core.parser.cst.Expr.ModuleExpr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.NewExpr;
+import org.pkl.core.parser.cst.Expr.NonNullExpr;
+import org.pkl.core.parser.cst.Expr.NullLiteralExpr;
+import org.pkl.core.parser.cst.Expr.OuterExpr;
+import org.pkl.core.parser.cst.Expr.ParenthesizedExpr;
+import org.pkl.core.parser.cst.Expr.QualifiedAccessExpr;
+import org.pkl.core.parser.cst.Expr.ReadExpr;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.SubscriptExpr;
+import org.pkl.core.parser.cst.Expr.SuperAccessExpr;
+import org.pkl.core.parser.cst.Expr.SuperSubscriptExpr;
+import org.pkl.core.parser.cst.Expr.ThisExpr;
+import org.pkl.core.parser.cst.Expr.ThrowExpr;
+import org.pkl.core.parser.cst.Expr.TraceExpr;
+import org.pkl.core.parser.cst.Expr.TypeCastExpr;
+import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
+import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
+import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -494,8 +495,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitThisExpr(This expr) {
-    if (!(expr.parent() instanceof QualifiedAccess)) {
+  public ExpressionNode visitThisExpr(ThisExpr expr) {
+    if (!(expr.parent() instanceof QualifiedAccessExpr)) {
       var currentScope = symbolTable.getCurrentScope();
       var needsConst =
           currentScope.getConstLevel() == ConstLevel.ALL
@@ -516,8 +517,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   // rather than just performing a lookup in the immediately enclosing object
   // also, consider interpreting `x = ... x ...` as `x = ... outer.x ...`
   @Override
-  public OuterNode visitOuterExpr(Outer expr) {
-    if (!(expr.parent() instanceof QualifiedAccess)) {
+  public OuterNode visitOuterExpr(OuterExpr expr) {
+    if (!(expr.parent() instanceof QualifiedAccessExpr)) {
       var constLevel = symbolTable.getCurrentScope().getConstLevel();
       var outerScope = getParentLexicalScope();
       if (outerScope != null && constLevel.bigger(outerScope.getConstLevel())) {
@@ -531,10 +532,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public GetModuleNode visitModuleExpr(Expr.Module expr) {
+  public GetModuleNode visitModuleExpr(ModuleExpr expr) {
     // cannot use unqualified `module` in a const context
     if (symbolTable.getCurrentScope().getConstLevel().isConst()
-        && !(expr.parent() instanceof QualifiedAccess)) {
+        && !(expr.parent() instanceof QualifiedAccessExpr)) {
       var scope = symbolTable.getCurrentScope();
       while (scope != null
           && !(scope instanceof AnnotationScope)
@@ -558,12 +559,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ConstantValueNode visitNullLiteralExpr(NullLiteral expr) {
+  public ConstantValueNode visitNullLiteralExpr(NullLiteralExpr expr) {
     return new ConstantValueNode(createSourceSection(expr), VmNull.withoutDefault());
   }
 
   @Override
-  public ExpressionNode visitBoolLiteralExpr(BoolLiteral expr) {
+  public ExpressionNode visitBoolLiteralExpr(BoolLiteralExpr expr) {
     if (expr.isB()) {
       return new TrueLiteralNode(createSourceSection(expr));
     } else {
@@ -572,7 +573,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public IntLiteralNode visitIntLiteralExpr(IntLiteral expr) {
+  public IntLiteralNode visitIntLiteralExpr(IntLiteralExpr expr) {
     var section = createSourceSection(expr);
     var text = expr.getNumber();
 
@@ -589,7 +590,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     // relies on grammar rule nesting depth, but a breakage won't go unnoticed by tests
-    if (expr.parent() instanceof UnaryMinus) {
+    if (expr.parent() instanceof UnaryMinusExpr) {
       // handle negation here to make parsing of base.MinInt work
       // also moves negation from runtime to parse time
       text = "-" + text;
@@ -604,11 +605,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public FloatLiteralNode visitFloatLiteralExpr(FloatLiteral expr) {
+  public FloatLiteralNode visitFloatLiteralExpr(FloatLiteralExpr expr) {
     var section = createSourceSection(expr);
     var text = expr.getNumber();
     // relies on grammar rule nesting depth, but a breakage won't go unnoticed by tests
-    if (expr.parent() instanceof UnaryMinus) {
+    if (expr.parent() instanceof UnaryMinusExpr) {
       // handle negation here for consistency with visitIntegerLiteral
       // also moves negation from runtime to parse time
       text = "-" + text;
@@ -623,12 +624,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitThrowExpr(Throw expr) {
+  public ExpressionNode visitThrowExpr(ThrowExpr expr) {
     return ThrowNodeGen.create(createSourceSection(expr), visitExpr(expr.getExpr()));
   }
 
   @Override
-  public TraceNode visitTraceExpr(Trace expr) {
+  public TraceNode visitTraceExpr(TraceExpr expr) {
     return new TraceNode(createSourceSection(expr), visitExpr(expr.getExpr()));
   }
 
@@ -653,7 +654,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public AbstractReadNode visitReadExpr(Read expr) {
+  public AbstractReadNode visitReadExpr(ReadExpr expr) {
     return switch (expr.getReadType()) {
       case READ ->
           ReadNodeGen.create(createSourceSection(expr), moduleKey, visitExpr(expr.getExpr()));
@@ -665,7 +666,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitUnqualifiedAccessExpr(UnqualifiedAccess expr) {
+  public ExpressionNode visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
     var identifier = toIdentifier(expr.getIdentifier().getValue());
     var argList = expr.getArgumentList();
 
@@ -725,7 +726,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
+  public ExpressionNode visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr) {
     var parts = expr.getParts();
     if (parts.isEmpty()) {
       return new ConstantValueNode(createSourceSection(expr), "");
@@ -742,7 +743,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
+  public ExpressionNode visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
     var parts = expr.getParts();
     if (parts.isEmpty()) {
       throw exceptionBuilder()
@@ -855,7 +856,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitNewExpr(New expr) {
+  public ExpressionNode visitNewExpr(NewExpr expr) {
     var type = expr.getType();
     return type != null
         ? doVisitNewExprWithExplicitParent(expr, type)
@@ -863,7 +864,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   // `new Listing<Person> {}` is sugar for: `new Listing<Person> {} as Listing<Person>`
-  private ExpressionNode doVisitNewExprWithExplicitParent(New newExpr, Type type) {
+  private ExpressionNode doVisitNewExprWithExplicitParent(NewExpr newExpr, Type type) {
     var parentType = visitType(type);
     var expr =
         doVisitObjectBody(
@@ -878,7 +879,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return expr;
   }
 
-  private ExpressionNode doVisitNewExprWithInferredParent(New expr) {
+  private ExpressionNode doVisitNewExprWithInferredParent(NewExpr expr) {
     ExpressionNode inferredParentNode;
 
     Node child = expr;
@@ -886,11 +887,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var scope = symbolTable.getCurrentScope();
     var levelsUp = 0;
 
-    while (parent instanceof If
-        || parent instanceof Trace
-        || parent instanceof Let letExpr && letExpr.getExpr() == child) {
+    while (parent instanceof IfExpr
+        || parent instanceof TraceExpr
+        || parent instanceof LetExpr letExpr && letExpr.getExpr() == child) {
 
-      if (parent instanceof Let) {
+      if (parent instanceof LetExpr) {
         assert scope != null;
         scope = scope.getParent();
         levelsUp += 1;
@@ -933,7 +934,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   language,
                   scopeName,
                   levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp));
-    } else if (parent instanceof Let letExpr && letExpr.getBindingExpr() == child) {
+    } else if (parent instanceof LetExpr letExpr && letExpr.getBindingExpr() == child) {
       // TODO (unclear how to infer type now that let-expression is implemented as lambda
       // invocation)
       throw exceptionBuilder()
@@ -951,14 +952,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitAmendsExpr(Amends expr) {
+  public ExpressionNode visitAmendsExpr(AmendsExpr expr) {
     // parentExpr is always New, Amends or Parenthesized. The parser makes sure of it in
     // `Parser.parseExprRest`
     return doVisitObjectBody(expr.getBody(), visitExpr(expr.getExpr()));
   }
 
   @Override
-  public ExpressionNode visitSuperAccessExpr(SuperAccess expr) {
+  public ExpressionNode visitSuperAccessExpr(SuperAccessExpr expr) {
     var sourceSection = createSourceSection(expr);
     var memberName = toIdentifier(expr.getIdentifier().getValue());
     var argCtx = expr.getArgumentList();
@@ -983,12 +984,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitSuperSubscriptExpr(SuperSubscript expr) {
+  public ExpressionNode visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
     return new ReadSuperEntryNode(createSourceSection(expr), visitExpr(expr.getArg()));
   }
 
   @Override
-  public ExpressionNode visitQualifiedAccessExpr(QualifiedAccess expr) {
+  public ExpressionNode visitQualifiedAccessExpr(QualifiedAccessExpr expr) {
     if (expr.getArgumentList() != null) {
       return doVisitMethodAccessExpr(expr);
     }
@@ -997,21 +998,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitSubscriptExpr(Subscript expr) {
+  public ExpressionNode visitSubscriptExpr(SubscriptExpr expr) {
     return SubscriptNodeGen.create(
         createSourceSection(expr), visitExpr(expr.getExpr()), visitExpr(expr.getArg()));
   }
 
   @Override
-  public ExpressionNode visitNonNullExpr(NonNull expr) {
+  public ExpressionNode visitNonNullExpr(NonNullExpr expr) {
     return new NonNullNode(createSourceSection(expr), visitExpr(expr.getExpr()));
   }
 
   @Override
-  public ExpressionNode visitUnaryMinusExpr(UnaryMinus expr) {
+  public ExpressionNode visitUnaryMinusExpr(UnaryMinusExpr expr) {
     var childNode = expr.getExpr();
     var childExpr = visitExpr(childNode);
-    if (childNode instanceof IntLiteral || childNode instanceof FloatLiteral) {
+    if (childNode instanceof IntLiteralExpr || childNode instanceof FloatLiteralExpr) {
       // negation already handled (see visitIntLiteral/visitFloatLiteral)
       return childExpr;
     }
@@ -1019,12 +1020,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitLogicalNotExpr(LogicalNot expr) {
+  public ExpressionNode visitLogicalNotExpr(LogicalNotExpr expr) {
     return LogicalNotNodeGen.create(createSourceSection(expr), visitExpr(expr.getExpr()));
   }
 
   @Override
-  public ExpressionNode visitBinaryOpExpr(BinaryOp expr) {
+  public ExpressionNode visitBinaryOperatorExpr(BinaryOperatorExpr expr) {
     return switch (expr.getOp()) {
       case POW ->
           ExponentiationNodeGen.create(
@@ -1082,19 +1083,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitTypeCheckExpr(TypeCheck expr) {
+  public ExpressionNode visitTypeCheckExpr(TypeCheckExpr expr) {
     return new TypeTestNode(
         createSourceSection(expr), visitExpr(expr.getExpr()), visitType(expr.getType()));
   }
 
   @Override
-  public ExpressionNode visitTypeCastExpr(TypeCast expr) {
+  public ExpressionNode visitTypeCastExpr(TypeCastExpr expr) {
     return new TypeCastNode(
         createSourceSection(expr), visitExpr(expr.getExpr()), visitType(expr.getType()));
   }
 
   @Override
-  public ExpressionNode visitIfExpr(If expr) {
+  public ExpressionNode visitIfExpr(IfExpr expr) {
     return new IfElseNode(
         createSourceSection(expr),
         visitExpr(expr.getCond()),
@@ -1103,7 +1104,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitLetExpr(Let letExpr) {
+  public ExpressionNode visitLetExpr(LetExpr letExpr) {
     var sourceSection = createSourceSection(letExpr);
     var parameter = letExpr.getParameter();
     var frameBuilder = FrameDescriptor.newBuilder();
@@ -1138,7 +1139,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitFunctionLiteralExpr(FunctionLiteral expr) {
+  public ExpressionNode visitFunctionLiteralExpr(FunctionLiteralExpr expr) {
     var sourceSection = createSourceSection(expr);
     var params = expr.getParameterList();
     var descriptorBuilder = createFrameDescriptorBuilder(params);
@@ -1172,7 +1173,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ExpressionNode visitParenthesizedExpr(Parenthesized expr) {
+  public ExpressionNode visitParenthesizedExpr(ParenthesizedExpr expr) {
     return visitExpr(expr.getExpr());
   }
 
@@ -2517,7 +2518,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return result;
   }
 
-  private ExpressionNode doVisitPropertyInvocationExpr(QualifiedAccess expr) {
+  private ExpressionNode doVisitPropertyInvocationExpr(QualifiedAccessExpr expr) {
     var sourceSection = createSourceSection(expr);
     var propertyName = toIdentifier(expr.getIdentifier().getValue());
     var receiver = visitExpr(expr.getExpr());
@@ -2568,7 +2569,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return ReadPropertyNodeGen.create(sourceSection, propertyName, needsConst, receiver);
   }
 
-  private ExpressionNode doVisitMethodAccessExpr(QualifiedAccess expr) {
+  private ExpressionNode doVisitMethodAccessExpr(QualifiedAccessExpr expr) {
     var sourceSection = createSourceSection(expr);
     var functionName = toIdentifier(expr.getIdentifier().getValue());
     var argCtx = expr.getArgumentList();

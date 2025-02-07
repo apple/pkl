@@ -30,12 +30,34 @@ import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.NullLiteral;
+import org.pkl.core.parser.cst.Expr.AmendsExpr;
+import org.pkl.core.parser.cst.Expr.BoolLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FloatLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FunctionLiteralExpr;
+import org.pkl.core.parser.cst.Expr.IfExpr;
+import org.pkl.core.parser.cst.Expr.IntLiteralExpr;
+import org.pkl.core.parser.cst.Expr.LetExpr;
+import org.pkl.core.parser.cst.Expr.LogicalNotExpr;
+import org.pkl.core.parser.cst.Expr.ModuleExpr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.NewExpr;
+import org.pkl.core.parser.cst.Expr.NonNullExpr;
+import org.pkl.core.parser.cst.Expr.NullLiteralExpr;
 import org.pkl.core.parser.cst.Expr.OperatorExpr;
-import org.pkl.core.parser.cst.Expr.Parenthesized;
+import org.pkl.core.parser.cst.Expr.OuterExpr;
+import org.pkl.core.parser.cst.Expr.ParenthesizedExpr;
+import org.pkl.core.parser.cst.Expr.QualifiedAccessExpr;
+import org.pkl.core.parser.cst.Expr.ReadExpr;
 import org.pkl.core.parser.cst.Expr.ReadType;
-import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.SubscriptExpr;
+import org.pkl.core.parser.cst.Expr.SuperAccessExpr;
+import org.pkl.core.parser.cst.Expr.SuperSubscriptExpr;
+import org.pkl.core.parser.cst.Expr.ThisExpr;
+import org.pkl.core.parser.cst.Expr.ThrowExpr;
+import org.pkl.core.parser.cst.Expr.TraceExpr;
+import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
+import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -794,7 +816,7 @@ public class Parser {
           }
           var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
           exprs.add(
-              new Expr.QualifiedAccess(
+              new QualifiedAccessExpr(
                   expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan)));
         }
         default -> {
@@ -837,23 +859,23 @@ public class Parser {
   private Expr parseExprAtom(@Nullable String expectation) {
     var expr =
         switch (lookahead) {
-          case THIS -> new Expr.This(next().span);
-          case OUTER -> new Expr.Outer(next().span);
-          case MODULE -> new Expr.Module(next().span);
-          case NULL -> new NullLiteral(next().span);
+          case THIS -> new ThisExpr(next().span);
+          case OUTER -> new OuterExpr(next().span);
+          case MODULE -> new ModuleExpr(next().span);
+          case NULL -> new NullLiteralExpr(next().span);
           case THROW -> {
             var start = next().span;
             expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr(")");
             var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.Throw(exp, start.endWith(end));
+            yield new ThrowExpr(exp, start.endWith(end));
           }
           case TRACE -> {
             var start = next().span;
             expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr(")");
             var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.Trace(exp, start.endWith(end));
+            yield new TraceExpr(exp, start.endWith(end));
           }
           case IMPORT -> {
             var start = next().span;
@@ -880,7 +902,7 @@ public class Parser {
             expect(Token.LPAREN, "unexpectedToken", "(");
             var exp = parseExpr(")");
             var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-            yield new Expr.Read(exp, readType, start.endWith(end));
+            yield new ReadExpr(exp, readType, start.endWith(end));
           }
           case NEW -> {
             var start = next().span;
@@ -889,21 +911,21 @@ public class Parser {
               type = parseType("{");
             }
             var body = parseObjectBody();
-            yield new Expr.New(type, body, start.endWith(body.span()));
+            yield new NewExpr(type, body, start.endWith(body.span()));
           }
           case MINUS -> {
             var start = next().span;
             // calling `parseExprAtom` here and not `parseExpr` because
             // unary minus has higher precendence than binary operators
             var exp = parseExprAtom(expectation);
-            yield new Expr.UnaryMinus(exp, start.endWith(exp.span()));
+            yield new UnaryMinusExpr(exp, start.endWith(exp.span()));
           }
           case NOT -> {
             var start = next().span;
             // calling `parseExprAtom` here and not `parseExpr` because
             // logical not has higher precendence than binary operators
             var exp = parseExprAtom(expectation);
-            yield new Expr.LogicalNot(exp, start.endWith(exp.span()));
+            yield new LogicalNotExpr(exp, start.endWith(exp.span()));
           }
           case LPAREN -> {
             // can be function literal or parenthesized expression
@@ -916,13 +938,13 @@ public class Parser {
                 var paramList = new ParameterList(List.of(), start.endWith(endParen));
                 expect(Token.ARROW, "unexpectedToken", "->");
                 var exp = parseExpr(expectation);
-                yield new Expr.FunctionLiteral(paramList, exp, start.endWith(exp.span()));
+                yield new FunctionLiteralExpr(paramList, exp, start.endWith(exp.span()));
               }
               default -> {
                 // expression
                 var exp = parseExpr(")");
                 var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-                yield new Parenthesized(exp, start.endWith(end));
+                yield new ParenthesizedExpr(exp, start.endWith(end));
               }
             };
           }
@@ -933,15 +955,15 @@ public class Parser {
               var identifier = parseIdentifier();
               if (lookahead == Token.LPAREN) {
                 var args = parseArgumentList();
-                yield new Expr.SuperAccess(identifier, args, start.endWith(args.span()));
+                yield new SuperAccessExpr(identifier, args, start.endWith(args.span()));
               } else {
-                yield new Expr.SuperAccess(identifier, null, start.endWith(identifier.span()));
+                yield new SuperAccessExpr(identifier, null, start.endWith(identifier.span()));
               }
             } else {
               expect(Token.LBRACK, "unexpectedToken", "[");
               var exp = parseExpr("]");
               var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
-              yield new Expr.SuperSubscript(exp, start.endWith(end));
+              yield new SuperSubscriptExpr(exp, start.endWith(end));
             }
           }
           case IF -> {
@@ -952,7 +974,7 @@ public class Parser {
             var then = parseExpr("else");
             expect(Token.ELSE, "unexpectedToken", "else");
             var elseCase = parseExpr(expectation);
-            yield new Expr.If(pred, then, elseCase, start.endWith(elseCase.span()));
+            yield new IfExpr(pred, then, elseCase, start.endWith(elseCase.span()));
           }
           case LET -> {
             var start = next().span();
@@ -962,19 +984,19 @@ public class Parser {
             var bindExpr = parseExpr(")");
             expect(Token.RPAREN, "unexpectedToken", ")");
             var exp = parseExpr(expectation);
-            yield new Expr.Let(param, bindExpr, exp, start.endWith(exp.span()));
+            yield new LetExpr(param, bindExpr, exp, start.endWith(exp.span()));
           }
-          case TRUE -> new Expr.BoolLiteral(true, next().span);
-          case FALSE -> new Expr.BoolLiteral(false, next().span);
+          case TRUE -> new BoolLiteralExpr(true, next().span);
+          case FALSE -> new BoolLiteralExpr(false, next().span);
           case INT, HEX, BIN, OCT -> {
             var tk = next();
             var text = remove_(tk.text(lexer));
-            yield new Expr.IntLiteral(text, tk.span);
+            yield new IntLiteralExpr(text, tk.span);
           }
           case FLOAT -> {
             var tk = next();
             var text = remove_(tk.text(lexer));
-            yield new Expr.FloatLiteral(text, tk.span);
+            yield new FloatLiteralExpr(text, tk.span);
           }
           case STRING_START, STRING_MULTI_START -> {
             var start = next();
@@ -1027,9 +1049,10 @@ public class Parser {
             }
             var end = expect(Token.STRING_END, "noError").span;
             if (start.token == Token.STRING_START) {
-              yield new SingleLineStringLiteral(parts, start.span, end, start.span.endWith(end));
+              yield new SingleLineStringLiteralExpr(
+                  parts, start.span, end, start.span.endWith(end));
             } else {
-              yield new MultiLineStringLiteral(parts, start.span, end, start.span.endWith(end));
+              yield new MultiLineStringLiteralExpr(parts, start.span, end, start.span.endWith(end));
             }
           }
           case IDENTIFIER -> {
@@ -1038,10 +1061,10 @@ public class Parser {
                 && !precededBySemicolon
                 && _lookahead.newLinesBetween == 0) {
               var args = parseArgumentList();
-              yield new Expr.UnqualifiedAccess(
+              yield new UnqualifiedAccessExpr(
                   identifier, args, identifier.span().endWith(args.span()));
             } else {
-              yield new Expr.UnqualifiedAccess(identifier, null, identifier.span());
+              yield new UnqualifiedAccessExpr(identifier, null, identifier.span());
             }
           }
           case EOF ->
@@ -1062,16 +1085,16 @@ public class Parser {
     // non null
     if (lookahead == Token.NON_NULL) {
       var end = next().span;
-      var res = new Expr.NonNull(expr, expr.span().endWith(end));
+      var res = new NonNullExpr(expr, expr.span().endWith(end));
       return parseExprRest(res);
     }
     // amends
     if (lookahead == Token.LBRACE) {
-      if (expr instanceof Parenthesized
-          || expr instanceof Expr.Amends
-          || expr instanceof Expr.New) {
+      if (expr instanceof ParenthesizedExpr
+          || expr instanceof AmendsExpr
+          || expr instanceof NewExpr) {
         var body = parseObjectBody();
-        return parseExprRest(new Expr.Amends(expr, body, expr.span().endWith(body.span())));
+        return parseExprRest(new AmendsExpr(expr, body, expr.span().endWith(body.span())));
       }
       throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
     }
@@ -1085,7 +1108,7 @@ public class Parser {
       }
       var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
       var res =
-          new Expr.QualifiedAccess(
+          new QualifiedAccessExpr(
               expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan));
       return parseExprRest(res);
     }
@@ -1094,7 +1117,7 @@ public class Parser {
       next();
       var exp = parseExpr("]");
       var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
-      var res = new Expr.Subscript(expr, exp, expr.span().endWith(end));
+      var res = new SubscriptExpr(expr, exp, expr.span().endWith(end));
       return parseExprRest(res);
     }
     return expr;
@@ -1113,7 +1136,7 @@ public class Parser {
         var paramList = new ParameterList(params, start.endWith(endParen));
         expect(Token.ARROW, "unexpectedToken", "->");
         var expr = parseExpr();
-        yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
+        yield new FunctionLiteralExpr(paramList, expr, start.endWith(expr.span()));
       }
       case COLON -> {
         var typeAnnotation = parseTypeAnnotation();
@@ -1127,7 +1150,7 @@ public class Parser {
         var paramList = new ParameterList(params, start.endWith(endParen));
         expect(Token.ARROW, "unexpectedToken", "->");
         var expr = parseExpr(")");
-        yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
+        yield new FunctionLiteralExpr(paramList, expr, start.endWith(expr.span()));
       }
       case RPAREN -> {
         // still not sure
@@ -1138,10 +1161,10 @@ public class Parser {
           var params = new ArrayList<Parameter>();
           params.add(new TypedIdentifier(identifier, null, identifier.span()));
           var paramList = new ParameterList(params, start.endWith(end));
-          yield new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
+          yield new FunctionLiteralExpr(paramList, expr, start.endWith(expr.span()));
         } else {
-          var exp = new Expr.UnqualifiedAccess(identifier, null, identifier.span());
-          yield new Parenthesized(exp, start.endWith(end));
+          var exp = new UnqualifiedAccessExpr(identifier, null, identifier.span());
+          yield new ParenthesizedExpr(exp, start.endWith(end));
         }
       }
       default -> {
@@ -1149,19 +1172,19 @@ public class Parser {
         backtrack();
         var expr = parseExpr(")");
         var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-        yield new Parenthesized(expr, start.endWith(end));
+        yield new ParenthesizedExpr(expr, start.endWith(end));
       }
     };
   }
 
-  private Expr.FunctionLiteral parseFunctionLiteral(Span start) {
+  private FunctionLiteralExpr parseFunctionLiteral(Span start) {
     // the open parens is already parsed
     var params = parseListOfParameter(Token.COMMA);
     var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     var paramList = new ParameterList(params, start.endWith(endParen));
     expect(Token.ARROW, "unexpectedToken", "->");
     var expr = parseExpr();
-    return new Expr.FunctionLiteral(paramList, expr, start.endWith(expr.span()));
+    return new FunctionLiteralExpr(paramList, expr, start.endWith(expr.span()));
   }
 
   private Type parseType() {

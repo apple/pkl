@@ -18,7 +18,7 @@ package org.pkl.core.parser
 import org.pkl.core.parser.cst.*
 import org.pkl.core.parser.cst.Annotation
 import org.pkl.core.parser.cst.Expr.*
-import org.pkl.core.parser.cst.Expr.Module
+import org.pkl.core.parser.cst.Expr.ModuleExpr
 import org.pkl.core.parser.cst.ObjectMemberNode.*
 import org.pkl.core.parser.cst.Parameter.TypedIdentifier
 import org.pkl.core.parser.cst.Type.*
@@ -353,31 +353,31 @@ class SexpRenderer {
 
   fun renderExpr(expr: Expr) {
     when (expr) {
-      is This -> {
+      is ThisExpr -> {
         buf.append(tab)
         buf.append("(thisExpr)")
       }
-      is Outer -> {
+      is OuterExpr -> {
         buf.append(tab)
         buf.append("(outerExpr)")
       }
-      is Module -> {
+      is ModuleExpr -> {
         buf.append(tab)
         buf.append("(moduleExpr)")
       }
-      is NullLiteral -> {
+      is NullLiteralExpr -> {
         buf.append(tab)
         buf.append("(nullExpr)")
       }
-      is BoolLiteral -> {
+      is BoolLiteralExpr -> {
         buf.append(tab)
         buf.append("(boolLiteralExpr)")
       }
-      is IntLiteral -> {
+      is IntLiteralExpr -> {
         buf.append(tab)
         buf.append("(intLiteralExpr)")
       }
-      is FloatLiteral -> {
+      is FloatLiteralExpr -> {
         buf.append(tab)
         buf.append("(floatLiteralExpr)")
       }
@@ -385,39 +385,39 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(stringConstantExpr)")
       }
-      is SingleLineStringLiteral -> renderSingleLineStringLiteral(expr)
-      is MultiLineStringLiteral -> renderMultiLineStringLiteral(expr)
-      is Throw -> renderThrowExpr(expr)
-      is Trace -> renderTraceExpr(expr)
+      is SingleLineStringLiteralExpr -> renderSingleLineStringLiteral(expr)
+      is MultiLineStringLiteralExpr -> renderMultiLineStringLiteral(expr)
+      is ThrowExpr -> renderThrowExpr(expr)
+      is TraceExpr -> renderTraceExpr(expr)
       is ImportExpr -> {
         buf.append(tab)
         val name = if (expr.isGlob) "(importGlobExpr)" else "(importExpr)"
         buf.append(name)
       }
-      is Read -> renderReadExpr(expr)
-      is UnqualifiedAccess -> renderUnqualifiedAccessExpr(expr)
-      is QualifiedAccess -> renderQualifiedAccessExpr(expr)
-      is SuperAccess -> renderSuperAccessExpr(expr)
-      is SuperSubscript -> renderSuperSubscriptExpr(expr)
-      is Subscript -> renderSubscriptExpr(expr)
-      is If -> renderIfExpr(expr)
-      is Let -> renderLetExpr(expr)
-      is FunctionLiteral -> renderFunctionLiteralExpr(expr)
-      is Parenthesized -> renderParenthesisedExpr(expr)
-      is New -> renderNewExpr(expr)
-      is Amends -> renderAmendsExpr(expr)
-      is NonNull -> renderNonNullExpr(expr)
-      is UnaryMinus -> renderUnaryMinusExpr(expr)
-      is LogicalNot -> renderLogicalNotExpr(expr)
-      is BinaryOp -> renderBinaryOpExpr(expr)
-      is TypeCheck -> renderTypeCheckExpr(expr)
-      is TypeCast -> renderTypeCastExpr(expr)
+      is ReadExpr -> renderReadExpr(expr)
+      is UnqualifiedAccessExpr -> renderUnqualifiedAccessExpr(expr)
+      is QualifiedAccessExpr -> renderQualifiedAccessExpr(expr)
+      is SuperAccessExpr -> renderSuperAccessExpr(expr)
+      is SuperSubscriptExpr -> renderSuperSubscriptExpr(expr)
+      is SubscriptExpr -> renderSubscriptExpr(expr)
+      is IfExpr -> renderIfExpr(expr)
+      is LetExpr -> renderLetExpr(expr)
+      is FunctionLiteralExpr -> renderFunctionLiteralExpr(expr)
+      is ParenthesizedExpr -> renderParenthesisedExpr(expr)
+      is NewExpr -> renderNewExpr(expr)
+      is AmendsExpr -> renderAmendsExpr(expr)
+      is NonNullExpr -> renderNonNullExpr(expr)
+      is UnaryMinusExpr -> renderUnaryMinusExpr(expr)
+      is LogicalNotExpr -> renderLogicalNotExpr(expr)
+      is BinaryOperatorExpr -> renderBinaryOpExpr(expr)
+      is TypeCheckExpr -> renderTypeCheckExpr(expr)
+      is TypeCastExpr -> renderTypeCastExpr(expr)
       is OperatorExpr -> throw RuntimeException("Operator expr should not exist after parsing")
       is TypeExpr -> throw RuntimeException("Type expr should not exist after parsing")
     }
   }
 
-  fun renderSingleLineStringLiteral(expr: SingleLineStringLiteral) {
+  fun renderSingleLineStringLiteral(expr: SingleLineStringLiteralExpr) {
     buf.append(tab)
     buf.append("(interpolatedStringExpr")
     val oldTab = increaseTab()
@@ -434,7 +434,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderMultiLineStringLiteral(expr: MultiLineStringLiteral) {
+  fun renderMultiLineStringLiteral(expr: MultiLineStringLiteralExpr) {
     buf.append(tab)
     buf.append("(interpolatedMultiStringExpr")
     val oldTab = increaseTab()
@@ -451,7 +451,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderThrowExpr(expr: Throw) {
+  fun renderThrowExpr(expr: ThrowExpr) {
     buf.append(tab)
     buf.append("(throwExpr")
     val oldTab = increaseTab()
@@ -461,7 +461,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderTraceExpr(expr: Trace) {
+  fun renderTraceExpr(expr: TraceExpr) {
     buf.append(tab)
     buf.append("(traceExpr")
     val oldTab = increaseTab()
@@ -471,7 +471,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderReadExpr(expr: Read) {
+  fun renderReadExpr(expr: ReadExpr) {
     val name =
       when (expr.readType) {
         ReadType.READ -> "(readExpr"
@@ -487,7 +487,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderUnqualifiedAccessExpr(expr: UnqualifiedAccess) {
+  fun renderUnqualifiedAccessExpr(expr: UnqualifiedAccessExpr) {
     buf.append(tab)
     buf.append("(unqualifiedAccessExpr")
     val oldTab = increaseTab()
@@ -502,7 +502,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderQualifiedAccessExpr(expr: QualifiedAccess) {
+  fun renderQualifiedAccessExpr(expr: QualifiedAccessExpr) {
     buf.append(tab)
     buf.append(if (expr.isNullable) "(nullableQualifiedAccessExpr" else "(qualifiedAccessExpr")
     val oldTab = increaseTab()
@@ -519,7 +519,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderSuperAccessExpr(expr: SuperAccess) {
+  fun renderSuperAccessExpr(expr: SuperAccessExpr) {
     buf.append(tab)
     buf.append("(superAccessExpr")
     val oldTab = increaseTab()
@@ -533,7 +533,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderSuperSubscriptExpr(expr: SuperSubscript) {
+  fun renderSuperSubscriptExpr(expr: SuperSubscriptExpr) {
     buf.append(tab)
     buf.append("(superSubscriptExpr")
     val oldTab = increaseTab()
@@ -543,7 +543,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderSubscriptExpr(expr: Subscript) {
+  fun renderSubscriptExpr(expr: SubscriptExpr) {
     buf.append(tab)
     buf.append("(subscriptExpr")
     val oldTab = increaseTab()
@@ -555,7 +555,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderIfExpr(expr: If) {
+  fun renderIfExpr(expr: IfExpr) {
     buf.append(tab)
     buf.append("(ifExpr")
     val oldTab = increaseTab()
@@ -569,7 +569,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderLetExpr(expr: Let) {
+  fun renderLetExpr(expr: LetExpr) {
     buf.append(tab)
     buf.append("(letExpr")
     val oldTab = increaseTab()
@@ -583,7 +583,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderFunctionLiteralExpr(expr: FunctionLiteral) {
+  fun renderFunctionLiteralExpr(expr: FunctionLiteralExpr) {
     buf.append(tab)
     buf.append("(functionLiteralExpr")
     val oldTab = increaseTab()
@@ -594,7 +594,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderParenthesisedExpr(expr: Parenthesized) {
+  fun renderParenthesisedExpr(expr: ParenthesizedExpr) {
     buf.append(tab)
     buf.append("(parenthesizedExpr")
     val oldTab = increaseTab()
@@ -604,7 +604,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderNewExpr(expr: New) {
+  fun renderNewExpr(expr: NewExpr) {
     buf.append(tab)
     buf.append("(newExpr")
     val oldTab = increaseTab()
@@ -618,7 +618,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderAmendsExpr(expr: Amends) {
+  fun renderAmendsExpr(expr: AmendsExpr) {
     buf.append(tab)
     buf.append("(amendsExpr")
     val oldTab = increaseTab()
@@ -630,7 +630,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderNonNullExpr(expr: NonNull) {
+  fun renderNonNullExpr(expr: NonNullExpr) {
     buf.append(tab)
     buf.append("(nonNullExpr")
     val oldTab = increaseTab()
@@ -640,7 +640,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderUnaryMinusExpr(expr: UnaryMinus) {
+  fun renderUnaryMinusExpr(expr: UnaryMinusExpr) {
     buf.append(tab)
     buf.append("(unaryMinusExpr")
     val oldTab = increaseTab()
@@ -650,7 +650,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderLogicalNotExpr(expr: LogicalNot) {
+  fun renderLogicalNotExpr(expr: LogicalNotExpr) {
     buf.append(tab)
     buf.append("(logicalNotExpr")
     val oldTab = increaseTab()
@@ -660,7 +660,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderBinaryOpExpr(expr: BinaryOp) {
+  fun renderBinaryOpExpr(expr: BinaryOperatorExpr) {
     buf.append(tab)
     val name =
       when (expr.op) {
@@ -695,7 +695,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderTypeCheckExpr(expr: TypeCheck) {
+  fun renderTypeCheckExpr(expr: TypeCheckExpr) {
     buf.append(tab)
     buf.append("(typeCheckExpr")
     val oldTab = increaseTab()
@@ -707,7 +707,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderTypeCastExpr(expr: TypeCast) {
+  fun renderTypeCastExpr(expr: TypeCastExpr) {
     buf.append(tab)
     buf.append("(typeCastExpr")
     val oldTab = increaseTab()

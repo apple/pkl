@@ -28,9 +28,9 @@ import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
 import org.pkl.core.parser.cst.Expr;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
-import org.pkl.core.parser.cst.Expr.Read;
+import org.pkl.core.parser.cst.Expr.ReadExpr;
 import org.pkl.core.parser.cst.Expr.ReadType;
-import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl.Type;
 import org.pkl.core.parser.cst.Import;
@@ -120,13 +120,13 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
   }
 
   @Override
-  public @Nullable List<Entry> visitReadExpr(Read expr) {
+  public @Nullable List<Entry> visitReadExpr(ReadExpr expr) {
     return doVisitReadExpr(expr.getExpr(), expr.getReadType() == ReadType.GLOB);
   }
 
   @SuppressWarnings("DataFlowIssue")
   public List<Entry> doVisitReadExpr(Expr expr, boolean isGlob) {
-    if (!(expr instanceof SingleLineStringLiteral slStr)) {
+    if (!(expr instanceof SingleLineStringLiteralExpr slStr)) {
       return Collections.emptyList();
     }
     // best-effort approach; only collect read expressions that are string constants.

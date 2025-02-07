@@ -30,8 +30,8 @@ public abstract sealed class Expr extends AbstractNode {
     super(span, children);
   }
 
-  public static final class This extends Expr {
-    public This(Span span) {
+  public static final class ThisExpr extends Expr {
+    public ThisExpr(Span span) {
       super(span, null);
     }
 
@@ -41,8 +41,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Outer extends Expr {
-    public Outer(Span span) {
+  public static final class OuterExpr extends Expr {
+    public OuterExpr(Span span) {
       super(span, null);
     }
 
@@ -52,8 +52,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Module extends Expr {
-    public Module(Span span) {
+  public static final class ModuleExpr extends Expr {
+    public ModuleExpr(Span span) {
       super(span, null);
     }
 
@@ -63,8 +63,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class NullLiteral extends Expr {
-    public NullLiteral(Span span) {
+  public static final class NullLiteralExpr extends Expr {
+    public NullLiteralExpr(Span span) {
       super(span, null);
     }
 
@@ -74,10 +74,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class BoolLiteral extends Expr {
+  public static final class BoolLiteralExpr extends Expr {
     private final boolean b;
 
-    public BoolLiteral(boolean b, Span span) {
+    public BoolLiteralExpr(boolean b, Span span) {
       super(span, null);
       this.b = b;
     }
@@ -92,10 +92,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class IntLiteral extends Expr {
+  public static final class IntLiteralExpr extends Expr {
     private final String number;
 
-    public IntLiteral(String number, Span span) {
+    public IntLiteralExpr(String number, Span span) {
       super(span, null);
       this.number = number;
     }
@@ -110,10 +110,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class FloatLiteral extends Expr {
+  public static final class FloatLiteralExpr extends Expr {
     private final String number;
 
-    public FloatLiteral(String number, Span span) {
+    public FloatLiteralExpr(String number, Span span) {
       super(span, null);
       this.number = number;
     }
@@ -128,11 +128,11 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class SingleLineStringLiteral extends Expr {
+  public static final class SingleLineStringLiteralExpr extends Expr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
 
-    public SingleLineStringLiteral(
+    public SingleLineStringLiteralExpr(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       super(span, parts);
       this.startDelimiterSpan = startDelimiterSpan;
@@ -141,7 +141,7 @@ public abstract sealed class Expr extends AbstractNode {
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitSingleLineStringLiteral(this);
+      return visitor.visitSingleLineStringLiteralExpr(this);
     }
 
     public List<StringPart> getParts() {
@@ -158,11 +158,11 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class MultiLineStringLiteral extends Expr {
+  public static final class MultiLineStringLiteralExpr extends Expr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
 
-    public MultiLineStringLiteral(
+    public MultiLineStringLiteralExpr(
         List<StringPart> parts, Span startDelimiterSpan, Span endDelimiterSpan, Span span) {
       super(span, parts);
       this.startDelimiterSpan = startDelimiterSpan;
@@ -171,7 +171,7 @@ public abstract sealed class Expr extends AbstractNode {
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitMultiLineStringLiteral(this);
+      return visitor.visitMultiLineStringLiteralExpr(this);
     }
 
     public List<StringPart> getParts() {
@@ -187,8 +187,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Throw extends Expr {
-    public Throw(Expr expr, Span span) {
+  public static final class ThrowExpr extends Expr {
+    public ThrowExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -202,8 +202,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Trace extends Expr {
-    public Trace(Expr expr, Span span) {
+  public static final class TraceExpr extends Expr {
+    public TraceExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -239,10 +239,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Read extends Expr {
+  public static final class ReadExpr extends Expr {
     private final ReadType readType;
 
-    public Read(Expr expr, ReadType readType, Span span) {
+    public ReadExpr(Expr expr, ReadType readType, Span span) {
       super(span, List.of(expr));
       this.readType = readType;
     }
@@ -267,8 +267,8 @@ public abstract sealed class Expr extends AbstractNode {
     NULL
   }
 
-  public static final class UnqualifiedAccess extends Expr {
-    public UnqualifiedAccess(
+  public static final class UnqualifiedAccessExpr extends Expr {
+    public UnqualifiedAccessExpr(
         Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
       super(span, Arrays.asList(identifier, argumentList));
     }
@@ -287,10 +287,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class QualifiedAccess extends Expr {
+  public static final class QualifiedAccessExpr extends Expr {
     private final boolean isNullable;
 
-    public QualifiedAccess(
+    public QualifiedAccessExpr(
         Expr expr,
         Identifier identifier,
         boolean isNullable,
@@ -322,8 +322,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class SuperAccess extends Expr {
-    public SuperAccess(Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
+  public static final class SuperAccessExpr extends Expr {
+    public SuperAccessExpr(Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
       super(span, Arrays.asList(identifier, argumentList));
     }
 
@@ -341,8 +341,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class SuperSubscript extends Expr {
-    public SuperSubscript(Expr arg, Span span) {
+  public static final class SuperSubscriptExpr extends Expr {
+    public SuperSubscriptExpr(Expr arg, Span span) {
       super(span, List.of(arg));
     }
 
@@ -356,8 +356,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Subscript extends Expr {
-    public Subscript(Expr expr, Expr arg, Span span) {
+  public static final class SubscriptExpr extends Expr {
+    public SubscriptExpr(Expr expr, Expr arg, Span span) {
       super(span, List.of(expr, arg));
     }
 
@@ -375,8 +375,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class If extends Expr {
-    public If(Expr cond, Expr then, Expr els, Span span) {
+  public static final class IfExpr extends Expr {
+    public IfExpr(Expr cond, Expr then, Expr els, Span span) {
       super(span, List.of(cond, then, els));
     }
 
@@ -398,8 +398,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Let extends Expr {
-    public Let(Parameter parameter, Expr bindingExpr, Expr expr, Span span) {
+  public static final class LetExpr extends Expr {
+    public LetExpr(Parameter parameter, Expr bindingExpr, Expr expr, Span span) {
       super(span, List.of(parameter, bindingExpr, expr));
     }
 
@@ -421,8 +421,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class FunctionLiteral extends Expr {
-    public FunctionLiteral(ParameterList parameterList, Expr expr, Span span) {
+  public static final class FunctionLiteralExpr extends Expr {
+    public FunctionLiteralExpr(ParameterList parameterList, Expr expr, Span span) {
       super(span, List.of(parameterList, expr));
     }
 
@@ -440,8 +440,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Parenthesized extends Expr {
-    public Parenthesized(Expr expr, Span span) {
+  public static final class ParenthesizedExpr extends Expr {
+    public ParenthesizedExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -455,8 +455,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class New extends Expr {
-    public New(@Nullable Type type, ObjectBody body, Span span) {
+  public static final class NewExpr extends Expr {
+    public NewExpr(@Nullable Type type, ObjectBody body, Span span) {
       super(span, Arrays.asList(type, body));
     }
 
@@ -478,8 +478,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class Amends extends Expr {
-    public Amends(Expr expr, ObjectBody body, Span span) {
+  public static final class AmendsExpr extends Expr {
+    public AmendsExpr(Expr expr, ObjectBody body, Span span) {
       super(span, List.of(expr, body));
     }
 
@@ -497,8 +497,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class NonNull extends Expr {
-    public NonNull(Expr expr, Span span) {
+  public static final class NonNullExpr extends Expr {
+    public NonNullExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -512,8 +512,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class UnaryMinus extends Expr {
-    public UnaryMinus(Expr expr, Span span) {
+  public static final class UnaryMinusExpr extends Expr {
+    public UnaryMinusExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -527,8 +527,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class LogicalNot extends Expr {
-    public LogicalNot(Expr expr, Span span) {
+  public static final class LogicalNotExpr extends Expr {
+    public LogicalNotExpr(Expr expr, Span span) {
       super(span, List.of(expr));
     }
 
@@ -542,17 +542,17 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class BinaryOp extends Expr {
+  public static final class BinaryOperatorExpr extends Expr {
     private final Operator op;
 
-    public BinaryOp(Expr left, Expr right, Operator op, Span span) {
+    public BinaryOperatorExpr(Expr left, Expr right, Operator op, Span span) {
       super(span, List.of(left, right));
       this.op = op;
     }
 
     @Override
     public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitBinaryOpExpr(this);
+      return visitor.visitBinaryOperatorExpr(this);
     }
 
     public Expr getLeft() {
@@ -580,7 +580,7 @@ public abstract sealed class Expr extends AbstractNode {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      BinaryOp binaryOp = (BinaryOp) o;
+      BinaryOperatorExpr binaryOp = (BinaryOperatorExpr) o;
       return Objects.deepEquals(children, binaryOp.children)
           && op == binaryOp.op
           && Objects.equals(span, binaryOp.span);
@@ -592,8 +592,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class TypeCheck extends Expr {
-    public TypeCheck(Expr expr, Type type, Span span) {
+  public static final class TypeCheckExpr extends Expr {
+    public TypeCheckExpr(Expr expr, Type type, Span span) {
       super(span, List.of(expr, type));
     }
 
@@ -611,8 +611,8 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class TypeCast extends Expr {
-    public TypeCast(Expr expr, Type type, Span span) {
+  public static final class TypeCastExpr extends Expr {
+    public TypeCastExpr(Expr expr, Type type, Span span) {
       super(span, List.of(expr, type));
     }
 

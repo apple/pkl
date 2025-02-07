@@ -18,7 +18,10 @@ package org.pkl.core.parser;
 import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.parser.cst.Expr;
+import org.pkl.core.parser.cst.Expr.BinaryOperatorExpr;
 import org.pkl.core.parser.cst.Expr.OperatorExpr;
+import org.pkl.core.parser.cst.Expr.TypeCastExpr;
+import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
 import org.pkl.core.parser.cst.Expr.TypeExpr;
 import org.pkl.core.parser.cst.Operator;
 import org.pkl.core.util.Nullable;
@@ -96,9 +99,9 @@ class OperatorResolver {
     var span = left.span().endWith(right.span());
     var binOp =
         switch (op) {
-          case IS -> new Expr.TypeCheck(left, ((TypeExpr) right).getType(), span);
-          case AS -> new Expr.TypeCast(left, ((TypeExpr) right).getType(), span);
-          default -> new Expr.BinaryOp(left, right, op, span);
+          case IS -> new TypeCheckExpr(left, ((TypeExpr) right).getType(), span);
+          case AS -> new TypeCastExpr(left, ((TypeExpr) right).getType(), span);
+          default -> new BinaryOperatorExpr(left, right, op, span);
         };
     res.remove(i - 1);
     res.remove(i - 1);

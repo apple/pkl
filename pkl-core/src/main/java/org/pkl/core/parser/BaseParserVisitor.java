@@ -23,36 +23,36 @@ import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Expr.Amends;
-import org.pkl.core.parser.cst.Expr.BinaryOp;
-import org.pkl.core.parser.cst.Expr.BoolLiteral;
-import org.pkl.core.parser.cst.Expr.FloatLiteral;
-import org.pkl.core.parser.cst.Expr.FunctionLiteral;
-import org.pkl.core.parser.cst.Expr.If;
+import org.pkl.core.parser.cst.Expr.AmendsExpr;
+import org.pkl.core.parser.cst.Expr.BinaryOperatorExpr;
+import org.pkl.core.parser.cst.Expr.BoolLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FloatLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FunctionLiteralExpr;
+import org.pkl.core.parser.cst.Expr.IfExpr;
 import org.pkl.core.parser.cst.Expr.ImportExpr;
-import org.pkl.core.parser.cst.Expr.IntLiteral;
-import org.pkl.core.parser.cst.Expr.Let;
-import org.pkl.core.parser.cst.Expr.LogicalNot;
-import org.pkl.core.parser.cst.Expr.Module;
-import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.New;
-import org.pkl.core.parser.cst.Expr.NonNull;
-import org.pkl.core.parser.cst.Expr.NullLiteral;
-import org.pkl.core.parser.cst.Expr.Outer;
-import org.pkl.core.parser.cst.Expr.Parenthesized;
-import org.pkl.core.parser.cst.Expr.QualifiedAccess;
-import org.pkl.core.parser.cst.Expr.Read;
-import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.Subscript;
-import org.pkl.core.parser.cst.Expr.SuperAccess;
-import org.pkl.core.parser.cst.Expr.SuperSubscript;
-import org.pkl.core.parser.cst.Expr.This;
-import org.pkl.core.parser.cst.Expr.Throw;
-import org.pkl.core.parser.cst.Expr.Trace;
-import org.pkl.core.parser.cst.Expr.TypeCast;
-import org.pkl.core.parser.cst.Expr.TypeCheck;
-import org.pkl.core.parser.cst.Expr.UnaryMinus;
-import org.pkl.core.parser.cst.Expr.UnqualifiedAccess;
+import org.pkl.core.parser.cst.Expr.IntLiteralExpr;
+import org.pkl.core.parser.cst.Expr.LetExpr;
+import org.pkl.core.parser.cst.Expr.LogicalNotExpr;
+import org.pkl.core.parser.cst.Expr.ModuleExpr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.NewExpr;
+import org.pkl.core.parser.cst.Expr.NonNullExpr;
+import org.pkl.core.parser.cst.Expr.NullLiteralExpr;
+import org.pkl.core.parser.cst.Expr.OuterExpr;
+import org.pkl.core.parser.cst.Expr.ParenthesizedExpr;
+import org.pkl.core.parser.cst.Expr.QualifiedAccessExpr;
+import org.pkl.core.parser.cst.Expr.ReadExpr;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.SubscriptExpr;
+import org.pkl.core.parser.cst.Expr.SuperAccessExpr;
+import org.pkl.core.parser.cst.Expr.SuperSubscriptExpr;
+import org.pkl.core.parser.cst.Expr.ThisExpr;
+import org.pkl.core.parser.cst.Expr.ThrowExpr;
+import org.pkl.core.parser.cst.Expr.TraceExpr;
+import org.pkl.core.parser.cst.Expr.TypeCastExpr;
+import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
+import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
+import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -157,47 +157,47 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public @Nullable T visitThisExpr(This expr) {
+  public @Nullable T visitThisExpr(ThisExpr expr) {
     return null;
   }
 
   @Override
-  public @Nullable T visitOuterExpr(Outer expr) {
+  public @Nullable T visitOuterExpr(OuterExpr expr) {
     return null;
   }
 
   @Override
-  public T visitModuleExpr(Module expr) {
+  public T visitModuleExpr(ModuleExpr expr) {
     return null;
   }
 
   @Override
-  public T visitNullLiteralExpr(NullLiteral expr) {
+  public T visitNullLiteralExpr(NullLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitBoolLiteralExpr(BoolLiteral expr) {
+  public T visitBoolLiteralExpr(BoolLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitIntLiteralExpr(IntLiteral expr) {
+  public T visitIntLiteralExpr(IntLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitFloatLiteralExpr(FloatLiteral expr) {
+  public T visitFloatLiteralExpr(FloatLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitThrowExpr(Throw expr) {
+  public T visitThrowExpr(ThrowExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTraceExpr(Trace expr) {
+  public T visitTraceExpr(TraceExpr expr) {
     return visitChildren(expr);
   }
 
@@ -207,12 +207,12 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitReadExpr(Read expr) {
+  public T visitReadExpr(ReadExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitUnqualifiedAccessExpr(UnqualifiedAccess expr) {
+  public T visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
     return visitChildren(expr);
   }
 
@@ -222,92 +222,92 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitSingleLineStringLiteral(SingleLineStringLiteral expr) {
+  public T visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitMultiLineStringLiteral(MultiLineStringLiteral expr) {
+  public T visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitNewExpr(New expr) {
+  public T visitNewExpr(NewExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitAmendsExpr(Amends expr) {
+  public T visitAmendsExpr(AmendsExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSuperAccessExpr(SuperAccess expr) {
+  public T visitSuperAccessExpr(SuperAccessExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSuperSubscriptExpr(SuperSubscript expr) {
+  public T visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitQualifiedAccessExpr(QualifiedAccess expr) {
+  public T visitQualifiedAccessExpr(QualifiedAccessExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSubscriptExpr(Subscript expr) {
+  public T visitSubscriptExpr(SubscriptExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitNonNullExpr(NonNull expr) {
+  public T visitNonNullExpr(NonNullExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitUnaryMinusExpr(UnaryMinus expr) {
+  public T visitUnaryMinusExpr(UnaryMinusExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitLogicalNotExpr(LogicalNot expr) {
+  public T visitLogicalNotExpr(LogicalNotExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitBinaryOpExpr(BinaryOp expr) {
+  public T visitBinaryOperatorExpr(BinaryOperatorExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTypeCheckExpr(TypeCheck expr) {
+  public T visitTypeCheckExpr(TypeCheckExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTypeCastExpr(TypeCast expr) {
+  public T visitTypeCastExpr(TypeCastExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitIfExpr(If expr) {
+  public T visitIfExpr(IfExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitLetExpr(Let expr) {
+  public T visitLetExpr(LetExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitFunctionLiteralExpr(FunctionLiteral expr) {
+  public T visitFunctionLiteralExpr(FunctionLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitParenthesizedExpr(Parenthesized expr) {
+  public T visitParenthesizedExpr(ParenthesizedExpr expr) {
     return visitChildren(expr);
   }
 

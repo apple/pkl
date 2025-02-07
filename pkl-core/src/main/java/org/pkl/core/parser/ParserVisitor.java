@@ -23,9 +23,35 @@ import org.pkl.core.parser.cst.ClassMethod;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.DocComment;
 import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Expr.MultiLineStringLiteral;
-import org.pkl.core.parser.cst.Expr.NullLiteral;
-import org.pkl.core.parser.cst.Expr.SingleLineStringLiteral;
+import org.pkl.core.parser.cst.Expr.AmendsExpr;
+import org.pkl.core.parser.cst.Expr.BinaryOperatorExpr;
+import org.pkl.core.parser.cst.Expr.BoolLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FloatLiteralExpr;
+import org.pkl.core.parser.cst.Expr.FunctionLiteralExpr;
+import org.pkl.core.parser.cst.Expr.IfExpr;
+import org.pkl.core.parser.cst.Expr.IntLiteralExpr;
+import org.pkl.core.parser.cst.Expr.LetExpr;
+import org.pkl.core.parser.cst.Expr.LogicalNotExpr;
+import org.pkl.core.parser.cst.Expr.ModuleExpr;
+import org.pkl.core.parser.cst.Expr.MultiLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.NewExpr;
+import org.pkl.core.parser.cst.Expr.NonNullExpr;
+import org.pkl.core.parser.cst.Expr.NullLiteralExpr;
+import org.pkl.core.parser.cst.Expr.OuterExpr;
+import org.pkl.core.parser.cst.Expr.ParenthesizedExpr;
+import org.pkl.core.parser.cst.Expr.QualifiedAccessExpr;
+import org.pkl.core.parser.cst.Expr.ReadExpr;
+import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.cst.Expr.SubscriptExpr;
+import org.pkl.core.parser.cst.Expr.SuperAccessExpr;
+import org.pkl.core.parser.cst.Expr.SuperSubscriptExpr;
+import org.pkl.core.parser.cst.Expr.ThisExpr;
+import org.pkl.core.parser.cst.Expr.ThrowExpr;
+import org.pkl.core.parser.cst.Expr.TraceExpr;
+import org.pkl.core.parser.cst.Expr.TypeCastExpr;
+import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
+import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
+import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.Import;
@@ -87,97 +113,97 @@ public interface ParserVisitor<Result> {
   Result visitType(Type type);
 
   @Nullable
-  Result visitThisExpr(Expr.This expr);
+  Result visitThisExpr(ThisExpr expr);
 
   @Nullable
-  Result visitOuterExpr(Expr.Outer expr);
+  Result visitOuterExpr(OuterExpr expr);
 
   @Nullable
-  Result visitModuleExpr(Expr.Module expr);
+  Result visitModuleExpr(ModuleExpr expr);
 
   @Nullable
-  Result visitNullLiteralExpr(NullLiteral expr);
+  Result visitNullLiteralExpr(NullLiteralExpr expr);
 
   @Nullable
-  Result visitBoolLiteralExpr(Expr.BoolLiteral expr);
+  Result visitBoolLiteralExpr(BoolLiteralExpr expr);
 
   @Nullable
-  Result visitIntLiteralExpr(Expr.IntLiteral expr);
+  Result visitIntLiteralExpr(IntLiteralExpr expr);
 
   @Nullable
-  Result visitFloatLiteralExpr(Expr.FloatLiteral expr);
+  Result visitFloatLiteralExpr(FloatLiteralExpr expr);
 
   @Nullable
-  Result visitThrowExpr(Expr.Throw expr);
+  Result visitThrowExpr(ThrowExpr expr);
 
   @Nullable
-  Result visitTraceExpr(Expr.Trace expr);
+  Result visitTraceExpr(TraceExpr expr);
 
   @Nullable
   Result visitImportExpr(Expr.ImportExpr expr);
 
   @Nullable
-  Result visitReadExpr(Expr.Read expr);
+  Result visitReadExpr(ReadExpr expr);
 
   @Nullable
-  Result visitUnqualifiedAccessExpr(Expr.UnqualifiedAccess expr);
+  Result visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr);
 
   @Nullable
   Result visitStringConstant(StringConstant expr);
 
   @Nullable
-  Result visitSingleLineStringLiteral(SingleLineStringLiteral expr);
+  Result visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr);
 
   @Nullable
-  Result visitMultiLineStringLiteral(MultiLineStringLiteral expr);
+  Result visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr);
 
   @Nullable
-  Result visitNewExpr(Expr.New expr);
+  Result visitNewExpr(NewExpr expr);
 
   @Nullable
-  Result visitAmendsExpr(Expr.Amends expr);
+  Result visitAmendsExpr(AmendsExpr expr);
 
   @Nullable
-  Result visitSuperAccessExpr(Expr.SuperAccess expr);
+  Result visitSuperAccessExpr(SuperAccessExpr expr);
 
   @Nullable
-  Result visitSuperSubscriptExpr(Expr.SuperSubscript expr);
+  Result visitSuperSubscriptExpr(SuperSubscriptExpr expr);
 
   @Nullable
-  Result visitQualifiedAccessExpr(Expr.QualifiedAccess expr);
+  Result visitQualifiedAccessExpr(QualifiedAccessExpr expr);
 
   @Nullable
-  Result visitSubscriptExpr(Expr.Subscript expr);
+  Result visitSubscriptExpr(SubscriptExpr expr);
 
   @Nullable
-  Result visitNonNullExpr(Expr.NonNull expr);
+  Result visitNonNullExpr(NonNullExpr expr);
 
   @Nullable
-  Result visitUnaryMinusExpr(Expr.UnaryMinus expr);
+  Result visitUnaryMinusExpr(UnaryMinusExpr expr);
 
   @Nullable
-  Result visitLogicalNotExpr(Expr.LogicalNot expr);
+  Result visitLogicalNotExpr(LogicalNotExpr expr);
 
   @Nullable
-  Result visitBinaryOpExpr(Expr.BinaryOp expr);
+  Result visitBinaryOperatorExpr(BinaryOperatorExpr expr);
 
   @Nullable
-  Result visitTypeCheckExpr(Expr.TypeCheck expr);
+  Result visitTypeCheckExpr(TypeCheckExpr expr);
 
   @Nullable
-  Result visitTypeCastExpr(Expr.TypeCast expr);
+  Result visitTypeCastExpr(TypeCastExpr expr);
 
   @Nullable
-  Result visitIfExpr(Expr.If expr);
+  Result visitIfExpr(IfExpr expr);
 
   @Nullable
-  Result visitLetExpr(Expr.Let expr);
+  Result visitLetExpr(LetExpr expr);
 
   @Nullable
-  Result visitFunctionLiteralExpr(Expr.FunctionLiteral expr);
+  Result visitFunctionLiteralExpr(FunctionLiteralExpr expr);
 
   @Nullable
-  Result visitParenthesizedExpr(Expr.Parenthesized expr);
+  Result visitParenthesizedExpr(ParenthesizedExpr expr);
 
   @Nullable
   Result visitExpr(Expr expr);
