@@ -36,12 +36,12 @@ public final class Module extends AbstractNode {
     return (ModuleDecl) children.get(0);
   }
 
-  public List<Import> getImports() {
+  public List<ImportClause> getImports() {
     if (children.size() < 2) return List.of();
-    var res = new ArrayList<Import>();
+    var res = new ArrayList<ImportClause>();
     for (int i = 1; i < children.size(); i++) {
       var child = children.get(i);
-      if (child instanceof Import imp) {
+      if (child instanceof ImportClause imp) {
         res.add(imp);
       } else {
         // imports are sequential

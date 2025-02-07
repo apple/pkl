@@ -15,44 +15,42 @@
  */
 package org.pkl.core.parser.cst;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ExtendsOrAmendsDecl extends AbstractNode {
-  private final Type type;
+@SuppressWarnings("DataFlowIssue")
+public final class ImportClause extends AbstractNode {
+  private final boolean isGlob;
 
-  public ExtendsOrAmendsDecl(StringConstant url, Type type, Span span) {
-    super(span, List.of(url));
-    this.type = type;
+  public ImportClause(
+      StringConstant importStr, boolean isGlob, @Nullable Identifier alias, Span span) {
+    super(span, Arrays.asList(importStr, alias));
+    this.isGlob = isGlob;
   }
 
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitExtendsOrAmendsDecl(this);
+    return visitor.visitImportClause(this);
   }
 
-  public StringConstant getUrl() {
-    assert children != null;
+  public StringConstant getImportStr() {
     return (StringConstant) children.get(0);
   }
 
-  public Type getType() {
-    return type;
+  public boolean isGlob() {
+    return isGlob;
+  }
+
+  public @Nullable Identifier getAlias() {
+    return (Identifier) children.get(1);
   }
 
   @Override
   public String toString() {
-    return "ExtendsOrAmendsDecl{"
-        + "type="
-        + type
-        + ", span="
-        + span
-        + ", children="
-        + children
-        + '}';
+    return "Import{isGlob=" + isGlob + ", span=" + span + ", children=" + children + '}';
   }
 
   @SuppressWarnings("ConstantValue")
@@ -67,17 +65,12 @@ public class ExtendsOrAmendsDecl extends AbstractNode {
     if (!super.equals(o)) {
       return false;
     }
-    ExtendsOrAmendsDecl that = (ExtendsOrAmendsDecl) o;
-    return type == that.type;
+    ImportClause anImport = (ImportClause) o;
+    return isGlob == anImport.isGlob;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), type);
-  }
-
-  public enum Type {
-    EXTENDS,
-    AMENDS
+    return Objects.hash(super.hashCode(), isGlob);
   }
 }

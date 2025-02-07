@@ -52,8 +52,8 @@ public final class ModuleDecl extends AbstractNode {
     return (QualifiedIdentifier) children.get(nameOffset);
   }
 
-  public @Nullable ExtendsOrAmendsDecl getExtendsOrAmendsDecl() {
-    return (ExtendsOrAmendsDecl) children.get(nameOffset + 1);
+  public @Nullable ExtendsOrAmendsClause getExtendsOrAmendsDecl() {
+    return (ExtendsOrAmendsClause) children.get(nameOffset + 1);
   }
 
   public Span headerSpan() {

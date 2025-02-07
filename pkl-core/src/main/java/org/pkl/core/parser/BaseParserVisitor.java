@@ -53,22 +53,22 @@ import org.pkl.core.parser.cst.Expr.TypeCastExpr;
 import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
 import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
 import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
 import org.pkl.core.parser.cst.Identifier;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.Node;
 import org.pkl.core.parser.cst.ObjectBody;
-import org.pkl.core.parser.cst.ObjectMemberNode;
-import org.pkl.core.parser.cst.ObjectMemberNode.ForGenerator;
-import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicate;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectElement;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntry;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectMethod;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
-import org.pkl.core.parser.cst.ObjectMemberNode.WhenGenerator;
+import org.pkl.core.parser.cst.ObjectMember;
+import org.pkl.core.parser.cst.ObjectMember.ForGenerator;
+import org.pkl.core.parser.cst.ObjectMember.MemberPredicate;
+import org.pkl.core.parser.cst.ObjectMember.ObjectElement;
+import org.pkl.core.parser.cst.ObjectMember.ObjectEntry;
+import org.pkl.core.parser.cst.ObjectMember.ObjectMethod;
+import org.pkl.core.parser.cst.ObjectMember.ObjectProperty;
+import org.pkl.core.parser.cst.ObjectMember.ObjectSpread;
+import org.pkl.core.parser.cst.ObjectMember.WhenGenerator;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
@@ -357,7 +357,7 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitObjectMember(ObjectMemberNode member) {
+  public T visitObjectMember(ObjectMember member) {
     return visitChildren(member);
   }
 
@@ -372,12 +372,12 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl) {
+  public T visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
     return visitChildren(decl);
   }
 
   @Override
-  public T visitImport(Import imp) {
+  public T visitImportClause(ImportClause imp) {
     return visitChildren(imp);
   }
 

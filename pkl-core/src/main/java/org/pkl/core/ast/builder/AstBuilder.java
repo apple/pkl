@@ -194,23 +194,22 @@ import org.pkl.core.parser.cst.Expr.TypeCastExpr;
 import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
 import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
 import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
 import org.pkl.core.parser.cst.Identifier;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Modifier.ModifierValue;
 import org.pkl.core.parser.cst.Module;
 import org.pkl.core.parser.cst.Node;
 import org.pkl.core.parser.cst.ObjectBody;
-import org.pkl.core.parser.cst.ObjectMemberNode;
-import org.pkl.core.parser.cst.ObjectMemberNode.ForGenerator;
-import org.pkl.core.parser.cst.ObjectMemberNode.MemberPredicate;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectElement;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectEntry;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectMethod;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectSpread;
-import org.pkl.core.parser.cst.ObjectMemberNode.WhenGenerator;
+import org.pkl.core.parser.cst.ObjectMember.ForGenerator;
+import org.pkl.core.parser.cst.ObjectMember.MemberPredicate;
+import org.pkl.core.parser.cst.ObjectMember.ObjectElement;
+import org.pkl.core.parser.cst.ObjectMember.ObjectEntry;
+import org.pkl.core.parser.cst.ObjectMember.ObjectMethod;
+import org.pkl.core.parser.cst.ObjectMember.ObjectProperty;
+import org.pkl.core.parser.cst.ObjectMember.ObjectSpread;
+import org.pkl.core.parser.cst.ObjectMember.WhenGenerator;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
 import org.pkl.core.parser.cst.ParameterList;
@@ -323,7 +322,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               ? declaredModuleName.text()
               : IoUtils.inferModuleName(moduleKey);
       var clause = moduleDecl.getExtendsOrAmendsDecl();
-      var isAmend = clause != null && clause.getType() == ExtendsOrAmendsDecl.Type.AMENDS;
+      var isAmend = clause != null && clause.getType() == ExtendsOrAmendsClause.Type.AMENDS;
       moduleInfo =
           new ModuleInfo(
               sourceSection,
@@ -1238,7 +1237,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public GeneratorMemberNode visitObjectMember(ObjectMemberNode member) {
+  public GeneratorMemberNode visitObjectMember(org.pkl.core.parser.cst.ObjectMember member) {
     return (GeneratorMemberNode) member.accept(this);
   }
 
@@ -1499,7 +1498,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private EconomicMap<Object, ObjectMember> doVisitModuleProperties(
-      List<Import> imports,
+      List<ImportClause> imports,
       List<Class> classes,
       List<TypeAlias> typeAliases,
       List<ClassProperty> properties,
@@ -1510,7 +1509,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var result = EconomicMaps.<Object, ObjectMember>create(totalSize);
 
     for (var _import : imports) {
-      var member = visitImport(_import);
+      var member = visitImportClause(_import);
       checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
       EconomicMaps.put(result, member.getName(), member);
     }
@@ -1568,7 +1567,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ObjectMember visitImport(Import imp) {
+  public ObjectMember visitImportClause(ImportClause imp) {
     var importNode = doVisitImport(imp.isGlob(), imp, imp.getImportStr());
     var moduleKey = moduleResolver.resolve(importNode.getImportUri());
     var importName =
@@ -2510,7 +2509,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorMemberNode[] doVisitGeneratorMemberNodes(
-      List<? extends ObjectMemberNode> members) {
+      List<? extends org.pkl.core.parser.cst.ObjectMember> members) {
     var result = new GeneratorMemberNode[members.size()];
     for (var i = 0; i < result.length; i++) {
       result[i] = visitObjectMember(members.get(i));
@@ -2799,13 +2798,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       return;
     }
     var forExprCtx = ctx.parent();
-    while (forExprCtx.getClass() != ObjectMemberNode.ForGenerator.class) {
+    while (forExprCtx.getClass() != org.pkl.core.parser.cst.ObjectMember.ForGenerator.class) {
       forExprCtx = forExprCtx.parent();
     }
     throw exceptionBuilder()
         .evalError(errorMessageKey)
         .withSourceSection(
-            createSourceSection(((ObjectMemberNode.ForGenerator) forExprCtx).forSpan()))
+            createSourceSection(
+                ((org.pkl.core.parser.cst.ObjectMember.ForGenerator) forExprCtx).forSpan()))
         .build();
   }
 

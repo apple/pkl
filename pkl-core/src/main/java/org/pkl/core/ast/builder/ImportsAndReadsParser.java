@@ -31,9 +31,9 @@ import org.pkl.core.parser.cst.Expr.ImportExpr;
 import org.pkl.core.parser.cst.Expr.ReadExpr;
 import org.pkl.core.parser.cst.Expr.ReadType;
 import org.pkl.core.parser.cst.Expr.SingleLineStringLiteralExpr;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl.Type;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause.Type;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.StringPart.StringConstantParts;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
@@ -87,7 +87,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
   }
 
   @Override
-  public @Nullable List<Entry> visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl) {
+  public @Nullable List<Entry> visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
     var importStr = doVisitStringConstant(decl.getUrl());
     var sourceSection = createSourceSection(decl.getUrl());
     assert sourceSection != null;
@@ -102,7 +102,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
   }
 
   @Override
-  public List<Entry> visitImport(Import imp) {
+  public List<Entry> visitImportClause(ImportClause imp) {
     var importStr = doVisitStringConstant(imp.getImportStr());
     var sourceSection = createSourceSection(imp.getImportStr());
     assert sourceSection != null;

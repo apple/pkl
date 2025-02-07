@@ -19,7 +19,7 @@ import org.pkl.core.parser.cst.*
 import org.pkl.core.parser.cst.Annotation
 import org.pkl.core.parser.cst.Expr.*
 import org.pkl.core.parser.cst.Expr.ModuleExpr
-import org.pkl.core.parser.cst.ObjectMemberNode.*
+import org.pkl.core.parser.cst.ObjectMember.*
 import org.pkl.core.parser.cst.Parameter.TypedIdentifier
 import org.pkl.core.parser.cst.Type.*
 
@@ -89,7 +89,7 @@ class SexpRenderer {
     buf.append(')')
   }
 
-  fun renderImport(imp: Import) {
+  fun renderImport(imp: ImportClause) {
     buf.append(tab)
     if (imp.isGlob) {
       buf.append("(importGlobClause")
@@ -841,7 +841,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderMember(member: ObjectMemberNode) {
+  fun renderMember(member: ObjectMember) {
     when (member) {
       is ObjectElement -> renderObjectElement(member)
       is ObjectProperty -> renderObjectProperty(member)

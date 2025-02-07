@@ -52,14 +52,14 @@ import org.pkl.core.parser.cst.Expr.TypeCastExpr;
 import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
 import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
 import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
 import org.pkl.core.parser.cst.Identifier;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Module;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.ObjectBody;
-import org.pkl.core.parser.cst.ObjectMemberNode;
+import org.pkl.core.parser.cst.ObjectMember;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.ParameterList;
 import org.pkl.core.parser.cst.QualifiedIdentifier;
@@ -209,31 +209,31 @@ public interface ParserVisitor<Result> {
   Result visitExpr(Expr expr);
 
   @Nullable
-  Result visitObjectProperty(ObjectMemberNode.ObjectProperty member);
+  Result visitObjectProperty(ObjectMember.ObjectProperty member);
 
   @Nullable
-  Result visitObjectMethod(ObjectMemberNode.ObjectMethod member);
+  Result visitObjectMethod(ObjectMember.ObjectMethod member);
 
   @Nullable
-  Result visitMemberPredicate(ObjectMemberNode.MemberPredicate member);
+  Result visitMemberPredicate(ObjectMember.MemberPredicate member);
 
   @Nullable
-  Result visitObjectElement(ObjectMemberNode.ObjectElement member);
+  Result visitObjectElement(ObjectMember.ObjectElement member);
 
   @Nullable
-  Result visitObjectEntry(ObjectMemberNode.ObjectEntry member);
+  Result visitObjectEntry(ObjectMember.ObjectEntry member);
 
   @Nullable
-  Result visitObjectSpread(ObjectMemberNode.ObjectSpread member);
+  Result visitObjectSpread(ObjectMember.ObjectSpread member);
 
   @Nullable
-  Result visitWhenGenerator(ObjectMemberNode.WhenGenerator member);
+  Result visitWhenGenerator(ObjectMember.WhenGenerator member);
 
   @Nullable
-  Result visitForGenerator(ObjectMemberNode.ForGenerator member);
+  Result visitForGenerator(ObjectMember.ForGenerator member);
 
   @Nullable
-  Result visitObjectMember(ObjectMemberNode member);
+  Result visitObjectMember(ObjectMember member);
 
   @Nullable
   Result visitModule(Module module);
@@ -242,10 +242,10 @@ public interface ParserVisitor<Result> {
   Result visitModuleDecl(ModuleDecl decl);
 
   @Nullable
-  Result visitExtendsOrAmendsDecl(ExtendsOrAmendsDecl decl);
+  Result visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl);
 
   @Nullable
-  Result visitImport(Import imp);
+  Result visitImportClause(ImportClause imp);
 
   @Nullable
   Result visitClass(Class clazz);

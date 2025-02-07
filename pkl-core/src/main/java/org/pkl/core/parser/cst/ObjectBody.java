@@ -38,7 +38,7 @@ public final class ObjectBody extends AbstractNode {
     return (List<Parameter>) children.subList(0, membersOffset);
   }
 
-  public List<ObjectMemberNode> getMembers() {
-    return (List<ObjectMemberNode>) children.subList(membersOffset, children.size());
+  public List<ObjectMember> getMembers() {
+    return (List<ObjectMember>) children.subList(membersOffset, children.size());
   }
 }

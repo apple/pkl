@@ -58,16 +58,16 @@ import org.pkl.core.parser.cst.Expr.ThrowExpr;
 import org.pkl.core.parser.cst.Expr.TraceExpr;
 import org.pkl.core.parser.cst.Expr.UnaryMinusExpr;
 import org.pkl.core.parser.cst.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.cst.ExtendsOrAmendsDecl;
+import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
 import org.pkl.core.parser.cst.Identifier;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.Modifier;
 import org.pkl.core.parser.cst.Modifier.ModifierValue;
 import org.pkl.core.parser.cst.Module;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.Node;
 import org.pkl.core.parser.cst.ObjectBody;
-import org.pkl.core.parser.cst.ObjectMemberNode;
+import org.pkl.core.parser.cst.ObjectMember;
 import org.pkl.core.parser.cst.Operator;
 import org.pkl.core.parser.cst.Parameter;
 import org.pkl.core.parser.cst.Parameter.TypedIdentifier;
@@ -244,21 +244,23 @@ public class Parser {
     return new QualifiedIdentifier(idents);
   }
 
-  private @Nullable ExtendsOrAmendsDecl parseExtendsAmendsDecl() {
+  private @Nullable ExtendsOrAmendsClause parseExtendsAmendsDecl() {
     if (lookahead == Token.EXTENDS) {
       var tk = next().span;
       var url = parseStringConstant();
-      return new ExtendsOrAmendsDecl(url, ExtendsOrAmendsDecl.Type.EXTENDS, tk.endWith(url.span()));
+      return new ExtendsOrAmendsClause(
+          url, ExtendsOrAmendsClause.Type.EXTENDS, tk.endWith(url.span()));
     }
     if (lookahead == Token.AMENDS) {
       var tk = next().span;
       var url = parseStringConstant();
-      return new ExtendsOrAmendsDecl(url, ExtendsOrAmendsDecl.Type.AMENDS, tk.endWith(url.span()));
+      return new ExtendsOrAmendsClause(
+          url, ExtendsOrAmendsClause.Type.AMENDS, tk.endWith(url.span()));
     }
     return null;
   }
 
-  private Import parseImportDecl() {
+  private ImportClause parseImportDecl() {
     Span start;
     boolean isGlob = false;
     if (lookahead == Token.IMPORT_STAR) {
@@ -275,7 +277,7 @@ public class Parser {
       alias = parseIdentifier();
       end = alias.span();
     }
-    return new Import(str, isGlob, alias, start.endWith(end));
+    return new ImportClause(str, isGlob, alias, start.endWith(end));
   }
 
   private MemberHeader parseMemberHeader() {
@@ -561,7 +563,7 @@ public class Parser {
           var expr = parseExpr();
           membersOffset = 0;
           nodes.add(
-              new ObjectMemberNode.ObjectProperty(
+              new ObjectMember.ObjectProperty(
                   Arrays.asList(identifier, typeAnnotation, expr),
                   0,
                   identifier.span().endWith(expr.span())));
@@ -583,7 +585,7 @@ public class Parser {
     return new ObjectBody(nodes, membersOffset, start.endWith(end));
   }
 
-  private ObjectMemberNode parseObjectMember() {
+  private ObjectMember parseObjectMember() {
     return switch (lookahead) {
       case IDENTIFIER -> {
         next();
@@ -624,12 +626,12 @@ public class Parser {
     };
   }
 
-  private ObjectMemberNode.ObjectElement parseObjectElement() {
+  private ObjectMember.ObjectElement parseObjectElement() {
     var expr = parseExpr("}");
-    return new ObjectMemberNode.ObjectElement(expr, expr.span());
+    return new ObjectMember.ObjectElement(expr, expr.span());
   }
 
-  private ObjectMemberNode parseObjectProperty(@Nullable List<Modifier> modifiers) {
+  private ObjectMember parseObjectProperty(@Nullable List<Modifier> modifiers) {
     var start = spanLookahead;
     var allModifiers = modifiers;
     if (allModifiers == null) {
@@ -648,7 +650,7 @@ public class Parser {
       nodes.add(identifier);
       nodes.add(typeAnnotation);
       nodes.add(expr);
-      return new ObjectMemberNode.ObjectProperty(
+      return new ObjectMember.ObjectProperty(
           nodes, allModifiers.size(), start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
@@ -659,10 +661,10 @@ public class Parser {
     nodes.add(null);
     nodes.add(null);
     nodes.addAll(bodies);
-    return new ObjectMemberNode.ObjectProperty(nodes, allModifiers.size(), start.endWith(end));
+    return new ObjectMember.ObjectProperty(nodes, allModifiers.size(), start.endWith(end));
   }
 
-  private ObjectMemberNode.ObjectMethod parseObjectMethod(List<Modifier> modifiers) {
+  private ObjectMember.ObjectMethod parseObjectMethod(List<Modifier> modifiers) {
     var start = spanLookahead;
     expect(Token.FUNCTION, "unexpectedToken", "function");
     var identifier = parseIdentifier();
@@ -684,10 +686,10 @@ public class Parser {
     nodes.add(args);
     nodes.add(typeAnnotation);
     nodes.add(expr);
-    return new ObjectMemberNode.ObjectMethod(nodes, modifiers.size(), start.endWith(expr.span()));
+    return new ObjectMember.ObjectMethod(nodes, modifiers.size(), start.endWith(expr.span()));
   }
 
-  private ObjectMemberNode parseMemberPredicate() {
+  private ObjectMember parseMemberPredicate() {
     var start = next().span;
     var pred = parseExpr("]]");
     var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]").span;
@@ -704,7 +706,7 @@ public class Parser {
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr("}");
-      return new ObjectMemberNode.MemberPredicate(List.of(pred, expr), start.endWith(expr.span()));
+      return new ObjectMember.MemberPredicate(List.of(pred, expr), start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
@@ -712,17 +714,17 @@ public class Parser {
     nodes.add(pred);
     nodes.add(null);
     nodes.addAll(bodies);
-    return new ObjectMemberNode.MemberPredicate(nodes, start.endWith(end));
+    return new ObjectMember.MemberPredicate(nodes, start.endWith(end));
   }
 
-  private ObjectMemberNode parseObjectEntry() {
+  private ObjectMember parseObjectEntry() {
     var start = expect(Token.LBRACK, "unexpectedToken", "[").span;
     var key = parseExpr("]");
     expect(Token.RBRACK, "unexpectedToken", "]");
     if (lookahead == Token.ASSIGN) {
       next();
       var expr = parseExpr("}");
-      return new ObjectMemberNode.ObjectEntry(List.of(key, expr), start.endWith(expr.span()));
+      return new ObjectMember.ObjectEntry(List.of(key, expr), start.endWith(expr.span()));
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
@@ -730,20 +732,20 @@ public class Parser {
     nodes.add(key);
     nodes.add(null);
     nodes.addAll(bodies);
-    return new ObjectMemberNode.ObjectEntry(nodes, start.endWith(end));
+    return new ObjectMember.ObjectEntry(nodes, start.endWith(end));
   }
 
-  private ObjectMemberNode.ObjectSpread parseObjectSpread() {
+  private ObjectMember.ObjectSpread parseObjectSpread() {
     if (lookahead != Token.SPREAD && lookahead != Token.QSPREAD) {
       throw parserError("unexpectedToken2", "...", "...?");
     }
     var peek = next();
     boolean isNullable = peek.token == Token.QSPREAD;
     var expr = parseExpr("}");
-    return new ObjectMemberNode.ObjectSpread(expr, isNullable, peek.span.endWith(expr.span()));
+    return new ObjectMember.ObjectSpread(expr, isNullable, peek.span.endWith(expr.span()));
   }
 
-  private ObjectMemberNode.WhenGenerator parseWhenGenerator() {
+  private ObjectMember.WhenGenerator parseWhenGenerator() {
     var start = expect(Token.WHEN, "unexpectedToken", "when").span;
     expect(Token.LPAREN, "unexpectedToken", "(");
     var pred = parseExpr(")");
@@ -756,10 +758,10 @@ public class Parser {
       elseBody = parseObjectBody();
       end = elseBody.span();
     }
-    return new ObjectMemberNode.WhenGenerator(pred, body, elseBody, start.endWith(end));
+    return new ObjectMember.WhenGenerator(pred, body, elseBody, start.endWith(end));
   }
 
-  private ObjectMemberNode.ForGenerator parseForGenerator() {
+  private ObjectMember.ForGenerator parseForGenerator() {
     var start = expect(Token.FOR, "unexpectedToken", "for").span;
     expect(Token.LPAREN, "unexpectedToken", "(");
     var par1 = parseParameter();
@@ -772,7 +774,7 @@ public class Parser {
     var expr = parseExpr(")");
     expect(Token.RPAREN, "unexpectedToken", ")");
     var body = parseObjectBody();
-    return new ObjectMemberNode.ForGenerator(par1, par2, expr, body, start.endWith(body.span()));
+    return new ObjectMember.ForGenerator(par1, par2, expr, body, start.endWith(body.span()));
   }
 
   private Expr parseExpr() {

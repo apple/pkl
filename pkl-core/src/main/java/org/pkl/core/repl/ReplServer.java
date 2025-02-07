@@ -40,7 +40,7 @@ import org.pkl.core.parser.ParserError;
 import org.pkl.core.parser.cst.Class;
 import org.pkl.core.parser.cst.ClassProperty;
 import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Import;
+import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.ReplInput;
 import org.pkl.core.project.DeclaredDependencies;
@@ -212,8 +212,8 @@ public class ReplServer implements AutoCloseable {
         if (tree instanceof Expr expr) {
           var exprNode = builder.visitExpr(expr);
           evaluateExpr(replState, exprNode, forceResults, results);
-        } else if (tree instanceof Import importClause) {
-          addStaticModuleProperty(builder.visitImport(importClause));
+        } else if (tree instanceof ImportClause importClause) {
+          addStaticModuleProperty(builder.visitImportClause(importClause));
         } else if (tree instanceof ClassProperty classProperty) {
           var propertyNode = builder.visitClassProperty(classProperty);
           var property = addModuleProperty(propertyNode);

@@ -23,13 +23,13 @@ import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
 @SuppressWarnings("ALL")
-public abstract sealed class ObjectMemberNode extends AbstractNode {
+public abstract sealed class ObjectMember extends AbstractNode {
 
-  public ObjectMemberNode(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public ObjectMember(Span span, @Nullable List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
-  public static final class ObjectElement extends ObjectMemberNode {
+  public static final class ObjectElement extends ObjectMember {
     public ObjectElement(Expr expr, Span span) {
       super(span, List.of(expr));
     }
@@ -44,7 +44,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class ObjectProperty extends ObjectMemberNode {
+  public static final class ObjectProperty extends ObjectMember {
     private final int identifierOffset;
 
     public ObjectProperty(List<Node> nodes, int identifierOffset, Span span) {
@@ -78,7 +78,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class ObjectMethod extends ObjectMemberNode {
+  public static final class ObjectMethod extends ObjectMember {
     private final int identifierOffset;
 
     public ObjectMethod(List<Node> nodes, int identifierOffset, Span span) {
@@ -127,7 +127,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class MemberPredicate extends ObjectMemberNode {
+  public static final class MemberPredicate extends ObjectMember {
     public MemberPredicate(List<Node> nodes, Span span) {
       super(span, nodes);
     }
@@ -150,7 +150,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class ObjectEntry extends ObjectMemberNode {
+  public static final class ObjectEntry extends ObjectMember {
     public ObjectEntry(List<Node> nodes, Span span) {
       super(span, nodes);
     }
@@ -173,7 +173,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class ObjectSpread extends ObjectMemberNode {
+  public static final class ObjectSpread extends ObjectMember {
     private final boolean isNullable;
 
     public ObjectSpread(Expr expr, boolean isNullable, Span span) {
@@ -227,7 +227,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class WhenGenerator extends ObjectMemberNode {
+  public static final class WhenGenerator extends ObjectMember {
     public WhenGenerator(Expr cond, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
       super(span, Arrays.asList(cond, body, elseClause));
     }
@@ -250,7 +250,7 @@ public abstract sealed class ObjectMemberNode extends AbstractNode {
     }
   }
 
-  public static final class ForGenerator extends ObjectMemberNode {
+  public static final class ForGenerator extends ObjectMember {
     public ForGenerator(
         Parameter p1, @Nullable Parameter p2, Expr expr, ObjectBody body, Span span) {
       super(span, Arrays.asList(p1, p2, expr, body));

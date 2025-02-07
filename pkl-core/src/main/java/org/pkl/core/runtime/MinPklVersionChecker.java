@@ -19,7 +19,7 @@ import com.oracle.truffle.api.nodes.Node;
 import org.pkl.core.Release;
 import org.pkl.core.Version;
 import org.pkl.core.parser.cst.Module;
-import org.pkl.core.parser.cst.ObjectMemberNode.ObjectProperty;
+import org.pkl.core.parser.cst.ObjectMember.ObjectProperty;
 import org.pkl.core.parser.cst.Type;
 import org.pkl.core.parser.cst.Type.DeclaredType;
 import org.pkl.core.util.Nullable;
