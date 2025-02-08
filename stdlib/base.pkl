@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2793,6 +2793,40 @@ external class List<out Element> extends Collection<Element> {
   external length: Int
 
   external isEmpty: Boolean
+
+  /// The [MD5](https://en.wikipedia.org/wiki/MD5)
+  /// hash of this list's byte sequence as hexadecimal string.
+  ///
+  /// MD5 is cryptographically broken and should not be used for secure applications.
+  /// 
+  /// Throws an error when [Element] is not [UInt8].
+  external md5: String
+
+  /// The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
+  /// hash of this list's byte sequence.
+  ///
+  /// SHA-1 is cryptographically broken and should not be used for secure applications.
+  /// 
+  /// Throws an error when [Element] is not [UInt8].
+  external sha1: String
+
+  /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this list's byte sequence
+  /// as hexadecimal string.
+  /// 
+  /// Throws an error when [Element] is not [UInt8].
+  external sha256: String
+
+  /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
+  /// cryptographic hash of this list's byte sequence.
+  /// 
+  /// Throws an error when [Element] is not [UInt8].
+  external sha256Int: Int
+
+  /// The Base64 encoding of this string's UTF-8 byte sequence.
+  /// 
+  /// Throws an error when [Element] is not [UInt8].
+  external base64: String
 
   /// The index of the last element in this list (same as `length - 1`).
   ///
