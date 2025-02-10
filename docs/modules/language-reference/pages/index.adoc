@@ -2036,6 +2036,29 @@ greeting2 = greetPigeon(parrot)  // <4>
 <3> Call instance method on `pigeon`.
 <4> Call module method (on `this`).
 
+Like other object-oriented languages, methods defined on extended classes and modules may be overridden.
+The parent type's method may be called via the `super` keyword.
+
+[source%parsed,{pkl}]
+----
+open class Bird {
+  name: String
+  function canEat(food: String): Boolean = food == "seeds"
+}
+
+class InsectivorousBird extends Bird {
+  function canEat(food: String): Boolean = super.canEat(food) || food == "insects" // <1>
+}
+
+swallow = new InsectivorousBird { name = "Swallow" }
+
+canEatSeeds = swallow.canEat("seeds") // <2>
+canEatMeat = swallow.canEat("insects")  // <3>
+----
+<1> Call parent class instance method (on `this`).
+<2> result: `true`
+<3> result: `true`
+
 NOTE: Methods do not support named parameters or default parameter values.
 The xref:blog:ROOT:class-as-a-function.adoc[Class-as-a-function] pattern may be a suitable replacement.
 
