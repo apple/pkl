@@ -1,4 +1,5 @@
 prefix = "Oh "
+sameProp = "abc"
 res1 = "Oh Pigeon"
 res2 = "Oh Barn Owl"
 res3 = "Oh ParrotOh Parrot"
@@ -6,3 +7,4 @@ res4 = "Oh PigeonOh Barn Owl"
 res5 = "Oh Barn OwlOh Pigeon"
 res6 = "Oh Parrot"
 res7 = "Cannot find method `other` in module `supercalls2`."
+res8 = 6
