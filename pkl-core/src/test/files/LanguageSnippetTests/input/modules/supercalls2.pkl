@@ -5,3 +5,5 @@ extends "supercalls1.pkl"
 hidden pigeon = super.say("Pigeon")
 function barnOwl() = super.say("Barn Owl")
 function say2(msg) = super.say(msg) + super.say(msg)
+function sameMethod() = 2 + super.sameMethod()
+sameProp = super.sameProp + "b"
