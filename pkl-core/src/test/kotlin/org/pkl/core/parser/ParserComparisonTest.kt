@@ -83,6 +83,9 @@ class ParserComparisonTest : ParserComparisonTestInterface {
         "errors/underscore.pkl",
         "spacesBetweenDocComments.pkl",
         "lineCommentBetween.pkl",
+        "constantStringInterpolation.pkl",
+        "wrongDocComment.pkl",
+        "typeAnnotationInAmends.pkl",
       )
 
     private val regexExceptions =

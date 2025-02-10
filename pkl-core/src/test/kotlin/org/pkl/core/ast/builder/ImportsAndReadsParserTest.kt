@@ -82,7 +82,7 @@ class ImportsAndReadsParserTest {
       .hasMessage(
         """
           –– Pkl Error ––
-          Invalid property definition. Expected type annotation, assignment or amending.
+          Invalid property definition. Expected a type annotation, `=` or `{`.
           
           1 | not valid Pkl syntax
               ^^^

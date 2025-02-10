@@ -1,0 +1,2 @@
+/// not a valid doc comment
+import "../../input-helper/basic/read/module1.pkl"
