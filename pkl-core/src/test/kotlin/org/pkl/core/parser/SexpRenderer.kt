@@ -15,27 +15,27 @@
  */
 package org.pkl.core.parser
 
-import org.pkl.core.parser.cst.*
-import org.pkl.core.parser.cst.Annotation
-import org.pkl.core.parser.cst.Expr.*
-import org.pkl.core.parser.cst.Expr.ModuleExpr
-import org.pkl.core.parser.cst.ObjectMember.*
-import org.pkl.core.parser.cst.Parameter.TypedIdentifier
-import org.pkl.core.parser.cst.Type.*
+import org.pkl.core.parser.ast.*
+import org.pkl.core.parser.ast.Annotation
+import org.pkl.core.parser.ast.Expr.*
+import org.pkl.core.parser.ast.Expr.ModuleExpr
+import org.pkl.core.parser.ast.ObjectMember.*
+import org.pkl.core.parser.ast.Parameter.TypedIdentifier
+import org.pkl.core.parser.ast.Type.*
 
 @Suppress("MemberVisibilityCanBePrivate")
 class SexpRenderer {
   private var tab = ""
   private var buf = StringBuilder()
 
-  fun render(mod: org.pkl.core.parser.cst.Module): String {
+  fun render(mod: org.pkl.core.parser.ast.Module): String {
     renderModule(mod)
     val res = buf.toString()
     reset()
     return res
   }
 
-  fun renderModule(mod: org.pkl.core.parser.cst.Module) {
+  fun renderModule(mod: org.pkl.core.parser.ast.Module) {
     buf.append(tab)
     buf.append("(module")
     val oldTab = increaseTab()
@@ -1043,7 +1043,7 @@ class SexpRenderer {
   }
 
   companion object {
-    private fun sortModuleEntries(mod: org.pkl.core.parser.cst.Module): List<Node> {
+    private fun sortModuleEntries(mod: org.pkl.core.parser.ast.Module): List<Node> {
       val res = mutableListOf<Node>()
       res += mod.classes
       res += mod.typeAliases

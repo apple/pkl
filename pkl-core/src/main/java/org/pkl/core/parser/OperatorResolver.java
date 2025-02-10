@@ -17,13 +17,13 @@ package org.pkl.core.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.pkl.core.parser.cst.Expr;
-import org.pkl.core.parser.cst.Expr.BinaryOperatorExpr;
-import org.pkl.core.parser.cst.Expr.OperatorExpr;
-import org.pkl.core.parser.cst.Expr.TypeCastExpr;
-import org.pkl.core.parser.cst.Expr.TypeCheckExpr;
-import org.pkl.core.parser.cst.Expr.TypeExpr;
-import org.pkl.core.parser.cst.Operator;
+import org.pkl.core.parser.ast.Expr;
+import org.pkl.core.parser.ast.Expr.BinaryOperatorExpr;
+import org.pkl.core.parser.ast.Expr.OperatorExpr;
+import org.pkl.core.parser.ast.Expr.TypeCastExpr;
+import org.pkl.core.parser.ast.Expr.TypeCheckExpr;
+import org.pkl.core.parser.ast.Expr.TypeExpr;
+import org.pkl.core.parser.ast.Operator;
 import org.pkl.core.util.Nullable;
 
 class OperatorResolver {

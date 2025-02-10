@@ -23,7 +23,7 @@ import org.pkl.core.util.IoUtils
 import org.pkl.core.http.HttpClient
 import org.pkl.core.parser.Parser
 import org.pkl.core.parser.ParserError
-import org.pkl.core.parser.cst.ClassProperty
+import org.pkl.core.parser.ast.ClassProperty
 import org.pkl.core.resource.ResourceReaders
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
@@ -302,7 +302,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
 
       override fun getType() = Type.TEST
 
-      private val parsed: org.pkl.core.parser.cst.Node by lazy {
+      private val parsed: org.pkl.core.parser.ast.Node by lazy {
         when (language) {
           "pkl" -> Parser().parseModule(code)
           "pkl-expr" -> Parser().parseExpressionInput(code)
