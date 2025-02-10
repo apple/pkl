@@ -351,7 +351,7 @@ public class Parser {
   }
 
   private TypeAlias parseTypeAlias(MemberHeader header) {
-    var start = expect(Token.TYPE_ALIAS, "unexpectedToken", "typealias").span;
+    var start = next().span;
     var startSpan = header.span(start);
 
     var identifier = parseIdentifier();
@@ -374,7 +374,7 @@ public class Parser {
   }
 
   private Class parseClass(MemberHeader header) {
-    var start = expect(Token.CLASS, "unexpectedToken", "class").span;
+    var start = next().span;
     var startSpan = header.span(start);
     var children = new ArrayList<Node>();
     children.add(header.docComment);
@@ -1349,6 +1349,9 @@ public class Parser {
   }
 
   private List<ObjectBody> parseBodyList() {
+    if (lookahead != Token.LBRACE) {
+      throw parserError("unexpectedToken2", _lookahead.text(lexer), "{", "=");
+    }
     var bodies = new ArrayList<ObjectBody>();
     do {
       bodies.add(parseObjectBody());
