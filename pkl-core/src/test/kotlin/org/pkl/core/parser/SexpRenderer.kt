@@ -975,7 +975,7 @@ class SexpRenderer {
     buf.append("(whenGenerator")
     val oldTab = increaseTab()
     buf.append('\n')
-    renderExpr(generator.cond)
+    renderExpr(generator.thenClause)
     buf.append('\n')
     renderObjectBody(generator.body)
     if (generator.elseClause !== null) {

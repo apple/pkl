@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.pkl.core.PklBugException;
 import org.pkl.core.parser.cst.Annotation;
 import org.pkl.core.parser.cst.ArgumentList;
@@ -62,7 +61,6 @@ import org.pkl.core.parser.cst.ExtendsOrAmendsClause;
 import org.pkl.core.parser.cst.Identifier;
 import org.pkl.core.parser.cst.ImportClause;
 import org.pkl.core.parser.cst.Modifier;
-import org.pkl.core.parser.cst.Modifier.ModifierValue;
 import org.pkl.core.parser.cst.Module;
 import org.pkl.core.parser.cst.ModuleDecl;
 import org.pkl.core.parser.cst.Node;
@@ -579,6 +577,10 @@ public class Parser {
     }
     // members
     while (lookahead != Token.RBRACE) {
+      if (lookahead == Token.EOF) {
+        throw new ParserError(
+            ErrorMessages.create("missingDelimiter", "}"), prev.span.stopSpan().move(1));
+      }
       nodes.add(parseObjectMember());
     }
     var end = expect(Token.RBRACE, "unexpectedToken", "}").span;
@@ -1049,7 +1051,8 @@ public class Parser {
               var span = temp.get(0).span().endWith(temp.get(temp.size() - 1).span());
               parts.add(new StringPart.StringConstantParts(temp, span));
             }
-            var end = expect(Token.STRING_END, "noError").span;
+            var expectedDelimiter = start.token == Token.STRING_START ? "\"" : "\"\"\"";
+            var end = expect(Token.STRING_END, "missingDelimiter", expectedDelimiter).span;
             if (start.token == Token.STRING_START) {
               yield new SingleLineStringLiteralExpr(
                   parts, start.span, end, start.span.endWith(end));
@@ -1318,13 +1321,7 @@ public class Parser {
       case HIDDEN -> new Modifier(Modifier.ModifierValue.HIDDEN, next().span);
       case FIXED -> new Modifier(Modifier.ModifierValue.FIXED, next().span);
       case CONST -> new Modifier(Modifier.ModifierValue.CONST, next().span);
-      default -> {
-        var modifierNames =
-            Arrays.stream(ModifierValue.values())
-                .map((m) -> "`" + m.name().toLowerCase() + "`")
-                .collect(Collectors.joining(", "));
-        throw parserError("unexpectedTokenMany", modifierNames);
-      }
+      default -> throw PklBugException.unreachableCode();
     };
   }
 
@@ -1439,7 +1436,6 @@ public class Parser {
           var text = tk.text(lexer);
           parts.add(new StringConstantPart.StringUnicodeEscape(text, tk.span));
         }
-        case STRING_NEWLINE -> throw parserError("singleQuoteStringNewline");
         case EOF -> throw parserError("unexpectedEndOfFile");
         case INTERPOLATION_START -> throw parserError("interpolationInConstant");
         // the lexer makes sure we only get the above tokens inside a string
@@ -1568,8 +1564,13 @@ public class Parser {
         tk, lexer.span(), lexer.sCursor, lexer.cursor - lexer.sCursor, lexer.newLinesBetween);
   }
 
-  // backtrack to the previous token
+  /**
+   * Backtrack to the previous token.
+   *
+   * <p>Can only backtrack one token.
+   */
   private void backtrack() {
+    assert !backtracking;
     lookahead = prev.token;
     spanLookahead = prev.span;
     backtracking = true;

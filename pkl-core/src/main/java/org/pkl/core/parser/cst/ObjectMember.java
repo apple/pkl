@@ -228,8 +228,9 @@ public abstract sealed class ObjectMember extends AbstractNode {
   }
 
   public static final class WhenGenerator extends ObjectMember {
-    public WhenGenerator(Expr cond, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
-      super(span, Arrays.asList(cond, body, elseClause));
+    public WhenGenerator(
+        Expr thenClause, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
+      super(span, Arrays.asList(thenClause, body, elseClause));
     }
 
     @Override
@@ -237,7 +238,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return visitor.visitWhenGenerator(this);
     }
 
-    public Expr getCond() {
+    public Expr getThenClause() {
       return (Expr) children.get(0);
     }
 

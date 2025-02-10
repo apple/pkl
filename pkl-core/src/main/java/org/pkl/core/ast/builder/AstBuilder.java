@@ -1299,7 +1299,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             ? new GeneratorMemberNode[0]
             : doVisitForWhenBody(member.getElseClause());
 
-    return new GeneratorWhenNode(sourceSection, visitExpr(member.getCond()), thenNodes, elseNodes);
+    return new GeneratorWhenNode(
+        sourceSection, visitExpr(member.getThenClause()), thenNodes, elseNodes);
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBody body) {
