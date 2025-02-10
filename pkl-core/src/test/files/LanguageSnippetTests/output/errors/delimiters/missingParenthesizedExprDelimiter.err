@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `)`.
+Unexpected token `y`. Expected `)`.
 
 x | x = 3 * (1 + 2
                   ^

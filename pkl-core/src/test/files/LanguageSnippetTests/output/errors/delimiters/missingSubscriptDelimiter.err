@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `]`.
+Unexpected token `EOF`. Expected `]`.
 
 x | res1 = x[3 + 4
                   ^

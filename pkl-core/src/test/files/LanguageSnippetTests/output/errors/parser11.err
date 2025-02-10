@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `}`.
+Unexpected token `]`. Expected `}`.
 
 x | res1 = new { foo = 42 ]
                           ^

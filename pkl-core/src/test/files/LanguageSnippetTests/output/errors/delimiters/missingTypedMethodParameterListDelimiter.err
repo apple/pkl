@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `=`. Expected `,` or `)`.
 
 x | function foo(arg1: String, arg2: String = arg1 + arg2
                                             ^

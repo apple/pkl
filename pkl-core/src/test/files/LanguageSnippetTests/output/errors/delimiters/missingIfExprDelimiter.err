@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `)`.
+Unexpected token `3`. Expected `)`.
 
 x | res1 = if (cond 3 else 4
                     ^

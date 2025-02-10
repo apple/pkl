@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `res2`. Expected `,` or `)`.
 
 x | res1 = "abc".substring(0, 1 + "def"
                                        ^

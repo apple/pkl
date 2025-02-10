@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `3`. Expected `,` or `)`.
 
 x | list = List(1, 2  3, 4)
                       ^

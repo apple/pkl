@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `3`. Expected `,` or `)`.
 
 x | res1 = foo(1, 2 3)
                     ^

@@ -697,13 +697,16 @@ public class Parser {
     var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]").span;
     Span secondbrack;
     if (lookahead != Token.RBRACK) {
-      throw new ParserError(ErrorMessages.create("unexpectedToken", "]]"), firstBrack);
+      var text = _lookahead.text(lexer);
+      throw new ParserError(ErrorMessages.create("unexpectedToken", text, "]]"), firstBrack);
     } else {
       secondbrack = next().span;
     }
     if (firstBrack.charIndex() != secondbrack.charIndex() - 1) {
       // There shouldn't be any whitespace between the first and second ']'.
-      throw new ParserError(ErrorMessages.create("unexpectedToken", "]]"), firstBrack);
+      var span = firstBrack.endWith(secondbrack);
+      var text = lexer.textFor(span.charIndex(), span.length());
+      throw new ParserError(ErrorMessages.create("unexpectedToken", text, "]]"), firstBrack);
     }
     if (lookahead == Token.ASSIGN) {
       next();
@@ -1073,10 +1076,11 @@ public class Parser {
               throw new ParserError(
                   ErrorMessages.create("unexpectedEndOfFile"), prev.span.stopSpan().move(1));
           default -> {
+            var text = _lookahead.text(lexer);
             if (expectation != null) {
-              throw parserError("unexpectedToken", expectation);
+              throw parserError("unexpectedToken", text, expectation);
             }
-            throw parserError("unexpectedTokenForExpression");
+            throw parserError("unexpectedTokenForExpression", text);
           }
         };
     return parseExprRest(expr);
@@ -1245,10 +1249,11 @@ public class Parser {
         typ = new StringConstantType(str, str.span());
       }
       default -> {
+        var text = _lookahead.text(lexer);
         if (expectation != null) {
-          throw parserError("unexpectedToken", expectation);
+          throw parserError("unexpectedToken", text, expectation);
         }
-        throw parserError("unexpectedTokenForType");
+        throw parserError("unexpectedTokenForType", text);
       }
     }
 
@@ -1404,7 +1409,7 @@ public class Parser {
       if (lookahead.isKeyword()) {
         throw parserError("keywordNotAllowedHere", lookahead.text());
       }
-      throw parserError("unexpectedToken", "identifier");
+      throw parserError("unexpectedToken", _lookahead.text(lexer), "identifier");
     }
     var tk = next();
     var text = removeBackticks(tk.text(lexer));
@@ -1447,12 +1452,18 @@ public class Parser {
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {
     if (lookahead != type) {
+      var span = spanLookahead;
       if (lookahead == Token.EOF || _lookahead.newLinesBetween > 0) {
         // don't point at the EOF or the next line, but at the end of the last token
-        throw new ParserError(
-            ErrorMessages.create(errorKey, messageArgs), prev.span.stopSpan().move(1));
+        span = prev.span.stopSpan().move(1);
       }
-      throw new ParserError(ErrorMessages.create(errorKey, messageArgs), spanLookahead);
+      var args = messageArgs;
+      if (errorKey.startsWith("unexpectedToken")) {
+        args = new Object[messageArgs.length + 1];
+        args[0] = lookahead == Token.EOF ? "EOF" : _lookahead.text(lexer);
+        System.arraycopy(messageArgs, 0, args, 1, messageArgs.length);
+      }
+      throw new ParserError(ErrorMessages.create(errorKey, args), span);
     }
     return next();
   }

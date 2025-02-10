@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `->`. Expected `,` or `)`.
 
 x | f = (arg1, arg2, arg3 -> arg1 + arg2 + arg3
                           ^^

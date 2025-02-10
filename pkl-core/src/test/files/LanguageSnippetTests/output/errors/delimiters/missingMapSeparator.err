@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token. Expected `,` or `)`.
+Unexpected token `4`. Expected `,` or `)`.
 
 x | map = Map(1, 2, 3  4, 5, 6)
                        ^
