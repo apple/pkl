@@ -326,7 +326,8 @@ public class Lexer {
       var ch = nextChar();
       switch (ch) {
         case '\n', '\r' ->
-            throw lexError(ErrorMessages.create("singleQuoteStringNewline"), cursor - 1, 1);
+            throw lexError(
+                ErrorMessages.create("missingDelimiter", "\"" + "#".repeat(pounds)), cursor - 1, 1);
         case '"' -> {
           if (pounds == 0) {
             backup();

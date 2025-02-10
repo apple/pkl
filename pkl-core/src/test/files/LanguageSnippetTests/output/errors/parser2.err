@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Single quoted strings cannot span multiple lines.
+Missing `"` delimiter.
 
 x | res1 = "some string
                        ^

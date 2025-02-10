@@ -583,7 +583,7 @@ public class Parser {
       }
       nodes.add(parseObjectMember());
     }
-    var end = expect(Token.RBRACE, "unexpectedToken", "}").span;
+    var end = next().span;
     return new ObjectBody(nodes, membersOffset, start.endWith(end));
   }
 
@@ -738,17 +738,14 @@ public class Parser {
   }
 
   private ObjectMember.ObjectSpread parseObjectSpread() {
-    if (lookahead != Token.SPREAD && lookahead != Token.QSPREAD) {
-      throw parserError("unexpectedToken2", "...", "...?");
-    }
-    var peek = next();
-    boolean isNullable = peek.token == Token.QSPREAD;
+    var start = next();
+    boolean isNullable = start.token == Token.QSPREAD;
     var expr = parseExpr("}");
-    return new ObjectMember.ObjectSpread(expr, isNullable, peek.span.endWith(expr.span()));
+    return new ObjectMember.ObjectSpread(expr, isNullable, start.span.endWith(expr.span()));
   }
 
   private ObjectMember.WhenGenerator parseWhenGenerator() {
-    var start = expect(Token.WHEN, "unexpectedToken", "when").span;
+    var start = next().span;
     expect(Token.LPAREN, "unexpectedToken", "(");
     var pred = parseExpr(")");
     expect(Token.RPAREN, "unexpectedToken", ")");
@@ -764,7 +761,7 @@ public class Parser {
   }
 
   private ObjectMember.ForGenerator parseForGenerator() {
-    var start = expect(Token.FOR, "unexpectedToken", "for").span;
+    var start = next().span;
     expect(Token.LPAREN, "unexpectedToken", "(");
     var par1 = parseParameter();
     Parameter par2 = null;
