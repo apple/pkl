@@ -235,7 +235,7 @@ public class Lexer {
           yield lexNumber(ch);
         } else if (isIdentifierStart(ch)) {
           yield lexIdentifier();
-        } else throw lexError("invalidCharacter", ch);
+        } else throw lexError(ErrorMessages.create("invalidCharacter", ch), cursor - 1, 1);
       }
     };
   }

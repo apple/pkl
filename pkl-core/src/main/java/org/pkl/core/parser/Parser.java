@@ -345,6 +345,9 @@ public class Parser {
         if (lookahead.isKeyword()) {
           throw parserError("keywordNotAllowedHere", lookahead.text());
         }
+        if (lookahead == Token.DOC_COMMENT) {
+          throw parserError("danglingDocComment");
+        }
         throw parserError("invalidTopLevelToken");
       }
     }

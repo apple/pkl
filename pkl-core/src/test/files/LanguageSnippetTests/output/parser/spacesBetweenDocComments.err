@@ -1,5 +1,7 @@
 –– Pkl Error ––
-Invalid token at position. Expected a class, typealias, method, or property.
+Dangling documentation comment.
+
+Documentation comments must be attached to modules, classes, typealiases, methods, or properties.
 
 x | /// doc comment continuation
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
