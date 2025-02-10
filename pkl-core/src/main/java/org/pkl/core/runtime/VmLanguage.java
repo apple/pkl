@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
 import com.oracle.truffle.api.nodes.Node;
@@ -24,9 +23,9 @@ import com.oracle.truffle.api.source.Source;
 import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.antlr.PklParser;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.ast.Module;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
@@ -56,7 +55,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
     throw new UnsupportedOperationException("parse");
   }
 
-  @TruffleBoundary
   public VmTyped loadModule(ModuleKey moduleKey) {
     var context = VmContext.get(null);
 
@@ -71,7 +69,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             null);
   }
 
-  @TruffleBoundary
   public VmTyped loadModule(ModuleKey moduleKey, @Nullable Node importNode) {
     var context = VmContext.get(null);
 
@@ -86,7 +83,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             importNode);
   }
 
-  @TruffleBoundary
   void initializeModule(
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
@@ -95,12 +91,13 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
       VmTyped emptyModule,
       @Nullable Node importNode) {
     var parser = new Parser();
-    PklParser.ModuleContext moduleContext;
+    Module moduleContext;
+    var sourceStr = source.getCharacters().toString();
     try {
-      moduleContext = parser.parseModule(source.getCharacters().toString());
-    } catch (LexParseException e) {
+      moduleContext = parser.parseModule(sourceStr);
+    } catch (ParserError e) {
       var moduleName = IoUtils.inferModuleName(moduleKey);
-      MinPklVersionChecker.check(moduleName, e.getPartialParseResult(), importNode);
+      MinPklVersionChecker.check(moduleName, e.getPartialParseResult(), importNode, sourceStr);
       throw VmUtils.toVmException(e, source, moduleName);
     }
 

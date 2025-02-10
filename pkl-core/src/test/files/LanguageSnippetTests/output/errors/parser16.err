@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Unexpected separator character.
 
+The separator character (`_`) cannot follow `0x`, `0b`, `.`, `e`, or 'E' in a number literal.
+
 x | res = 0x_01
             ^
-at parser16#res (file:///$snippetsDir/input/errors/parser16.pkl)
-
-The separator character (`_`) cannot follow `0x`, `0b`, `.`, `e`, or 'E' in a number literal.
+at parser16 (file:///$snippetsDir/input/errors/parser16.pkl)

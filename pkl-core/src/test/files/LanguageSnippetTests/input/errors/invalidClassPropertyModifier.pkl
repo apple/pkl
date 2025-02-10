@@ -2,4 +2,4 @@ class Foo {
   open foo: Int = 42
 }
 
-res1 = Foo {}
+res1 = new Foo {}

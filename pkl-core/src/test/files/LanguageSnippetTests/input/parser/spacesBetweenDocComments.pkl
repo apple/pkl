@@ -1,0 +1,4 @@
+/// doc comment start
+
+/// doc comment continuation
+foo = 1

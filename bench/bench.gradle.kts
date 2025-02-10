@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ val graal: Configuration by configurations.creating
 @Suppress("UnstableApiUsage")
 dependencies {
   jmh(projects.pklCore)
-  // necessary because antlr4-runtime is declared as implementation dependency in pkl-core.gradle
-  jmh(libs.antlrRuntime)
   truffle(libs.truffleApi)
   graal(libs.graalCompiler)
 }

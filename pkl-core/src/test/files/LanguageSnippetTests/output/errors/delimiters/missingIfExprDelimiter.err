@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token `3`. Expected `)`.
 
 x | res1 = if (cond 3 else 4
-                   ^
-at missingIfExprDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingIfExprDelimiter.pkl)
+                    ^
+at missingIfExprDelimiter (file:///$snippetsDir/input/errors/delimiters/missingIfExprDelimiter.pkl)

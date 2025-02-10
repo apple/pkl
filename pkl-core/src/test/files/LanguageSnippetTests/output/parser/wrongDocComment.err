@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Imports cannot have doc comments, annotations or modifiers.
+
+x | import "../../input-helper/basic/read/module1.pkl"
+    ^^^^^^
+at wrongDocComment (file:///$snippetsDir/input/parser/wrongDocComment.pkl)

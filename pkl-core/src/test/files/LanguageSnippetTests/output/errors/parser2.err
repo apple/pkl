@@ -3,4 +3,4 @@ Missing `"` delimiter.
 
 x | res1 = "some string
                        ^
-at parser2#res1 (file:///$snippetsDir/input/errors/parser2.pkl)
+at parser2 (file:///$snippetsDir/input/errors/parser2.pkl)

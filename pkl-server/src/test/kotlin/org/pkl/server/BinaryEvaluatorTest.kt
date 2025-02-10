@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ class BinaryEvaluatorTest {
         listOf(Pattern.compile(".*")),
         listOf(Pattern.compile(".*")),
         SecurityManagers.defaultTrustLevels,
-        Path.of("")
+        Path.of(""),
       ),
       HttpClient.dummyClient(),
       Loggers.noop(),
@@ -44,7 +44,7 @@ class BinaryEvaluatorTest {
       null,
       null,
       null,
-      null
+      null,
     )
 
   private fun evaluate(text: String, expression: String?) =
@@ -79,7 +79,7 @@ class BinaryEvaluatorTest {
       }
     """
           .trimIndent(),
-        "foo.bar"
+        "foo.bar",
       )
 
     assertThat(bytes.asInt()).isEqualTo(2)
@@ -99,7 +99,7 @@ class BinaryEvaluatorTest {
       }
     """
           .trimIndent(),
-        "output.text"
+        "output.text",
       )
 
     assertThat(bytes.asString())
@@ -131,7 +131,7 @@ class BinaryEvaluatorTest {
   fun `evaluate expression with invalid syntax`() {
     val error = assertThrows<PklException> { evaluate("foo = 1", "<>!!!") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
+    assertThat(error).hasMessageContaining("Unexpected token")
     assertThat(error).hasMessageContaining("<>!!!")
   }
 
@@ -139,7 +139,7 @@ class BinaryEvaluatorTest {
   fun `evaluate non-expression`() {
     val error = assertThrows<PklException> { evaluate("bar = 2", "bar = 15") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
+    assertThat(error).hasMessageContaining("Unexpected token")
     assertThat(error).hasMessageContaining("bar = 15")
   }
 

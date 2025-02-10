@@ -1,2 +1,4 @@
 foo = (bar) {
   x = 1
+
+class Foo

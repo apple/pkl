@@ -1,5 +1,7 @@
 –– Pkl Error ––
-Keyword `outer` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
+Keyword `outer` is not allowed here.
+
+If you must use this name as identifier, enclose it in backticks.
 
 x | function outer() = 42
              ^^^^^

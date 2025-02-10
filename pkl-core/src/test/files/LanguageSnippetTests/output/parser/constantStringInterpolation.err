@@ -1,0 +1,6 @@
+–– Pkl Error ––
+String constant cannot have interpolated values.
+
+x | import "\(name).pkl"
+            ^^
+at constantStringInterpolation (file:///$snippetsDir/input/parser/constantStringInterpolation.pkl)

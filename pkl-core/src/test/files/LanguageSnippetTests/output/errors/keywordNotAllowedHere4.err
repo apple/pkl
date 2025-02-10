@@ -1,5 +1,7 @@
 –– Pkl Error ––
-Keyword `record` is not allowed here. (If you must use this name as identifier, enclose it in backticks.)
+Keyword `record` is not allowed here.
+
+If you must use this name as identifier, enclose it in backticks.
 
 x | record = 5
     ^^^^^^

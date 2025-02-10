@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `,` separator.
+Unexpected token `arg3`. Expected `,` or `->`.
 
 x | f { arg1, arg2 arg3 ->
-                  ^
-at missingFunctionAmendParameterListSeparator#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionAmendParameterListSeparator.pkl)
+                   ^^^^
+at missingFunctionAmendParameterListSeparator (file:///$snippetsDir/input/errors/delimiters/missingFunctionAmendParameterListSeparator.pkl)

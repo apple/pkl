@@ -4,7 +4,7 @@
 com.google.code.findbugs:jsr305:3.0.2=compileClasspath,compileOnlyDependenciesMetadata
 com.palantir.javapoet:javapoet:0.6.0=generatorCompileClasspath,generatorImplementationDependenciesMetadata,generatorRuntimeClasspath
 com.tunnelvisionlabs:antlr4-annotations:4.9.0=antlr
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=antlr,compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+com.tunnelvisionlabs:antlr4-runtime:4.9.0=antlr,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.tunnelvisionlabs:antlr4:4.9.0=antlr
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.abego.treelayout:org.abego.treelayout.core:1.0.1=antlr

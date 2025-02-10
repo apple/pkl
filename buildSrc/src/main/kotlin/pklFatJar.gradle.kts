@@ -39,7 +39,6 @@ val firstPartySourcesJarsConfiguration: Configuration =
 val relocations =
   mapOf(
     // pkl-core dependencies
-    "org.antlr.v4." to "org.pkl.thirdparty.antlr.v4.",
     "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
     "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
     "org.msgpack." to "org.pkl.thirdparty.msgpack.",

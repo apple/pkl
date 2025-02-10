@@ -3,4 +3,4 @@ Missing `}` delimiter.
 
 x | x = 1
          ^
-at missingObjectDelimiter#foo (file:///$snippetsDir/input/errors/delimiters/missingObjectDelimiter.pkl)
+at missingObjectDelimiter (file:///$snippetsDir/input/errors/delimiters/missingObjectDelimiter.pkl)

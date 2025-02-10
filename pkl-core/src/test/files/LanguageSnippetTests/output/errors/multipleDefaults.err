@@ -2,5 +2,5 @@
 A type union cannot have more than one default type.
 
 x | foo: *Int|*String|*"foo"
-         ^^^^^^^^^^^^^^^^^^^
-at multipleDefaults#foo (file:///$snippetsDir/input/errors/multipleDefaults.pkl)
+              ^
+at multipleDefaults (file:///$snippetsDir/input/errors/multipleDefaults.pkl)

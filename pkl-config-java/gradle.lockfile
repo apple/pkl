@@ -4,7 +4,6 @@
 com.github.ajalt.clikt:clikt-jvm:3.5.4=pklCodegenJava
 com.github.ajalt.clikt:clikt:3.5.4=pklCodegenJava
 com.palantir.javapoet:javapoet:0.6.0=pklCodegenJava
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=pklCodegenJava,runtimeClasspath,testRuntimeClasspath
 io.leangen.geantyref:geantyref:1.3.16=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 javax.inject:javax.inject:1=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

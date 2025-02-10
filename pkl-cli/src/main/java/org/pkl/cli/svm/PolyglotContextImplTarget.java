@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import com.oracle.svm.core.annotate.RecomputeFieldValue.Kind;
 import com.oracle.svm.core.annotate.TargetClass;
 import com.oracle.svm.truffle.TruffleFeature;
 import java.util.Map;
+import org.pkl.core.ast.builder.AstBuilder;
 
 /**
  * Workaround to prevent the native-image build error "Detected a started Thread in the image
  * heap.". The cause of this error is the use of {@link org.graalvm.polyglot.Context} in the
  * (intentionally) statically reachable class {@link org.pkl.core.runtime.StdLibModule}.
  *
- * <p>A cleaner solution would be to have a separate {@link org.pkl.core.ast.builder.AstBuilder} for
- * stdlib modules that produces a fully initialized module object without executing any Truffle
- * nodes.
+ * <p>A cleaner solution would be to have a separate {@link AstBuilder} for stdlib modules that
+ * produces a fully initialized module object without executing any Truffle nodes.
  *
  * <p>This class is automatically discovered by native-image; no registration is required.
  */
