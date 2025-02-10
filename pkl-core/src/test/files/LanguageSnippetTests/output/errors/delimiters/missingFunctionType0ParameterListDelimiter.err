@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Unexpected token `->`. Expected `)`.
+Unexpected token `->`. Expected a type or `)`.
 
 x | f: ( -> String
          ^^

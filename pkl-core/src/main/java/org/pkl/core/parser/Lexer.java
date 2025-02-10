@@ -169,7 +169,7 @@ public class Lexer {
           nextChar();
           yield Token.AND;
         } else {
-          throw unexpectedChar(ch, "`&&`");
+          throw unexpectedChar(ch, "&&");
         }
       }
       case '|' -> {
@@ -194,7 +194,7 @@ public class Lexer {
           nextChar();
           yield Token.INT_DIV;
         } else {
-          throw unexpectedChar(ch, "`~/`");
+          throw unexpectedChar(ch, "~/");
         }
       }
       case '.' -> {
@@ -209,7 +209,7 @@ public class Lexer {
               yield Token.SPREAD;
             }
           } else {
-            throw unexpectedChar("..", "`.`, `...` or `...?`");
+            throw unexpectedChar("..", ".", "...", "...?");
           }
         } else if (lookahead >= 48 && lookahead <= 57) {
           yield lexNumber(ch);
@@ -287,7 +287,7 @@ public class Lexer {
       throw lexError(ErrorMessages.create("unexpectedEndOfFile"), span());
     }
     if (lookahead != '"') {
-      throw unexpectedChar(lookahead, "`\"`");
+      throw unexpectedChar(lookahead, "\"");
     }
     nextChar();
     return lexStringStart(pounds);
@@ -445,7 +445,7 @@ public class Lexer {
 
   private Token lexUnicodeEscape() {
     if (lookahead != '{') {
-      throw unexpectedChar(lookahead, "`{`");
+      throw unexpectedChar(lookahead, "{");
     }
     do {
       nextChar();
@@ -496,7 +496,7 @@ public class Lexer {
     if (lookahead == '`') {
       nextChar();
     } else {
-      throw unexpectedChar(lookahead, "backquote (`)");
+      throw unexpectedChar(lookahead, "backquote");
     }
   }
 
@@ -590,7 +590,7 @@ public class Lexer {
       throw lexError("invalidSeparatorPosition");
     }
     if (!isHex(lookahead)) {
-      throw unexpectedChar(lookahead, "`0` .. `9`, `a` .. `f` or `A` .. `F`");
+      throw unexpectedChar(lookahead, "hexadecimal number");
     }
     while (isHex(lookahead) || lookahead == '_') {
       nextChar();
@@ -602,7 +602,7 @@ public class Lexer {
       throw lexError("invalidSeparatorPosition");
     }
     if (!(lookahead == '0' || lookahead == '1')) {
-      throw unexpectedChar(lookahead, "`0` or `1`");
+      throw unexpectedChar(lookahead, "binary number");
     }
     while (lookahead == '0' || lookahead == '1' || lookahead == '_') {
       nextChar();
@@ -615,7 +615,7 @@ public class Lexer {
     }
     var ch = (int) lookahead;
     if (!(ch >= 48 && ch <= 55)) {
-      throw unexpectedChar((char) ch, "`0` .. `7`");
+      throw unexpectedChar((char) ch, "octal number");
     }
     while ((ch >= 48 && ch <= 55) || ch == '_') {
       nextChar();
@@ -631,7 +631,7 @@ public class Lexer {
       throw lexError("invalidSeparatorPosition");
     }
     if (lookahead < 48 || lookahead > 57) {
-      throw unexpectedChar(lookahead, "`0` .. `9`");
+      throw unexpectedChar(lookahead, "number");
     }
     while ((lookahead >= 48 && lookahead <= 57) || lookahead == '_') {
       nextChar();
@@ -709,8 +709,8 @@ public class Lexer {
     return lexError("unexpectedCharacter", got, didYouMean);
   }
 
-  private ParserError unexpectedChar(String got, String didYouMean) {
-    return lexError("unexpectedCharacter", got, didYouMean);
+  private ParserError unexpectedChar(String got, String option1, String option2, String option3) {
+    return lexError("unexpectedCharacter3", got, option1, option2, option3);
   }
 
   private ParserError unexpectedEndOfFile() {

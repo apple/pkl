@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Invalid token at position. Expected class, typealias, method or property.
+Invalid token at position. Expected a class, typealias, method, or property.
 
-x | res1 = new { foo = 42 }}
-                           ^
-at parser12 (file:///$snippetsDir/input/errors/parser12.pkl)
+x | res1 = "some string"""
+                        ^
+at parser5 (file:///$snippetsDir/input/errors/parser5.pkl)

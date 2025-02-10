@@ -1251,7 +1251,7 @@ public class Parser {
       default -> {
         var text = _lookahead.text(lexer);
         if (expectation != null) {
-          throw parserError("unexpectedToken", text, expectation);
+          throw parserError("unexpectedTokenForType2", text, expectation);
         }
         throw parserError("unexpectedTokenForType", text);
       }

@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Invalid token at position. Expected class, typealias, method or property.
+Invalid token at position. Expected a class, typealias, method, or property.
 
 x | /// doc comment continuation
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
