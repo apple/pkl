@@ -101,9 +101,6 @@ public interface ParserVisitor<Result> {
   Result visitConstrainedType(Type.ConstrainedType type);
 
   @Nullable
-  Result visitDefaultUnionType(Type.DefaultUnionType type);
-
-  @Nullable
   Result visitUnionType(Type.UnionType type);
 
   @Nullable

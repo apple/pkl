@@ -79,7 +79,6 @@ import org.pkl.core.parser.ast.StringPart;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
 import org.pkl.core.parser.ast.Type.DeclaredType;
-import org.pkl.core.parser.ast.Type.DefaultUnionType;
 import org.pkl.core.parser.ast.Type.FunctionType;
 import org.pkl.core.parser.ast.Type.ModuleType;
 import org.pkl.core.parser.ast.Type.NothingType;
@@ -133,11 +132,6 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
 
   @Override
   public T visitConstrainedType(ConstrainedType type) {
-    return visitChildren(type);
-  }
-
-  @Override
-  public T visitDefaultUnionType(DefaultUnionType type) {
     return visitChildren(type);
   }
 

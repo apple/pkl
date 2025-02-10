@@ -24,7 +24,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -226,7 +225,6 @@ import org.pkl.core.parser.ast.StringPart.StringInterpolation;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
 import org.pkl.core.parser.ast.Type.DeclaredType;
-import org.pkl.core.parser.ast.Type.DefaultUnionType;
 import org.pkl.core.parser.ast.Type.FunctionType;
 import org.pkl.core.parser.ast.Type.ModuleType;
 import org.pkl.core.parser.ast.Type.NothingType;
@@ -412,20 +410,17 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public UnresolvedTypeNode visitDefaultUnionType(DefaultUnionType type) {
-    throw exceptionBuilder()
-        .evalError("notAUnion")
-        .withSourceSection(createSourceSection(type))
-        .build();
-  }
-
-  @Override
   public UnresolvedTypeNode visitUnionType(UnionType type) {
-    var elementTypes = new ArrayList<Type>();
+    var elementTypes = type.getTypes();
 
-    var result = flattenUnionType(type, elementTypes);
-    boolean isUnionOfStringLiterals = result.isUnionOfStringLiterals;
-    int defaultIndex = result.defaultIndex;
+    boolean isUnionOfStringLiterals = true;
+    for (var typ : elementTypes) {
+      if (!(typ instanceof StringConstantType)) {
+        isUnionOfStringLiterals = false;
+        break;
+      }
+    }
+    int defaultIndex = type.getDefaultIndex();
 
     if (isUnionOfStringLiterals) {
       return new UnresolvedTypeNode.UnionOfStringLiterals(
@@ -443,44 +438,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     return new UnresolvedTypeNode.Union(createSourceSection(type), defaultIndex, elements);
   }
-
-  private FlatUnionResult flattenUnionType(UnionType type, List<Type> collector) {
-    boolean isUnionOfStringLiterals = true;
-    int index = 0;
-    int defaultIndex = -1;
-    var list = new ArrayDeque<Type>();
-    list.addLast(type.getLeft());
-    list.addLast(type.getRight());
-
-    while (!list.isEmpty()) {
-      var current = list.removeFirst();
-      if (current instanceof UnionType unionType) {
-        list.addFirst(unionType.getRight());
-        list.addFirst(unionType.getLeft());
-        continue;
-      }
-      if (current instanceof DefaultUnionType defaultUnionType) {
-        if (defaultIndex == -1) {
-          defaultIndex = index;
-        } else {
-          throw exceptionBuilder()
-              .evalError("multipleUnionDefaults")
-              .withSourceSection(createSourceSection(type))
-              .build();
-        }
-        isUnionOfStringLiterals =
-            isUnionOfStringLiterals && defaultUnionType.getType() instanceof StringConstantType;
-        collector.add(defaultUnionType.getType());
-      } else {
-        isUnionOfStringLiterals = isUnionOfStringLiterals && current instanceof StringConstantType;
-        collector.add(current);
-      }
-      index++;
-    }
-    return new FlatUnionResult(isUnionOfStringLiterals, defaultIndex);
-  }
-
-  private record FlatUnionResult(boolean isUnionOfStringLiterals, int defaultIndex) {}
 
   @Override
   public UnresolvedTypeNode visitFunctionType(FunctionType type) {

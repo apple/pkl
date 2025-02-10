@@ -587,6 +587,7 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(functionLiteralExpr")
     val oldTab = increaseTab()
+    buf.append('\n')
     renderParameterList(expr.parameterList)
     buf.append('\n')
     renderExpr(expr.expr)
@@ -751,7 +752,6 @@ class SexpRenderer {
       is ParenthesizedType -> renderParenthesizedType(type)
       is NullableType -> renderNullableType(type)
       is ConstrainedType -> renderConstrainedType(type)
-      is DefaultUnionType -> renderDefaultUnionType(type)
       is UnionType -> renderUnionType(type)
       is FunctionType -> renderFunctionType(type)
     }
@@ -805,24 +805,25 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderDefaultUnionType(type: DefaultUnionType) {
-    buf.append(tab)
-    buf.append("(defaultUnionType")
-    val oldTab = increaseTab()
-    buf.append('\n')
-    renderType(type.type)
-    buf.append(')')
-    tab = oldTab
-  }
-
   fun renderUnionType(type: UnionType) {
     buf.append(tab)
     buf.append("(unionType")
     val oldTab = increaseTab()
-    buf.append('\n')
-    renderType(type.left)
-    buf.append('\n')
-    renderType(type.right)
+    for (idx in type.types.indices) {
+      val typ = type.types[idx]
+      buf.append('\n')
+      if (type.defaultIndex == idx) {
+        buf.append(tab)
+        buf.append("(defaultUnionType")
+        val oldTab2 = increaseTab()
+        buf.append('\n')
+        renderType(typ)
+        buf.append(')')
+        tab = oldTab2
+      } else {
+        renderType(typ)
+      }
+    }
     buf.append(')')
     tab = oldTab
   }

@@ -413,12 +413,28 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(unionType")
     val oldTab = increaseTab()
-    buf.append('\n')
-    renderType(type.l)
-    buf.append('\n')
-    renderType(type.r)
+    val types = flattenUnion(type)
+    for (typ in types) {
+      buf.append('\n')
+      renderType(typ)
+    }
     buf.append(')')
     tab = oldTab
+  }
+
+  private fun flattenUnion(type: UnionTypeContext): List<TypeContext> {
+    val types = mutableListOf<TypeContext>()
+    val toCheck = mutableListOf(type.l, type.r)
+    while (toCheck.isNotEmpty()) {
+      val typ = toCheck.removeFirst()
+      if (typ is UnionTypeContext) {
+        toCheck.addFirst(typ.r)
+        toCheck.addFirst(typ.l)
+      } else {
+        types += typ
+      }
+    }
+    return types
   }
 
   fun renderFunctionType(type: FunctionTypeContext) {
@@ -980,6 +996,7 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(functionLiteralExpr")
     val oldTab = increaseTab()
+    buf.append('\n')
     renderParameterList(expr.parameterList())
     buf.append('\n')
     renderExpr(expr.expr())

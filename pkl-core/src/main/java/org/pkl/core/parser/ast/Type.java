@@ -16,6 +16,7 @@
 package org.pkl.core.parser.ast;
 
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
@@ -143,24 +144,12 @@ public abstract sealed class Type extends AbstractNode {
     }
   }
 
-  public static final class DefaultUnionType extends Type {
-    public DefaultUnionType(Type type, Span span) {
-      super(span, List.of(type));
-    }
-
-    @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
-      return visitor.visitDefaultUnionType(this);
-    }
-
-    public Type getType() {
-      return (Type) children.get(0);
-    }
-  }
-
   public static final class UnionType extends Type {
-    public UnionType(Type left, Type right, Span span) {
-      super(span, List.of(left, right));
+    private final int defaultIndex;
+
+    public UnionType(List<Type> types, int defaultIndex, Span span) {
+      super(span, types);
+      this.defaultIndex = defaultIndex;
     }
 
     @Override
@@ -168,12 +157,44 @@ public abstract sealed class Type extends AbstractNode {
       return visitor.visitUnionType(this);
     }
 
-    public Type getLeft() {
-      return (Type) children.get(0);
+    public List<Type> getTypes() {
+      return (List<Type>) children;
     }
 
-    public Type getRight() {
-      return (Type) children.get(1);
+    public int getDefaultIndex() {
+      return defaultIndex;
+    }
+
+    @Override
+    public String toString() {
+      return "UnionType{"
+          + "defaultIndex="
+          + defaultIndex
+          + ", span="
+          + span
+          + ", children="
+          + children
+          + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+      UnionType unionType = (UnionType) o;
+      return defaultIndex == unionType.defaultIndex;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), defaultIndex);
     }
   }
 

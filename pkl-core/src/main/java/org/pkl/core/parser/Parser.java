@@ -81,7 +81,6 @@ import org.pkl.core.parser.ast.StringPart;
 import org.pkl.core.parser.ast.StringPart.StringConstantParts;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.DeclaredType;
-import org.pkl.core.parser.ast.Type.DefaultUnionType;
 import org.pkl.core.parser.ast.Type.ParenthesizedType;
 import org.pkl.core.parser.ast.Type.StringConstantType;
 import org.pkl.core.parser.ast.TypeAlias;
@@ -1197,14 +1196,50 @@ public class Parser {
   }
 
   private Type parseType() {
-    return parseType(false, null);
+    return parseType(null);
   }
 
   private Type parseType(@Nullable String expectation) {
-    return parseType(false, expectation);
+    var defaultIndex = -1;
+    Span start = null;
+    if (lookahead == Token.STAR) {
+      defaultIndex = 0;
+      start = next().span;
+    }
+    var first = parseTypeAtom(expectation);
+    if (start == null) {
+      start = first.span();
+    }
+
+    if (lookahead != Token.UNION) {
+      if (defaultIndex == 0) {
+        throw new ParserError(ErrorMessages.create("notAUnion"), start.endWith(first.span()));
+      }
+      return first;
+    }
+
+    var types = new ArrayList<Type>();
+    types.add(first);
+    var end = start;
+    var i = 1;
+    while (lookahead == Token.UNION) {
+      next();
+      if (lookahead == Token.STAR) {
+        if (defaultIndex != -1) {
+          throw parserError("multipleUnionDefaults");
+        }
+        defaultIndex = i;
+        next();
+      }
+      var type = parseTypeAtom(expectation);
+      types.add(type);
+      end = type.span();
+      i++;
+    }
+    return new Type.UnionType(types, defaultIndex, start.endWith(end));
   }
 
-  private Type parseType(boolean shortCircuit, @Nullable String expectation) {
+  private Type parseTypeAtom(@Nullable String expectation) {
     Type typ;
     switch (lookahead) {
       case UNKNOWN -> typ = new Type.UnknownType(next().span);
@@ -1228,11 +1263,6 @@ public class Parser {
         } else {
           typ = new ParenthesizedType((Type) children.get(0), tk.span.endWith(end));
         }
-      }
-      case STAR -> {
-        var tk = next();
-        var type = parseType(true, expectation);
-        typ = new DefaultUnionType(type, tk.span.endWith(type.span()));
       }
       case IDENTIFIER -> {
         var start = spanLookahead;
@@ -1261,16 +1291,16 @@ public class Parser {
     }
 
     if (typ instanceof Type.FunctionType) return typ;
-    return parseTypeEnd(typ, shortCircuit, expectation);
+    return parseTypeEnd(typ);
   }
 
-  private Type parseTypeEnd(Type type, boolean shortCircuit, @Nullable String expectation) {
+  private Type parseTypeEnd(Type type) {
     // nullable types
     if (lookahead == Token.QUESTION) {
       var end = spanLookahead;
       next();
       var res = new Type.NullableType(type, type.span().endWith(end));
-      return parseTypeEnd(res, shortCircuit, expectation);
+      return parseTypeEnd(res);
     }
     // constrained types: have to start in the same line as the type
     if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
@@ -1281,15 +1311,7 @@ public class Parser {
       children.add(type);
       children.addAll(constraints);
       var res = new Type.ConstrainedType(children, type.span().endWith(end));
-      return parseTypeEnd(res, shortCircuit, expectation);
-    }
-    // union types
-    if (lookahead == Token.UNION && !shortCircuit) {
-      next();
-      // union types are left associative
-      var right = parseType(true, expectation);
-      var res = new Type.UnionType(type, right, type.span().endWith(right.span()));
-      return parseTypeEnd(res, false, expectation);
+      return parseTypeEnd(res);
     }
     return type;
   }
