@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -3040,7 +3040,11 @@ external class List<out Element> extends Collection<Element> {
 /// ```
 external const function Set<Element>(elements: VarArgs<Element>): Set<Element>
 
-/// An unordered collection of unique elements.
+/// A collection of unique elements.
+///
+/// Sets retain the order of elements when constructed, which affects the how they are iterated
+/// over.
+/// However, ordering does not affect equality between two sets.
 ///
 /// The following operators are supported for sets:
 /// ```
@@ -3174,7 +3178,11 @@ external class Set<out Element> extends Collection<Element> {
 /// ```
 external const function Map<Key, Value>(keysAndValues: VarArgs<Key|Value>): Map<Key, Value>
 
-/// An unordered mapping from keys to values.
+/// A mapping from keys to values.
+///
+/// Maps retain the order of entries when constructed, which affects the how they are iterated
+/// over.
+/// However, ordering of entries does not affect equality between two maps.
 ///
 /// The following operators are supported for maps:
 /// ```
