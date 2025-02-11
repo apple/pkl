@@ -1,3 +1,5 @@
+import "pkl:reflect"
+
 /// doc comment
 // line comments can appear between doc comments
 /*
@@ -5,3 +7,5 @@
 */
 /// doc continuation
 foo = 1
+
+theComment = reflect.Class(module.getClass()).properties["foo"].docComment

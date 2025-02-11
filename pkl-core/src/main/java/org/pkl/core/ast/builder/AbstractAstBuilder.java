@@ -21,6 +21,7 @@ import java.util.List;
 import org.pkl.core.PklBugException;
 import org.pkl.core.parser.BaseParserVisitor;
 import org.pkl.core.parser.Span;
+import org.pkl.core.parser.ast.DocComment;
 import org.pkl.core.parser.ast.Modifier;
 import org.pkl.core.parser.ast.Modifier.ModifierValue;
 import org.pkl.core.parser.ast.Node;
@@ -95,6 +96,10 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
         : source.createSection(node.span().charIndex(), node.span().length());
   }
 
+  protected SourceSection @Nullable [] createDocSourceSection(@Nullable DocComment node) {
+    return createDocSourceSection(source, node);
+  }
+
   protected SourceSection createSourceSection(Span span) {
     return source.createSection(span.charIndex(), span.length());
   }
@@ -112,6 +117,18 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
   protected static @Nullable SourceSection createSourceSection(Source source, @Nullable Node node) {
     if (node == null) return null;
     return createSourceSection(source, node.span());
+  }
+
+  protected static SourceSection @Nullable [] createDocSourceSection(
+      Source source, @Nullable DocComment node) {
+    if (node == null) return null;
+    var spans = node.getSpans();
+    var sections = new SourceSection[spans.size()];
+    for (var i = 0; i < sections.length; i++) {
+      var span = spans.get(i);
+      sections[i] = source.createSection(span.charIndex(), span.length());
+    }
+    return sections;
   }
 
   protected static SourceSection createSourceSection(Source source, Span span) {

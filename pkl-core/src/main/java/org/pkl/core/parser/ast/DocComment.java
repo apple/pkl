@@ -33,6 +33,10 @@ public final class DocComment extends AbstractNode {
     return spans.get(0).endWith(spans.get(spans.size() - 1));
   }
 
+  public List<Span> getSpans() {
+    return spans;
+  }
+
   @Override
   public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitDocComment(this);

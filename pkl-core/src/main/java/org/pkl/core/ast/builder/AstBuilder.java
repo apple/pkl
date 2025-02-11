@@ -305,7 +305,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             // no explicit module declaration; designate start of file as header section
             source.createSection(0, 0);
     var docComment =
-        moduleDecl != null ? createSourceSection(source, moduleDecl.getDocComment()) : null;
+        moduleDecl != null ? createDocSourceSection(source, moduleDecl.getDocComment()) : null;
 
     ModuleInfo moduleInfo;
     if (moduleDecl == null) {
@@ -1615,7 +1615,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               new ClassNode(
                   sourceSection,
                   headerSection,
-                  createSourceSection(clazz.getDocComment()),
+                  createDocSourceSection(clazz.getDocComment()),
                   doVisitAnnotations(clazz.getAnnotations()),
                   modifiers,
                   classInfo,
@@ -1701,7 +1701,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var typeAnnotation = entry.getTypeAnnotation();
     var expr = entry.getExpr();
     var objectBodies = entry.getBodyList();
-    var docComment = createSourceSection(docCom);
+    var docComment = createDocSourceSection(docCom);
     var annotationNodes = doVisitAnnotations(annotations);
     var sourceSection = createSourceSection(entry);
     var headerStart = !modifierList.isEmpty() ? modifierList.get(0).span() : name.span();
@@ -1849,7 +1849,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               createSourceSection(entry),
               headerSection,
               scope.buildFrameDescriptor(),
-              createSourceSection(entry.getDocComment()),
+              createDocSourceSection(entry.getDocComment()),
               doVisitAnnotations(entry.getAnnotations()),
               modifiers,
               methodName,
@@ -1889,7 +1889,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               new TypeAliasNode(
                   sourceSection,
                   headerSection,
-                  createSourceSection(typeAlias.getDocComment()),
+                  createDocSourceSection(typeAlias.getDocComment()),
                   doVisitAnnotations(typeAlias.getAnnotations()),
                   modifiers,
                   scopeName.toString(),

@@ -526,21 +526,26 @@ public final class VmUtils {
         .build();
   }
 
-  public static @Nullable String exportDocComment(@Nullable SourceSection docComment) {
+  public static @Nullable String exportDocComment(SourceSection @Nullable [] docComment) {
     if (docComment == null) return null;
 
     var builder = new StringBuilder();
-    var matcher = DOC_COMMENT_LINE_START.matcher(docComment.getCharacters());
-    var firstMatch = true;
-    while (matcher.find()) {
-      if (firstMatch) {
-        matcher.appendReplacement(builder, "");
-        firstMatch = false;
-      } else {
-        matcher.appendReplacement(builder, "\n");
+    for (var i = 0; i < docComment.length; i++) {
+      if (i > 0) {
+        builder.append("\n");
       }
+      var matcher = DOC_COMMENT_LINE_START.matcher(docComment[i].getCharacters());
+      var firstMatch = true;
+      while (matcher.find()) {
+        if (firstMatch) {
+          matcher.appendReplacement(builder, "");
+          firstMatch = false;
+        } else {
+          matcher.appendReplacement(builder, "\n");
+        }
+      }
+      matcher.appendTail(builder);
     }
-    matcher.appendTail(builder);
     return builder.toString();
   }
 
@@ -877,7 +882,6 @@ public final class VmUtils {
     var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
     var parsedExpression = parseExpressionNode(expression, source);
     var exprNode = builder.visitExpr(parsedExpression);
-    assert exprNode != null;
     var rootNode =
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);

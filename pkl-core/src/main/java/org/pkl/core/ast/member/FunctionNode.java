@@ -140,7 +140,7 @@ public final class FunctionNode extends RegularMemberNode {
 
   public PClass.Method export(
       PClass owner,
-      @Nullable SourceSection docComment,
+      SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       int modifiers,
       List<TypeParameter> typeParameters) {

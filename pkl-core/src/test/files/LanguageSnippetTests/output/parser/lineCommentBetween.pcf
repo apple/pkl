@@ -1,1 +1,5 @@
 foo = 1
+theComment = """
+  doc comment
+  doc continuation
+  """
