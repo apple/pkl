@@ -110,8 +110,7 @@ class CliMainTest {
 
   @Test
   fun `invalid URIs are not accepted`() {
-    val ex =
-      assertThrows<BadParameterValue> { RootCommand().parse(arrayOf("eval", "file:my file.txt")) }
+    val ex = assertThrows<BadParameterValue> { rootCmd.parse(arrayOf("eval", "file:my file.txt")) }
 
     assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
   }
