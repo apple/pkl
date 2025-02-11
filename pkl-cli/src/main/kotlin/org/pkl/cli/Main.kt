@@ -22,5 +22,5 @@ import org.pkl.commons.cli.cliMain
 
 /** Main method of the Pkl CLI (command-line evaluator and REPL). */
 internal fun main(args: Array<String>) {
-  cliMain { RootCommand.main(args) }
+  cliMain { RootCommand().main(args) }
 }

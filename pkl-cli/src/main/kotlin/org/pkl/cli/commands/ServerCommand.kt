@@ -19,7 +19,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import org.pkl.cli.CliServer
 import org.pkl.commons.cli.CliBaseOptions
 
-object ServerCommand :
+class ServerCommand :
   CliktCommand(
     name = "server",
     help = "Run as a server that communicates over standard input/output",

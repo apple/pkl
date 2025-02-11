@@ -23,7 +23,7 @@ import org.pkl.core.Release
 
 internal val helpLink = "${Release.current().documentation.homepage}pkl-cli/index.html#usage"
 
-object RootCommand :
+class RootCommand :
   NoOpCliktCommand(
     name = "pkl",
     printHelpOnEmptyArgs = true,
@@ -41,13 +41,13 @@ object RootCommand :
     }
 
     subcommands(
-      EvalCommand,
-      ReplCommand,
-      ServerCommand,
-      TestCommand,
-      ProjectCommand,
-      DownloadPackageCommand,
-      AnalyzeCommand,
+      EvalCommand(),
+      ReplCommand(),
+      ServerCommand(),
+      TestCommand(),
+      ProjectCommand(),
+      DownloadPackageCommand(),
+      AnalyzeCommand(),
     )
   }
 }

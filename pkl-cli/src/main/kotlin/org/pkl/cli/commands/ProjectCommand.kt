@@ -33,18 +33,18 @@ import org.pkl.commons.cli.commands.single
 
 private const val NEWLINE = '\u0085'
 
-object ProjectCommand :
+class ProjectCommand :
   NoOpCliktCommand(
     name = "project",
     help = "Run commands related to projects",
     epilog = "For more information, visit $helpLink",
   ) {
   init {
-    subcommands(ResolveCommand, PackageCommand)
+    subcommands(ResolveCommand(), PackageCommand())
   }
 }
 
-object ResolveCommand :
+class ResolveCommand :
   BaseCommand(
     name = "resolve",
     helpLink = helpLink,
@@ -74,7 +74,7 @@ object ResolveCommand :
   }
 }
 
-object PackageCommand :
+class PackageCommand :
   BaseCommand(
     name = "package",
     helpLink = helpLink,

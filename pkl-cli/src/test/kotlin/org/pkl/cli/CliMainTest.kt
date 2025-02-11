@@ -32,28 +32,28 @@ import org.pkl.commons.writeString
 import org.pkl.core.Release
 
 class CliMainTest {
+  private val rootCmd = RootCommand()
 
   @Test
   fun `duplicate CLI option produces meaningful error message`(@TempDir tempDir: Path) {
     val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
 
     assertThatCode {
-        RootCommand.parse(
+        rootCmd.parse(
           arrayOf("eval", "--output-path", "path1", "--output-path", "path2", inputFile)
         )
       }
       .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
 
     assertThatCode {
-        RootCommand.parse(arrayOf("eval", "-o", "path1", "--output-path", "path2", inputFile))
+        rootCmd.parse(arrayOf("eval", "-o", "path1", "--output-path", "path2", inputFile))
       }
       .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
   }
 
   @Test
   fun `eval requires at least one file`() {
-    assertThatCode { RootCommand.parse(arrayOf("eval")) }
-      .hasMessage("""Missing argument "<modules>"""")
+    assertThatCode { rootCmd.parse(arrayOf("eval")) }.hasMessage("""Missing argument "<modules>"""")
   }
 
   // Can't reliably create symlinks on Windows.
@@ -74,7 +74,7 @@ class CliMainTest {
     val inputFile = tempDir.resolve("test.pkl").writeString(code).toString()
     val outputFile = makeSymdir(tempDir, "out", "linkOut").resolve("test.pkl").toString()
 
-    assertThatCode { RootCommand.parse(arrayOf("eval", inputFile, "-o", outputFile)) }
+    assertThatCode { rootCmd.parse(arrayOf("eval", inputFile, "-o", outputFile)) }
       .doesNotThrowAnyException()
   }
 
@@ -85,24 +85,24 @@ class CliMainTest {
     val error =
       """Invalid value for "--multiple-file-output-path": Option is mutually exclusive with -o, --output-path and -x, --expression."""
 
-    assertThatCode { RootCommand.parse(arrayOf("eval", "-m", testOut, "-x", "x", testIn)) }
+    assertThatCode { rootCmd.parse(arrayOf("eval", "-m", testOut, "-x", "x", testIn)) }
       .hasMessage(error)
 
-    assertThatCode { RootCommand.parse(arrayOf("eval", "-m", testOut, "-o", "/tmp/test", testIn)) }
+    assertThatCode { rootCmd.parse(arrayOf("eval", "-m", testOut, "-o", "/tmp/test", testIn)) }
       .hasMessage(error)
   }
 
   @Test
   fun `showing version works`() {
-    assertThatCode { RootCommand.parse(arrayOf("--version")) }
-      .hasMessage(Release.current().versionInfo)
+    assertThatCode { rootCmd.parse(arrayOf("--version")) }.hasMessage(Release.current().versionInfo)
   }
 
   @Test
   fun `file paths get parsed into URIs`(@TempDir tempDir: Path) {
-    RootCommand.parse(arrayOf("eval", makeInput(tempDir, "my file.txt")))
+    val cmd = RootCommand()
+    cmd.parse(arrayOf("eval", makeInput(tempDir, "my file.txt")))
 
-    val evalCmd = RootCommand.registeredSubcommands().filterIsInstance<EvalCommand>().first()
+    val evalCmd = cmd.registeredSubcommands().filterIsInstance<EvalCommand>().first()
     val modules = evalCmd.baseOptions.baseOptions(evalCmd.modules).normalizedSourceModules
     assertThat(modules).hasSize(1)
     assertThat(modules[0].path).endsWith("my file.txt")
@@ -110,8 +110,7 @@ class CliMainTest {
 
   @Test
   fun `invalid URIs are not accepted`() {
-    val ex =
-      assertThrows<BadParameterValue> { RootCommand.parse(arrayOf("eval", "file:my file.txt")) }
+    val ex = assertThrows<BadParameterValue> { rootCmd.parse(arrayOf("eval", "file:my file.txt")) }
 
     assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
   }
