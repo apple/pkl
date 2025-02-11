@@ -72,226 +72,152 @@ import org.pkl.core.parser.ast.TypeAlias;
 import org.pkl.core.parser.ast.TypeAnnotation;
 import org.pkl.core.parser.ast.TypeParameter;
 import org.pkl.core.parser.ast.TypeParameterList;
-import org.pkl.core.util.Nullable;
 
 public interface ParserVisitor<Result> {
 
-  @Nullable
   Result visitUnknownType(Type.UnknownType type);
 
-  @Nullable
   Result visitNothingType(Type.NothingType type);
 
-  @Nullable
   Result visitModuleType(Type.ModuleType type);
 
-  @Nullable
   Result visitStringConstantType(Type.StringConstantType type);
 
-  @Nullable
   Result visitDeclaredType(Type.DeclaredType type);
 
-  @Nullable
   Result visitParenthesizedType(Type.ParenthesizedType type);
 
-  @Nullable
   Result visitNullableType(Type.NullableType type);
 
-  @Nullable
   Result visitConstrainedType(Type.ConstrainedType type);
 
-  @Nullable
   Result visitUnionType(Type.UnionType type);
 
-  @Nullable
   Result visitFunctionType(Type.FunctionType type);
 
-  @Nullable
   Result visitThisExpr(ThisExpr expr);
 
-  @Nullable
   Result visitOuterExpr(OuterExpr expr);
 
-  @Nullable
   Result visitModuleExpr(ModuleExpr expr);
 
-  @Nullable
   Result visitNullLiteralExpr(NullLiteralExpr expr);
 
-  @Nullable
   Result visitBoolLiteralExpr(BoolLiteralExpr expr);
 
-  @Nullable
   Result visitIntLiteralExpr(IntLiteralExpr expr);
 
-  @Nullable
   Result visitFloatLiteralExpr(FloatLiteralExpr expr);
 
-  @Nullable
   Result visitThrowExpr(ThrowExpr expr);
 
-  @Nullable
   Result visitTraceExpr(TraceExpr expr);
 
-  @Nullable
   Result visitImportExpr(Expr.ImportExpr expr);
 
-  @Nullable
   Result visitReadExpr(ReadExpr expr);
 
-  @Nullable
   Result visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr);
 
-  @Nullable
   Result visitStringConstant(StringConstant expr);
 
-  @Nullable
   Result visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr);
 
-  @Nullable
   Result visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr);
 
-  @Nullable
   Result visitNewExpr(NewExpr expr);
 
-  @Nullable
   Result visitAmendsExpr(AmendsExpr expr);
 
-  @Nullable
   Result visitSuperAccessExpr(SuperAccessExpr expr);
 
-  @Nullable
   Result visitSuperSubscriptExpr(SuperSubscriptExpr expr);
 
-  @Nullable
   Result visitQualifiedAccessExpr(QualifiedAccessExpr expr);
 
-  @Nullable
   Result visitSubscriptExpr(SubscriptExpr expr);
 
-  @Nullable
   Result visitNonNullExpr(NonNullExpr expr);
 
-  @Nullable
   Result visitUnaryMinusExpr(UnaryMinusExpr expr);
 
-  @Nullable
   Result visitLogicalNotExpr(LogicalNotExpr expr);
 
-  @Nullable
   Result visitBinaryOperatorExpr(BinaryOperatorExpr expr);
 
-  @Nullable
   Result visitTypeCheckExpr(TypeCheckExpr expr);
 
-  @Nullable
   Result visitTypeCastExpr(TypeCastExpr expr);
 
-  @Nullable
   Result visitIfExpr(IfExpr expr);
 
-  @Nullable
   Result visitLetExpr(LetExpr expr);
 
-  @Nullable
   Result visitFunctionLiteralExpr(FunctionLiteralExpr expr);
 
-  @Nullable
   Result visitParenthesizedExpr(ParenthesizedExpr expr);
 
-  @Nullable
   Result visitObjectProperty(ObjectMember.ObjectProperty member);
 
-  @Nullable
   Result visitObjectMethod(ObjectMember.ObjectMethod member);
 
-  @Nullable
   Result visitMemberPredicate(ObjectMember.MemberPredicate member);
 
-  @Nullable
   Result visitObjectElement(ObjectMember.ObjectElement member);
 
-  @Nullable
   Result visitObjectEntry(ObjectMember.ObjectEntry member);
 
-  @Nullable
   Result visitObjectSpread(ObjectMember.ObjectSpread member);
 
-  @Nullable
   Result visitWhenGenerator(ObjectMember.WhenGenerator member);
 
-  @Nullable
   Result visitForGenerator(ObjectMember.ForGenerator member);
 
-  @Nullable
   Result visitModule(Module module);
 
-  @Nullable
   Result visitModuleDecl(ModuleDecl decl);
 
-  @Nullable
   Result visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl);
 
-  @Nullable
   Result visitImportClause(ImportClause imp);
 
-  @Nullable
   Result visitClass(Class clazz);
 
-  @Nullable
   Result visitModifier(Modifier modifier);
 
-  @Nullable
   Result visitClassProperty(ClassProperty entry);
 
-  @Nullable
   Result visitClassMethod(ClassMethod entry);
 
-  @Nullable
   Result visitClassBody(ClassBody classBody);
 
-  @Nullable
   Result visitTypeAlias(TypeAlias typeAlias);
 
-  @Nullable
   Result visitAnnotation(Annotation annotation);
 
-  @Nullable
   Result visitParameter(Parameter param);
 
-  @Nullable
   Result visitParameterList(ParameterList paramList);
 
-  @Nullable
   Result visitTypeParameter(TypeParameter typeParameter);
 
-  @Nullable
   Result visitTypeParameterList(TypeParameterList typeParameterList);
 
-  @Nullable
   Result visitTypeAnnotation(TypeAnnotation typeAnnotation);
 
-  @Nullable
   Result visitArgumentList(ArgumentList argumentList);
 
-  @Nullable
   Result visitStringPart(StringPart part);
 
-  @Nullable
   Result visitStringConstantPart(StringConstantPart part);
 
-  @Nullable
   Result visitDocComment(DocComment docComment);
 
-  @Nullable
   Result visitIdentifier(Identifier identifier);
 
-  @Nullable
   Result visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier);
 
-  @Nullable
   Result visitObjectBody(ObjectBody objectBody);
 
-  @Nullable
   Result visitReplInput(ReplInput replInput);
 }

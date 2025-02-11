@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -261,7 +262,6 @@ import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
-@SuppressWarnings("DataFlowIssue")
 public class AstBuilder extends AbstractAstBuilder<Object> {
   private final VmLanguage language;
   private final ModuleInfo moduleInfo;
@@ -1427,6 +1427,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             moduleInfo);
 
     for (var methodCtx : mod.getMethods()) {
+      assert methodCtx.getExpr() != null;
       var localMethod =
           doVisitObjectMethod(
               methodCtx,
@@ -2007,6 +2008,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return res;
   }
 
+  @Override
+  protected Object defaultValue() {
+    throw PklBugException.unreachableCode();
+  }
+
   private ResolveDeclaredTypeNode doVisitTypeName(QualifiedIdentifier ctx) {
     var identifiers = ctx.getIdentifiers();
     return switch (identifiers.size()) {
@@ -2048,7 +2054,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         (scope) -> {
           var objectMembers = body.getMembers();
           if (objectMembers.isEmpty()) {
-            return EmptyObjectLiteralNodeGen.create(createSourceSection(body.parent()), parentNode);
+            return EmptyObjectLiteralNodeGen.create(
+                Objects.requireNonNull(createSourceSection(body.parent())), parentNode);
           }
           var sourceSection = createSourceSection(body.parent());
 
@@ -2683,6 +2690,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                       language, scope.buildFrameDescriptor(), member, valueNode));
             }
           } else { // ["key"] { ... }
+            assert objectBodyCtxs != null;
             var objectBody =
                 doVisitObjectBody(
                     objectBodyCtxs,
@@ -2753,9 +2761,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       return;
     }
     var forExprCtx = ctx.parent();
-    while (forExprCtx.getClass() != org.pkl.core.parser.ast.ObjectMember.ForGenerator.class) {
+    while (forExprCtx != null
+        && forExprCtx.getClass() != org.pkl.core.parser.ast.ObjectMember.ForGenerator.class) {
       forExprCtx = forExprCtx.parent();
     }
+    assert forExprCtx != null;
     throw exceptionBuilder()
         .evalError(errorMessageKey)
         .withSourceSection(

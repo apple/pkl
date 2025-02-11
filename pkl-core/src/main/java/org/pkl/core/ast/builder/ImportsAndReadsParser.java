@@ -160,4 +160,9 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     ret.addAll(nextResult);
     return ret;
   }
+
+  @Override
+  protected List<Entry> defaultValue() {
+    return List.of();
+  }
 }

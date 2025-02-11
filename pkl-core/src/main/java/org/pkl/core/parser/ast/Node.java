@@ -31,7 +31,7 @@ public interface Node {
   @Nullable
   List<? extends @Nullable Node> children();
 
-  <T> @Nullable T accept(ParserVisitor<? extends T> visitor);
+  <T> T accept(ParserVisitor<? extends T> visitor);
 
   default String text(char[] source) {
     return new String(source, span().charIndex(), span().length());

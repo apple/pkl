@@ -90,7 +90,7 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
     }
   }
 
-  protected @Nullable SourceSection createSourceSection(@Nullable Node node) {
+  protected final @Nullable SourceSection createSourceSection(@Nullable Node node) {
     return node == null
         ? null
         : source.createSection(node.span().charIndex(), node.span().length());
@@ -104,7 +104,6 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
     return source.createSection(span.charIndex(), span.length());
   }
 
-  @SuppressWarnings("DataFlowIssue")
   protected final SourceSection createSourceSection(
       List<? extends Modifier> modifiers, ModifierValue symbol) {
 
