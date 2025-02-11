@@ -107,9 +107,6 @@ public interface ParserVisitor<Result> {
   Result visitFunctionType(Type.FunctionType type);
 
   @Nullable
-  Result visitType(Type type);
-
-  @Nullable
   Result visitThisExpr(ThisExpr expr);
 
   @Nullable
@@ -203,9 +200,6 @@ public interface ParserVisitor<Result> {
   Result visitParenthesizedExpr(ParenthesizedExpr expr);
 
   @Nullable
-  Result visitExpr(Expr expr);
-
-  @Nullable
   Result visitObjectProperty(ObjectMember.ObjectProperty member);
 
   @Nullable
@@ -228,9 +222,6 @@ public interface ParserVisitor<Result> {
 
   @Nullable
   Result visitForGenerator(ObjectMember.ForGenerator member);
-
-  @Nullable
-  Result visitObjectMember(ObjectMember member);
 
   @Nullable
   Result visitModule(Module module);

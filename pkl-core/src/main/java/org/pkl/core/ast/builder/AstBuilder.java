@@ -1193,7 +1193,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return Pair.of(elementNodes, isConstantNodes);
   }
 
-  @Override
   public GeneratorMemberNode visitObjectMember(org.pkl.core.parser.ast.ObjectMember member) {
     return (GeneratorMemberNode) member.accept(this);
   }
@@ -1736,7 +1735,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   .build();
             }
             bodyNode = visitExpr(expr);
-          } else if (objectBodies != null && !objectBodies.isEmpty()) { // prop { ... }
+          } else if (!objectBodies.isEmpty()) { // prop { ... }
             if (typeAnnotation != null) {
               throw exceptionBuilder()
                   .evalError("cannotAmendPropertyDefinition")
@@ -1946,12 +1945,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return nodes;
   }
 
-  @Override
   public UnresolvedTypeNode visitType(Type type) {
     return (UnresolvedTypeNode) type.accept(this);
   }
 
-  @Override
   public ExpressionNode visitExpr(Expr expr) {
     return (ExpressionNode) expr.accept(this);
   }

@@ -22,7 +22,6 @@ import org.pkl.core.parser.ast.ClassBody;
 import org.pkl.core.parser.ast.ClassMethod;
 import org.pkl.core.parser.ast.ClassProperty;
 import org.pkl.core.parser.ast.DocComment;
-import org.pkl.core.parser.ast.Expr;
 import org.pkl.core.parser.ast.Expr.AmendsExpr;
 import org.pkl.core.parser.ast.Expr.BinaryOperatorExpr;
 import org.pkl.core.parser.ast.Expr.BoolLiteralExpr;
@@ -60,7 +59,6 @@ import org.pkl.core.parser.ast.Modifier;
 import org.pkl.core.parser.ast.ModuleDecl;
 import org.pkl.core.parser.ast.Node;
 import org.pkl.core.parser.ast.ObjectBody;
-import org.pkl.core.parser.ast.ObjectMember;
 import org.pkl.core.parser.ast.ObjectMember.ForGenerator;
 import org.pkl.core.parser.ast.ObjectMember.MemberPredicate;
 import org.pkl.core.parser.ast.ObjectMember.ObjectElement;
@@ -76,7 +74,6 @@ import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.parser.ast.StringConstant;
 import org.pkl.core.parser.ast.StringConstantPart;
 import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
 import org.pkl.core.parser.ast.Type.DeclaredType;
 import org.pkl.core.parser.ast.Type.FunctionType;
@@ -111,43 +108,38 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitStringConstantType(StringConstantType type) {
+  public @Nullable T visitStringConstantType(StringConstantType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitDeclaredType(DeclaredType type) {
+  public @Nullable T visitDeclaredType(DeclaredType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitParenthesizedType(ParenthesizedType type) {
+  public @Nullable T visitParenthesizedType(ParenthesizedType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitNullableType(NullableType type) {
+  public @Nullable T visitNullableType(NullableType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitConstrainedType(ConstrainedType type) {
+  public @Nullable T visitConstrainedType(ConstrainedType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitUnionType(UnionType type) {
+  public @Nullable T visitUnionType(UnionType type) {
     return visitChildren(type);
   }
 
   @Override
-  public T visitFunctionType(FunctionType type) {
+  public @Nullable T visitFunctionType(FunctionType type) {
     return visitChildren(type);
-  }
-
-  @Override
-  public T visitType(Type type) {
-    return type.accept(this);
   }
 
   @Override
@@ -161,317 +153,307 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   }
 
   @Override
-  public T visitModuleExpr(ModuleExpr expr) {
+  public @Nullable T visitModuleExpr(ModuleExpr expr) {
     return null;
   }
 
   @Override
-  public T visitNullLiteralExpr(NullLiteralExpr expr) {
+  public @Nullable T visitNullLiteralExpr(NullLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitBoolLiteralExpr(BoolLiteralExpr expr) {
+  public @Nullable T visitBoolLiteralExpr(BoolLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitIntLiteralExpr(IntLiteralExpr expr) {
+  public @Nullable T visitIntLiteralExpr(IntLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitFloatLiteralExpr(FloatLiteralExpr expr) {
+  public @Nullable T visitFloatLiteralExpr(FloatLiteralExpr expr) {
     return null;
   }
 
   @Override
-  public T visitThrowExpr(ThrowExpr expr) {
+  public @Nullable T visitThrowExpr(ThrowExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTraceExpr(TraceExpr expr) {
+  public @Nullable T visitTraceExpr(TraceExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitImportExpr(ImportExpr expr) {
+  public @Nullable T visitImportExpr(ImportExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitReadExpr(ReadExpr expr) {
+  public @Nullable T visitReadExpr(ReadExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
+  public @Nullable T visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitStringConstant(StringConstant expr) {
+  public @Nullable T visitStringConstant(StringConstant expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr) {
+  public @Nullable T visitSingleLineStringLiteralExpr(SingleLineStringLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
+  public @Nullable T visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitNewExpr(NewExpr expr) {
+  public @Nullable T visitNewExpr(NewExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitAmendsExpr(AmendsExpr expr) {
+  public @Nullable T visitAmendsExpr(AmendsExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSuperAccessExpr(SuperAccessExpr expr) {
+  public @Nullable T visitSuperAccessExpr(SuperAccessExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
+  public @Nullable T visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitQualifiedAccessExpr(QualifiedAccessExpr expr) {
+  public @Nullable T visitQualifiedAccessExpr(QualifiedAccessExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitSubscriptExpr(SubscriptExpr expr) {
+  public @Nullable T visitSubscriptExpr(SubscriptExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitNonNullExpr(NonNullExpr expr) {
+  public @Nullable T visitNonNullExpr(NonNullExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitUnaryMinusExpr(UnaryMinusExpr expr) {
+  public @Nullable T visitUnaryMinusExpr(UnaryMinusExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitLogicalNotExpr(LogicalNotExpr expr) {
+  public @Nullable T visitLogicalNotExpr(LogicalNotExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitBinaryOperatorExpr(BinaryOperatorExpr expr) {
+  public @Nullable T visitBinaryOperatorExpr(BinaryOperatorExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTypeCheckExpr(TypeCheckExpr expr) {
+  public @Nullable T visitTypeCheckExpr(TypeCheckExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitTypeCastExpr(TypeCastExpr expr) {
+  public @Nullable T visitTypeCastExpr(TypeCastExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitIfExpr(IfExpr expr) {
+  public @Nullable T visitIfExpr(IfExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitLetExpr(LetExpr expr) {
+  public @Nullable T visitLetExpr(LetExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitFunctionLiteralExpr(FunctionLiteralExpr expr) {
+  public @Nullable T visitFunctionLiteralExpr(FunctionLiteralExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitParenthesizedExpr(ParenthesizedExpr expr) {
+  public @Nullable T visitParenthesizedExpr(ParenthesizedExpr expr) {
     return visitChildren(expr);
   }
 
   @Override
-  public T visitExpr(Expr expr) {
-    return visitChildren(expr);
-  }
-
-  @Override
-  public T visitObjectProperty(ObjectProperty member) {
+  public @Nullable T visitObjectProperty(ObjectProperty member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitObjectMethod(ObjectMethod member) {
+  public @Nullable T visitObjectMethod(ObjectMethod member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitMemberPredicate(MemberPredicate member) {
+  public @Nullable T visitMemberPredicate(MemberPredicate member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitObjectElement(ObjectElement member) {
+  public @Nullable T visitObjectElement(ObjectElement member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitObjectEntry(ObjectEntry member) {
+  public @Nullable T visitObjectEntry(ObjectEntry member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitObjectSpread(ObjectSpread member) {
+  public @Nullable T visitObjectSpread(ObjectSpread member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitWhenGenerator(WhenGenerator member) {
+  public @Nullable T visitWhenGenerator(WhenGenerator member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitForGenerator(ForGenerator member) {
+  public @Nullable T visitForGenerator(ForGenerator member) {
     return visitChildren(member);
   }
 
   @Override
-  public T visitObjectMember(ObjectMember member) {
-    return visitChildren(member);
-  }
-
-  @Override
-  public T visitModule(org.pkl.core.parser.ast.Module module) {
+  public @Nullable T visitModule(org.pkl.core.parser.ast.Module module) {
     return visitChildren(module);
   }
 
   @Override
-  public T visitModuleDecl(ModuleDecl decl) {
+  public @Nullable T visitModuleDecl(ModuleDecl decl) {
     return visitChildren(decl);
   }
 
   @Override
-  public T visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
+  public @Nullable T visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
     return visitChildren(decl);
   }
 
   @Override
-  public T visitImportClause(ImportClause imp) {
+  public @Nullable T visitImportClause(ImportClause imp) {
     return visitChildren(imp);
   }
 
   @Override
-  public T visitClass(Class clazz) {
+  public @Nullable T visitClass(Class clazz) {
     return visitChildren(clazz);
   }
 
   @Override
-  public T visitModifier(Modifier modifier) {
+  public @Nullable T visitModifier(Modifier modifier) {
     return null;
   }
 
   @Override
-  public T visitClassProperty(ClassProperty prop) {
+  public @Nullable T visitClassProperty(ClassProperty prop) {
     return visitChildren(prop);
   }
 
   @Override
-  public T visitClassMethod(ClassMethod method) {
+  public @Nullable T visitClassMethod(ClassMethod method) {
     return visitChildren(method);
   }
 
   @Override
-  public T visitTypeAlias(TypeAlias typeAlias) {
+  public @Nullable T visitTypeAlias(TypeAlias typeAlias) {
     return visitChildren(typeAlias);
   }
 
   @Override
-  public T visitAnnotation(Annotation annotation) {
+  public @Nullable T visitAnnotation(Annotation annotation) {
     return visitChildren(annotation);
   }
 
   @Override
-  public T visitParameter(Parameter param) {
+  public @Nullable T visitParameter(Parameter param) {
     return visitChildren(param);
   }
 
   @Override
-  public T visitParameterList(ParameterList paramList) {
+  public @Nullable T visitParameterList(ParameterList paramList) {
     return visitChildren(paramList);
   }
 
   @Override
-  public T visitTypeParameterList(TypeParameterList typeParameterList) {
+  public @Nullable T visitTypeParameterList(TypeParameterList typeParameterList) {
     return visitChildren(typeParameterList);
   }
 
   @Override
-  public T visitTypeAnnotation(TypeAnnotation typeAnnotation) {
+  public @Nullable T visitTypeAnnotation(TypeAnnotation typeAnnotation) {
     return visitChildren(typeAnnotation);
   }
 
   @Override
-  public T visitArgumentList(ArgumentList argumentList) {
+  public @Nullable T visitArgumentList(ArgumentList argumentList) {
     return visitChildren(argumentList);
   }
 
   @Override
-  public T visitStringPart(StringPart part) {
+  public @Nullable T visitStringPart(StringPart part) {
     return visitChildren(part);
   }
 
   @Override
-  public T visitStringConstantPart(StringConstantPart part) {
+  public @Nullable T visitStringConstantPart(StringConstantPart part) {
     return null;
   }
 
   @Override
-  public T visitClassBody(ClassBody classBody) {
+  public @Nullable T visitClassBody(ClassBody classBody) {
     return visitChildren(classBody);
   }
 
   @Override
-  public T visitDocComment(DocComment docComment) {
+  public @Nullable T visitDocComment(DocComment docComment) {
     return null;
   }
 
   @Override
-  public T visitIdentifier(Identifier identifier) {
+  public @Nullable T visitIdentifier(Identifier identifier) {
     return null;
   }
 
   @Override
-  public T visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier) {
+  public @Nullable T visitQualifiedIdentifier(QualifiedIdentifier qualifiedIdentifier) {
     return visitChildren(qualifiedIdentifier);
   }
 
   @Override
-  public T visitObjectBody(ObjectBody objectBody) {
+  public @Nullable T visitObjectBody(ObjectBody objectBody) {
     return visitChildren(objectBody);
   }
 
   @Override
-  public T visitTypeParameter(TypeParameter typeParameter) {
+  public @Nullable T visitTypeParameter(TypeParameter typeParameter) {
     return visitChildren(typeParameter);
   }
 
   @Override
-  public T visitReplInput(ReplInput replInput) {
+  public @Nullable T visitReplInput(ReplInput replInput) {
     return visitChildren(replInput);
   }
 
