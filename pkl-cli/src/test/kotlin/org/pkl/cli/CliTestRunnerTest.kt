@@ -388,7 +388,7 @@ class CliTestRunnerTest {
   @Test
   fun `no source modules specified has same message as pkl eval`() {
     val e1 = assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
-    val e2 = assertThrows<MissingArgument> { RootCommand.parse(listOf("eval")) }
+    val e2 = assertThrows<MissingArgument> { RootCommand().parse(listOf("eval")) }
     assertThat(e1).hasMessageContaining("Missing argument \"<modules>\"")
     assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
   }

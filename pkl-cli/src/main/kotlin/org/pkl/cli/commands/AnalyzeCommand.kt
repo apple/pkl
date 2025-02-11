@@ -25,7 +25,7 @@ import org.pkl.cli.CliImportAnalyzerOptions
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
-object AnalyzeCommand :
+class AnalyzeCommand :
   NoOpCliktCommand(
     name = "analyze",
     help = "Commands related to static analysis",

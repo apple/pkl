@@ -26,7 +26,7 @@ import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.TestOptions
 
-object TestCommand :
+class TestCommand :
   BaseCommand(name = "test", help = "Run tests within the given module(s)", helpLink = helpLink) {
   val modules: List<URI> by
     argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
