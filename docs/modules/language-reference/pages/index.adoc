@@ -3196,7 +3196,6 @@ This section discusses language features that are generally more relevant to tem
 <<glob-patterns,Glob Patterns>> +
 <<doc-comments,Doc Comments>> +
 <<name-resolution,Name Resolution>> +
-<<grammar-definition,Grammar Definition>> +
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>> +
@@ -5273,11 +5272,6 @@ For example, the prototype chain of value `42` contains, now listed from top to 
 . The prototype of class `Int`.
 
 A prototype chain never contains a non-object value, such as `42`.
-
-[[grammar-definition]]
-=== Grammar Definition
-
-Pkl's link:{uri-antlr4}[ANTLR 4] grammar is defined in link:{uri-github-PklLexer}[PklLexer.g4] and link:{uri-github-PklParser}[PklParser.g4].
 
 [[reserved-keywords]]
 === Reserved keywords

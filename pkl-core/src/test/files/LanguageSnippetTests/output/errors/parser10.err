@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Mismatched input: `[`. Expected one of: `module`, `nothing`, `unknown`, `(`, `{`, `*`, SLQuote, Identifier
+Unexpected token `[`. Expected a type or `{`.
 
 x | res1 = new [ 42 }
                ^

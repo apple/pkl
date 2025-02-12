@@ -1,0 +1,7 @@
+–– Pkl Error ––
+Object members must be separated by whitespace, newline, or semicolon.
+Object entries must be separated by newline or semicolon.
+
+x | 1 2 3...IntSeq(4, 10)...IntSeq(11, 20)
+         ^^^^^^^^^^^^^^^^
+at spreadSyntaxNoSpace#foo (file:///$snippetsDir/input/generators/spreadSyntaxNoSpace.pkl)

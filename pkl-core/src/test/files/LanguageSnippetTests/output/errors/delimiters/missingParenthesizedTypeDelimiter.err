@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token `res2`. Expected `,` or `)`.
 
 x | res1: ((String) -> String | List<String>
                                             ^
-at missingParenthesizedTypeDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingParenthesizedTypeDelimiter.pkl)
+at missingParenthesizedTypeDelimiter (file:///$snippetsDir/input/errors/delimiters/missingParenthesizedTypeDelimiter.pkl)

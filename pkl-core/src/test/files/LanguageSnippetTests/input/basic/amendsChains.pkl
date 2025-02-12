@@ -29,5 +29,5 @@ baz = new Listing<Listing<Listing<Number>>> {
       inner.fold(_acc, (__acc, it) -> __acc.add(it))))
 
 qux {
-  (foo.bar) { "world" "!" } { [0] = "Goodbye " [1] = "cruel " }.toList().join("")
+  (foo.bar) { "world" "!" } { [0] = "Goodbye "; [1] = "cruel " }.toList().join("")
 }

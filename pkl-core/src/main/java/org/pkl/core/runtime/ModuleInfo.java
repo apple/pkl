@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.pkl.core.util.Nullable;
 public final class ModuleInfo {
   private final SourceSection headerSection;
   private final SourceSection sourceSection;
-  private final @Nullable SourceSection docComment;
+  private final SourceSection @Nullable [] docComment;
   private final String moduleName;
   private final ModuleKey moduleKey;
   private final ResolvedModuleKey resolvedModuleKey;
@@ -49,7 +49,7 @@ public final class ModuleInfo {
   public ModuleInfo(
       SourceSection sourceSection,
       SourceSection headerSection,
-      @Nullable SourceSection docComment,
+      SourceSection @Nullable [] docComment,
       String moduleName,
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
@@ -82,7 +82,7 @@ public final class ModuleInfo {
     return headerSection;
   }
 
-  public @Nullable SourceSection getDocComment() {
+  public SourceSection @Nullable [] getDocComment() {
     return docComment;
   }
 

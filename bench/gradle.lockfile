@@ -1,7 +1,6 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.sf.jopt-simple:jopt-simple:5.0.4=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath
 org.apache.commons:commons-math3:3.6.1=jmh,jmhCompileClasspath,jmhImplementationDependenciesMetadata,jmhRuntimeClasspath

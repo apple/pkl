@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.pkl.core.util.Nullable;
 @NodeInfo(shortName = "class")
 public final class ClassNode extends ExpressionNode {
   private final SourceSection headerSection;
-  private final @Nullable SourceSection docComment;
+  private final SourceSection @Nullable [] docComment;
   @Children private final ExpressionNode[] annotationNodes;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
@@ -52,7 +52,7 @@ public final class ClassNode extends ExpressionNode {
   public ClassNode(
       SourceSection section,
       SourceSection headerSection,
-      @Nullable SourceSection docComment,
+      SourceSection @Nullable [] docComment,
       ExpressionNode[] annotationNodes,
       int modifiers,
       PClassInfo<?> classInfo,

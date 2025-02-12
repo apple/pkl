@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `)` delimiter.
+Unexpected token `->`. Expected `,` or `)`.
 
 x | f: (String -> String
-              ^
-at missingFunctionType1ParameterListDelimiter#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionType1ParameterListDelimiter.pkl)
+               ^^
+at missingFunctionType1ParameterListDelimiter (file:///$snippetsDir/input/errors/delimiters/missingFunctionType1ParameterListDelimiter.pkl)

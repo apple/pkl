@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,122 +18,131 @@ package org.pkl.core.ast.builder;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.pkl.core.parser.antlr.PklLexer;
-import org.pkl.core.parser.antlr.PklParser.ModifierContext;
-import org.pkl.core.parser.antlr.PklParserBaseVisitor;
+import org.pkl.core.PklBugException;
+import org.pkl.core.parser.BaseParserVisitor;
+import org.pkl.core.parser.Span;
+import org.pkl.core.parser.ast.DocComment;
+import org.pkl.core.parser.ast.Modifier;
+import org.pkl.core.parser.ast.Modifier.ModifierValue;
+import org.pkl.core.parser.ast.Node;
+import org.pkl.core.parser.ast.StringConstant;
+import org.pkl.core.parser.ast.StringConstantPart;
+import org.pkl.core.parser.ast.StringConstantPart.ConstantPart;
+import org.pkl.core.parser.ast.StringConstantPart.StringEscape;
+import org.pkl.core.parser.ast.StringConstantPart.StringUnicodeEscape;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
 
-public abstract class AbstractAstBuilder<T> extends PklParserBaseVisitor<T> {
+public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
 
   protected final Source source;
+
+  protected abstract VmExceptionBuilder exceptionBuilder();
 
   protected AbstractAstBuilder(Source source) {
     this.source = source;
   }
 
-  protected abstract VmExceptionBuilder exceptionBuilder();
+  protected String doVisitStringConstant(StringConstant expr) {
+    return doVisitStringConstant(expr.getStrParts().getParts());
+  }
 
-  protected String doVisitSingleLineConstantStringPart(List<Token> ts) {
-    if (ts.isEmpty()) return "";
-
+  protected String doVisitStringConstant(List<StringConstantPart> strs) {
     var builder = new StringBuilder();
-    for (var token : ts) {
-      switch (token.getType()) {
-        case PklLexer.SLCharacters -> builder.append(token.getText());
-        case PklLexer.SLCharacterEscape -> builder.append(parseCharacterEscapeSequence(token));
-        case PklLexer.SLUnicodeEscape -> builder.appendCodePoint(parseUnicodeEscapeSequence(token));
-        default -> throw exceptionBuilder().unreachableCode().build();
-      }
+    for (var part : strs) {
+      builder.append(doVisitStringConstantPart(part));
     }
-
     return builder.toString();
   }
 
-  protected int parseUnicodeEscapeSequence(Token token) {
-    var text = token.getText();
-    var lastIndex = text.length() - 1;
-
-    if (text.charAt(lastIndex) != '}') {
-      throw exceptionBuilder()
-          .evalError("unterminatedUnicodeEscapeSequence", token.getText())
-          .withSourceSection(createSourceSection(token))
-          .build();
+  protected String doVisitStringConstantPart(StringConstantPart part) {
+    if (part instanceof ConstantPart cp) {
+      return cp.getStr();
     }
+    if (part instanceof StringUnicodeEscape ue) {
+      var codePoint = parseUnicodeEscapeSequence(ue);
+      return Character.toString(codePoint);
+    }
+    if (part instanceof StringEscape se) {
+      return switch (se.getType()) {
+        case NEWLINE -> "\n";
+        case QUOTE -> "\"";
+        case BACKSLASH -> "\\";
+        case TAB -> "\t";
+        case RETURN -> "\r";
+      };
+    }
+    throw PklBugException.unreachableCode();
+  }
 
+  protected int parseUnicodeEscapeSequence(StringUnicodeEscape escape) {
+    var text = escape.getEscape();
+    var lastIndex = text.length() - 1;
     var startIndex = text.indexOf('{', 2);
     assert startIndex != -1; // guaranteed by lexer
-
     try {
       return Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
     } catch (NumberFormatException e) {
       throw exceptionBuilder()
-          .evalError("invalidUnicodeEscapeSequence", token.getText(), text.substring(0, startIndex))
-          .withSourceSection(createSourceSection(token))
+          .evalError("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex))
+          .withSourceSection(createSourceSection(escape))
           .build();
     }
   }
 
-  protected String parseCharacterEscapeSequence(Token token) {
-    var text = token.getText();
-    var lastChar = text.charAt(text.length() - 1);
-
-    return switch (lastChar) {
-      case 'n' -> "\n";
-      case 'r' -> "\r";
-      case 't' -> "\t";
-      case '"' -> "\"";
-      case '\\' -> "\\";
-      default ->
-          throw exceptionBuilder()
-              .evalError(
-                  "invalidCharacterEscapeSequence", text, text.substring(0, text.length() - 1))
-              .withSourceSection(createSourceSection(token))
-              .build();
-    };
+  protected final @Nullable SourceSection createSourceSection(@Nullable Node node) {
+    return node == null
+        ? null
+        : source.createSection(node.span().charIndex(), node.span().length());
   }
 
-  protected final SourceSection createSourceSection(ParserRuleContext ctx) {
-    return createSourceSection(ctx.getStart(), ctx.getStop());
+  protected SourceSection @Nullable [] createDocSourceSection(@Nullable DocComment node) {
+    return createDocSourceSection(source, node);
   }
 
-  protected final SourceSection createSourceSection(TerminalNode node) {
-    return createSourceSection(node.getSymbol());
-  }
-
-  protected final @Nullable SourceSection createSourceSection(@Nullable Token token) {
-    return token != null ? createSourceSection(token, token) : null;
-  }
-
-  protected final SourceSection createSourceSection(Token start, Token stop) {
-    return source.createSection(
-        start.getStartIndex(), stop.getStopIndex() - start.getStartIndex() + 1);
+  protected SourceSection createSourceSection(Span span) {
+    return source.createSection(span.charIndex(), span.length());
   }
 
   protected final SourceSection createSourceSection(
-      List<? extends ModifierContext> modifierCtxs, int symbol) {
+      List<? extends Modifier> modifiers, ModifierValue symbol) {
 
     var modifierCtx =
-        modifierCtxs.stream().filter(ctx -> ctx.t.getType() == symbol).findFirst().orElseThrow();
+        modifiers.stream().filter(mod -> mod.getValue() == symbol).findFirst().orElseThrow();
 
     return createSourceSection(modifierCtx);
   }
 
-  protected static SourceSection createSourceSection(Source source, ParserRuleContext ctx) {
-    var start = ctx.start.getStartIndex();
-    var stop = ctx.stop.getStopIndex();
-    return source.createSection(start, stop - start + 1);
+  protected static @Nullable SourceSection createSourceSection(Source source, @Nullable Node node) {
+    if (node == null) return null;
+    return createSourceSection(source, node.span());
   }
 
-  protected static @Nullable SourceSection createSourceSection(
-      Source source, @Nullable Token token) {
-    if (token == null) return null;
+  protected static SourceSection @Nullable [] createDocSourceSection(
+      Source source, @Nullable DocComment node) {
+    if (node == null) return null;
+    var spans = node.getSpans();
+    var sections = new SourceSection[spans.size()];
+    for (var i = 0; i < sections.length; i++) {
+      var span = spans.get(i);
+      sections[i] = source.createSection(span.charIndex(), span.length());
+    }
+    return sections;
+  }
 
-    var start = token.getStartIndex();
-    var stop = token.getStopIndex();
-    return source.createSection(start, stop - start + 1);
+  protected static SourceSection createSourceSection(Source source, Span span) {
+    return source.createSection(span.charIndex(), span.length());
+  }
+
+  protected SourceSection startOf(Node node) {
+    return startOf(node.span());
+  }
+
+  protected SourceSection startOf(Span span) {
+    return source.createSection(span.charIndex(), 1);
+  }
+
+  protected SourceSection shrinkLeft(SourceSection section, int length) {
+    return source.createSection(section.getCharIndex() + length, section.getCharLength() - length);
   }
 }

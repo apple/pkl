@@ -116,7 +116,7 @@ class EvaluateExpressionTest {
   fun `evaluate expression with invalid syntax`() {
     val error = assertThrows<PklException> { evaluate("foo = 1", "<>!!!") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
+    assertThat(error).hasMessageContaining("Unexpected token")
     assertThat(error).hasMessageContaining("<>!!!")
   }
 
@@ -124,7 +124,7 @@ class EvaluateExpressionTest {
   fun `evaluate non-expression`() {
     val error = assertThrows<PklException> { evaluate("bar = 2", "bar = 15") }
 
-    assertThat(error).hasMessageContaining("Mismatched input")
+    assertThat(error).hasMessageContaining("Unexpected token")
     assertThat(error).hasMessageContaining("bar = 15")
   }
 

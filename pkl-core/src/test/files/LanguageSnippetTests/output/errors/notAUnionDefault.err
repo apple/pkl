@@ -3,4 +3,4 @@ Only type unions can have a default marker (*).
 
 x | foo: *"foo"
          ^^^^^^
-at notAUnionDefault#foo (file:///$snippetsDir/input/errors/notAUnionDefault.pkl)
+at notAUnionDefault (file:///$snippetsDir/input/errors/notAUnionDefault.pkl)

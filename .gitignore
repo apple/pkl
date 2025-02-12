@@ -5,6 +5,7 @@
 .gradle/
 build/
 generated/
+testgenerated/
 
 # IntelliJ
 .idea/

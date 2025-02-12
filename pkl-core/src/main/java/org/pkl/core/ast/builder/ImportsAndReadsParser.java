@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,17 @@ import java.util.List;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.antlr.PklLexer;
-import org.pkl.core.parser.antlr.PklParser.ImportClauseContext;
-import org.pkl.core.parser.antlr.PklParser.ImportExprContext;
-import org.pkl.core.parser.antlr.PklParser.ModuleExtendsOrAmendsClauseContext;
-import org.pkl.core.parser.antlr.PklParser.ReadExprContext;
-import org.pkl.core.parser.antlr.PklParser.SingleLineStringLiteralContext;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.ast.Expr;
+import org.pkl.core.parser.ast.Expr.ImportExpr;
+import org.pkl.core.parser.ast.Expr.ReadExpr;
+import org.pkl.core.parser.ast.Expr.ReadType;
+import org.pkl.core.parser.ast.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
+import org.pkl.core.parser.ast.ExtendsOrAmendsClause.Type;
+import org.pkl.core.parser.ast.ImportClause;
+import org.pkl.core.parser.ast.StringPart.StringConstantParts;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.IoUtils;
@@ -68,7 +71,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     var importListParser = new ImportsAndReadsParser(source);
     try {
       return parser.parseModule(text).accept(importListParser);
-    } catch (LexParseException e) {
+    } catch (ParserError e) {
       var moduleName = IoUtils.inferModuleName(moduleKey);
       throw VmUtils.toVmException(e, source, moduleName);
     }
@@ -84,62 +87,63 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
   }
 
   @Override
-  public @Nullable List<Entry> visitModuleExtendsOrAmendsClause(
-      ModuleExtendsOrAmendsClauseContext ctx) {
-    var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
-    var sourceSection = createSourceSection(ctx.stringConstant());
+  public @Nullable List<Entry> visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
+    var importStr = doVisitStringConstant(decl.getUrl());
+    var sourceSection = createSourceSection(decl.getUrl());
+    assert sourceSection != null;
     return Collections.singletonList(
         new Entry(
-            true, false, ctx.EXTENDS() != null, ctx.AMENDS() != null, importStr, sourceSection));
+            true,
+            false,
+            decl.getType() == Type.EXTENDS,
+            decl.getType() == Type.AMENDS,
+            importStr,
+            sourceSection));
   }
 
   @Override
-  public List<Entry> visitImportClause(ImportClauseContext ctx) {
-    var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
-    var sourceSection = createSourceSection(ctx.stringConstant());
+  public List<Entry> visitImportClause(ImportClause imp) {
+    var importStr = doVisitStringConstant(imp.getImportStr());
+    var sourceSection = createSourceSection(imp.getImportStr());
+    assert sourceSection != null;
     return Collections.singletonList(
-        new Entry(
-            true, ctx.t.getType() == PklLexer.IMPORT_GLOB, false, false, importStr, sourceSection));
+        new Entry(true, imp.isGlob(), false, false, importStr, sourceSection));
   }
 
   @Override
-  public List<Entry> visitImportExpr(ImportExprContext ctx) {
-    var importStr = doVisitSingleLineConstantStringPart(ctx.stringConstant().ts);
-    var sourceSection = createSourceSection(ctx.stringConstant());
+  public List<Entry> visitImportExpr(ImportExpr expr) {
+    var importStr = doVisitStringConstant(expr.getImportStr());
+    var sourceSection = createSourceSection(expr.getImportStr());
+    assert sourceSection != null;
     return Collections.singletonList(
-        new Entry(
-            true, ctx.t.getType() == PklLexer.IMPORT_GLOB, false, false, importStr, sourceSection));
+        new Entry(true, expr.isGlob(), false, false, importStr, sourceSection));
   }
 
   @Override
-  public List<Entry> visitReadExpr(ReadExprContext ctx) {
-    var expr = ctx.expr();
-    if (!(expr instanceof SingleLineStringLiteralContext slCtx)) {
+  public @Nullable List<Entry> visitReadExpr(ReadExpr expr) {
+    return doVisitReadExpr(expr.getExpr(), expr.getReadType() == ReadType.GLOB);
+  }
+
+  @SuppressWarnings("DataFlowIssue")
+  public List<Entry> doVisitReadExpr(Expr expr, boolean isGlob) {
+    if (!(expr instanceof SingleLineStringLiteralExpr slStr)) {
       return Collections.emptyList();
     }
     // best-effort approach; only collect read expressions that are string constants.
-    var singleParts = slCtx.singleLineStringPart();
     String importString;
+    var singleParts = slStr.getParts();
     if (singleParts.isEmpty()) {
       importString = "";
-    } else if (singleParts.size() == 1) {
-      var ts = singleParts.get(0).ts;
-      if (!ts.isEmpty()) {
-        importString = doVisitSingleLineConstantStringPart(ts);
-      } else {
-        return Collections.emptyList();
-      }
+    } else if (singleParts.size() == 1
+        && singleParts.get(0) instanceof StringConstantParts cparts
+        && !cparts.getParts().isEmpty()) {
+      importString = doVisitStringConstant(cparts.getParts());
     } else {
       return Collections.emptyList();
     }
+
     return Collections.singletonList(
-        new Entry(
-            false,
-            ctx.t.getType() == PklLexer.READ_GLOB,
-            false,
-            false,
-            importString,
-            createSourceSection(slCtx)));
+        new Entry(false, isGlob, false, false, importString, createSourceSection(slStr)));
   }
 
   @Override
@@ -155,5 +159,10 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     ret.addAll(aggregate);
     ret.addAll(nextResult);
     return ret;
+  }
+
+  @Override
+  protected List<Entry> defaultValue() {
+    return List.of();
   }
 }
