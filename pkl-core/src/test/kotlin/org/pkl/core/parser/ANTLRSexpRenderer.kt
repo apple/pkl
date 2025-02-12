@@ -428,8 +428,8 @@ class ANTLRSexpRenderer {
     while (toCheck.isNotEmpty()) {
       val typ = toCheck.removeAt(0)
       if (typ is UnionTypeContext) {
-        toCheck.addFirst(typ.r)
-        toCheck.addFirst(typ.l)
+        toCheck.add(0, typ.r)
+        toCheck.add(0, typ.l)
       } else {
         types += typ
       }
