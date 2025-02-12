@@ -47,7 +47,7 @@ class DownloadPackageCommand : BaseCommand(name = "download-package") {
   private val projectOptions by ProjectOptions()
 
   private val packageUris: List<PackageUri> by
-    argument("<package>", "The package URIs to download")
+    argument("package", "The package URIs to download")
       .convert { PackageUri(it) }
       .multiple(required = true)
 

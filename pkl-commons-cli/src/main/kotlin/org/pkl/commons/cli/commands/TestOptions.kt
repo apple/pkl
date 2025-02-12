@@ -26,7 +26,7 @@ class TestOptions : OptionGroup() {
   private val junitReportDir: Path? by
     option(
         names = arrayOf("--junit-reports"),
-        metavar = "<dir>",
+        metavar = "dir",
         help = "Directory where to store JUnit reports.",
       )
       .path()
