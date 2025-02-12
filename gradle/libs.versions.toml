@@ -1,8 +1,8 @@
 [versions] # ordered alphabetically
 antlr = "4.+"
-assertj = "3.+" 
+assertj = "3.+"
 checksumPlugin = "1.4.0"
-clikt = "3.+"
+clikt = "5.+"
 commonMark = "0.+"
 downloadTaskPlugin = "5.6.0"
 geantyref = "1.+"
@@ -53,6 +53,7 @@ antlr = { group = "com.tunnelvisionlabs", name = "antlr4", version.ref = "antlr"
 antlrRuntime = { group = "com.tunnelvisionlabs", name = "antlr4-runtime", version.ref = "antlr" }
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
+cliktMarkdown = { group = "com.github.ajalt.clikt", name = "clikt-markdown", version.ref = "clikt" }
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }

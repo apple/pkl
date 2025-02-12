@@ -1,8 +1,16 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.4=compileClasspath
-com.github.ajalt.clikt:clikt:3.5.4=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.clikt:clikt-core-jvm:5.0.3=compileClasspath
+com.github.ajalt.clikt:clikt-core:5.0.3=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.clikt:clikt-jvm:5.0.3=compileClasspath
+com.github.ajalt.clikt:clikt:5.0.3=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.colormath:colormath-jvm:3.6.0=compileClasspath
+com.github.ajalt.colormath:colormath:3.6.0=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.mordant:mordant-core-jvm:3.0.1=compileClasspath
+com.github.ajalt.mordant:mordant-core:3.0.1=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.mordant:mordant-jvm:3.0.1=compileClasspath
+com.github.ajalt.mordant:mordant:3.0.1=compileClasspath,compileOnlyDependenciesMetadata
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testJdk17CompileClasspath,testJdk17ImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.27.3=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

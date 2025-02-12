@@ -1,11 +1,26 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.4=pklCodegenKotlin
-com.github.ajalt.clikt:clikt:3.5.4=pklCodegenKotlin
+com.github.ajalt.clikt:clikt-core-jvm:5.0.3=pklCodegenKotlin
+com.github.ajalt.clikt:clikt-core:5.0.3=pklCodegenKotlin
+com.github.ajalt.clikt:clikt-jvm:5.0.3=pklCodegenKotlin
+com.github.ajalt.clikt:clikt:5.0.3=pklCodegenKotlin
+com.github.ajalt.colormath:colormath-jvm:3.6.0=pklCodegenKotlin
+com.github.ajalt.colormath:colormath:3.6.0=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-core-jvm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-core:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-ffm-jvm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-ffm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-graal-ffi-jvm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-graal-ffi:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-jna-jvm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm-jna:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant-jvm:3.0.1=pklCodegenKotlin
+com.github.ajalt.mordant:mordant:3.0.1=pklCodegenKotlin
 com.squareup:kotlinpoet:1.6.0=pklCodegenKotlin
 io.leangen.geantyref:geantyref:1.3.16=pklConfigJava,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+net.java.dev.jna:jna:5.14.0=pklCodegenKotlin
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testJdk17CompileClasspath,testJdk17ImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.27.3=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.graalvm.polyglot:polyglot:24.1.2=pklCodegenKotlin,pklConfigJava,runtimeClasspath,testRuntimeClasspath
