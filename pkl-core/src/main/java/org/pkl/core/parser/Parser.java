@@ -996,13 +996,11 @@ public class Parser {
           case FALSE -> new BoolLiteralExpr(false, next().span);
           case INT, HEX, BIN, OCT -> {
             var tk = next();
-            var text = remove_(tk.text(lexer));
-            yield new IntLiteralExpr(text, tk.span);
+            yield new IntLiteralExpr(tk.text(lexer), tk.span);
           }
           case FLOAT -> {
             var tk = next();
-            var text = remove_(tk.text(lexer));
-            yield new FloatLiteralExpr(text, tk.span);
+            yield new FloatLiteralExpr(tk.text(lexer), tk.span);
           }
           case STRING_START, STRING_MULTI_START -> {
             var start = next();
@@ -1440,7 +1438,7 @@ public class Parser {
       throw parserError("unexpectedToken", _lookahead.text(lexer), "identifier");
     }
     var tk = next();
-    var text = removeBackticks(tk.text(lexer));
+    var text = tk.text(lexer);
     return new Identifier(text, tk.span);
   }
 
@@ -1617,24 +1615,6 @@ public class Parser {
       throw new ParserError(
           ErrorMessages.create("wrongHeaders", messageArg), header.span(spanLookahead));
     }
-  }
-
-  private String remove_(String number) {
-    var builder = new StringBuilder(number.length());
-    for (var i = 0; i < number.length(); i++) {
-      var ch = number.charAt(i);
-      if (ch == '_') continue;
-      builder.append(ch);
-    }
-    return builder.toString();
-  }
-
-  private String removeBackticks(String text) {
-    if (!text.isEmpty() && text.charAt(0) == '`') {
-      // lexer makes sure there's a ` at the end
-      return text.substring(1, text.length() - 1);
-    }
-    return text;
   }
 
   private record FullToken(

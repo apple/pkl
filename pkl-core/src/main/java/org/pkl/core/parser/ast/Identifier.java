@@ -18,7 +18,6 @@ package org.pkl.core.parser.ast;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.util.Nullable;
 
 public final class Identifier extends AbstractNode {
   private final String value;
@@ -29,12 +28,24 @@ public final class Identifier extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitIdentifier(this);
   }
 
   public String getValue() {
+    return removeBackticks(value);
+  }
+
+  public String getRawValue() {
     return value;
+  }
+
+  private static String removeBackticks(String text) {
+    if (!text.isEmpty() && text.charAt(0) == '`') {
+      // lexer makes sure there's a ` at the end
+      return text.substring(1, text.length() - 1);
+    }
+    return text;
   }
 
   @Override

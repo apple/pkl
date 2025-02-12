@@ -531,7 +531,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public IntLiteralNode visitIntLiteralExpr(IntLiteralExpr expr) {
     var section = createSourceSection(expr);
-    var text = expr.getNumber();
+    var text = remove_(expr.getNumber());
 
     var radix = 10;
     if (text.startsWith("0x") || text.startsWith("0b") || text.startsWith("0o")) {
@@ -563,7 +563,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public FloatLiteralNode visitFloatLiteralExpr(FloatLiteralExpr expr) {
     var section = createSourceSection(expr);
-    var text = expr.getNumber();
+    var text = remove_(expr.getNumber());
     // relies on grammar rule nesting depth, but a breakage won't go unnoticed by tests
     if (expr.parent() instanceof UnaryMinusExpr) {
       // handle negation here for consistency with visitIntegerLiteral
@@ -577,6 +577,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     } catch (NumberFormatException e) {
       throw exceptionBuilder().evalError("floatTooLarge", text).withSourceSection(section).build();
     }
+  }
+
+  private static String remove_(String number) {
+    var builder = new StringBuilder(number.length());
+    for (var i = 0; i < number.length(); i++) {
+      var ch = number.charAt(i);
+      if (ch == '_') continue;
+      builder.append(ch);
+    }
+    return builder.toString();
   }
 
   @Override
