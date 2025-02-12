@@ -31,7 +31,7 @@ sourceSets { test { java { srcDir(file("testgenerated/antlr")) } } }
 
 idea {
   module {
-    // mark src/main/antlr as source dir
+    // mark src/test/antlr as source dir
     // mark generated/antlr as generated source dir
     // mark generated/truffle as generated source dir
     sourceDirs = sourceDirs + files("generated/truffle")
@@ -93,29 +93,25 @@ publishing {
   }
 }
 
-tasks.generateGrammarSource {
+tasks.generateTestGrammarSource {
   maxHeapSize = "64m"
 
   // generate only visitor
   arguments = arguments + listOf("-visitor", "-no-listener")
 
-  source = fileTree("src/test/antlr") { include("*.g4") }
-
   // Due to https://github.com/antlr/antlr4/issues/2260,
-  // we can't put .g4 files into src/main/antlr/org/pkl/core/parser/antlr.
-  // Instead, we put .g4 files into src/main/antlr, adapt output dir below,
+  // we can't put .g4 files into src/test/antlr/org/pkl/core/parser/antlr.
+  // Instead, we put .g4 files into src/test/antlr, adapt output dir below,
   // and use @header directives in .g4 files (instead of setting `-package` argument here)
   // and task makeIntelliJAntlrPluginHappy to fix up the IDE story.
   outputDirectory = file("testgenerated/antlr/org/pkl/core/parser/antlr")
 }
 
-tasks.compileJava { dependsOn(tasks.generateGrammarSource) }
-
-tasks.sourcesJar { dependsOn(tasks.generateGrammarSource) }
-
-tasks.generateTestGrammarSource { enabled = false }
+tasks.generateGrammarSource { enabled = false }
 
 tasks.named("generateGeneratorGrammarSource") { enabled = false }
+
+tasks.compileTestKotlin { dependsOn(tasks.generateTestGrammarSource) }
 
 // Satisfy expectations of IntelliJ ANTLR plugin,
 // which can't otherwise cope with our ANTLR setup.
@@ -252,7 +248,7 @@ tasks.clean {
 spotless {
   antlr4 {
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
-    target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
+    target(files("src/test/antlr/PklParser.g4", "src/test/antlr/PklLexer.g4"))
   }
 }
 
