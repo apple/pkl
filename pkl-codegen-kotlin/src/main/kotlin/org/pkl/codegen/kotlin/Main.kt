@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.kotlin
 
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
@@ -34,11 +35,8 @@ internal fun main(args: Array<String>) {
   cliMain { PklKotlinCodegenCommand().main(args) }
 }
 
-class PklKotlinCodegenCommand :
-  ModulesCommand(
-    name = "pkl-codegen-kotlin",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
+  override val helpLink = Release.current().documentation().homepage()
 
   private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 

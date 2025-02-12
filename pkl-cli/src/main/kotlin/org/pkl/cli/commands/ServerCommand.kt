@@ -16,15 +16,15 @@
 package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import org.pkl.cli.CliServer
 import org.pkl.commons.cli.CliBaseOptions
 
-class ServerCommand :
-  CliktCommand(
-    name = "server",
-    help = "Run as a server that communicates over standard input/output",
-    epilog = "For more information, visit $helpLink",
-  ) {
+class ServerCommand : CliktCommand(name = "server") {
+  override fun help(context: Context) =
+    "Run as a server that communicates over standard input/output"
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
   override fun run() {
     CliServer(CliBaseOptions()).run()

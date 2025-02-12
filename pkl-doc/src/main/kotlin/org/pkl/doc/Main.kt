@@ -37,8 +37,8 @@ internal fun main(args: Array<String>) {
   cliMain { DocCommand().main(args) }
 }
 
-class DocCommand :
-  BaseCommand(name = "pkldoc", helpLink = Release.current().documentation().homepage()) {
+class DocCommand : BaseCommand(name = "pkldoc") {
+  override val helpLink = Release.current().documentation().homepage()
 
   private val modules: List<URI> by
     argument(

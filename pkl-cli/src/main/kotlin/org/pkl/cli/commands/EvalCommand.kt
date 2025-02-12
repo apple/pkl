@@ -24,8 +24,9 @@ import org.pkl.cli.CliEvaluatorOptions
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
-class EvalCommand :
-  ModulesCommand(name = "eval", help = "Render pkl module(s)", helpLink = helpLink) {
+class EvalCommand : ModulesCommand(name = "eval") {
+  override val helpString = "Render pkl module(s)"
+
   private val outputPath: String? by
     option(
         names = arrayOf("-o", "--output-path"),

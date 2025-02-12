@@ -21,8 +21,7 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import java.net.URI
 
-abstract class ModulesCommand(name: String, helpLink: String, help: String = "") :
-  BaseCommand(name = name, help = help, helpLink = helpLink) {
+abstract class ModulesCommand(name: String) : BaseCommand(name = name) {
   open val modules: List<URI> by
     argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }

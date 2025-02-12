@@ -16,6 +16,8 @@
 package org.pkl.cli
 
 import com.github.ajalt.clikt.core.BadParameterValue
+import com.github.ajalt.clikt.core.CliktError
+import com.github.ajalt.clikt.core.parse
 import java.nio.file.Path
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createSymbolicLinkPointingTo
@@ -43,17 +45,20 @@ class CliMainTest {
           arrayOf("eval", "--output-path", "path1", "--output-path", "path2", inputFile)
         )
       }
-      .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
+      .hasMessage("Option cannot be repeated")
 
     assertThatCode {
         rootCmd.parse(arrayOf("eval", "-o", "path1", "--output-path", "path2", inputFile))
       }
-      .hasMessage("Invalid value for \"--output-path\": Option cannot be repeated")
+      .hasMessage("Option cannot be repeated")
   }
 
   @Test
   fun `eval requires at least one file`() {
-    assertThatCode { rootCmd.parse(arrayOf("eval")) }.hasMessage("""Missing argument "<modules>"""")
+    assertThatCode { rootCmd.parse(arrayOf("eval")) }
+      .isInstanceOf(CliktError::class.java)
+      .extracting("paramName")
+      .isEqualTo("modules")
   }
 
   // Can't reliably create symlinks on Windows.
@@ -82,8 +87,7 @@ class CliMainTest {
   fun `cannot have multiple output with -o or -x`(@TempDir tempDir: Path) {
     val testIn = makeInput(tempDir)
     val testOut = tempDir.resolve("test").toString()
-    val error =
-      """Invalid value for "--multiple-file-output-path": Option is mutually exclusive with -o, --output-path and -x, --expression."""
+    val error = """Option is mutually exclusive with -o, --output-path and -x, --expression."""
 
     assertThatCode { rootCmd.parse(arrayOf("eval", "-m", testOut, "-x", "x", testIn)) }
       .hasMessage(error)

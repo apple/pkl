@@ -43,7 +43,7 @@ fun <EachT : Any, ValueT> NullableOption<EachT, ValueT>.splitAll(
     transformEach = { it },
     transformAll = { it.flatten().ifEmpty { default } },
     validator = {},
-    nvalues = 1,
-    valueSplit = Regex.fromLiteral(separator),
+    nvalues = 1..1,
+    valueSplit = { it.split(Regex.fromLiteral(separator)) },
   )
 }

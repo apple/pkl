@@ -27,25 +27,23 @@ import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.single
 import org.pkl.core.packages.PackageUri
 
-class DownloadPackageCommand :
-  BaseCommand(
-    name = "download-package",
-    helpLink = helpLink,
-    help =
-      """
-    Download package(s)
-    
-    This command downloads the specified packages to the cache directory.
-    If the package already exists in the cache directory, this command is a no-op.
-    
-    Examples:
-    ```
-    # Download two packages
-    $ pkl download-package package://example.com/package1@1.0.0 package://example.com/package2@1.0.0 
-    ```
+class DownloadPackageCommand : BaseCommand(name = "download-package") {
+  override val helpString =
+    """
+  Download package(s)
+  
+  This command downloads the specified packages to the cache directory.
+  If the package already exists in the cache directory, this command is a no-op.
+  
+  Examples:
+  
+  ```
+  # Download two packages
+  $ pkl download-package package://example.com/package1@1.0.0 package://example.com/package2@1.0.0 
+  ```
   """
-        .trimIndent(),
-  ) {
+      .trimIndent()
+
   private val projectOptions by ProjectOptions()
 
   private val packageUris: List<PackageUri> by

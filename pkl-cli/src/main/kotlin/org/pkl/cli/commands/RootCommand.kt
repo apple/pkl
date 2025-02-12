@@ -15,25 +15,28 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.core.installMordantMarkdown
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.versionOption
 import org.pkl.core.Release
 
 internal val helpLink = "${Release.current().documentation.homepage}pkl-cli/index.html#usage"
 
-class RootCommand :
-  NoOpCliktCommand(
-    name = "pkl",
-    printHelpOnEmptyArgs = true,
-    epilog = "For more information, visit $helpLink",
-  ) {
+class RootCommand : NoOpCliktCommand(name = "pkl") {
+  override val printHelpOnEmptyArgs = true
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+
   init {
     versionOption(Release.current().versionInfo, names = setOf("-v", "--version"), message = { it })
 
+    installMordantMarkdown()
+
     context {
-      correctionSuggestor = { given, possible ->
+      suggestTypoCorrection = { given, possible ->
         if (!given.startsWith("-")) {
           registeredSubcommands().map { it.commandName }
         } else possible

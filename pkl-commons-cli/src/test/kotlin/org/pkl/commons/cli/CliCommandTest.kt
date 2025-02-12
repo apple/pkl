@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli
 
+import com.github.ajalt.clikt.core.parse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.commons.cli.commands.BaseCommand
@@ -30,7 +31,7 @@ class CliCommandTest {
   }
 
   private val cmd =
-    object : BaseCommand("test", "") {
+    object : BaseCommand("test") {
       override fun run() = Unit
     }
 

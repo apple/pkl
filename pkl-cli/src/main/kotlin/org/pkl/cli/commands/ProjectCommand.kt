@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -33,39 +34,35 @@ import org.pkl.commons.cli.commands.single
 
 private const val NEWLINE = '\u0085'
 
-class ProjectCommand :
-  NoOpCliktCommand(
-    name = "project",
-    help = "Run commands related to projects",
-    epilog = "For more information, visit $helpLink",
-  ) {
+class ProjectCommand : NoOpCliktCommand(name = "project") {
+  override fun help(context: Context) = "Run commands related to projects"
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+
   init {
     subcommands(ResolveCommand(), PackageCommand())
   }
 }
 
-class ResolveCommand :
-  BaseCommand(
-    name = "resolve",
-    helpLink = helpLink,
-    help =
-      """
-    Resolve dependencies for project(s)
-    
-    This command takes the `dependencies` of `PklProject`s, and writes the
-    resolved versions to `PklProject.deps.json` files.
-    
-    Examples:
+class ResolveCommand : BaseCommand(name = "resolve") {
+  override val helpString =
+    """
+  Resolve dependencies for project(s)
 
-    ```
-    # Search the current working directory for a project, and resolve its dependencies.
-    $ pkl project resolve
+  This command takes the `dependencies` of `PklProject`s, and writes the
+  resolved versions to `PklProject.deps.json` files.
 
-    # Resolve dependencies for all projects within the `packages/` directory.
-    $ pkl project resolve packages/*/
-    ```
-    """,
-  ) {
+  Examples:
+
+  ```
+  # Search the current working directory for a project, and resolve its dependencies.
+  $ pkl project resolve
+
+  # Resolve dependencies for all projects within the `packages/` directory.
+  $ pkl project resolve packages/*/
+  ```
+  """
+
   private val projectDirs: List<Path> by
     argument("<dir>", "The project directories to resolve dependencies for").path().multiple()
 
@@ -74,44 +71,41 @@ class ResolveCommand :
   }
 }
 
-class PackageCommand :
-  BaseCommand(
-    name = "package",
-    helpLink = helpLink,
-    help =
-      """
-      Verify package(s), and prepare package artifacts to be published.
+class PackageCommand : BaseCommand(name = "package") {
+  override val helpString =
+    """
+  Verify package(s), and prepare package artifacts to be published.
 
-      This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
-      Additionally, it verifies that all imports resolve to paths that are local to the project.
+  This command runs a project's api tests, as defined by `apiTests` in `PklProject`.
+  Additionally, it verifies that all imports resolve to paths that are local to the project.
 
-      Finally, this command writes the following artifacts into the output directory specified by the output path.
+  Finally, this command writes the following artifacts into the output directory specified by the output path.
 
-        - `name@version` - dependency metadata$NEWLINE
-        - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
-        - `name@version.zip` - package archive$NEWLINE
-        - `name@version.zip.sha256` - package archive's SHA-256 checksum
+    - `name@version` - dependency metadata$NEWLINE
+    - `name@version.sha256` - dependency metadata's SHA-256 checksum$NEWLINE
+    - `name@version.zip` - package archive$NEWLINE
+    - `name@version.zip.sha256` - package archive's SHA-256 checksum
 
-      The output path option accepts the following placeholders:
+  The output path option accepts the following placeholders:
 
-        - %{name}: The display name of the package$NEWLINE
-        - %{version}: The version of the package
+    - %{name}: The display name of the package$NEWLINE
+    - %{version}: The version of the package
 
-      If a project has local project dependencies, the depended upon project directories must also
-      be included as arguments to this command.
+  If a project has local project dependencies, the depended upon project directories must also
+  be included as arguments to this command.
 
-      Examples:
+  Examples:
 
-      ```
-      # Search the current working directory for a project, and package it.
-      $ pkl project package
+  ```
+  # Search the current working directory for a project, and package it.
+  $ pkl project package
 
-      # Package all projects within the `packages/` directory.
-      $ pkl project package packages/*/
-      ```
-      """
-        .trimIndent(),
-  ) {
+  # Package all projects within the `packages/` directory.
+  $ pkl project package packages/*/
+  ```
+  """
+      .trimIndent()
+
   private val testOptions by TestOptions()
 
   private val projectDirs: List<Path> by

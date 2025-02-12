@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.java
 
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
@@ -31,11 +32,8 @@ internal fun main(args: Array<String>) {
   cliMain { PklJavaCodegenCommand().main(args) }
 }
 
-class PklJavaCodegenCommand :
-  ModulesCommand(
-    name = "pkl-codegen-java",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java") {
+  override val helpLink = Release.current().documentation().homepage()
 
   private val defaults = CliJavaCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 

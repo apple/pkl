@@ -15,6 +15,7 @@
  */
 package org.pkl.doc
 
+import com.github.ajalt.clikt.core.parse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
