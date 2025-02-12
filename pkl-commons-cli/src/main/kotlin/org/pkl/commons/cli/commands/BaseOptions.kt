@@ -103,7 +103,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("--allowed-modules"),
         help = "URI patterns that determine which modules can be loaded and evaluated.",
       )
-      .convert("pattern1,pattern2") { Pattern.compile(it) }
+      .convert("<pattern1,pattern2>") { Pattern.compile(it) }
       .splitAll()
 
   val allowedResources: List<Pattern> by
@@ -111,7 +111,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("--allowed-resources"),
         help = "URI patterns that determine which external resources can be read.",
       )
-      .convert("pattern1,pattern2") { Pattern.compile(it) }
+      .convert("<pattern1,pattern2>") { Pattern.compile(it) }
       .splitAll()
 
   val rootDir: Path? by
@@ -140,7 +140,7 @@ class BaseOptions : OptionGroup() {
   val properties: Map<String, String> by
     option(
         names = arrayOf("-p", "--property"),
-        metavar = "name=value",
+        metavar = "<name=value>",
         help = "External property to set (repeatable).",
       )
       .associateProps()
@@ -148,7 +148,7 @@ class BaseOptions : OptionGroup() {
   val color: Color by
     option(
         names = arrayOf("--color"),
-        metavar = "when",
+        metavar = "<when>",
         help =
           "Whether to format messages in ANSI color. Possible values of <when> are 'never', 'auto', and 'always'.",
       )
@@ -171,7 +171,7 @@ class BaseOptions : OptionGroup() {
   val envVars: Map<String, String> by
     option(
         names = arrayOf("-e", "--env-var"),
-        metavar = "name=value",
+        metavar = "<name=value>",
         help = "Environment variable to set (repeatable).",
       )
       .associate()
@@ -179,7 +179,7 @@ class BaseOptions : OptionGroup() {
   val modulePath: List<Path> by
     option(
         names = arrayOf("--module-path"),
-        metavar = "path1${File.pathSeparator}path2",
+        metavar = "<path1${File.pathSeparator}path2>",
         help =
           "Directories, ZIP archives, or JAR archives to search when resolving `modulepath:` URIs.",
       )
@@ -194,7 +194,7 @@ class BaseOptions : OptionGroup() {
   val timeout: Duration? by
     option(
         names = arrayOf("-t", "--timeout"),
-        metavar = "number",
+        metavar = "<number>",
         help = "Duration, in seconds, after which evaluation of a source module will be timed out.",
       )
       .single()
@@ -204,7 +204,7 @@ class BaseOptions : OptionGroup() {
   val caCertificates: List<Path> by
     option(
         names = arrayOf("--ca-certificates"),
-        metavar = "path",
+        metavar = "<path>",
         help = "Only trust CA certificates from the provided file(s).",
       )
       .path()
@@ -213,7 +213,7 @@ class BaseOptions : OptionGroup() {
   val proxy: URI? by
     option(
         names = arrayOf("--http-proxy"),
-        metavar = "address",
+        metavar = "<address>",
         help = "Proxy to use for HTTP(S) connections.",
       )
       .single()
@@ -229,7 +229,7 @@ class BaseOptions : OptionGroup() {
   val noProxy: List<String>? by
     option(
         names = arrayOf("--http-no-proxy"),
-        metavar = "pattern1,pattern",
+        metavar = "<pattern1,pattern2>",
         help = "Hostnames that should not be connected to via a proxy.",
       )
       .single()
@@ -238,7 +238,7 @@ class BaseOptions : OptionGroup() {
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
-        metavar = "<scheme>='<executable> [<arguments>]'",
+        metavar = "<scheme>='<executable>[ <arguments>]'",
         help = "External reader registrations for module URI schemes",
       )
       .parseExternalReader("=")
@@ -248,7 +248,7 @@ class BaseOptions : OptionGroup() {
   val externalResourceReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-resource-reader"),
-        metavar = "<scheme>='<executable> [<arguments>]'",
+        metavar = "<scheme>='<executable>[ <arguments>]'",
         help = "External reader registrations for resource URI schemes",
       )
       .parseExternalReader("=")

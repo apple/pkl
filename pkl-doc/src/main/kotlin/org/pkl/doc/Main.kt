@@ -17,7 +17,6 @@
 
 package org.pkl.doc
 
-import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
@@ -43,7 +42,7 @@ class DocCommand : BaseCommand(name = "pkldoc") {
 
   private val modules: List<URI> by
     argument(
-        name = "modules",
+        name = "<modules>",
         help = "Module paths/uris, or package uris to generate documentation for",
       )
       .convert { parseModuleName(it) }
@@ -52,7 +51,7 @@ class DocCommand : BaseCommand(name = "pkldoc") {
   private val outputDir: Path by
     option(
         names = arrayOf("-o", "--output-dir"),
-        metavar = "directory",
+        metavar = "<directory>",
         help = "Directory where generated documentation is placed.",
       )
       .path()

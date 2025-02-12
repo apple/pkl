@@ -30,7 +30,7 @@ class EvalCommand : ModulesCommand(name = "eval") {
   private val outputPath: String? by
     option(
         names = arrayOf("-o", "--output-path"),
-        metavar = "path",
+        metavar = "<path>",
         help = "File path where the output file is placed.",
       )
       .single()
@@ -38,7 +38,7 @@ class EvalCommand : ModulesCommand(name = "eval") {
   private val moduleOutputSeparator: String by
     option(
         names = arrayOf("--module-output-separator"),
-        metavar = "string",
+        metavar = "<string>",
         help =
           "Separator to use when multiple module outputs are written to the same file. (default: ---)",
       )
@@ -48,7 +48,7 @@ class EvalCommand : ModulesCommand(name = "eval") {
   private val expression: String? by
     option(
         names = arrayOf("-x", "--expression"),
-        metavar = "expression",
+        metavar = "<expression>",
         help = "Expression to be evaluated within the module.",
       )
       .single()
@@ -56,7 +56,7 @@ class EvalCommand : ModulesCommand(name = "eval") {
   private val multipleFileOutputPath: String? by
     option(
         names = arrayOf("-m", "--multiple-file-output-path"),
-        metavar = "path",
+        metavar = "<path>",
         help = "Directory where a module's multiple file output is placed.",
       )
       .single()
