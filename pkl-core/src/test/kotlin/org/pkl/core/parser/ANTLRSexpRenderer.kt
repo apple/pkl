@@ -426,7 +426,7 @@ class ANTLRSexpRenderer {
     val types = mutableListOf<TypeContext>()
     val toCheck = mutableListOf(type.l, type.r)
     while (toCheck.isNotEmpty()) {
-      val typ = toCheck.removeFirst()
+      val typ = toCheck.removeAt(0)
       if (typ is UnionTypeContext) {
         toCheck.addFirst(typ.r)
         toCheck.addFirst(typ.l)
