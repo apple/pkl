@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `,` separator.
+Unexpected token `String`. Expected `,` or `)`.
 
 x | f: (String, Int String) -> String
-                   ^
-at missingFunctionTypeParameterListSeparator#f (file:///$snippetsDir/input/errors/delimiters/missingFunctionTypeParameterListSeparator.pkl)
+                    ^^^^^^
+at missingFunctionTypeParameterListSeparator (file:///$snippetsDir/input/errors/delimiters/missingFunctionTypeParameterListSeparator.pkl)

@@ -2036,6 +2036,29 @@ greeting2 = greetPigeon(parrot)  // <4>
 <3> Call instance method on `pigeon`.
 <4> Call module method (on `this`).
 
+Like other object-oriented languages, methods defined on extended classes and modules may be overridden.
+The parent type's method may be called via the `super` keyword.
+
+[source%parsed,{pkl}]
+----
+open class Bird {
+  name: String
+  function canEat(food: String): Boolean = food == "seeds"
+}
+
+class InsectivorousBird extends Bird {
+  function canEat(food: String): Boolean = super.canEat(food) || food == "insects" // <1>
+}
+
+swallow = new InsectivorousBird { name = "Swallow" }
+
+canEatSeeds = swallow.canEat("seeds") // <2>
+canEatMeat = swallow.canEat("insects")  // <3>
+----
+<1> Call parent class instance method (on `this`).
+<2> result: `true`
+<3> result: `true`
+
 NOTE: Methods do not support named parameters or default parameter values.
 The xref:blog:ROOT:class-as-a-function.adoc[Class-as-a-function] pattern may be a suitable replacement.
 
@@ -3196,7 +3219,6 @@ This section discusses language features that are generally more relevant to tem
 <<glob-patterns,Glob Patterns>> +
 <<doc-comments,Doc Comments>> +
 <<name-resolution,Name Resolution>> +
-<<grammar-definition,Grammar Definition>> +
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>> +
@@ -3539,9 +3561,7 @@ res6 = list.map((n) -> n * 3) // <6>
 [[sets]]
 === Sets
 
-A value of type link:{uri-stdlib-Set}[Set] is an ordered collection of unique _elements_.
-
-A set's elements are eagerly evaluated.
+A value of type link:{uri-stdlib-Set}[Set] is a collection of unique _elements_.
 
 Sets are constructed with the `Set()` methodfootnote:soft-keyword[]:
 
@@ -3556,6 +3576,20 @@ res4 = Set(1, "x", 5.min, List(1, 2, 3)) // <4>
 <2> result: set of length 3
 <3> result: same set of length 3
 <4> result: heterogeneous set that contains a list as its last element
+
+Sets retain the order of elements when constructed, which impacts how they are iterated over.
+However, this order is not considered when determining equality of two sets.
+
+[source%tested,{pkl}]
+----
+res1 = Set(4, 3, 2)
+res2 = res1.first // <1>
+res3 = res1.toListing() // <2>
+res4 = Set(2, 3, 4) == res1 // <3>
+----
+<1> result: `4`
+<2> result: `new Listing { 4; 3; 2 }`
+<3> result: `true`
 
 To compute the union of sets, use the `+` operator:
 
@@ -3584,7 +3618,7 @@ res4 = set.intersect(Set(3, 9, 2)) // <4>
 [[maps]]
 === Maps
 
-A value of type link:{uri-stdlib-Map}[Map] is an ordered collection of _values_ indexed by _key_.
+A value of type link:{uri-stdlib-Map}[Map] is a collection of _values_ indexed by _key_.
 
 A map's key-value pairs are called its _entries_.
 Keys and values are eagerly evaluated.
@@ -3618,6 +3652,20 @@ Any Pkl value can be used as a map key:
 ----
 Map(new Dynamic { name = "Pigeon" }, 10.gb)
 ----
+
+Maps retain the order of entries when constructed, which impacts how they are iterated over.
+However, this order is not considered when determining equality of two maps.
+
+[source%tested,{pkl}]
+----
+res1 = Map(2, "hello", 1, "world")
+res2 = res1.entries.first // <1>
+res3 = res1.toMapping() // <2>
+res4 = res1 == Map(1, "world", 2, "hello") // <3>
+----
+<1> result: `Pair(2, "hello")`
+<2> result: `new Mapping { [2] = "hello"; [1] = "world" }`
+<3> result: `true`
 
 To merge maps, use the `+` operator:
 
@@ -5247,11 +5295,6 @@ For example, the prototype chain of value `42` contains, now listed from top to 
 . The prototype of class `Int`.
 
 A prototype chain never contains a non-object value, such as `42`.
-
-[[grammar-definition]]
-=== Grammar Definition
-
-Pkl's link:{uri-antlr4}[ANTLR 4] grammar is defined in link:{uri-github-PklLexer}[PklLexer.g4] and link:{uri-github-PklParser}[PklParser.g4].
 
 [[reserved-keywords]]
 === Reserved keywords

@@ -24,7 +24,6 @@ dependencies {
   implementation(projects.pklCore)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
-  implementation(libs.antlrRuntime)
 
   testImplementation(projects.pklCommonsTest)
 }

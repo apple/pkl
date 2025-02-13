@@ -3,4 +3,4 @@ Missing `"#` delimiter.
 
 x | res1 = #"abc
                 ^
-at missingRawStringDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingRawStringDelimiter.pkl)
+at missingRawStringDelimiter (file:///$snippetsDir/input/errors/delimiters/missingRawStringDelimiter.pkl)

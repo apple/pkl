@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
         cliOptions.allowedModules ?: SecurityManagers.defaultAllowedModules,
         cliOptions.allowedResources ?: SecurityManagers.defaultAllowedResources,
         SecurityManagers.defaultTrustLevels,
-        cliOptions.normalizedRootDir
+        cliOptions.normalizedRootDir,
       )
     val envVars = cliOptions.environmentVariables ?: System.getenv()
     val stackFrameTransformer =
@@ -99,7 +99,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       securityManager,
       cliOptions.timeout,
       stackFrameTransformer,
-      envVars
+      envVars,
     )
   }
 
@@ -110,15 +110,15 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   protected val allowedModules: List<Pattern> by lazy {
     cliOptions.allowedModules
       ?: evaluatorSettings?.allowedModules
-        ?: (SecurityManagers.defaultAllowedModules +
-        externalModuleReaders.keys.map { Pattern.compile("$it:") }.toList())
+      ?: (SecurityManagers.defaultAllowedModules +
+        externalModuleReaders.keys.map { Pattern.compile(Pattern.quote("$it:")) }.toList())
   }
 
   protected val allowedResources: List<Pattern> by lazy {
     cliOptions.allowedResources
       ?: evaluatorSettings?.allowedResources
-        ?: (SecurityManagers.defaultAllowedResources +
-        externalResourceReaders.keys.map { Pattern.compile("$it:") }.toList())
+      ?: (SecurityManagers.defaultAllowedResources +
+        externalResourceReaders.keys.map { Pattern.compile(Pattern.quote("$it:")) }.toList())
   }
 
   protected val rootDir: Path? by lazy {
@@ -140,7 +140,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
         ?: evaluatorSettings?.let { settings ->
           if (settings.noCache == true) null else settings.moduleCacheDir
         }
-          ?: IoUtils.getDefaultModuleCacheDir()
+        ?: IoUtils.getDefaultModuleCacheDir()
   }
 
   protected val modulePath: List<Path> by lazy {
@@ -160,7 +160,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       allowedModules,
       allowedResources,
       SecurityManagers.defaultTrustLevels,
-      rootDir
+      rootDir,
     )
   }
 
@@ -168,22 +168,24 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   private val proxyAddress by lazy {
     cliOptions.httpProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+      ?: project?.evaluatorSettings?.http?.proxy?.address
+      ?: settings.http?.proxy?.address
   }
 
   private val noProxy by lazy {
     cliOptions.httpNoProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.noProxy ?: settings.http?.proxy?.noProxy
+      ?: project?.evaluatorSettings?.http?.proxy?.noProxy
+      ?: settings.http?.proxy?.noProxy
   }
 
   private val externalModuleReaders by lazy {
-    (project?.evaluatorSettings?.externalModuleReaders
-      ?: emptyMap()) + cliOptions.externalModuleReaders
+    (project?.evaluatorSettings?.externalModuleReaders ?: emptyMap()) +
+      cliOptions.externalModuleReaders
   }
 
   private val externalResourceReaders by lazy {
-    (project?.evaluatorSettings?.externalResourceReaders
-      ?: emptyMap()) + cliOptions.externalResourceReaders
+    (project?.evaluatorSettings?.externalResourceReaders ?: emptyMap()) +
+      cliOptions.externalResourceReaders
   }
 
   private val externalProcesses by lazy {

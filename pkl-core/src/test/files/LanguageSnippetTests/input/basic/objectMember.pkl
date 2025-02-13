@@ -11,6 +11,6 @@ res6{1;2}
 res7{foo = 1}
 res8{foo = 1 bar = 2}
 res9{nested{1}}
-res10{["foo"] = 1 ["bar"] = 2}
+res10{["foo"] = 1; ["bar"] = 2}
 res11 { new {} new {} new {} }
 res12 {1.2;.3;.4;.5}

@@ -3,4 +3,4 @@ Missing `"` delimiter.
 
 x | res1 = "
             ^
-at missingEmptyStringDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingEmptyStringDelimiter.pkl)
+at missingEmptyStringDelimiter (file:///$snippetsDir/input/errors/delimiters/missingEmptyStringDelimiter.pkl)

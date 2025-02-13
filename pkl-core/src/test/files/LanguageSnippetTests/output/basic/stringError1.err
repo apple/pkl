@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Mismatched input: `are`. Expected one of: `{`, `=`, `:`
+Missing `"` delimiter.
 
-x | How are you today?
-        ^^^
+x | singleLineStringCannotSpanLines = "
+                                       ^
 at stringError1 (file:///$snippetsDir/input/basic/stringError1.pkl)

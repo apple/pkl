@@ -23,7 +23,8 @@ import org.pkl.commons.cli.CliException
 class CliMainTest {
   @Test
   fun `CLI run test`() {
-    val e = assertThrows<CliException> { DocCommand.parse(arrayOf("foo", "--output-dir", "/tmp")) }
+    val e =
+      assertThrows<CliException> { DocCommand().parse(arrayOf("foo", "--output-dir", "/tmp")) }
     assertThat(e)
       .hasMessageContaining("must contain at least one module named `doc-package-info.pkl`")
   }

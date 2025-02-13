@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import org.pkl.core.util.Nullable;
 
 public final class TypeAliasNode extends ExpressionNode {
   private final SourceSection headerSection;
-  private final @Nullable SourceSection docComment;
+  private final SourceSection @Nullable [] docComment;
   @Children private final ExpressionNode[] annotationNodes;
   private final int modifiers;
   private final String simpleName;
@@ -45,7 +45,7 @@ public final class TypeAliasNode extends ExpressionNode {
   public TypeAliasNode(
       SourceSection sourceSection,
       SourceSection headerSection,
-      @Nullable SourceSection docComment,
+      SourceSection @Nullable [] docComment,
       ExpressionNode[] annotationNodes,
       int modifiers,
       String simpleName,

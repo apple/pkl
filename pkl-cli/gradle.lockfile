@@ -19,7 +19,6 @@ com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava=test
 com.google.j2objc:j2objc-annotations:3.0.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.jayway.jsonpath:json-path:2.9.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 com.networknt:json-schema-validator:1.5.5=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=runtimeClasspath,testRuntimeClasspath
 commons-fileupload:commons-fileupload:1.5=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 commons-io:commons-io:2.11.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.util.Nullable;
 
 public abstract class ClassMember extends Member {
-  protected final @Nullable SourceSection docComment;
+  protected final SourceSection @Nullable [] docComment;
   protected final List<VmTyped> annotations;
   // store prototype instead of class because the former is needed much more often
   private final VmTyped owner;
@@ -34,7 +34,7 @@ public abstract class ClassMember extends Member {
       int modifiers,
       Identifier name,
       String qualifiedName,
-      @Nullable SourceSection docComment,
+      SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       VmTyped owner) {
 
@@ -45,7 +45,7 @@ public abstract class ClassMember extends Member {
     this.owner = owner;
   }
 
-  public final @Nullable SourceSection getDocComment() {
+  public final SourceSection @Nullable [] getDocComment() {
     return docComment;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,15 +27,16 @@ plugins {
 
 val generatorSourceSet = sourceSets.register("generator")
 
-sourceSets { main { java { srcDir(file("generated/antlr")) } } }
+sourceSets { test { java { srcDir(file("testgenerated/antlr")) } } }
 
 idea {
   module {
-    // mark src/main/antlr as source dir
+    // mark src/test/antlr as source dir
     // mark generated/antlr as generated source dir
     // mark generated/truffle as generated source dir
-    sourceDirs = sourceDirs + files("src/main/antlr", "generated/antlr", "generated/truffle")
-    generatedSourceDirs = generatedSourceDirs + files("generated/antlr", "generated/truffle")
+    sourceDirs = sourceDirs + files("generated/truffle")
+    generatedSourceDirs = generatedSourceDirs + files("testgenerated/antlr", "generated/truffle")
+    testSources.from(files("src/test/antlr", "testgenerated/antlr"))
   }
 }
 
@@ -56,7 +57,6 @@ dependencies {
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
   compileOnly(projects.pklExecutor)
 
-  implementation(libs.antlrRuntime)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
@@ -65,6 +65,7 @@ dependencies {
 
   implementation(libs.snakeYaml)
 
+  testImplementation(libs.antlrRuntime)
   testImplementation(projects.pklCommonsTest)
 
   add("generatorImplementation", libs.javaPoet)
@@ -92,35 +93,33 @@ publishing {
   }
 }
 
-tasks.generateGrammarSource {
+tasks.generateTestGrammarSource {
   maxHeapSize = "64m"
 
   // generate only visitor
   arguments = arguments + listOf("-visitor", "-no-listener")
 
   // Due to https://github.com/antlr/antlr4/issues/2260,
-  // we can't put .g4 files into src/main/antlr/org/pkl/core/parser/antlr.
-  // Instead, we put .g4 files into src/main/antlr, adapt output dir below,
+  // we can't put .g4 files into src/test/antlr/org/pkl/core/parser/antlr.
+  // Instead, we put .g4 files into src/test/antlr, adapt output dir below,
   // and use @header directives in .g4 files (instead of setting `-package` argument here)
   // and task makeIntelliJAntlrPluginHappy to fix up the IDE story.
-  outputDirectory = file("generated/antlr/org/pkl/core/parser/antlr")
+  outputDirectory = file("testgenerated/antlr/org/pkl/core/parser/antlr")
 }
 
-tasks.compileJava { dependsOn(tasks.generateGrammarSource) }
-
-tasks.sourcesJar { dependsOn(tasks.generateGrammarSource) }
-
-tasks.generateTestGrammarSource { enabled = false }
+tasks.generateGrammarSource { enabled = false }
 
 tasks.named("generateGeneratorGrammarSource") { enabled = false }
+
+tasks.compileTestKotlin { dependsOn(tasks.generateTestGrammarSource) }
 
 // Satisfy expectations of IntelliJ ANTLR plugin,
 // which can't otherwise cope with our ANTLR setup.
 val makeIntelliJAntlrPluginHappy by
   tasks.registering(Copy::class) {
     dependsOn(tasks.generateGrammarSource)
-    into("src/main/antlr")
-    from("generated/antlr/org/pkl/core/parser/antlr") { include("PklLexer.tokens") }
+    into("test/antlr")
+    from("testgenerated/antlr/org/pkl/core/parser/antlr") { include("PklLexer.tokens") }
   }
 
 tasks.processResources {
@@ -141,7 +140,7 @@ tasks.processResources {
         mapOf(
           "version" to buildInfo.pklVersion,
           "commitId" to buildInfo.commitId,
-          "stdlibModules" to stdlibModules.joinToString(",")
+          "stdlibModules" to stdlibModules.joinToString(","),
         )
     )
   }
@@ -249,7 +248,7 @@ tasks.clean {
 spotless {
   antlr4 {
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
-    target(files("src/main/antlr/PklParser.g4", "src/main/antlr/PklLexer.g4"))
+    target(files("src/test/antlr/PklParser.g4", "src/test/antlr/PklLexer.g4"))
   }
 }
 

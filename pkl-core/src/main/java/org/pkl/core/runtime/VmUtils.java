@@ -56,9 +56,9 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.antlr.PklParser.ExprContext;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.ast.Expr;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
@@ -506,7 +506,7 @@ public final class VmUtils {
   }
 
   public static VmException toVmException(
-      LexParseException e, String text, URI moduleUri, String moduleName) {
+      ParserError e, String text, URI moduleUri, String moduleName) {
     var source =
         Source.newBuilder("pkl", text, moduleName)
             .mimeType(VmLanguage.MIME_TYPE)
@@ -516,47 +516,36 @@ public final class VmUtils {
     return toVmException(e, source, moduleName);
   }
 
-  // wanted to keep Parser/LexParseException API free from
+  // wanted to keep Parser/ParserError API free from
   // Truffle classes (Source), hence put this method here
-  public static VmException toVmException(LexParseException e, Source source, String moduleName) {
-    int lineStartOffset;
-    try {
-      lineStartOffset = source.getLineStartOffset(e.getLine());
-    } catch (IllegalArgumentException iae) {
-      // work around the fact that antlr and truffle disagree on how many lines a file that is
-      // ending in a newline has
-      lineStartOffset = source.getLineStartOffset(e.getLine() - 1);
-    }
-
+  public static VmException toVmException(ParserError e, Source source, String moduleName) {
     return new VmExceptionBuilder()
         .adhocEvalError(e.getMessage())
-        .withSourceSection(
-            source.createSection(
-                // compute char offset manually to work around
-                // https://github.com/graalvm/truffle/issues/184
-                lineStartOffset + e.getColumn() - 1, e.getLength()))
+        .withSourceSection(source.createSection(e.span().charIndex(), e.span().length()))
         .withMemberName(moduleName)
         .build();
   }
 
-  public static @Nullable String exportDocComment(@Nullable SourceSection docComment) {
+  public static @Nullable String exportDocComment(SourceSection @Nullable [] docComment) {
     if (docComment == null) return null;
 
     var builder = new StringBuilder();
-    var matcher = DOC_COMMENT_LINE_START.matcher(docComment.getCharacters());
-    var firstMatch = true;
-    while (matcher.find()) {
-      if (firstMatch) {
-        matcher.appendReplacement(builder, "");
-        firstMatch = false;
-      } else {
-        matcher.appendReplacement(builder, "\n");
+    for (var i = 0; i < docComment.length; i++) {
+      if (i > 0) {
+        builder.append("\n");
       }
+      var matcher = DOC_COMMENT_LINE_START.matcher(docComment[i].getCharacters());
+      var firstMatch = true;
+      while (matcher.find()) {
+        if (firstMatch) {
+          matcher.appendReplacement(builder, "");
+          firstMatch = false;
+        } else {
+          matcher.appendReplacement(builder, "\n");
+        }
+      }
+      matcher.appendTail(builder);
     }
-    matcher.appendTail(builder);
-    var newLength = builder.length() - 1;
-    assert builder.charAt(newLength) == '\n';
-    builder.setLength(newLength);
     return builder.toString();
   }
 
@@ -857,10 +846,10 @@ public final class VmUtils {
         section.getEndColumn());
   }
 
-  private static ExprContext parseExpressionContext(String expression, Source source) {
+  private static Expr parseExpressionNode(String expression, Source source) {
     try {
-      return new Parser().parseExpressionInput(expression).expr();
-    } catch (LexParseException e) {
+      return new Parser().parseExpressionInput(expression);
+    } catch (ParserError e) {
       throw VmUtils.toVmException(e, source, REPL_TEXT);
     }
   }
@@ -891,8 +880,8 @@ public final class VmUtils {
             false);
     var language = VmLanguage.get(null);
     var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
-    var exprContext = parseExpressionContext(expression, source);
-    var exprNode = (ExpressionNode) exprContext.accept(builder);
+    var parsedExpression = parseExpressionNode(expression, source);
+    var exprNode = builder.visitExpr(parsedExpression);
     var rootNode =
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);

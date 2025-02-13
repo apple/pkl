@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.polyglot.Context;
 import org.pkl.core.*;
@@ -36,10 +35,14 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
-import org.pkl.core.parser.LexParseException;
 import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.antlr.PklParser;
-import org.pkl.core.parser.antlr.PklParser.*;
+import org.pkl.core.parser.ParserError;
+import org.pkl.core.parser.ast.Class;
+import org.pkl.core.parser.ast.ClassProperty;
+import org.pkl.core.parser.ast.Expr;
+import org.pkl.core.parser.ast.ImportClause;
+import org.pkl.core.parser.ast.ModuleDecl;
+import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.repl.ReplRequest.Eval;
 import org.pkl.core.repl.ReplRequest.Load;
@@ -166,7 +169,7 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings("StatementWithEmptyBody")
+  @SuppressWarnings({"StatementWithEmptyBody", "DataFlowIssue"})
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -174,14 +177,12 @@ public class ReplServer implements AutoCloseable {
       boolean evalDefinitions,
       boolean forceResults) {
     var parser = new Parser();
-    PklParser.ReplInputContext replInputContext;
+    ReplInput replInputContext;
     var uri = URI.create("repl:" + requestId);
 
     try {
       replInputContext = parser.parseReplInput(text);
-    } catch (LexParseException.IncompleteInput e) {
-      return List.of(new ReplResponse.IncompleteInput(e.getMessage()));
-    } catch (LexParseException e) {
+    } catch (ParserError e) {
       var exception = VmUtils.toVmException(e, text, uri, uri.toString());
       var errorMessage = errorRenderer.render(exception);
       return List.of(new EvalError(errorMessage));
@@ -205,32 +206,28 @@ public class ReplServer implements AutoCloseable {
             language,
             replState.module.getModuleInfo(),
             moduleResolver);
-    var childrenExceptEof =
-        replInputContext.children.subList(0, replInputContext.children.size() - 1);
 
-    for (var tree : childrenExceptEof) {
+    for (var tree : replInputContext.getNodes()) {
       try {
-        if (tree instanceof ExprContext) {
-          var exprNode = (ExpressionNode) tree.accept(builder);
+        if (tree instanceof Expr expr) {
+          var exprNode = builder.visitExpr(expr);
           evaluateExpr(replState, exprNode, forceResults, results);
-        } else if (tree instanceof ImportClauseContext importClause) {
+        } else if (tree instanceof ImportClause importClause) {
           addStaticModuleProperty(builder.visitImportClause(importClause));
-        } else if (tree instanceof ClassPropertyContext classProperty) {
+        } else if (tree instanceof ClassProperty classProperty) {
           var propertyNode = builder.visitClassProperty(classProperty);
           var property = addModuleProperty(propertyNode);
           if (evalDefinitions) {
             evaluateMemberDef(replState, property, forceResults, results);
           }
-        } else if (tree instanceof ClazzContext clazz) {
-          addStaticModuleProperty(builder.visitClazz(clazz));
-        } else if (tree instanceof TypeAliasContext typeAlias) {
+        } else if (tree instanceof Class clazz) {
+          addStaticModuleProperty(builder.visitClass(clazz));
+        } else if (tree instanceof org.pkl.core.parser.ast.TypeAlias typeAlias) {
           addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
-        } else if (tree instanceof ClassMethodContext classMethod) {
+        } else if (tree instanceof org.pkl.core.parser.ast.ClassMethod classMethod) {
           addModuleMethodDef(builder.visitClassMethod(classMethod));
-        } else if (tree instanceof ModuleDeclContext) {
+        } else if (tree instanceof ModuleDecl) {
           // do nothing for now
-        } else if (tree instanceof TerminalNode && tree.toString().equals(",")) {
-          // do nothing
         } else {
           results.add(
               new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
@@ -261,7 +258,7 @@ public class ReplServer implements AutoCloseable {
             language, new FrameDescriptor(), propertyNode, replState.module.getVmClass());
 
     var property =
-        (ClassProperty)
+        (org.pkl.core.ast.member.ClassProperty)
             callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
 
     replState.module.getVmClass().addProperty(property);
@@ -397,7 +394,7 @@ public class ReplServer implements AutoCloseable {
   }
 
   private VmTyped createReplModule(
-      Iterable<ClassProperty> propertyDefs,
+      Iterable<org.pkl.core.ast.member.ClassProperty> propertyDefs,
       Iterable<ClassMethod> methodDefs,
       UnmodifiableEconomicMap<Object, ObjectMember> moduleMembers,
       @Nullable VmTyped parent) {

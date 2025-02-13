@@ -1,6 +1,6 @@
 –– Pkl Error ––
-Missing `]` delimiter.
+Unexpected token `EOF`. Expected `]`.
 
 x | res1 = x[3 + 4
                   ^
-at missingSubscriptDelimiter#res1 (file:///$snippetsDir/input/errors/delimiters/missingSubscriptDelimiter.pkl)
+at missingSubscriptDelimiter (file:///$snippetsDir/input/errors/delimiters/missingSubscriptDelimiter.pkl)
