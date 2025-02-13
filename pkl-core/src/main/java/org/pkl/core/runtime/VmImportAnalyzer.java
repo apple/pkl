@@ -85,17 +85,14 @@ public class VmImportAnalyzer {
     List<Entry> importsAndReads;
     var moduleKey = resolvedModuleKey.getOriginal();
     try {
-      importsAndReads =
-          ImportsAndReadsParser.parse(moduleKey, resolvedModuleKey);
+      importsAndReads = ImportsAndReadsParser.parse(moduleKey, resolvedModuleKey);
     } catch (VmException err) {
       throw new VmExceptionBuilder()
           .evalError("cannotAnalyzeBecauseSyntaxError", moduleKey.getUri())
           .wrapping(err)
           .build();
     } catch (IOException err) {
-      throw new VmExceptionBuilder()
-          .evalError("ioErrorLoadingModule", moduleKey.getUri())
-          .build();
+      throw new VmExceptionBuilder().evalError("ioErrorLoadingModule", moduleKey.getUri()).build();
     }
     if (importsAndReads == null) {
       return Set.of();
