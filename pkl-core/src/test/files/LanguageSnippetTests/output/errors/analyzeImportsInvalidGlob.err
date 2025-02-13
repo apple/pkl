@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot combine glob imports with triple-dot module URIs.
+
+x | import* ".../**.pkl"
+    ^^^^^^^^^^^^^^^^^^^^
+at analyzeImportsInvalidGlob#invalidGlob (file:///$snippetsDir/input-helper/analyze/invalidGlob.pkl)
+
+x | res = analyze.importGraph(Set(reflect.Module(invalidGlob).uri))
+                                                 ^^^^^^^^^^^
+at analyzeImportsInvalidGlob#res (file:///$snippetsDir/input/errors/analyzeImportsInvalidGlob.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

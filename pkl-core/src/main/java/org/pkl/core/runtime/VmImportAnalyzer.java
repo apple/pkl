@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,12 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.NoSuchFileException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,22 +34,22 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 import org.pkl.core.util.IoUtils;
 
 public class VmImportAnalyzer {
   @TruffleBoundary
   public static ImportGraph analyze(URI[] moduleUris, VmContext context)
-      throws IOException,
-          URISyntaxException,
-          SecurityManagerException,
-          ExternalReaderProcessException {
+      throws IOException, SecurityManagerException {
     var imports = new TreeMap<URI, Set<ImportGraph.Import>>();
     var resolvedImports = new TreeMap<URI, URI>();
     for (var moduleUri : moduleUris) {
-      analyzeSingle(moduleUri, context, imports, resolvedImports);
+      var moduleKey = context.getModuleResolver().resolve(moduleUri);
+      var resolvedModuleKey = moduleKey.resolve(context.getSecurityManager());
+      analyzeSingle(moduleUri, resolvedModuleKey, context, imports, resolvedImports);
     }
     return new ImportGraph(imports, resolvedImports);
   }
@@ -54,37 +57,33 @@ public class VmImportAnalyzer {
   @TruffleBoundary
   private static void analyzeSingle(
       URI moduleUri,
+      ResolvedModuleKey resolvedModuleKey,
       VmContext context,
       Map<URI, Set<ImportGraph.Import>> imports,
-      Map<URI, URI> resolvedImports)
-      throws IOException,
-          URISyntaxException,
-          SecurityManagerException,
-          ExternalReaderProcessException {
+      Map<URI, URI> resolvedImports) {
     var moduleResolver = context.getModuleResolver();
     var securityManager = context.getSecurityManager();
-    var importsInModule = collectImports(moduleUri, moduleResolver, securityManager);
-
+    var collectedImports = collectImports(resolvedModuleKey, moduleResolver, securityManager);
+    var importsInModule = new TreeSet<Import>();
+    for (var imprt : collectedImports) {
+      importsInModule.add(imprt.toImport());
+    }
     imports.put(moduleUri, importsInModule);
-    resolvedImports.put(
-        moduleUri, moduleResolver.resolve(moduleUri).resolve(securityManager).getUri());
-    for (var imprt : importsInModule) {
-      if (imports.containsKey(imprt.uri())) {
+    resolvedImports.put(moduleUri, resolvedModuleKey.getUri());
+    for (var imprt : collectedImports) {
+      if (imports.containsKey(imprt.moduleUri)) {
         continue;
       }
-      analyzeSingle(imprt.uri(), context, imports, resolvedImports);
+      analyzeSingle(imprt.moduleUri, imprt.resolvedModuleKey, context, imports, resolvedImports);
     }
   }
 
-  private static Set<ImportGraph.Import> collectImports(
-      URI moduleUri, ModuleResolver moduleResolver, SecurityManager securityManager)
-      throws IOException,
-          URISyntaxException,
-          SecurityManagerException,
-          ExternalReaderProcessException {
-    var moduleKey = moduleResolver.resolve(moduleUri);
-    var resolvedModuleKey = moduleKey.resolve(securityManager);
+  private static Set<ImportEntry> collectImports(
+      ResolvedModuleKey resolvedModuleKey,
+      ModuleResolver moduleResolver,
+      SecurityManager securityManager) {
     List<Entry> importsAndReads;
+    var moduleKey = resolvedModuleKey.getOriginal();
     try {
       importsAndReads = ImportsAndReadsParser.parse(moduleKey, resolvedModuleKey);
     } catch (VmException err) {
@@ -92,19 +91,21 @@ public class VmImportAnalyzer {
           .evalError("cannotAnalyzeBecauseSyntaxError", moduleKey.getUri())
           .wrapping(err)
           .build();
+    } catch (IOException err) {
+      throw new VmExceptionBuilder().evalError("ioErrorLoadingModule", moduleKey.getUri()).build();
     }
     if (importsAndReads == null) {
       return Set.of();
     }
-    var result = new TreeSet<ImportGraph.Import>();
+    var result = new HashSet<ImportEntry>();
     for (var entry : importsAndReads) {
       if (!entry.isModule()) {
         continue;
       }
-      if (entry.isGlob()) {
-        var theModuleKey =
-            moduleResolver.resolve(moduleKey.resolveUri(IoUtils.toUri(entry.stringValue())));
-        try {
+      try {
+        if (entry.isGlob()) {
+          var theModuleKey =
+              moduleResolver.resolve(moduleKey.resolveUri(IoUtils.toUri(entry.stringValue())));
           var elements =
               GlobResolver.resolveGlob(
                   securityManager,
@@ -112,24 +113,60 @@ public class VmImportAnalyzer {
                   moduleKey,
                   moduleKey.getUri(),
                   entry.stringValue());
-          var globImports =
-              elements.values().stream()
-                  .map(ResolvedGlobElement::uri)
-                  .map(ImportGraph.Import::new)
-                  .toList();
-          result.addAll(globImports);
-        } catch (InvalidGlobPatternException e) {
-          throw new VmExceptionBuilder()
-              .evalError("invalidGlobPattern", entry.stringValue())
-              .withSourceSection(entry.sourceSection())
-              .build();
+          for (var globElement : elements.values()) {
+            var moduleUri = globElement.uri();
+            var mk = moduleResolver.resolve(moduleUri);
+            var rmk = mk.resolve(securityManager);
+            result.add(new ImportEntry(moduleUri, rmk));
+          }
+        } else {
+          var resolvedUri =
+              IoUtils.resolve(securityManager, moduleKey, IoUtils.toUri(entry.stringValue()));
+          var mKey = moduleResolver.resolve(resolvedUri);
+          var rmk = mKey.resolve(securityManager);
+          result.add(new ImportEntry(resolvedUri, rmk));
         }
-      } else {
-        var resolvedUri =
-            IoUtils.resolve(securityManager, moduleKey, IoUtils.toUri(entry.stringValue()));
-        result.add(new Import(resolvedUri));
+      } catch (InvalidGlobPatternException e) {
+        throw new VmExceptionBuilder()
+            .evalError("invalidGlobPattern", entry.stringValue())
+            .withSourceSection(entry.sourceSection())
+            .build();
+      } catch (FileNotFoundException | NoSuchFileException e) {
+        throw new VmExceptionBuilder()
+            .evalError("cannotFindModule", entry.stringValue())
+            .withSourceSection(entry.sourceSection())
+            .build();
+      } catch (URISyntaxException e) {
+        throw new VmExceptionBuilder()
+            .evalError("invalidModuleUri", entry.stringValue())
+            .withHint(e.getReason())
+            .withSourceSection(entry.sourceSection())
+            .build();
+      } catch (IOException e) {
+        throw new VmExceptionBuilder()
+            .evalError("ioErrorLoadingModule", entry.stringValue())
+            .withCause(e)
+            .withSourceSection(entry.sourceSection())
+            .build();
+      } catch (SecurityManagerException | PackageLoadError e) {
+        throw new VmExceptionBuilder()
+            .withSourceSection(entry.sourceSection())
+            .withCause(e)
+            .build();
+      } catch (ExternalReaderProcessException e) {
+        throw new VmExceptionBuilder()
+            .withSourceSection(entry.sourceSection())
+            .evalError("externalReaderFailure")
+            .withCause(e)
+            .build();
       }
     }
     return result;
+  }
+
+  private record ImportEntry(URI moduleUri, ResolvedModuleKey resolvedModuleKey) {
+    private Import toImport() {
+      return new Import(resolvedModuleKey.getOriginal().getUri());
+    }
   }
 }
