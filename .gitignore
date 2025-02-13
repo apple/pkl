@@ -23,3 +23,5 @@ testgenerated/
 # :pkl-core:makeIntelliJAntlrPluginHappy
 gen/
 PklLexer.tokens
+
+.kotlin/
