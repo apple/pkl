@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,13 @@ import org.opentest4j.AssertionFailedError
 import org.pkl.commons.*
 
 object FileTestUtils {
+  @JvmStatic
   val rootProjectDir: Path by lazy {
     val workingDir = currentWorkingDir
     workingDir.takeIf { it.resolve("settings.gradle.kts").exists() }
       ?: workingDir.parent.takeIf { it.resolve("settings.gradle.kts").exists() }
-        ?: workingDir.parent.parent.takeIf { it.resolve("settings.gradle.kts").exists() }
-        ?: throw AssertionError("Failed to locate root project directory.")
+      ?: workingDir.parent.parent.takeIf { it.resolve("settings.gradle.kts").exists() }
+      ?: throw AssertionError("Failed to locate root project directory.")
   }
   val selfSignedCertificate: Path by lazy {
     rootProjectDir.resolve("pkl-commons-test/build/keystore/localhost.pem")
