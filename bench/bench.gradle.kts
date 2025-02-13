@@ -22,9 +22,9 @@ plugins {
 val truffle: Configuration by configurations.creating
 val graal: Configuration by configurations.creating
 
-@Suppress("UnstableApiUsage")
 dependencies {
   jmh(projects.pklCore)
+  jmh(projects.pklCommonsTest)
   truffle(libs.truffleApi)
   graal(libs.graalCompiler)
 }

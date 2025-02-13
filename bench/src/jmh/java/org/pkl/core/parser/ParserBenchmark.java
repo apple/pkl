@@ -15,8 +15,15 @@
  */
 package org.pkl.core.parser;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
+import org.pkl.commons.test.FileTestUtils;
+import org.pkl.commons.test.FileTestUtilsKt;
+import org.pkl.core.Release;
+import org.pkl.core.util.IoUtils;
 
 @SuppressWarnings("unused")
 @Warmup(iterations = 5, time = 2)
@@ -24,37 +31,33 @@ import org.openjdk.jmh.annotations.*;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(1)
 public class ParserBenchmark {
-  // One-time execution of this code took ~10s until moving rule alternative
-  // for parenthesized expression after alternative for anonymous function.
   @Benchmark
-  public void run() {
-    new Parser()
-        .parseModule(
-            """
-            a1 {
-              a2 {
-                a3 {
-                  a4 {
-                    a5 {
-                      a6 {
-                        a7 {
-                          a8 {
-                            a9 {
-                              a10 {
-                                a11 {
-                                  a12 {
-                                    a13 = map(map(map((x) -> 1)))
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }""");
+  public void parseStdlib() {
+    for (var stdlibModule : Release.current().standardLibrary().modules()) {
+      try {
+        var moduleSource =
+            IoUtils.readClassPathResourceAsString(
+                getClass(), "/org/pkl/core/stdlib/%s.pkl".formatted(stdlibModule.substring(4)));
+        new Parser().parseModule(moduleSource);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
+  }
+
+  @Benchmark
+  public void parseSnippetTests() {
+    var snippetTestDir =
+        FileTestUtils.getRootProjectDir()
+            .resolve("pkl-core/src/test/files/LanguageSnippetTests/input");
+    for (var snippet : FileTestUtilsKt.listFilesRecursively(snippetTestDir)) {
+      try {
+        var moduleSource = Files.readString(snippet);
+        new Parser().parseModule(moduleSource);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      } catch (ParserError ignore) {
+      }
+    }
   }
 }
