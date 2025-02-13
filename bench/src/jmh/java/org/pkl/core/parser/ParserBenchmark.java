@@ -47,7 +47,6 @@ public class ParserBenchmark {
 
   @Benchmark
   public void parseSnippetTests() {
-    var parser = new Parser();
     var snippetTestDir =
         FileTestUtils.getRootProjectDir()
             .resolve("pkl-core/src/test/files/LanguageSnippetTests/input");
