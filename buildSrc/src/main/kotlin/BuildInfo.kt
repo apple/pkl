@@ -350,6 +350,8 @@ open class BuildInfo(private val project: Project) {
 
   // could be `commitId: Provider<String> = project.provider { ... }`
   val commitId: String by lazy {
+    // allow -DcommitId=abc123 for build environments that don't have git.
+    System.getProperty("commitId").let { if (it != null) return@lazy it }
     // only run command once per build invocation
     if (project === project.rootProject) {
       val process =
