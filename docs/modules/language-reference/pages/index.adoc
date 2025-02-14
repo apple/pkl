@@ -5076,8 +5076,8 @@ TIP: If incorporating escape characters into a glob pattern, use <<custom-string
 |===
 |Pattern |Description
 
-|`*.pc[lf]`
-|Anything suffixed by `.pkl`, or `.pcf`.
+|`*.pk[lg]`
+|Anything suffixed by `.pkl`, or `.pkg`.
 
 |`**.y{a,}ml`
 |Anything suffixed by either `yml` or `yaml`, crossing directory boundaries. 
