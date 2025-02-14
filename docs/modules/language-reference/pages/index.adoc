@@ -2037,27 +2037,7 @@ greeting2 = greetPigeon(parrot)  // <4>
 <4> Call module method (on `this`).
 
 Like other object-oriented languages, methods defined on extended classes and modules may be overridden.
-The parent type's method may be called via the `super` keyword.
-
-[source%parsed,{pkl}]
-----
-open class Bird {
-  name: String
-  function canEat(food: String): Boolean = food == "seeds"
-}
-
-class InsectivorousBird extends Bird {
-  function canEat(food: String): Boolean = super.canEat(food) || food == "insects" // <1>
-}
-
-swallow = new InsectivorousBird { name = "Swallow" }
-
-canEatSeeds = swallow.canEat("seeds") // <2>
-canEatMeat = swallow.canEat("insects")  // <3>
-----
-<1> Call parent class instance method (on `this`).
-<2> result: `true`
-<3> result: `true`
+The parent type's method may be called via the <<super-keyword,`super` keyword>>.
 
 NOTE: Methods do not support named parameters or default parameter values.
 The xref:blog:ROOT:class-as-a-function.adoc[Class-as-a-function] pattern may be a suitable replacement.
@@ -3216,6 +3196,10 @@ This section discusses language features that are generally more relevant to tem
 <<for-generators,For Generators>> +
 <<spread-syntax,Spread Syntax>> +
 <<member-predicates,Member Predicates (`[[...]]`)>> +
+<<this-keyword,`this` Keyword>> +
+<<outer-keyword,`outer` Keyword>> +
+<<super-keyword,`super` Keyword>> +
+<<module-keyword,`module` Keyword>> +
 <<glob-patterns,Glob Patterns>> +
 <<doc-comments,Doc Comments>> +
 <<name-resolution,Name Resolution>> +
@@ -4850,6 +4834,161 @@ updated = (environmentVariables) {
 The predicate, enclosed in double brackets (`\[[...]]`), is matched against each member of the enclosing object.
 Within the predicate, `this` refers to the member that the predicate is matched against.
 Matching members are amended (`{ ... }`) or overridden (`= <new-value>`).
+
+[[this-keyword]]
+=== `this` keyword
+
+Normally, the `this` keyword references the enclosing object's receiver.
+
+Example:
+[source,pkl]
+----
+bird {
+  eatsInsects = this is InsectavorousBird
+}
+----
+
+When used inside a <<type-constraints,type constraint>>, `this` refers to the value being tested.
+
+Example:
+[source,pkl]
+----
+port: UInt16(this > 1000)
+----
+
+When used inside a <<member-predicates,member predicate>>, `this` refers to the value being matched against.
+
+Example:
+[source,pkl]
+----
+animals {
+  [[this is Bird]] {
+    canFly = true
+  }
+}
+----
+
+[[receiver]]
+==== Receiver
+
+The receiver is the bottom-most object in the <<prototype-chain>>.
+That means that, within the context of an amending object, the reciever is the amending object.
+
+Example:
+[source,pkl]
+----
+hidden lawyerBird {
+  title = "\(this.name), Esq."
+}
+
+polly = (lawyerBird) {
+  name = "Polly" // <1>
+}
+----
+<1> Polly has title `"Polly, Esq."`.
+
+[[outer-keyword]]
+=== `outer` keyword
+
+The `outer` keyword references the <<receiver,receiver>> of the immediately outer lexical object.
+
+It can be useful to disambiguate a lookup that might otherwise resolve elsewhere.
+
+Example:
+[source%tested,pkl]
+----
+foo {
+  bar = "bar"
+  qux {
+    bar = outer.bar // <1>
+  }
+}
+----
+<1> References `bar` one level higher.
+
+Note that `outer` cannot be chained.
+In order to reference a value more than one level higher, a typical pattern is to declare a local property at that level.
+
+For example:
+
+[source%parsed,pkl]
+----
+foo {
+  local self = this
+  bar {
+    baz {
+      qux = self.qux
+    }
+  }
+}
+----
+
+[[super-keyword]]
+=== `super` keyword
+
+The `super` keyword references the parent object in the <<prototype-chain,prototype chain>>.
+
+When used within a class, it refers to the superclass's prototype.
+When used within an object, it refers to the parent object in the amends chain.
+
+Example:
+[source%tested,pkl]
+----
+bird = new { name = "Quail" }
+
+bird2 = (bird) { name = "Ms. \(super.name)" } // <1>
+
+abstract class Bird {
+  foods: Listing<String>
+
+  function canEat(food: String): Boolean = foods.contains(food)
+}
+
+class InsectavorousBird extends Bird {
+  function canEat(food: String) =
+    super.canEat(food) || food == "insect" // <2>
+}
+----
+<1> Result: `"Ms. Quail"`
+<2> Calls parent class method `canEat()`
+
+The `super` keyword must be followed by property/method access, or subscript.
+`super` by itself a syntax error; whereas `super.foo` and `super["foo"]` are valid expressions.
+
+[[module-keyword]]
+=== `module` keyword
+
+The `module` keyword can be used as either a value, or as a type.
+
+When used as a value, it refers to the <<receiver,receiver>> of the module itself.
+
+[source%tested,pkl]
+----
+name = "Quail"
+
+some {
+  deep {
+    object {
+      name = module.name // <1>
+    }
+  }
+}
+----
+<1> Resolves to `"Quail"`
+
+When used as a type, it is the module's class.
+
+[source%parsed,pkl]
+----
+module Bird
+
+friend: module // <1>
+----
+<1> Is class `Bird`
+
+The `module` type is a _self type_.
+If the module is extended by another module, the `module` type refers to the extending module when
+in the context of that module.
 
 [[glob-patterns]]
 === Glob Patterns
