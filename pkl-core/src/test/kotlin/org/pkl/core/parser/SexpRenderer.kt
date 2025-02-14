@@ -763,7 +763,19 @@ class SexpRenderer {
     val oldTab = increaseTab()
     buf.append('\n')
     renderQualifiedIdent(type.name)
-    for (arg in type.args) {
+    if (type.args !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(type.args!!)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderTypeArgumentList(typeArgumentList: TypeArgumentList) {
+    buf.append(tab)
+    buf.append("(typeArgumentList")
+    val oldTab = increaseTab()
+    for (arg in typeArgumentList.types) {
       buf.append('\n')
       renderType(arg)
     }
@@ -976,9 +988,9 @@ class SexpRenderer {
     buf.append("(whenGenerator")
     val oldTab = increaseTab()
     buf.append('\n')
-    renderExpr(generator.thenClause)
+    renderExpr(generator.predicate)
     buf.append('\n')
-    renderObjectBody(generator.body)
+    renderObjectBody(generator.thenClause)
     if (generator.elseClause !== null) {
       buf.append('\n')
       renderObjectBody(generator.elseClause!!)

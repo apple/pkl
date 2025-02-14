@@ -15,29 +15,17 @@
  */
 package org.pkl.core.parser.ast;
 
-import java.util.List;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 
-@SuppressWarnings({"unchecked", "DataFlowIssue"})
-public final class ObjectBody extends AbstractNode {
-  private final int membersOffset;
+public class Keyword extends AbstractNode {
 
-  public ObjectBody(List<Node> nodes, int membersOffset, Span span) {
-    super(span, nodes);
-    this.membersOffset = membersOffset;
+  public Keyword(Span span) {
+    super(span, null);
   }
 
   @Override
   public <T> T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitObjectBody(this);
-  }
-
-  public List<Parameter> getParameters() {
-    return (List<Parameter>) children.subList(0, membersOffset);
-  }
-
-  public List<ObjectMember> getMembers() {
-    return (List<ObjectMember>) children.subList(membersOffset, children.size());
+    return visitor.visitKeyword(this);
   }
 }

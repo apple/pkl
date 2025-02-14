@@ -15,6 +15,7 @@
  */
 package org.pkl.core.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
@@ -77,8 +78,8 @@ public abstract sealed class Type extends AbstractNode {
   }
 
   public static final class DeclaredType extends Type {
-    public DeclaredType(List<Node> nodes, Span span) {
-      super(span, nodes);
+    public DeclaredType(QualifiedIdentifier name, @Nullable TypeArgumentList typeArgs, Span span) {
+      super(span, Arrays.asList(name, typeArgs));
     }
 
     @Override
@@ -90,8 +91,8 @@ public abstract sealed class Type extends AbstractNode {
       return (QualifiedIdentifier) children.get(0);
     }
 
-    public List<Type> getArgs() {
-      return (List<Type>) children.subList(1, children.size());
+    public @Nullable TypeArgumentList getArgs() {
+      return (TypeArgumentList) children.get(1);
     }
   }
 

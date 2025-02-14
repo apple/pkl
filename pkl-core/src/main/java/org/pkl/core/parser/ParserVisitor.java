@@ -55,6 +55,7 @@ import org.pkl.core.parser.ast.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
 import org.pkl.core.parser.ast.Identifier;
 import org.pkl.core.parser.ast.ImportClause;
+import org.pkl.core.parser.ast.Keyword;
 import org.pkl.core.parser.ast.Modifier;
 import org.pkl.core.parser.ast.Module;
 import org.pkl.core.parser.ast.ModuleDecl;
@@ -70,6 +71,7 @@ import org.pkl.core.parser.ast.StringPart;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.TypeAlias;
 import org.pkl.core.parser.ast.TypeAnnotation;
+import org.pkl.core.parser.ast.TypeArgumentList;
 import org.pkl.core.parser.ast.TypeParameter;
 import org.pkl.core.parser.ast.TypeParameterList;
 
@@ -220,4 +222,8 @@ public interface ParserVisitor<Result> {
   Result visitObjectBody(ObjectBody objectBody);
 
   Result visitReplInput(ReplInput replInput);
+
+  Result visitKeyword(Keyword keyword);
+
+  Result visitTypeArgumentList(TypeArgumentList typeArgumentList);
 }

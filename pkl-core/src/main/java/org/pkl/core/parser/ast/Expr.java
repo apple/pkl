@@ -23,7 +23,7 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public abstract sealed class Expr extends AbstractNode {
 
   public Expr(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -36,7 +36,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitThisExpr(this);
     }
   }
@@ -47,7 +47,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitOuterExpr(this);
     }
   }
@@ -58,7 +58,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitModuleExpr(this);
     }
   }
@@ -69,7 +69,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNullLiteralExpr(this);
     }
   }
@@ -83,7 +83,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitBoolLiteralExpr(this);
     }
 
@@ -101,7 +101,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitIntLiteralExpr(this);
     }
 
@@ -119,7 +119,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitFloatLiteralExpr(this);
     }
 
@@ -140,7 +140,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitSingleLineStringLiteralExpr(this);
     }
 
@@ -170,7 +170,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitMultiLineStringLiteralExpr(this);
     }
 
@@ -193,7 +193,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitThrowExpr(this);
     }
 
@@ -208,7 +208,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitTraceExpr(this);
     }
 
@@ -226,7 +226,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitImportExpr(this);
     }
 
@@ -248,7 +248,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitReadExpr(this);
     }
 
@@ -274,7 +274,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitUnqualifiedAccessExpr(this);
     }
 
@@ -301,7 +301,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitQualifiedAccessExpr(this);
     }
 
@@ -328,7 +328,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitSuperAccessExpr(this);
     }
 
@@ -347,7 +347,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitSuperSubscriptExpr(this);
     }
 
@@ -362,7 +362,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitSubscriptExpr(this);
     }
 
@@ -381,7 +381,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitIfExpr(this);
     }
 
@@ -404,7 +404,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitLetExpr(this);
     }
 
@@ -427,7 +427,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitFunctionLiteralExpr(this);
     }
 
@@ -446,7 +446,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitParenthesizedExpr(this);
     }
 
@@ -461,7 +461,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNewExpr(this);
     }
 
@@ -484,7 +484,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitAmendsExpr(this);
     }
 
@@ -503,7 +503,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNonNullExpr(this);
     }
 
@@ -518,7 +518,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitUnaryMinusExpr(this);
     }
 
@@ -533,7 +533,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitLogicalNotExpr(this);
     }
 
@@ -551,7 +551,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitBinaryOperatorExpr(this);
     }
 
@@ -569,7 +569,7 @@ public abstract sealed class Expr extends AbstractNode {
 
     @Override
     public String toString() {
-      return "BinaryOp{" + "children=" + children + ", op=" + op + ", span=" + span + '}';
+      return "BinaryOp{children=" + children + ", op=" + op + ", span=" + span + '}';
     }
 
     @Override
@@ -598,7 +598,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitTypeCheckExpr(this);
     }
 
@@ -617,7 +617,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitTypeCastExpr(this);
     }
 
@@ -640,7 +640,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       // should never be called
       throw PklBugException.unreachableCode();
     }
@@ -679,7 +679,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       // should never be called
       throw PklBugException.unreachableCode();
     }

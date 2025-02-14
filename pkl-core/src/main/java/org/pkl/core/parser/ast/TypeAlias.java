@@ -20,7 +20,7 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class TypeAlias extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -32,7 +32,7 @@ public final class TypeAlias extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitTypeAlias(this);
   }
 
@@ -48,24 +48,36 @@ public final class TypeAlias extends AbstractNode {
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
+  public Keyword getTypealiasKeyword() {
+    return (Keyword) children.get(nameOffset);
+  }
+
   public Identifier getName() {
-    return (Identifier) children.get(nameOffset);
+    return (Identifier) children.get(nameOffset + 1);
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    return (TypeParameterList) children.get(nameOffset + 1);
+    return (TypeParameterList) children.get(nameOffset + 2);
   }
 
   public Type getType() {
-    return (Type) children.get(nameOffset + 2);
+    return (Type) children.get(nameOffset + 3);
   }
 
   public Span getHeaderSpan() {
-    var end = children.get(nameOffset).span();
-    var tparList = children.get(nameOffset + 1);
+    Span start = null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        start = child.span();
+        break;
+      }
+    }
+    var end = children.get(nameOffset + 1).span();
+    var tparList = children.get(nameOffset + 2);
     if (tparList != null) {
       end = tparList.span();
     }
-    return span.endWith(end);
+    return start.endWith(end);
   }
 }

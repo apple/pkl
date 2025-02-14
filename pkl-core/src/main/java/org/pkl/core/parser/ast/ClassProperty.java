@@ -32,7 +32,7 @@ public final class ClassProperty extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitClassProperty(this);
   }
 

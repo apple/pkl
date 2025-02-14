@@ -22,7 +22,7 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings("DataFlowIssue")
 public abstract sealed class ObjectMember extends AbstractNode {
 
   public ObjectMember(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -35,7 +35,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectElement(this);
     }
 
@@ -44,6 +44,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static final class ObjectProperty extends ObjectMember {
     private final int identifierOffset;
 
@@ -73,7 +74,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return (Expr) children.get(identifierOffset + 2);
     }
 
-    public @Nullable List<ObjectBody> getBodyList() {
+    public List<ObjectBody> getBodyList() {
       return (List<ObjectBody>) children.subList(identifierOffset + 3, children.size());
     }
   }
@@ -91,39 +92,52 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return visitor.visitObjectMethod(this);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Modifier> getModifiers() {
       return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
+    public Keyword getFunctionKeyword() {
+      return (Keyword) children.get(identifierOffset);
+    }
+
     public Identifier getIdentifier() {
-      return (Identifier) children.get(identifierOffset);
+      return (Identifier) children.get(identifierOffset + 1);
     }
 
     public @Nullable TypeParameterList getTypeParameterList() {
-      return (TypeParameterList) children.get(identifierOffset + 1);
+      return (TypeParameterList) children.get(identifierOffset + 2);
     }
 
     public ParameterList getParamList() {
-      return (ParameterList) children.get(identifierOffset + 2);
+      return (ParameterList) children.get(identifierOffset + 3);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      return (TypeAnnotation) children.get(identifierOffset + 3);
+      return (TypeAnnotation) children.get(identifierOffset + 4);
     }
 
     public Expr getExpr() {
-      return (Expr) children.get(identifierOffset + 4);
+      return (Expr) children.get(identifierOffset + 5);
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public Span headerSpan() {
+      Span start = null;
+      for (var child : children) {
+        if (child != null) {
+          start = child.span();
+          break;
+        }
+      }
       Span end;
-      var typeAnnotation = children.get(identifierOffset + 3);
+      var typeAnnotation = children.get(identifierOffset + 4);
       if (typeAnnotation == null) {
-        end = children.get(identifierOffset + 2).span();
+        end = children.get(identifierOffset + 3).span();
       } else {
         end = typeAnnotation.span();
       }
-      return span.endWith(end);
+      return start.endWith(end);
     }
   }
 
@@ -145,6 +159,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return (Expr) children.get(1);
     }
 
+    @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
       return (List<ObjectBody>) children.subList(2, children.size());
     }
@@ -168,6 +183,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return (Expr) children.get(1);
     }
 
+    @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
       return (List<ObjectBody>) children.subList(2, children.size());
     }
@@ -229,8 +245,8 @@ public abstract sealed class ObjectMember extends AbstractNode {
 
   public static final class WhenGenerator extends ObjectMember {
     public WhenGenerator(
-        Expr thenClause, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
-      super(span, Arrays.asList(thenClause, body, elseClause));
+        Expr predicate, ObjectBody thenClause, @Nullable ObjectBody elseClause, Span span) {
+      super(span, Arrays.asList(predicate, thenClause, elseClause));
     }
 
     @Override
@@ -238,11 +254,11 @@ public abstract sealed class ObjectMember extends AbstractNode {
       return visitor.visitWhenGenerator(this);
     }
 
-    public Expr getThenClause() {
+    public Expr getPredicate() {
       return (Expr) children.get(0);
     }
 
-    public ObjectBody getBody() {
+    public ObjectBody getThenClause() {
       return (ObjectBody) children.get(1);
     }
 

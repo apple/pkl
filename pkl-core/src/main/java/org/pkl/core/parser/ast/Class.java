@@ -23,16 +23,16 @@ import org.pkl.core.util.Nullable;
 @SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class Class extends AbstractNode {
   private final int modifiersOffset;
-  private final int nameOffset;
+  private final int keywordOffset;
 
-  public Class(List<Node> nodes, int modifiersOffset, int nameOffset, Span span) {
+  public Class(List<Node> nodes, int modifiersOffset, int keywordOffset, Span span) {
     super(span, nodes);
     this.modifiersOffset = modifiersOffset;
-    this.nameOffset = nameOffset;
+    this.keywordOffset = keywordOffset;
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitClass(this);
   }
 
@@ -45,26 +45,39 @@ public final class Class extends AbstractNode {
   }
 
   public List<Modifier> getModifiers() {
-    return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
+    return (List<Modifier>) children.subList(modifiersOffset, keywordOffset);
+  }
+
+  public Keyword getClassKeyword() {
+    return (Keyword) children.get(keywordOffset);
   }
 
   public Identifier getName() {
-    return (Identifier) children.get(nameOffset);
+    return (Identifier) children.get(keywordOffset + 1);
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    return (TypeParameterList) children.get(nameOffset + 1);
+    return (TypeParameterList) children.get(keywordOffset + 2);
   }
 
   public @Nullable Type getSuperClass() {
-    return (Type) children.get(nameOffset + 2);
+    return (Type) children.get(keywordOffset + 3);
   }
 
   public @Nullable ClassBody getBody() {
-    return (ClassBody) children.get(nameOffset + 3);
+    return (ClassBody) children.get(keywordOffset + 4);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   public Span getHeaderSpan() {
+    Span start = null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        start = child.span();
+        break;
+      }
+    }
     Span end;
     if (getSuperClass() != null) {
       end = getSuperClass().span();
@@ -73,6 +86,6 @@ public final class Class extends AbstractNode {
     } else {
       end = getName().span();
     }
-    return span.endWith(end);
+    return start.endWith(end);
   }
 }

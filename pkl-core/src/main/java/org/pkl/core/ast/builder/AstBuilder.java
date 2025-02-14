@@ -361,7 +361,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var identifier = type.getName();
     var args = type.getArgs();
 
-    if (args.isEmpty()) {
+    if (args == null) {
       if (identifier.getIdentifiers().size() == 1) {
         var text = identifier.getIdentifiers().get(0).getValue();
         var typeParameter = symbolTable.findTypeParameter(text);
@@ -374,9 +374,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           createSourceSection(type), doVisitTypeName(identifier));
     }
 
-    var argTypes = new UnresolvedTypeNode[args.size()];
-    for (var i = 0; i < args.size(); i++) {
-      argTypes[i] = visitType(args.get(i));
+    var targs = args.getTypes();
+    var argTypes = new UnresolvedTypeNode[targs.size()];
+    for (var i = 0; i < targs.size(); i++) {
+      argTypes[i] = visitType(targs.get(i));
     }
 
     return new UnresolvedTypeNode.Parameterized(
@@ -839,7 +840,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 createSourceSection(newExpr),
                 parentType,
                 symbolTable.getCurrentScope().getQualifiedName()));
-    if (type instanceof DeclaredType declaredType && !declaredType.getArgs().isEmpty()) {
+    if (type instanceof DeclaredType declaredType && declaredType.getArgs() != null) {
       return new TypeCastNode(parentType.getSourceSection(), expr, parentType);
     }
     return expr;
@@ -1259,14 +1260,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public GeneratorMemberNode visitWhenGenerator(WhenGenerator member) {
     var sourceSection = createSourceSection(member);
-    var thenNodes = doVisitForWhenBody(member.getBody());
+    var thenNodes = doVisitForWhenBody(member.getThenClause());
     var elseNodes =
         member.getElseClause() == null
             ? new GeneratorMemberNode[0]
             : doVisitForWhenBody(member.getElseClause());
 
     return new GeneratorWhenNode(
-        sourceSection, visitExpr(member.getThenClause()), thenNodes, elseNodes);
+        sourceSection, visitExpr(member.getPredicate()), thenNodes, elseNodes);
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBody body) {
@@ -1454,7 +1455,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var moduleNode =
         AmendModuleNodeGen.create(
-            moduleInfo.getSourceSection(),
+            moduleInfo.getHeaderSection(),
             language,
             annotationNodes,
             moduleProperties,
