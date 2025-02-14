@@ -4890,7 +4890,7 @@ polly = (lawyerBird) {
 [[outer-keyword]]
 === `outer` keyword
 
-The `outer` keyword references the <<receiver,receiver>> of the outer lexical object.
+The `outer` keyword references the <<receiver,receiver>> of the immediately outer lexical object.
 
 It can be useful to disambiguate a lookup that might otherwise resolve elsewhere.
 
