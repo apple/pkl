@@ -26,6 +26,7 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
   }
+  implementation(libs.cliktMarkdown)
 
   implementation(projects.pklCommons)
   testImplementation(projects.pklCommonsTest)

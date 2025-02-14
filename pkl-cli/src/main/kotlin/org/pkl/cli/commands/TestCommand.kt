@@ -32,7 +32,7 @@ class TestCommand : BaseCommand(name = "test") {
   val modules: List<URI> by
     argument(name = "modules", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }
-      .multiple(required = true)
+      .multiple()
 
   private val projectOptions by ProjectOptions()
 
