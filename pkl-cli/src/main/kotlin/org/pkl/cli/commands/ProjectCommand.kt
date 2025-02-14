@@ -64,7 +64,7 @@ class ResolveCommand : BaseCommand(name = "resolve") {
   """
 
   private val projectDirs: List<Path> by
-    argument("<dir>", "The project directories to resolve dependencies for").path().multiple()
+    argument("dir", "The project directories to resolve dependencies for").path().multiple()
 
   override fun run() {
     CliProjectResolver(baseOptions.baseOptions(emptyList()), projectDirs).run()
@@ -109,13 +109,13 @@ class PackageCommand : BaseCommand(name = "package") {
   private val testOptions by TestOptions()
 
   private val projectDirs: List<Path> by
-    argument("<dir>", "The project directories to package").path().multiple()
+    argument("dir", "The project directories to package").path().multiple()
 
   private val outputPath: String by
     option(
         names = arrayOf("--output-path"),
         help = "The directory to write artifacts to",
-        metavar = "<path>",
+        metavar = "path",
       )
       .single()
       .default(".out/%{name}@%{version}")

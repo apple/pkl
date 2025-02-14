@@ -30,7 +30,7 @@ class TestCommand : BaseCommand(name = "test") {
   override val helpString = "Run tests within the given module(s)"
 
   val modules: List<URI> by
-    argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
+    argument(name = "modules", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }
       .multiple(required = true)
 

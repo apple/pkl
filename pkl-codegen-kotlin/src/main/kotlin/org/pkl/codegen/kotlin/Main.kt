@@ -43,7 +43,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
   private val outputDir: Path by
     option(
         names = arrayOf("-o", "--output-dir"),
-        metavar = "<path>",
+        metavar = "path",
         help = "The directory where generated source code is placed.",
       )
       .path()
@@ -52,7 +52,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
   private val indent: String by
     option(
         names = arrayOf("--indent"),
-        metavar = "<chars>",
+        metavar = "chars",
         help = "The characters to use for indenting generated source code.",
       )
       .default(defaults.indent)
@@ -81,7 +81,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
   private val renames: Map<String, String> by
     option(
         names = arrayOf("--rename"),
-        metavar = "<old_name=new_name>",
+        metavar = "old_name=new_name",
         help =
           """
             Replace a prefix in the names of the generated Kotlin classes (repeatable).

@@ -23,7 +23,7 @@ import java.net.URI
 
 abstract class ModulesCommand(name: String) : BaseCommand(name = name) {
   open val modules: List<URI> by
-    argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
+    argument(name = "modules", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }
       .multiple(required = true)
 

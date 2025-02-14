@@ -42,7 +42,7 @@ class AnalyzeImportsCommand : ModulesCommand(name = "imports") {
   private val outputPath: Path? by
     option(
         names = arrayOf("-o", "--output-path"),
-        metavar = "<path>",
+        metavar = "path",
         help = "File path where the output file is placed.",
       )
       .path()
