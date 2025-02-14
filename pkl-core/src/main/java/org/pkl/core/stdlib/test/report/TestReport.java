@@ -24,11 +24,11 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.TestResults;
 import org.pkl.core.util.StringBuilderWriter;
 
-public interface TestReport {
+abstract class TestReport {
 
-  void report(TestResults results, Writer writer) throws IOException;
+  public abstract void report(TestResults results, Writer writer) throws IOException;
 
-  default String report(TestResults results) {
+  public String report(TestResults results) throws IOException {
     try {
       var builder = new StringBuilder();
       var writer = new StringBuilderWriter(builder);
@@ -39,7 +39,7 @@ public interface TestReport {
     }
   }
 
-  default void reportToPath(TestResults results, Path path) throws IOException {
+  public void reportToPath(TestResults results, Path path) throws IOException {
     try (var writer = new FileWriter(path.toFile(), StandardCharsets.UTF_8)) {
       report(results, writer);
     }

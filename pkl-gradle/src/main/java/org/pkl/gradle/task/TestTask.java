@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,14 @@ public abstract class TestTask extends ModulesTask {
   public abstract DirectoryProperty getJunitReportsDir();
 
   @Input
+  @Optional
+  public abstract Property<Boolean> getJunitAggregateReports();
+
+  @Input
+  @Optional
+  public abstract Property<String> getJunitSuiteName();
+
+  @Input
   public abstract Property<Boolean> getOverwrite();
 
   @Override
@@ -38,7 +46,9 @@ public abstract class TestTask extends ModulesTask {
             getCliBaseOptions(),
             new CliTestOptions(
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
-                getOverwrite().get()),
+                getOverwrite().get(),
+                getJunitAggregateReports().getOrElse(false),
+                getJunitSuiteName().getOrElse(null)),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

@@ -381,7 +381,7 @@ pkl eval -m . myFiles.pkl
 pkl eval -m "%{moduleName}" foo.pkl bar.pkl
 ----
 
-For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output] 
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output]
 in the language reference.
 ====
 
@@ -465,7 +465,29 @@ Default: (none) +
 Example: `./build/test-results` +
 Directory where to store JUnit reports.
 
+One file will be created for each test module.
+
 No JUnit reports will be generated if this option is not present.
+====
+
+[[junit-aggregate-reports]]
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `test.xml` but you can override it using `--junit-suite-name` flag.
+====
+
+[[junit-suite-name]]
+.--junit-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
 ====
 
 [[overwrite]]
@@ -553,6 +575,26 @@ Example: `./build/test-results` +
 Directory where to store JUnit reports.
 
 No JUnit reports will be generated if this option is not present.
+====
+
+[[junit-aggregate-reports]]
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `test.xml` but you can override it using `--junit-suite-name` flag.
+====
+
+[[junit-suite-name]]
+.--junit-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
 ====
 
 .--overwrite

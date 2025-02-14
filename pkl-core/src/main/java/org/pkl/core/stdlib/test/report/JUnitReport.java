@@ -36,14 +36,13 @@ import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
 import org.pkl.core.util.EconomicMaps;
 
-public final class JUnitReport implements TestReport {
-
+public class JUnitReport extends TestReport {
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
     writer.append(renderXML("    ", "1.0", buildSuite(results)));
   }
 
-  private VmDynamic buildSuite(TestResults results) {
+  public VmDynamic buildSuite(TestResults results) {
     if (results.error() != null) {
       var testCase = rootTestCase(results, results.error());
       var attrs =
@@ -142,7 +141,7 @@ public final class JUnitReport implements TestReport {
     return list;
   }
 
-  private VmDynamic buildXmlElement(String name, VmMapping attributes, VmDynamic... elements) {
+  public VmDynamic buildXmlElement(String name, VmMapping attributes, VmDynamic... elements) {
     return buildXmlElement(
         name,
         attributes,
@@ -173,7 +172,7 @@ public final class JUnitReport implements TestReport {
         members.size() - 4);
   }
 
-  private VmMapping buildAttributes(Object... attributes) {
+  public VmMapping buildAttributes(Object... attributes) {
     EconomicMap<Object, ObjectMember> attrs = EconomicMaps.create(attributes.length);
     for (int i = 0; i < attributes.length; i += 2) {
       attrs.put(
@@ -201,7 +200,7 @@ public final class JUnitReport implements TestReport {
     return str.replaceAll("\033\\[[;\\d]*m", "");
   }
 
-  private static String renderXML(String indent, String version, VmDynamic value) {
+  public static String renderXML(String indent, String version, VmDynamic value) {
     var builder = new StringBuilder();
     var converter = new PklConverter(VmMapping.empty());
     var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), converter);

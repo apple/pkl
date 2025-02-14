@@ -31,8 +31,25 @@ class TestOptions : OptionGroup() {
       )
       .path()
 
+  private val junitAggregateReports: Boolean by
+    option(
+        names = arrayOf("--junit-aggregate-reports"),
+        help = "Aggregate JUnit reports into a single file.",
+      )
+      .flag()
+
+  private val junitSuiteName: String? by
+    option(
+        names = arrayOf("--junit-suite-name"),
+        metavar = "name",
+        help = "The name of the root JUnit test suite.",
+      )
+      .single()
+
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
-  val cliTestOptions: CliTestOptions by lazy { CliTestOptions(junitReportDir, overwrite) }
+  val cliTestOptions: CliTestOptions by lazy {
+    CliTestOptions(junitReportDir, overwrite, junitAggregateReports, junitSuiteName)
+  }
 }

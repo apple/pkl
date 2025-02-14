@@ -28,7 +28,7 @@ import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReport implements TestReport {
+public final class SimpleReport extends TestReport {
 
   private static final String passingMark = "✔ ";
   private static final String failingMark = "✘ ";

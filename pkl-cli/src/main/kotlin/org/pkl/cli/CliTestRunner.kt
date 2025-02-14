@@ -21,6 +21,7 @@ import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
 import org.pkl.core.TestResults
+import org.pkl.core.stdlib.test.report.JUnitAggregateReport
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
 import org.pkl.core.util.ErrorMessages
@@ -65,6 +66,12 @@ constructor(
       val moduleNames = mutableSetOf<String>()
       val reporter = SimpleReport(useColor)
       val allTestResults = mutableListOf<TestResults>()
+
+      val junitDir = testOptions.junitDir
+      if (junitDir != null) {
+        junitDir.toFile().mkdirs()
+      }
+
       for ((idx, moduleUri) in sources.withIndex()) {
         try {
           val results = evaluator.evaluateTest(uri(moduleUri), testOptions.overwrite)
@@ -78,9 +85,7 @@ constructor(
             consoleWriter.append('\n')
           }
           consoleWriter.flush()
-          val junitDir = testOptions.junitDir
           if (junitDir != null) {
-            junitDir.toFile().mkdirs()
             val moduleName = "${results.moduleName}.xml"
             if (moduleName in moduleNames) {
               throw RuntimeException(
@@ -94,7 +99,10 @@ constructor(
               )
             }
             moduleNames += moduleName
-            JUnitReport().reportToPath(results, junitDir.resolve(moduleName))
+
+            if (!testOptions.junitAggregateReports) {
+              JUnitReport().reportToPath(results, junitDir.resolve(moduleName))
+            }
           }
         } catch (ex: Exception) {
           errWriter.appendLine("Error evaluating module ${moduleUri.path}:")
@@ -105,6 +113,11 @@ constructor(
           errWriter.flush()
           failed = true
         }
+      }
+      if (testOptions.junitAggregateReports && junitDir != null) {
+        val suite = testOptions.junitSuiteName ?: "test"
+        val fileName = "${suite}.xml"
+        JUnitAggregateReport().reportToPath(suite, allTestResults, junitDir.resolve(fileName))
       }
       consoleWriter.append('\n')
       reporter.summarize(allTestResults, consoleWriter)

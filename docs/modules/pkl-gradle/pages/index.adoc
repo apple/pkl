@@ -195,7 +195,7 @@ Example 1: `multipleFileOutputDir = layout.projectDirectory.dir("output")` +
 Example 2: `+multipleFileOutputDir = layout.projectDirectory.file("%{moduleDir}/output")+`
 The directory where a module's output files are placed.
 
-Setting this option causes Pkl to evaluate a module's `output.files` property 
+Setting this option causes Pkl to evaluate a module's `output.files` property
 and write the files specified therein.
 Within `output.files`, a key determines a file's path relative to `multipleFileOutputDir`,
 and a value determines the file's contents.
@@ -207,7 +207,7 @@ This option cannot be used together with any of the following:
 
 This option supports the same placeholders as xref:output-file[outputFile].
 
-For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output] 
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output]
 in the language reference.
 ====
 
@@ -296,6 +296,22 @@ pkl {
 Default: `null` +
 Example: `junitReportsDir = layout.buildDirectory.dir("reports")` +
 Whether and where to generate JUnit XML reports.
+====
+
+[[junit-aggregate-reports]]
+.junitAggregateReports: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Aggregate JUnit reports into a single file.
+====
+
+[[junit-suite-name]]
+.junitSuiteName: Property<String>
+[%collapsible]
+====
+Default: `null` +
+The name of the root JUnit test suite.
 ====
 
 [[overwrite]]
@@ -391,7 +407,7 @@ For Spring Boot applications, and for users of `pkl-config-java` compiling the g
 Default: `"org.pkl.config.java.mapper.NonNull"` +
 Example: `nonNullAnnotation = "org.project.MyAnnotation"` +
 Fully qualified name of the annotation type to use for annotating non-null types. +
-The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)` 
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
 or the generated code may not compile.
 ====
 
@@ -431,7 +447,7 @@ build.gradle.kts::
 +
 [source,kotlin]
 ----
-pkl { 
+pkl {
   kotlinCodeGenerators {
     register("genKotlin") {
       sourceModules.addAll(files("Template1.pkl", "Template2.pkl"))
