@@ -21,7 +21,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public abstract sealed class Parameter extends AbstractNode {
 
   public Parameter(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -46,10 +45,12 @@ public abstract sealed class Parameter extends AbstractNode {
     }
 
     public Identifier getIdentifier() {
+      assert children != null;
       return (Identifier) children.get(0);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
+      assert children != null;
       return (TypeAnnotation) children.get(1);
     }
   }

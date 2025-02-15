@@ -356,10 +356,20 @@ class ANTLRSexpRenderer {
     renderQualifiedIdent(type.qualifiedIdentifier())
     val args = type.typeArgumentList()
     if (args != null) {
-      for (arg in args.type()) {
-        buf.append('\n')
-        renderType(arg)
-      }
+      buf.append('\n')
+      renderTypeArgumentList(args)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderTypeArgumentList(ctx: TypeArgumentListContext) {
+    buf.append(tab)
+    buf.append("(typeArgumentList")
+    val oldTab = increaseTab()
+    for (arg in ctx.type()) {
+      buf.append('\n')
+      renderType(arg)
     }
     buf.append(')')
     tab = oldTab
@@ -420,21 +430,6 @@ class ANTLRSexpRenderer {
     }
     buf.append(')')
     tab = oldTab
-  }
-
-  private fun flattenUnion(type: UnionTypeContext): List<TypeContext> {
-    val types = mutableListOf<TypeContext>()
-    val toCheck = mutableListOf(type.l, type.r)
-    while (toCheck.isNotEmpty()) {
-      val typ = toCheck.removeAt(0)
-      if (typ is UnionTypeContext) {
-        toCheck.add(0, typ.r)
-        toCheck.add(0, typ.l)
-      } else {
-        types += typ
-      }
-    }
-    return types
   }
 
   fun renderFunctionType(type: FunctionTypeContext) {
@@ -1053,6 +1048,21 @@ class ANTLRSexpRenderer {
       res += body.classMethod()
       res.sortWith(compareBy { it.sourceInterval.a })
       return res
+    }
+
+    fun flattenUnion(type: UnionTypeContext): List<TypeContext> {
+      val types = mutableListOf<TypeContext>()
+      val toCheck = mutableListOf(type.l, type.r)
+      while (toCheck.isNotEmpty()) {
+        val typ = toCheck.removeAt(0)
+        if (typ is UnionTypeContext) {
+          toCheck.add(0, typ.r)
+          toCheck.add(0, typ.l)
+        } else {
+          types += typ
+        }
+      }
+      return types
     }
   }
 }

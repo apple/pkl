@@ -30,7 +30,7 @@ public final class TypeParameter extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitTypeParameter(this);
   }
 
@@ -55,6 +55,7 @@ public final class TypeParameter extends AbstractNode {
         + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {

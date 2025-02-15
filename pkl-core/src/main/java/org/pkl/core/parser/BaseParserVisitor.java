@@ -55,6 +55,7 @@ import org.pkl.core.parser.ast.Expr.UnqualifiedAccessExpr;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
 import org.pkl.core.parser.ast.Identifier;
 import org.pkl.core.parser.ast.ImportClause;
+import org.pkl.core.parser.ast.Keyword;
 import org.pkl.core.parser.ast.Modifier;
 import org.pkl.core.parser.ast.ModuleDecl;
 import org.pkl.core.parser.ast.Node;
@@ -86,6 +87,7 @@ import org.pkl.core.parser.ast.Type.UnionType;
 import org.pkl.core.parser.ast.Type.UnknownType;
 import org.pkl.core.parser.ast.TypeAlias;
 import org.pkl.core.parser.ast.TypeAnnotation;
+import org.pkl.core.parser.ast.TypeArgumentList;
 import org.pkl.core.parser.ast.TypeParameter;
 import org.pkl.core.parser.ast.TypeParameterList;
 
@@ -454,6 +456,16 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   @Override
   public T visitReplInput(ReplInput replInput) {
     return visitChildren(replInput);
+  }
+
+  @Override
+  public T visitKeyword(Keyword keyword) {
+    return defaultValue();
+  }
+
+  @Override
+  public T visitTypeArgumentList(TypeArgumentList typeArgumentList) {
+    return visitChildren(typeArgumentList);
   }
 
   private T visitChildren(Node node) {

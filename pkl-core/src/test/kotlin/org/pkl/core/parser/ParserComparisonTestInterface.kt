@@ -47,6 +47,23 @@ interface ParserComparisonTestInterface {
     }
   }
 
+  @Test
+  @Execution(ExecutionMode.CONCURRENT)
+  fun compareSnippetTestsSpans() {
+    SoftAssertions.assertSoftly { softly ->
+      getSnippets()
+        .parallelStream()
+        .map { Pair(it.pathString, it.readText()) }
+        .forEach { (path, snippet) ->
+          try {
+            compareSpans(snippet, path, softly)
+          } catch (e: ParserError) {
+            softly.fail("path: $path. Message: ${e.message}", e)
+          }
+        }
+    }
+  }
+
   fun getSnippets(): List<Path>
 
   fun compare(code: String, path: String? = null, softly: SoftAssertions? = null) {
@@ -56,6 +73,22 @@ interface ParserComparisonTestInterface {
         softly.assertThat(sexp).`as`("path: $path").isEqualTo(antlrExp)
       else -> assertThat(sexp).isEqualTo(antlrExp)
     }
+  }
+
+  fun compareSpans(code: String, path: String, softly: SoftAssertions) {
+    // Our ANTLR grammar always start doc comment spans in the beginning of the line,
+    // even though they may have leading spaces.
+    // This is a regression, but it's a bugfix
+    if (path.endsWith("annotation1.pkl")) return
+
+    val parser = Parser()
+    val mod = parser.parseModule(code)
+    val lexer = PklLexer(ANTLRInputStream(code))
+    val antlr = PklParser(CommonTokenStream(lexer))
+    val antlrMod = antlr.module()
+
+    val comparer = SpanComparison(path, softly)
+    comparer.compare(mod, antlrMod)
   }
 
   fun renderBoth(code: String): Pair<String, String> = Pair(renderCode(code), renderANTLRCode(code))

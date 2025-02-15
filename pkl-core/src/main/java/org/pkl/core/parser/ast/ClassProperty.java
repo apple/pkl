@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings({"DuplicatedCode", "unchecked"})
 public final class ClassProperty extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -32,7 +31,7 @@ public final class ClassProperty extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitClassProperty(this);
   }
 
@@ -41,11 +40,13 @@ public final class ClassProperty extends AbstractNode {
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
     assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
     assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
@@ -66,6 +67,7 @@ public final class ClassProperty extends AbstractNode {
     return (Expr) children.get(nameOffset + 2);
   }
 
+  @SuppressWarnings("unchecked")
   public List<ObjectBody> getBodyList() {
     assert children != null;
     return (List<ObjectBody>) children.subList(nameOffset + 3, children.size());

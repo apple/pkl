@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings({"DataFlowIssue", "unchecked"})
 public final class ModuleDecl extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -32,42 +31,58 @@ public final class ModuleDecl extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitModuleDecl(this);
   }
 
   public @Nullable DocComment getDocComment() {
+    assert children != null;
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
+    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
+    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
+  public @Nullable Keyword getModuleKeyword() {
+    assert children != null;
+    return (Keyword) children.get(nameOffset);
+  }
+
   public @Nullable QualifiedIdentifier getName() {
-    return (QualifiedIdentifier) children.get(nameOffset);
+    assert children != null;
+    return (QualifiedIdentifier) children.get(nameOffset + 1);
   }
 
   public @Nullable ExtendsOrAmendsClause getExtendsOrAmendsDecl() {
-    return (ExtendsOrAmendsClause) children.get(nameOffset + 1);
+    assert children != null;
+    return (ExtendsOrAmendsClause) children.get(nameOffset + 2);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   public Span headerSpan() {
     Span start = null;
-    Span end = null;
+    assert children != null;
     for (var i = modifiersOffset; i < children.size(); i++) {
       var child = children.get(i);
       if (child != null) {
-        if (start == null) {
-          start = child.span();
-        }
-        end = child.span();
+        start = child.span();
+        break;
       }
     }
-    return start.endWith(end);
+    var extendsOrAmends = children.get(nameOffset + 2);
+    assert start != null;
+    if (extendsOrAmends != null) {
+      return start.endWith(extendsOrAmends.span());
+    }
+    return start.endWith(children.get(nameOffset + 1).span());
   }
 }

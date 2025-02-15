@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,23 @@
 package org.pkl.core.parser.ast;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import org.pkl.core.parser.ParserVisitor;
+import org.pkl.core.parser.Span;
 
-public final class QualifiedIdentifier extends AbstractNode {
-  public QualifiedIdentifier(List<Identifier> identifiers) {
-    super(
-        identifiers.get(0).span.endWith(identifiers.get(identifiers.size() - 1).span), identifiers);
+public class TypeArgumentList extends AbstractNode {
+
+  public TypeArgumentList(List<Type> children, Span span) {
+    super(span, children);
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<Type> getTypes() {
+    assert children != null;
+    return (List<Type>) children;
   }
 
   @Override
   public <T> T accept(ParserVisitor<? extends T> visitor) {
-    return visitor.visitQualifiedIdentifier(this);
-  }
-
-  @SuppressWarnings("unchecked")
-  public List<Identifier> getIdentifiers() {
-    assert children != null;
-    return (List<Identifier>) children;
-  }
-
-  public String text() {
-    return getIdentifiers().stream().map(Identifier::getValue).collect(Collectors.joining("."));
+    return visitor.visitTypeArgumentList(this);
   }
 }

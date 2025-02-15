@@ -22,7 +22,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public abstract sealed class ObjectMember extends AbstractNode {
 
   public ObjectMember(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -35,11 +34,12 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectElement(this);
     }
 
     public Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(0);
     }
   }
@@ -53,27 +53,34 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectProperty(this);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Modifier> getModifiers() {
+      assert children != null;
       return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
     public Identifier getIdentifier() {
+      assert children != null;
       return (Identifier) children.get(identifierOffset);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
+      assert children != null;
       return (TypeAnnotation) children.get(identifierOffset + 1);
     }
 
     public @Nullable Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(identifierOffset + 2);
     }
 
-    public @Nullable List<ObjectBody> getBodyList() {
+    @SuppressWarnings("unchecked")
+    public List<ObjectBody> getBodyList() {
+      assert children != null;
       return (List<ObjectBody>) children.subList(identifierOffset + 3, children.size());
     }
   }
@@ -87,43 +94,65 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectMethod(this);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Modifier> getModifiers() {
+      assert children != null;
       return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
+    public Keyword getFunctionKeyword() {
+      assert children != null;
+      return (Keyword) children.get(identifierOffset);
+    }
+
     public Identifier getIdentifier() {
-      return (Identifier) children.get(identifierOffset);
+      assert children != null;
+      return (Identifier) children.get(identifierOffset + 1);
     }
 
     public @Nullable TypeParameterList getTypeParameterList() {
-      return (TypeParameterList) children.get(identifierOffset + 1);
+      assert children != null;
+      return (TypeParameterList) children.get(identifierOffset + 2);
     }
 
     public ParameterList getParamList() {
-      return (ParameterList) children.get(identifierOffset + 2);
+      assert children != null;
+      return (ParameterList) children.get(identifierOffset + 3);
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      return (TypeAnnotation) children.get(identifierOffset + 3);
+      assert children != null;
+      return (TypeAnnotation) children.get(identifierOffset + 4);
     }
 
     public Expr getExpr() {
-      return (Expr) children.get(identifierOffset + 4);
+      assert children != null;
+      return (Expr) children.get(identifierOffset + 5);
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public Span headerSpan() {
+      Span start = null;
+      assert children != null;
+      for (var child : children) {
+        if (child != null) {
+          start = child.span();
+          break;
+        }
+      }
       Span end;
-      var typeAnnotation = children.get(identifierOffset + 3);
+      var typeAnnotation = children.get(identifierOffset + 4);
       if (typeAnnotation == null) {
-        end = children.get(identifierOffset + 2).span();
+        end = children.get(identifierOffset + 3).span();
       } else {
         end = typeAnnotation.span();
       }
-      return span.endWith(end);
+      assert start != null;
+      return start.endWith(end);
     }
   }
 
@@ -133,19 +162,23 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitMemberPredicate(this);
     }
 
     public Expr getPred() {
+      assert children != null;
       return (Expr) children.get(0);
     }
 
     public @Nullable Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(1);
     }
 
+    @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
+      assert children != null;
       return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
@@ -156,19 +189,23 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectEntry(this);
     }
 
     public Expr getKey() {
+      assert children != null;
       return (Expr) children.get(0);
     }
 
     public @Nullable Expr getValue() {
+      assert children != null;
       return (Expr) children.get(1);
     }
 
+    @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
+      assert children != null;
       return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
@@ -182,11 +219,12 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitObjectSpread(this);
     }
 
     public Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(0);
     }
 
@@ -206,6 +244,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
           + '}';
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -229,24 +268,27 @@ public abstract sealed class ObjectMember extends AbstractNode {
 
   public static final class WhenGenerator extends ObjectMember {
     public WhenGenerator(
-        Expr thenClause, ObjectBody body, @Nullable ObjectBody elseClause, Span span) {
-      super(span, Arrays.asList(thenClause, body, elseClause));
+        Expr predicate, ObjectBody thenClause, @Nullable ObjectBody elseClause, Span span) {
+      super(span, Arrays.asList(predicate, thenClause, elseClause));
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitWhenGenerator(this);
     }
 
-    public Expr getThenClause() {
+    public Expr getPredicate() {
+      assert children != null;
       return (Expr) children.get(0);
     }
 
-    public ObjectBody getBody() {
+    public ObjectBody getThenClause() {
+      assert children != null;
       return (ObjectBody) children.get(1);
     }
 
     public @Nullable ObjectBody getElseClause() {
+      assert children != null;
       return (ObjectBody) children.get(2);
     }
   }
@@ -258,23 +300,27 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitForGenerator(this);
     }
 
     public Parameter getP1() {
+      assert children != null;
       return (Parameter) children.get(0);
     }
 
     public @Nullable Parameter getP2() {
+      assert children != null;
       return (Parameter) children.get(1);
     }
 
     public Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(2);
     }
 
     public ObjectBody getBody() {
+      assert children != null;
       return (ObjectBody) children.get(3);
     }
 

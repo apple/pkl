@@ -20,51 +20,74 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class Class extends AbstractNode {
   private final int modifiersOffset;
-  private final int nameOffset;
+  private final int keywordOffset;
 
-  public Class(List<Node> nodes, int modifiersOffset, int nameOffset, Span span) {
+  public Class(List<Node> nodes, int modifiersOffset, int keywordOffset, Span span) {
     super(span, nodes);
     this.modifiersOffset = modifiersOffset;
-    this.nameOffset = nameOffset;
+    this.keywordOffset = keywordOffset;
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitClass(this);
   }
 
   public @Nullable DocComment getDocComment() {
+    assert children != null;
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
+    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
+    assert children != null;
+    return (List<Modifier>) children.subList(modifiersOffset, keywordOffset);
+  }
+
+  public Keyword getClassKeyword() {
+    assert children != null;
+    return (Keyword) children.get(keywordOffset);
   }
 
   public Identifier getName() {
-    return (Identifier) children.get(nameOffset);
+    assert children != null;
+    return (Identifier) children.get(keywordOffset + 1);
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    return (TypeParameterList) children.get(nameOffset + 1);
+    assert children != null;
+    return (TypeParameterList) children.get(keywordOffset + 2);
   }
 
   public @Nullable Type getSuperClass() {
-    return (Type) children.get(nameOffset + 2);
+    assert children != null;
+    return (Type) children.get(keywordOffset + 3);
   }
 
   public @Nullable ClassBody getBody() {
-    return (ClassBody) children.get(nameOffset + 3);
+    assert children != null;
+    return (ClassBody) children.get(keywordOffset + 4);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   public Span getHeaderSpan() {
+    Span start = null;
+    assert children != null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        start = child.span();
+        break;
+      }
+    }
     Span end;
     if (getSuperClass() != null) {
       end = getSuperClass().span();
@@ -73,6 +96,7 @@ public final class Class extends AbstractNode {
     } else {
       end = getName().span();
     }
-    return span.endWith(end);
+    assert start != null;
+    return start.endWith(end);
   }
 }

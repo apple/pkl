@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public final class TypeAlias extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -32,40 +31,64 @@ public final class TypeAlias extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitTypeAlias(this);
   }
 
   public @Nullable DocComment getDocComment() {
+    assert children != null;
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
+    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
+    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
+  public Keyword getTypealiasKeyword() {
+    assert children != null;
+    return (Keyword) children.get(nameOffset);
+  }
+
   public Identifier getName() {
-    return (Identifier) children.get(nameOffset);
+    assert children != null;
+    return (Identifier) children.get(nameOffset + 1);
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    return (TypeParameterList) children.get(nameOffset + 1);
+    assert children != null;
+    return (TypeParameterList) children.get(nameOffset + 2);
   }
 
   public Type getType() {
-    return (Type) children.get(nameOffset + 2);
+    assert children != null;
+    return (Type) children.get(nameOffset + 3);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   public Span getHeaderSpan() {
-    var end = children.get(nameOffset).span();
-    var tparList = children.get(nameOffset + 1);
+    Span start = null;
+    assert children != null;
+    for (var i = modifiersOffset; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child != null) {
+        start = child.span();
+        break;
+      }
+    }
+    var end = children.get(nameOffset + 1).span();
+    var tparList = children.get(nameOffset + 2);
     if (tparList != null) {
       end = tparList.span();
     }
-    return span.endWith(end);
+    assert start != null;
+    return start.endWith(end);
   }
 }

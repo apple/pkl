@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("unchecked")
 public class ArgumentList extends AbstractNode {
 
   public ArgumentList(List<Expr> arguments, Span span) {
@@ -32,6 +31,7 @@ public class ArgumentList extends AbstractNode {
     return visitor.visitArgumentList(this);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Expr> getArguments() {
     assert children != null;
     return (List<Expr>) children;

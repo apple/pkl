@@ -21,7 +21,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("DataFlowIssue")
 public final class ImportClause extends AbstractNode {
   private final boolean isGlob;
 
@@ -32,11 +31,12 @@ public final class ImportClause extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitImportClause(this);
   }
 
   public StringConstant getImportStr() {
+    assert children != null;
     return (StringConstant) children.get(0);
   }
 
@@ -45,6 +45,7 @@ public final class ImportClause extends AbstractNode {
   }
 
   public @Nullable Identifier getAlias() {
+    assert children != null;
     return (Identifier) children.get(1);
   }
 

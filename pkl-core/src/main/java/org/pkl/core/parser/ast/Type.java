@@ -15,13 +15,13 @@
  */
 package org.pkl.core.parser.ast;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public abstract sealed class Type extends AbstractNode {
 
   public Type(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -34,7 +34,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitUnknownType(this);
     }
   }
@@ -45,7 +45,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNothingType(this);
     }
   }
@@ -56,7 +56,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitModuleType(this);
     }
   }
@@ -67,31 +67,34 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitStringConstantType(this);
     }
 
     public StringConstant getStr() {
+      assert children != null;
       return (StringConstant) children.get(0);
     }
   }
 
   public static final class DeclaredType extends Type {
-    public DeclaredType(List<Node> nodes, Span span) {
-      super(span, nodes);
+    public DeclaredType(QualifiedIdentifier name, @Nullable TypeArgumentList typeArgs, Span span) {
+      super(span, Arrays.asList(name, typeArgs));
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitDeclaredType(this);
     }
 
     public QualifiedIdentifier getName() {
+      assert children != null;
       return (QualifiedIdentifier) children.get(0);
     }
 
-    public List<Type> getArgs() {
-      return (List<Type>) children.subList(1, children.size());
+    public @Nullable TypeArgumentList getArgs() {
+      assert children != null;
+      return (TypeArgumentList) children.get(1);
     }
   }
 
@@ -101,11 +104,12 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitParenthesizedType(this);
     }
 
     public Type getType() {
+      assert children != null;
       return (Type) children.get(0);
     }
   }
@@ -116,11 +120,12 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitNullableType(this);
     }
 
     public Type getType() {
+      assert children != null;
       return (Type) children.get(0);
     }
   }
@@ -131,15 +136,18 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitConstrainedType(this);
     }
 
     public Type getType() {
+      assert children != null;
       return (Type) children.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Expr> getExprs() {
+      assert children != null;
       return (List<Expr>) children.subList(1, children.size());
     }
   }
@@ -153,11 +161,13 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitUnionType(this);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Type> getTypes() {
+      assert children != null;
       return (List<Type>) children;
     }
 
@@ -177,6 +187,7 @@ public abstract sealed class Type extends AbstractNode {
           + '}';
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -204,15 +215,18 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<? extends T> visitor) {
       return visitor.visitFunctionType(this);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Type> getArgs() {
+      assert children != null;
       return (List<Type>) children.subList(0, children.size() - 1);
     }
 
     public Type getRet() {
+      assert children != null;
       return (Type) children.get(children.size() - 1);
     }
   }
