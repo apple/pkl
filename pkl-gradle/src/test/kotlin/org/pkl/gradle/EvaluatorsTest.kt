@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ class EvaluatorsTest : AbstractTest() {
         age = 30
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -62,7 +62,7 @@ class EvaluatorsTest : AbstractTest() {
         name: Pigeon
         age: 30
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -85,7 +85,7 @@ class EvaluatorsTest : AbstractTest() {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -115,7 +115,7 @@ class EvaluatorsTest : AbstractTest() {
       </dict>
       </plist>
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -126,7 +126,7 @@ class EvaluatorsTest : AbstractTest() {
       """
       externalProperties = [prop1: "value1", prop2: "value2"]
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writePklFile(
@@ -148,7 +148,7 @@ class EvaluatorsTest : AbstractTest() {
       prop2 = "value2"
       other = null
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -175,7 +175,7 @@ class EvaluatorsTest : AbstractTest() {
       prop2 = null
       prop3 = null
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -186,7 +186,7 @@ class EvaluatorsTest : AbstractTest() {
       """
       environmentVariables = [VAR1: "value1", VAR2: "value2"]
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writePklFile(
@@ -208,7 +208,7 @@ class EvaluatorsTest : AbstractTest() {
       prop2 = "value2"
       other = null
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -228,7 +228,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     val result = runTask("evalTest", true)
@@ -244,7 +244,7 @@ class EvaluatorsTest : AbstractTest() {
         name = "Pigeon"
         age = 20 + 10
       }
-    """
+    """,
     )
 
     writeFile(
@@ -264,7 +264,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     runTask("evalTest")
@@ -278,7 +278,7 @@ class EvaluatorsTest : AbstractTest() {
         age = 30
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -300,7 +300,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     val result = runTask("evalTest", expectFailure = true)
@@ -314,9 +314,12 @@ class EvaluatorsTest : AbstractTest() {
   @Test
   fun `evaluation timeout`() {
     // Gradle 4.10 doesn't automatically import Duration
-    writeBuildFile("pcf", """
+    writeBuildFile(
+      "pcf",
+      """
       evalTimeout = java.time.Duration.ofMillis(100)
-    """)
+    """,
+    )
 
     writePklFile(
       """
@@ -349,7 +352,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     writeFile("test1.pkl", "foo = 1")
@@ -363,7 +366,7 @@ class EvaluatorsTest : AbstractTest() {
       // hello
       bar = 2
     """
-        .trimIndent()
+        .trimIndent(),
     )
   }
 
@@ -378,7 +381,7 @@ class EvaluatorsTest : AbstractTest() {
         text = reflect.Module(module).uri
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     runTask("evalTest")
@@ -395,7 +398,7 @@ class EvaluatorsTest : AbstractTest() {
       """
       multipleFileOutputDir = layout.projectDirectory.dir("my-output")
     """
-        .trimIndent()
+        .trimIndent(),
     )
     writeFile(
       "test.pkl",
@@ -411,7 +414,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     runTask("evalTest")
     checkFileContents(testProjectDir.resolve("my-output/output-1.txt"), "My output 1")
@@ -426,7 +429,7 @@ class EvaluatorsTest : AbstractTest() {
       expression = "metadata.name"
       outputFile = layout.projectDirectory.file("output.txt")
     """
-        .trimIndent()
+        .trimIndent(),
     )
     writeFile(
       "test.pkl",
@@ -435,7 +438,7 @@ class EvaluatorsTest : AbstractTest() {
           name = "Uni"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     runTask("evalTest")
     checkFileContents(testProjectDir.resolve("output.txt"), "Uni")
@@ -448,7 +451,7 @@ class EvaluatorsTest : AbstractTest() {
       """
       moduleCacheDir = file("${tempDir.toUri()}")
     """
-        .trimIndent()
+        .trimIndent(),
     )
     writeFile(
       "test.pkl",
@@ -457,7 +460,7 @@ class EvaluatorsTest : AbstractTest() {
         
         res = new Bird { name = "Wally"; favoriteFruit { name = "bananas" } }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     PackageServer.populateCacheDir(tempDir)
     runTask("evalTest")
@@ -483,7 +486,7 @@ class EvaluatorsTest : AbstractTest() {
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writeFile(
@@ -498,7 +501,7 @@ class EvaluatorsTest : AbstractTest() {
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writeFile(
@@ -515,7 +518,7 @@ class EvaluatorsTest : AbstractTest() {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writeFile(
@@ -526,7 +529,7 @@ class EvaluatorsTest : AbstractTest() {
         "resolvedDependencies": {}
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writeFile(
@@ -536,7 +539,7 @@ class EvaluatorsTest : AbstractTest() {
       
       bar: String = import("@proj2/baz.pkl").qux
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     writeFile(
@@ -544,7 +547,7 @@ class EvaluatorsTest : AbstractTest() {
       """
       qux: String = "Contents of @proj2/qux"
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     runTask("evalTest")
@@ -595,7 +598,7 @@ class EvaluatorsTest : AbstractTest() {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val result1 = runTask("printEvalFiles")
@@ -741,7 +744,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       """
-          .trimIndent()
+          .trimIndent(),
     )
 
     val result1 = runTask("printEvalDirs")
@@ -875,7 +878,7 @@ class EvaluatorsTest : AbstractTest() {
         """
       transitiveModules.from(files("shared2.pkl"))
     """
-          .trimIndent()
+          .trimIndent(),
     )
     val result1 = runTask("evalTest")
     assertThat(result1.task(":evalTest")!!.outcome).isEqualTo(TaskOutcome.SUCCESS)
@@ -901,7 +904,7 @@ class EvaluatorsTest : AbstractTest() {
     outputFormat: String,
     additionalContents: String = "",
     sourceModules: List<String> = listOf("test.pkl"),
-    additionalBuildScript: String = ""
+    additionalBuildScript: String = "",
   ) {
     writeFile(
       "build.gradle",
@@ -922,12 +925,13 @@ class EvaluatorsTest : AbstractTest() {
       }
       
       $additionalBuildScript
-    """
+    """,
     )
   }
 
   private fun writePklFile(
-    contents: String = """
+    contents: String =
+      """
     person {
       name = "Pigeon"
       age = 20 + 10

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ open class CliException(
   message: String,
 
   /** The process exit code to use. */
-  val exitCode: Int = 1
+  val exitCode: Int = 1,
 ) : RuntimeException(message) {
 
   override fun toString(): String = message!!
@@ -39,7 +39,7 @@ class CliBugException(
   private val theCause: Exception,
 
   /** The process exit code to use. */
-  exitCode: Int = 1
+  exitCode: Int = 1,
 ) :
   CliException("An unexpected error has occurred. Would you mind filing a bug report?", exitCode) {
 

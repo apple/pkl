@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,13 +54,13 @@ class ProjectDepsTest {
         CanonicalPackageUri.of("package://localhost:0/birds@0"),
         Dependency.RemoteDependency(
           PackageUri.create("package://localhost:0/birds@0.5.0"),
-          Checksums("abc123")
+          Checksums("abc123"),
         ),
         CanonicalPackageUri.of("package://localhost:0/fruit@1"),
         Dependency.LocalDependency(
           PackageUri.create("package://localhost:0/fruit@1.1.0"),
-          Path.of("../fruit")
-        )
+          Path.of("../fruit"),
+        ),
       )
     ProjectDeps(projectDepsMap)
   }

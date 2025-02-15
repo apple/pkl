@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ class PkldocGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
     writeFile(
       "doc-package-info.pkl",
@@ -57,7 +57,7 @@ class PkldocGeneratorsTest : AbstractTest() {
       sourceCode = "sources.apple.com/"
       issueTracker = "issues.apple.com"
     """
-        .trimIndent()
+        .trimIndent(),
     )
     writeFile(
       "person.pkl",
@@ -76,7 +76,7 @@ class PkldocGeneratorsTest : AbstractTest() {
 
       other = 42
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     runTask("pkldoc")
@@ -124,7 +124,7 @@ class PkldocGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+    """,
     )
 
     runTask("pkldoc")
@@ -150,7 +150,7 @@ class PkldocGeneratorsTest : AbstractTest() {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val result = runTask("pkldoc", true)

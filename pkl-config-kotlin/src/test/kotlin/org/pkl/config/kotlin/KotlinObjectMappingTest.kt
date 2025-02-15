@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ class KotlinObjectMappingTest {
     // Map & Mapping with structured keys
     val intListingStringMapping: Map<List<Int>, String>,
     val intSetListStringMapping: Map<List<Set<Int>>, String>,
-    val thisOneGoesToEleven: Map<List<Set<Int>>, Map<List<Int>, Map<Int, String>>>
+    val thisOneGoesToEleven: Map<List<Set<Int>>, Map<List<Int>, Map<Int, String>>>,
   )
 
   @Test

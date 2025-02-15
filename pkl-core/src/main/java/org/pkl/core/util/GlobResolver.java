@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -227,7 +227,7 @@ public final class GlobResolver {
           sb.append("!");
         }
 
-          // no special meaning in glob patterns but have special meaning in regex.
+        // no special meaning in glob patterns but have special meaning in regex.
         case '.', '(', '%', '^', '$', '|' -> sb.append("\\").append(current);
         default -> sb.append(current);
       }

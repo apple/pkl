@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ data class CliKotlinCodeGeneratorOptions(
    * from Pkl module names, you can define a rename mapping, where the key is a prefix of the
    * original Pkl module name, and the value is the desired replacement.
    */
-  val renames: Map<String, String> = emptyMap()
+  val renames: Map<String, String> = emptyMap(),
 ) {
   @Suppress("DeprecatedCallableAddReplaceWith")
   @Deprecated("deprecated without replacement")
@@ -57,6 +57,6 @@ data class CliKotlinCodeGeneratorOptions(
       generateKdoc,
       generateSpringBootConfig,
       implementSerializable,
-      renames
+      renames,
     )
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class ProjectOptions : OptionGroup() {
         names = arrayOf("--project-dir"),
         metavar = "<path>",
         help =
-          "The project directory to use for this command. By default, searches up from the working directory for a PklProject file."
+          "The project directory to use for this command. By default, searches up from the working directory for a PklProject file.",
       )
       .single()
       .path()
@@ -39,7 +39,7 @@ class ProjectOptions : OptionGroup() {
   val omitProjectSettings: Boolean by
     option(
         names = arrayOf("--omit-project-settings"),
-        help = "Ignores evaluator settings set in the PklProject file."
+        help = "Ignores evaluator settings set in the PklProject file.",
       )
       .single()
       .flag(default = false)
@@ -47,7 +47,7 @@ class ProjectOptions : OptionGroup() {
   val noProject: Boolean by
     option(
         names = arrayOf("--no-project"),
-        help = "Disables loading settings and dependencies from the PklProject file."
+        help = "Disables loading settings and dependencies from the PklProject file.",
       )
       .single()
       .flag(default = false)

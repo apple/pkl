@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ class ImportGraphUtilsTest {
       ImportGraph(
         mapOf(
           fooUri to setOf(ImportGraph.Import(barUri)),
-          barUri to setOf(ImportGraph.Import(fooUri))
+          barUri to setOf(ImportGraph.Import(fooUri)),
         ),
         // resolved URIs is not important
-        mapOf()
+        mapOf(),
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
     assertThat(cycles).isEqualTo(listOf(listOf(fooUri, barUri)))
@@ -50,10 +50,10 @@ class ImportGraphUtilsTest {
           fooUri to setOf(ImportGraph.Import(barUri)),
           barUri to setOf(ImportGraph.Import(fooUri)),
           bizUri to setOf(ImportGraph.Import(quxUri)),
-          quxUri to setOf(ImportGraph.Import(bizUri))
+          quxUri to setOf(ImportGraph.Import(bizUri)),
         ),
         // resolved URIs is not important
-        mapOf()
+        mapOf(),
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
     assertThat(cycles).isEqualTo(listOf(listOf(fooUri, barUri), listOf(bizUri, quxUri)))
@@ -71,10 +71,10 @@ class ImportGraphUtilsTest {
           barUri to setOf(ImportGraph.Import(fooUri)),
           fooUri to setOf(ImportGraph.Import(bizUri)),
           bizUri to setOf(ImportGraph.Import(quxUri)),
-          quxUri to setOf()
+          quxUri to setOf(),
         ),
         // resolved URIs is not important
-        mapOf()
+        mapOf(),
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
     assertThat(cycles).isEmpty()
@@ -87,7 +87,7 @@ class ImportGraphUtilsTest {
       ImportGraph(
         mapOf(fooUri to setOf(ImportGraph.Import(fooUri))),
         // resolved URIs is not important
-        mapOf()
+        mapOf(),
       )
     val cycles = ImportGraphUtils.findImportCycles(graph)
     assertThat(cycles).isEqualTo(listOf(listOf(fooUri)))

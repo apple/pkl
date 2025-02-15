@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import kotlinx.html.*
 internal abstract class MainOrPackagePageGenerator<S>(
   docsiteInfo: DocsiteInfo,
   pageScope: S,
-  private val siteScope: SiteScope
+  private val siteScope: SiteScope,
 ) : PageGenerator<S>(docsiteInfo, pageScope) where S : PageScope {
   protected fun UL.renderModuleOrPackage(
     name: String,
     moduleOrPackageScope: DocScope,
-    memberDocs: MemberDocs
+    memberDocs: MemberDocs,
   ) {
     li {
       renderAnchor(name)
@@ -47,7 +47,7 @@ internal abstract class MainOrPackagePageGenerator<S>(
 
             renderModifiers(
               setOf(),
-              if (moduleOrPackageScope is PackageScope) "package" else "module"
+              if (moduleOrPackageScope is PackageScope) "package" else "module",
             )
           }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class CliKotlinCodeGeneratorTest {
         name: String
         age: Int
       }
-      """
+      """,
       )
 
     val module2 =
@@ -49,7 +49,7 @@ class CliKotlinCodeGeneratorTest {
       extends "mod1.pkl"
 
       parrot: Person
-      """
+      """,
       )
 
     val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
@@ -60,7 +60,7 @@ class CliKotlinCodeGeneratorTest {
       CliKotlinCodeGenerator(
         CliKotlinCodeGeneratorOptions(
           CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
-          outputDir
+          outputDir,
         )
       )
 
@@ -79,7 +79,7 @@ class CliKotlinCodeGeneratorTest {
       ) {
     """
         .trimIndent(),
-      module1KotlinFile.readString()
+      module1KotlinFile.readString(),
     )
 
     assertContains(
@@ -90,7 +90,7 @@ class CliKotlinCodeGeneratorTest {
       ) : Mod1(pigeon) {
     """
         .trimIndent(),
-      module2KotlinFile.readString()
+      module2KotlinFile.readString(),
     )
   }
 
@@ -105,7 +105,7 @@ class CliKotlinCodeGeneratorTest {
       class Person {
         name: String
       }
-      """
+      """,
       )
 
     val module2 =
@@ -122,7 +122,7 @@ class CliKotlinCodeGeneratorTest {
       class Person {
         age: Int
       }
-      """
+      """,
       )
 
     val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
@@ -133,7 +133,7 @@ class CliKotlinCodeGeneratorTest {
       CliKotlinCodeGenerator(
         CliKotlinCodeGeneratorOptions(
           CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
-          outputDir
+          outputDir,
         )
       )
 
@@ -148,7 +148,7 @@ class CliKotlinCodeGeneratorTest {
       )
       """
         .trimIndent(),
-      module2KotlinFile.readString()
+      module2KotlinFile.readString(),
     )
   }
 
@@ -163,7 +163,7 @@ class CliKotlinCodeGeneratorTest {
           class Person {
             name: String
           }
-        """
+        """,
       )
 
     val module2 =
@@ -178,7 +178,7 @@ class CliKotlinCodeGeneratorTest {
             owner: Module1.Person
             name: String
           }
-        """
+        """,
       )
 
     val module3 =
@@ -192,7 +192,7 @@ class CliKotlinCodeGeneratorTest {
           class Supergroup {
             owner: Module2.Group
           }
-        """
+        """,
       )
 
     val module1PklFile = module1.writeToDisk(tempDir.resolve("org/foo/Module1.pkl"))
@@ -205,7 +205,7 @@ class CliKotlinCodeGeneratorTest {
         CliKotlinCodeGeneratorOptions(
           CliBaseOptions(listOf(module1PklFile, module2PklFile, module3PklFile).map { it.toUri() }),
           outputDir,
-          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b"),
         )
       )
 
@@ -223,7 +223,7 @@ class CliKotlinCodeGeneratorTest {
         |    val name: String
         |  )
         """,
-        it
+        it,
       )
     }
 
@@ -242,7 +242,7 @@ class CliKotlinCodeGeneratorTest {
         |    val name: String
         |  )
         """,
-        it
+        it,
       )
     }
 
@@ -260,7 +260,7 @@ class CliKotlinCodeGeneratorTest {
         |    val owner: Module2.Group
         |  )
         """,
-        it
+        it,
       )
     }
   }

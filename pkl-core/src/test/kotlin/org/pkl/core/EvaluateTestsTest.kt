@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class EvaluateTestsTest {
     """
             .trimIndent()
         ),
-        true
+        true,
       )
 
     assertThat(results.moduleName).isEqualTo("text")
@@ -75,7 +75,7 @@ class EvaluateTestsTest {
         """
             .trimIndent()
         ),
-        true
+        true,
       )
 
     assertThat(results.totalTests()).isEqualTo(1)
@@ -111,7 +111,7 @@ class EvaluateTestsTest {
         """
             .trimIndent()
         ),
-        true
+        true,
       )
 
     assertThat(results.totalTests()).isEqualTo(1)
@@ -157,7 +157,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     Files.writeString(
@@ -172,7 +172,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val results = evaluator.evaluateTest(path(file), false)
@@ -207,7 +207,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     Files.writeString(
@@ -222,7 +222,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val results = evaluator.evaluateTest(path(file), false)
@@ -260,7 +260,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     Files.writeString(
@@ -275,7 +275,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val results = evaluator.evaluateTest(path(file), false)
@@ -314,7 +314,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     Files.writeString(
@@ -329,7 +329,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val results = evaluator.evaluateTest(path(file), false)
@@ -377,7 +377,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
     evaluator.evaluateTest(path(file), false)
     val expectedFile = file.parent.resolve(file.fileName.toString() + "-expected.pcf")
@@ -411,7 +411,7 @@ class EvaluateTestsTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
     createExpected(file)
       .writeString(

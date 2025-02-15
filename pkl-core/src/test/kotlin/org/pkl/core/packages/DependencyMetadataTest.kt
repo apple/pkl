@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,8 @@ class DependencyMetadataTest {
         "foo" to
           Dependency.RemoteDependency(
             PackageUri("package://example.com/foo@0.5.3"),
-            Checksums("abc123")
-          ),
+            Checksums("abc123"),
+          )
       ),
       "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
       URI("https://example.com/my/source"),
@@ -62,9 +62,9 @@ class DependencyMetadataTest {
             "map" to mapOf(true to "t", false to "f"),
             "dataSize" to DataSize(1.5, DataSizeUnit.GIGABYTES),
             "duration" to Duration(2.9, DurationUnit.HOURS),
-            "pair" to Pair(1L, "1")
-          )
-        )
+            "pair" to Pair(1L, "1"),
+          ),
+        ),
       ),
     )
   private val dependencyMetadataStr =
@@ -204,7 +204,7 @@ class DependencyMetadataTest {
         listOf(
           PObject(
             PClassInfo.get("myModule", "MyAnnotation", URI("pkl:fake")),
-            mapOf("pattern" to Regex(".*").toPattern())
+            mapOf("pattern" to Regex(".*").toPattern()),
           )
         ),
       )

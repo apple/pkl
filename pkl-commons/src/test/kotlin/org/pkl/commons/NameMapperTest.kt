@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,14 +43,7 @@ class NameMapperTest {
 
   @Test
   fun `no implicit uppercased classname if explicitly renamed`() {
-    val mapper =
-      NameMapper(
-        mapOf(
-          "foo.bar" to "bar.bar",
-          "foo.c" to "foo.z",
-          "com.foo." to "x",
-        )
-      )
+    val mapper = NameMapper(mapOf("foo.bar" to "bar.bar", "foo.c" to "foo.z", "com.foo." to "x"))
     assertThat(mapper.map("foo.bar")).isEqualTo("bar" to "bar")
     assertThat(mapper.map("foo.bar")).isEqualTo("bar" to "bar")
     assertThat(mapper.map("foo.cow")).isEqualTo("foo" to "zow")

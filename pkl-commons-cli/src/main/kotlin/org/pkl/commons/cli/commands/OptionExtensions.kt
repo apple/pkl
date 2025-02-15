@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ fun <EachT : Any, ValueT> NullableOption<EachT, ValueT>.single(): NullableOption
  */
 fun <EachT : Any, ValueT> NullableOption<EachT, ValueT>.splitAll(
   separator: String = ",",
-  default: List<ValueT> = emptyList()
+  default: List<ValueT> = emptyList(),
 ): OptionWithValues<List<ValueT>, List<ValueT>, ValueT> {
   return copy(
     transformValue = transformValue,
@@ -44,6 +44,6 @@ fun <EachT : Any, ValueT> NullableOption<EachT, ValueT>.splitAll(
     transformAll = { it.flatten().ifEmpty { default } },
     validator = {},
     nvalues = 1,
-    valueSplit = Regex.fromLiteral(separator)
+    valueSplit = Regex.fromLiteral(separator),
   )
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,10 @@ class SearchTest {
             base =
               CliBaseOptions(
                 sourceModules = listOf(packageModule) + inputModules,
-                settings = URI("pkl:settings")
+                settings = URI("pkl:settings"),
               ),
             outputDir = pkldocDir,
-            true
+            true,
           )
         )
         .run()
@@ -145,8 +145,8 @@ class SearchTest {
         "com.package1.modulePropertyComments",
         "com.package1.modulePropertyModifiers",
         "com.package1.modulePropertyTypeAnnotations",
-        "com.package1.modulePropertyTypeReferences"
-      )
+        "com.package1.modulePropertyTypeReferences",
+      ),
     )
   }
 
@@ -159,8 +159,8 @@ class SearchTest {
         "com.package1.classMethodTypeReferences",
         "com.package1.classPropertyTypeReferences",
         "com.package1.moduleMethodTypeReferences",
-        "com.package1.modulePropertyTypeReferences"
-      )
+        "com.package1.modulePropertyTypeReferences",
+      ),
     )
   }
 
@@ -172,8 +172,8 @@ class SearchTest {
         "prpertyWithExpandableComment",
         "AnnotatedClssWithExpandableComment",
         "ClassWithAnnotatedProperty",
-        "mthodWithExpandableComment"
-      )
+        "mthodWithExpandableComment",
+      ),
     )
   }
 
@@ -195,8 +195,8 @@ class SearchTest {
         "com.package1.modulePropertyTypeAnnotations",
         "com.package1.modulePropertyCommentInheritance",
         "com.package1.docExampleSubject1",
-        "com.package1.docExampleSubject2"
-      )
+        "com.package1.docExampleSubject2",
+      ),
     )
   }
 
@@ -208,8 +208,8 @@ class SearchTest {
         "com.package1.classInheritance",
         "city", // disregard
         "com.package1.moduleMethodCommentInheritance",
-        "com.package1.modulePropertyCommentInheritance"
-      )
+        "com.package1.modulePropertyCommentInheritance",
+      ),
     )
   }
 

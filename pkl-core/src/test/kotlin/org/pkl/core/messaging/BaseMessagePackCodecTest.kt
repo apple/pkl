@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ class BaseMessagePackCodecTest {
         123,
         234,
         listOf(PathElement("foo", true), PathElement("bar", false)),
-        null
+        null,
       )
     )
     roundtrip(ListModulesResponse(123, 234, null, "Something dun went wrong"))
@@ -92,7 +92,7 @@ class BaseMessagePackCodecTest {
         3851,
         3019,
         listOf(PathElement("foo", true), PathElement("bar", false)),
-        null
+        null,
       )
     )
     roundtrip(ListResourcesResponse(3851, 3019, null, "something went wrong"))

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ internal class ClassPageGenerator(
   docModule: DocModule,
   clazz: PClass,
   pageScope: ClassScope,
-  isTestMode: Boolean
+  isTestMode: Boolean,
 ) : ModuleOrClassPageGenerator<ClassScope>(docsiteInfo, docModule, clazz, pageScope, isTestMode) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
@@ -71,13 +71,13 @@ internal class ClassPageGenerator(
                   id = HtmlConstants.KNOWN_VERSIONS
                   classes = runtimeDataClasses
                 },
-            )
+            ),
           )
 
         renderMemberGroupLinks(
           Triple("Overview", "#_overview", memberDocs.isExpandable),
           Triple("Properties", "#_properties", clazz.hasListedProperty),
-          Triple("Methods", "#_methods", clazz.hasListedMethod)
+          Triple("Methods", "#_methods", clazz.hasListedMethod),
         )
 
         renderAnchor("_overview")

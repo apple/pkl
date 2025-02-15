@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,14 +118,14 @@ public final class CodeGeneratorUtils {
    */
   private static boolean isValidIdentifierPart(int codePoint, int category) {
     return switch (category) {
-        // NOT Character.CURRENCY_SYMBOL, which is valid in Java, but invalid in Kotlin
+      // NOT Character.CURRENCY_SYMBOL, which is valid in Java, but invalid in Kotlin
       case Character.LOWERCASE_LETTER,
-              Character.UPPERCASE_LETTER,
-              Character.MODIFIER_LETTER,
-              Character.OTHER_LETTER,
-              Character.TITLECASE_LETTER,
-              Character.LETTER_NUMBER,
-              Character.DECIMAL_DIGIT_NUMBER ->
+          Character.UPPERCASE_LETTER,
+          Character.MODIFIER_LETTER,
+          Character.OTHER_LETTER,
+          Character.TITLECASE_LETTER,
+          Character.LETTER_NUMBER,
+          Character.DECIMAL_DIGIT_NUMBER ->
           true;
       default -> codePoint == UNDERSCORE;
     };
@@ -133,18 +133,18 @@ public final class CodeGeneratorUtils {
 
   private static boolean isPunctuationOrSpacing(int category) {
     return switch (category) {
-        // Punctuation
+      // Punctuation
       case Character.CONNECTOR_PUNCTUATION, // Pc
-              Character.DASH_PUNCTUATION, // Pd
-              Character.START_PUNCTUATION, // Ps
-              Character.END_PUNCTUATION, // Pe
-              Character.INITIAL_QUOTE_PUNCTUATION, // Pi
-              Character.FINAL_QUOTE_PUNCTUATION, // Pf
-              Character.OTHER_PUNCTUATION, // Po
-              // Spacing
-              Character.SPACE_SEPARATOR, // Zs
-              Character.LINE_SEPARATOR, // Zl
-              Character.PARAGRAPH_SEPARATOR -> // Zp
+          Character.DASH_PUNCTUATION, // Pd
+          Character.START_PUNCTUATION, // Ps
+          Character.END_PUNCTUATION, // Pe
+          Character.INITIAL_QUOTE_PUNCTUATION, // Pi
+          Character.FINAL_QUOTE_PUNCTUATION, // Pf
+          Character.OTHER_PUNCTUATION, // Po
+          // Spacing
+          Character.SPACE_SEPARATOR, // Zs
+          Character.LINE_SEPARATOR, // Zl
+          Character.PARAGRAPH_SEPARATOR -> // Zp
           true;
       default -> false;
     };

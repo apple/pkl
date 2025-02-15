@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         MessageTransports.stream(
           ServerMessagePackDecoder(inputStream),
           ServerMessagePackEncoder(outputStream),
-          ::log
+          ::log,
         )
       )
   }
@@ -76,7 +76,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
           is EvaluateRequest -> handleEvaluate(message)
           else -> throw ProtocolException("Unexpected incoming request message: $message")
         }
-      }
+      },
     )
   }
 
@@ -147,7 +147,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private fun buildDeclaredDependencies(
     projectFileUri: URI,
     dependencies: Map<String, Dependency>,
-    myPackageUri: URI?
+    myPackageUri: URI?,
   ): DeclaredDependencies {
     val remoteDependencies = buildMap {
       for ((key, dep) in dependencies) {
@@ -156,8 +156,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
             key,
             org.pkl.core.packages.Dependency.RemoteDependency(
               PackageUri(dep.packageUri),
-              dep.checksums
-            )
+              dep.checksums,
+            ),
           )
         }
       }
@@ -175,7 +175,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       remoteDependencies,
       localDependencies,
       projectFileUri,
-      myPackageUri?.let(::PackageUri)
+      myPackageUri?.let(::PackageUri),
     )
   }
 
@@ -210,7 +210,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         allowedModules,
         allowedResources,
         SecurityManagers.defaultTrustLevels,
-        rootDir
+        rootDir,
       ),
       httpClient,
       ClientLogger(evaluatorId, transport),
@@ -221,14 +221,14 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       timeout,
       cacheDir,
       dependencies,
-      message.outputFormat
+      message.outputFormat,
     )
   }
 
   private fun createResourceReaders(
     message: CreateEvaluatorRequest,
     evaluatorId: Long,
-    modulePathResolver: ModulePathResolver
+    modulePathResolver: ModulePathResolver,
   ): List<ResourceReader> = buildList {
     add(ResourceReaders.environmentVariable())
     add(ResourceReaders.externalProperty())
@@ -248,7 +248,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       add(
         ResourceReaders.externalResolver(
           readerSpec,
-          MessageTransportResourceResolver(transport, evaluatorId)
+          MessageTransportResourceResolver(transport, evaluatorId),
         )
       )
     }
@@ -257,7 +257,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   private fun createModuleKeyFactories(
     message: CreateEvaluatorRequest,
     evaluatorId: Long,
-    modulePathResolver: ModulePathResolver
+    modulePathResolver: ModulePathResolver,
   ): List<ModuleKeyFactory> = buildList {
     // add client-side module key factory first to ensure it wins over builtin ones
     if (message.clientModuleReaders?.isNotEmpty() == true) {
@@ -268,7 +268,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         ModuleKeyFactories.externalProcess(
           scheme,
           getExternalProcess(evaluatorId, spec),
-          evaluatorId
+          evaluatorId,
         )
       )
     }

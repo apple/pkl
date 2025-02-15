@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,13 +52,13 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           map.unpackProject(),
           map.unpackHttp(),
           unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
-          unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader)
+          unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader),
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(
           unpackLong(map, "requestId"),
           unpackLongOrNull(map, "evaluatorId"),
-          unpackStringOrNull(map, "error")
+          unpackStringOrNull(map, "error"),
         )
       Message.Type.CLOSE_EVALUATOR -> CloseEvaluator(unpackLong(map, "evaluatorId"))
       Message.Type.EVALUATE_REQUEST ->
@@ -67,21 +67,21 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           unpackLong(map, "evaluatorId"),
           URI(unpackString(map, "moduleUri")),
           unpackStringOrNull(map, "moduleText"),
-          unpackStringOrNull(map, "expr")
+          unpackStringOrNull(map, "expr"),
         )
       Message.Type.EVALUATE_RESPONSE ->
         EvaluateResponse(
           unpackLong(map, "requestId"),
           unpackLong(map, "evaluatorId"),
           unpackByteArray(map, "result"),
-          unpackStringOrNull(map, "error")
+          unpackStringOrNull(map, "error"),
         )
       Message.Type.LOG_MESSAGE ->
         LogMessage(
           unpackLong(map, "evaluatorId"),
           unpackInt(map, "level"),
           unpackString(map, "message"),
-          unpackString(map, "frameUri")
+          unpackString(map, "frameUri"),
         )
       else -> super.decodeMessage(msgType, map)
     }

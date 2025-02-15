@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ class SecurityManagersTest {
       listOf(Pattern.compile("test:foo/bar")),
       listOf(Pattern.compile("env:FOO_BAR")),
       { uri -> if (uri.scheme == "one") 1 else if (uri.scheme == "two") 2 else 0 },
-      null
+      null,
     )
 
   @Test
@@ -142,7 +142,7 @@ class SecurityManagersTest {
         listOf(Pattern.compile("file")),
         listOf(Pattern.compile("file")),
         SecurityManagers.defaultTrustLevels,
-        rootDir
+        rootDir,
       )
 
     val path = rootDir.resolve("baz.pkl")
@@ -163,7 +163,7 @@ class SecurityManagersTest {
         listOf(Pattern.compile("file")),
         listOf(Pattern.compile("file")),
         SecurityManagers.defaultTrustLevels,
-        rootDir
+        rootDir,
       )
 
     manager.checkResolveModule(Path.of("/foo/bar/baz.pkl").toUri())
@@ -185,7 +185,7 @@ class SecurityManagersTest {
         listOf(Pattern.compile("file")),
         listOf(Pattern.compile("file")),
         SecurityManagers.defaultTrustLevels,
-        rootDir
+        rootDir,
       )
 
     val path = rootDir.resolve("../baz.pkl")
@@ -210,7 +210,7 @@ class SecurityManagersTest {
         listOf(Pattern.compile("file")),
         listOf(Pattern.compile("file")),
         SecurityManagers.defaultTrustLevels,
-        rootDir
+        rootDir,
       )
 
     assertThrows<SecurityManagerException> {

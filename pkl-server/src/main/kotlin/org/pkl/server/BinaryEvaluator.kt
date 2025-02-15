@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ internal class BinaryEvaluator(
   timeout: Duration?,
   moduleCacheDir: Path?,
   declaredDependencies: DeclaredDependencies?,
-  outputFormat: String?
+  outputFormat: String?,
 ) :
   EvaluatorImpl(
     transformer,
@@ -53,7 +53,7 @@ internal class BinaryEvaluator(
     timeout,
     moduleCacheDir,
     declaredDependencies,
-    outputFormat
+    outputFormat,
   ) {
   fun evaluate(moduleSource: ModuleSource, expression: String?): ByteArray {
     return doEvaluate(moduleSource) { module ->

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ class ReplServerTest {
       listOf(
         ModuleKeyFactories.standardLibrary,
         ModuleKeyFactories.classPath(this::class.java.classLoader),
-        ModuleKeyFactories.file
+        ModuleKeyFactories.file,
       ),
       listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
       mapOf("NAME1" to "value1", "NAME2" to "value2"),
@@ -72,7 +72,7 @@ class ReplServerTest {
           "length()",
           "getClass()",
           "toString()",
-          "toTyped("
+          "toTyped(",
         )
       )
   }
@@ -121,7 +121,7 @@ class ReplServerTest {
           "getPropertyOrNull(",
           "hasProperty(",
           "relativePathTo(",
-          "toString()"
+          "toString()",
         )
       )
   }

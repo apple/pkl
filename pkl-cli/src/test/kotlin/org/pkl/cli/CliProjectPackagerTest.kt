@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ class CliProjectPackagerTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
@@ -130,7 +130,7 @@ class CliProjectPackagerTest {
         apiTests { "myTest.pkl" }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
     val buffer = StringWriter()
     val packager =
@@ -140,7 +140,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = buffer
+        consoleWriter = buffer,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageContaining("because its API tests are failing")
@@ -187,7 +187,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = buffer
+        consoleWriter = buffer,
       )
     packager.run()
   }
@@ -286,7 +286,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out",
         skipPublishCheck = true,
-        consoleWriter = buffer
+        consoleWriter = buffer,
       )
     packager.run()
   }
@@ -301,7 +301,7 @@ class CliProjectPackagerTest {
         
         name: String
       """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val fooTxt =
@@ -312,7 +312,7 @@ class CliProjectPackagerTest {
         bar
         baz
       """
-          .trimIndent()
+          .trimIndent(),
       )
 
     tempDir
@@ -337,7 +337,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = StringWriter()
+        consoleWriter = StringWriter(),
       )
     packager.run()
     val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
@@ -411,7 +411,7 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     CliProjectPackager(
         CliBaseOptions(workingDir = tempDir),
@@ -419,7 +419,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = StringWriter()
+        consoleWriter = StringWriter(),
       )
       .run()
     val expectedArchive = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0.zip")
@@ -432,7 +432,7 @@ class CliProjectPackagerTest {
           "/input",
           "/input/foo",
           "/input/foo/bar.txt",
-          "/main.pkl"
+          "/main.pkl",
         )
       )
   }
@@ -460,7 +460,7 @@ class CliProjectPackagerTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     projectDir.writeFile(
       "PklProject.deps.json",
@@ -483,7 +483,7 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
 
     project2Dir.writeFile(
@@ -498,7 +498,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com/project2.zip"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     project2Dir.writeFile(
       "PklProject.deps.json",
@@ -508,7 +508,7 @@ class CliProjectPackagerTest {
           "resolvedDependencies": {}
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
 
     CliProjectPackager(
@@ -517,7 +517,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = StringWriter()
+        consoleWriter = StringWriter(),
       )
       .run()
     val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")
@@ -598,7 +598,7 @@ class CliProjectPackagerTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     projectDir.writeFile(
       "PklProject.deps.json",
@@ -621,7 +621,7 @@ class CliProjectPackagerTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
 
     project2Dir.writeFile(
@@ -636,7 +636,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com/project2.zip"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     project2Dir.writeFile(
       "PklProject.deps.json",
@@ -646,7 +646,7 @@ class CliProjectPackagerTest {
           "resolvedDependencies": {}
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     assertThatCode {
         CliProjectPackager(
@@ -655,7 +655,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
-            consoleWriter = StringWriter()
+            consoleWriter = StringWriter(),
           )
           .run()
       }
@@ -671,7 +671,7 @@ class CliProjectPackagerTest {
   
         res = foo
       """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
@@ -685,7 +685,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val e =
       assertThrows<CliException> {
@@ -695,7 +695,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
-            consoleWriter = StringWriter()
+            consoleWriter = StringWriter(),
           )
           .run()
       }
@@ -725,7 +725,7 @@ class CliProjectPackagerTest {
   
         res = foo
       """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
@@ -739,7 +739,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val e =
       assertThrows<CliException> {
@@ -749,7 +749,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
-            consoleWriter = StringWriter()
+            consoleWriter = StringWriter(),
           )
           .run()
       }
@@ -771,7 +771,7 @@ class CliProjectPackagerTest {
       """
         res = read("$tempDir/foo.pkl")
       """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
@@ -785,7 +785,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val e =
       assertThrows<CliException> {
@@ -795,7 +795,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
-            consoleWriter = StringWriter()
+            consoleWriter = StringWriter(),
           )
           .run()
       }
@@ -816,7 +816,7 @@ class CliProjectPackagerTest {
       """
         import "baz.pkl"
       """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
@@ -830,7 +830,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     CliProjectPackager(
         CliBaseOptions(workingDir = tempDir),
@@ -838,7 +838,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = StringWriter()
+        consoleWriter = StringWriter(),
       )
       .run()
   }
@@ -858,7 +858,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     tempDir.writeFile("project2/main2.pkl", "res = 2")
     tempDir.writeFile(
@@ -873,7 +873,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val out = StringWriter()
     CliProjectPackager(
@@ -882,7 +882,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = out
+        consoleWriter = out,
       )
       .run()
     val sep = File.separatorChar
@@ -923,7 +923,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val e =
       assertThrows<CliException> {
@@ -931,13 +931,13 @@ class CliProjectPackagerTest {
             CliBaseOptions(
               workingDir = tempDir,
               caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-              testPort = packageServer.port
+              testPort = packageServer.port,
             ),
             listOf(tempDir.resolve("project")),
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = false,
-            consoleWriter = StringWriter()
+            consoleWriter = StringWriter(),
           )
           .run()
       }
@@ -968,20 +968,20 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val out = StringWriter()
     CliProjectPackager(
         CliBaseOptions(
           workingDir = tempDir,
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
-          testPort = packageServer.port
+          testPort = packageServer.port,
         ),
         listOf(tempDir.resolve("project")),
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = false,
-        consoleWriter = out
+        consoleWriter = out,
       )
       .run()
     val sep = File.separatorChar
@@ -1025,7 +1025,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
-        consoleWriter = StringWriter()
+        consoleWriter = StringWriter(),
       )
     packager.run()
     val expectedMetadata = tempDir.resolve(".out/mypackage@1.0.0/mypackage@1.0.0")

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ class CliProjectResolver(
   baseOptions: CliBaseOptions,
   projectDirs: List<Path>,
   private val consoleWriter: Writer = System.out.writer(),
-  private val errWriter: Writer = System.err.writer()
+  private val errWriter: Writer = System.err.writer(),
 ) : CliProjectCommand(baseOptions, projectDirs) {
   override fun doRun() {
     for (projectFile in normalizedProjectFiles) {
@@ -38,10 +38,10 @@ class CliProjectResolver(
             allowedModules,
             allowedResources,
             SecurityManagers.defaultTrustLevels,
-            rootDir
+            rootDir,
           ),
           httpClient,
-          moduleCacheDir
+          moduleCacheDir,
         )
       val dependencies = ProjectDependenciesResolver(project, packageResolver, errWriter).resolve()
       val depsFile =
