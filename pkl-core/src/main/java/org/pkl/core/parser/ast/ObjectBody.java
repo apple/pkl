@@ -19,7 +19,6 @@ import java.util.List;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 
-@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class ObjectBody extends AbstractNode {
   private final int membersOffset;
 
@@ -33,11 +32,15 @@ public final class ObjectBody extends AbstractNode {
     return visitor.visitObjectBody(this);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Parameter> getParameters() {
+    assert children != null;
     return (List<Parameter>) children.subList(0, membersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<ObjectMember> getMembers() {
+    assert children != null;
     return (List<ObjectMember>) children.subList(membersOffset, children.size());
   }
 }

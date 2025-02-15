@@ -55,6 +55,7 @@ public final class TypeParameter extends AbstractNode {
         + '}';
   }
 
+  @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
     if (this == o) {

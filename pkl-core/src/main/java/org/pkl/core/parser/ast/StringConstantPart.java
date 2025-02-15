@@ -21,7 +21,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public abstract sealed class StringConstantPart extends AbstractNode {
 
   public StringConstantPart(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -56,6 +55,7 @@ public abstract sealed class StringConstantPart extends AbstractNode {
       return "ConstantPart{str='" + str + '\'' + ", span=" + span + '}';
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -91,6 +91,7 @@ public abstract sealed class StringConstantPart extends AbstractNode {
       return "StringUnicodeEscape{escape='" + escape + '\'' + ", span=" + span + '}';
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -126,6 +127,7 @@ public abstract sealed class StringConstantPart extends AbstractNode {
       return "StringEscape{type=" + type + ", span=" + span + '}';
     }
 
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
       if (this == o) {

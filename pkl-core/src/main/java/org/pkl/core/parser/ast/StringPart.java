@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("ALL")
 public abstract sealed class StringPart extends AbstractNode {
 
   public StringPart(Span span, @Nullable List<? extends @Nullable Node> children) {
@@ -37,7 +36,9 @@ public abstract sealed class StringPart extends AbstractNode {
       super(span, parts);
     }
 
+    @SuppressWarnings("unchecked")
     public List<StringConstantPart> getParts() {
+      assert children != null;
       return (List<StringConstantPart>) children;
     }
   }
@@ -48,6 +49,7 @@ public abstract sealed class StringPart extends AbstractNode {
     }
 
     public Expr getExpr() {
+      assert children != null;
       return (Expr) children.get(0);
     }
   }

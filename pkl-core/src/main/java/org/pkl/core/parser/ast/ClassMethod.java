@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("unchecked")
 public class ClassMethod extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -44,11 +43,13 @@ public class ClassMethod extends AbstractNode {
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
     assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
     assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);

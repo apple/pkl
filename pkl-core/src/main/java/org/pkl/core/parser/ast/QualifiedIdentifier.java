@@ -18,7 +18,6 @@ package org.pkl.core.parser.ast;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.pkl.core.parser.ParserVisitor;
-import org.pkl.core.util.Nullable;
 
 public final class QualifiedIdentifier extends AbstractNode {
   public QualifiedIdentifier(List<Identifier> identifiers) {
@@ -27,12 +26,13 @@ public final class QualifiedIdentifier extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitQualifiedIdentifier(this);
   }
 
-  @SuppressWarnings({"unchecked", "DataFlowIssue"})
+  @SuppressWarnings("unchecked")
   public List<Identifier> getIdentifiers() {
+    assert children != null;
     return (List<Identifier>) children;
   }
 

@@ -18,7 +18,6 @@ package org.pkl.core.parser.ast;
 import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.util.Nullable;
 
 public final class Modifier extends AbstractNode {
   private final ModifierValue value;
@@ -29,7 +28,7 @@ public final class Modifier extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<? extends T> visitor) {
     return visitor.visitModifier(this);
   }
 

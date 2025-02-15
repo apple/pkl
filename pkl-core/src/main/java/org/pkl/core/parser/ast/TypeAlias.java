@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings({"unchecked", "DataFlowIssue"})
 public final class TypeAlias extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -37,35 +36,46 @@ public final class TypeAlias extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
+    assert children != null;
     return (DocComment) children.get(0);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
+    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
+    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public Keyword getTypealiasKeyword() {
+    assert children != null;
     return (Keyword) children.get(nameOffset);
   }
 
   public Identifier getName() {
+    assert children != null;
     return (Identifier) children.get(nameOffset + 1);
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
+    assert children != null;
     return (TypeParameterList) children.get(nameOffset + 2);
   }
 
   public Type getType() {
+    assert children != null;
     return (Type) children.get(nameOffset + 3);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   public Span getHeaderSpan() {
     Span start = null;
+    assert children != null;
     for (var i = modifiersOffset; i < children.size(); i++) {
       var child = children.get(i);
       if (child != null) {
@@ -78,6 +88,7 @@ public final class TypeAlias extends AbstractNode {
     if (tparList != null) {
       end = tparList.span();
     }
+    assert start != null;
     return start.endWith(end);
   }
 }

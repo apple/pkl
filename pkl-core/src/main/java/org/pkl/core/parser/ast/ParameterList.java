@@ -20,7 +20,6 @@ import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-@SuppressWarnings("unchecked")
 public class ParameterList extends AbstractNode {
   public ParameterList(List<Parameter> parameters, Span span) {
     super(span, parameters);
@@ -31,6 +30,7 @@ public class ParameterList extends AbstractNode {
     return visitor.visitParameterList(this);
   }
 
+  @SuppressWarnings("unchecked")
   public List<Parameter> getParameters() {
     assert children != null;
     return (List<Parameter>) children;
