@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,13 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
             allowedModules,
             allowedResources,
             SecurityManagers.defaultTrustLevels,
-            rootDir
+            rootDir,
           ),
           httpClient,
           Loggers.stdErr(),
           listOf(
             ModuleKeyFactories.standardLibrary,
-            ModuleKeyFactories.modulePath(modulePathResolver)
+            ModuleKeyFactories.modulePath(modulePathResolver),
           ) +
             ModuleKeyFactories.fromServiceProviders() +
             listOf(
@@ -48,7 +48,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
               ModuleKeyFactories.http,
               ModuleKeyFactories.pkg,
               ModuleKeyFactories.projectpackage,
-              ModuleKeyFactories.genericUrl
+              ModuleKeyFactories.genericUrl,
             ),
           listOf(
             ResourceReaders.environmentVariable(),
@@ -58,7 +58,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
             ResourceReaders.http(),
             ResourceReaders.https(),
             ResourceReaders.pkg(),
-            ResourceReaders.projectpackage()
+            ResourceReaders.projectpackage(),
           ),
           environmentVariables,
           externalProperties,

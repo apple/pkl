@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,7 +125,7 @@ internal class SiteScope(
   docPackages: List<DocPackage>,
   private val overviewImports: Map<String, URI>,
   private val importResolver: (URI) -> ModuleSchema,
-  outputDir: Path
+  outputDir: Path,
 ) : PageScope() {
   private val pklVersion = Release.current().version().withBuild(null).toString()
 
@@ -139,7 +139,7 @@ internal class SiteScope(
           docPackage.docModules.map { it.schema },
           pklBaseModule,
           docPackage.docPackageInfo.overviewImports,
-          this
+          this,
         )
     }
   }
@@ -162,7 +162,7 @@ internal class SiteScope(
     name: String,
     version: String,
     sourceCodeUrlScheme: String?,
-    sourceCode: URI?
+    sourceCode: URI?,
   ): PackageScope =
     PackageScope(
       DocPackageInfo(
@@ -175,12 +175,12 @@ internal class SiteScope(
         importUri = "",
         issueTracker = null,
         overview = null,
-        uri = null
+        uri = null,
       ),
       emptyList(),
       pklBaseModule,
       emptyMap(),
-      this
+      this,
     )
 
   override fun getMethod(name: String): MethodScope? = null
@@ -196,7 +196,7 @@ internal class SiteScope(
       name.startsWith("pkl.") -> {
         val packagePage =
           packageScopes["pkl"]?.url // link to locally generated stdlib docs if available
-           ?: PklInfo.current().packageIndex.getPackagePage("pkl", pklVersion).toUri()
+          ?: PklInfo.current().packageIndex.getPackagePage("pkl", pklVersion).toUri()
         packagePage.resolve(name.substring(4) + "/")
       }
       // doesn't make much sense to search in [packageScopes]
@@ -227,8 +227,7 @@ internal class SiteScope(
     overviewImports[name]?.let { uri ->
       val mod = resolveImport(uri)
       resolveModuleNameToDocUrl(mod.moduleName)?.let { url -> ModuleScope(mod, url, null) }
-    }
-      ?: pklBaseScope.getProperty(name)
+    } ?: pklBaseScope.getProperty(name)
 }
 
 internal class PackageScope(
@@ -236,7 +235,7 @@ internal class PackageScope(
   modules: List<ModuleSchema>,
   pklBaseModule: ModuleSchema,
   private val overviewImports: Map<String, URI>,
-  override val parent: SiteScope
+  override val parent: SiteScope,
 ) : PageScope() {
   val name = docPackageInfo.name
 
@@ -305,8 +304,7 @@ internal class PackageScope(
     overviewImports[name]?.let { uri ->
       val mod = resolveImport(uri)
       resolveModuleNameToDocUrl(mod.moduleName)?.let { url -> ModuleScope(mod, url, null) }
-    }
-      ?: getPklBaseProperty(name)
+    } ?: getPklBaseProperty(name)
 
   override fun equals(other: Any?): Boolean =
     other is PackageScope && docPackageInfo.name == other.docPackageInfo.name
@@ -318,7 +316,7 @@ internal class PackageScope(
 internal class ModuleScope(
   val module: ModuleSchema,
   override val url: URI,
-  override val parent: PackageScope?
+  override val parent: PackageScope?,
 ) : PageScope() {
   val name: String
     get() = module.moduleName
@@ -335,7 +333,7 @@ internal class ModuleScope(
   override fun getProperty(name: String): DocScope? =
     module.moduleClass.allProperties[name]?.let { PropertyScope(it, this) }
       ?: module.allClasses[name]?.let { ClassScope(it, url, this) }
-        ?: module.allTypeAliases[name]?.let { TypeAliasScope(it, url, this) }
+      ?: module.allTypeAliases[name]?.let { TypeAliasScope(it, url, this) }
 
   private fun resolveImport(uri: URI): ModuleSchema = parent!!.resolveImport(uri)
 
@@ -358,7 +356,8 @@ internal class ModuleScope(
 
   override fun resolveMethod(name: String): MethodScope? =
     module.moduleClass.methods[name]?.let { MethodScope(it, this) }
-      ?: parent!!.getPklBaseMethod(name) ?: getMethod(name)
+      ?: parent!!.getPklBaseMethod(name)
+      ?: getMethod(name)
 
   override fun resolveVariable(name: String): DocScope? =
     name.takeIf { it == "module" }?.let { this }
@@ -366,11 +365,12 @@ internal class ModuleScope(
         val mod = resolveImport(uri)
         resolveModuleNameToDocUrl(mod.moduleName)?.let { url -> ModuleScope(mod, url, null) }
       }
-        ?: module.moduleClass.properties[name]?.let { PropertyScope(it, this) }
+      ?: module.moduleClass.properties[name]?.let { PropertyScope(it, this) }
       // inherited classes/type aliases are in scope when resolving types -> search `all`
       ?: module.allClasses[name]?.let { ClassScope(it, url, this) }
-        ?: module.allTypeAliases[name]?.let { TypeAliasScope(it, url, this) }
-        ?: parent!!.getPklBaseProperty(name) ?: getProperty(name)
+      ?: module.allTypeAliases[name]?.let { TypeAliasScope(it, url, this) }
+      ?: parent!!.getPklBaseProperty(name)
+      ?: getProperty(name)
 
   override fun equals(other: Any?): Boolean = other is ModuleScope && module == other.module
 
@@ -380,7 +380,7 @@ internal class ModuleScope(
 internal class ClassScope(
   val clazz: PClass,
   private val parentUrl: URI,
-  override val parent: ModuleScope?
+  override val parent: ModuleScope?,
 ) : PageScope() {
   override val url: URI by lazy {
     // `isModuleClass` distinction is relevant when this scope is a link target
@@ -406,12 +406,14 @@ internal class ClassScope(
 
   override fun resolveMethod(name: String): MethodScope? =
     clazz.methods[name]?.let { MethodScope(it, this) }
-      ?: parent!!.resolveMethod(name) ?: getMethod(name)
+      ?: parent!!.resolveMethod(name)
+      ?: getMethod(name)
 
   override fun resolveVariable(name: String): DocScope? =
     clazz.typeParameters.find { it.name == name }?.let { ParameterScope(name, this) }
-      ?: clazz.properties[name]?.let { PropertyScope(it, this) } ?: parent!!.resolveVariable(name)
-        ?: clazz.allProperties[name]?.let { PropertyScope(it, this) }
+      ?: clazz.properties[name]?.let { PropertyScope(it, this) }
+      ?: parent!!.resolveVariable(name)
+      ?: clazz.allProperties[name]?.let { PropertyScope(it, this) }
 
   override fun equals(other: Any?): Boolean = other is ClassScope && clazz == other.clazz
 
@@ -421,7 +423,7 @@ internal class ClassScope(
 internal class TypeAliasScope(
   val typeAlias: TypeAlias,
   private val parentDocUrl: URI,
-  override val parent: ModuleScope?
+  override val parent: ModuleScope?,
 ) : DocScope() {
   override val url: URI
     get() = parentDocUrl.resolve("#${typeAlias.simpleName}")
@@ -468,7 +470,8 @@ internal class MethodScope(val method: PClass.Method, override val parent: DocSc
 
   override fun resolveVariable(name: String): DocScope? =
     method.typeParameters.find { it.name == name }?.let { ParameterScope(name, this) }
-      ?: method.parameters[name]?.let { ParameterScope(name, this) } ?: parent.resolveVariable(name)
+      ?: method.parameters[name]?.let { ParameterScope(name, this) }
+      ?: parent.resolveVariable(name)
 
   override fun equals(other: Any?): Boolean = other is MethodScope && method == other.method
 
@@ -477,7 +480,7 @@ internal class MethodScope(val method: PClass.Method, override val parent: DocSc
 
 internal class PropertyScope(
   val property: PClass.Property,
-  override val parent: DocScope // ModuleScope|ClassScope
+  override val parent: DocScope, // ModuleScope|ClassScope
 ) : DocScope() {
   override val url: URI
     get() = parent.url.resolve("#${property.simpleName}")

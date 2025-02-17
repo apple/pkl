@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
             PklInfo.current()
               .packageIndex
               .getPackagePage("pkl", Release.current().version().toString())
-          )
+          ),
     )
 
   private fun DependencyMetadata.getPackageDependencies(): List<DocPackageInfo.PackageDependency> {
@@ -78,7 +78,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
             version = metadata.version.toString(),
             sourceCode = metadata.sourceCode,
             sourceCodeUrlScheme = metadata.sourceCodeUrlScheme,
-            documentation = metadata.documentation
+            documentation = metadata.documentation,
           )
         add(packageDependency)
       }
@@ -269,7 +269,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           importedModules::getValue,
           versionComparator,
           options.normalizedOutputDir,
-          options.isTestMode
+          options.isTestMode,
         )
         .run()
     } catch (e: DocGeneratorException) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ data class CreateEvaluatorRequest(
   val project: Project?,
   val http: Http?,
   val externalModuleReaders: Map<String, ExternalReader>?,
-  val externalResourceReaders: Map<String, ExternalReader>?
+  val externalResourceReaders: Map<String, ExternalReader>?,
 ) : Message.Client.Request {
 
   override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
@@ -61,11 +61,11 @@ data class CreateEvaluatorRequest(
     return requestId == other.requestId &&
       Objects.equals(
         allowedModules?.map { it.pattern() },
-        other.allowedModules?.map { it.pattern() }
+        other.allowedModules?.map { it.pattern() },
       ) &&
       Objects.equals(
         allowedResources?.map { it.pattern() },
-        other.allowedResources?.map { it.pattern() }
+        other.allowedResources?.map { it.pattern() },
       ) &&
       clientModuleReaders.equalsNullable(other.clientModuleReaders) &&
       clientResourceReaders.equalsNullable(other.clientResourceReaders) &&
@@ -108,7 +108,7 @@ data class Http(
   /** PEM-format CA certificates as raw bytes. */
   val caCertificates: ByteArray?,
   /** Proxy settings */
-  val proxy: Proxy?
+  val proxy: Proxy?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -130,7 +130,7 @@ data class Http(
 
 enum class DependencyType(val value: String) {
   LOCAL("local"),
-  REMOTE("remote")
+  REMOTE("remote"),
 }
 
 sealed interface Dependency {
@@ -145,7 +145,7 @@ data class RemoteDependency(override val packageUri: URI, val checksums: Checksu
 data class Project(
   val projectFileUri: URI,
   override val packageUri: URI?,
-  val dependencies: Map<String, Dependency>
+  val dependencies: Map<String, Dependency>,
 ) : Dependency {
   override val type: DependencyType = DependencyType.LOCAL
 }
@@ -169,7 +169,7 @@ data class EvaluateRequest(
   val evaluatorId: Long,
   val moduleUri: URI,
   val moduleText: String?,
-  val expr: String?
+  val expr: String?,
 ) : Message.Client.Request {
   override fun type(): Message.Type = Message.Type.EVALUATE_REQUEST
 
@@ -180,7 +180,7 @@ data class EvaluateResponse(
   private val requestId: Long,
   val evaluatorId: Long,
   val result: ByteArray?,
-  val error: String?
+  val error: String?,
 ) : Message.Server.Response {
   override fun type(): Message.Type = Message.Type.EVALUATE_RESPONSE
 
@@ -212,7 +212,7 @@ data class LogMessage(
   val evaluatorId: Long,
   val level: Int,
   val message: String,
-  val frameUri: String
+  val frameUri: String,
 ) : Message.Server.OneWay {
   override fun type(): Message.Type = Message.Type.LOG_MESSAGE
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ class GlobResolverTest {
         "baz.pkl",
         "buzzy...baz.pkl",
         "ted_lasso.min.pkl",
-        "ted_lasso.pkl.min.pkl"
+        "ted_lasso.pkl.min.pkl",
       ]
   )
   fun `glob match`(input: String) {
@@ -68,7 +68,7 @@ class GlobResolverTest {
         "pkl",
         // crosses directory boundaries
         "/bar/baz.pkl",
-        "/baz.pkl"
+        "/baz.pkl",
       ]
   )
   fun `glob non-match`(input: String) {
@@ -95,13 +95,7 @@ class GlobResolverTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-    strings =
-      [
-        "/foo.pkl/bar/baz.pkl",
-        "//fo///ba.pkl",
-      ]
-  )
+  @ValueSource(strings = ["/foo.pkl/bar/baz.pkl", "//fo///ba.pkl"])
   fun `globstar match 2`(input: String) {
     val pattern = GlobResolver.toRegexPattern("/**/*.pkl")
     assertTrue(pattern.matcher(input).matches())

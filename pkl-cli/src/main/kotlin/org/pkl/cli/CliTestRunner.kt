@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ constructor(
   private val options: CliBaseOptions,
   private val testOptions: CliTestOptions,
   private val consoleWriter: Writer = System.out.writer(),
-  private val errWriter: Writer = System.err.writer()
+  private val errWriter: Writer = System.err.writer(),
 ) : CliCommand(options) {
 
   override fun doRun() {

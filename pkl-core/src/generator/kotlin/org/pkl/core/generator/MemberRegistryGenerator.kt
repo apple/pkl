@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ class MemberRegistryGenerator : AbstractProcessor() {
             if (it.enclosingElement.kind == ElementKind.PACKAGE) ""
             else it.enclosingElement.simpleName.toString()
           },
-          { it.simpleName.toString() }
+          { it.simpleName.toString() },
         )
       )
       .groupBy { processingEnv.elementUtils.getPackageOf(it) }
@@ -126,7 +126,7 @@ class MemberRegistryGenerator : AbstractProcessor() {
       registryClassConstructor.addStatement(
         "register(\$S, \$T::create)",
         pklMemberNameQualified,
-        nodeClass
+        nodeClass,
       )
     }
 

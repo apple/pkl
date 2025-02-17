@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class ProjectTest {
           .trimIndent(),
         URI("https://example.com/my/issues"),
         listOf(Path.of("apiTest1.pkl"), Path.of("apiTest2.pkl")),
-        listOf("PklProject", "PklProject.deps.json", ".**", "*.exe")
+        listOf("PklProject", "PklProject.deps.json", ".**", "*.exe"),
       )
     val expectedSettings =
       PklEvaluatorSettings(
@@ -73,13 +73,13 @@ class ProjectTest {
         path,
         null,
         null,
-        null
+        null,
       )
     val expectedAnnotations =
       listOf(
         PObject(
           PClassInfo.Deprecated,
-          mapOf("since" to "1.2", "message" to "do not use", "replaceWith" to "somethingElse")
+          mapOf("since" to "1.2", "message" to "do not use", "replaceWith" to "somethingElse"),
         ),
         PObject(PClassInfo.Unlisted, mapOf()),
         PObject(PClassInfo.ModuleInfo, mapOf("minPklVersion" to "0.26.0")),

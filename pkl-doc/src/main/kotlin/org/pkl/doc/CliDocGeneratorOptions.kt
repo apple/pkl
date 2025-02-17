@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ constructor(
    * Generates source URLs with fixed line numbers `#L123-L456` to avoid churn in expected output
    * files (e.g., when stdlib line numbers change).
    */
-  val isTestMode: Boolean = false
+  val isTestMode: Boolean = false,
 ) {
   /** [outputDir] after undergoing normalization. */
   val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)

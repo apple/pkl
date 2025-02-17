@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ class LongVsDoubleSpecializationTest {
   fun addition() {
     val result =
       evaluator.evaluate(
-        ModuleSource.text("""
+        ModuleSource.text(
+          """
         x1 = Pair(1.0 + 2.0, 1 + 2).second
-        """)
+        """
+        )
       )
 
     assertThat(result.properties["x1"]).isEqualTo(3L)
@@ -47,9 +49,11 @@ class LongVsDoubleSpecializationTest {
   fun subtraction() {
     val result =
       evaluator.evaluate(
-        ModuleSource.text("""
+        ModuleSource.text(
+          """
         x1 = Pair(1.0 - 2.0, 1 - 2).second
-        """)
+        """
+        )
       )
 
     assertThat(result.properties["x1"]).isEqualTo(-1L)
@@ -59,9 +63,11 @@ class LongVsDoubleSpecializationTest {
   fun multiplication() {
     val result =
       evaluator.evaluate(
-        ModuleSource.text("""
+        ModuleSource.text(
+          """
         x1 = Pair(1.0 * 2.0, 1 * 2).second
-        """)
+        """
+        )
       )
 
     assertThat(result.properties["x1"]).isEqualTo(2L)

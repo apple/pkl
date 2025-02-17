@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,18 +52,8 @@ class ServerMessagePackCodecTest {
 
   @Test
   fun `round-trip CreateEvaluatorRequest`() {
-    val resourceReader1 =
-      ResourceReaderSpec(
-        "resourceReader1",
-        true,
-        true,
-      )
-    val resourceReader2 =
-      ResourceReaderSpec(
-        "resourceReader2",
-        true,
-        false,
-      )
+    val resourceReader1 = ResourceReaderSpec("resourceReader1", true, true)
+    val resourceReader2 = ResourceReaderSpec("resourceReader2", true, false)
     val moduleReader1 = ModuleReaderSpec("moduleReader1", true, true, true)
     val moduleReader2 = ModuleReaderSpec("moduleReader2", true, false, false)
     val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
@@ -99,18 +89,18 @@ class ServerMessagePackCodecTest {
                           Project(
                             projectFileUri = URI("file:///bar"),
                             packageUri = URI("package://localhost:0/bar@1.1.0"),
-                            dependencies = emptyMap()
+                            dependencies = emptyMap(),
                           )
-                      )
+                      ),
                   ),
                 "baz" to
-                  RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123"))
-              )
+                  RemoteDependency(URI("package://localhost:0/baz@1.1.0"), Checksums("abc123")),
+              ),
           ),
         http =
           Http(
             proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
-            caCertificates = byteArrayOf(1, 2, 3, 4)
+            caCertificates = byteArrayOf(1, 2, 3, 4),
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),
@@ -136,7 +126,7 @@ class ServerMessagePackCodecTest {
         evaluatorId = 456,
         moduleUri = URI("some/module.pkl"),
         moduleText = null,
-        expr = "some + expression"
+        expr = "some + expression",
       )
     )
   }
@@ -148,7 +138,7 @@ class ServerMessagePackCodecTest {
         requestId = 123,
         evaluatorId = 456,
         result = byteArrayOf(1, 2, 3, 4, 5),
-        error = null
+        error = null,
       )
     )
   }
@@ -160,7 +150,7 @@ class ServerMessagePackCodecTest {
         evaluatorId = 123,
         level = 0,
         message = "Hello, world!",
-        frameUri = "file:///some/module.pkl"
+        frameUri = "file:///some/module.pkl",
       )
     )
   }

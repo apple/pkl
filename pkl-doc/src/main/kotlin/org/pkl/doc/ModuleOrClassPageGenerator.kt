@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ internal abstract class ModuleOrClassPageGenerator<S>(
   private val docModule: DocModule,
   protected val clazz: PClass,
   scope: S,
-  private val isTestMode: Boolean
+  private val isTestMode: Boolean,
 ) : PageGenerator<S>(docsiteInfo, scope) where S : PageScope {
   protected fun HtmlBlockTag.renderProperties() {
     if (!clazz.hasListedProperty) return
@@ -279,9 +279,8 @@ internal abstract class ModuleOrClassPageGenerator<S>(
     val moduleSourceUrl =
       pageScope.resolveModuleNameToSourceUrl(
         member.moduleName,
-        Member.SourceLocation(startLine, endLine)
-      )
-        ?: return
+        Member.SourceLocation(startLine, endLine),
+      ) ?: return
     a {
       classes = setOf("member-source-link")
       href = moduleSourceUrl.toString()

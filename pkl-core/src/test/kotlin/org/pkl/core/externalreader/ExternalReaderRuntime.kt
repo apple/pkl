@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.pkl.core.util.Nullable
 class ExternalReaderRuntime(
   private val moduleReaders: List<ExternalModuleReader>,
   private val resourceReaders: List<ExternalResourceReader>,
-  private val transport: MessageTransport
+  private val transport: MessageTransport,
 ) {
   /** Close the runtime and its transport. */
   fun close() {
@@ -96,7 +96,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   null,
-                  "No module reader found for scheme " + req.uri.scheme
+                  "No module reader found for scheme " + req.uri.scheme,
                 )
               )
               return@start
@@ -107,7 +107,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   reader.listElements(req.uri),
-                  null
+                  null,
                 )
               )
             } catch (e: Exception) {
@@ -125,7 +125,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   null,
-                  "No resource reader found for scheme " + req.uri.scheme
+                  "No resource reader found for scheme " + req.uri.scheme,
                 )
               )
               return@start
@@ -136,7 +136,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   reader.listElements(req.uri),
-                  null
+                  null,
                 )
               )
             } catch (e: Exception) {
@@ -154,7 +154,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   null,
-                  "No module reader found for scheme " + req.uri.scheme
+                  "No module reader found for scheme " + req.uri.scheme,
                 )
               )
               return@start
@@ -176,7 +176,7 @@ class ExternalReaderRuntime(
                   req.requestId,
                   req.evaluatorId,
                   byteArrayOf(),
-                  "No resource reader found for scheme " + req.uri.scheme
+                  "No resource reader found for scheme " + req.uri.scheme,
                 )
               )
               return@start
@@ -193,7 +193,7 @@ class ExternalReaderRuntime(
           }
           else -> throw ProtocolException("Unexpected incoming request message: $msg")
         }
-      }
+      },
     )
   }
 }

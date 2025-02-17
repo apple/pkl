@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ public abstract class YamlEmitter {
           needsQuoting =
               needsQuoting || i == (length - 1) || (i + 1 < length) && str.charAt(i + 1) == ' ';
         }
-          // number chars
+        // number chars
         case '0',
             '1',
             '2',
@@ -228,44 +228,44 @@ public abstract class YamlEmitter {
 
     return switch (str) {
       case "",
-              "~",
-              "null",
-              "Null",
-              "NULL",
-              ".nan",
-              ".NaN",
-              ".NAN",
-              ".inf",
-              ".Inf",
-              ".INF",
-              "+.inf",
-              "+.Inf",
-              "+.INF",
-              "-.inf",
-              "-.Inf",
-              "-.INF",
-              "true",
-              "True",
-              "TRUE",
-              "false",
-              "False",
-              "FALSE",
-              "on",
-              "On",
-              "ON",
-              "off",
-              "Off",
-              "OFF",
-              "y",
-              "Y",
-              "yes",
-              "Yes",
-              "YES",
-              "n",
-              "N",
-              "no",
-              "No",
-              "NO" ->
+          "~",
+          "null",
+          "Null",
+          "NULL",
+          ".nan",
+          ".NaN",
+          ".NAN",
+          ".inf",
+          ".Inf",
+          ".INF",
+          "+.inf",
+          "+.Inf",
+          "+.INF",
+          "-.inf",
+          "-.Inf",
+          "-.INF",
+          "true",
+          "True",
+          "TRUE",
+          "false",
+          "False",
+          "FALSE",
+          "on",
+          "On",
+          "ON",
+          "off",
+          "Off",
+          "OFF",
+          "y",
+          "Y",
+          "yes",
+          "Yes",
+          "YES",
+          "n",
+          "N",
+          "no",
+          "No",
+          "NO" ->
           true;
       default -> false;
     };

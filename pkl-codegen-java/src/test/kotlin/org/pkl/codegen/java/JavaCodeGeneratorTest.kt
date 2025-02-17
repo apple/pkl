@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ class JavaCodeGeneratorTest {
 
     private fun generateJavaCode(
       pklCode: String,
-      options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions()
+      options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions(),
     ): JavaSourceCode {
       val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
       val generator = JavaCodeGenerator(module, options)
@@ -219,7 +219,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateJavadoc = true),
       )
     assertThat(javaCode)
       .contains(
@@ -258,7 +258,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
       )
     assertThat(javaCode)
       .contains(
@@ -305,7 +305,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateJavadoc = true),
       )
     assertThat(javaCode)
       .contains(
@@ -332,7 +332,7 @@ class JavaCodeGeneratorTest {
       propertyInDeprecatedModuleClass : Int = 42
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc)
+        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
       )
 
     assertThat(javaCode)
@@ -372,7 +372,7 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent(),
         // no message, so no Javadoc, regardless of flag
-        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc)
+        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
       )
 
     assertThat(javaCode)
@@ -407,7 +407,7 @@ class JavaCodeGeneratorTest {
         }
       """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true)
+        JavaCodeGeneratorOptions(generateGetters = true),
       )
 
     assertThat(javaCode)
@@ -496,7 +496,7 @@ class JavaCodeGeneratorTest {
       @Deprecated { message = "property is deprecated" }
       deprecatedProperty: Int
     """,
-        JavaCodeGeneratorOptions(generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateJavadoc = true),
       )
 
     assertThat(javaCode)
@@ -564,7 +564,7 @@ class JavaCodeGeneratorTest {
         "digit-1" to "DIGIT_1",
         "42" to "_42",
         "àœü" to "ÀŒÜ",
-        "日本-つくば" to "日本_つくば"
+        "日本-つくば" to "日本_つくば",
       )
     val javaCode =
       generateJavaCode(
@@ -586,7 +586,7 @@ class JavaCodeGeneratorTest {
           assertThat(field.name).isEqualTo(kotlinName)
           Unit
         }
-      }
+      },
     )
 
     assertAll(
@@ -596,7 +596,7 @@ class JavaCodeGeneratorTest {
           assertThat(enumConstant.toString()).isEqualTo(pklName)
           Unit
         }
-      }
+      },
     )
   }
 
@@ -718,7 +718,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true)
+        JavaCodeGeneratorOptions(generateGetters = true),
       )
 
     assertThat(javaCode)
@@ -872,7 +872,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true)
+        JavaCodeGeneratorOptions(generateGetters = true),
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GenerateGetters.jva")
@@ -985,7 +985,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateJavadoc = true),
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("Javadoc.jva")
@@ -1009,7 +1009,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true)
+        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
       )
 
     assertThat(javaCode)
@@ -1151,7 +1151,7 @@ class JavaCodeGeneratorTest {
       foo: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull")
+        JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull"),
       )
 
     assertThat(javaCode)
@@ -1455,7 +1455,7 @@ class JavaCodeGeneratorTest {
       name: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(paramsAnnotation = "org.project.MyAnnotation")
+        JavaCodeGeneratorOptions(paramsAnnotation = "org.project.MyAnnotation"),
       )
 
     assertThat(javaCode)
@@ -1473,7 +1473,7 @@ class JavaCodeGeneratorTest {
       name: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(paramsAnnotation = null)
+        JavaCodeGeneratorOptions(paramsAnnotation = null),
       )
 
     assertThat(javaCode).contains("public Mod(@NonNull String name)")
@@ -1494,7 +1494,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateSpringBootConfig = true)
+        JavaCodeGeneratorOptions(generateSpringBootConfig = true),
       )
 
     assertThat(javaCode)
@@ -1548,7 +1548,7 @@ class JavaCodeGeneratorTest {
           
           pigeon: Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val client =
@@ -1563,7 +1563,7 @@ class JavaCodeGeneratorTest {
           
           parrot: library.Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val javaSourceFiles = generateFiles(library, client)
@@ -1595,7 +1595,7 @@ class JavaCodeGeneratorTest {
         
           pigeon: Person
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val derived =
@@ -1610,7 +1610,7 @@ class JavaCodeGeneratorTest {
           person1: Person
           person2: Person2
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val javaSourceFiles = generateFiles(base, derived)
@@ -1646,7 +1646,7 @@ class JavaCodeGeneratorTest {
     
           typealias Version = "LATEST"|String
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val derived =
@@ -1659,7 +1659,7 @@ class JavaCodeGeneratorTest {
           
           v: Version = "1.2.3"
         """
-          .trimIndent()
+          .trimIndent(),
       )
 
     val javaSourceFiles = generateFiles(base, derived)
@@ -1697,7 +1697,7 @@ class JavaCodeGeneratorTest {
             prop: Int
           }
         """
-          .trimIndent()
+          .trimIndent(),
       )
     val generated = generateFiles(pklModule)
     val expectedPropertyFile =
@@ -1730,7 +1730,7 @@ class JavaCodeGeneratorTest {
             prop: Int
           }
         """
-          .trimIndent()
+          .trimIndent(),
       )
     val generated = generateFiles(pklModule)
     val expectedPropertyFile =
@@ -1782,7 +1782,7 @@ class JavaCodeGeneratorTest {
       typealias Direction = "north"|"east"|"south"|"west"
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true)
+        JavaCodeGeneratorOptions(implementSerializable = true),
       )
 
     assertThat(javaCode)
@@ -1821,7 +1821,7 @@ class JavaCodeGeneratorTest {
         smallStruct,
         Pattern.compile("(i?)\\w*"),
         smallStruct,
-        enumValue
+        enumValue,
       )
 
     fun confirmSerDe(instance: Any) {
@@ -1863,7 +1863,7 @@ class JavaCodeGeneratorTest {
       abstract class Foo { str: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true)
+        JavaCodeGeneratorOptions(implementSerializable = true),
       )
 
     assertThat(javaCode).doesNotContain("Serializable")
@@ -1874,7 +1874,7 @@ class JavaCodeGeneratorTest {
       module my.mod
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true)
+        JavaCodeGeneratorOptions(implementSerializable = true),
       )
 
     assertThat(javaCode).doesNotContain("Serializable")
@@ -1891,7 +1891,7 @@ class JavaCodeGeneratorTest {
       class Address { city: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true)
+        JavaCodeGeneratorOptions(implementSerializable = true),
       )
 
     assertThat(javaCode)
@@ -1977,7 +1977,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true)
+        JavaCodeGeneratorOptions(generateGetters = true),
       )
 
     assertThat(javaCode)
@@ -2021,7 +2021,7 @@ class JavaCodeGeneratorTest {
               
               bar: Int = 123
             """
-              .trimIndent()
+              .trimIndent(),
         )
         .toMutableMap()
 
@@ -2064,7 +2064,7 @@ class JavaCodeGeneratorTest {
               
               baz: String
             """
-              .trimIndent()
+              .trimIndent(),
         )
 
     files.validateContents(
@@ -2090,7 +2090,7 @@ class JavaCodeGeneratorTest {
             mapOf(
               "org.foo." to "com.foo.x.",
               "org.bar.Module2" to "org.bar.RenamedModule",
-              "org.baz." to "com.baz.a.b."
+              "org.baz." to "com.baz.a.b.",
             )
         )
         .generateFiles(
@@ -2125,7 +2125,7 @@ class JavaCodeGeneratorTest {
                 owner: Module2.Group
               }
             """
-              .trimIndent()
+              .trimIndent(),
         )
 
     files.validateContents(
@@ -2141,7 +2141,7 @@ class JavaCodeGeneratorTest {
           "package org.bar;",
           "import com.foo.x.Module1;",
           "public final class RenamedModule {",
-          "public final Module1. @NonNull Person owner;"
+          "public final Module1. @NonNull Person owner;",
         ),
       "$MAPPER_PREFIX/org.bar.Module2.properties" to
         listOf(
@@ -2154,7 +2154,7 @@ class JavaCodeGeneratorTest {
           "package com.baz.a.b;",
           "import org.bar.RenamedModule;",
           "public final class Module3 {",
-          "public final RenamedModule. @NonNull Group owner;"
+          "public final RenamedModule. @NonNull Group owner;",
         ),
       "$MAPPER_PREFIX/org.baz.Module3.properties" to
         listOf(
@@ -2184,7 +2184,7 @@ class JavaCodeGeneratorTest {
               
               bar: Int = 123
             """
-              .trimIndent()
+              .trimIndent(),
         )
 
     files.validateContents(
@@ -2312,7 +2312,7 @@ class JavaCodeGeneratorTest {
         Pattern.compile("(i?)\\w*"),
         other,
         other,
-        enumValue
+        enumValue,
       )
 
     return other to propertyTypes

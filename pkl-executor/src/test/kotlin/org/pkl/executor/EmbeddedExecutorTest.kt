@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ class EmbeddedExecutorTest {
   class TestExecutor(
     private val executor: Executor,
     private val spiOptionsVersion: Int,
-    private val name: String
+    private val name: String,
   ) {
     fun evaluatePath(modulePath: Path, optionSpec: ExecutorOptions.Builder.() -> Unit): String {
       val options =
@@ -66,7 +66,7 @@ class EmbeddedExecutorTest {
         TestExecutor(executor2_1.value, 1, "SpiOptions1, Executor2, Distribution1"),
         TestExecutor(executor2_1.value, 2, "SpiOptions2, Executor2, Distribution1"),
         TestExecutor(executor2_2.value, 1, "SpiOptions1, Executor2, Distribution2"),
-        TestExecutor(executor2_2.value, 2, "SpiOptions2, Executor2, Distribution2")
+        TestExecutor(executor2_2.value, 2, "SpiOptions2, Executor2, Distribution2"),
       )
     }
 
@@ -239,7 +239,7 @@ class EmbeddedExecutorTest {
   @MethodSource("getAllTestExecutors")
   fun `evaluate a module that is missing a ModuleInfo annotation`(
     executor: TestExecutor,
-    @TempDir tempDir: Path
+    @TempDir tempDir: Path,
   ) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
@@ -270,7 +270,7 @@ class EmbeddedExecutorTest {
   @MethodSource("getAllTestExecutors")
   fun `evaluate a module that requests an incompatible Pkl version`(
     executor: TestExecutor,
-    @TempDir tempDir: Path
+    @TempDir tempDir: Path,
   ) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
@@ -302,7 +302,7 @@ class EmbeddedExecutorTest {
   @MethodSource("getAllTestExecutors")
   fun `evaluate a module that reads environment variables and external properties`(
     executor: TestExecutor,
-    @TempDir tempDir: Path
+    @TempDir tempDir: Path,
   ) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
@@ -328,17 +328,21 @@ class EmbeddedExecutorTest {
       }
 
     assertThat(result.trim())
-      .isEqualTo("""
+      .isEqualTo(
+        """
       x = "ENV_VAR"
       y = "property"
-    """.trimIndent().trim())
+    """
+          .trimIndent()
+          .trim()
+      )
   }
 
   @ParameterizedTest
   @MethodSource("getAllTestExecutors")
   fun `evaluate a module that depends on another module`(
     executor: TestExecutor,
-    @TempDir tempDir: Path
+    @TempDir tempDir: Path,
   ) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
@@ -376,11 +380,15 @@ class EmbeddedExecutorTest {
       }
 
     assertThat(result.trim())
-      .isEqualTo("""
+      .isEqualTo(
+        """
       foo {
         bar = 42
       }
-    """.trimIndent().trim())
+    """
+          .trimIndent()
+          .trim()
+      )
   }
 
   @ParameterizedTest
@@ -419,7 +427,7 @@ class EmbeddedExecutorTest {
   @MethodSource("getAllTestExecutors")
   fun `evaluate a module whose project evaluation fails`(
     executor: TestExecutor,
-    @TempDir tempDir: Path
+    @TempDir tempDir: Path,
   ) {
     // the toRealPath is important here or the failure reason can change
     // this happens on macOS where /tmp is a symlink to /private/tmp

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ class PPairToKotlinPairTest {
     val mapped: Pair<Int, Duration> =
       mapper.map(
         ex1,
-        Types.parameterizedType(Pair::class.java, Integer::class.java, Duration::class.java)
+        Types.parameterizedType(Pair::class.java, Integer::class.java, Duration::class.java),
       )
     assertThat(mapped).isEqualTo(Pair(1, Duration(3.0, DurationUnit.SECONDS)))
   }
@@ -60,7 +60,7 @@ class PPairToKotlinPairTest {
     val mapped: Pair<PObject, PObject> =
       mapper.map(
         ex2,
-        Types.parameterizedType(Pair::class.java, PObject::class.java, PObject::class.java)
+        Types.parameterizedType(Pair::class.java, PObject::class.java, PObject::class.java),
       )
 
     assertThat(mapped.first.properties).containsOnly(entry("name", "pigeon"), entry("age", 40L))

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class CliJavaCodeGeneratorTest {
         name: String
         age: Int
       }
-      """
+      """,
       )
 
     val module2 =
@@ -53,7 +53,7 @@ class CliJavaCodeGeneratorTest {
       extends "mod1.pkl"
 
       parrot: Person
-      """
+      """,
       )
 
     val module1File = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
@@ -64,7 +64,7 @@ class CliJavaCodeGeneratorTest {
       CliJavaCodeGenerator(
         CliJavaCodeGeneratorOptions(
           CliBaseOptions(listOf(module1File.toUri(), module2File.toUri())),
-          outputDir
+          outputDir,
         )
       )
 
@@ -82,7 +82,7 @@ class CliJavaCodeGeneratorTest {
       |public class Mod1 {
       |  public final @NonNull Person pigeon;
     """,
-      module1JavaFile.readString()
+      module1JavaFile.readString(),
     )
 
     val module2JavaFile = javaDir.resolve("org/Mod2.java")
@@ -91,7 +91,7 @@ class CliJavaCodeGeneratorTest {
       |public final class Mod2 extends Mod1 {
       |  public final Mod1. @NonNull Person parrot;
     """,
-      module2JavaFile.readString()
+      module2JavaFile.readString(),
     )
     val resourcesDir = outputDir.resolve("resources/META-INF/org/pkl/config/java/mapper/classes/")
 
@@ -101,18 +101,18 @@ class CliJavaCodeGeneratorTest {
     // use two assertions because java.util.Properties doesn't guarantee order
     assertContains(
       """org.pkl.config.java.mapper.org.mod1\#Person=org.Mod1${dollar}Person""",
-      module1PropertiesString
+      module1PropertiesString,
     )
     assertContains(
       """org.pkl.config.java.mapper.org.mod1\#ModuleClass=org.Mod1""",
-      module1PropertiesString
+      module1PropertiesString,
     )
 
     val module2PropertiesFile = resourcesDir.resolve("org.mod2.properties")
 
     assertContains(
       """org.pkl.config.java.mapper.org.mod2\#ModuleClass=org.Mod2""",
-      module2PropertiesFile.readString()
+      module2PropertiesFile.readString(),
     )
   }
 
@@ -127,7 +127,7 @@ class CliJavaCodeGeneratorTest {
       class Person {
         name: String
       }
-      """
+      """,
       )
 
     val module2 =
@@ -144,7 +144,7 @@ class CliJavaCodeGeneratorTest {
       class Person {
         age: Int
       }
-      """
+      """,
       )
 
     val module1PklFile = module1.writeToDisk(tempDir.resolve("org/mod1.pkl"))
@@ -155,7 +155,7 @@ class CliJavaCodeGeneratorTest {
       CliJavaCodeGenerator(
         CliJavaCodeGeneratorOptions(
           CliBaseOptions(listOf(module1PklFile.toUri(), module2PklFile.toUri())),
-          outputDir
+          outputDir,
         )
       )
 
@@ -169,7 +169,7 @@ class CliJavaCodeGeneratorTest {
       |
       |  public final @NonNull Person person2;
       """,
-      module2JavaFile.readString()
+      module2JavaFile.readString(),
     )
   }
 
@@ -184,7 +184,7 @@ class CliJavaCodeGeneratorTest {
           class Person {
             name: String
           }
-        """
+        """,
       )
 
     val module2 =
@@ -199,7 +199,7 @@ class CliJavaCodeGeneratorTest {
             owner: Module1.Person
             name: String
           }
-        """
+        """,
       )
 
     val module3 =
@@ -213,7 +213,7 @@ class CliJavaCodeGeneratorTest {
           class Supergroup {
             owner: Module2.Group
           }
-        """
+        """,
       )
 
     val module1PklFile = module1.writeToDisk(tempDir.resolve("org/foo/Module1.pkl"))
@@ -226,7 +226,7 @@ class CliJavaCodeGeneratorTest {
         CliJavaCodeGeneratorOptions(
           CliBaseOptions(listOf(module1PklFile, module2PklFile, module3PklFile).map { it.toUri() }),
           outputDir,
-          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b")
+          renames = mapOf("org.foo" to "com.foo.x", "org.baz" to "com.baz.a.b"),
         )
       )
 
@@ -243,7 +243,7 @@ class CliJavaCodeGeneratorTest {
         |  public static final class Person {
         |    public final @NonNull String name;
         """,
-        it
+        it,
       )
     }
 
@@ -260,7 +260,7 @@ class CliJavaCodeGeneratorTest {
         |  public static final class Group {
         |    public final Module1. @NonNull Person owner;
         """,
-        it
+        it,
       )
     }
 
@@ -277,7 +277,7 @@ class CliJavaCodeGeneratorTest {
         |  public static final class Supergroup {
         |    public final Module2. @NonNull Group owner;
         """,
-        it
+        it,
       )
     }
   }

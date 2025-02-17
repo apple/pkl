@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class PathSpecParserTest {
           Identifier.get("prop3"),
           Identifier.get("prop2"),
           Identifier.get("prop1"),
-          TOP_LEVEL_VALUE
+          TOP_LEVEL_VALUE,
         )
       )
 
@@ -98,7 +98,7 @@ class PathSpecParserTest {
           "key2",
           WILDCARD_PROPERTY,
           "key1",
-          Identifier.get("prop1")
+          Identifier.get("prop1"),
         )
       )
 
@@ -111,7 +111,7 @@ class PathSpecParserTest {
           WILDCARD_PROPERTY,
           "key1",
           Identifier.get("prop1"),
-          TOP_LEVEL_VALUE
+          TOP_LEVEL_VALUE,
         )
       )
   }

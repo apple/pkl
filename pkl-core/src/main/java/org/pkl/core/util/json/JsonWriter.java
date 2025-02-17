@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -563,7 +563,7 @@ public final class JsonWriter implements Closeable, Flushable {
         if (!lenient) {
           throw new IllegalStateException("JSON must have only one top-level value.");
         }
-        // fall-through
+      // fall-through
       case EMPTY_DOCUMENT: // first in document
         replaceTop(NONEMPTY_DOCUMENT);
         break;

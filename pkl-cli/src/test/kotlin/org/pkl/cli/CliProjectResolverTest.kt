@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class CliProjectResolverTest {
         CliBaseOptions(workingDir = tempDir, noCache = true),
         emptyList(),
         consoleWriter = StringWriter(),
-        errWriter = StringWriter()
+        errWriter = StringWriter(),
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
@@ -60,7 +60,7 @@ class CliProjectResolverTest {
         CliBaseOptions(noCache = true),
         listOf(tempDir),
         consoleWriter = StringWriter(),
-        errWriter = StringWriter()
+        errWriter = StringWriter(),
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
@@ -79,18 +79,18 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           testPort = packageServer.port,
-          noCache = true
+          noCache = true,
         ),
         listOf(tempDir),
         consoleWriter = StringWriter(),
-        errWriter = StringWriter()
+        errWriter = StringWriter(),
       )
       .run()
     val expectedOutput = tempDir.resolve("PklProject.deps.json")
@@ -134,18 +134,18 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           testPort = packageServer.port,
-          noCache = true
+          noCache = true,
         ),
         emptyList(),
         consoleWriter = StringWriter(),
-        errWriter = StringWriter()
+        errWriter = StringWriter(),
       )
       .run()
     val expectedOutput = tempDir.resolve("PklProject.deps.json")
@@ -191,7 +191,7 @@ class CliProjectResolverTest {
           ["project2"] = import("../project2/PklProject")
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     projectDir.writeFile(
       "../project2/PklProject",
@@ -212,7 +212,7 @@ class CliProjectResolverTest {
           ["project3"] = import("../project3/PklProject")
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
 
     projectDir.writeFile(
@@ -233,17 +233,17 @@ class CliProjectResolverTest {
           }
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     CliProjectResolver(
         CliBaseOptions(
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           testPort = packageServer.port,
-          noCache = true
+          noCache = true,
         ),
         listOf(projectDir),
         consoleWriter = StringWriter(),
-        errWriter = StringWriter()
+        errWriter = StringWriter(),
       )
       .run()
     val expectedOutput = projectDir.resolve("PklProject.deps.json")
@@ -299,7 +299,7 @@ class CliProjectResolverTest {
           ["fruit"] = import("../fruit/PklProject")
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     projectDir.writeFile(
       "../fruit/PklProject",
@@ -313,7 +313,7 @@ class CliProjectResolverTest {
           packageZipUrl = "https://foo.com/fruit.zip"
         }
       """
-        .trimIndent()
+        .trimIndent(),
     )
     val consoleOut = StringWriter()
     val errOut = StringWriter()
@@ -321,11 +321,11 @@ class CliProjectResolverTest {
         CliBaseOptions(
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           testPort = packageServer.port,
-          noCache = true
+          noCache = true,
         ),
         listOf(projectDir),
         consoleWriter = consoleOut,
-        errWriter = errOut
+        errWriter = errOut,
       )
       .run()
     val expectedOutput = projectDir.resolve("PklProject.deps.json")
@@ -373,7 +373,7 @@ class CliProjectResolverTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     tempDir.writeFile(
@@ -387,7 +387,7 @@ class CliProjectResolverTest {
         }
       }
     """
-        .trimIndent()
+        .trimIndent(),
     )
 
     val consoleOut = StringWriter()
@@ -396,11 +396,11 @@ class CliProjectResolverTest {
         CliBaseOptions(
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
           testPort = packageServer.port,
-          noCache = true
+          noCache = true,
         ),
         listOf(tempDir.resolve("project1"), tempDir.resolve("project2")),
         consoleWriter = consoleOut,
-        errWriter = errOut
+        errWriter = errOut,
       )
       .run()
     val sep = File.separatorChar

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.pkl.core.module.*
 internal class ClientModuleKeyFactory(
   private val readerSpecs: Collection<ModuleReaderSpec>,
   transport: MessageTransport,
-  evaluatorId: Long
+  evaluatorId: Long,
 ) : ModuleKeyFactory {
   private val schemes = readerSpecs.map { it.scheme }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.pkl.core.messaging.MessageTransport
 
 internal class ClientLogger(
   private val evaluatorId: Long,
-  private val transport: MessageTransport
+  private val transport: MessageTransport,
 ) : Logger {
   override fun trace(message: String, frame: StackFrame) {
     transport.send(LogMessage(evaluatorId, 0, message, frame.moduleUri))
