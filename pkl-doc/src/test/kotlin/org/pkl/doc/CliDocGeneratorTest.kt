@@ -280,6 +280,7 @@ class CliDocGeneratorTest {
     val sourceDirectory = actualOutputDir.resolve("com.package1/1.2.3")
 
     assertThat(currentDirectory).isDirectory()
+    assertThat(currentDirectory.isSymbolicLink()).isFalse()
 
     val expectedFiles = sourceDirectory.walk().map(sourceDirectory::relativize).toList()
     val actualFiles = currentDirectory.walk().map(currentDirectory::relativize).toList()
