@@ -270,6 +270,7 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           versionComparator,
           options.normalizedOutputDir,
           options.isTestMode,
+          options.noSymlinks,
         )
         .run()
     } catch (e: DocGeneratorException) {

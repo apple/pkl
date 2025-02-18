@@ -21,6 +21,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.path
@@ -30,6 +31,7 @@ import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions.Companion.parseModuleName
 import org.pkl.commons.cli.commands.ProjectOptions
+import org.pkl.commons.cli.commands.single
 import org.pkl.core.Release
 
 /** Main method for the Pkldoc CLI. */
@@ -57,11 +59,24 @@ class DocCommand :
       .path()
       .required()
 
+  private val noSymlinks: Boolean by
+    option(
+        names = arrayOf("--no-symlinks"),
+        help = "Create copies of directories and files instead of symbolic links.",
+      )
+      .single()
+      .flag(default = false)
+
   private val projectOptions by ProjectOptions()
 
   override fun run() {
     val options =
-      CliDocGeneratorOptions(baseOptions.baseOptions(modules, projectOptions), outputDir, true)
+      CliDocGeneratorOptions(
+        baseOptions.baseOptions(modules, projectOptions),
+        outputDir,
+        true,
+        noSymlinks,
+      )
     CliDocGenerator(options).run()
   }
 }

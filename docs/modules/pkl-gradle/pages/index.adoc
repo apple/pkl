@@ -534,6 +534,19 @@ Example: `outputDir = layout.projectDirectory.dir("pkl-docs")` +
 The directory where generated documentation is placed.
 ====
 
+.noSymlinks: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `noSymlinks = true` +
+Create copies of files and directories instead of symbolic links.
+Affects, in particular, how the "current" directories containing documentation content
+for the last generated version should be created. By default, a symbolic link is created
+pointing to the last generated version. If symlinks are disabled, a full copy
+of the last generated version is created. Symbolic links are not processed correctly
+by some systems (e.g. GitHub Pages), so the disabling them is occasionally useful.
+====
+
 Common properties:
 
 include::../partials/gradle-modules-properties.adoc[]

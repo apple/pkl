@@ -261,8 +261,14 @@ public class PklPlugin implements Plugin<Project> {
                       .getBuildDirectory()
                       .map(it -> it.dir("pkldoc").dir(spec.getName())));
 
+          spec.getNoSymlinks().convention(false);
+
           createModulesTask(PkldocTask.class, spec)
-              .configure(task -> task.getOutputDir().set(spec.getOutputDir()));
+              .configure(
+                  task -> {
+                    task.getOutputDir().set(spec.getOutputDir());
+                    task.getNoSymlinks().set(spec.getNoSymlinks());
+                  });
         });
   }
 

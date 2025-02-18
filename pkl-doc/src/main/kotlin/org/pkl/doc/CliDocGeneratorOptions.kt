@@ -36,6 +36,17 @@ constructor(
    * files (e.g., when stdlib line numbers change).
    */
   val isTestMode: Boolean = false,
+
+  /**
+   * Disables creation of symlinks, replacing them with regular files and directories.
+   *
+   * In particular, this affects creation of the "current" directory which contains documentation
+   * for the latest version of the package.
+   *
+   * `false` will make the current directory into a symlink to the actual version directory. `true`,
+   * however, will create a full copy instead.
+   */
+  val noSymlinks: Boolean = false,
 ) {
   /** [outputDir] after undergoing normalization. */
   val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)
