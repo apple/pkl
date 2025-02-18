@@ -27,6 +27,7 @@ import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
@@ -105,5 +106,9 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
         renames = renames,
       )
     CliKotlinCodeGenerator(options).run()
+  }
+
+  init {
+    installCommonOptions()
   }
 }

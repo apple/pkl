@@ -16,16 +16,21 @@
 package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
-import org.pkl.commons.cli.commands.BaseRootCommand
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.core.Release
 
 internal val helpLink = "${Release.current().documentation.homepage}pkl-cli/index.html#usage"
 
-class RootCommand : BaseRootCommand(name = "pkl") {
+class RootCommand : NoOpCliktCommand(name = "pkl") {
+  override val printHelpOnEmptyArgs = true
+
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
   init {
+    installCommonOptions()
+
     subcommands(
       EvalCommand(),
       ReplCommand(),

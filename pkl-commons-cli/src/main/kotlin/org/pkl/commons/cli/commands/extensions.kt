@@ -15,8 +15,7 @@
  */
 package org.pkl.commons.cli.commands
 
-import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.BaseCliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.installMordantMarkdown
 import com.github.ajalt.clikt.core.terminal
@@ -26,32 +25,19 @@ import com.github.ajalt.mordant.rendering.Theme
 import com.github.ajalt.mordant.terminal.Terminal
 import org.pkl.core.Release
 
-abstract class BaseRootCommand(name: String) : NoOpCliktCommand(name = name) {
-  open val helpLink: String = "${Release.current().documentation.homepage}pkl-cli/index.html#usage"
-  open val helpString: String = ""
+private val theme = Theme { styles["markdown.code.span"] = TextStyle(bold = true) }
 
-  override fun help(context: Context) = helpString
+fun <T : BaseCliktCommand<T>> T.installCommonOptions() {
+  installMordantMarkdown()
 
-  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+  versionOption(Release.current().versionInfo, names = setOf("-v", "--version"), message = { it })
 
-  override val printHelpOnEmptyArgs = true
-
-  companion object {
-    private val theme = Theme { styles["markdown.code.span"] = TextStyle(bold = true) }
-  }
-
-  init {
-    versionOption(Release.current().versionInfo, names = setOf("-v", "--version"), message = { it })
-
-    installMordantMarkdown()
-
-    context {
-      suggestTypoCorrection = { given, possible ->
-        if (!given.startsWith("-")) {
-          registeredSubcommands().map { it.commandName }
-        } else possible
-      }
-      terminal = Terminal(theme = theme)
+  context {
+    suggestTypoCorrection = { given, possible ->
+      if (!given.startsWith("-")) {
+        registeredSubcommands().map { it.commandName }
+      } else possible
     }
+    terminal = Terminal(theme = theme)
   }
 }

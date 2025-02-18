@@ -31,6 +31,7 @@ import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions.Companion.parseModuleName
 import org.pkl.commons.cli.commands.ProjectOptions
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.core.Release
 
 /** Main method for the Pkldoc CLI. */
@@ -64,5 +65,9 @@ class DocCommand : BaseCommand(name = "pkldoc") {
     val options =
       CliDocGeneratorOptions(baseOptions.baseOptions(modules, projectOptions), outputDir, true)
     CliDocGenerator(options).run()
+  }
+
+  init {
+    installCommonOptions()
   }
 }

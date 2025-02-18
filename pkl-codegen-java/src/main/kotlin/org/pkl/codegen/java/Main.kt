@@ -24,6 +24,7 @@ import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
@@ -138,5 +139,9 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java") {
         renames = renames,
       )
     CliJavaCodeGenerator(options).run()
+  }
+
+  init {
+    installCommonOptions()
   }
 }
