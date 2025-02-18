@@ -419,7 +419,7 @@ class SexpRenderer {
 
   fun renderSingleLineStringLiteral(expr: SingleLineStringLiteralExpr) {
     buf.append(tab)
-    buf.append("(interpolatedStringExpr")
+    buf.append("(singleLineStringLiteralExpr")
     val oldTab = increaseTab()
     for (part in expr.parts) {
       if (part is StringPart.StringInterpolation) {
@@ -436,15 +436,14 @@ class SexpRenderer {
 
   fun renderMultiLineStringLiteral(expr: MultiLineStringLiteralExpr) {
     buf.append(tab)
-    buf.append("(interpolatedMultiStringExpr")
+    buf.append("(multiLineStringLiteralExpr")
     val oldTab = increaseTab()
+    // render only interpolated expressions because
+    // the new parser parses string differently
     for (part in expr.parts) {
       if (part is StringPart.StringInterpolation) {
         buf.append('\n')
         renderExpr(part.expr)
-      } else {
-        buf.append('\n').append(tab)
-        buf.append("(stringConstantExpr)")
       }
     }
     buf.append(')')

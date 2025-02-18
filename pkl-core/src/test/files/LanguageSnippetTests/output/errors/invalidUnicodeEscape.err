@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Invalid Unicode escape sequence `\u{12x}`.
 
+Valid Unicode escape sequences are \u{0} to \u{10FFFF} (1-6 hexadecimal characters).
+
 x | res1 = "\u{12x}"
             ^^^^^^^
-at invalidUnicodeEscape#res1 (file:///$snippetsDir/input/errors/invalidUnicodeEscape.pkl)
-
-Valid Unicode escape sequences are \u{0} to \u{10FFFF} (1-6 hexadecimal characters).
+at invalidUnicodeEscape (file:///$snippetsDir/input/errors/invalidUnicodeEscape.pkl)

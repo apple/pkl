@@ -73,7 +73,6 @@ import org.pkl.core.parser.ast.ParameterList;
 import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
 import org.pkl.core.parser.ast.StringPart;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
 import org.pkl.core.parser.ast.Type.DeclaredType;
@@ -416,11 +415,6 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   @Override
   public T visitStringPart(StringPart part) {
     return visitChildren(part);
-  }
-
-  @Override
-  public T visitStringConstantPart(StringConstantPart part) {
-    return defaultValue();
   }
 
   @Override

@@ -215,13 +215,8 @@ import org.pkl.core.parser.ast.Parameter.TypedIdentifier;
 import org.pkl.core.parser.ast.ParameterList;
 import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.ConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.StringEscape;
-import org.pkl.core.parser.ast.StringConstantPart.StringNewline;
-import org.pkl.core.parser.ast.StringConstantPart.StringUnicodeEscape;
 import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.StringPart.StringConstantParts;
+import org.pkl.core.parser.ast.StringPart.StringConstantPart;
 import org.pkl.core.parser.ast.StringPart.StringInterpolation;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
@@ -353,7 +348,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitStringConstantType(StringConstantType type) {
     return new UnresolvedTypeNode.StringLiteral(
-        createSourceSection(type), doVisitStringConstant(type.getStr()));
+        createSourceSection(type), type.getStr().getString());
   }
 
   @Override
@@ -428,7 +423,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           createSourceSection(type),
           defaultIndex,
           elementTypes.stream()
-              .map(it -> doVisitStringConstant(((StringConstantType) it).getStr()))
+              .map(it -> ((StringConstantType) it).getStr().getString())
               .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
@@ -609,7 +604,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private AbstractImportNode doVisitImport(
       boolean isGlobImport, Node node, StringConstant importUriNode) {
     var section = createSourceSection(node);
-    var importUri = doVisitStringConstant(importUriNode);
+    var importUri = importUriNode.getString();
     if (isGlobImport && importUri.startsWith("...")) {
       throw exceptionBuilder().evalError("cannotGlobTripleDots").withSourceSection(section).build();
     }
@@ -670,7 +665,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitStringConstant(StringConstant expr) {
-    return new ConstantValueNode(createSourceSection(expr), doVisitStringConstant(expr));
+    return new ConstantValueNode(createSourceSection(expr), expr.getString());
   }
 
   @Override
@@ -682,12 +677,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (spart instanceof StringInterpolation si) {
       return ToStringNodeGen.create(createSourceSection(span), visitExpr(si.getExpr()));
     }
-    if (spart instanceof StringConstantParts sparts) {
-      var builder = new StringBuilder();
-      for (var part : sparts.getParts()) {
-        builder.append(doVisitStringConstantPart(part));
-      }
-      return new ConstantValueNode(createSourceSection(span), builder.toString());
+    if (spart instanceof StringConstantPart sparts) {
+      return new ConstantValueNode(createSourceSection(span), sparts.getString());
     }
     throw exceptionBuilder().unreachableCode().build();
   }
@@ -712,114 +703,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public ExpressionNode visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
     var parts = expr.getParts();
-    if (parts.isEmpty()) {
-      throw exceptionBuilder()
-          .evalError("stringContentMustBeginOnNewLine")
-          .withSourceSection(createSourceSection(expr))
-          .build();
-    }
-    var firstPart = parts.get(0);
-    var newLineStart =
-        firstPart instanceof StringConstantParts str
-            && str.getParts().get(0) instanceof StringNewline;
-    if (!newLineStart) {
-      throw exceptionBuilder()
-          .evalError("stringContentMustBeginOnNewLine")
-          .withSourceSection(startOf(firstPart))
-          .build();
-    }
-
-    var lastPart = parts.get(parts.size() - 1);
-    var commonIndent = getCommonIndent(lastPart, expr.getEndDelimiterSpan());
 
     if (parts.size() == 1) {
-      StringConstantParts sc = (StringConstantParts) firstPart;
-      return new ConstantValueNode(
-          createSourceSection(expr),
-          doVisitMultiLineStringParts(sc.getParts(), commonIndent, true, true));
+      return doVisitStringPart(parts.get(0), expr.span());
     }
 
     var nodes = new ExpressionNode[parts.size()];
-    var lastIndex = nodes.length - 1;
-
-    for (int i = 0; i <= lastIndex; i++) {
-      nodes[i] = doVisitMultiLineStringPart(parts.get(i), commonIndent, i == 0, i == lastIndex);
+    for (int i = 0; i < nodes.length; i++) {
+      nodes[i] = visitStringPart(parts.get(i));
     }
     return new InterpolatedStringLiteralNode(createSourceSection(expr), nodes);
-  }
-
-  public ExpressionNode doVisitMultiLineStringPart(
-      StringPart spart, String commonIndent, boolean isStringStart, boolean isStringEnd) {
-    if (spart instanceof StringInterpolation si) {
-      return ToStringNodeGen.create(createSourceSection(si), visitExpr(si.getExpr()));
-    }
-    if (spart instanceof StringConstantParts sparts) {
-      return new ConstantValueNode(
-          createSourceSection(spart),
-          doVisitMultiLineStringParts(sparts.getParts(), commonIndent, isStringStart, isStringEnd));
-    }
-    throw PklBugException.unreachableCode();
-  }
-
-  private String doVisitMultiLineStringParts(
-      List<StringConstantPart> parts,
-      String commonIndent,
-      boolean isStringStart,
-      boolean isStringEnd) {
-
-    var starIndex = isStringStart ? 1 : 0;
-    var endIndex = parts.size() - 1;
-    if (isStringEnd) {
-      if (parts.get(endIndex) instanceof StringNewline) {
-        // skip trailing newline token
-        endIndex -= 1;
-      } else {
-        // skip trailing newline and whitespace (common indent) tokens
-        endIndex -= 2;
-      }
-    }
-
-    var builder = new StringBuilder();
-    var isLineStart = isStringStart;
-    for (var i = starIndex; i <= endIndex; i++) {
-      var part = parts.get(i);
-      if (part instanceof StringNewline) {
-        builder.append('\n');
-        isLineStart = true;
-      } else if (part instanceof ConstantPart cp) {
-        var text = cp.getStr();
-        if (isLineStart) {
-          if (text.startsWith(commonIndent)) {
-            builder.append(text, commonIndent.length(), text.length());
-          } else {
-            String actualIndent = getLeadingIndent(text);
-            if (actualIndent.length() > commonIndent.length()) {
-              actualIndent = actualIndent.substring(0, commonIndent.length());
-            }
-            throw exceptionBuilder()
-                .evalError("stringIndentationMustMatchLastLine")
-                .withSourceSection(shrinkLeft(createSourceSection(cp), actualIndent.length()))
-                .build();
-          }
-        } else {
-          builder.append(text);
-        }
-        isLineStart = false;
-      } else if (part instanceof StringEscape || part instanceof StringUnicodeEscape) {
-        if (isLineStart && !commonIndent.isEmpty()) {
-          throw exceptionBuilder()
-              .evalError("stringIndentationMustMatchLastLine")
-              .withSourceSection(createSourceSection(part))
-              .build();
-        }
-        builder.append(doVisitStringConstantPart(part));
-        isLineStart = false;
-      } else {
-        throw PklBugException.unreachableCode();
-      }
-    }
-
-    return builder.toString();
   }
 
   @Override
@@ -2827,48 +2720,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         scope.getConstDepth());
   }
 
-  private String getCommonIndent(Node lastParts, Span endQuoteSpan) {
-    if (!(lastParts instanceof StringConstantParts sparts)) {
-      throw exceptionBuilder()
-          .evalError("closingStringDelimiterMustBeginOnNewLine")
-          .withSourceSection(startOf(endQuoteSpan))
-          .build();
-    }
-
-    var parts = sparts.getParts();
-    assert !parts.isEmpty();
-    var lastPart = parts.get(parts.size() - 1);
-    if (lastPart instanceof StringNewline) {
-      return "";
-    }
-
-    if (parts.size() > 1) {
-      var lastButOne = parts.get(parts.size() - 2);
-      if (lastButOne instanceof StringNewline && isIndentChars(lastPart)) {
-        return ((ConstantPart) lastPart).getStr();
-      }
-    }
-
-    throw exceptionBuilder()
-        .evalError("closingStringDelimiterMustBeginOnNewLine")
-        .withSourceSection(startOf(endQuoteSpan))
-        .build();
-  }
-
-  private static boolean isIndentChars(Node node) {
-    if (!(node instanceof ConstantPart part)) {
-      return false;
-    }
-    var text = part.getStr();
-
-    for (var i = 0; i < text.length(); i++) {
-      var ch = text.charAt(i);
-      if (ch != ' ' && ch != '\t') return false;
-    }
-
-    return true;
-  }
-
   private URI resolveImport(String importUri, StringConstant ctx) {
     URI parsedUri;
     try {
@@ -2949,16 +2800,5 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private static SourceSection unavailableSourceSection() {
     return VmUtils.unavailableSourceSection();
-  }
-
-  private static String getLeadingIndent(String text) {
-    for (var i = 0; i < text.length(); i++) {
-      var ch = text.charAt(i);
-      if (ch != ' ' && ch != '\t') {
-        return text.substring(0, i);
-      }
-    }
-
-    return text;
   }
 }

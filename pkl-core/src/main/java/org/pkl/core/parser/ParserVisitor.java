@@ -66,7 +66,6 @@ import org.pkl.core.parser.ast.ParameterList;
 import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
 import org.pkl.core.parser.ast.StringPart;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.TypeAlias;
@@ -210,8 +209,6 @@ public interface ParserVisitor<Result> {
   Result visitArgumentList(ArgumentList argumentList);
 
   Result visitStringPart(StringPart part);
-
-  Result visitStringConstantPart(StringConstantPart part);
 
   Result visitDocComment(DocComment docComment);
 
