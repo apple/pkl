@@ -32,11 +32,11 @@ class AnalyzeCommand :
     epilog = "For more information, visit $helpLink",
   ) {
   init {
-    subcommands(AnalyzeImportsCommand)
+    subcommands(AnalyzeImportsCommand())
   }
 }
 
-object AnalyzeImportsCommand :
+class AnalyzeImportsCommand :
   ModulesCommand(
     name = "imports",
     helpLink = helpLink,

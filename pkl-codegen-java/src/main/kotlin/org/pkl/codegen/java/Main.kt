@@ -28,10 +28,10 @@ import org.pkl.core.Release
 
 /** Main method for the Java code generator CLI. */
 internal fun main(args: Array<String>) {
-  cliMain { PklJavaCodegenCommand.main(args) }
+  cliMain { PklJavaCodegenCommand().main(args) }
 }
 
-object PklJavaCodegenCommand :
+class PklJavaCodegenCommand :
   ModulesCommand(
     name = "pkl-codegen-java",
     helpLink = Release.current().documentation().homepage(),

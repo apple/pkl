@@ -31,10 +31,10 @@ import org.pkl.core.Release
 
 /** Main method for the Kotlin code generator CLI. */
 internal fun main(args: Array<String>) {
-  cliMain { PklKotlinCodegenCommand.main(args) }
+  cliMain { PklKotlinCodegenCommand().main(args) }
 }
 
-object PklKotlinCodegenCommand :
+class PklKotlinCodegenCommand :
   ModulesCommand(
     name = "pkl-codegen-kotlin",
     helpLink = Release.current().documentation().homepage(),
