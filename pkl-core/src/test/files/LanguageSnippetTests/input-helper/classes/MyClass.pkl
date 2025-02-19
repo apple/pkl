@@ -1,0 +1,9 @@
+typealias EmailAddress = String(matches(Regex(#".+@\S+|.+<\S+@\S+>"#)))
+
+class MyClass {
+  emails: Listing<EmailAddress>
+}
+
+myClass: MyClass
+
+others: Listing<module(this != module)>

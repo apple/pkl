@@ -1,0 +1,14 @@
+// This test executes constraint `EmailAddress` within `MyClass` from two different root nodes:
+//   - ListingOrMappingTypeCastNode
+//   - PropertyTypeNode
+amends ".../input-helper/classes/MyClass.pkl"
+
+myClass {
+  emails {
+    "foo@bar.com"
+  }
+}
+
+others {
+  import(".../input-helper/classes/myClass1.pkl")
+}

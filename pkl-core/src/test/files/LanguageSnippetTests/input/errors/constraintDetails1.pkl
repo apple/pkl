@@ -1,0 +1,9 @@
+// Error message should include `new Bird { name = "Bob" }`
+birds: Listing(firstOneIsSandy) = new {
+  new Bird { name = "Bob" }
+  new Bird { name = "Bob" }
+}
+
+hidden firstOneIsSandy = (it: Listing<Bird>) -> it[0].name == "Sandy"
+
+class Bird { name: String }

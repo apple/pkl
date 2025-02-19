@@ -72,10 +72,29 @@ public abstract class TypeNode extends PklNode {
   public abstract TypeNode initWriteSlotNode(int slot);
 
   /**
+   * Checks if {@code value} conforms to this type.
+   *
+   * <p>Possibly returns a new object with type-casted members, in the case of {@link
+   * MappingTypeNode} or {@link ListingTypeNode}.
+   *
+   * <p>If {@link VmLocalContext#shouldEagerTypecheck()} is true, this method will always do an
+   * eager check.
+   *
+   * <p>If not, throws a {@link VmTypeMismatchException}.
+   */
+  public final Object execute(VirtualFrame frame, Object value) {
+    var localContext = VmLanguage.get(this).localContext.get();
+    if (localContext.shouldEagerTypecheck()) {
+      return executeEagerly(frame, value);
+    }
+    return executeLazily(frame, value);
+  }
+
+  /**
    * Checks if {@code value} conforms to this type, and possibly casts it in the case of {@link
    * MappingTypeNode} or {@link ListingTypeNode}.
    */
-  public abstract Object execute(VirtualFrame frame, Object value);
+  protected abstract Object executeLazily(VirtualFrame frame, Object value);
 
   /**
    * Checks if {@code value} conforms to this type, and possibly casts its value.
@@ -92,7 +111,7 @@ public abstract class TypeNode extends PklNode {
    * check its members.
    */
   public Object executeEagerly(VirtualFrame frame, Object value) {
-    return execute(frame, value);
+    return executeLazily(frame, value);
   }
 
   // method arguments are used when default value contains a root node
@@ -264,7 +283,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public final Object executeAndSet(VirtualFrame frame, Object value) {
-      var result = execute(frame, value);
+      var result = executeLazily(frame, value);
       writeSlotNode.executeWithValue(frame, result);
       return result;
     }
@@ -287,7 +306,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       // do nothing
       return value;
     }
@@ -320,14 +339,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       CompilerDirectives.transferToInterpreter();
       throw new VmTypeMismatchException.Nothing(sourceSection, value);
     }
 
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
-      execute(frame, value);
+      executeLazily(frame, value);
       // guaranteed to never run (execute will always throw).
       CompilerDirectives.transferToInterpreter();
       throw PklBugException.unreachableCode();
@@ -369,7 +388,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmTyped typed && typed.getVmClass() == moduleClass) return value;
 
       throw typeMismatch(value, moduleClass);
@@ -416,7 +435,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
 
       if (value instanceof VmTyped typed) {
@@ -477,7 +496,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (literal.equals(value)) return value;
 
       throw typeMismatch(value, literal);
@@ -512,7 +531,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmTyped) return value;
 
       throw typeMismatch(value, BaseModule.getTypedClass());
@@ -540,7 +559,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmDynamic) return value;
 
       throw typeMismatch(value, BaseModule.getDynamicClass());
@@ -583,7 +602,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmValue vmValue && clazz == vmValue.getVmClass()) return value;
 
       throw typeMismatch(value, clazz);
@@ -727,12 +746,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
         // do nothing
         return value;
       }
-      return elementTypeNode.execute(frame, value);
+      return elementTypeNode.executeLazily(frame, value);
     }
 
     @Override
@@ -894,7 +913,7 @@ public abstract class TypeNode extends PklNode {
 
     @Fallback
     @ExplodeLoop
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (skipElementTypeChecks) return value;
 
       // escape analysis should remove this allocation in compiled code
@@ -910,7 +929,7 @@ public abstract class TypeNode extends PklNode {
           if (shouldEagerCheck) {
             return elementTypeNode.executeEagerly(frame, value);
           } else {
-            return elementTypeNode.execute(frame, value);
+            return elementTypeNode.executeLazily(frame, value);
           }
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
@@ -969,7 +988,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (contains(value)) return value;
 
       throw typeMismatch(value, stringLiterals);
@@ -1020,7 +1039,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmList vmList) {
         return evalList(frame, vmList);
       }
@@ -1081,7 +1100,7 @@ public abstract class TypeNode extends PklNode {
       var idx = 0;
 
       for (var elem : value) {
-        var result = elementTypeNode.execute(frame, elem);
+        var result = elementTypeNode.executeLazily(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
         }
@@ -1175,7 +1194,7 @@ public abstract class TypeNode extends PklNode {
     @SuppressWarnings("DuplicatedCode")
     @Override
     @ExplodeLoop
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (!(value instanceof VmList vmList)) {
         throw typeMismatch(value, BaseModule.getListClass());
       }
@@ -1184,7 +1203,7 @@ public abstract class TypeNode extends PklNode {
       var idx = 0;
 
       for (var elem : vmList) {
-        var result = elementTypeNode.execute(frame, elem);
+        var result = elementTypeNode.executeLazily(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
         }
@@ -1296,7 +1315,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmMap vmMap) {
         return eval(frame, vmMap);
       }
@@ -1359,7 +1378,7 @@ public abstract class TypeNode extends PklNode {
       for (var entry : value) {
         var key = VmUtils.getKey(entry);
         keyTypeNode.executeEagerly(frame, key);
-        var result = valueTypeNode.execute(frame, VmUtils.getValue(entry));
+        var result = valueTypeNode.executeLazily(frame, VmUtils.getValue(entry));
         if (result != VmUtils.getValue(entry)) {
           ret = ret.put(key, result);
         }
@@ -1373,7 +1392,7 @@ public abstract class TypeNode extends PklNode {
       if (skipEntryTypeChecks) return value;
       for (var entry : value) {
         keyTypeNode.executeEagerly(frame, VmUtils.getKey(entry));
-        valueTypeNode.execute(frame, VmUtils.getValue(entry));
+        valueTypeNode.executeLazily(frame, VmUtils.getValue(entry));
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
@@ -1393,7 +1412,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (!(value instanceof VmListing vmListing)) {
         throw typeMismatch(value, BaseModule.getListingClass());
       }
@@ -1459,7 +1478,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (!(value instanceof VmMapping vmMapping)) {
         throw typeMismatch(value, BaseModule.getMappingClass());
       }
@@ -1942,10 +1961,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmPair vmPair) {
-        var first = firstTypeNode.execute(frame, vmPair.getFirst());
-        var second = secondTypeNode.execute(frame, vmPair.getSecond());
+        var first = firstTypeNode.executeLazily(frame, vmPair.getFirst());
+        var second = secondTypeNode.executeLazily(frame, vmPair.getSecond());
         if (first == vmPair.getFirst() && second == vmPair.getSecond()) {
           return vmPair;
         }
@@ -2026,7 +2045,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("internalStdLibClass", "VarArgs").build();
     }
@@ -2078,7 +2097,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       // do nothing
       return value;
     }
@@ -2105,7 +2124,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
         throw new VmTypeMismatchException.Constraint(
             BaseModule.getNonNullTypeAlias().getConstraintSection(), value);
@@ -2146,7 +2165,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
         if ((l & mask) == l) return value;
 
@@ -2189,7 +2208,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
         if (l == l.byteValue()) return value;
 
@@ -2233,7 +2252,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
         if (l == l.shortValue()) return value;
 
@@ -2277,7 +2296,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long l) {
         if (l == l.intValue()) return value;
 
@@ -2373,21 +2392,21 @@ public abstract class TypeNode extends PklNode {
      * <p>Before executing the typealias body, use the owner and receiver of the original frame
      * where the typealias was declared, so that we preserve its original scope.
      */
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
       setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
 
       try {
-        return aliasedTypeNode.execute(frame, value);
+        return aliasedTypeNode.executeLazily(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
       }
     }
 
-    /** See docstring on {@link TypeAliasTypeNode#execute}. */
+    /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
       var prevOwner = VmUtils.getOwner(frame);
@@ -2490,14 +2509,18 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class ConstrainedTypeNode extends TypeNode {
+
+    private final VmLanguage language;
     @Child private TypeNode childNode;
     @Children private final TypeConstraintNode[] constraintNodes;
 
-    @CompilationFinal private int customThisSlot = -1;
-
     public ConstrainedTypeNode(
-        SourceSection sourceSection, TypeNode childNode, TypeConstraintNode[] constraintNodes) {
+        SourceSection sourceSection,
+        VmLanguage language,
+        TypeNode childNode,
+        TypeConstraintNode[] constraintNodes) {
       super(sourceSection);
+      this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
     }
@@ -2514,21 +2537,24 @@ public abstract class TypeNode extends PklNode {
     }
 
     @ExplodeLoop
-    public Object execute(VirtualFrame frame, Object value) {
-      if (customThisSlot == -1) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-        customThisSlot =
-            frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
-      }
+    protected Object executeLazily(VirtualFrame frame, Object value) {
+      var customThisSlot =
+          frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
 
-      var ret = childNode.execute(frame, value);
+      var ret = childNode.executeLazily(frame, value);
 
+      var localContext = language.localContext.get();
+      var prevShouldTypeCheck = localContext.shouldEagerTypecheck();
+      localContext.shouldEagerTypecheck(true);
       frame.setAuxiliarySlot(customThisSlot, value);
-      for (var node : constraintNodes) {
-        node.execute(frame);
+      try {
+        for (var node : constraintNodes) {
+          node.execute(frame);
+        }
+        return ret;
+      } finally {
+        localContext.shouldEagerTypecheck(prevShouldTypeCheck);
       }
-      return ret;
     }
 
     @Override
@@ -2593,7 +2619,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       // do nothing
       return value;
     }
@@ -2620,7 +2646,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof String) return value;
 
       throw typeMismatch(value, BaseModule.getStringClass());
@@ -2653,7 +2679,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long || value instanceof Double) return value;
 
       throw typeMismatch(value, BaseModule.getNumberClass());
@@ -2707,7 +2733,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Long) return value;
 
       throw typeMismatch(value, BaseModule.getIntClass());
@@ -2740,7 +2766,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Double) return value;
 
       throw typeMismatch(value, BaseModule.getFloatClass());
@@ -2748,7 +2774,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
-      execute(frame, value);
+      executeLazily(frame, value);
       frame.setDouble(slot, (double) value);
       return value;
     }
@@ -2780,7 +2806,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public Object execute(VirtualFrame frame, Object value) {
+    protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof Boolean) return value;
 
       throw typeMismatch(value, BaseModule.getBooleanClass());

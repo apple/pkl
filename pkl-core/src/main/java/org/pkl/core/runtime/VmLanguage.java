@@ -16,6 +16,7 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.ContextThreadLocal;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
 import com.oracle.truffle.api.nodes.Node;
@@ -44,6 +45,9 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
   public static VmLanguage get(@Nullable Node node) {
     return REFERENCE.get(node);
   }
+
+  public final ContextThreadLocal<VmLocalContext> localContext =
+      locals.createContextThreadLocal((ignoredCtx, ignoredThread) -> new VmLocalContext());
 
   @Override
   protected VmContext createContext(Env env) {

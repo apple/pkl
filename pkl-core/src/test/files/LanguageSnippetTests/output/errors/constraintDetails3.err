@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Type constraint `toList().every((it: Listing<Bird>) -> it[0].name == "Bob")` violated.
+Value: new Listing { new Listing { new Bird { name = "Eagle" }; new Bird { name = ? ...
+
+x | foo: Listing(toList().every((it: Listing<Bird>) -> it[0].name == "Bob")) = new {
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at constraintDetails3#foo (file:///$snippetsDir/input/errors/constraintDetails3.pkl)
+
+x | foo: Listing(toList().every((it: Listing<Bird>) -> it[0].name == "Bob")) = new {
+                                                                               ^^^^^
+at constraintDetails3#foo (file:///$snippetsDir/input/errors/constraintDetails3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

@@ -401,7 +401,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             var expr = visitExpr(exprs.get(i));
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
           }
-          return new Constrained(createSourceSection(type), childNode, constraints);
+          return new Constrained(createSourceSection(type), language, childNode, constraints);
         });
   }
 
