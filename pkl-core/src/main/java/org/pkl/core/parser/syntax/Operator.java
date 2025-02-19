@@ -13,29 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.parser;
+package org.pkl.core.parser.syntax;
 
-import org.pkl.core.parser.syntax.Module;
-import org.pkl.core.util.Nullable;
-
-public class ParserError extends RuntimeException {
-  private final Span span;
-  private @Nullable Module partialParseResult;
-
-  public ParserError(String msg, Span span) {
-    super(msg);
-    this.span = span;
-  }
-
-  public Span span() {
-    return span;
-  }
-
-  public void setPartialParseResult(@Nullable Module partialParseResult) {
-    this.partialParseResult = partialParseResult;
-  }
-
-  public @Nullable Module getPartialParseResult() {
-    return partialParseResult;
-  }
+public enum Operator {
+  POW,
+  MULT,
+  DIV,
+  INT_DIV,
+  MOD,
+  PLUS,
+  MINUS,
+  LT,
+  GT,
+  LTE,
+  GTE,
+  IS,
+  AS,
+  EQ_EQ,
+  NOT_EQ,
+  AND,
+  OR,
+  PIPE,
+  NULL_COALESCE,
+  DOT,
+  QDOT,
 }

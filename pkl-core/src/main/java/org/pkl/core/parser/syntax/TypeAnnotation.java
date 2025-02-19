@@ -13,29 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.parser;
+package org.pkl.core.parser.syntax;
 
-import org.pkl.core.parser.syntax.Module;
+import java.util.List;
+import org.pkl.core.parser.ParserVisitor;
+import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
 
-public class ParserError extends RuntimeException {
-  private final Span span;
-  private @Nullable Module partialParseResult;
-
-  public ParserError(String msg, Span span) {
-    super(msg);
-    this.span = span;
+public class TypeAnnotation extends AbstractNode {
+  public TypeAnnotation(Type type, Span span) {
+    super(span, List.of(type));
   }
 
-  public Span span() {
-    return span;
+  @Override
+  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+    return visitor.visitTypeAnnotation(this);
   }
 
-  public void setPartialParseResult(@Nullable Module partialParseResult) {
-    this.partialParseResult = partialParseResult;
-  }
-
-  public @Nullable Module getPartialParseResult() {
-    return partialParseResult;
+  public Type getType() {
+    assert children != null;
+    return (Type) children.get(0);
   }
 }
