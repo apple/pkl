@@ -75,7 +75,7 @@ import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.parser.ast.StringConstant;
 import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.StringPart.StringConstantPart;
+import org.pkl.core.parser.ast.StringPart.StringChars;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.DeclaredType;
 import org.pkl.core.parser.ast.Type.ParenthesizedType;
@@ -1131,7 +1131,7 @@ public class Parser {
           var istart = next().span;
           if (!builder.isEmpty()) {
             assert startSpan != null;
-            parts.add(new StringConstantPart(builder.toString(), startSpan.endWith(end)));
+            parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
             builder = new StringBuilder();
           }
           var exp = parseExpr(")");
@@ -1146,7 +1146,7 @@ public class Parser {
       }
     }
     if (!builder.isEmpty()) {
-      parts.add(new StringConstantPart(builder.toString(), startSpan.endWith(end)));
+      parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
     }
     end = next().span;
     return new SingleLineStringLiteralExpr(parts, start.span, end, start.span.endWith(end));
@@ -1195,7 +1195,7 @@ public class Parser {
     }
     // only contains a newline
     if (nodes.size() == 1) {
-      return List.of(new StringConstantPart("", firstNode.span()));
+      return List.of(new StringChars("", firstNode.span()));
     }
     var indent = getCommonIndent(nodes, span);
     return renderString(nodes, indent);
@@ -1213,18 +1213,18 @@ public class Parser {
       var node = nodes.get(i);
       if (node.node != null) {
         if (!builder.isEmpty()) {
-          parts.add(new StringConstantPart(builder.toString(), start.endWith(end)));
+          parts.add(new StringChars(builder.toString(), start.endWith(end)));
           builder = new StringBuilder();
           start = null;
         }
         parts.add(node.node);
       } else {
-        if (start == null) {
-          start = node.span();
-        }
-        end = node.span();
         var token = node.token;
         assert token != null;
+        if (start == null) {
+          start = token.span;
+        }
+        end = token.span;
         switch (token.token) {
           case STRING_NEWLINE -> {
             builder.append('\n');
@@ -1236,8 +1236,8 @@ public class Parser {
               if (text.startsWith(commonIndent)) {
                 builder.append(text, commonIndent.length(), text.length());
               } else {
-                var actualIndent = getLeadingIndent(text).length();
-                var textSpan = token.span.move(actualIndent).resizeBy(-actualIndent);
+                var actualIndent = getLeadingIndentCount(text);
+                var textSpan = token.span.move(actualIndent).grow(-actualIndent);
                 throw new ParserError(
                     ErrorMessages.create("stringIndentationMustMatchLastLine"), textSpan);
               }
@@ -1258,7 +1258,7 @@ public class Parser {
       }
     }
     if (!builder.isEmpty()) {
-      parts.add(new StringConstantPart(builder.toString(), start.endWith(end)));
+      parts.add(new StringChars(builder.toString(), start.endWith(end)));
     }
     return parts;
   }
@@ -1678,15 +1678,15 @@ public class Parser {
     return text;
   }
 
-  private String getLeadingIndent(String text) {
-    if (text.isEmpty()) return "";
+  private int getLeadingIndentCount(String text) {
+    if (text.isEmpty()) return 0;
     for (var i = 0; i < text.length(); i++) {
       var ch = text.charAt(i);
       if (ch != ' ' && ch != '\t') {
-        return text.substring(0, i);
+        return i;
       }
     }
-    return text;
+    return text.length();
   }
 
   private record TempNode(

@@ -32,10 +32,10 @@ public abstract sealed class StringPart extends AbstractNode {
     return visitor.visitStringPart(this);
   }
 
-  public static final class StringConstantPart extends StringPart {
+  public static final class StringChars extends StringPart {
     private final String string;
 
-    public StringConstantPart(String string, Span span) {
+    public StringChars(String string, Span span) {
       super(span, null);
       this.string = string;
     }
@@ -46,7 +46,7 @@ public abstract sealed class StringPart extends AbstractNode {
 
     @Override
     public String toString() {
-      return "StringConstantPart{string='" + string + '\'' + ", span=" + span + '}';
+      return "StringChars{string='" + string + '\'' + ", span=" + span + '}';
     }
 
     @SuppressWarnings("ConstantValue")
@@ -61,7 +61,7 @@ public abstract sealed class StringPart extends AbstractNode {
       if (!super.equals(o)) {
         return false;
       }
-      StringConstantPart that = (StringConstantPart) o;
+      StringChars that = (StringChars) o;
       return Objects.equals(string, that.string);
     }
 

@@ -34,7 +34,7 @@ import org.pkl.core.parser.ast.Expr.SingleLineStringLiteralExpr;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause.Type;
 import org.pkl.core.parser.ast.ImportClause;
-import org.pkl.core.parser.ast.StringPart.StringConstantPart;
+import org.pkl.core.parser.ast.StringPart.StringChars;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.IoUtils;
@@ -130,7 +130,7 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     var singleParts = slStr.getParts();
     if (singleParts.isEmpty()) {
       importString = "";
-    } else if (singleParts.size() == 1 && singleParts.get(0) instanceof StringConstantPart cparts) {
+    } else if (singleParts.size() == 1 && singleParts.get(0) instanceof StringChars cparts) {
       importString = cparts.getString();
     } else {
       return Collections.emptyList();

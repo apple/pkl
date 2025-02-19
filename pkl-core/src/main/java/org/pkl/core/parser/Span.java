@@ -39,7 +39,7 @@ public record Span(int charIndex, int length) {
     return new Span(charIndex + amount, length);
   }
 
-  public Span resizeBy(int amount) {
+  public Span grow(int amount) {
     return new Span(charIndex, length + amount);
   }
 }

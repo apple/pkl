@@ -216,7 +216,7 @@ import org.pkl.core.parser.ast.ParameterList;
 import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.StringConstant;
 import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.StringPart.StringConstantPart;
+import org.pkl.core.parser.ast.StringPart.StringChars;
 import org.pkl.core.parser.ast.StringPart.StringInterpolation;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.ConstrainedType;
@@ -677,7 +677,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (spart instanceof StringInterpolation si) {
       return ToStringNodeGen.create(createSourceSection(span), visitExpr(si.getExpr()));
     }
-    if (spart instanceof StringConstantPart sparts) {
+    if (spart instanceof StringChars sparts) {
       return new ConstantValueNode(createSourceSection(span), sparts.getString());
     }
     throw exceptionBuilder().unreachableCode().build();
