@@ -34,7 +34,7 @@ import org.pkl.core.parser.ast.Expr.SingleLineStringLiteralExpr;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
 import org.pkl.core.parser.ast.ExtendsOrAmendsClause.Type;
 import org.pkl.core.parser.ast.ImportClause;
-import org.pkl.core.parser.ast.StringPart.StringConstantParts;
+import org.pkl.core.parser.ast.StringPart.StringChars;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.IoUtils;
@@ -63,8 +63,8 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
       SourceSection sourceSection) {}
 
   /** Parses a module, and collects all imports and reads. */
-  public static @Nullable List<Entry> parse(
-      ModuleKey moduleKey, ResolvedModuleKey resolvedModuleKey) throws IOException {
+  public static List<Entry> parse(ModuleKey moduleKey, ResolvedModuleKey resolvedModuleKey)
+      throws IOException {
     var parser = new Parser();
     var text = resolvedModuleKey.loadSource();
     var source = VmUtils.createSource(moduleKey, text);
@@ -88,9 +88,8 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public @Nullable List<Entry> visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl) {
-    var importStr = doVisitStringConstant(decl.getUrl());
+    var importStr = decl.getUrl().getString();
     var sourceSection = createSourceSection(decl.getUrl());
-    assert sourceSection != null;
     return Collections.singletonList(
         new Entry(
             true,
@@ -103,18 +102,16 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
 
   @Override
   public List<Entry> visitImportClause(ImportClause imp) {
-    var importStr = doVisitStringConstant(imp.getImportStr());
+    var importStr = imp.getImportStr().getString();
     var sourceSection = createSourceSection(imp.getImportStr());
-    assert sourceSection != null;
     return Collections.singletonList(
         new Entry(true, imp.isGlob(), false, false, importStr, sourceSection));
   }
 
   @Override
   public List<Entry> visitImportExpr(ImportExpr expr) {
-    var importStr = doVisitStringConstant(expr.getImportStr());
+    var importStr = expr.getImportStr().getString();
     var sourceSection = createSourceSection(expr.getImportStr());
-    assert sourceSection != null;
     return Collections.singletonList(
         new Entry(true, expr.isGlob(), false, false, importStr, sourceSection));
   }
@@ -124,7 +121,6 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     return doVisitReadExpr(expr.getExpr(), expr.getReadType() == ReadType.GLOB);
   }
 
-  @SuppressWarnings("DataFlowIssue")
   public List<Entry> doVisitReadExpr(Expr expr, boolean isGlob) {
     if (!(expr instanceof SingleLineStringLiteralExpr slStr)) {
       return Collections.emptyList();
@@ -134,10 +130,8 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
     var singleParts = slStr.getParts();
     if (singleParts.isEmpty()) {
       importString = "";
-    } else if (singleParts.size() == 1
-        && singleParts.get(0) instanceof StringConstantParts cparts
-        && !cparts.getParts().isEmpty()) {
-      importString = doVisitStringConstant(cparts.getParts());
+    } else if (singleParts.size() == 1 && singleParts.get(0) instanceof StringChars cparts) {
+      importString = cparts.getString();
     } else {
       return Collections.emptyList();
     }

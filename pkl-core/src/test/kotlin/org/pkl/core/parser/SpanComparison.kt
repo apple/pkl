@@ -302,10 +302,11 @@ class SpanComparison(val path: String, private val softly: SoftAssertions) {
         }
       }
       is MultiLineStringLiteralExpr -> {
-        node.parts.zip((ctx as MultiLineStringLiteralContext).multiLineStringPart()).forEach {
-          (s1, s2) ->
-          compareSpan(s1, s2)
-        }
+        // only compare interpolated expressions
+        val exprs = node.parts.filterIsInstance<StringPart.StringInterpolation>()
+        val antlrExprs =
+          (ctx as MultiLineStringLiteralContext).multiLineStringPart().mapNotNull { it.expr() }
+        exprs.zip(antlrExprs).forEach { (s1, s2) -> compareExpr(s1.expr, s2) }
       }
       is ThrowExpr -> compareExpr(node.expr, (ctx as ThrowExprContext).expr())
       is TraceExpr -> compareExpr(node.expr, (ctx as TraceExprContext).expr())

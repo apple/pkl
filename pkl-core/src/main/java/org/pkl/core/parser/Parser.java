@@ -74,12 +74,8 @@ import org.pkl.core.parser.ast.ParameterList;
 import org.pkl.core.parser.ast.QualifiedIdentifier;
 import org.pkl.core.parser.ast.ReplInput;
 import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.EscapeType;
-import org.pkl.core.parser.ast.StringConstantPart.StringEscape;
-import org.pkl.core.parser.ast.StringConstantPart.StringNewline;
 import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.StringPart.StringConstantParts;
+import org.pkl.core.parser.ast.StringPart.StringChars;
 import org.pkl.core.parser.ast.Type;
 import org.pkl.core.parser.ast.Type.DeclaredType;
 import org.pkl.core.parser.ast.Type.ParenthesizedType;
@@ -1022,64 +1018,8 @@ public class Parser {
             var tk = next();
             yield new FloatLiteralExpr(tk.text(lexer), tk.span);
           }
-          case STRING_START, STRING_MULTI_START -> {
-            var start = next();
-            var parts = new ArrayList<StringPart>();
-            var temp = new ArrayList<StringConstantPart>();
-            while (lookahead != Token.STRING_END) {
-              switch (lookahead) {
-                case STRING_PART -> {
-                  var tk = next();
-                  var text = tk.text(lexer);
-                  if (!text.isEmpty()) {
-                    temp.add(new StringConstantPart.ConstantPart(text, tk.span));
-                  }
-                }
-                // lexer makes sure we don't get newlines in single quoted strings
-                case STRING_NEWLINE -> temp.add(new StringNewline(next().span));
-                case STRING_ESCAPE_NEWLINE ->
-                    temp.add(new StringEscape(EscapeType.NEWLINE, next().span));
-                case STRING_ESCAPE_TAB -> temp.add(new StringEscape(EscapeType.TAB, next().span));
-                case STRING_ESCAPE_QUOTE ->
-                    temp.add(new StringEscape(EscapeType.QUOTE, next().span));
-                case STRING_ESCAPE_BACKSLASH ->
-                    temp.add(new StringEscape(EscapeType.BACKSLASH, next().span));
-                case STRING_ESCAPE_RETURN ->
-                    temp.add(new StringEscape(EscapeType.RETURN, next().span));
-                case STRING_ESCAPE_UNICODE -> {
-                  var tk = next();
-                  var text = tk.text(lexer);
-                  temp.add(new StringConstantPart.StringUnicodeEscape(text, tk.span));
-                }
-                case INTERPOLATION_START -> {
-                  var istart = next().span;
-                  if (!temp.isEmpty()) {
-                    var span = temp.get(0).span().endWith(temp.get(temp.size() - 1).span());
-                    parts.add(new StringPart.StringConstantParts(temp, span));
-                    temp = new ArrayList<>();
-                  }
-                  var exp = parseExpr(")");
-                  var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
-                  parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
-                }
-                case EOF -> throw parserError("unexpectedEndOfFile");
-                // the lexer makes sure we only get the above tokens inside a string
-                default -> throw PklBugException.unreachableCode();
-              }
-            }
-            if (!temp.isEmpty()) {
-              var span = temp.get(0).span().endWith(temp.get(temp.size() - 1).span());
-              parts.add(new StringPart.StringConstantParts(temp, span));
-            }
-            var expectedDelimiter = start.token == Token.STRING_START ? "\"" : "\"\"\"";
-            var end = expect(Token.STRING_END, "missingDelimiter", expectedDelimiter).span;
-            if (start.token == Token.STRING_START) {
-              yield new SingleLineStringLiteralExpr(
-                  parts, start.span, end, start.span.endWith(end));
-            } else {
-              yield new MultiLineStringLiteralExpr(parts, start.span, end, start.span.endWith(end));
-            }
-          }
+          case STRING_START -> parseSingleLineStringLiteralExpr();
+          case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
           case IDENTIFIER -> {
             var identifier = parseIdentifier();
             if (lookahead == Token.LPAREN
@@ -1147,6 +1087,180 @@ public class Parser {
       return parseExprRest(res);
     }
     return expr;
+  }
+
+  private Expr parseSingleLineStringLiteralExpr() {
+    var start = next();
+    var parts = new ArrayList<StringPart>();
+    var builder = new StringBuilder();
+    var startSpan = spanLookahead;
+    var end = spanLookahead;
+    while (lookahead != Token.STRING_END) {
+      switch (lookahead) {
+        case STRING_PART -> {
+          var tk = next();
+          end = tk.span;
+          builder.append(tk.text(lexer));
+        }
+        case STRING_ESCAPE_NEWLINE -> {
+          end = next().span;
+          builder.append('\n');
+        }
+        case STRING_ESCAPE_TAB -> {
+          end = next().span;
+          builder.append('\t');
+        }
+        case STRING_ESCAPE_QUOTE -> {
+          end = next().span;
+          builder.append('"');
+        }
+        case STRING_ESCAPE_BACKSLASH -> {
+          end = next().span;
+          builder.append('\\');
+        }
+        case STRING_ESCAPE_RETURN -> {
+          end = next().span;
+          builder.append('\r');
+        }
+        case STRING_ESCAPE_UNICODE -> {
+          var tk = next();
+          end = tk.span;
+          builder.append(parseUnicodeEscape(tk));
+        }
+        case INTERPOLATION_START -> {
+          var istart = next().span;
+          if (!builder.isEmpty()) {
+            assert startSpan != null;
+            parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
+            builder = new StringBuilder();
+          }
+          var exp = parseExpr(")");
+          end = expect(Token.RPAREN, "unexpectedToken", ")").span;
+          parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
+          startSpan = spanLookahead;
+        }
+        case EOF -> {
+          var delimiter = new StringBuilder(start.text(lexer)).reverse().toString();
+          throw parserError("missingDelimiter", delimiter);
+        }
+      }
+    }
+    if (!builder.isEmpty()) {
+      parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
+    }
+    end = next().span;
+    return new SingleLineStringLiteralExpr(parts, start.span, end, start.span.endWith(end));
+  }
+
+  private Expr parseMultiLineStringLiteralExpr() {
+    var start = next();
+    var stringTokens = new ArrayList<TempNode>();
+    while (lookahead != Token.STRING_END) {
+      switch (lookahead) {
+        case STRING_PART,
+            STRING_NEWLINE,
+            STRING_ESCAPE_NEWLINE,
+            STRING_ESCAPE_TAB,
+            STRING_ESCAPE_QUOTE,
+            STRING_ESCAPE_BACKSLASH,
+            STRING_ESCAPE_RETURN,
+            STRING_ESCAPE_UNICODE ->
+            stringTokens.add(new TempNode(next(), null));
+        case INTERPOLATION_START -> {
+          var istart = next();
+          var exp = parseExpr(")");
+          var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
+          var interpolation = new StringPart.StringInterpolation(exp, istart.span.endWith(end));
+          stringTokens.add(new TempNode(null, interpolation));
+        }
+        case EOF -> {
+          var delimiter = new StringBuilder(start.text(lexer)).reverse().toString();
+          throw parserError("missingDelimiter", delimiter);
+        }
+      }
+    }
+    var end = next().span;
+    var fullSpan = start.span.endWith(end);
+    var parts = validateMultiLineString(stringTokens, fullSpan);
+    return new MultiLineStringLiteralExpr(parts, start.span, end, fullSpan);
+  }
+
+  private List<StringPart> validateMultiLineString(List<TempNode> nodes, Span span) {
+    var firstNode = nodes.isEmpty() ? null : nodes.get(0);
+    if (firstNode == null
+        || firstNode.token == null
+        || firstNode.token.token != Token.STRING_NEWLINE) {
+      var errorSpan = firstNode == null ? span : firstNode.span();
+      throw new ParserError(ErrorMessages.create("stringContentMustBeginOnNewLine"), errorSpan);
+    }
+    // only contains a newline
+    if (nodes.size() == 1) {
+      return List.of(new StringChars("", firstNode.span()));
+    }
+    var indent = getCommonIndent(nodes, span);
+    return renderString(nodes, indent);
+  }
+
+  @SuppressWarnings("DataFlowIssue")
+  private List<StringPart> renderString(List<TempNode> nodes, String commonIndent) {
+    var parts = new ArrayList<StringPart>();
+    var builder = new StringBuilder();
+    var endOffset = nodes.get(nodes.size() - 1).token.token == Token.STRING_NEWLINE ? 1 : 2;
+    var isNewLine = true;
+    Span start = null;
+    Span end = null;
+    for (var i = 1; i < nodes.size() - endOffset; i++) {
+      var node = nodes.get(i);
+      if (node.node != null) {
+        if (!builder.isEmpty()) {
+          parts.add(new StringChars(builder.toString(), start.endWith(end)));
+          builder = new StringBuilder();
+          start = null;
+        }
+        parts.add(node.node);
+      } else {
+        var token = node.token;
+        assert token != null;
+        if (start == null) {
+          start = token.span;
+        }
+        end = token.span;
+        switch (token.token) {
+          case STRING_NEWLINE -> {
+            builder.append('\n');
+            isNewLine = true;
+          }
+          case STRING_PART -> {
+            var text = token.text(lexer);
+            if (isNewLine) {
+              if (text.startsWith(commonIndent)) {
+                builder.append(text, commonIndent.length(), text.length());
+              } else {
+                var actualIndent = getLeadingIndentCount(text);
+                var textSpan = token.span.move(actualIndent).grow(-actualIndent);
+                throw new ParserError(
+                    ErrorMessages.create("stringIndentationMustMatchLastLine"), textSpan);
+              }
+            } else {
+              builder.append(text);
+            }
+            isNewLine = false;
+          }
+          default -> {
+            if (isNewLine && !commonIndent.isEmpty()) {
+              throw new ParserError(
+                  ErrorMessages.create("stringIndentationMustMatchLastLine"), token.span);
+            }
+            builder.append(getEscapeText(token));
+            isNewLine = false;
+          }
+        }
+      }
+    }
+    if (!builder.isEmpty()) {
+      parts.add(new StringChars(builder.toString(), start.endWith(end)));
+    }
+    return parts;
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -1471,36 +1585,117 @@ public class Parser {
 
   private StringConstant parseStringConstant() {
     var start = spanLookahead;
-    expect(Token.STRING_START, "unexpectedToken", "\"");
-    var parts = new ArrayList<StringConstantPart>();
+    var startTk = expect(Token.STRING_START, "unexpectedToken", "\"");
+    var builder = new StringBuilder();
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
-        case STRING_PART -> {
-          var tk = next();
-          var text = tk.text(lexer);
-          parts.add(new StringConstantPart.ConstantPart(text, tk.span));
+        case STRING_PART -> builder.append(next().text(lexer));
+        case STRING_ESCAPE_NEWLINE -> {
+          next();
+          builder.append('\n');
         }
-        case STRING_ESCAPE_NEWLINE -> parts.add(new StringEscape(EscapeType.NEWLINE, next().span));
-        case STRING_ESCAPE_TAB -> parts.add(new StringEscape(EscapeType.TAB, next().span));
-        case STRING_ESCAPE_QUOTE -> parts.add(new StringEscape(EscapeType.QUOTE, next().span));
-        case STRING_ESCAPE_BACKSLASH ->
-            parts.add(new StringEscape(EscapeType.BACKSLASH, next().span));
-        case STRING_ESCAPE_RETURN -> parts.add(new StringEscape(EscapeType.RETURN, next().span));
-        case STRING_ESCAPE_UNICODE -> {
-          var tk = next();
-          var text = tk.text(lexer);
-          parts.add(new StringConstantPart.StringUnicodeEscape(text, tk.span));
+        case STRING_ESCAPE_TAB -> {
+          next();
+          builder.append('\t');
         }
-        case EOF -> throw parserError("unexpectedEndOfFile");
+        case STRING_ESCAPE_QUOTE -> {
+          next();
+          builder.append('"');
+        }
+        case STRING_ESCAPE_BACKSLASH -> {
+          next();
+          builder.append('\\');
+        }
+        case STRING_ESCAPE_RETURN -> {
+          next();
+          builder.append('\r');
+        }
+        case STRING_ESCAPE_UNICODE -> builder.append(parseUnicodeEscape(next()));
+        case EOF -> {
+          var delimiter = new StringBuilder(startTk.text(lexer)).reverse().toString();
+          throw parserError("missingDelimiter", delimiter);
+        }
         case INTERPOLATION_START -> throw parserError("interpolationInConstant");
         // the lexer makes sure we only get the above tokens inside a string
         default -> throw PklBugException.unreachableCode();
       }
     }
-    var end = expect(Token.STRING_END, "missingDelimiter", "\"").span;
-    assert !parts.isEmpty();
-    var constSpan = parts.get(0).span().endWith(parts.get(parts.size() - 1).span());
-    return new StringConstant(new StringConstantParts(parts, constSpan), start.endWith(end));
+    var end = next().span;
+    return new StringConstant(builder.toString(), start.endWith(end));
+  }
+
+  private String getEscapeText(FullToken tk) {
+    return switch (tk.token) {
+      case STRING_ESCAPE_NEWLINE -> "\n";
+      case STRING_ESCAPE_QUOTE -> "\"";
+      case STRING_ESCAPE_BACKSLASH -> "\\";
+      case STRING_ESCAPE_TAB -> "\t";
+      case STRING_ESCAPE_RETURN -> "\r";
+      case STRING_ESCAPE_UNICODE -> parseUnicodeEscape(tk);
+      default -> throw PklBugException.unreachableCode();
+    };
+  }
+
+  private String parseUnicodeEscape(FullToken tk) {
+    var text = tk.text(lexer);
+    var lastIndex = text.length() - 1;
+    var startIndex = text.indexOf('{', 2);
+    try {
+      var codepoint = Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
+      return Character.toString(codepoint);
+    } catch (NumberFormatException e) {
+      throw new ParserError(
+          ErrorMessages.create("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex)),
+          tk.span);
+    }
+  }
+
+  private String getCommonIndent(List<TempNode> nodes, Span span) {
+    var lastNode = nodes.get(nodes.size() - 1);
+    if (lastNode.token == null) {
+      throw new ParserError(
+          ErrorMessages.create("closingStringDelimiterMustBeginOnNewLine"), lastNode.span());
+    }
+    if (lastNode.token.token == Token.STRING_NEWLINE) return "";
+    var beforeLast = nodes.get(nodes.size() - 2);
+    if (beforeLast.token != null && beforeLast.token.token == Token.STRING_NEWLINE) {
+      var indent = getTrailingIndent(lastNode);
+      if (indent != null) {
+        return indent;
+      }
+    }
+    throw new ParserError(ErrorMessages.create("closingStringDelimiterMustBeginOnNewLine"), span);
+  }
+
+  private @Nullable String getTrailingIndent(TempNode node) {
+    var token = node.token;
+    if (token == null || token.token != Token.STRING_PART) return null;
+    var text = token.text(lexer);
+    for (var i = 0; i < text.length(); i++) {
+      var ch = text.charAt(i);
+      if (ch != ' ' && ch != '\t') return null;
+    }
+    return text;
+  }
+
+  private int getLeadingIndentCount(String text) {
+    if (text.isEmpty()) return 0;
+    for (var i = 0; i < text.length(); i++) {
+      var ch = text.charAt(i);
+      if (ch != ' ' && ch != '\t') {
+        return i;
+      }
+    }
+    return text.length();
+  }
+
+  private record TempNode(
+      @Nullable FullToken token, @Nullable StringPart.StringInterpolation node) {
+    Span span() {
+      if (token != null) return token.span;
+      assert node != null;
+      return node.span();
+    }
   }
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {

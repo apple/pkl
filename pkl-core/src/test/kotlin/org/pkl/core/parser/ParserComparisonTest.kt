@@ -42,10 +42,18 @@ class ParserComparisonTest : ParserComparisonTestInterface {
 
     compare(
       """
-      prop = ${"\"\"\""}\(bar)${"\"\"\""}
-      prop2 = ${"\"\"\""}foo \(bar)${"\"\"\""}
-      prop3 = ${"\"\"\""}\(bar) foo${"\"\"\""}
-      prop4 = ${"\"\"\""}foo \(bar + baz) foo${"\"\"\""}
+      prop = ""${'"'}
+        \(bar)
+        ""${'"'}
+      prop2 = ""${'"'}
+        foo \(bar)
+        ""${'"'}
+      prop3 = ""${'"'}
+        \(bar) foo
+        ""${'"'}
+      prop4 = ""${'"'}
+        foo \(bar + baz) foo
+        ""${'"'}
       """
         .trimIndent()
     )

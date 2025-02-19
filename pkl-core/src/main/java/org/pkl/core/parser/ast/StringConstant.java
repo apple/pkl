@@ -15,15 +15,17 @@
  */
 package org.pkl.core.parser.ast;
 
-import java.util.List;
+import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.ast.StringPart.StringConstantParts;
 import org.pkl.core.util.Nullable;
 
 public class StringConstant extends AbstractNode {
-  public StringConstant(StringConstantParts strParts, Span span) {
-    super(span, List.of(strParts));
+  private final String string;
+
+  public StringConstant(String string, Span span) {
+    super(span, null);
+    this.string = string;
   }
 
   @Override
@@ -31,8 +33,33 @@ public class StringConstant extends AbstractNode {
     return visitor.visitStringConstant(this);
   }
 
-  public StringConstantParts getStrParts() {
-    assert children != null;
-    return (StringConstantParts) children.get(0);
+  public String getString() {
+    return string;
+  }
+
+  @Override
+  public String toString() {
+    return "StringConstant{string='" + string + '\'' + ", span=" + span + '}';
+  }
+
+  @SuppressWarnings("ConstantValue")
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    StringConstant that = (StringConstant) o;
+    return Objects.equals(string, that.string);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), string);
   }
 }

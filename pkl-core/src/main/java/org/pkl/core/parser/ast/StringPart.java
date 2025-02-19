@@ -16,6 +16,7 @@
 package org.pkl.core.parser.ast;
 
 import java.util.List;
+import java.util.Objects;
 import org.pkl.core.parser.ParserVisitor;
 import org.pkl.core.parser.Span;
 import org.pkl.core.util.Nullable;
@@ -31,15 +32,42 @@ public abstract sealed class StringPart extends AbstractNode {
     return visitor.visitStringPart(this);
   }
 
-  public static final class StringConstantParts extends StringPart {
-    public StringConstantParts(List<StringConstantPart> parts, Span span) {
-      super(span, parts);
+  public static final class StringChars extends StringPart {
+    private final String string;
+
+    public StringChars(String string, Span span) {
+      super(span, null);
+      this.string = string;
     }
 
-    @SuppressWarnings("unchecked")
-    public List<StringConstantPart> getParts() {
-      assert children != null;
-      return (List<StringConstantPart>) children;
+    public String getString() {
+      return string;
+    }
+
+    @Override
+    public String toString() {
+      return "StringChars{string='" + string + '\'' + ", span=" + span + '}';
+    }
+
+    @SuppressWarnings("ConstantValue")
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      if (!super.equals(o)) {
+        return false;
+      }
+      StringChars that = (StringChars) o;
+      return Objects.equals(string, that.string);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.hashCode(), string);
     }
   }
 

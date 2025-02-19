@@ -38,4 +38,8 @@ public record Span(int charIndex, int length) {
   public Span move(int amount) {
     return new Span(charIndex + amount, length);
   }
+
+  public Span grow(int amount) {
+    return new Span(charIndex, length + amount);
+  }
 }

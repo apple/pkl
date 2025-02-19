@@ -3,4 +3,4 @@ Line must match or exceed indentation of the String's last line.
 
 x | mismatched indent
     ^^^^^^^^^^^^^^^^^
-at parser8#res1 (file:///$snippetsDir/input/errors/parser8.pkl)
+at parser8 (file:///$snippetsDir/input/errors/parser8.pkl)

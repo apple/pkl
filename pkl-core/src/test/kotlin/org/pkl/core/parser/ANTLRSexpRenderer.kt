@@ -791,7 +791,7 @@ class ANTLRSexpRenderer {
 
   fun renderSingleLineStringExpr(expr: SingleLineStringLiteralContext) {
     buf.append(tab)
-    buf.append("(interpolatedStringExpr")
+    buf.append("(singleLineStringLiteralExpr")
     val oldTab = increaseTab()
     for (part in expr.singleLineStringPart()) {
       if (part.expr() != null) {
@@ -808,15 +808,14 @@ class ANTLRSexpRenderer {
 
   fun renderMultiLineStringExpr(expr: MultiLineStringLiteralContext) {
     buf.append(tab)
-    buf.append("(interpolatedMultiStringExpr")
+    buf.append("(multiLineStringLiteralExpr")
     val oldTab = increaseTab()
+    // render only interpolated expressions because
+    // the new parser parses string differently
     for (part in expr.multiLineStringPart()) {
       if (part.expr() != null) {
         buf.append('\n')
         renderExpr(part.expr())
-      } else {
-        buf.append('\n').append(tab)
-        buf.append("(stringConstantExpr)")
       }
     }
     buf.append(')')
