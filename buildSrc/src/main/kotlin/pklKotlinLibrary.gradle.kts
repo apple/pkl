@@ -28,15 +28,6 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 // Version Catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      // prevent transitive deps from bumping Koltin version
-      useVersion(libs.versions.kotlin.get())
-    }
-  }
-}
-
 dependencies {
   // At least some of our kotlin APIs contain Kotlin stdlib types
   // that aren't compiled away by kotlinc (e.g., `kotlin.Function`).

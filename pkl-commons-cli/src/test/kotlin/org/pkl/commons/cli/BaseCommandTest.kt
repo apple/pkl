@@ -32,6 +32,8 @@ class BaseCommandTest {
   private val cmd =
     object : BaseCommand("test", "") {
       override fun run() = Unit
+
+      override val helpString: String = ""
     }
 
   @Test
