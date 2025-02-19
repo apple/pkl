@@ -36,10 +36,9 @@ internal fun main(args: Array<String>) {
   cliMain { PklKotlinCodegenCommand().main(args) }
 }
 
-class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
-  override val helpLink =
-    "${Release.current().documentation.homepage}kotlin-binding/codegen.html#cli"
+val helpLink = "${Release.current().documentation.homepage}kotlin-binding/codegen.html#cli"
 
+class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", helpLink = helpLink) {
   private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 
   private val outputDir: Path by
@@ -94,6 +93,8 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
             .trimIndent(),
       )
       .associate()
+
+  override val helpString: String = "Generate Kotlin classes and interfaces from Pkl module(s)"
 
   override fun run() {
     val options =

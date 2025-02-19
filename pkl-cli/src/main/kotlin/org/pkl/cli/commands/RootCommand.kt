@@ -17,6 +17,7 @@ package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
 import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.core.Release
@@ -29,6 +30,14 @@ class RootCommand : NoOpCliktCommand(name = "pkl") {
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
   init {
+    context {
+      suggestTypoCorrection = { given, possible ->
+        if (!given.startsWith("-")) {
+          registeredSubcommands().map { it.commandName }
+        } else possible
+      }
+    }
+
     installCommonOptions()
 
     subcommands(

@@ -68,11 +68,7 @@ dependencies {
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
   implementation(projects.pklServer)
-  implementation(libs.clikt) {
-    // force clikt to use our version of the kotlin stdlib
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
-  }
+  implementation(libs.clikt)
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.wiremock)

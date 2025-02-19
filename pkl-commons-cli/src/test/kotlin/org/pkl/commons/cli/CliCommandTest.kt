@@ -31,7 +31,7 @@ class CliCommandTest {
   }
 
   private val cmd =
-    object : BaseCommand("test") {
+    object : BaseCommand("test", "") {
       override fun run() = Unit
     }
 

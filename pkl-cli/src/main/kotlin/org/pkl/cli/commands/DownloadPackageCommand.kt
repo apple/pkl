@@ -27,7 +27,7 @@ import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.single
 import org.pkl.core.packages.PackageUri
 
-class DownloadPackageCommand : BaseCommand(name = "download-package") {
+class DownloadPackageCommand : BaseCommand(name = "download-package", helpLink = helpLink) {
   override val helpString =
     """
   Download package(s)

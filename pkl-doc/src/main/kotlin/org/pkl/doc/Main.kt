@@ -39,9 +39,9 @@ internal fun main(args: Array<String>) {
   cliMain { DocCommand().main(args) }
 }
 
-class DocCommand : BaseCommand(name = "pkldoc") {
-  override val helpLink = "${Release.current().documentation.homepage}pkl-doc/index.html#cli"
+val helpLink = "${Release.current().documentation.homepage}pkl-doc/index.html#cli"
 
+class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
   private val modules: List<URI> by
     argument(
         name = "modules",
@@ -60,6 +60,8 @@ class DocCommand : BaseCommand(name = "pkldoc") {
       .required()
 
   private val projectOptions by ProjectOptions()
+
+  override val helpString: String = "Generate HTML documentation from Pkl modules and packages."
 
   override fun run() {
     val options =

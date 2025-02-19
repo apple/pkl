@@ -21,11 +21,7 @@ plugins {
 
 dependencies {
   api(projects.pklCore)
-  api(libs.clikt) {
-    // force clikt to use our version of the kotlin stdlib
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
-  }
+  api(libs.clikt)
   implementation(libs.cliktMarkdown)
 
   implementation(projects.pklCommons)

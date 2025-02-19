@@ -44,7 +44,7 @@ class ProjectCommand : NoOpCliktCommand(name = "project") {
   }
 }
 
-class ResolveCommand : BaseCommand(name = "resolve") {
+class ResolveCommand : BaseCommand(name = "resolve", helpLink = helpLink) {
   override val helpString =
     """
   Resolve dependencies for project(s)
@@ -71,7 +71,7 @@ class ResolveCommand : BaseCommand(name = "resolve") {
   }
 }
 
-class PackageCommand : BaseCommand(name = "package") {
+class PackageCommand : BaseCommand(name = "package", helpLink = helpLink) {
   override val helpString =
     """
   Verify package(s), and prepare package artifacts to be published.

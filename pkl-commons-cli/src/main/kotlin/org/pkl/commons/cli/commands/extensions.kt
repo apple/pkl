@@ -32,12 +32,5 @@ fun <T : BaseCliktCommand<T>> T.installCommonOptions() {
 
   versionOption(Release.current().versionInfo, names = setOf("-v", "--version"), message = { it })
 
-  context {
-    suggestTypoCorrection = { given, possible ->
-      if (!given.startsWith("-")) {
-        registeredSubcommands().map { it.commandName }
-      } else possible
-    }
-    terminal = Terminal(theme = theme)
-  }
+  context { terminal = Terminal(theme = theme) }
 }

@@ -36,7 +36,7 @@ class AnalyzeCommand : NoOpCliktCommand(name = "analyze") {
   }
 }
 
-class AnalyzeImportsCommand : ModulesCommand(name = "imports") {
+class AnalyzeImportsCommand : ModulesCommand(name = "imports", helpLink = helpLink) {
   override val helpString = "Prints the graph of modules imported by the input module(s)."
 
   private val outputPath: Path? by

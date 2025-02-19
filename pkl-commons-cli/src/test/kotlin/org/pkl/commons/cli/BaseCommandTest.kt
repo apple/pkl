@@ -30,7 +30,7 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 class BaseCommandTest {
 
   private val cmd =
-    object : BaseCommand("test") {
+    object : BaseCommand("test", "") {
       override fun run() = Unit
     }
 
