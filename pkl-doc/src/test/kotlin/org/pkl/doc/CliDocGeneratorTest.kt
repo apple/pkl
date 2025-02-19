@@ -18,6 +18,7 @@ package org.pkl.doc
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import java.net.URI
+import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
@@ -35,13 +36,14 @@ import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
 import org.pkl.commons.toPath
+import org.pkl.commons.walk
 import org.pkl.core.Version
 import org.pkl.core.util.IoUtils
 import org.pkl.doc.DocGenerator.Companion.current
 
 class CliDocGeneratorTest {
   companion object {
-    private val tempFileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
+    private val tempFileSystem: FileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
 
     private val tmpOutputDir by lazy {
       tempFileSystem.getPath("/work/output").apply { createDirectories() }
@@ -107,7 +109,7 @@ class CliDocGeneratorTest {
 
     private val binaryFileExtensions = setOf("woff2", "png", "svg")
 
-    private fun runDocGenerator(outputDir: Path, cacheDir: Path?) {
+    private fun runDocGenerator(outputDir: Path, cacheDir: Path?, noSymlinks: Boolean = false) {
       CliDocGenerator(
           CliDocGeneratorOptions(
             CliBaseOptions(
@@ -125,6 +127,7 @@ class CliDocGeneratorTest {
             ),
             outputDir = outputDir,
             isTestMode = true,
+            noSymlinks = noSymlinks,
           )
         )
         .run()
@@ -254,15 +257,35 @@ class CliDocGeneratorTest {
   }
 
   @Test
-  fun `creates a symlink called current`(@TempDir tempDir: Path) {
+  fun `creates a symlink called current by default`(@TempDir tempDir: Path) {
     PackageServer.populateCacheDir(tempDir)
     runDocGenerator(actualOutputDir, tempDir)
+
     val expectedSymlink = actualOutputDir.resolve("com.package1/current")
     val expectedDestination = actualOutputDir.resolve("com.package1/1.2.3")
-    org.junit.jupiter.api.Assertions.assertTrue(Files.isSymbolicLink(expectedSymlink))
-    org.junit.jupiter.api.Assertions.assertTrue(
-      Files.isSameFile(expectedSymlink, expectedDestination)
-    )
+
+    assertThat(expectedSymlink).isSymbolicLink().matches {
+      Files.isSameFile(it, expectedDestination)
+    }
+  }
+
+  @Test
+  fun `creates a copy of the latest output called current when symlinks are disabled`(
+    @TempDir tempDir: Path
+  ) {
+    PackageServer.populateCacheDir(tempDir)
+    runDocGenerator(actualOutputDir, tempDir, noSymlinks = true)
+
+    val currentDirectory = actualOutputDir.resolve("com.package1/current")
+    val sourceDirectory = actualOutputDir.resolve("com.package1/1.2.3")
+
+    assertThat(currentDirectory).isDirectory()
+    assertThat(currentDirectory.isSymbolicLink()).isFalse()
+
+    val expectedFiles = sourceDirectory.walk().map(sourceDirectory::relativize).toList()
+    val actualFiles = currentDirectory.walk().map(currentDirectory::relativize).toList()
+
+    assertThat(actualFiles).hasSameElementsAs(expectedFiles)
   }
 
   @Test

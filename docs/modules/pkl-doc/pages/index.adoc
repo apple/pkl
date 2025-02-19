@@ -232,8 +232,16 @@ Relative URIs are resolved against the working directory.
 [%collapsible]
 ====
 Default: (none) +
-Example: `pkldoc`
+Example: `pkldoc` +
 The directory where generated documentation is placed.
+====
+
+.--no-symlinks
+[%collapsible]
+====
+Create copies of files and directories instead of symbolic links.
+In particular, this affects how the "current" directories containing documentation content for the last generated version should be created.
+By default, a symbolic link is created pointing to the last generated version. If symlinks are disabled, a full copy of the last generated version is created.
 ====
 
 Common CLI options:

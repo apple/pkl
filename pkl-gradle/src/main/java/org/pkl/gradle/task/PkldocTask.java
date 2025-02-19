@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.pkl.gradle.task;
 
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
 import org.pkl.doc.CliDocGenerator;
 import org.pkl.doc.CliDocGeneratorOptions;
@@ -24,11 +26,17 @@ public abstract class PkldocTask extends ModulesTask {
   @OutputDirectory
   public abstract DirectoryProperty getOutputDir();
 
+  @Input
+  public abstract Property<Boolean> getNoSymlinks();
+
   @Override
   protected void doRunTask() {
     new CliDocGenerator(
             new CliDocGeneratorOptions(
-                getCliBaseOptions(), getOutputDir().get().getAsFile().toPath()))
+                getCliBaseOptions(),
+                getOutputDir().get().getAsFile().toPath(),
+                false,
+                getNoSymlinks().get()))
         .run();
   }
 }

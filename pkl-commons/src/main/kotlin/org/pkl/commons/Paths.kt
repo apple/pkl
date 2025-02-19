@@ -20,6 +20,9 @@ import java.nio.charset.Charset
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 import java.util.stream.Stream
+import kotlin.io.path.copyTo
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.exists
 
 // not stored to avoid build-time initialization by native-image
 val currentWorkingDir: Path
@@ -50,6 +53,19 @@ fun Path.writeString(
 /** [Files.readString] seems more efficient than [kotlin.io.path.readText]. */
 @Throws(IOException::class)
 fun Path.readString(charset: Charset = Charsets.UTF_8): String = Files.readString(this, charset)
+
+@Throws(IOException::class)
+fun Path.copyRecursively(target: Path) {
+  if (exists()) {
+    target.createParentDirectories()
+    walk().use { paths ->
+      paths.forEach { src ->
+        val dst = target.resolve(this@copyRecursively.relativize(src))
+        src.copyTo(dst, overwrite = true)
+      }
+    }
+  }
+}
 
 private val isWindows by lazy { System.getProperty("os.name").contains("Windows") }
 
