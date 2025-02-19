@@ -19,6 +19,7 @@ import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.*
+import org.pkl.commons.copyRecursively
 import org.pkl.core.ModuleSchema
 import org.pkl.core.PClassInfo
 import org.pkl.core.Version
@@ -50,6 +51,7 @@ class DocGenerator(
 
   /** A comparator for package versions. */
   versionComparator: Comparator<String>,
+
   /** The directory where generated documentation is placed. */
   private val outputDir: Path,
 
@@ -60,8 +62,21 @@ class DocGenerator(
    * files (e.g., when stdlib line numbers change).
    */
   private val isTestMode: Boolean = false,
+
+  /**
+   * Disables creation of symbolic links, using copies of files and directories instead of them.
+   *
+   * In particular, determines how to create the "current" directory which contains documentation
+   * for the latest version of the package.
+   *
+   * `false` will make the current directory into a symlink to the actual version directory. `true`,
+   * however, will create a full copy instead.
+   */
+  private val noSymlinks: Boolean = false,
 ) {
   companion object {
+    const val CURRENT_DIRECTORY_NAME = "current"
+
     internal fun List<PackageData>.current(
       versionComparator: Comparator<String>
     ): List<PackageData> {
@@ -102,7 +117,7 @@ class DocGenerator(
       val packagesData = packageDataGenerator.readAll()
       val currentPackagesData = packagesData.current(descendingVersionComparator)
 
-      createSymlinks(currentPackagesData)
+      createCurrentDirectories(currentPackagesData)
 
       htmlGenerator.generateSite(currentPackagesData)
       searchIndexGenerator.generateSiteIndex(currentPackagesData)
@@ -117,14 +132,21 @@ class DocGenerator(
     outputDir.resolve(IoUtils.encodePath("$name/$version")).deleteRecursively()
   }
 
-  private fun createSymlinks(currentPackagesData: List<PackageData>) {
+  private fun createCurrentDirectories(currentPackagesData: List<PackageData>) {
     for (packageData in currentPackagesData) {
       val basePath = outputDir.resolve(packageData.ref.pkg.pathEncoded)
       val src = basePath.resolve(packageData.ref.version)
-      val dest = basePath.resolve("current")
-      if (dest.exists() && dest.isSameFileAs(src)) continue
-      dest.deleteIfExists()
-      dest.createSymbolicLinkPointingTo(IoUtils.relativize(src, basePath))
+      val dst = basePath.resolve(CURRENT_DIRECTORY_NAME)
+
+      if (noSymlinks) {
+        dst.deleteRecursively()
+        src.copyRecursively(dst)
+      } else {
+        if (!dst.exists() || !dst.isSameFileAs(src)) {
+          dst.deleteRecursively()
+          dst.createSymbolicLinkPointingTo(IoUtils.relativize(src, basePath))
+        }
+      }
     }
   }
 }

@@ -15,27 +15,27 @@
  */
 package org.pkl.core.parser
 
-import org.pkl.core.parser.ast.*
-import org.pkl.core.parser.ast.Annotation
-import org.pkl.core.parser.ast.Expr.*
-import org.pkl.core.parser.ast.Expr.ModuleExpr
-import org.pkl.core.parser.ast.ObjectMember.*
-import org.pkl.core.parser.ast.Parameter.TypedIdentifier
-import org.pkl.core.parser.ast.Type.*
+import org.pkl.core.parser.syntax.*
+import org.pkl.core.parser.syntax.Annotation
+import org.pkl.core.parser.syntax.Expr.*
+import org.pkl.core.parser.syntax.Expr.ModuleExpr
+import org.pkl.core.parser.syntax.ObjectMember.*
+import org.pkl.core.parser.syntax.Parameter.TypedIdentifier
+import org.pkl.core.parser.syntax.Type.*
 
 @Suppress("MemberVisibilityCanBePrivate")
 class SexpRenderer {
   private var tab = ""
   private var buf = StringBuilder()
 
-  fun render(mod: org.pkl.core.parser.ast.Module): String {
+  fun render(mod: org.pkl.core.parser.syntax.Module): String {
     renderModule(mod)
     val res = buf.toString()
     reset()
     return res
   }
 
-  fun renderModule(mod: org.pkl.core.parser.ast.Module) {
+  fun renderModule(mod: org.pkl.core.parser.syntax.Module) {
     buf.append(tab)
     buf.append("(module")
     val oldTab = increaseTab()
@@ -419,7 +419,7 @@ class SexpRenderer {
 
   fun renderSingleLineStringLiteral(expr: SingleLineStringLiteralExpr) {
     buf.append(tab)
-    buf.append("(interpolatedStringExpr")
+    buf.append("(singleLineStringLiteralExpr")
     val oldTab = increaseTab()
     for (part in expr.parts) {
       if (part is StringPart.StringInterpolation) {
@@ -436,15 +436,14 @@ class SexpRenderer {
 
   fun renderMultiLineStringLiteral(expr: MultiLineStringLiteralExpr) {
     buf.append(tab)
-    buf.append("(interpolatedMultiStringExpr")
+    buf.append("(multiLineStringLiteralExpr")
     val oldTab = increaseTab()
+    // render only interpolated expressions because
+    // the new parser parses string differently
     for (part in expr.parts) {
       if (part is StringPart.StringInterpolation) {
         buf.append('\n')
         renderExpr(part.expr)
-      } else {
-        buf.append('\n').append(tab)
-        buf.append("(stringConstantExpr)")
       }
     }
     buf.append(')')
@@ -1056,7 +1055,7 @@ class SexpRenderer {
   }
 
   companion object {
-    private fun sortModuleEntries(mod: org.pkl.core.parser.ast.Module): List<Node> {
+    private fun sortModuleEntries(mod: org.pkl.core.parser.syntax.Module): List<Node> {
       val res = mutableListOf<Node>()
       res += mod.classes
       res += mod.typeAliases

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,14 +36,18 @@ public abstract class UnresolvedTypeNode extends PklNode {
   public abstract TypeNode execute(VirtualFrame frame);
 
   public static final class Constrained extends UnresolvedTypeNode {
+
+    private final VmLanguage language;
     @Child UnresolvedTypeNode childNode;
     TypeConstraintNode[] constraintCheckNodes;
 
     public Constrained(
         SourceSection sourceSection,
+        VmLanguage language,
         UnresolvedTypeNode childNode,
         TypeConstraintNode[] constraintCheckNodes) {
       super(sourceSection);
+      this.language = language;
       this.childNode = childNode;
       this.constraintCheckNodes = constraintCheckNodes;
     }
@@ -52,7 +56,8 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new ConstrainedTypeNode(sourceSection, childNode.execute(frame), constraintCheckNodes);
+      return new ConstrainedTypeNode(
+          sourceSection, language, childNode.execute(frame), constraintCheckNodes);
     }
   }
 

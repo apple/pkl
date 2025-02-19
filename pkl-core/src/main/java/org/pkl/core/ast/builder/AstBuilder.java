@@ -158,85 +158,80 @@ import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.ast.Annotation;
-import org.pkl.core.parser.ast.ArgumentList;
-import org.pkl.core.parser.ast.Class;
-import org.pkl.core.parser.ast.ClassMethod;
-import org.pkl.core.parser.ast.ClassProperty;
-import org.pkl.core.parser.ast.Expr;
-import org.pkl.core.parser.ast.Expr.AmendsExpr;
-import org.pkl.core.parser.ast.Expr.BinaryOperatorExpr;
-import org.pkl.core.parser.ast.Expr.BoolLiteralExpr;
-import org.pkl.core.parser.ast.Expr.FloatLiteralExpr;
-import org.pkl.core.parser.ast.Expr.FunctionLiteralExpr;
-import org.pkl.core.parser.ast.Expr.IfExpr;
-import org.pkl.core.parser.ast.Expr.ImportExpr;
-import org.pkl.core.parser.ast.Expr.IntLiteralExpr;
-import org.pkl.core.parser.ast.Expr.LetExpr;
-import org.pkl.core.parser.ast.Expr.LogicalNotExpr;
-import org.pkl.core.parser.ast.Expr.ModuleExpr;
-import org.pkl.core.parser.ast.Expr.MultiLineStringLiteralExpr;
-import org.pkl.core.parser.ast.Expr.NewExpr;
-import org.pkl.core.parser.ast.Expr.NonNullExpr;
-import org.pkl.core.parser.ast.Expr.NullLiteralExpr;
-import org.pkl.core.parser.ast.Expr.OuterExpr;
-import org.pkl.core.parser.ast.Expr.ParenthesizedExpr;
-import org.pkl.core.parser.ast.Expr.QualifiedAccessExpr;
-import org.pkl.core.parser.ast.Expr.ReadExpr;
-import org.pkl.core.parser.ast.Expr.SingleLineStringLiteralExpr;
-import org.pkl.core.parser.ast.Expr.SubscriptExpr;
-import org.pkl.core.parser.ast.Expr.SuperAccessExpr;
-import org.pkl.core.parser.ast.Expr.SuperSubscriptExpr;
-import org.pkl.core.parser.ast.Expr.ThisExpr;
-import org.pkl.core.parser.ast.Expr.ThrowExpr;
-import org.pkl.core.parser.ast.Expr.TraceExpr;
-import org.pkl.core.parser.ast.Expr.TypeCastExpr;
-import org.pkl.core.parser.ast.Expr.TypeCheckExpr;
-import org.pkl.core.parser.ast.Expr.UnaryMinusExpr;
-import org.pkl.core.parser.ast.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.ast.ExtendsOrAmendsClause;
-import org.pkl.core.parser.ast.Identifier;
-import org.pkl.core.parser.ast.ImportClause;
-import org.pkl.core.parser.ast.Modifier;
-import org.pkl.core.parser.ast.Modifier.ModifierValue;
-import org.pkl.core.parser.ast.Module;
-import org.pkl.core.parser.ast.Node;
-import org.pkl.core.parser.ast.ObjectBody;
-import org.pkl.core.parser.ast.ObjectMember.ForGenerator;
-import org.pkl.core.parser.ast.ObjectMember.MemberPredicate;
-import org.pkl.core.parser.ast.ObjectMember.ObjectElement;
-import org.pkl.core.parser.ast.ObjectMember.ObjectEntry;
-import org.pkl.core.parser.ast.ObjectMember.ObjectMethod;
-import org.pkl.core.parser.ast.ObjectMember.ObjectProperty;
-import org.pkl.core.parser.ast.ObjectMember.ObjectSpread;
-import org.pkl.core.parser.ast.ObjectMember.WhenGenerator;
-import org.pkl.core.parser.ast.Parameter;
-import org.pkl.core.parser.ast.Parameter.TypedIdentifier;
-import org.pkl.core.parser.ast.ParameterList;
-import org.pkl.core.parser.ast.QualifiedIdentifier;
-import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.ConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.StringEscape;
-import org.pkl.core.parser.ast.StringConstantPart.StringNewline;
-import org.pkl.core.parser.ast.StringConstantPart.StringUnicodeEscape;
-import org.pkl.core.parser.ast.StringPart;
-import org.pkl.core.parser.ast.StringPart.StringConstantParts;
-import org.pkl.core.parser.ast.StringPart.StringInterpolation;
-import org.pkl.core.parser.ast.Type;
-import org.pkl.core.parser.ast.Type.ConstrainedType;
-import org.pkl.core.parser.ast.Type.DeclaredType;
-import org.pkl.core.parser.ast.Type.FunctionType;
-import org.pkl.core.parser.ast.Type.ModuleType;
-import org.pkl.core.parser.ast.Type.NothingType;
-import org.pkl.core.parser.ast.Type.NullableType;
-import org.pkl.core.parser.ast.Type.ParenthesizedType;
-import org.pkl.core.parser.ast.Type.StringConstantType;
-import org.pkl.core.parser.ast.Type.UnionType;
-import org.pkl.core.parser.ast.Type.UnknownType;
-import org.pkl.core.parser.ast.TypeAlias;
-import org.pkl.core.parser.ast.TypeAnnotation;
-import org.pkl.core.parser.ast.TypeParameterList;
+import org.pkl.core.parser.syntax.Annotation;
+import org.pkl.core.parser.syntax.ArgumentList;
+import org.pkl.core.parser.syntax.Class;
+import org.pkl.core.parser.syntax.ClassMethod;
+import org.pkl.core.parser.syntax.ClassProperty;
+import org.pkl.core.parser.syntax.Expr;
+import org.pkl.core.parser.syntax.Expr.AmendsExpr;
+import org.pkl.core.parser.syntax.Expr.BinaryOperatorExpr;
+import org.pkl.core.parser.syntax.Expr.BoolLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.FloatLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.FunctionLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.IfExpr;
+import org.pkl.core.parser.syntax.Expr.ImportExpr;
+import org.pkl.core.parser.syntax.Expr.IntLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.LetExpr;
+import org.pkl.core.parser.syntax.Expr.LogicalNotExpr;
+import org.pkl.core.parser.syntax.Expr.ModuleExpr;
+import org.pkl.core.parser.syntax.Expr.MultiLineStringLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.NewExpr;
+import org.pkl.core.parser.syntax.Expr.NonNullExpr;
+import org.pkl.core.parser.syntax.Expr.NullLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.OuterExpr;
+import org.pkl.core.parser.syntax.Expr.ParenthesizedExpr;
+import org.pkl.core.parser.syntax.Expr.QualifiedAccessExpr;
+import org.pkl.core.parser.syntax.Expr.ReadExpr;
+import org.pkl.core.parser.syntax.Expr.SingleLineStringLiteralExpr;
+import org.pkl.core.parser.syntax.Expr.SubscriptExpr;
+import org.pkl.core.parser.syntax.Expr.SuperAccessExpr;
+import org.pkl.core.parser.syntax.Expr.SuperSubscriptExpr;
+import org.pkl.core.parser.syntax.Expr.ThisExpr;
+import org.pkl.core.parser.syntax.Expr.ThrowExpr;
+import org.pkl.core.parser.syntax.Expr.TraceExpr;
+import org.pkl.core.parser.syntax.Expr.TypeCastExpr;
+import org.pkl.core.parser.syntax.Expr.TypeCheckExpr;
+import org.pkl.core.parser.syntax.Expr.UnaryMinusExpr;
+import org.pkl.core.parser.syntax.Expr.UnqualifiedAccessExpr;
+import org.pkl.core.parser.syntax.ExtendsOrAmendsClause;
+import org.pkl.core.parser.syntax.Identifier;
+import org.pkl.core.parser.syntax.ImportClause;
+import org.pkl.core.parser.syntax.Modifier;
+import org.pkl.core.parser.syntax.Modifier.ModifierValue;
+import org.pkl.core.parser.syntax.Module;
+import org.pkl.core.parser.syntax.Node;
+import org.pkl.core.parser.syntax.ObjectBody;
+import org.pkl.core.parser.syntax.ObjectMember.ForGenerator;
+import org.pkl.core.parser.syntax.ObjectMember.MemberPredicate;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectElement;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectEntry;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectMethod;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectProperty;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectSpread;
+import org.pkl.core.parser.syntax.ObjectMember.WhenGenerator;
+import org.pkl.core.parser.syntax.Parameter;
+import org.pkl.core.parser.syntax.Parameter.TypedIdentifier;
+import org.pkl.core.parser.syntax.ParameterList;
+import org.pkl.core.parser.syntax.QualifiedIdentifier;
+import org.pkl.core.parser.syntax.StringConstant;
+import org.pkl.core.parser.syntax.StringPart;
+import org.pkl.core.parser.syntax.StringPart.StringChars;
+import org.pkl.core.parser.syntax.StringPart.StringInterpolation;
+import org.pkl.core.parser.syntax.Type;
+import org.pkl.core.parser.syntax.Type.ConstrainedType;
+import org.pkl.core.parser.syntax.Type.DeclaredType;
+import org.pkl.core.parser.syntax.Type.FunctionType;
+import org.pkl.core.parser.syntax.Type.ModuleType;
+import org.pkl.core.parser.syntax.Type.NothingType;
+import org.pkl.core.parser.syntax.Type.NullableType;
+import org.pkl.core.parser.syntax.Type.ParenthesizedType;
+import org.pkl.core.parser.syntax.Type.StringConstantType;
+import org.pkl.core.parser.syntax.Type.UnionType;
+import org.pkl.core.parser.syntax.Type.UnknownType;
+import org.pkl.core.parser.syntax.TypeAlias;
+import org.pkl.core.parser.syntax.TypeAnnotation;
+import org.pkl.core.parser.syntax.TypeParameterList;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
@@ -353,7 +348,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitStringConstantType(StringConstantType type) {
     return new UnresolvedTypeNode.StringLiteral(
-        createSourceSection(type), doVisitStringConstant(type.getStr()));
+        createSourceSection(type), type.getStr().getString());
   }
 
   @Override
@@ -406,7 +401,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             var expr = visitExpr(exprs.get(i));
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
           }
-          return new Constrained(createSourceSection(type), childNode, constraints);
+          return new Constrained(createSourceSection(type), language, childNode, constraints);
         });
   }
 
@@ -428,7 +423,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           createSourceSection(type),
           defaultIndex,
           elementTypes.stream()
-              .map(it -> doVisitStringConstant(((StringConstantType) it).getStr()))
+              .map(it -> ((StringConstantType) it).getStr().getString())
               .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
@@ -609,7 +604,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private AbstractImportNode doVisitImport(
       boolean isGlobImport, Node node, StringConstant importUriNode) {
     var section = createSourceSection(node);
-    var importUri = doVisitStringConstant(importUriNode);
+    var importUri = importUriNode.getString();
     if (isGlobImport && importUri.startsWith("...")) {
       throw exceptionBuilder().evalError("cannotGlobTripleDots").withSourceSection(section).build();
     }
@@ -670,7 +665,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitStringConstant(StringConstant expr) {
-    return new ConstantValueNode(createSourceSection(expr), doVisitStringConstant(expr));
+    return new ConstantValueNode(createSourceSection(expr), expr.getString());
   }
 
   @Override
@@ -682,12 +677,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (spart instanceof StringInterpolation si) {
       return ToStringNodeGen.create(createSourceSection(span), visitExpr(si.getExpr()));
     }
-    if (spart instanceof StringConstantParts sparts) {
-      var builder = new StringBuilder();
-      for (var part : sparts.getParts()) {
-        builder.append(doVisitStringConstantPart(part));
-      }
-      return new ConstantValueNode(createSourceSection(span), builder.toString());
+    if (spart instanceof StringChars sparts) {
+      return new ConstantValueNode(createSourceSection(span), sparts.getString());
     }
     throw exceptionBuilder().unreachableCode().build();
   }
@@ -712,114 +703,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public ExpressionNode visitMultiLineStringLiteralExpr(MultiLineStringLiteralExpr expr) {
     var parts = expr.getParts();
-    if (parts.isEmpty()) {
-      throw exceptionBuilder()
-          .evalError("stringContentMustBeginOnNewLine")
-          .withSourceSection(createSourceSection(expr))
-          .build();
-    }
-    var firstPart = parts.get(0);
-    var newLineStart =
-        firstPart instanceof StringConstantParts str
-            && str.getParts().get(0) instanceof StringNewline;
-    if (!newLineStart) {
-      throw exceptionBuilder()
-          .evalError("stringContentMustBeginOnNewLine")
-          .withSourceSection(startOf(firstPart))
-          .build();
-    }
-
-    var lastPart = parts.get(parts.size() - 1);
-    var commonIndent = getCommonIndent(lastPart, expr.getEndDelimiterSpan());
 
     if (parts.size() == 1) {
-      StringConstantParts sc = (StringConstantParts) firstPart;
-      return new ConstantValueNode(
-          createSourceSection(expr),
-          doVisitMultiLineStringParts(sc.getParts(), commonIndent, true, true));
+      return doVisitStringPart(parts.get(0), expr.span());
     }
 
     var nodes = new ExpressionNode[parts.size()];
-    var lastIndex = nodes.length - 1;
-
-    for (int i = 0; i <= lastIndex; i++) {
-      nodes[i] = doVisitMultiLineStringPart(parts.get(i), commonIndent, i == 0, i == lastIndex);
+    for (int i = 0; i < nodes.length; i++) {
+      nodes[i] = visitStringPart(parts.get(i));
     }
     return new InterpolatedStringLiteralNode(createSourceSection(expr), nodes);
-  }
-
-  public ExpressionNode doVisitMultiLineStringPart(
-      StringPart spart, String commonIndent, boolean isStringStart, boolean isStringEnd) {
-    if (spart instanceof StringInterpolation si) {
-      return ToStringNodeGen.create(createSourceSection(si), visitExpr(si.getExpr()));
-    }
-    if (spart instanceof StringConstantParts sparts) {
-      return new ConstantValueNode(
-          createSourceSection(spart),
-          doVisitMultiLineStringParts(sparts.getParts(), commonIndent, isStringStart, isStringEnd));
-    }
-    throw PklBugException.unreachableCode();
-  }
-
-  private String doVisitMultiLineStringParts(
-      List<StringConstantPart> parts,
-      String commonIndent,
-      boolean isStringStart,
-      boolean isStringEnd) {
-
-    var starIndex = isStringStart ? 1 : 0;
-    var endIndex = parts.size() - 1;
-    if (isStringEnd) {
-      if (parts.get(endIndex) instanceof StringNewline) {
-        // skip trailing newline token
-        endIndex -= 1;
-      } else {
-        // skip trailing newline and whitespace (common indent) tokens
-        endIndex -= 2;
-      }
-    }
-
-    var builder = new StringBuilder();
-    var isLineStart = isStringStart;
-    for (var i = starIndex; i <= endIndex; i++) {
-      var part = parts.get(i);
-      if (part instanceof StringNewline) {
-        builder.append('\n');
-        isLineStart = true;
-      } else if (part instanceof ConstantPart cp) {
-        var text = cp.getStr();
-        if (isLineStart) {
-          if (text.startsWith(commonIndent)) {
-            builder.append(text, commonIndent.length(), text.length());
-          } else {
-            String actualIndent = getLeadingIndent(text);
-            if (actualIndent.length() > commonIndent.length()) {
-              actualIndent = actualIndent.substring(0, commonIndent.length());
-            }
-            throw exceptionBuilder()
-                .evalError("stringIndentationMustMatchLastLine")
-                .withSourceSection(shrinkLeft(createSourceSection(cp), actualIndent.length()))
-                .build();
-          }
-        } else {
-          builder.append(text);
-        }
-        isLineStart = false;
-      } else if (part instanceof StringEscape || part instanceof StringUnicodeEscape) {
-        if (isLineStart && !commonIndent.isEmpty()) {
-          throw exceptionBuilder()
-              .evalError("stringIndentationMustMatchLastLine")
-              .withSourceSection(createSourceSection(part))
-              .build();
-        }
-        builder.append(doVisitStringConstantPart(part));
-        isLineStart = false;
-      } else {
-        throw PklBugException.unreachableCode();
-      }
-    }
-
-    return builder.toString();
   }
 
   @Override
@@ -1204,7 +1097,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return Pair.of(elementNodes, isConstantNodes);
   }
 
-  public GeneratorMemberNode visitObjectMember(org.pkl.core.parser.ast.ObjectMember member) {
+  public GeneratorMemberNode visitObjectMember(org.pkl.core.parser.syntax.ObjectMember member) {
     return (GeneratorMemberNode) member.accept(this);
   }
 
@@ -2482,7 +2375,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorMemberNode[] doVisitGeneratorMemberNodes(
-      List<? extends org.pkl.core.parser.ast.ObjectMember> members) {
+      List<? extends org.pkl.core.parser.syntax.ObjectMember> members) {
     var result = new GeneratorMemberNode[members.size()];
     for (var i = 0; i < result.length; i++) {
       result[i] = visitObjectMember(members.get(i));
@@ -2773,7 +2666,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
     var forExprCtx = ctx.parent();
     while (forExprCtx != null
-        && forExprCtx.getClass() != org.pkl.core.parser.ast.ObjectMember.ForGenerator.class) {
+        && forExprCtx.getClass() != org.pkl.core.parser.syntax.ObjectMember.ForGenerator.class) {
       forExprCtx = forExprCtx.parent();
     }
     assert forExprCtx != null;
@@ -2781,7 +2674,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         .evalError(errorMessageKey)
         .withSourceSection(
             createSourceSection(
-                ((org.pkl.core.parser.ast.ObjectMember.ForGenerator) forExprCtx).forSpan()))
+                ((org.pkl.core.parser.syntax.ObjectMember.ForGenerator) forExprCtx).forSpan()))
         .build();
   }
 
@@ -2825,48 +2718,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         scope.isCustomThisScope(),
         scope.getConstLevel(),
         scope.getConstDepth());
-  }
-
-  private String getCommonIndent(Node lastParts, Span endQuoteSpan) {
-    if (!(lastParts instanceof StringConstantParts sparts)) {
-      throw exceptionBuilder()
-          .evalError("closingStringDelimiterMustBeginOnNewLine")
-          .withSourceSection(startOf(endQuoteSpan))
-          .build();
-    }
-
-    var parts = sparts.getParts();
-    assert !parts.isEmpty();
-    var lastPart = parts.get(parts.size() - 1);
-    if (lastPart instanceof StringNewline) {
-      return "";
-    }
-
-    if (parts.size() > 1) {
-      var lastButOne = parts.get(parts.size() - 2);
-      if (lastButOne instanceof StringNewline && isIndentChars(lastPart)) {
-        return ((ConstantPart) lastPart).getStr();
-      }
-    }
-
-    throw exceptionBuilder()
-        .evalError("closingStringDelimiterMustBeginOnNewLine")
-        .withSourceSection(startOf(endQuoteSpan))
-        .build();
-  }
-
-  private static boolean isIndentChars(Node node) {
-    if (!(node instanceof ConstantPart part)) {
-      return false;
-    }
-    var text = part.getStr();
-
-    for (var i = 0; i < text.length(); i++) {
-      var ch = text.charAt(i);
-      if (ch != ' ' && ch != '\t') return false;
-    }
-
-    return true;
   }
 
   private URI resolveImport(String importUri, StringConstant ctx) {
@@ -2949,16 +2800,5 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private static SourceSection unavailableSourceSection() {
     return VmUtils.unavailableSourceSection();
-  }
-
-  private static String getLeadingIndent(String text) {
-    for (var i = 0; i < text.length(); i++) {
-      var ch = text.charAt(i);
-      if (ch != ' ' && ch != '\t') {
-        return text.substring(0, i);
-      }
-    }
-
-    return text;
   }
 }

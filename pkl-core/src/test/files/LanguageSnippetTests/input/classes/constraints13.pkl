@@ -1,0 +1,16 @@
+import "pkl:test"
+
+const local isOddLengthOfBirds = (it: Listing<Bird>) -> it.length.isOdd
+
+class Bird
+
+class MyTest {
+  // function parameter type should be checked eagerly
+  birds: Listing(isOddLengthOfBirds) = new {
+    1
+    2
+    3
+  }
+}
+
+res = test.catch(() -> new MyTest {}.birds)

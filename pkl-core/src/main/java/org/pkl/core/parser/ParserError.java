@@ -15,7 +15,7 @@
  */
 package org.pkl.core.parser;
 
-import org.pkl.core.parser.ast.Module;
+import org.pkl.core.parser.syntax.Module;
 import org.pkl.core.util.Nullable;
 
 public class ParserError extends RuntimeException {

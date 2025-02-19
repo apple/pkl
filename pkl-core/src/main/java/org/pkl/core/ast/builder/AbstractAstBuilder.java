@@ -18,18 +18,12 @@ package org.pkl.core.ast.builder;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
-import org.pkl.core.PklBugException;
 import org.pkl.core.parser.BaseParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.ast.DocComment;
-import org.pkl.core.parser.ast.Modifier;
-import org.pkl.core.parser.ast.Modifier.ModifierValue;
-import org.pkl.core.parser.ast.Node;
-import org.pkl.core.parser.ast.StringConstant;
-import org.pkl.core.parser.ast.StringConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.ConstantPart;
-import org.pkl.core.parser.ast.StringConstantPart.StringEscape;
-import org.pkl.core.parser.ast.StringConstantPart.StringUnicodeEscape;
+import org.pkl.core.parser.syntax.DocComment;
+import org.pkl.core.parser.syntax.Modifier;
+import org.pkl.core.parser.syntax.Modifier.ModifierValue;
+import org.pkl.core.parser.syntax.Node;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
 
@@ -41,53 +35,6 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
 
   protected AbstractAstBuilder(Source source) {
     this.source = source;
-  }
-
-  protected String doVisitStringConstant(StringConstant expr) {
-    return doVisitStringConstant(expr.getStrParts().getParts());
-  }
-
-  protected String doVisitStringConstant(List<StringConstantPart> strs) {
-    var builder = new StringBuilder();
-    for (var part : strs) {
-      builder.append(doVisitStringConstantPart(part));
-    }
-    return builder.toString();
-  }
-
-  protected String doVisitStringConstantPart(StringConstantPart part) {
-    if (part instanceof ConstantPart cp) {
-      return cp.getStr();
-    }
-    if (part instanceof StringUnicodeEscape ue) {
-      var codePoint = parseUnicodeEscapeSequence(ue);
-      return Character.toString(codePoint);
-    }
-    if (part instanceof StringEscape se) {
-      return switch (se.getType()) {
-        case NEWLINE -> "\n";
-        case QUOTE -> "\"";
-        case BACKSLASH -> "\\";
-        case TAB -> "\t";
-        case RETURN -> "\r";
-      };
-    }
-    throw PklBugException.unreachableCode();
-  }
-
-  protected int parseUnicodeEscapeSequence(StringUnicodeEscape escape) {
-    var text = escape.getEscape();
-    var lastIndex = text.length() - 1;
-    var startIndex = text.indexOf('{', 2);
-    assert startIndex != -1; // guaranteed by lexer
-    try {
-      return Integer.parseInt(text.substring(startIndex + 1, lastIndex), 16);
-    } catch (NumberFormatException e) {
-      throw exceptionBuilder()
-          .evalError("invalidUnicodeEscapeSequence", text, text.substring(0, startIndex))
-          .withSourceSection(createSourceSection(escape))
-          .build();
-    }
   }
 
   protected final @Nullable SourceSection createSourceSection(@Nullable Node node) {
@@ -132,17 +79,5 @@ public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
 
   protected static SourceSection createSourceSection(Source source, Span span) {
     return source.createSection(span.charIndex(), span.length());
-  }
-
-  protected SourceSection startOf(Node node) {
-    return startOf(node.span());
-  }
-
-  protected SourceSection startOf(Span span) {
-    return source.createSection(span.charIndex(), 1);
-  }
-
-  protected SourceSection shrinkLeft(SourceSection section, int length) {
-    return source.createSection(section.getCharIndex() + length, section.getCharLength() - length);
   }
 }
