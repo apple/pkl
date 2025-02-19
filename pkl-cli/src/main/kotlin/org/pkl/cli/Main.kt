@@ -17,6 +17,7 @@
 
 package org.pkl.cli
 
+import com.github.ajalt.clikt.core.main
 import org.pkl.cli.commands.*
 import org.pkl.commons.cli.cliMain
 

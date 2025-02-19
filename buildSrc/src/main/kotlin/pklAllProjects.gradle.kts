@@ -42,6 +42,15 @@ configurations {
   }
 }
 
+configurations.all {
+  resolutionStrategy.eachDependency {
+    if (requested.group == "org.jetbrains.kotlin") {
+      // prevent transitive deps from bumping Koltin version
+      useVersion(libs.versions.kotlin.get())
+    }
+  }
+}
+
 plugins.withType(JavaPlugin::class).configureEach {
   val java = project.extensions.getByType<JavaPluginExtension>()
   java.sourceCompatibility = JavaVersion.VERSION_17

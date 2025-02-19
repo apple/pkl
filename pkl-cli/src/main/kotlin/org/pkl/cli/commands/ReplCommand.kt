@@ -21,7 +21,9 @@ import org.pkl.cli.CliRepl
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
 
-class ReplCommand : BaseCommand(name = "repl", help = "Start a REPL session", helpLink = helpLink) {
+class ReplCommand : BaseCommand(name = "repl", helpLink = helpLink) {
+  override val helpString = "Start a REPL session"
+
   private val projectOptions by ProjectOptions()
 
   override fun run() {

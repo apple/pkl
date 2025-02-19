@@ -26,10 +26,11 @@ import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.TestOptions
 
-class TestCommand :
-  BaseCommand(name = "test", help = "Run tests within the given module(s)", helpLink = helpLink) {
+class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
+  override val helpString = "Run tests within the given module(s)"
+
   val modules: List<URI> by
-    argument(name = "<modules>", help = "Module paths or URIs to evaluate.")
+    argument(name = "modules", help = "Module paths or URIs to evaluate.")
       .convert { BaseOptions.parseModuleName(it) }
       .multiple()
 

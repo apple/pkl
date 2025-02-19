@@ -48,6 +48,9 @@ val relocations =
     // pkl-cli dependencies
     "org.jline." to "org.pkl.thirdparty.jline.",
     "com.github.ajalt.clikt." to "org.pkl.thirdparty.clikt.",
+    "com.github.ajalt.colormath" to "org.pkl.thirdparty.colormath.",
+    "com.github.ajalt.mordant" to "org.pkl.thirdparty.mordant",
+    "com.sun.jna" to "org.pkl.thirdparty.jna",
     "kotlin." to "org.pkl.thirdparty.kotlin.",
     "kotlinx." to "org.pkl.thirdparty.kotlinx.",
     "org.intellij." to "org.pkl.thirdparty.intellij.",

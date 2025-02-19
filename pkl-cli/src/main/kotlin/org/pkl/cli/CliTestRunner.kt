@@ -51,9 +51,9 @@ constructor(
         // keep in sync with error message thrown by clikt
         throw CliException(
           """
-          Usage: pkl test [OPTIONS] <modules>...
+          Usage: pkl test [<options>] <modules>...
           
-          Error: Missing argument "<modules>"
+          Error: missing argument <modules>
         """
             .trimIndent()
         )

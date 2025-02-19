@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.option
@@ -25,28 +26,23 @@ import org.pkl.cli.CliImportAnalyzerOptions
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.single
 
-class AnalyzeCommand :
-  NoOpCliktCommand(
-    name = "analyze",
-    help = "Commands related to static analysis",
-    epilog = "For more information, visit $helpLink",
-  ) {
+class AnalyzeCommand : NoOpCliktCommand(name = "analyze") {
+  override fun help(context: Context) = "Commands related to static analysis"
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+
   init {
     subcommands(AnalyzeImportsCommand())
   }
 }
 
-class AnalyzeImportsCommand :
-  ModulesCommand(
-    name = "imports",
-    helpLink = helpLink,
-    help = "Prints the graph of modules imported by the input module(s).",
-  ) {
+class AnalyzeImportsCommand : ModulesCommand(name = "imports", helpLink = helpLink) {
+  override val helpString = "Prints the graph of modules imported by the input module(s)."
 
   private val outputPath: Path? by
     option(
         names = arrayOf("-o", "--output-path"),
-        metavar = "<path>",
+        metavar = "path",
         help = "File path where the output file is placed.",
       )
       .path()

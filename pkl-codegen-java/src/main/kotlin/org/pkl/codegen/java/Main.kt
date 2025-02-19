@@ -17,12 +17,14 @@
 
 package org.pkl.codegen.java
 
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
@@ -31,18 +33,15 @@ internal fun main(args: Array<String>) {
   cliMain { PklJavaCodegenCommand().main(args) }
 }
 
-class PklJavaCodegenCommand :
-  ModulesCommand(
-    name = "pkl-codegen-java",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+internal val helpLink = "${Release.current().documentation.homepage}java-binding/codegen.html#cli"
 
+class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink) {
   private val defaults = CliJavaCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 
   private val outputDir: Path by
     option(
         names = arrayOf("-o", "--output-dir"),
-        metavar = "<path>",
+        metavar = "path",
         help = "The directory where generated source code is placed.",
       )
       .path()
@@ -51,7 +50,7 @@ class PklJavaCodegenCommand :
   private val indent: String by
     option(
         names = arrayOf("--indent"),
-        metavar = "<chars>",
+        metavar = "chars",
         help = "The characters to use for indenting generated source code.",
       )
       .default(defaults.indent)
@@ -113,7 +112,7 @@ class PklJavaCodegenCommand :
   private val renames: Map<String, String> by
     option(
         names = arrayOf("--rename"),
-        metavar = "<old_name=new_name>",
+        metavar = "old_name=new_name",
         help =
           """
             Replace a prefix in the names of the generated Java classes (repeatable).
@@ -124,6 +123,8 @@ class PklJavaCodegenCommand :
             .trimIndent(),
       )
       .associate()
+
+  override val helpString: String = "Generate Java classes and interfaces from Pkl module(s)"
 
   override fun run() {
     val options =
@@ -140,5 +141,9 @@ class PklJavaCodegenCommand :
         renames = renames,
       )
     CliJavaCodeGenerator(options).run()
+  }
+
+  init {
+    installCommonOptions()
   }
 }

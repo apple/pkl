@@ -1,8 +1,16 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.github.ajalt.clikt:clikt-jvm:3.5.4=compileClasspath
-com.github.ajalt.clikt:clikt:3.5.4=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.clikt:clikt-core-jvm:5.0.3=compileClasspath
+com.github.ajalt.clikt:clikt-core:5.0.3=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.clikt:clikt-jvm:5.0.3=compileClasspath
+com.github.ajalt.clikt:clikt:5.0.3=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.colormath:colormath-jvm:3.6.0=compileClasspath
+com.github.ajalt.colormath:colormath:3.6.0=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.mordant:mordant-core-jvm:3.0.1=compileClasspath
+com.github.ajalt.mordant:mordant-core:3.0.1=compileClasspath,compileOnlyDependenciesMetadata
+com.github.ajalt.mordant:mordant-jvm:3.0.1=compileClasspath
+com.github.ajalt.mordant:mordant:3.0.1=compileClasspath,compileOnlyDependenciesMetadata
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata,testJdk17CompileClasspath,testJdk17ImplementationDependenciesMetadata,testRuntimeOnlyDependenciesMetadata
 org.assertj:assertj-core:3.27.3=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
@@ -16,13 +24,12 @@ org.jetbrains.kotlin:kotlin-daemon-client:2.0.21=kotlinBuildToolsApiClasspath
 org.jetbrains.kotlin:kotlin-daemon-embeddable:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinKlibCommonizerClasspath
 org.jetbrains.kotlin:kotlin-klib-commonizer-embeddable:2.0.21=kotlinKlibCommonizerClasspath
 org.jetbrains.kotlin:kotlin-native-prebuilt:2.0.21=kotlinNativeBundleConfiguration
-org.jetbrains.kotlin:kotlin-reflect:1.6.10=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinKlibCommonizerClasspath
+org.jetbrains.kotlin:kotlin-reflect:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinKlibCommonizerClasspath
 org.jetbrains.kotlin:kotlin-script-runtime:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17,kotlinKlibCommonizerClasspath
 org.jetbrains.kotlin:kotlin-scripting-common:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17
 org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17
 org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17
 org.jetbrains.kotlin:kotlin-scripting-jvm:2.0.21=kotlinBuildToolsApiClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17
-org.jetbrains.kotlin:kotlin-stdlib-common:2.0.21=compileClasspath,compileOnlyDependenciesMetadata
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21=compileClasspath,compileOnlyDependenciesMetadata,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.21=compileClasspath,compileOnlyDependenciesMetadata,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.jetbrains.kotlin:kotlin-stdlib:2.0.21=compileClasspath,compileOnlyDependenciesMetadata,kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest,kotlinCompilerPluginClasspathTestJdk17,kotlinKlibCommonizerClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath

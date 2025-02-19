@@ -29,7 +29,7 @@ class ProjectOptions : OptionGroup() {
   val projectDir: Path? by
     option(
         names = arrayOf("--project-dir"),
-        metavar = "<path>",
+        metavar = "path",
         help =
           "The project directory to use for this command. By default, searches up from the working directory for a PklProject file.",
       )

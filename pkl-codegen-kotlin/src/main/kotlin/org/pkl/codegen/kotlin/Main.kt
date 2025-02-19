@@ -17,6 +17,7 @@
 
 package org.pkl.codegen.kotlin
 
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
@@ -26,6 +27,7 @@ import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
@@ -34,18 +36,15 @@ internal fun main(args: Array<String>) {
   cliMain { PklKotlinCodegenCommand().main(args) }
 }
 
-class PklKotlinCodegenCommand :
-  ModulesCommand(
-    name = "pkl-codegen-kotlin",
-    helpLink = Release.current().documentation().homepage(),
-  ) {
+val helpLink = "${Release.current().documentation.homepage}kotlin-binding/codegen.html#cli"
 
+class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", helpLink = helpLink) {
   private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 
   private val outputDir: Path by
     option(
         names = arrayOf("-o", "--output-dir"),
-        metavar = "<path>",
+        metavar = "path",
         help = "The directory where generated source code is placed.",
       )
       .path()
@@ -54,7 +53,7 @@ class PklKotlinCodegenCommand :
   private val indent: String by
     option(
         names = arrayOf("--indent"),
-        metavar = "<chars>",
+        metavar = "chars",
         help = "The characters to use for indenting generated source code.",
       )
       .default(defaults.indent)
@@ -83,7 +82,7 @@ class PklKotlinCodegenCommand :
   private val renames: Map<String, String> by
     option(
         names = arrayOf("--rename"),
-        metavar = "<old_name=new_name>",
+        metavar = "old_name=new_name",
         help =
           """
             Replace a prefix in the names of the generated Kotlin classes (repeatable).
@@ -94,6 +93,8 @@ class PklKotlinCodegenCommand :
             .trimIndent(),
       )
       .associate()
+
+  override val helpString: String = "Generate Kotlin classes and interfaces from Pkl module(s)"
 
   override fun run() {
     val options =
@@ -107,5 +108,9 @@ class PklKotlinCodegenCommand :
         renames = renames,
       )
     CliKotlinCodeGenerator(options).run()
+  }
+
+  init {
+    installCommonOptions()
   }
 }

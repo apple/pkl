@@ -15,7 +15,7 @@
  */
 package org.pkl.cli
 
-import com.github.ajalt.clikt.core.MissingArgument
+import com.github.ajalt.clikt.testing.test
 import java.io.StringWriter
 import java.io.Writer
 import java.net.URI
@@ -388,9 +388,9 @@ class CliTestRunnerTest {
   @Test
   fun `no source modules specified has same message as pkl eval`() {
     val e1 = assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
-    val e2 = assertThrows<MissingArgument> { RootCommand().parse(listOf("eval")) }
-    assertThat(e1).hasMessageContaining("Missing argument \"<modules>\"")
-    assertThat(e1.message!!.replace("test", "eval")).isEqualTo(e2.helpMessage())
+    val e2 = RootCommand().test("eval")
+    assertThat(e1).hasMessageContaining("missing argument <modules>")
+    assertThat(e1.message!!.replace("test", "eval") + "\n").isEqualTo(e2.stderr)
   }
 
   @Test

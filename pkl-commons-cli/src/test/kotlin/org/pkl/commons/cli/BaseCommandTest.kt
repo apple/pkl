@@ -17,6 +17,7 @@ package org.pkl.commons.cli
 
 import com.github.ajalt.clikt.core.BadParameterValue
 import com.github.ajalt.clikt.core.PrintHelpMessage
+import com.github.ajalt.clikt.core.parse
 import java.io.File
 import java.nio.file.Path
 import java.util.regex.Pattern
@@ -31,12 +32,14 @@ class BaseCommandTest {
   private val cmd =
     object : BaseCommand("test", "") {
       override fun run() = Unit
+
+      override val helpString: String = ""
     }
 
   @Test
   fun `invalid timeout`() {
     val e = assertThrows<BadParameterValue> { cmd.parse(arrayOf("--timeout", "abc")) }
-    assertThat(e).hasMessageContaining("timeout")
+    assertThat(e.message).isEqualTo("abc is not a valid integer")
   }
 
   @Test
