@@ -37,7 +37,7 @@ internal fun main(args: Array<String>) {
 }
 
 class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin") {
-  override val helpLink = Release.current().documentation().homepage()
+  override val helpLink = "${Release.current().documentation.homepage}kotlin-binding/codegen.html#cli"
 
   private val defaults = CliKotlinCodeGeneratorOptions(CliBaseOptions(), "".toPath())
 

@@ -40,7 +40,7 @@ internal fun main(args: Array<String>) {
 }
 
 class DocCommand : BaseCommand(name = "pkldoc") {
-  override val helpLink = Release.current().documentation().homepage()
+  override val helpLink = "${Release.current().documentation.homepage}pkl-doc/index.html#cli"
 
   private val modules: List<URI> by
     argument(
