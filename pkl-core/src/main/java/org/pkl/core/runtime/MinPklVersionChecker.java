@@ -18,10 +18,10 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.nodes.Node;
 import org.pkl.core.Release;
 import org.pkl.core.Version;
-import org.pkl.core.parser.ast.Module;
-import org.pkl.core.parser.ast.ObjectMember.ObjectProperty;
-import org.pkl.core.parser.ast.Type;
-import org.pkl.core.parser.ast.Type.DeclaredType;
+import org.pkl.core.parser.syntax.Module;
+import org.pkl.core.parser.syntax.ObjectMember.ObjectProperty;
+import org.pkl.core.parser.syntax.Type;
+import org.pkl.core.parser.syntax.Type.DeclaredType;
 import org.pkl.core.util.Nullable;
 
 final class MinPklVersionChecker {

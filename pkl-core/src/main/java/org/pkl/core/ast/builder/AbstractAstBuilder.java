@@ -20,10 +20,10 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.pkl.core.parser.BaseParserVisitor;
 import org.pkl.core.parser.Span;
-import org.pkl.core.parser.ast.DocComment;
-import org.pkl.core.parser.ast.Modifier;
-import org.pkl.core.parser.ast.Modifier.ModifierValue;
-import org.pkl.core.parser.ast.Node;
+import org.pkl.core.parser.syntax.DocComment;
+import org.pkl.core.parser.syntax.Modifier;
+import org.pkl.core.parser.syntax.Modifier.ModifierValue;
+import org.pkl.core.parser.syntax.Node;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
 

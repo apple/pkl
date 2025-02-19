@@ -25,7 +25,7 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.ast.Module;
+import org.pkl.core.parser.syntax.Module;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 

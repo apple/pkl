@@ -37,12 +37,12 @@ import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.ast.Class;
-import org.pkl.core.parser.ast.ClassProperty;
-import org.pkl.core.parser.ast.Expr;
-import org.pkl.core.parser.ast.ImportClause;
-import org.pkl.core.parser.ast.ModuleDecl;
-import org.pkl.core.parser.ast.ReplInput;
+import org.pkl.core.parser.syntax.Class;
+import org.pkl.core.parser.syntax.ClassProperty;
+import org.pkl.core.parser.syntax.Expr;
+import org.pkl.core.parser.syntax.ImportClause;
+import org.pkl.core.parser.syntax.ModuleDecl;
+import org.pkl.core.parser.syntax.ReplInput;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.repl.ReplRequest.Eval;
 import org.pkl.core.repl.ReplRequest.Load;
@@ -222,9 +222,9 @@ public class ReplServer implements AutoCloseable {
           }
         } else if (tree instanceof Class clazz) {
           addStaticModuleProperty(builder.visitClass(clazz));
-        } else if (tree instanceof org.pkl.core.parser.ast.TypeAlias typeAlias) {
+        } else if (tree instanceof org.pkl.core.parser.syntax.TypeAlias typeAlias) {
           addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
-        } else if (tree instanceof org.pkl.core.parser.ast.ClassMethod classMethod) {
+        } else if (tree instanceof org.pkl.core.parser.syntax.ClassMethod classMethod) {
           addModuleMethodDef(builder.visitClassMethod(classMethod));
         } else if (tree instanceof ModuleDecl) {
           // do nothing for now

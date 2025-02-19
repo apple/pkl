@@ -58,7 +58,7 @@ import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.parser.Parser;
 import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.ast.Expr;
+import org.pkl.core.parser.syntax.Expr;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
