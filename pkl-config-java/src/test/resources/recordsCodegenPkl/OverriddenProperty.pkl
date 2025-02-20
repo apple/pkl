@@ -1,0 +1,28 @@
+module com.example.records.OverriddenProperty
+
+abstract class BaseClass {
+  fixed bar: Listing<BaseBar> = new {
+    new {
+      prop1 = "hello"
+    }
+  }
+}
+
+theClass: TheClass
+
+class TheClass extends BaseClass {
+  fixed bar: Listing<Bar> = new {
+    new {
+      prop1 = "hello"
+      prop2 = "hello again"
+    }
+  }
+}
+
+open class BaseBar {
+  prop1: String
+}
+
+class Bar extends BaseBar {
+  prop2: String
+}

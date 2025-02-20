@@ -74,6 +74,13 @@ data class CliJavaCodeGeneratorOptions(
    * Pkl module name, and the value is the desired replacement.
    */
   val renames: Map<String, String> = emptyMap(),
+
+  /**
+   * Whether to generate Java records, the related interfaces, and JEP 468 like withers.
+   *
+   * This overrides any Java class generation related options!
+   */
+  val generateRecords: Boolean = false,
 ) {
   @Suppress("DeprecatedCallableAddReplaceWith")
   @Deprecated("deprecated without replacement")
@@ -89,5 +96,6 @@ data class CliJavaCodeGeneratorOptions(
       nonNullAnnotation,
       implementSerializable,
       renames,
+      generateRecords,
     )
 }
