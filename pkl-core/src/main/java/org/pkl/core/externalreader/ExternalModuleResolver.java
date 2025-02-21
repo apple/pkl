@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.module;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.messaging.MessageTransport;
+import org.pkl.core.module.PathElement;
 
 public interface ExternalModuleResolver {
-
-  interface Spec {
-    boolean hasHierarchicalUris();
-
-    boolean isGlobbable();
-
-    boolean isLocal();
-
-    String scheme();
+  static ExternalModuleResolver of(MessageTransport transport, long evaluatorId) {
+    return new ExternalModuleResolverImpl(transport, evaluatorId);
   }
 
   String resolveModule(SecurityManager securityManager, URI uri)

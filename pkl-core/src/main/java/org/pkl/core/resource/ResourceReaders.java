@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalResourceResolver;
+import org.pkl.core.externalreader.ResourceReaderSpec;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -162,7 +164,7 @@ public final class ResourceReaders {
 
   /** Returns a reader for external and client reader resources. */
   public static ResourceReader externalResolver(
-      ExternalResourceResolver.Spec spec, ExternalResourceResolver resolver) {
+      ResourceReaderSpec spec, ExternalResourceResolver resolver) {
     return new ExternalResolver(spec, resolver);
   }
 
@@ -691,11 +693,10 @@ public final class ResourceReaders {
   }
 
   private static final class ExternalResolver implements ResourceReader {
-    private final ExternalResourceResolver.Spec readerSpec;
+    private final ResourceReaderSpec readerSpec;
     private final ExternalResourceResolver resolver;
 
-    public ExternalResolver(
-        ExternalResourceResolver.Spec readerSpec, ExternalResourceResolver resolver) {
+    public ExternalResolver(ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
       this.readerSpec = readerSpec;
       this.resolver = resolver;
     }

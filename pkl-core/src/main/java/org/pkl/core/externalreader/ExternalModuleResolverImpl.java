@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,77 +13,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.messaging;
+package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.messaging.Messages.*;
+import org.pkl.core.messaging.MessageTransport;
+import org.pkl.core.messaging.MessageTransports;
+import org.pkl.core.messaging.Messages.ListModulesRequest;
+import org.pkl.core.messaging.Messages.ListModulesResponse;
+import org.pkl.core.messaging.Messages.ReadModuleRequest;
+import org.pkl.core.messaging.Messages.ReadModuleResponse;
+import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
-import org.pkl.core.resource.ExternalResourceResolver;
-import org.pkl.core.resource.Resource;
 
-public class MessageTransportResourceResolver implements ExternalResourceResolver {
+final class ExternalModuleResolverImpl implements ExternalModuleResolver {
   private final MessageTransport transport;
   private final long evaluatorId;
-  private final Map<URI, Future<byte[]>> readResponses = new ConcurrentHashMap<>();
+  private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
-  public MessageTransportResourceResolver(MessageTransport transport, long evaluatorId) {
+  ExternalModuleResolverImpl(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
     this.evaluatorId = evaluatorId;
   }
 
-  public Optional<Object> read(URI uri) throws IOException {
-    var result = doRead(uri);
-    return Optional.of(new Resource(uri, result));
+  public List<PathElement> listElements(SecurityManager securityManager, URI uri)
+      throws IOException, SecurityManagerException {
+    securityManager.checkResolveModule(uri);
+    return doListElements(uri);
   }
 
-  public boolean hasElement(SecurityManager securityManager, URI elementUri)
+  public boolean hasElement(SecurityManager securityManager, URI uri)
       throws SecurityManagerException {
-    securityManager.checkResolveResource(elementUri);
+    securityManager.checkResolveModule(uri);
     try {
-      doRead(elementUri);
+      doReadModule(uri);
       return true;
     } catch (IOException e) {
       return false;
     }
   }
 
-  public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
+  public String resolveModule(SecurityManager securityManager, URI uri)
       throws IOException, SecurityManagerException {
-    securityManager.checkResolveResource(baseUri);
-    return doListElements(baseUri);
+    securityManager.checkResolveModule(uri);
+    return doReadModule(uri);
   }
 
-  public List<PathElement> doListElements(URI baseUri) throws IOException {
+  private String doReadModule(URI moduleUri) throws IOException {
     return MessageTransports.resolveFuture(
-        listResponses.computeIfAbsent(
-            baseUri,
+        readResponses.computeIfAbsent(
+            moduleUri,
             (uri) -> {
-              var future = new CompletableFuture<List<PathElement>>();
-              var request =
-                  new ListResourcesRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
+              var future = new CompletableFuture<String>();
+              var request = new ReadModuleRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,
                     (response) -> {
-                      if (response instanceof ListResourcesResponse resp) {
+                      if (response instanceof ReadModuleResponse resp) {
                         if (resp.error() != null) {
                           future.completeExceptionally(new IOException(resp.error()));
+                        } else if (resp.contents() != null) {
+                          future.complete(resp.contents());
                         } else {
-                          future.complete(
-                              Objects.requireNonNullElseGet(resp.pathElements(), List::of));
+                          future.complete("");
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));
@@ -96,25 +100,23 @@ public class MessageTransportResourceResolver implements ExternalResourceResolve
             }));
   }
 
-  public byte[] doRead(URI baseUri) throws IOException {
+  private List<PathElement> doListElements(URI baseUri) throws IOException {
     return MessageTransports.resolveFuture(
-        readResponses.computeIfAbsent(
+        listResponses.computeIfAbsent(
             baseUri,
             (uri) -> {
-              var future = new CompletableFuture<byte[]>();
-              var request =
-                  new ReadResourceRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
+              var future = new CompletableFuture<List<PathElement>>();
+              var request = new ListModulesRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {
                 transport.send(
                     request,
                     (response) -> {
-                      if (response instanceof ReadResourceResponse resp) {
+                      if (response instanceof ListModulesResponse resp) {
                         if (resp.error() != null) {
                           future.completeExceptionally(new IOException(resp.error()));
-                        } else if (resp.contents() != null) {
-                          future.complete(resp.contents());
                         } else {
-                          future.complete(new byte[0]);
+                          future.complete(
+                              Objects.requireNonNullElseGet(resp.pathElements(), List::of));
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));

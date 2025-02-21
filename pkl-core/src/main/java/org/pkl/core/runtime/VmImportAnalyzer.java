@@ -43,7 +43,7 @@ import org.pkl.core.util.IoUtils;
 public class VmImportAnalyzer {
   @TruffleBoundary
   public static ImportGraph analyze(URI[] moduleUris, VmContext context)
-      throws IOException, SecurityManagerException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     var imports = new TreeMap<URI, Set<ImportGraph.Import>>();
     var resolvedImports = new TreeMap<URI, URI>();
     for (var moduleUri : moduleUris) {

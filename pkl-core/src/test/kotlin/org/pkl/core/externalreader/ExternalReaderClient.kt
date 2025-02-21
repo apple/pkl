@@ -19,14 +19,15 @@ import java.io.IOException
 import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageTransport
+import org.pkl.core.messaging.Messages
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.util.Nullable
 
 /** An implementation of the client side of the external reader flow */
-class ExternalReaderRuntime(
-  private val moduleReaders: List<ExternalModuleReader>,
-  private val resourceReaders: List<ExternalResourceReader>,
+class ExternalReaderClient(
+  private val externalModuleReaders: List<ExternalModuleReader>,
+  private val externalResourceReaders: List<ExternalResourceReader>,
   private val transport: MessageTransport,
 ) {
   /** Close the runtime and its transport. */
@@ -35,7 +36,7 @@ class ExternalReaderRuntime(
   }
 
   private fun findModuleReader(scheme: String): @Nullable ExternalModuleReader? {
-    for (moduleReader in moduleReaders) {
+    for (moduleReader in externalModuleReaders) {
       if (moduleReader.scheme.equals(scheme, ignoreCase = true)) {
         return moduleReader
       }
@@ -44,7 +45,7 @@ class ExternalReaderRuntime(
   }
 
   private fun findResourceReader(scheme: String): @Nullable ExternalResourceReader? {
-    for (resourceReader in resourceReaders) {
+    for (resourceReader in externalResourceReaders) {
       if (resourceReader.scheme.equals(scheme, ignoreCase = true)) {
         return resourceReader
       }
@@ -72,7 +73,7 @@ class ExternalReaderRuntime(
           Message.Type.INITIALIZE_MODULE_READER_REQUEST -> {
             val req = msg as InitializeModuleReaderRequest
             val reader = findModuleReader(req.scheme)
-            var spec: @Nullable ModuleReaderSpec? = null
+            var spec: Messages.ModuleReaderSpec? = null
             if (reader != null) {
               spec = reader.spec
             }
@@ -81,7 +82,7 @@ class ExternalReaderRuntime(
           Message.Type.INITIALIZE_RESOURCE_READER_REQUEST -> {
             val req = msg as InitializeResourceReaderRequest
             val reader = findResourceReader(req.scheme)
-            var spec: @Nullable ResourceReaderSpec? = null
+            var spec: Messages.ResourceReaderSpec? = null
             if (reader != null) {
               spec = reader.spec
             }

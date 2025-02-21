@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.core.messaging.Message.*;
-import org.pkl.core.module.ExternalModuleResolver;
 import org.pkl.core.module.PathElement;
-import org.pkl.core.resource.ExternalResourceResolver;
 import org.pkl.core.util.Nullable;
 
 public final class Messages {
   private Messages() {}
 
   public record ModuleReaderSpec(
-      String scheme, boolean hasHierarchicalUris, boolean isLocal, boolean isGlobbable)
-      implements ExternalModuleResolver.Spec {}
+      String scheme, boolean hasHierarchicalUris, boolean isLocal, boolean isGlobbable) {}
 
-  public record ResourceReaderSpec(String scheme, boolean hasHierarchicalUris, boolean isGlobbable)
-      implements ExternalResourceResolver.Spec {}
+  public record ResourceReaderSpec(
+      String scheme, boolean hasHierarchicalUris, boolean isGlobbable) {}
 
   public record ListResourcesRequest(long requestId, long evaluatorId, URI uri)
       implements Server.Request {

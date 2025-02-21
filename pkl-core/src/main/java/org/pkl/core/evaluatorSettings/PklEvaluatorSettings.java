@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,6 +137,7 @@ public record PklEvaluatorSettings(
   }
 
   public record Proxy(@Nullable URI address, @Nullable List<String> noProxy) {
+    @Deprecated(forRemoval = true)
     public static Proxy create(@Nullable String address, @Nullable List<String> noProxy) {
       URI addressUri;
       try {
@@ -147,14 +148,19 @@ public record PklEvaluatorSettings(
       return new Proxy(addressUri, noProxy);
     }
 
-    @SuppressWarnings("unchecked")
     public static @Nullable Proxy parse(Value input) {
       if (input instanceof PNull) {
         return null;
       } else if (input instanceof PObject proxy) {
         var address = (String) proxy.get("address");
+        @SuppressWarnings("unchecked")
         var noProxy = (List<String>) proxy.get("noProxy");
-        return create(address, noProxy);
+        try {
+          var addressUri = address == null ? null : new URI(address);
+          return new Proxy(addressUri, noProxy);
+        } catch (URISyntaxException e) {
+          throw new PklException(ErrorMessages.create("invalidUri", address));
+        }
       } else {
         throw PklBugException.unreachableCode();
       }

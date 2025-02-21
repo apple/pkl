@@ -30,12 +30,8 @@ import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
-import org.pkl.core.messaging.MessageTransportModuleResolver;
-import org.pkl.core.messaging.MessageTransportResourceResolver;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
-import org.pkl.core.module.ExternalModuleResolver;
-import org.pkl.core.resource.ExternalResourceResolver;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -46,9 +42,9 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
   private final ExternalReader spec;
   private final @Nullable String logPrefix;
-  private final Map<String, Future<ExternalModuleResolver.@Nullable Spec>>
-      initializeModuleReaderResponses = new ConcurrentHashMap<>();
-  private final Map<String, Future<ExternalResourceResolver.@Nullable Spec>>
+  private final Map<String, Future<@Nullable ModuleReaderSpec>> initializeModuleReaderResponses =
+      new ConcurrentHashMap<>();
+  private final Map<String, Future<@Nullable ResourceReaderSpec>>
       initializeResourceReaderResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
@@ -80,13 +76,13 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   @Override
   public ExternalModuleResolver getModuleResolver(long evaluatorId)
       throws ExternalReaderProcessException {
-    return new MessageTransportModuleResolver(getTransport(), evaluatorId);
+    return ExternalModuleResolver.of(getTransport(), evaluatorId);
   }
 
   @Override
   public ExternalResourceResolver getResourceResolver(long evaluatorId)
       throws ExternalReaderProcessException {
-    return new MessageTransportResourceResolver(getTransport(), evaluatorId);
+    return ExternalResourceResolver.of(getTransport(), evaluatorId);
   }
 
   private MessageTransport getTransport() throws ExternalReaderProcessException {
@@ -175,13 +171,12 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public ExternalModuleResolver.@Nullable Spec getModuleReaderSpec(String uriScheme)
-      throws IOException {
+  public ModuleReaderSpec getModuleReaderSpec(String uriScheme) throws IOException {
     return MessageTransports.resolveFuture(
         initializeModuleReaderResponses.computeIfAbsent(
             uriScheme,
             (scheme) -> {
-              var future = new CompletableFuture<ExternalModuleResolver.@Nullable Spec>();
+              var future = new CompletableFuture<@Nullable ModuleReaderSpec>();
               var request =
                   new InitializeModuleReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {
@@ -190,7 +185,15 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
                         request,
                         (response) -> {
                           if (response instanceof InitializeModuleReaderResponse resp) {
-                            future.complete(resp.spec());
+                            var spec =
+                                resp.spec() == null
+                                    ? null
+                                    : new ModuleReaderSpec(
+                                        resp.spec().scheme(),
+                                        resp.spec().hasHierarchicalUris(),
+                                        resp.spec().isLocal(),
+                                        resp.spec().isGlobbable());
+                            future.complete(spec);
                           } else {
                             future.completeExceptionally(
                                 new ProtocolException("unexpected response"));
@@ -204,13 +207,12 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public ExternalResourceResolver.@Nullable Spec getResourceReaderSpec(String uriScheme)
-      throws IOException {
+  public ResourceReaderSpec getResourceReaderSpec(String uriScheme) throws IOException {
     return MessageTransports.resolveFuture(
         initializeResourceReaderResponses.computeIfAbsent(
             uriScheme,
             (scheme) -> {
-              var future = new CompletableFuture<ExternalResourceResolver.@Nullable Spec>();
+              var future = new CompletableFuture<@Nullable ResourceReaderSpec>();
               var request =
                   new InitializeResourceReaderRequest(requestIdGenerator.nextLong(), scheme);
               try {
@@ -220,7 +222,14 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
                         (response) -> {
                           log(response.toString());
                           if (response instanceof InitializeResourceReaderResponse resp) {
-                            future.complete(resp.spec());
+                            var spec =
+                                resp.spec() == null
+                                    ? null
+                                    : new ResourceReaderSpec(
+                                        resp.spec().scheme(),
+                                        resp.spec().hasHierarchicalUris(),
+                                        resp.spec().isGlobbable());
+                            future.complete(spec);
                           } else {
                             future.completeExceptionally(
                                 new ProtocolException("unexpected response"));
