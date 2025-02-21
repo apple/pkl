@@ -49,18 +49,8 @@ class ServerMessagePackCodecTest {
 
   @Test
   fun `round-trip CreateEvaluatorRequest`() {
-    val resourceReader1 =
-      Messages.ResourceReaderSpec(
-        "resourceReader1",
-        true,
-        true,
-      )
-    val resourceReader2 =
-      Messages.ResourceReaderSpec(
-        "resourceReader2",
-        true,
-        false,
-      )
+    val resourceReader1 = Messages.ResourceReaderSpec("resourceReader1", true, true)
+    val resourceReader2 = Messages.ResourceReaderSpec("resourceReader2", true, false)
     val moduleReader1 = Messages.ModuleReaderSpec("moduleReader1", true, true, true)
     val moduleReader2 = Messages.ModuleReaderSpec("moduleReader2", true, false, false)
     val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
@@ -105,7 +95,7 @@ class ServerMessagePackCodecTest {
         http =
           Http(
             proxy = Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
-            caCertificates = byteArrayOf(1, 2, 3, 4)
+            caCertificates = byteArrayOf(1, 2, 3, 4),
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),

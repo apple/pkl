@@ -252,7 +252,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
           ResourceReaderSpec(
             readerSpec.scheme,
             readerSpec.hasHierarchicalUris,
-            readerSpec.isGlobbable
+            readerSpec.isGlobbable,
           ),
           ResourceResolver.of(transport, evaluatorId),
         )

@@ -93,7 +93,6 @@ public final class AnalyzeNodes {
         var results = VmImportAnalyzer.analyze(uris, context);
         return importGraphFactory.create(results);
       } catch (IOException
-          | URISyntaxException
           | SecurityManagerException
           | PackageLoadError
           | ReaderProcessException e) {
