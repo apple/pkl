@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.List;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.IoUtils;
@@ -30,10 +30,10 @@ public interface ReaderBase {
    * Tells if the URIs represented by this module key or resource reader should be interpreted as <a
    * href="https://www.rfc-editor.org/rfc/rfc3986#section-1.2.3">hierarchical</a>.
    */
-  boolean hasHierarchicalUris() throws ReaderProcessException, IOException;
+  boolean hasHierarchicalUris() throws ExternalReaderProcessException, IOException;
 
   /** Tells if this module key or resource reader supports globbing. */
-  boolean isGlobbable() throws ReaderProcessException, IOException;
+  boolean isGlobbable() throws ExternalReaderProcessException, IOException;
 
   /**
    * Tells if relative paths of this URI should be resolved from {@link URI#getFragment()}, rather
@@ -50,7 +50,7 @@ public interface ReaderBase {
    * if either {@link #isGlobbable()} or {@link ModuleKey#isLocal()} returns true.
    */
   default boolean hasElement(SecurityManager securityManager, URI elementUri)
-      throws IOException, SecurityManagerException, ReaderProcessException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     throw new UnsupportedOperationException();
   }
 
@@ -67,7 +67,7 @@ public interface ReaderBase {
    * this reader.
    */
   default List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-      throws IOException, SecurityManagerException, ReaderProcessException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     throw new UnsupportedOperationException();
   }
 

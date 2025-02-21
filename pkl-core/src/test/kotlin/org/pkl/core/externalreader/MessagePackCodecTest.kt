@@ -20,7 +20,7 @@ import java.io.PipedOutputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.msgpack.core.MessagePack
-import org.pkl.core.externalreader.ReaderMessages.*
+import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.*
 
 class MessagePackCodecTest {
@@ -30,8 +30,8 @@ class MessagePackCodecTest {
   init {
     val inputStream = PipedInputStream()
     val outputStream = PipedOutputStream(inputStream)
-    encoder = MessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
-    decoder = MessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
+    encoder = ExternalReaderMessagePackEncoder(MessagePack.newDefaultPacker(outputStream))
+    decoder = ExternalReaderMessagePackDecoder(MessagePack.newDefaultUnpacker(inputStream))
   }
 
   private fun roundtrip(message: Message) {

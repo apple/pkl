@@ -28,7 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.externalreader.ReaderMessages.*;
+import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
@@ -36,7 +36,7 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-final class ReaderProcessImpl implements ReaderProcess {
+final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
   private static final Duration CLOSE_TIMEOUT = Duration.ofSeconds(3);
 
@@ -65,7 +65,7 @@ final class ReaderProcessImpl implements ReaderProcess {
     }
   }
 
-  ReaderProcessImpl(ExternalReader spec) {
+  ExternalReaderProcessImpl(ExternalReader spec) {
     this.spec = spec;
     logPrefix =
         Objects.equals(System.getenv("PKL_DEBUG"), "1")
@@ -74,23 +74,26 @@ final class ReaderProcessImpl implements ReaderProcess {
   }
 
   @Override
-  public ModuleResolver getModuleResolver(long evaluatorId) throws ReaderProcessException {
-    return ModuleResolver.of(getTransport(), evaluatorId);
+  public ExternalModuleResolver getModuleResolver(long evaluatorId)
+      throws ExternalReaderProcessException {
+    return ExternalModuleResolver.of(getTransport(), evaluatorId);
   }
 
   @Override
-  public ResourceResolver getResourceResolver(long evaluatorId) throws ReaderProcessException {
-    return ResourceResolver.of(getTransport(), evaluatorId);
+  public ExternalResourceResolver getResourceResolver(long evaluatorId)
+      throws ExternalReaderProcessException {
+    return ExternalResourceResolver.of(getTransport(), evaluatorId);
   }
 
-  private MessageTransport getTransport() throws ReaderProcessException {
+  private MessageTransport getTransport() throws ExternalReaderProcessException {
     synchronized (lock) {
       if (closed) {
         throw new IllegalStateException("External reader process has already been closed.");
       }
       if (process != null) {
         if (!process.isAlive()) {
-          throw new ReaderProcessException(ErrorMessages.create("externalReaderAlreadyTerminated"));
+          throw new ExternalReaderProcessException(
+              ErrorMessages.create("externalReaderAlreadyTerminated"));
         }
 
         return transport;
@@ -109,12 +112,12 @@ final class ReaderProcessImpl implements ReaderProcess {
     try {
       process = builder.start();
     } catch (IOException e) {
-      throw new ReaderProcessException(e);
+      throw new ExternalReaderProcessException(e);
     }
     transport =
         MessageTransports.stream(
-            new MessagePackDecoder(process.getInputStream()),
-            new MessagePackEncoder(process.getOutputStream()),
+            new ExternalReaderMessagePackDecoder(process.getInputStream()),
+            new ExternalReaderMessagePackEncoder(process.getOutputStream()),
             this::log);
 
     var rxThread = new Thread(this::runTransport, "ExternalReaderProcessImpl rxThread for " + spec);
@@ -196,7 +199,7 @@ final class ReaderProcessImpl implements ReaderProcess {
                                 new ProtocolException("unexpected response"));
                           }
                         });
-              } catch (ProtocolException | IOException | ReaderProcessException e) {
+              } catch (ProtocolException | IOException | ExternalReaderProcessException e) {
                 future.completeExceptionally(e);
               }
               return future;
@@ -232,7 +235,7 @@ final class ReaderProcessImpl implements ReaderProcess {
                                 new ProtocolException("unexpected response"));
                           }
                         });
-              } catch (ProtocolException | IOException | ReaderProcessException e) {
+              } catch (ProtocolException | IOException | ExternalReaderProcessException e) {
                 future.completeExceptionally(e);
               }
               return future;

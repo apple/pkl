@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.externalreader.ExternalModuleResolver;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.externalreader.ModuleReaderSpec;
-import org.pkl.core.externalreader.ModuleResolver;
-import org.pkl.core.externalreader.ReaderProcessException;
 import org.pkl.core.packages.Dependency;
 import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.PackageAssetUri;
@@ -132,7 +132,7 @@ public final class ModuleKeys {
 
   /** Creates a module key for an externally read module. */
   public static ModuleKey externalResolver(
-      URI uri, ModuleReaderSpec spec, ModuleResolver resolver) {
+      URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
     return new ExternalResolver(uri, spec, resolver);
   }
 
@@ -174,7 +174,7 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean hasHierarchicalUris() throws IOException, ReaderProcessException {
+    public boolean hasHierarchicalUris() throws IOException, ExternalReaderProcessException {
       return delegate.hasHierarchicalUris();
     }
 
@@ -184,19 +184,19 @@ public final class ModuleKeys {
     }
 
     @Override
-    public boolean isGlobbable() throws IOException, ReaderProcessException {
+    public boolean isGlobbable() throws IOException, ExternalReaderProcessException {
       return delegate.isGlobbable();
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI uri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.hasElement(securityManager, uri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return delegate.listElements(securityManager, baseUri);
     }
   }
@@ -719,7 +719,7 @@ public final class ModuleKeys {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -740,7 +740,7 @@ public final class ModuleKeys {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveModule(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -781,9 +781,9 @@ public final class ModuleKeys {
 
     private final URI uri;
     private final ModuleReaderSpec spec;
-    private final ModuleResolver resolver;
+    private final ExternalModuleResolver resolver;
 
-    ExternalResolver(URI uri, ModuleReaderSpec spec, ModuleResolver resolver) {
+    ExternalResolver(URI uri, ModuleReaderSpec spec, ExternalModuleResolver resolver) {
       this.uri = uri;
       this.spec = spec;
       this.resolver = resolver;

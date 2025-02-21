@@ -33,7 +33,7 @@ import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.builder.ImportsAndReadsParser;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.util.GlobResolver;
@@ -43,7 +43,7 @@ import org.pkl.core.util.IoUtils;
 public class VmImportAnalyzer {
   @TruffleBoundary
   public static ImportGraph analyze(URI[] moduleUris, VmContext context)
-      throws IOException, SecurityManagerException, ReaderProcessException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     var imports = new TreeMap<URI, Set<ImportGraph.Import>>();
     var resolvedImports = new TreeMap<URI, URI>();
     for (var moduleUri : moduleUris) {
@@ -153,7 +153,7 @@ public class VmImportAnalyzer {
             .withSourceSection(entry.sourceSection())
             .withCause(e)
             .build();
-      } catch (ReaderProcessException e) {
+      } catch (ExternalReaderProcessException e) {
         throw new VmExceptionBuilder()
             .withSourceSection(entry.sourceSection())
             .evalError("externalReaderFailure")

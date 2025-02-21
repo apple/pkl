@@ -16,14 +16,23 @@
 package org.pkl.core.externalreader
 
 import java.net.URI
-import org.pkl.core.messaging.Messages.ModuleReaderSpec
+import org.pkl.core.module.PathElement
 
-/** An external module reader, to be used with [ReaderRuntime]. */
-interface ModuleReader : ExternalReaderBase {
-  val isLocal: Boolean
+class TestExternalModuleReader : ExternalModuleReader {
+  override val scheme: String = "test"
 
-  fun read(uri: URI): String
+  override val hasHierarchicalUris: Boolean = false
 
-  val spec: ModuleReaderSpec
-    get() = ModuleReaderSpec(scheme, hasHierarchicalUris, isLocal, isGlobbable)
+  override val isLocal: Boolean = true
+
+  override val isGlobbable: Boolean = false
+
+  override fun read(uri: URI): String =
+    """
+    name = "Pigeon"
+    age = 40
+  """
+      .trimIndent()
+
+  override fun listElements(uri: URI): List<PathElement> = emptyList()
 }

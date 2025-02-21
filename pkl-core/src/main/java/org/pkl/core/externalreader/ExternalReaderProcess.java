@@ -20,13 +20,13 @@ import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.util.Nullable;
 
 /** An external process that reads Pkl modules and resources. */
-public interface ReaderProcess extends AutoCloseable {
+public interface ExternalReaderProcess extends AutoCloseable {
   /**
-   * Creates a new {@link ReaderProcess} from the given spec. No resources are allocated at this
-   * time.
+   * Creates a new {@link ExternalReaderProcess} from the given spec. No resources are allocated at
+   * this time.
    */
-  static ReaderProcess of(ExternalReader spec) {
-    return new ReaderProcessImpl(spec);
+  static ExternalReaderProcess of(ExternalReader spec) {
+    return new ExternalReaderProcessImpl(spec);
   }
 
   /**
@@ -36,7 +36,7 @@ public interface ReaderProcess extends AutoCloseable {
    *
    * @throws IllegalStateException if this process has already been closed
    */
-  ModuleResolver getModuleResolver(long evaluatorId) throws ReaderProcessException;
+  ExternalModuleResolver getModuleResolver(long evaluatorId) throws ExternalReaderProcessException;
 
   /**
    * Returns a resolver for resources provided via this reader.
@@ -45,7 +45,8 @@ public interface ReaderProcess extends AutoCloseable {
    *
    * @throws IllegalStateException if this process has already been closed
    */
-  ResourceResolver getResourceResolver(long evaluatorId) throws ReaderProcessException;
+  ExternalResourceResolver getResourceResolver(long evaluatorId)
+      throws ExternalReaderProcessException;
 
   /**
    * Returns the spec, if available, of this process's module reader with the given scheme.
@@ -71,8 +72,8 @@ public interface ReaderProcess extends AutoCloseable {
    * <p>This method can be safely called multiple times. Subsequent calls have no effect.
    *
    * @implNote Implementers should request a graceful termination by sending a {@link
-   *     ReaderMessages.CloseExternalProcess CloseExternalProcess} message to the process before
-   *     terminating it forcibly.
+   *     ExternalReaderMessages.CloseExternalProcess CloseExternalProcess} message to the process
+   *     before terminating it forcibly.
    */
   @Override
   void close();

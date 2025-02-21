@@ -35,14 +35,14 @@ import org.pkl.core.messaging.Messages.ReadModuleResponse;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 
-final class ModuleResolverImpl implements ModuleResolver {
+final class ExternalModuleResolverImpl implements ExternalModuleResolver {
   private final MessageTransport transport;
   private final long evaluatorId;
   private final Map<URI, Future<String>> readResponses = new ConcurrentHashMap<>();
   private final Map<URI, Future<List<PathElement>>> listResponses = new ConcurrentHashMap<>();
   private final Random requestIdGenerator = new Random();
 
-  ModuleResolverImpl(MessageTransport transport, long evaluatorId) {
+  ExternalModuleResolverImpl(MessageTransport transport, long evaluatorId) {
     this.transport = transport;
     this.evaluatorId = evaluatorId;
   }

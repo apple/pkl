@@ -24,9 +24,9 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.module.PathElement;
 
-public interface ResourceResolver {
-  static ResourceResolver of(MessageTransport transport, long evaluatorId) {
-    return new ResourceResolverImpl(transport, evaluatorId);
+public interface ExternalResourceResolver {
+  static ExternalResourceResolver of(MessageTransport transport, long evaluatorId) {
+    return new ExternalResourceResolverImpl(transport, evaluatorId);
   }
 
   Optional<Object> read(URI uri) throws IOException;

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.runtime.ReaderBase;
@@ -244,7 +244,7 @@ public final class GlobResolver {
       URI globUri,
       Pattern pattern,
       Map<String, ResolvedGlobElement> result)
-      throws IOException, SecurityManagerException, ReaderProcessException {
+      throws IOException, SecurityManagerException, ExternalReaderProcessException {
     var elements = reader.listElements(securityManager, globUri);
     for (var elem : sorted(elements)) {
       URI resolvedUri;
@@ -305,7 +305,7 @@ public final class GlobResolver {
       throws IOException,
           SecurityManagerException,
           InvalidGlobPatternException,
-          ReaderProcessException {
+          ExternalReaderProcessException {
     var result = new ArrayList<ResolvedGlobElement>();
     doExpandHierarchicalGlobPart(
         securityManager,
@@ -333,7 +333,7 @@ public final class GlobResolver {
       throws IOException,
           SecurityManagerException,
           InvalidGlobPatternException,
-          ReaderProcessException {
+          ExternalReaderProcessException {
 
     if (listElementCallCount.getAndIncrement() > maxListElements()) {
       throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobTooComplex"));
@@ -377,7 +377,7 @@ public final class GlobResolver {
       throws IOException,
           SecurityManagerException,
           InvalidGlobPatternException,
-          ReaderProcessException {
+          ExternalReaderProcessException {
     var isLeaf = idx == globPatternParts.length - 1;
     var patternPart = globPatternParts[idx];
     if (isRegularPathPart(patternPart)) {
@@ -477,7 +477,7 @@ public final class GlobResolver {
       throws IOException,
           SecurityManagerException,
           InvalidGlobPatternException,
-          ReaderProcessException {
+          ExternalReaderProcessException {
 
     var result = new LinkedHashMap<String, ResolvedGlobElement>();
     var hasAbsoluteGlob = globPattern.matches("\\w+:.*");

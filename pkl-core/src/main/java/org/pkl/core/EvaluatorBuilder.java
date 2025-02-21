@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
-import org.pkl.core.externalreader.ReaderProcess;
+import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -498,19 +498,21 @@ public final class EvaluatorBuilder {
     }
 
     // this isn't ideal as project and non-project ExternalReaderProcess instances can be dupes
-    var procs = new HashMap<ExternalReader, ReaderProcess>();
+    var procs = new HashMap<ExternalReader, ExternalReaderProcess>();
     if (settings.externalModuleReaders() != null) {
       for (var entry : settings.externalModuleReaders().entrySet()) {
         addModuleKeyFactory(
             ModuleKeyFactories.externalProcess(
-                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ReaderProcess::of)));
+                entry.getKey(),
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
     if (settings.externalResourceReaders() != null) {
       for (var entry : settings.externalResourceReaders().entrySet()) {
         addResourceReader(
             ResourceReaders.externalProcess(
-                entry.getKey(), procs.computeIfAbsent(entry.getValue(), ReaderProcess::of)));
+                entry.getKey(),
+                procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
     return this;

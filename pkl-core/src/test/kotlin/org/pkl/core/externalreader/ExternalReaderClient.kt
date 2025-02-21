@@ -16,7 +16,7 @@
 package org.pkl.core.externalreader
 
 import java.io.IOException
-import org.pkl.core.externalreader.ReaderMessages.*
+import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.Messages
@@ -25,9 +25,9 @@ import org.pkl.core.messaging.ProtocolException
 import org.pkl.core.util.Nullable
 
 /** An implementation of the client side of the external reader flow */
-class ReaderRuntime(
-  private val moduleReaders: List<ModuleReader>,
-  private val resourceReaders: List<ResourceReader>,
+class ExternalReaderClient(
+  private val externalModuleReaders: List<ExternalModuleReader>,
+  private val externalResourceReaders: List<ExternalResourceReader>,
   private val transport: MessageTransport,
 ) {
   /** Close the runtime and its transport. */
@@ -35,8 +35,8 @@ class ReaderRuntime(
     transport.close()
   }
 
-  private fun findModuleReader(scheme: String): @Nullable ModuleReader? {
-    for (moduleReader in moduleReaders) {
+  private fun findModuleReader(scheme: String): @Nullable ExternalModuleReader? {
+    for (moduleReader in externalModuleReaders) {
       if (moduleReader.scheme.equals(scheme, ignoreCase = true)) {
         return moduleReader
       }
@@ -44,8 +44,8 @@ class ReaderRuntime(
     return null
   }
 
-  private fun findResourceReader(scheme: String): @Nullable ResourceReader? {
-    for (resourceReader in resourceReaders) {
+  private fun findResourceReader(scheme: String): @Nullable ExternalResourceReader? {
+    for (resourceReader in externalResourceReaders) {
       if (resourceReader.scheme.equals(scheme, ignoreCase = true)) {
         return resourceReader
       }

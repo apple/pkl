@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 
 /** A factory for {@link ModuleKey}s. */
 public interface ModuleKeyFactory extends AutoCloseable {
@@ -38,7 +38,7 @@ public interface ModuleKeyFactory extends AutoCloseable {
    * @return a module key for the given URI
    */
   Optional<ModuleKey> create(URI uri)
-      throws URISyntaxException, ReaderProcessException, IOException;
+      throws URISyntaxException, ExternalReaderProcessException, IOException;
 
   /**
    * Closes this factory, releasing any resources held. See the documentation of factory methods in

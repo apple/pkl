@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
@@ -87,7 +87,7 @@ public final class ResourceManager {
     } catch (SecurityManagerException
         | PackageLoadError
         | HttpClientInitException
-        | ReaderProcessException e) {
+        | ExternalReaderProcessException e) {
       throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
     }
     return resource;

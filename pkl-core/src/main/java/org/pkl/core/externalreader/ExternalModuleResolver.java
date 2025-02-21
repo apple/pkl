@@ -23,9 +23,9 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.module.PathElement;
 
-public interface ModuleResolver {
-  static ModuleResolver of(MessageTransport transport, long evaluatorId) {
-    return new ModuleResolverImpl(transport, evaluatorId);
+public interface ExternalModuleResolver {
+  static ExternalModuleResolver of(MessageTransport transport, long evaluatorId) {
+    return new ExternalModuleResolverImpl(transport, evaluatorId);
   }
 
   String resolveModule(SecurityManager securityManager, URI uri)

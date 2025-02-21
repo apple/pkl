@@ -29,10 +29,10 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.externalreader.ReaderProcess;
-import org.pkl.core.externalreader.ReaderProcessException;
+import org.pkl.core.externalreader.ExternalReaderProcess;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.externalreader.ExternalResourceResolver;
 import org.pkl.core.externalreader.ResourceReaderSpec;
-import org.pkl.core.externalreader.ResourceResolver;
 import org.pkl.core.module.FileResolver;
 import org.pkl.core.module.ModulePathResolver;
 import org.pkl.core.module.PathElement;
@@ -144,27 +144,27 @@ public final class ResourceReaders {
   /**
    * Returns a reader for external reader resources.
    *
-   * <p>NOTE: {@code process} needs to be {@link ReaderProcess#close closed} to avoid resource
-   * leaks.
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
    */
-  public static ResourceReader externalProcess(String scheme, ReaderProcess process) {
+  public static ResourceReader externalProcess(String scheme, ExternalReaderProcess process) {
     return new ExternalProcess(scheme, process, 0);
   }
 
   /**
    * Returns a reader for external reader resources.
    *
-   * <p>NOTE: {@code process} needs to be {@link ReaderProcess#close closed} to avoid resource
-   * leaks.
+   * <p>NOTE: {@code process} needs to be {@link ExternalReaderProcess#close closed} to avoid
+   * resource leaks.
    */
   public static ResourceReader externalProcess(
-      String scheme, ReaderProcess process, long evaluatorId) {
+      String scheme, ExternalReaderProcess process, long evaluatorId) {
     return new ExternalProcess(scheme, process, evaluatorId);
   }
 
   /** Returns a reader for external and client reader resources. */
   public static ResourceReader externalResolver(
-      ResourceReaderSpec spec, ResourceResolver resolver) {
+      ResourceReaderSpec spec, ExternalResourceResolver resolver) {
     return new ExternalResolver(spec, resolver);
   }
 
@@ -552,7 +552,7 @@ public final class ResourceReaders {
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(baseUri);
       var packageAssetUri = PackageAssetUri.create(baseUri);
       var dependency =
@@ -574,7 +574,7 @@ public final class ResourceReaders {
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       securityManager.checkResolveResource(elementUri);
       var packageAssetUri = PackageAssetUri.create(elementUri);
       var dependency =
@@ -629,24 +629,25 @@ public final class ResourceReaders {
 
   private static final class ExternalProcess implements ResourceReader {
     private final String scheme;
-    private final ReaderProcess process;
+    private final ExternalReaderProcess process;
     private final long evaluatorId;
     private ExternalResolver underlying;
 
-    public ExternalProcess(String scheme, ReaderProcess process, long evaluatorId) {
+    public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
       this.process = process;
       this.evaluatorId = evaluatorId;
     }
 
-    private ExternalResolver getUnderlyingReader() throws ReaderProcessException, IOException {
+    private ExternalResolver getUnderlyingReader()
+        throws ExternalReaderProcessException, IOException {
       if (underlying != null) {
         return underlying;
       }
 
       var spec = process.getResourceReaderSpec(scheme);
       if (spec == null) {
-        throw new ReaderProcessException(
+        throw new ExternalReaderProcessException(
             ErrorMessages.create("externalReaderDoesNotSupportScheme", "resource", scheme));
       }
       underlying = new ExternalResolver(spec, process.getResourceResolver(evaluatorId));
@@ -659,29 +660,29 @@ public final class ResourceReaders {
     }
 
     @Override
-    public boolean hasHierarchicalUris() throws ReaderProcessException, IOException {
+    public boolean hasHierarchicalUris() throws ExternalReaderProcessException, IOException {
       return getUnderlyingReader().hasHierarchicalUris();
     }
 
     @Override
-    public boolean isGlobbable() throws ReaderProcessException, IOException {
+    public boolean isGlobbable() throws ExternalReaderProcessException, IOException {
       return getUnderlyingReader().isGlobbable();
     }
 
     @Override
-    public Optional<Object> read(URI uri) throws IOException, ReaderProcessException {
+    public Optional<Object> read(URI uri) throws IOException, ExternalReaderProcessException {
       return getUnderlyingReader().read(uri);
     }
 
     @Override
     public boolean hasElement(SecurityManager securityManager, URI elementUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return getUnderlyingReader().hasElement(securityManager, elementUri);
     }
 
     @Override
     public List<PathElement> listElements(SecurityManager securityManager, URI baseUri)
-        throws IOException, SecurityManagerException, ReaderProcessException {
+        throws IOException, SecurityManagerException, ExternalReaderProcessException {
       return getUnderlyingReader().listElements(securityManager, baseUri);
     }
 
@@ -693,9 +694,9 @@ public final class ResourceReaders {
 
   private static final class ExternalResolver implements ResourceReader {
     private final ResourceReaderSpec readerSpec;
-    private final ResourceResolver resolver;
+    private final ExternalResourceResolver resolver;
 
-    public ExternalResolver(ResourceReaderSpec readerSpec, ResourceResolver resolver) {
+    public ExternalResolver(ResourceReaderSpec readerSpec, ExternalResourceResolver resolver) {
       this.readerSpec = readerSpec;
       this.resolver = resolver;
     }

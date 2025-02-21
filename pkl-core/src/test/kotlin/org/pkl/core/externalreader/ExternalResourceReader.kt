@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalreader;
+package org.pkl.core.externalreader
 
-public final class ReaderProcessException extends Exception {
-  public ReaderProcessException(String msg) {
-    super(msg);
-  }
+import java.net.URI
+import org.pkl.core.messaging.Messages.ResourceReaderSpec
 
-  public ReaderProcessException(Throwable cause) {
-    super(cause);
-  }
+/** An external resource reader, to be used with [ExternalReaderClient]. */
+interface ExternalResourceReader : ExternalReaderBase {
+  fun read(uri: URI): ByteArray
+
+  val spec: ResourceReaderSpec
+    get() = ResourceReaderSpec(scheme, hasHierarchicalUris, isGlobbable)
 }

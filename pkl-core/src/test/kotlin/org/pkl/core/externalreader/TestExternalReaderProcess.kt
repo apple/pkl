@@ -23,12 +23,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import kotlin.random.Random
-import org.pkl.core.externalreader.ReaderMessages.*
+import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.messaging.ProtocolException
 
-class TestReaderProcess(private val transport: MessageTransport) : ReaderProcess {
+class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
   private val initializeModuleReaderResponses: MutableMap<String, Future<ModuleReaderSpec?>> =
     ConcurrentHashMap()
   private val initializeResourceReaderResponses: MutableMap<String, Future<ResourceReaderSpec?>> =
@@ -39,11 +39,11 @@ class TestReaderProcess(private val transport: MessageTransport) : ReaderProcess
     transport.close()
   }
 
-  override fun getModuleResolver(evaluatorId: Long): ModuleResolver =
-    ModuleResolver.of(transport, evaluatorId)
+  override fun getModuleResolver(evaluatorId: Long): ExternalModuleResolver =
+    ExternalModuleResolver.of(transport, evaluatorId)
 
-  override fun getResourceResolver(evaluatorId: Long): ResourceResolver =
-    ResourceResolver.of(transport, evaluatorId)
+  override fun getResourceResolver(evaluatorId: Long): ExternalResourceResolver =
+    ExternalResourceResolver.of(transport, evaluatorId)
 
   fun run() {
     try {
@@ -102,25 +102,32 @@ class TestReaderProcess(private val transport: MessageTransport) : ReaderProcess
 
   companion object {
     fun initializeTestHarness(
-      moduleReaders: List<ModuleReader>,
-      resourceReaders: List<ResourceReader>,
-    ): Pair<TestReaderProcess, ReaderRuntime> {
+      externalModuleReaders: List<ExternalModuleReader>,
+      externalResourceReaders: List<ExternalResourceReader>,
+    ): Pair<TestExternalReaderProcess, ExternalReaderClient> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
       val txIn = PipedInputStream(10240)
       val txOut = PipedOutputStream(txIn)
       val serverTransport =
-        MessageTransports.stream(MessagePackDecoder(rxIn), MessagePackEncoder(txOut)) {}
+        MessageTransports.stream(
+          ExternalReaderMessagePackDecoder(rxIn),
+          ExternalReaderMessagePackEncoder(txOut),
+        ) {}
       val clientTransport =
-        MessageTransports.stream(MessagePackDecoder(txIn), MessagePackEncoder(rxOut)) {}
+        MessageTransports.stream(
+          ExternalReaderMessagePackDecoder(txIn),
+          ExternalReaderMessagePackEncoder(rxOut),
+        ) {}
 
-      val runtime = ReaderRuntime(moduleReaders, resourceReaders, clientTransport)
-      val proc = TestReaderProcess(serverTransport)
+      val client =
+        ExternalReaderClient(externalModuleReaders, externalResourceReaders, clientTransport)
+      val proc = TestExternalReaderProcess(serverTransport)
 
-      Thread(runtime::run).start()
+      Thread(client::run).start()
       Thread(proc::run).start()
 
-      return proc to runtime
+      return proc to client
     }
   }
 }

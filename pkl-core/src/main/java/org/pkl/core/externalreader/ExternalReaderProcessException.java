@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.externalreader
+package org.pkl.core.externalreader;
 
-import java.net.URI
-import org.pkl.core.module.PathElement
+public final class ExternalReaderProcessException extends Exception {
+  public ExternalReaderProcessException(String msg) {
+    super(msg);
+  }
 
-class TestResourceReader : ResourceReader {
-  override val scheme: String = "test"
-
-  override val hasHierarchicalUris: Boolean = false
-
-  override val isGlobbable: Boolean = false
-
-  override fun read(uri: URI): ByteArray = "success".toByteArray(Charsets.UTF_8)
-
-  override fun listElements(uri: URI): List<PathElement> = emptyList()
+  public ExternalReaderProcessException(Throwable cause) {
+    super(cause);
+  }
 }

@@ -137,6 +137,17 @@ public record PklEvaluatorSettings(
   }
 
   public record Proxy(@Nullable URI address, @Nullable List<String> noProxy) {
+    @Deprecated(forRemoval = true)
+    public static Proxy create(@Nullable String address, @Nullable List<String> noProxy) {
+      URI addressUri;
+      try {
+        addressUri = address == null ? null : new URI(address);
+      } catch (URISyntaxException e) {
+        throw new PklException(ErrorMessages.create("invalidUri", address));
+      }
+      return new Proxy(addressUri, noProxy);
+    }
+
     public static @Nullable Proxy parse(Value input) {
       if (input instanceof PNull) {
         return null;
