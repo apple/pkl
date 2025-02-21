@@ -7,6 +7,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-double-precision: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
 :uri-progressive-disclosure: https://en.wikipedia.org/wiki/Progressive_disclosure
 :uri-javadoc-Pattern: https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html
+:uri-github-PklLexer: {uri-github-tree}/pkl-core/src/main/java/org/pkl/core/parser/Lexer.java
 :uri-pkl-core-ModuleSchema: {uri-pkl-core-main-sources}/ModuleSchema.java
 :uri-pkl-core-SecurityManager: {uri-pkl-core-main-sources}/SecurityManager.java
 :uri-pkl-core-ResourceReader: {uri-pkl-core-main-sources}/resource/ResourceReader.java
@@ -5448,6 +5449,8 @@ They cannot be used as a regular identifier, and currently do not have any meani
 * `vararg`
 
 To use these names in an identifier, <<quoted-identifiers, surround them with backticks>>.
+
+For a complete list of keywords, consult field `Lexer.KEYWORDS` in {uri-github-PklLexer}[Lexer.java].
 
 [[blank-identifiers]]
 === Blank Identifiers
