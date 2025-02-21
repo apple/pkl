@@ -17,14 +17,14 @@ package org.pkl.config.java.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.OverriddenProperty;
+import com.example.records.OverriddenProperty;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.pkl.config.java.ConfigEvaluator;
 import org.pkl.core.ModuleSource;
 
-@Tag("generate-classes")
-class PObjectToDataObjectOverriddenPropertyTest {
+@Tag("generate-records")
+class RecordPObjectToDataObjectOverriddenPropertyTest {
   @Test
   void overriddenProperty() {
     try (var evaluator = ConfigEvaluator.preconfigured()) {
@@ -32,8 +32,8 @@ class PObjectToDataObjectOverriddenPropertyTest {
           evaluator
               .evaluate(ModuleSource.modulePath("/codegenPkl/OverriddenProperty.pkl"))
               .as(OverriddenProperty.class);
-      assertThat(result.theClass.bar.get(0).prop1).isEqualTo("hello");
-      assertThat(result.theClass.bar.get(0).prop2).isEqualTo("hello again");
+      assertThat(result.theClass().bar().get(0).prop1()).isEqualTo("hello");
+      assertThat(result.theClass().bar().get(0).prop2()).isEqualTo("hello again");
     }
   }
 }

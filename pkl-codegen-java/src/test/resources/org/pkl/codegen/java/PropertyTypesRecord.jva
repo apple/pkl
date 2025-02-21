@@ -1,0 +1,181 @@
+package my;
+
+import java.lang.Object;
+import java.lang.Override;
+import java.lang.String;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import org.pkl.codegen.java.common.code.Wither;
+import org.pkl.config.java.mapper.Named;
+import org.pkl.config.java.mapper.NonNull;
+import org.pkl.core.DataSize;
+import org.pkl.core.DataSizeUnit;
+import org.pkl.core.Duration;
+import org.pkl.core.DurationUnit;
+import org.pkl.core.Pair;
+
+public record Mod() {
+  public record PropertyTypes(@Named("boolean") boolean _boolean, @Named("int") long _int,
+      @Named("float") double _float, @Named("string") @NonNull String string,
+      @Named("duration") @NonNull Duration duration,
+      @Named("durationUnit") @NonNull DurationUnit durationUnit,
+      @Named("dataSize") @NonNull DataSize dataSize,
+      @Named("dataSizeUnit") @NonNull DataSizeUnit dataSizeUnit, @Named("nullable") String nullable,
+      @Named("nullable2") String nullable2, @Named("pair") @NonNull Pair<Object, Object> pair,
+      @Named("pair2") @NonNull Pair<@NonNull String, @NonNull Other> pair2,
+      @Named("coll") @NonNull Collection<Object> coll,
+      @Named("coll2") @NonNull Collection<@NonNull Other> coll2,
+      @Named("list") @NonNull List<Object> list,
+      @Named("list2") @NonNull List<@NonNull Other> list2, @Named("set") @NonNull Set<Object> set,
+      @Named("set2") @NonNull Set<@NonNull Other> set2,
+      @Named("map") @NonNull Map<Object, Object> map,
+      @Named("map2") @NonNull Map<@NonNull String, @NonNull Other> map2,
+      @Named("container") @NonNull Map<Object, Object> container,
+      @Named("container2") @NonNull Map<@NonNull String, @NonNull Other> container2,
+      @Named("other") @NonNull Other other, @Named("regex") @NonNull Pattern regex,
+      @Named("any") Object any, @Named("nonNull") @NonNull Object nonNull,
+      @Named("enum") @NonNull Direction _enum) implements Wither<PropertyTypes, PropertyTypes.Memento> {
+    @Override
+    public PropertyTypes with(final Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public boolean _boolean;
+
+      public long _int;
+
+      public double _float;
+
+      public @NonNull String string;
+
+      public @NonNull Duration duration;
+
+      public @NonNull DurationUnit durationUnit;
+
+      public @NonNull DataSize dataSize;
+
+      public @NonNull DataSizeUnit dataSizeUnit;
+
+      public String nullable;
+
+      public String nullable2;
+
+      public @NonNull Pair<Object, Object> pair;
+
+      public @NonNull Pair<@NonNull String, @NonNull Other> pair2;
+
+      public @NonNull Collection<Object> coll;
+
+      public @NonNull Collection<@NonNull Other> coll2;
+
+      public @NonNull List<Object> list;
+
+      public @NonNull List<@NonNull Other> list2;
+
+      public @NonNull Set<Object> set;
+
+      public @NonNull Set<@NonNull Other> set2;
+
+      public @NonNull Map<Object, Object> map;
+
+      public @NonNull Map<@NonNull String, @NonNull Other> map2;
+
+      public @NonNull Map<Object, Object> container;
+
+      public @NonNull Map<@NonNull String, @NonNull Other> container2;
+
+      public @NonNull Other other;
+
+      public @NonNull Pattern regex;
+
+      public Object any;
+
+      public @NonNull Object nonNull;
+
+      public @NonNull Direction _enum;
+
+      private Memento(final PropertyTypes r) {
+        _boolean = r._boolean;
+        _int = r._int;
+        _float = r._float;
+        string = r.string;
+        duration = r.duration;
+        durationUnit = r.durationUnit;
+        dataSize = r.dataSize;
+        dataSizeUnit = r.dataSizeUnit;
+        nullable = r.nullable;
+        nullable2 = r.nullable2;
+        pair = r.pair;
+        pair2 = r.pair2;
+        coll = r.coll;
+        coll2 = r.coll2;
+        list = r.list;
+        list2 = r.list2;
+        set = r.set;
+        set2 = r.set2;
+        map = r.map;
+        map2 = r.map2;
+        container = r.container;
+        container2 = r.container2;
+        other = r.other;
+        regex = r.regex;
+        any = r.any;
+        nonNull = r.nonNull;
+        _enum = r._enum;
+      }
+
+      private PropertyTypes build() {
+        return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      }
+    }
+  }
+
+  public record Other(@Named("name") @NonNull String name) implements Wither<Other, Other.Memento> {
+    @Override
+    public Other with(final Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public @NonNull String name;
+
+      private Memento(final Other r) {
+        name = r.name;
+      }
+
+      private Other build() {
+        return new Other(name);
+      }
+    }
+  }
+
+  public enum Direction {
+    NORTH("north"),
+
+    EAST("east"),
+
+    SOUTH("south"),
+
+    WEST("west");
+
+    private String value;
+
+    private Direction(String value) {
+      this.value = value;
+    }
+
+    @Override
+    public String toString() {
+      return this.value;
+    }
+  }
+}

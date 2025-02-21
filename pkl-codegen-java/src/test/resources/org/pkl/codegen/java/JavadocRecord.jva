@@ -1,0 +1,66 @@
+package my;
+
+import java.lang.Override;
+import java.lang.String;
+import java.util.function.Consumer;
+import org.pkl.codegen.java.common.code.Wither;
+import org.pkl.config.java.mapper.Named;
+import org.pkl.config.java.mapper.NonNull;
+
+/**
+ * module comment.
+ * *emphasized* `code`.
+ *
+ * @param pigeon module property comment.
+ * *emphasized* `code`.
+ */
+public record Mod(
+    @Named("pigeon") Mod. @NonNull Person pigeon) implements Wither<Mod, Mod.Memento> {
+  @Override
+  public Mod with(final Consumer<Memento> setter) {
+    final var memento = new Memento(this);
+    setter.accept(memento);
+    return memento.build();
+  }
+
+  public static final class Memento {
+    public @NonNull Person pigeon;
+
+    private Memento(final Mod r) {
+      pigeon = r.pigeon;
+    }
+
+    private Mod build() {
+      return new Mod(pigeon);
+    }
+  }
+
+  /**
+   * class comment.
+   * *emphasized* `code`.
+   *
+   * @param name class property comment.
+   * *emphasized* `code`.
+   */
+  public record Person(
+      @Named("name") @NonNull String name) implements Wither<Person, Person.Memento> {
+    @Override
+    public Person with(final Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public @NonNull String name;
+
+      private Memento(final Person r) {
+        name = r.name;
+      }
+
+      private Person build() {
+        return new Person(name);
+      }
+    }
+  }
+}
