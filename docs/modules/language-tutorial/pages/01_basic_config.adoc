@@ -134,6 +134,7 @@ exampleObjectWithMixedElements {
 <2> Elements don't have to be literal values; they can be arbitrary _expressions_.
 <3> Elements can really be _any_ value, not just primitive values.
 
+[[entries]]
 === Entries
 
 Objects can have one more kind of member; _entries_.

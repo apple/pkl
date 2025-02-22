@@ -71,6 +71,7 @@ endif::[]
 :uri-stdlib-analyzeModule: {uri-pkl-stdlib-docs}/analyze
 :uri-stdlib-jsonnetModule: {uri-pkl-stdlib-docs}/jsonnet
 :uri-stdlib-reflectModule: {uri-pkl-stdlib-docs}/reflect
+:uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
@@ -142,3 +143,5 @@ endif::[]
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
+
+:uri-pkl-roadmap: https://github.com/orgs/apple/projects/12/views/1
