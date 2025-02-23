@@ -40,7 +40,7 @@ public record Mod() {
       @Named("any") Object any, @Named("nonNull") @NonNull Object nonNull,
       @Named("enum") @NonNull Direction _enum) implements Wither<PropertyTypes, PropertyTypes.Memento> {
     @Override
-    public PropertyTypes with(final Consumer<Memento> setter) {
+    public @NonNull PropertyTypes with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -101,7 +101,7 @@ public record Mod() {
 
       public @NonNull Direction _enum;
 
-      private Memento(final PropertyTypes r) {
+      private Memento(final @NonNull PropertyTypes r) {
         _boolean = r._boolean;
         _int = r._int;
         _float = r._float;
@@ -131,7 +131,7 @@ public record Mod() {
         _enum = r._enum;
       }
 
-      private PropertyTypes build() {
+      private @NonNull PropertyTypes build() {
         return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
       }
     }
@@ -139,7 +139,7 @@ public record Mod() {
 
   public record Other(@Named("name") @NonNull String name) implements Wither<Other, Other.Memento> {
     @Override
-    public Other with(final Consumer<Memento> setter) {
+    public @NonNull Other with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -148,11 +148,11 @@ public record Mod() {
     public static final class Memento {
       public @NonNull String name;
 
-      private Memento(final Other r) {
+      private Memento(final @NonNull Other r) {
         name = r.name;
       }
 
-      private Other build() {
+      private @NonNull Other build() {
         return new Other(name);
       }
     }

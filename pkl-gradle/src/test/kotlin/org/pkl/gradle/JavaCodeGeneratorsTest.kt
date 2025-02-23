@@ -40,14 +40,16 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(witherText)
       .isEqualToIgnoringWhitespace(
         """
-        package org.pkl.codegen.java.common.code;
-  
-        import java.util.function.Consumer;
-  
-        public interface Wither<R extends Record, S> {
-           R with(Consumer<S> setter);
-        }
-      """
+          package org.pkl.codegen.java.common.code;
+          
+          import java.lang.Record;
+          import java.util.function.Consumer;
+          import org.jspecify.annotations.NonNull;
+          
+          public interface Wither<@NonNull R extends @NonNull Record, @NonNull S> {
+            @NonNull R with(@NonNull Consumer<@NonNull S> setter);
+          }
+        """
           .trimIndent()
       )
 
@@ -65,24 +67,27 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     checkTextContains(
       text,
       """
-      public record Mod(@Named("other") @Nonnull Object other) implements Wither<Mod, Mod.Memento> {
-    """,
+        public record Mod(@Named("other") @NonNull Object other) implements Wither<Mod, Mod.Memento> {
+      """
+        .trimIndent(),
     )
 
     checkTextContains(
       text,
       """
-      public record Person(@Named("name") @Nonnull String name,
-          @Named("addresses") @Nonnull List<Address> addresses) implements Wither<Person, Person.Memento> {
-    """,
+        public record Person(@Named("name") @NonNull String name,
+            @Named("addresses") @NonNull List<Address> addresses) implements Wither<Person, Person.Memento> {
+      """
+        .trimIndent(),
     )
 
     checkTextContains(
       text,
       """
-      public record Address(@Named("street") @Nonnull String street,
-          @Named("zip") long zip) implements Wither<Address, Address.Memento> {
-    """,
+        public record Address(@Named("street") @NonNull String street,
+            @Named("zip") long zip) implements Wither<Address, Address.Memento> {
+      """
+        .trimIndent(),
     )
   }
 
@@ -107,29 +112,32 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     checkTextContains(
       text,
       """
-      |public final class Mod {
-      |  public final @Nonnull Object other;
-    """,
+        public final class Mod {
+          public final @NonNull Object other;
+      """
+        .trimIndent(),
     )
 
     checkTextContains(
       text,
       """
-      |  public static final class Person {
-      |    public final @Nonnull String name;
-      |
-      |    public final @Nonnull List<Address> addresses;
-    """,
+        public static final class Person {
+          public final @NonNull String name;
+      
+          public final @NonNull List<Address> addresses;
+      """
+        .trimIndent(),
     )
 
     checkTextContains(
       text,
       """
-      |  public static final class Address {
-      |    public final @Nonnull String street;
-      |
-      |    public final long zip;
-    """,
+        public static final class Address {
+          public final @NonNull String street;
+      
+          public final long zip;
+      """
+        .trimIndent(),
     )
   }
 
@@ -202,7 +210,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(result.output).contains("No source modules specified.")
   }
 
-  private fun writeBuildFile(isGenerateRecords: Boolean = false) {
+  private fun writeBuildFile(isGenerateRecords: Boolean = false, javaVersion: String = "21") {
     writeFile(
       "build.gradle",
       """
@@ -215,9 +223,15 @@ class JavaCodeGeneratorsTest : AbstractTest() {
         mavenCentral()
       }
 
+      java {
+          toolchain {
+              languageVersion = JavaLanguageVersion.of($javaVersion)
+          }
+      }
+
       dependencies {
         implementation "javax.inject:javax.inject:1"
-        implementation "com.google.code.findbugs:jsr305:3.0.2"
+        implementation "org.jspecify:jspecify:1.0.0"
       }
 
       pkl {
@@ -226,7 +240,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             sourceModules = ["mod.pkl"]
             outputDir = file("build/generated")
             paramsAnnotation = "javax.inject.Named"
-            nonNullAnnotation = "javax.annotation.Nonnull"
+            nonNullAnnotation = "org.jspecify.annotations.NonNull"
             generateRecords = $isGenerateRecords
             settingsModule = "pkl:settings"
             renames = [

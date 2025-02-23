@@ -151,18 +151,66 @@ class JavaRecordCodeGenerator(
       }
     }
 
-    fun generateCommonCode(): String =
-      """
-      package $commonCodePackage;
+    private fun nonNullAnnotation(codegenOptions: JavaCodeGeneratorOptions): AnnotationSpec {
+      val annotation = codegenOptions.nonNullAnnotation
+      val className =
+        if (annotation == null) {
+          ClassName.get("org.pkl.config.java.mapper", "NonNull")
+        } else {
+          toClassName(annotation)
+        }
+      return AnnotationSpec.builder(className).build()
+    }
 
-      import java.util.function.Consumer;
-      
-      public interface Wither<R extends Record, S> {
-         R with(Consumer<S> setter);
-      }
-    """
-        .trimIndent()
+    // package $commonCodePackage;
+    //
+    // import java.util.function.Consumer;
+    //
+    // public interface Wither<@NonNull R extends @NonNull Record, @NonNull S> {
+    //   @NonNull R with(@NonNull Consumer<@NonNull S> setter);
+    // }
+    fun generateCommonCode(codegenOptions: JavaCodeGeneratorOptions): String {
+      val interfaceSpec =
+        TypeSpec.interfaceBuilder("Wither")
+          .addModifiers(Modifier.PUBLIC)
+          .addTypeVariable(
+            TypeVariableName.get(
+                "R",
+                ClassName.get("java.lang", "Record").annotated(nonNullAnnotation(codegenOptions)),
+              )
+              .annotated(nonNullAnnotation(codegenOptions)) as TypeVariableName
+          )
+          .addTypeVariable(
+            TypeVariableName.get("S").annotated(nonNullAnnotation(codegenOptions))
+              as TypeVariableName
+          )
+          .addMethod(
+            MethodSpec.methodBuilder("with")
+              .addParameter(
+                ParameterSpec.builder(
+                    ParameterizedTypeName.get(
+                        ClassName.get("java.util.function", "Consumer"),
+                        TypeVariableName.get("S").annotated(nonNullAnnotation(codegenOptions)),
+                      )
+                      .annotated(nonNullAnnotation(codegenOptions)),
+                    "setter",
+                  )
+                  .build()
+              )
+              .returns(TypeVariableName.get("R").annotated(nonNullAnnotation(codegenOptions)))
+              .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+              .build()
+          )
+          .build()
+
+      return JavaFile.builder(commonCodePackage, interfaceSpec).build().toString()
+    }
   }
+
+  private data class GeneratedType(
+    val typeClass: TypeSpec.Builder?,
+    val typeInterface: TypeSpec.Builder?,
+  )
 
   val output: Map<String, String>
     get() {
@@ -186,18 +234,6 @@ class JavaRecordCodeGenerator(
         .toString()
     }
 
-  private val nonNullAnnotation: AnnotationSpec
-    get() {
-      val annotation = codegenOptions.nonNullAnnotation
-      val className =
-        if (annotation == null) {
-          ClassName.get("org.pkl.config.java.mapper", "NonNull")
-        } else {
-          toClassName(annotation)
-        }
-      return AnnotationSpec.builder(className).build()
-    }
-
   private fun getJavaFileName(isInterface: Boolean): String {
     val (packageName, className) = nameMapper.map(schema.moduleName)
     val dirPath = packageName.replace('.', '/')
@@ -218,58 +254,47 @@ class JavaRecordCodeGenerator(
 
     val pModuleClass = schema.moduleClass
 
-    val (moduleClass: TypeSpec.Builder, moduleInterface: TypeSpec.Builder?) =
-      generateTypeSpec(pModuleClass, schema).let {
-        when {
-          pModuleClass.isAbstract -> it[TypeSpec.Kind.INTERFACE]!! to null
-          pModuleClass.isOpen -> it[TypeSpec.Kind.RECORD]!! to it[TypeSpec.Kind.INTERFACE]
-          else -> it[TypeSpec.Kind.RECORD]!! to null
-        }
-      }
+    val generatedModule = generateTypeSpec(pModuleClass, schema)
+    val moduleClass = generatedModule.typeClass!!
+    val moduleInterface = generatedModule.typeInterface
 
     for (pClass in schema.classes.values) {
-      generateTypeSpec(pClass, schema).forEach { moduleClass.addType(it.value.build()) }
+      val generatedType = generateTypeSpec(pClass, schema)
+      generatedType.typeInterface?.let { moduleClass.addType(it.build()) }
+      generatedType.typeClass?.let { moduleClass.addType(it.build()) }
     }
 
     for (typeAlias in schema.typeAliases.values) {
       val stringLiterals = mutableSetOf<String>()
       if (CodeGeneratorUtils.isRepresentableAsEnum(typeAlias.aliasedType, stringLiterals)) {
-        moduleClass.addType(generateEnumTypeSpec(typeAlias, stringLiterals).build())
+        moduleClass?.addType(generateEnumTypeSpec(typeAlias, stringLiterals).build())
       }
     }
 
     val (packageName, _) = nameMapper.map(schema.moduleName)
 
-    val moduleMap: Map<String, String> =
-      mapOf(
+    val modulePair: kotlin.Pair<String, String> =
+      moduleClass.let {
         getJavaFileName(isInterface = false) to
           JavaFile.builder(packageName, moduleClass.build())
             .indent(codegenOptions.indent)
             .build()
             .toString()
-      )
+      }
 
-    val interfaceMap =
+    val interfacePair: kotlin.Pair<String, String>? =
       moduleInterface?.let {
-        mapOf(
-          getJavaFileName(isInterface = true) to
-            JavaFile.builder(packageName, moduleInterface.build())
-              .indent(codegenOptions.indent)
-              .build()
-              .toString()
-        )
-      } ?: emptyMap()
+        getJavaFileName(isInterface = true) to
+          JavaFile.builder(packageName, moduleInterface.build())
+            .indent(codegenOptions.indent)
+            .build()
+            .toString()
+      }
 
-    return moduleMap + interfaceMap
+    return listOfNotNull(modulePair, interfacePair).toMap()
   }
 
-  // 1. if pClass is module then a singleton list of module type
-  // 2. if pClass is abstract then a singleton list of interface type
-  // 3. else a list of a record type + its default interface type
-  private fun generateTypeSpec(
-    pClass: PClass,
-    schema: ModuleSchema,
-  ): Map<TypeSpec.Kind, TypeSpec.Builder> {
+  private fun generateTypeSpec(pClass: PClass, schema: ModuleSchema): GeneratedType {
     val isModuleClass = pClass == schema.moduleClass
     val javaPoetClassName = pClass.toJavaPoetName()
     val superclass =
@@ -334,7 +359,6 @@ class JavaRecordCodeGenerator(
             .firstOrNull { it.classInfo == PClassInfo.Deprecated }
             ?.let { deprecation ->
               (deprecation["message"] as String?)?.let {
-                //                CodeBlock.of("""${'$'}L${'$'}W""", renderAsJavadoc(it))
                 CodeBlock.of("""${'$'}L""", renderAsJavadoc(it))
               }
             }
@@ -351,8 +375,6 @@ class JavaRecordCodeGenerator(
                 .firstOrNull { it.classInfo == PClassInfo.Deprecated }
                 ?.let { deprecation ->
                   (deprecation["message"] as String?)?.let {
-                    //                    CodeBlock.of("""${'$'}N - ${'$'}L${'$'}W""", k,
-                    // renderAsJavadoc(it))
                     CodeBlock.of("""${'$'}N - ${'$'}L""", k, renderAsJavadoc(it))
                   }
                 }
@@ -387,14 +409,7 @@ class JavaRecordCodeGenerator(
         paramBuilder.addJavadoc(renderAsJavadoc(property.docComment!!))
       }
 
-      generateDeprecation(
-        property.annotations,
-        hasJavadoc,
-        { paramBuilder.addAnnotation(it) },
-        //        { paramBuilder.addJavadoc(it) }, // FIXME improve by doing something with
-        // @deprecated
-        {}, // no Javadocs on parameters!
-      )
+      generateDeprecation(property.annotations, hasJavadoc, { paramBuilder.addAnnotation(it) }, {})
 
       builder.addParameter(paramBuilder.build())
     }
@@ -413,8 +428,7 @@ class JavaRecordCodeGenerator(
 
       if (superProperties.isNotEmpty()) {
         for ((name, property) in superProperties) {
-          if (properties.containsKey(name))
-            continue // FIXME should be the other way around - superProps should be first, right?
+          if (properties.containsKey(name)) continue
           addCtorParameter(builder, name, property)
         }
       }
@@ -467,7 +481,6 @@ class JavaRecordCodeGenerator(
     }
 
     fun generateWither(builder: TypeSpec.Builder, constructorSpec: MethodSpec) {
-      // org.pkl.codegen.java.common.code.Wither<R, R.Memento> wherein R is this record class
       builder.addSuperinterface(
         ParameterizedTypeName.get(
           ClassName.get(commonCodePackage, "Wither"),
@@ -476,19 +489,19 @@ class JavaRecordCodeGenerator(
         )
       )
 
-      // add the `with` method with its standard body
       val withMethod =
         MethodSpec.methodBuilder("with")
           .addModifiers(Modifier.PUBLIC)
           .addParameter(
             ParameterizedTypeName.get(
-              ClassName.get(Consumer::class.java),
-              ClassName.get("", "Memento"),
-            ),
+                ClassName.get(Consumer::class.java),
+                ClassName.get("", "Memento"),
+              )
+              .nullableIf(false),
             "setter",
             Modifier.FINAL,
           )
-          .returns(ClassName.get("", javaPoetClassName.simpleName()))
+          .returns(ClassName.get("", javaPoetClassName.simpleName()).nullableIf(false))
           .addAnnotation(Override::class.java)
           .addCode(
             """
@@ -514,7 +527,11 @@ class JavaRecordCodeGenerator(
           .addMethod(
             MethodSpec.constructorBuilder()
               .addModifiers(Modifier.PRIVATE)
-              .addParameter(ClassName.get("", javaPoetClassName.simpleName()), "r", Modifier.FINAL)
+              .addParameter(
+                ClassName.get("", javaPoetClassName.simpleName()).nullableIf(false),
+                "r",
+                Modifier.FINAL,
+              )
               .addCode(
                 CodeBlock.builder()
                   .apply {
@@ -529,7 +546,7 @@ class JavaRecordCodeGenerator(
           .addMethod(
             MethodSpec.methodBuilder("build")
               .addModifiers(Modifier.PRIVATE)
-              .returns(ClassName.get("", javaPoetClassName.simpleName()))
+              .returns(ClassName.get("", javaPoetClassName.simpleName()).nullableIf(false))
               .addCode(
                 CodeBlock.builder()
                   .addStatement(
@@ -569,7 +586,6 @@ class JavaRecordCodeGenerator(
       superclass?.let { builder.addSuperinterface(it.toJavaPoetName(forceInterface = true)) }
 
       for ((name, property) in properties) {
-        // TODO: See generateField method
         val methodBuilder =
           MethodSpec.methodBuilder(name)
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -644,13 +660,11 @@ class JavaRecordCodeGenerator(
     }
 
     return when {
-      pClass.isAbstract -> mapOf(TypeSpec.Kind.INTERFACE to generateInterface())
-      pClass.isOpen ->
-        mapOf(
-          TypeSpec.Kind.INTERFACE to generateInterface(),
-          TypeSpec.Kind.RECORD to generateClass(),
-        )
-      else -> mapOf(TypeSpec.Kind.RECORD to generateClass())
+      pClass.isAbstract ->
+        if (pClass.isModuleClass) GeneratedType(generateInterface(), null)
+        else GeneratedType(null, generateInterface())
+      pClass.isOpen -> GeneratedType(generateClass(), generateInterface())
+      else -> GeneratedType(generateClass(), null)
     }
   }
 
@@ -836,6 +850,7 @@ class JavaRecordCodeGenerator(
             when {
               !classInfo.isStandardLibraryClass ->
                 pClass.toJavaPoetName(forceInterface = forceInterface).nullableIf(nullable)
+
               else ->
                 throw JavaCodeGeneratorException(
                   "Standard library class `${pClass.qualifiedName}` is not supported by Java code generator. " +
@@ -847,8 +862,10 @@ class JavaRecordCodeGenerator(
 
       is PType.Nullable ->
         baseType.toJavaPoetName(forceInterface = forceInterface, nullable = true, boxed = true)
+
       is PType.Constrained ->
         baseType.toJavaPoetName(forceInterface = forceInterface, nullable = nullable, boxed = boxed)
+
       is PType.Alias ->
         when (typeAlias.qualifiedName) {
           "pkl.base#NonNull" -> OBJECT.nullableIf(nullable)
@@ -899,7 +916,7 @@ class JavaRecordCodeGenerator(
 
   private fun TypeName.nullableIf(isNullable: Boolean): TypeName =
     if (isPrimitive && isNullable) box()
-    else if (isPrimitive || isNullable) this else annotated(nonNullAnnotation)
+    else if (isPrimitive || isNullable) this else annotated(nonNullAnnotation(codegenOptions))
 
   private fun TypeName.boxIf(shouldBox: Boolean): TypeName = if (shouldBox) box() else this
 

@@ -18,7 +18,7 @@ public record Mod() {
 
   public record None(@Named("one") long one) implements Foo, INone, Wither<None, None.Memento> {
     @Override
-    public None with(final Consumer<Memento> setter) {
+    public @NonNull None with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -27,11 +27,11 @@ public record Mod() {
     public static final class Memento {
       public long one;
 
-      private Memento(final None r) {
+      private Memento(final @NonNull None r) {
         one = r.one;
       }
 
-      private None build() {
+      private @NonNull None build() {
         return new None(one);
       }
     }
@@ -44,7 +44,7 @@ public record Mod() {
   public record Bar(@Named("one") long one,
       @Named("two") String two) implements INone, IBar, Wither<Bar, Bar.Memento> {
     @Override
-    public Bar with(final Consumer<Memento> setter) {
+    public @NonNull Bar with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -55,12 +55,12 @@ public record Mod() {
 
       public String two;
 
-      private Memento(final Bar r) {
+      private Memento(final @NonNull Bar r) {
         one = r.one;
         two = r.two;
       }
 
-      private Bar build() {
+      private @NonNull Bar build() {
         return new Bar(one, two);
       }
     }
@@ -69,7 +69,7 @@ public record Mod() {
   public record Baz(@Named("one") long one, @Named("two") String two,
       @Named("three") @NonNull Duration three) implements IBar, Wither<Baz, Baz.Memento> {
     @Override
-    public Baz with(final Consumer<Memento> setter) {
+    public @NonNull Baz with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -82,13 +82,13 @@ public record Mod() {
 
       public @NonNull Duration three;
 
-      private Memento(final Baz r) {
+      private Memento(final @NonNull Baz r) {
         one = r.one;
         two = r.two;
         three = r.three;
       }
 
-      private Baz build() {
+      private @NonNull Baz build() {
         return new Baz(one, two, three);
       }
     }

@@ -30,13 +30,16 @@ class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      if (options.generateRecords) {
-        options.outputDir.resolve(JavaRecordCodeGenerator.commonCodePackageFile).apply {
-          createParentDirectories().writeString(JavaRecordCodeGenerator.generateCommonCode())
-        }
-      }
-
       builder.build().use { evaluator ->
+        if (options.generateRecords) {
+          options.outputDir.resolve(JavaRecordCodeGenerator.commonCodePackageFile).apply {
+            createParentDirectories()
+              .writeString(
+                JavaRecordCodeGenerator.generateCommonCode(options.toJavaCodeGeneratorOptions())
+              )
+          }
+        }
+
         for (moduleUri in options.base.normalizedSourceModules) {
           val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
 

@@ -51,17 +51,7 @@ class JavaRecordCodeGeneratorTest {
     private const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
 
     private val commonCodeSource: kotlin.Pair<String, String> =
-      "org/pkl/codegen/java/common/code/Wither.java" to
-        """
-        package org.pkl.codegen.java.common.code;
-  
-        import java.util.function.Consumer;
-  
-        public interface Wither<R extends Record, S> {
-           R with(Consumer<S> setter);
-        }
-      """
-          .trimIndent()
+      "org/pkl/codegen/java/common/code/Wither.java" to generateCommonCode()
 
     private fun inMemoryCompile(sourceFiles: Map<String, String>): Map<String, Class<*>> {
       return InMemoryJavaCompiler.compile(sourceFiles + commonCodeSource)
@@ -133,6 +123,9 @@ class JavaRecordCodeGeneratorTest {
       propertyTypesSources.compile()
     }
 
+    private fun generateCommonCode(options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions()) =
+      JavaRecordCodeGenerator.generateCommonCode(options)
+
     private fun generateJavaCode(
       pklCode: String,
       options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions(),
@@ -158,6 +151,52 @@ class JavaRecordCodeGeneratorTest {
   }
 
   @TempDir lateinit var tempDir: Path
+
+  @Test
+  fun testCommonCode() {
+    val javaCode = generateCommonCode(JavaCodeGeneratorOptions(generateRecords = true))
+    assertThat(javaCode)
+      .containsIgnoringWhitespaces(
+        """
+          package org.pkl.codegen.java.common.code;
+          
+          import java.lang.Record;
+          import java.util.function.Consumer;
+          import org.pkl.config.java.mapper.NonNull;
+          
+          public interface Wither<@NonNull R extends @NonNull Record, @NonNull S> {
+            @NonNull R with(@NonNull Consumer<@NonNull S> setter);
+          }
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun testCommonCodeWithNonNullAnnotation() {
+    val javaCode =
+      generateCommonCode(
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          nonNullAnnotation = "very.custom.HelloNull",
+        )
+      )
+    assertThat(javaCode)
+      .containsIgnoringWhitespaces(
+        """
+          package org.pkl.codegen.java.common.code;
+          
+          import java.lang.Record;
+          import java.util.function.Consumer;
+          import very.custom.HelloNull;
+          
+          public interface Wither<@HelloNull R extends @HelloNull Record, @HelloNull S> {
+            @HelloNull R with(@HelloNull Consumer<@HelloNull S> setter);
+          }
+        """
+          .trimMargin()
+      )
+  }
 
   @Test
   fun testEquals() {
@@ -961,31 +1000,31 @@ class JavaRecordCodeGeneratorTest {
           )
           .containsIgnoringWhitespaces(
             """
-                public record Bar(@Named("x") long x,
-                    @Named("y") @NonNull String y) implements Foo, Wither<Bar, Bar.Memento> {
-                  @Override
-                  public Bar with(final Consumer<Memento> setter) {
-                    final var memento = new Memento(this);
-                    setter.accept(memento);
-                    return memento.build();
+              public record Bar(@Named("x") long x,
+                  @Named("y") @NonNull String y) implements Foo, Wither<Bar, Bar.Memento> {
+                @Override
+                public @NonNull Bar with(final @NonNull Consumer<Memento> setter) {
+                  final var memento = new Memento(this);
+                  setter.accept(memento);
+                  return memento.build();
+                }
+            
+                public static final class Memento {
+                  public long x;
+            
+                  public @NonNull String y;
+            
+                  private Memento(final @NonNull Bar r) {
+                    x = r.x;
+                    y = r.y;
                   }
-              
-                  public static final class Memento {
-                    public long x;
-              
-                    public @NonNull String y;
-              
-                    private Memento(final Bar r) {
-                      x = r.x;
-                      y = r.y;
-                    }
-              
-                    private Bar build() {
-                      return new Bar(x, y);
-                    }
+            
+                  private @NonNull Bar build() {
+                    return new Bar(x, y);
                   }
                 }
               }
+            }
             """
               .trimIndent()
           )
@@ -1986,17 +2025,17 @@ class JavaRecordCodeGeneratorTest {
               
                 public record Foo() implements IFoo, Wither<Foo, Foo.Memento> {
                   @Override
-                  public Foo with(final Consumer<Memento> setter) {
+                  public @NonNull Foo with(final @NonNull Consumer<Memento> setter) {
                     final var memento = new Memento(this);
                     setter.accept(memento);
                     return memento.build();
                   }
               
                   public static final class Memento {
-                    private Memento(final Foo r) {
+                    private Memento(final @NonNull Foo r) {
                     }
               
-                    private Foo build() {
+                    private @NonNull Foo build() {
                       return new Foo();
                     }
                   }
@@ -2005,7 +2044,7 @@ class JavaRecordCodeGeneratorTest {
                 public record TheFoo(
                     @Named("fooProp") @NonNull String fooProp) implements IFoo, Wither<TheFoo, TheFoo.Memento> {
                   @Override
-                  public TheFoo with(final Consumer<Memento> setter) {
+                  public @NonNull TheFoo with(final @NonNull Consumer<Memento> setter) {
                     final var memento = new Memento(this);
                     setter.accept(memento);
                     return memento.build();
@@ -2014,11 +2053,11 @@ class JavaRecordCodeGeneratorTest {
                   public static final class Memento {
                     public @NonNull String fooProp;
               
-                    private Memento(final TheFoo r) {
+                    private Memento(final @NonNull TheFoo r) {
                       fooProp = r.fooProp;
                     }
               
-                    private TheFoo build() {
+                    private @NonNull TheFoo build() {
                       return new TheFoo(fooProp);
                     }
                   }
@@ -2031,7 +2070,7 @@ class JavaRecordCodeGeneratorTest {
                 public record OpenClass(
                     @Named("prop") @NonNull Foo prop) implements IOpenClass, Wither<OpenClass, OpenClass.Memento> {
                   @Override
-                  public OpenClass with(final Consumer<Memento> setter) {
+                  public @NonNull OpenClass with(final @NonNull Consumer<Memento> setter) {
                     final var memento = new Memento(this);
                     setter.accept(memento);
                     return memento.build();
@@ -2040,11 +2079,11 @@ class JavaRecordCodeGeneratorTest {
                   public static final class Memento {
                     public @NonNull Foo prop;
               
-                    private Memento(final OpenClass r) {
+                    private Memento(final @NonNull OpenClass r) {
                       prop = r.prop;
                     }
               
-                    private OpenClass build() {
+                    private @NonNull OpenClass build() {
                       return new OpenClass(prop);
                     }
                   }
@@ -2053,7 +2092,7 @@ class JavaRecordCodeGeneratorTest {
                 public record TheClass(
                     @Named("prop") @NonNull TheFoo prop) implements IOpenClass, Wither<TheClass, TheClass.Memento> {
                   @Override
-                  public TheClass with(final Consumer<Memento> setter) {
+                  public @NonNull TheClass with(final @NonNull Consumer<Memento> setter) {
                     final var memento = new Memento(this);
                     setter.accept(memento);
                     return memento.build();
@@ -2062,11 +2101,11 @@ class JavaRecordCodeGeneratorTest {
                   public static final class Memento {
                     public @NonNull TheFoo prop;
               
-                    private Memento(final TheClass r) {
+                    private Memento(final @NonNull TheClass r) {
                       prop = r.prop;
                     }
               
-                    private TheClass build() {
+                    private @NonNull TheClass build() {
                       return new TheClass(prop);
                     }
                   }
@@ -2105,106 +2144,7 @@ class JavaRecordCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .satisfies({
-        assertThat(it.text)
-          .containsIgnoringWhitespaces(
-            """
-              public record Mod() {
-                public interface IFoo {
-                }
-              
-                public record Foo() implements IFoo, Wither<Foo, Foo.Memento> {
-                  @Override
-                  public Foo with(final Consumer<Memento> setter) {
-                    final var memento = new Memento(this);
-                    setter.accept(memento);
-                    return memento.build();
-                  }
-              
-                  public static final class Memento {
-                    private Memento(final Foo r) {
-                    }
-              
-                    private Foo build() {
-                      return new Foo();
-                    }
-                  }
-                }
-              
-                public record TheFoo(
-                    @Named("fooProp") @NonNull String fooProp) implements IFoo, Wither<TheFoo, TheFoo.Memento> {
-                  @Override
-                  public TheFoo with(final Consumer<Memento> setter) {
-                    final var memento = new Memento(this);
-                    setter.accept(memento);
-                    return memento.build();
-                  }
-              
-                  public static final class Memento {
-                    public @NonNull String fooProp;
-              
-                    private Memento(final TheFoo r) {
-                      fooProp = r.fooProp;
-                    }
-              
-                    private TheFoo build() {
-                      return new TheFoo(fooProp);
-                    }
-                  }
-                }
-              
-                public interface IOpenClass {
-                  @NonNull IFoo prop();
-                }
-              
-                public record OpenClass(
-                    @Named("prop") @NonNull Foo prop) implements IOpenClass, Wither<OpenClass, OpenClass.Memento> {
-                  @Override
-                  public OpenClass with(final Consumer<Memento> setter) {
-                    final var memento = new Memento(this);
-                    setter.accept(memento);
-                    return memento.build();
-                  }
-              
-                  public static final class Memento {
-                    public @NonNull Foo prop;
-              
-                    private Memento(final OpenClass r) {
-                      prop = r.prop;
-                    }
-              
-                    private OpenClass build() {
-                      return new OpenClass(prop);
-                    }
-                  }
-                }
-              
-                public record TheClass(
-                    @Named("prop") @NonNull TheFoo prop) implements IOpenClass, Wither<TheClass, TheClass.Memento> {
-                  @Override
-                  public TheClass with(final Consumer<Memento> setter) {
-                    final var memento = new Memento(this);
-                    setter.accept(memento);
-                    return memento.build();
-                  }
-              
-                  public static final class Memento {
-                    public @NonNull TheFoo prop;
-              
-                    private Memento(final TheClass r) {
-                      prop = r.prop;
-                    }
-              
-                    private TheClass build() {
-                      return new TheClass(prop);
-                    }
-                  }
-                }
-              }
-            """
-              .trimMargin()
-          )
-      })
+      .satisfies({ assertThat(it.text).doesNotContainPattern("""get\w+[(]""") })
   }
 
   @Test

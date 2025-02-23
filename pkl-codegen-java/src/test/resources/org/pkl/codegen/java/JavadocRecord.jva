@@ -17,7 +17,7 @@ import org.pkl.config.java.mapper.NonNull;
 public record Mod(
     @Named("pigeon") Mod. @NonNull Person pigeon) implements Wither<Mod, Mod.Memento> {
   @Override
-  public Mod with(final Consumer<Memento> setter) {
+  public @NonNull Mod with(final @NonNull Consumer<Memento> setter) {
     final var memento = new Memento(this);
     setter.accept(memento);
     return memento.build();
@@ -26,11 +26,11 @@ public record Mod(
   public static final class Memento {
     public @NonNull Person pigeon;
 
-    private Memento(final Mod r) {
+    private Memento(final @NonNull Mod r) {
       pigeon = r.pigeon;
     }
 
-    private Mod build() {
+    private @NonNull Mod build() {
       return new Mod(pigeon);
     }
   }
@@ -45,7 +45,7 @@ public record Mod(
   public record Person(
       @Named("name") @NonNull String name) implements Wither<Person, Person.Memento> {
     @Override
-    public Person with(final Consumer<Memento> setter) {
+    public @NonNull Person with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
       setter.accept(memento);
       return memento.build();
@@ -54,11 +54,11 @@ public record Mod(
     public static final class Memento {
       public @NonNull String name;
 
-      private Memento(final Person r) {
+      private Memento(final @NonNull Person r) {
         name = r.name;
       }
 
-      private Person build() {
+      private @NonNull Person build() {
         return new Person(name);
       }
     }
