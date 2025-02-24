@@ -6,6 +6,10 @@ local open class Person2 { name: String; hidden age: Int }
 
 local class Teenager extends Person2 { age = 15 }
 
+local class Myself {
+  me: Any
+}
+
 facts {
   local set: Set<Int> = IntSeq(1, 100).fold(Set(), (res, n) -> res.add(n))
   
@@ -52,5 +56,33 @@ facts {
   ["hidden members of superclass aren't included in hash code - Typed"] {
     local obj = new Teenager { name = "Jojo" }
     set.add(obj).length == 101
+  }
+
+  ["can compute hash code of cyclical objects - Dynamic"] {
+    local myself1: Dynamic = new { me = myself1 }
+    local myself2: Dynamic = new { me = List(myself2) }
+    local myself3: Dynamic = new { me = Set(myself3) }
+    local myself4: Dynamic = new { me = Pair(1, myself4) }
+    local myself5: Dynamic = new { me = Map(1, myself5) }
+
+    set.add(myself1).contains(myself1)
+    set.add(myself2).contains(myself2)
+    set.add(myself3).contains(myself3)
+    set.add(myself4).contains(myself4)
+    set.add(myself5).contains(myself5)
+  }
+
+  ["can compute hash code of cyclical objects - Typed"] {
+    local myself1: Myself = new { me = myself1 }
+    local myself2: Myself = new { me = List(myself2) }
+    local myself3: Myself = new { me = Set(myself3) }
+    local myself4: Myself = new { me = Pair(1, myself4) }
+    local myself5: Myself = new { me = Map(1, myself5) }
+
+    set.add(myself1).contains(myself1)
+    set.add(myself2).contains(myself2)
+    set.add(myself3).contains(myself3)
+    set.add(myself4).contains(myself4)
+    set.add(myself5).contains(myself5)
   }
 }

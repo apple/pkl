@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.pkl.core.runtime;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmValue {
@@ -90,4 +93,11 @@ public abstract class VmValue {
   /** Enables calling `vmValue.equals()` when not behind a Truffle boundary. */
   @Override
   public abstract boolean equals(Object obj);
+
+  @Override
+  public final int hashCode() {
+    return computeHashCode(Collections.newSetFromMap(new IdentityHashMap<>()));
+  }
+
+  abstract int computeHashCode(Set<VmValue> seenValues);
 }

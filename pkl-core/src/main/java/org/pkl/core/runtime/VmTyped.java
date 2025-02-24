@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.Set;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
@@ -195,17 +196,16 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
-  @TruffleBoundary
-  public int hashCode() {
+  int computeHashCode(Set<VmValue> seenValues) {
     if (cachedHash != 0) return cachedHash;
-
     force(false);
+
     var result = 0;
 
     for (var key : clazz.getAllRegularPropertyNames()) {
       var value = getCachedValue(key);
       assert value != null;
-      result = 31 * result + value.hashCode();
+      result = 31 * result + VmUtils.computeHashCode(value, seenValues);
     }
 
     cachedHash = result;

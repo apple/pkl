@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -343,9 +343,17 @@ public final class VmSet extends VmCollection {
   }
 
   @Override
-  @TruffleBoundary
-  public int hashCode() {
-    return set.hashCode();
+  int computeHashCode(Set<VmValue> seenValues) {
+    int ret = 1;
+
+    for (Object item : set) {
+      ret *= 31;
+      if (item != null) {
+        ret += VmUtils.computeHashCode(item, seenValues);
+      }
+    }
+
+    return ret;
   }
 
   private static final class Builder implements VmCollection.Builder<VmSet> {
