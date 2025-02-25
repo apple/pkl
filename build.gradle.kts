@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,25 @@ idea {
         afterSync(provider { project(":pkl-core").tasks.named("makeIntelliJAntlrPluginHappy") })
       }
     }
+  }
+}
+
+tasks.register("writeRuntimeDependencies") {
+  doLast {
+    val outputFile = file(rootDir.resolve("runtimeDependencies.txt"))
+    outputFile.createNewFile()
+    val deps = mutableSetOf<String>()
+    subprojects.forEach { subproject ->
+      if (subproject.name != "stdlib") {
+        subproject.configurations
+          .getByName("runtimeClasspath")
+          .resolvedConfiguration
+          .lenientConfiguration
+          .allModuleDependencies
+          .forEach { deps += "${it.moduleGroup}:${it.moduleName}" }
+      }
+    }
+    outputFile.writeText(deps.toList().sorted().joinToString("\n"))
   }
 }
 

@@ -6,6 +6,7 @@
 build/
 generated/
 testgenerated/
+runtimeDependencies.txt
 
 # IntelliJ
 .idea/
