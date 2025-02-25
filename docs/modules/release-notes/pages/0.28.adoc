@@ -130,9 +130,9 @@ The following snippet fails in Pkl 0.26, but passes in Pkl 0.27:
 ----
 class Bird { name: String }
 
-birds: Listing(nonEmpty) = new { 1; 2; 3 }
-
 local nonEmpty = (it: Listing<Bird>) -> !it.isEmpty
+
+birds: Listing(nonEmpty) = new { 1; 2; 3 }
 ----
 
 This is because the function parameter `it: Listing<Bird>` does not actually check members of the argument until they are accessed, and the function body `!it.isEmpty` does not access any members.
@@ -170,7 +170,7 @@ Thanks to https://github.com/odenix[@odenix] for their contribution!
 
 ==== New `--params-annotation=none` argument
 
-In pkl-codegen-java, the `--params-annoatation` flag now accepts `none` as a value, which causes the code generator to skip adding annotations to a constructor's parameters.
+In pkl-codegen-java, the `--params-annotation` flag now accepts `none` as a value, which causes the code generator to skip adding annotations to a constructor's parameters.
 
 Additionally, these annotations will not be added if the `--generate-spring-boot-config` flag is set.
 
@@ -350,7 +350,6 @@ The following bugs have been fixed.
 * Spread elements inside an object body don't need separators (https://github.com/apple/pkl/issues/932[#932])
 * Bad import analysis fails with "None (cause has no message)" (https://github.com/apple/pkl/issues/949[#949])
 * Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/937[#937])
-* Parser accepts wrong string escapes (https://github.com/apple/pkl/issues/888[#888])
 * ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
 * Doc comments with interleaving comments result in an error (https://github.com/apple/pkl/issues/931[#931])
 
