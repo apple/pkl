@@ -14,7 +14,7 @@ Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
 The next release (0.29) is scheduled for June 2025.
-To see what's coming in the future, follow the https://github.com/orgs/apple/projects/12/views/1[Pkl Roadmap].
+To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
 Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
@@ -328,11 +328,11 @@ For users that use both Pkl and other Truffle languages, this means that their v
 
 == Miscellaneous [small]#🐸#
 
-* Pkl's version of Kotlin has been upgraded to 2.0 (https://github.com/apple/pkl/pull/900[#900]).
-* The repository now requires Java 21 or higher to build (https://github.com/apple/pkl/pull/876[#876]).
 * Documentation improvements (https://github.com/apple/pkl/pull/792[#792], https://github.com/apple/pkl/pull/846[#846], https://github.com/apple/pkl/pull/860[#860], https://github.com/apple/pkl/pull/892[#892], https://github.com/apple/pkl/pull/921[#921], https://github.com/apple/pkl/pull/937[#937], https://github.com/apple/pkl/pull/943[#943], https://github.com/apple/pkl/pull/944[#944], https://github.com/apple/pkl/pull/955[#955], https://github.com/apple/pkl/pull/956[#956], https://github.com/apple/pkl/pull/973[#973]).
-* Allow setting commit id via `-DcommitId` flag when building Pkl (https://github.com/apple/pkl/pull/954[#954]).
+* The repository now requires Java 21 or higher to build (https://github.com/apple/pkl/pull/876[#876]).
 * Enable multi-jdk testing via `-DmultiJdkTesting=true` flag when building Pkl (https://github.com/apple/pkl/pull/876[#876]).
+* Pkl's version of Kotlin has been upgraded to 2.0 (https://github.com/apple/pkl/pull/900[#900]).
+* Allow setting commit id via `-DcommitId` flag when building Pkl (https://github.com/apple/pkl/pull/954[#954]).
 
 == Bugs fixed [small]#🐜#
 
@@ -347,11 +347,11 @@ The following bugs have been fixed.
 * Parser accepts wrong string escapes (https://github.com/apple/pkl/issues/888[#888])
 * Downstream native-image embedders are broken (https://github.com/apple/pkl/issues/907[#907])
 * Failed type constraint error messages do not show forced members (https://github.com/apple/pkl/issues/918[#918])
-* Spread elements inside an object body don't need separators (https://github.com/apple/pkl/issues/932[#932])
-* Bad import analysis fails with "None (cause has no message)" (https://github.com/apple/pkl/issues/949[#949])
-* Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/937[#937])
-* ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
 * Doc comments with interleaving comments result in an error (https://github.com/apple/pkl/issues/931[#931])
+* Spread elements inside an object body don't need separators (https://github.com/apple/pkl/issues/932[#932])
+* Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/937[#937])
+* Bad import analysis fails with "None (cause has no message)" (https://github.com/apple/pkl/issues/949[#949])
+* ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
 
 == Contributors [small]#🙏#
 
