@@ -2,7 +2,6 @@
 include::ROOT:partial$component-attributes.adoc[]
 :uri-common-mark: https://commonmark.org/
 :uri-newspeak: https://newspeaklanguage.org
-:uri-antlr4: https://www.antlr.org
 :uri-prototypical-inheritance: https://en.wikipedia.org/wiki/Prototype-based_programming
 :uri-double-precision: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
 :uri-progressive-disclosure: https://en.wikipedia.org/wiki/Progressive_disclosure

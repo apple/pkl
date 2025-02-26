@@ -2,7 +2,7 @@
 include::ROOT:partial$component-attributes.adoc[]
 
 [[release-0.28.0]]
-== 0.28.0 (UNRELEASED)
+== 0.28.0 (2025-02-26)
 
 xref:0.28.adoc[Release notes]
 
