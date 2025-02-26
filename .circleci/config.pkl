@@ -148,6 +148,8 @@ jobs {
         command = #"""
           # exclude build_artifacts.txt from publish
           rm -f pkl-cli/build/executable/*.build_artifacts.txt
+          find pkl-cli/build/executable/* -type d | xargs rm -rf 
+          rm -f pkl-cli/build/executable/resources
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
