@@ -162,25 +162,29 @@ This fixes some known bugs with the current for-generator implementation, and al
 
 Thanks to https://github.com/odenix[@odenix] for their contribution!
 
-=== Code generator improvements
+=== Java code generator improvements
 
-Improvements have been made to the Java/Kotlin code generators (https://github.com/apple/pkl/pull/792[#792], https://github.com/apple/pkl/pull/793[#793]).
-
-Thanks to https://github.com/odenix[@odenix] for their contribution!
-
-==== New `--params-annotation=none` argument
+Improvements have been made to the Java code generator (https://github.com/apple/pkl/pull/792[#792]).
 
 In pkl-codegen-java, the `--params-annotation` flag now accepts `none` as a value, which causes the code generator to skip adding annotations to a constructor's parameters.
+Additionally, the Kotlin API `org.pkl.codegen.java.JavaCodeGeneratorOptions.paramsAnnotation` is now nullable.
+If null, this also skips adding annotations.
 
-Additionally, these annotations will not be added if the `--generate-spring-boot-config` flag is set.
+By default, this annotation is set to `org.pkl.config.java.mapper.Named`, or none if the `--generate-spring-boot-config` flag is set.
 
 This is useful for those compiling Java code with the `-parameters` flag set, because the pkl-config-java library is able to map into these classes without any extra annotations.
 
-==== Consistent `toString()` representation
+Thanks to https://github.com/odenix[@odenix] for their contribution!
+
+=== Kotlin code generator improvements
+
+Improvements have been made to the Kotlin code generator (https://github.com/apple/pkl/pull/793[#793]).
 
 Currently, the output of `toString()` on a generated Kotlin class differs depending on if it was generated as a data class or as a regular class.
 
 In Pkl 0.28, this method produces the same format, and matches the format used by data classes.
+
+Thanks to https://github.com/odenix[@odenix] for their contribution!
 
 === pkldoc improvements
 
@@ -254,7 +258,7 @@ The minimum Gradle version for the xref:main:pkl-gradle:index.adoc[Gradle Plugin
 
 === Java/Kotlin API breaking changes
 
-Breaking changes have been made to the Java/Kotlin APIs (https://github.com/apple/pkl/pull/748[#748], https://github.com/apple/pkl/pull/749[#749], https://github.com/apple/pkl/pull/776[#776], https://github.com/apple/pkl/pull/808[#808], https://github.com/apple/pkl/pull/810[#810]).
+Breaking changes have been made to the Java/Kotlin APIs (https://github.com/apple/pkl/pull/748[#748], https://github.com/apple/pkl/pull/749[#749], https://github.com/apple/pkl/pull/776[#776], https://github.com/apple/pkl/pull/793[#793], https://github.com/apple/pkl/pull/808[#808], https://github.com/apple/pkl/pull/810[#810]).
 
 |===
 |API |Breakage
@@ -307,8 +311,10 @@ Breaking changes have been made to the Java/Kotlin APIs (https://github.com/appl
 | org.pkl.core.messaging{wbr}.CreateEvaluatorRequest 
 | Changed properties `allowedModules` and `allowedResources` to be of type `List<String>` instead of `List<Pattern>`
 
-|
-org.pkl.codegen.kotlin{wbr}.CliKotlinCodeGeneratorOptions{wbr}.toKotlinCodegenOptions
+| org.pkl.codegen.kotlin{wbr}.KotlinCodegenOptions
+| Renamed to org.pkl.codegen.kotlin.KotlinCodeGeneratorOptions
+
+| org.pkl.codegen.kotlin{wbr}.CliKotlinCodeGeneratorOptions{wbr}.toKotlinCodegenOptions
 | Deprecated without replacement
 
 | org.pkl.codegen.java{wbr}.JavaCodegenOptions
@@ -347,11 +353,11 @@ The following bugs have been fixed.
 * Parser accepts wrong string escapes (https://github.com/apple/pkl/issues/888[#888])
 * Downstream native-image embedders are broken (https://github.com/apple/pkl/issues/907[#907])
 * Failed type constraint error messages do not show forced members (https://github.com/apple/pkl/issues/918[#918])
+* ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
 * Doc comments with interleaving comments result in an error (https://github.com/apple/pkl/issues/931[#931])
 * Spread elements inside an object body don't need separators (https://github.com/apple/pkl/issues/932[#932])
-* Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/937[#937])
+* Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/941[#941])
 * Bad import analysis fails with "None (cause has no message)" (https://github.com/apple/pkl/issues/949[#949])
-* ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
 
 == Contributors [small]#🙏#
 
