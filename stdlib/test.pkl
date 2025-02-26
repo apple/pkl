@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 ///
 /// To write tests, amend this module and define [facts] or [examples] (or both).
 /// To run tests, evaluate the amended module.
-@ModuleInfo { minPklVersion = "0.28.0" }
+@ModuleInfo { minPklVersion = "0.29.0" }
 open module pkl.test
 
 /// Named groups of boolean expressions that are expected to evaluate to [true].
