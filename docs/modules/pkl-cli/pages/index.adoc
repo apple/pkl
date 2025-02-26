@@ -89,7 +89,7 @@ endif::[]
 [[mise]]
 === Mise
 
-On macOS and Linux, release versions can be installed using {uri-ubi}[the Universal Binary Installer (UBI)] with {uri-mise}[Mise].
+On macOS, Linux, and Windows, release versions can be installed using {uri-ubi}[the Universal Binary Installer (UBI)] with {uri-mise}[Mise].
 
 ifdef::is-release-version[]
 To install Pkl, run:
