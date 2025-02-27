@@ -95,8 +95,9 @@ ifdef::is-release-version[]
 To install Pkl, run:
 
 [source,shell]
+[subs="+attributes"]
 ----
-mise install -g ubi:apple/pkl@latest
+mise use -g pkl@{pkl-version}
 ----
 
 You can then run `mise use` to activate the latest version either globally or locally:
