@@ -154,25 +154,9 @@ public abstract class BasePklTask extends DefaultTask {
   // TODO: Remove this workaround when ugprading to Truffle 24.2+ (Truffle automatically falls back
   // in this scenario).
   protected void withFallbackTruffleRuntime(Runnable task) {
-    var prevUseFallbackRuntime = System.getProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG);
-    var prevWarnInterpreterOnly = System.getProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG);
-    try {
-      System.setProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG, "true");
-      System.setProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG, "false");
-      task.run();
-    } finally {
-      // try to be kind to Gradle and reset these system properties after execution
-      if (prevUseFallbackRuntime != null) {
-        System.setProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG, prevUseFallbackRuntime);
-      } else {
-        System.clearProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG);
-      }
-      if (prevWarnInterpreterOnly != null) {
-        System.setProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG, prevWarnInterpreterOnly);
-      } else {
-        System.clearProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG);
-      }
-    }
+    System.setProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG, "true");
+    System.setProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG, "false");
+    task.run();
   }
 
   @TaskAction
