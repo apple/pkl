@@ -1,6 +1,8 @@
 = CLI
 include::ROOT:partial$component-attributes.adoc[]
 :uri-homebrew: https://brew.sh
+:uri-mise: https://mise.jdx.dev
+:uri-ubi: https://github.com/houseabsolute/ubi
 
 :uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}
 :uri-pkl-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-amd64&e=bin
@@ -82,6 +84,29 @@ endif::[]
 
 ifndef::is-release-version[]
 For instructions, switch to a release version of this page.
+endif::[]
+
+[[mise]]
+=== Mise
+
+On macOS, Linux, and Windows, release versions can be installed using {uri-ubi}[the Universal Binary Installer (UBI)] with {uri-mise}[Mise].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+[subs="+attributes"]
+----
+mise use -g pkl@{pkl-version}
+----
+
+You can then run `mise use` to activate the latest version either globally or locally:
+
+[source,shell]
+----
+mise use -g ubi:apple/pkl@latest # Activate it globally
+mise use ubi:apple/pkl@latest
+----
 endif::[]
 
 [[download]]
