@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,11 @@ import org.pkl.core.util.Nullable;
 import org.pkl.gradle.utils.PluginUtils;
 
 public abstract class BasePklTask extends DefaultTask {
+  private static final String TRUFFLE_USE_FALLBACK_RUNTIME_FLAG = "truffle.UseFallbackRuntime";
+
+  private static final String POLYGLOT_WARN_INTERPRETER_ONLY_FLAG =
+      "polyglot.engine.WarnInterpreterOnly";
+
   @Input
   public abstract ListProperty<String> getAllowedModules();
 
@@ -137,9 +142,26 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract ListProperty<String> getHttpNoProxy();
 
+  /**
+   * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
+   * Truffle use an un-optimized runtime.
+   *
+   * @see <a
+   *     href="https://discuss.gradle.org/t/loading-a-native-library-in-a-gradle-plugin/44854">https://discuss.gradle.org/t/loading-a-native-library-in-a-gradle-plugin/44854</a>
+   * @see <a
+   *     href="https://github.com/apple/pkl/issues/988">https://github.com/apple/pkl/issues/988</a>
+   */
+  // TODO: Remove this workaround when ugprading to Truffle 24.2+ (Truffle automatically falls back
+  // in this scenario).
+  protected void withFallbackTruffleRuntime(Runnable task) {
+    System.setProperty(TRUFFLE_USE_FALLBACK_RUNTIME_FLAG, "true");
+    System.setProperty(POLYGLOT_WARN_INTERPRETER_ONLY_FLAG, "false");
+    task.run();
+  }
+
   @TaskAction
   public void runTask() {
-    doRunTask();
+    withFallbackTruffleRuntime(this::doRunTask);
   }
 
   protected abstract void doRunTask();
