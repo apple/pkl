@@ -15,6 +15,7 @@
  */
 import java.nio.charset.StandardCharsets
 import java.util.*
+import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 
 plugins {
   pklAllProjects
@@ -71,6 +72,8 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
 
   // placeholder output to satisfy up-to-date check
   val outputFile = layout.buildDirectory.file("testStartFatJar/${name}.txt")
+  outputs.file(outputFile)
+
   inputs.files(tasks.shadowJar)
   executable = launcher.get().executablePath.asFile.absolutePath
 
@@ -88,9 +91,12 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
     }
   )
 
-  doFirst { outputFile.get().asFile.delete() }
-
-  doLast { outputFile.get().asFile.writeText("OK") }
+  doLast {
+    outputFile.get().asFile.let { file ->
+      file.ensureParentDirsCreated()
+      file.writeText("OK")
+    }
+  }
 }
 
 val testStartFatJar by
