@@ -65,6 +65,58 @@ val javadocJar by
 
 tasks.shadowJar { archiveBaseName.set("pkl-tools-all") }
 
+private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
+  dependsOn(tasks.shadowJar)
+  group = "verification"
+
+  // placeholder output to satisfy up-to-date check
+  val outputFile = layout.buildDirectory.file("testStartFatJar/${name}.txt")
+  inputs.files(tasks.shadowJar)
+  executable = launcher.get().executablePath.asFile.absolutePath
+
+  argumentProviders.add(
+    CommandLineArgumentProvider {
+      buildList {
+        add("-cp")
+        add(tasks.shadowJar.get().outputs.files.singleFile.absolutePath)
+        add("org.pkl.cli.Main")
+        add("eval")
+        add("-x")
+        add("1 + 1")
+        add("pkl:base")
+      }
+    }
+  )
+
+  doFirst { outputFile.get().asFile.delete() }
+
+  doLast { outputFile.get().asFile.writeText("OK") }
+}
+
+val testStartFatJar by
+  tasks.registering(Exec::class) { configureTestStartFatJar(buildInfo.javaTestLauncher) }
+
+tasks.validateFatJar { dependsOn(testStartFatJar) }
+
+for (jdkTarget in buildInfo.jdkTestRange) {
+  if (buildInfo.jdkToolchainVersion == jdkTarget) {
+    tasks.register("testStartFatJarJdk${jdkTarget.asInt()}") {
+      group = "verification"
+      description = "alias for testStartFatJar"
+      dependsOn(testStartFatJar)
+    }
+  } else {
+    val task =
+      tasks.register("testStartFatJarJdk${jdkTarget.asInt()}", Exec::class) {
+        val launcher = project.javaToolchains.launcherFor { languageVersion = jdkTarget }
+        configureTestStartFatJar(launcher)
+      }
+    if (buildInfo.multiJdkTesting) {
+      tasks.validateFatJar { dependsOn(task) }
+    }
+  }
+}
+
 publishing {
   publications {
     named<MavenPublication>("fatJar") {
