@@ -15,7 +15,8 @@
  */
 import java.nio.charset.StandardCharsets
 import java.util.*
-import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
 
 plugins {
   pklAllProjects
@@ -92,8 +93,8 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
   )
 
   doLast {
-    outputFile.get().asFile.let { file ->
-      file.ensureParentDirsCreated()
+    outputFile.get().asFile.toPath().let { file ->
+      file.parent.createDirectories()
       file.writeText("OK")
     }
   }
