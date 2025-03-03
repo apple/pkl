@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
 import kotlin.io.path.createDirectories
@@ -77,6 +78,7 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
 
   inputs.files(tasks.shadowJar)
   executable = launcher.get().executablePath.asFile.absolutePath
+  standardOutput = OutputStream.nullOutputStream()
 
   argumentProviders.add(
     CommandLineArgumentProvider {

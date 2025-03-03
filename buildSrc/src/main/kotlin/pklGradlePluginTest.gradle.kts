@@ -23,7 +23,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
 
   when (val taskNameSuffix = matchResult.groupValues[1]) {
     "All" ->
-      task("compatibilityTestAll") {
+      tasks.register("compatibilityTestAll") {
         dependsOn(
           "compatibilityTestReleases",
           "compatibilityTestCandidate",
@@ -32,7 +32,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
       }
     // releases in configured range
     "Releases" ->
-      task("compatibilityTestReleases") {
+      tasks.register("compatibilityTestReleases") {
         val versionInfos = GradleVersionInfo.fetchReleases()
         val allVersions =
           versionInfos
@@ -49,7 +49,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
       }
     // latest release (if not developing against latest)
     "Latest" ->
-      task("compatibilityTestLatest") {
+      tasks.register("compatibilityTestLatest") {
         val versionInfo = GradleVersionInfo.fetchCurrent()
         if (versionInfo.version == gradle.gradleVersion) {
           doLast {
@@ -64,7 +64,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
       }
     // active release candidate (if any)
     "Candidate" ->
-      task("compatibilityTestCandidate") {
+      tasks.register("compatibilityTestCandidate") {
         val versionInfo = GradleVersionInfo.fetchRc()
         if (versionInfo?.activeRc == true) {
           dependsOn(createCompatibilityTestTask(versionInfo))
@@ -74,7 +74,7 @@ tasks.addRule("Pattern: compatibilityTest[All|Releases|Latest|Candidate|Nightly|
       }
     // latest nightly
     "Nightly" ->
-      task("compatibilityTestNightly") {
+      tasks.register("compatibilityTestNightly") {
         val versionInfo = GradleVersionInfo.fetchNightly()
         dependsOn(createCompatibilityTestTask(versionInfo))
       }
