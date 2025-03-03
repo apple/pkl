@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Information about the platform that the current program runs on.
-@ModuleInfo { minPklVersion = "0.28.0" }
+@ModuleInfo { minPklVersion = "0.28.1" }
 module pkl.platform
 
 /// The platform that the current program runs on.

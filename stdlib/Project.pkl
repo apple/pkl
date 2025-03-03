@@ -64,7 +64,7 @@
 ///   value = project
 /// }
 /// ``` 
-@ModuleInfo { minPklVersion = "0.28.0" }
+@ModuleInfo { minPklVersion = "0.28.1" }
 module pkl.Project
 
 import "pkl:EvaluatorSettings" as EvaluatorSettingsModule
