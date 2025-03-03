@@ -243,10 +243,9 @@ fun Exec.configureExecutable(
   // Allow setting args using flags like
   // (-Dpkl.native-Dpolyglot.engine.userResourceCache=/my/cache/dir) when building through Gradle.
   val extraArgsFromProperties =
-    System.getProperties().mapNotNull { (key, value) ->
-      if (!key.toString().startsWith("pkl.native")) null
-      else "$key=$value".substring("pkl.native".length)
-    }
+    System.getProperties()
+      .filter { it.key.toString().startsWith("pkl.native") }
+      .map { "${it.key}=${it.value}".substring("pkl.native".length) }
 
   // JARs to exclude from the class path for the native-image build.
   val exclusions = listOf(libs.graalSdk).map { it.get().module.name }
