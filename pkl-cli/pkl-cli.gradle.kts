@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import org.gradle.kotlin.dsl.support.serviceOf
 
 plugins {
@@ -148,6 +149,7 @@ private fun setupJavaExecutableRun(
         null -> "java"
         else -> launcher.get().executablePath.asFile.absolutePath
       }
+    standardOutput = OutputStream.nullOutputStream()
 
     args("-jar", javaExecutable.get().outputs.files.singleFile.toString(), *args)
 
