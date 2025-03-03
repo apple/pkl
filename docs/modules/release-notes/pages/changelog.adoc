@@ -2,7 +2,7 @@
 include::ROOT:partial$component-attributes.adoc[]
 
 [[release-0.28.1]]
-== 0.28.1 (2025-03-04)
+== 0.28.1 (2025-03-03)
 
 === Fixes
 
