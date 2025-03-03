@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.organicdesign.fp.collections.ImMap;
 import org.organicdesign.fp.collections.MutMap;
@@ -279,9 +280,15 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   }
 
   @Override
-  @TruffleBoundary
-  public int hashCode() {
-    return map.hashCode();
+  int computeHashCode(Set<VmValue> seenValues) {
+    var result = 0;
+    for (var entry : map) {
+      var key = entry.getKey();
+      var value = entry.getValue();
+      result +=
+          VmUtils.computeHashCode(key, seenValues) ^ VmUtils.computeHashCode(value, seenValues);
+    }
+    return result;
   }
 
   @TruffleBoundary

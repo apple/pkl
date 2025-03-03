@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.Set;
 import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.PklRootNode;
@@ -173,7 +174,7 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  public int hashCode() {
+  int computeHashCode(Set<VmValue> seenValues) {
     return System.identityHashCode(this);
   }
 }
