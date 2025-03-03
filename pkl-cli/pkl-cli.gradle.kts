@@ -237,6 +237,16 @@ fun Exec.configureExecutable(
   workingDir(outputFile.map { it.asFile.parentFile })
   executable = "${graalVm.baseDir}/bin/$nativeImageCommandName"
 
+  // For any system properties starting with `pkl.native`, strip off that prefix and pass the rest
+  // through as arguments to native-image.
+  //
+  // Allow setting args using flags like
+  // (-Dpkl.native-Dpolyglot.engine.userResourceCache=/my/cache/dir) when building through Gradle.
+  val extraArgsFromProperties =
+    System.getProperties()
+      .filter { it.key.toString().startsWith("pkl.native") }
+      .map { "${it.key}=${it.value}".substring("pkl.native".length) }
+
   // JARs to exclude from the class path for the native-image build.
   val exclusions = listOf(libs.graalSdk).map { it.get().module.name }
   // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
@@ -294,6 +304,7 @@ fun Exec.configureExecutable(
         // tools.
         addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
         addAll(extraArgs)
+        addAll(extraArgsFromProperties)
       }
     }
   )
