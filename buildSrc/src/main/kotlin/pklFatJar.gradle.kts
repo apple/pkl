@@ -42,20 +42,20 @@ val relocations =
     "org.organicdesign.fp." to "org.pkl.thirdparty.paguro.",
     "org.snakeyaml.engine." to "org.pkl.thirdparty.snakeyaml.engine.",
     "org.msgpack." to "org.pkl.thirdparty.msgpack.",
-    "org.w3c.dom." to "org.pkl.thirdparty.w3c.dom",
+    "org.w3c.dom." to "org.pkl.thirdparty.w3c.dom.",
     "com.oracle.svm.core." to "org.pkl.thirdparty.svm.",
 
     // pkl-cli dependencies
     "org.jline." to "org.pkl.thirdparty.jline.",
     "com.github.ajalt.clikt." to "org.pkl.thirdparty.clikt.",
-    "com.github.ajalt.colormath" to "org.pkl.thirdparty.colormath.",
-    "com.github.ajalt.mordant" to "org.pkl.thirdparty.mordant",
-    "com.sun.jna" to "org.pkl.thirdparty.jna",
+    "com.github.ajalt.colormath." to "org.pkl.thirdparty.colormath.",
+    "com.github.ajalt.mordant." to "org.pkl.thirdparty.mordant.",
+    "com.sun.jna." to "org.pkl.thirdparty.jna.",
     "kotlin." to "org.pkl.thirdparty.kotlin.",
     "kotlinx." to "org.pkl.thirdparty.kotlinx.",
     "org.intellij." to "org.pkl.thirdparty.intellij.",
-    "org.fusesource.jansi." to "org.pkl.thirdparty.jansi",
-    "org.fusesource.hawtjni." to "org.pkl.thirdparty.hawtjni",
+    "org.fusesource.jansi." to "org.pkl.thirdparty.jansi.",
+    "org.fusesource.hawtjni." to "org.pkl.thirdparty.hawtjni.",
 
     // pkl-doc dependencies
     "org.commonmark." to "org.pkl.thirdparty.commonmark.",
@@ -70,6 +70,19 @@ val relocations =
     // pkl-codegen-kotlin dependencies
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
   )
+
+for ((key, value) in relocations) {
+  if (!key.endsWith(".")) {
+    throw GradleException(
+      "Invalid relocation `\"$key\" to \"$value\"`: `$key` should end with a dot"
+    )
+  }
+  if (!value.endsWith(".")) {
+    throw GradleException(
+      "Invalid relocation `\"$key\" to \"$value\"`: `$value` should end with a dot"
+    )
+  }
+}
 
 val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/")
 
