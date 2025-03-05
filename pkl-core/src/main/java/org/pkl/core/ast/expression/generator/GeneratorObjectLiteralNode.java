@@ -73,6 +73,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     var data = executeChildren(frame, parent, parent.getLength());
+    if (data.hasNoMembers()) {
+      return parent;
+    }
     var result = new VmDynamic(frame.materialize(), parent, data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
@@ -81,6 +84,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   protected VmTyped evalTyped(VirtualFrame frame, VmTyped parent) {
     VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode());
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return parent;
+    }
     assert data.hasNoGeneratorFrames();
     return new VmTyped(frame.materialize(), parent, parent.getVmClass(), data.members());
   }
@@ -88,6 +94,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkListingCannotHaveParameters()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     var data = executeChildren(frame, parent, parent.getLength());
+    if (data.hasNoMembers()) {
+      return parent;
+    }
     var result = new VmListing(frame.materialize(), parent, data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
@@ -95,6 +104,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkMappingCannotHaveParameters()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return parent;
+    }
     var result = new VmMapping(frame.materialize(), parent, data.members());
     return data.storeGeneratorFrames(result);
   }
@@ -118,6 +130,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = {"parent == getDynamicClass()", "checkObjectCannotHaveParameters()"})
   protected VmDynamic evalDynamicClass(VirtualFrame frame, VmClass parent) {
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return VmDynamic.empty();
+    }
     var result =
         new VmDynamic(frame.materialize(), parent.getPrototype(), data.members(), data.length());
     return data.storeGeneratorFrames(result);
@@ -126,6 +141,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = {"parent == getMappingClass()", "checkMappingCannotHaveParameters()"})
   protected VmMapping evalMappingClass(VirtualFrame frame, VmClass parent) {
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return VmMapping.empty();
+    }
     var result = new VmMapping(frame.materialize(), parent.getPrototype(), data.members());
     return data.storeGeneratorFrames(result);
   }
@@ -133,6 +151,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = {"parent == getListingClass()", "checkListingCannotHaveParameters()"})
   protected VmListing evalListingClass(VirtualFrame frame, VmClass parent) {
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return VmListing.empty();
+    }
     var result =
         new VmListing(frame.materialize(), parent.getPrototype(), data.members(), data.length());
     return data.storeGeneratorFrames(result);
@@ -142,6 +163,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   protected VmTyped evalTypedObjectClass(VirtualFrame frame, VmClass parent) {
     VmUtils.checkIsInstantiable(parent, getParentNode());
     var data = executeChildren(frame, parent, 0);
+    if (data.hasNoMembers()) {
+      return parent.getPrototype();
+    }
     assert data.hasNoGeneratorFrames();
     return new VmTyped(frame.materialize(), parent.getPrototype(), parent, data.members());
   }
