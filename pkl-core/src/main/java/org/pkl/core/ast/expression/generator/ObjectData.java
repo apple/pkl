@@ -55,6 +55,10 @@ public final class ObjectData {
     return length;
   }
 
+  boolean hasNoMembers() {
+    return members.isEmpty();
+  }
+
   boolean hasNoGeneratorFrames() {
     return generatorFrames.isEmpty();
   }

@@ -1,0 +1,46 @@
+// should only result in once trace in the output; generator object literals that don't add any
+// members should be optimized away.
+res1 {
+  prop = trace("hello")
+}
+
+res2 = (res1) {
+  when (false) {
+    prop2 = 2
+  }
+}
+
+res3 = (res1) {
+  for (_ in List()) {
+    "hello"
+  }
+}
+
+res4 = (res1) {
+  ...List()
+}
+
+res5 = (res1) {
+  when (true) {
+  } else {
+    prop3 = 3
+  }
+}
+
+res6 = (Dynamic) {
+  when (true) {}
+}
+
+res7 = (Mapping) {
+  when (true) {}
+}
+
+class Person {}
+
+res8 = (Person) {
+  when (true) {}
+}
+
+res9 = (Listing) {
+  when (true) {}
+}
