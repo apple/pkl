@@ -1,4 +1,4 @@
-// should only result in once trace in the output; generator object literals that don't add any
+// should only result in one trace in the output; generator object literals that don't add any
 // members should be optimized away.
 res1 {
   prop = trace("hello")
