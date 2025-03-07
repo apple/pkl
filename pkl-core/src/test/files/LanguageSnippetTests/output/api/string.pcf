@@ -9,6 +9,11 @@ facts {
     true
     true
   }
+  ["isBase64"] {
+    true
+    true
+    true
+  }
   ["lastIndex"] {
     true
     true

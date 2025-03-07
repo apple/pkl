@@ -175,6 +175,10 @@ public final class VmUtils {
     return (String) VmUtils.readMember((VmObjectLike) receiver, Identifier.TEXT);
   }
 
+  public static VmBytes readBytesProperty(VmObjectLike receiver) {
+    return (VmBytes) VmUtils.readMember(receiver, Identifier.BYTES);
+  }
+
   @TruffleBoundary
   public static Object readMember(VmObjectLike receiver, Object memberKey) {
     var result = readMemberOrNull(receiver, memberKey);

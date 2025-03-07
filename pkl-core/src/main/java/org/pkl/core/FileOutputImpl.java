@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,18 @@ final class FileOutputImpl implements FileOutput {
   public String getText() {
     try {
       return evaluator.evaluateOutputText(fileOutput);
+    } catch (PolyglotException e) {
+      if (e.isCancelled()) {
+        throw new PklException("The evaluator is no longer available", e);
+      }
+      throw new PklBugException(e);
+    }
+  }
+
+  @Override
+  public byte[] getBytes() {
+    try {
+      return evaluator.evaluateOutputBytes(fileOutput);
     } catch (PolyglotException e) {
       if (e.isCancelled()) {
         throw new PklException("The evaluator is no longer available", e);

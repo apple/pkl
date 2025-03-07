@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.JsonnetModule;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmDynamic;
@@ -196,6 +197,11 @@ public final class RendererNodes {
 
     @Override
     public void visitDataSize(VmDataSize value) {
+      cannotRenderTypeAddConverter(value);
+    }
+
+    @Override
+    public void visitBytes(VmBytes value) {
       cannotRenderTypeAddConverter(value);
     }
 
