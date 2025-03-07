@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import java.util.Base64;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
@@ -28,6 +29,7 @@ import org.pkl.core.stdlib.*;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
+import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicSets;
 
 // duplication between ListNodes and SetNodes is "intentional"
@@ -48,6 +50,45 @@ public final class ListNodes {
     @Specialization
     protected boolean eval(VmList self) {
       return self.isEmpty();
+    }
+  }
+
+  public abstract static class md5 extends ExternalPropertyNode {
+    @TruffleBoundary
+    @Specialization
+    protected String eval(VmList self) {
+      return ByteArrayUtils.md5(self.getBytes());
+    }
+  }
+
+  public abstract static class sha1 extends ExternalPropertyNode {
+    @TruffleBoundary
+    @Specialization
+    protected String eval(VmList self) {
+      return ByteArrayUtils.sha1(self.getBytes());
+    }
+  }
+
+  public abstract static class sha256 extends ExternalPropertyNode {
+    @TruffleBoundary
+    @Specialization
+    protected String eval(VmList self) {
+      return ByteArrayUtils.sha256(self.getBytes());
+    }
+  }
+
+  public abstract static class sha256Int extends ExternalPropertyNode {
+    @TruffleBoundary
+    @Specialization
+    protected long eval(VmList self) {
+      return ByteArrayUtils.sha256Int(self.getBytes());
+    }
+  }
+
+  public abstract static class base64 extends ExternalPropertyNode {
+    @Specialization
+    protected String eval(VmList self) {
+      return Base64.getEncoder().encodeToString(self.getBytes());
     }
   }
 
