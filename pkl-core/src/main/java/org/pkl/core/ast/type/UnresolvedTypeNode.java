@@ -174,7 +174,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
             case "Int8":
               return new Int8TypeAliasTypeNode();
             case "UInt8":
-              return new UIntTypeAliasTypeNode(alias, 0x00000000000000FFL);
+              return new UInt8TypeAliasTypeNode();
             case "Int16":
               return new Int16TypeAliasTypeNode();
             case "UInt16":

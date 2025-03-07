@@ -303,6 +303,12 @@ examples {
     }
     new {}
   }
+  ["toBytes()"] {
+    Bytes(1, 2, 3)
+    Bytes()
+    "Expected value of type `Int`, but got `null`."
+    "Type constraint `isBetween(0, 255)` violated. Value: -1"
+  }
   ["filterNonNull()"] {
     List(1, 2, 3)
     List()

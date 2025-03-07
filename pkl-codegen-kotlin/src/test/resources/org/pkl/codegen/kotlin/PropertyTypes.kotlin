@@ -1,8 +1,10 @@
 package my
 
+import java.util.Arrays
 import java.util.Objects
 import kotlin.Any
 import kotlin.Boolean
+import kotlin.ByteArray
 import kotlin.Double
 import kotlin.Int
 import kotlin.Long
@@ -46,7 +48,8 @@ object Mod {
     open val regex: Regex,
     open val any: Any?,
     open val nonNull: Any,
-    open val enum: Direction
+    open val enum: Direction,
+    open val bytes: ByteArray
   ) {
     open fun copy(
       boolean: Boolean = this.boolean,
@@ -75,10 +78,11 @@ object Mod {
       regex: Regex = this.regex,
       any: Any? = this.any,
       nonNull: Any = this.nonNull,
-      enum: Direction = this.enum
+      enum: Direction = this.enum,
+      bytes: ByteArray = this.bytes
     ): PropertyTypes = PropertyTypes(boolean, int, float, string, duration, durationUnit, dataSize,
         dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map,
-        map2, container, container2, other, regex, any, nonNull, enum)
+        map2, container, container2, other, regex, any, nonNull, enum, bytes)
 
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
@@ -111,6 +115,7 @@ object Mod {
       if (this.any != other.any) return false
       if (this.nonNull != other.nonNull) return false
       if (this.enum != other.enum) return false
+      if (!this.bytes.contentEquals(other.bytes)) return false
       return true
     }
 
@@ -143,11 +148,12 @@ object Mod {
       result = 31 * result + Objects.hashCode(this.any)
       result = 31 * result + Objects.hashCode(this.nonNull)
       result = 31 * result + Objects.hashCode(this.enum)
+      result = 31 * result + this.bytes.contentHashCode()
       return result
     }
 
     override fun toString(): String =
-        """PropertyTypes(boolean=$boolean, int=$int, float=$float, string=$string, duration=$duration, durationUnit=$durationUnit, dataSize=$dataSize, dataSizeUnit=$dataSizeUnit, nullable=$nullable, nullable2=$nullable2, pair=$pair, pair2=$pair2, coll=$coll, coll2=$coll2, list=$list, list2=$list2, set=$set, set2=$set2, map=$map, map2=$map2, container=$container, container2=$container2, other=$other, regex=$regex, any=$any, nonNull=$nonNull, enum=$enum)"""
+        """PropertyTypes(boolean=$boolean, int=$int, float=$float, string=$string, duration=$duration, durationUnit=$durationUnit, dataSize=$dataSize, dataSizeUnit=$dataSizeUnit, nullable=$nullable, nullable2=$nullable2, pair=$pair, pair2=$pair2, coll=$coll, coll2=$coll2, list=$list, list2=$list2, set=$set, set2=$set2, map=$map, map2=$map2, container=$container, container2=$container2, other=$other, regex=$regex, any=$any, nonNull=$nonNull, enum=$enum, bytes=${Arrays.toString(bytes)})"""
   }
 
   open class Other(

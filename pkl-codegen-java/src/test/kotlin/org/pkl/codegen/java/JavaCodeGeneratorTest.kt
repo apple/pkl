@@ -87,6 +87,7 @@ class JavaCodeGeneratorTest {
           any: Any
           nonNull: NonNull
           enum: Direction
+          bytes: Bytes
         }
 
         class Other {
@@ -202,6 +203,7 @@ class JavaCodeGeneratorTest {
             name = pigeon
           }
           _enum = north
+          bytes = [1, 2, 3, 4]
         }
       """
           .trimIndent()
@@ -542,6 +544,7 @@ class JavaCodeGeneratorTest {
     assertThat(readProperty(propertyTypes, "regex")).isInstanceOf(Pattern::class.java)
     assertThat(readProperty(propertyTypes, "any")).isEqualTo(other)
     assertThat(readProperty(propertyTypes, "nonNull")).isEqualTo(other)
+    assertThat(readProperty(propertyTypes, "bytes")).isEqualTo(byteArrayOf(1, 2, 3, 4))
   }
 
   private fun readProperty(obj: Any, property: String): Any? =
@@ -2313,6 +2316,7 @@ class JavaCodeGeneratorTest {
         other,
         other,
         enumValue,
+        byteArrayOf(1, 2, 3, 4),
       )
 
     return other to propertyTypes

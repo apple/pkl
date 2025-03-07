@@ -1,0 +1,70 @@
+amends ".../snippetTest.pkl"
+
+local bytes1 = Bytes(1, 2, 3)
+local bytes2 = Bytes(1, 2, 4)
+
+examples {
+  ["basic"] {
+    Bytes(0, 255)
+  }
+
+  ["bytes from constant value nodes"] {
+    Bytes(0, 1, 2, 3, 4, 5, 6, 7)
+    Bytes(
+      0b000,
+      0b001,
+      0b010,
+      0b011,
+      0b100,
+      0b101,
+      0b110,
+      0b111
+    )
+    Bytes(0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7)
+    Bytes(0o0, 0o1, 0o2, 0o3, 0o4, 0o5, 0o6, 0o7)
+    Bytes(0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7)
+  }
+
+  ["bytes from non-constant value nodes"] {
+    local one = 1
+    local two = 2
+    Bytes(one, two)
+  }
+
+  ["incorrectly sized constant values"] {
+    module.catch(() -> Bytes(0, 1, 2, 0xffff))
+  }
+
+  ["equality"] {
+    bytes1 == bytes1
+    bytes1 == bytes2
+    bytes1 == bytes1.toList()
+    bytes1 == Bytes(1, 2, 3)
+  }
+
+  ["inequality"] {
+    bytes1 != bytes1
+    bytes1 != bytes2
+    bytes1 != bytes1.toList()
+    bytes1 != Bytes(1, 2, 3)
+  }
+
+  ["addition"] {
+    bytes1 + bytes2
+    Bytes() + Bytes()
+    bytes1 + Bytes()
+    Bytes() + bytes2
+    module.catch(() -> bytes1 + bytes2.toList())
+  }
+
+  ["subscript"] {
+    bytes1[0]
+    bytes1[1]
+    bytes1[2]
+    module.catch(() -> bytes1[3])
+  }
+
+  ["all bytes"] {
+    IntSeq(0, 255).toList().toBytes()
+  }
+}

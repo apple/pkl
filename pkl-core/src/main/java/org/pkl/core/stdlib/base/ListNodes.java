@@ -18,17 +18,22 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
 import org.pkl.core.ast.lambda.*;
+import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeNode.UInt8TypeAliasTypeNode;
+import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
 import org.pkl.core.util.EconomicSets;
+import org.pkl.core.util.LateInit;
 
 // duplication between ListNodes and SetNodes is "intentional"
 // (sharing nodes between VmCollection subtypes results in
@@ -1319,6 +1324,36 @@ public final class ListNodes {
     @TruffleBoundary
     protected VmDynamic eval(VmList self) {
       return self.toDynamic();
+    }
+  }
+
+  public abstract static class toBytes extends ExternalMethod0Node {
+
+    @Child @LateInit private TypeNode typeNode;
+
+    private TypeNode getTypeNode() {
+      if (typeNode == null) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        typeNode = new UInt8TypeAliasTypeNode();
+      }
+      return typeNode;
+    }
+
+    @Specialization
+    protected VmBytes eval(VirtualFrame frame, VmList self) {
+      var typeNode = getTypeNode();
+      var bytes = new byte[self.getLength()];
+      try {
+        for (var i = 0; i < self.getLength(); i++) {
+          var elem = self.get(i);
+          var num = (Long) typeNode.executeEagerly(frame, elem);
+          bytes[i] = num.byteValue();
+        }
+      } catch (VmTypeMismatchException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw e.toVmException();
+      }
+      return new VmBytes(self, bytes);
     }
   }
 }

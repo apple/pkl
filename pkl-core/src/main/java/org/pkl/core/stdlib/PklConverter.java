@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ public final class PklConverter implements VmValueConverter<Object> {
   private final @Nullable VmFunction floatConverter;
   private final @Nullable VmFunction durationConverter;
   private final @Nullable VmFunction dataSizeConverter;
+  private final @Nullable VmFunction bytesConverter;
   private final @Nullable VmFunction intSeqConverter;
   private final @Nullable VmFunction listConverter;
   private final @Nullable VmFunction setConverter;
@@ -56,6 +57,7 @@ public final class PklConverter implements VmValueConverter<Object> {
     floatConverter = typeConverters.get(BaseModule.getFloatClass());
     durationConverter = typeConverters.get(BaseModule.getDurationClass());
     dataSizeConverter = typeConverters.get(BaseModule.getDataSizeClass());
+    bytesConverter = typeConverters.get(BaseModule.getBytesClass());
     intSeqConverter = typeConverters.get(BaseModule.getIntSeqClass());
     listConverter = typeConverters.get(BaseModule.getListClass());
     setConverter = typeConverters.get(BaseModule.getSetClass());
@@ -98,6 +100,11 @@ public final class PklConverter implements VmValueConverter<Object> {
   @Override
   public Object convertDataSize(VmDataSize value, Iterable<Object> path) {
     return doConvert(value, path, dataSizeConverter);
+  }
+
+  @Override
+  public Object convertBytes(VmBytes value, Iterable<Object> path) {
+    return doConvert(value, path, bytesConverter);
   }
 
   @Override

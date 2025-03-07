@@ -6,6 +6,7 @@ local list: List<Int> = List(1, 2, 3)
 local map: Map<String, Int> = Map("a", 1, "b", 2)
 local intseq: IntSeq = IntSeq(0, 5).step(2)
 local set: Set<Int> = Set(10, 20, 30)
+local bytes: Bytes = Bytes(1, 2, 3, 4)
 
 res1: Listing = new {
   0
@@ -72,3 +73,15 @@ res16 = new Listing {
 }
 
 res17 = res16.length
+
+res18 = new Listing {
+  ...bytes
+}
+
+res19 = new Listing {
+  0
+  ...bytes
+  0
+  0
+  0
+}

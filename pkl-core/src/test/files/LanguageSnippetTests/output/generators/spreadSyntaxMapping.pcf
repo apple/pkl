@@ -55,3 +55,4 @@ res17 {
     }
   }
 }
+res18 = "Cannot spread value of type `Bytes` into object of type `Mapping`. Value: Bytes(1, 2, 3, 4)"

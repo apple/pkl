@@ -4,6 +4,7 @@ import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
 import java.lang.StringBuilder;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,8 @@ public final class Mod {
 
     public final @NonNull Direction _enum;
 
+    public final byte[] bytes;
+
     public PropertyTypes(@Named("boolean") boolean _boolean, @Named("int") long _int,
         @Named("float") double _float, @Named("string") @NonNull String string,
         @Named("duration") @NonNull Duration duration,
@@ -106,7 +109,7 @@ public final class Mod {
         @Named("container2") @NonNull Map<@NonNull String, @NonNull Other> container2,
         @Named("other") @NonNull Other other, @Named("regex") @NonNull Pattern regex,
         @Named("any") Object any, @Named("nonNull") @NonNull Object nonNull,
-        @Named("enum") @NonNull Direction _enum) {
+        @Named("enum") @NonNull Direction _enum, @Named("bytes") byte[] bytes) {
       this._boolean = _boolean;
       this._int = _int;
       this._float = _float;
@@ -134,114 +137,119 @@ public final class Mod {
       this.any = any;
       this.nonNull = nonNull;
       this._enum = _enum;
+      this.bytes = bytes;
     }
 
     public PropertyTypes withBoolean(boolean _boolean) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withInt(long _int) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withFloat(double _float) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withString(@NonNull String string) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withDuration(@NonNull Duration duration) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withDurationUnit(@NonNull DurationUnit durationUnit) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withDataSize(@NonNull DataSize dataSize) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withDataSizeUnit(@NonNull DataSizeUnit dataSizeUnit) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withNullable(String nullable) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withNullable2(String nullable2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withPair(@NonNull Pair<Object, Object> pair) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withPair2(@NonNull Pair<@NonNull String, @NonNull Other> pair2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withColl(@NonNull Collection<Object> coll) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withColl2(@NonNull Collection<@NonNull Other> coll2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withList(@NonNull List<Object> list) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withList2(@NonNull List<@NonNull Other> list2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withSet(@NonNull Set<Object> set) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withSet2(@NonNull Set<@NonNull Other> set2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withMap(@NonNull Map<Object, Object> map) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withMap2(@NonNull Map<@NonNull String, @NonNull Other> map2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withContainer(@NonNull Map<Object, Object> container) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withContainer2(@NonNull Map<@NonNull String, @NonNull Other> container2) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withOther(@NonNull Other other) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withRegex(@NonNull Pattern regex) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withAny(Object any) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withNonNull(@NonNull Object nonNull) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     public PropertyTypes withEnum(@NonNull Direction _enum) {
-      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum);
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
+    }
+
+    public PropertyTypes withBytes(byte[] bytes) {
+      return new PropertyTypes(_boolean, _int, _float, string, duration, durationUnit, dataSize, dataSizeUnit, nullable, nullable2, pair, pair2, coll, coll2, list, list2, set, set2, map, map2, container, container2, other, regex, any, nonNull, _enum, bytes);
     }
 
     @Override
@@ -277,6 +285,7 @@ public final class Mod {
       if (!Objects.equals(this.any, other.any)) return false;
       if (!Objects.equals(this.nonNull, other.nonNull)) return false;
       if (!Objects.equals(this._enum, other._enum)) return false;
+      if (!Objects.equals(this.bytes, other.bytes)) return false;
       return true;
     }
 
@@ -310,12 +319,13 @@ public final class Mod {
       result = 31 * result + Objects.hashCode(this.any);
       result = 31 * result + Objects.hashCode(this.nonNull);
       result = 31 * result + Objects.hashCode(this._enum);
+      result = 31 * result + Objects.hashCode(this.bytes);
       return result;
     }
 
     @Override
     public String toString() {
-      StringBuilder builder = new StringBuilder(1400);
+      StringBuilder builder = new StringBuilder(1450);
       builder.append(PropertyTypes.class.getSimpleName()).append(" {");
       appendProperty(builder, "_boolean", this._boolean);
       appendProperty(builder, "_int", this._int);
@@ -344,6 +354,7 @@ public final class Mod {
       appendProperty(builder, "any", this.any);
       appendProperty(builder, "nonNull", this.nonNull);
       appendProperty(builder, "_enum", this._enum);
+      appendProperty(builder, "bytes", Arrays.toString(this.bytes));
       builder.append("\n}");
       return builder.toString();
     }

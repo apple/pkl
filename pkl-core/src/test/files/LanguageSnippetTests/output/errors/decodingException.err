@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Invalid bytes for charset "UTF-8".
+
+x | res = Bytes(0xc0, 0xc1).decodeToString("UTF-8")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at decodingException#res (file:///$snippetsDir/input/errors/decodingException.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

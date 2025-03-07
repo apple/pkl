@@ -138,6 +138,7 @@ endif::[]
 :uri-stdlib-Function3: {uri-stdlib-baseModule}/Function3
 :uri-stdlib-Function4: {uri-stdlib-baseModule}/Function4
 :uri-stdlib-Function5: {uri-stdlib-baseModule}/Function5
+:uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
 
