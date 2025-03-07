@@ -19,9 +19,11 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.*;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
@@ -144,6 +146,19 @@ public final class StringNodes {
         Pattern.compile(self, Pattern.UNICODE_CASE);
         return true;
       } catch (PatternSyntaxException e) {
+        return false;
+      }
+    }
+  }
+
+  public abstract static class isBase64 extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(String self) {
+      try {
+        Base64.getDecoder().decode(self);
+        return true;
+      } catch (IllegalArgumentException e) {
         return false;
       }
     }
@@ -916,6 +931,19 @@ public final class StringNodes {
             .withProgramValue("String", self)
             .withCause(e)
             .build();
+      }
+    }
+  }
+
+  public abstract static class toBytesWithCharset extends ExternalMethod1Node {
+    @TruffleBoundary
+    @Specialization
+    protected VmBytes eval(String self, String charsetName) {
+      try {
+        var bytes = self.getBytes(charsetName);
+        return new VmBytes(bytes);
+      } catch (UnsupportedEncodingException e) {
+        throw PklBugException.unreachableCode();
       }
     }
   }

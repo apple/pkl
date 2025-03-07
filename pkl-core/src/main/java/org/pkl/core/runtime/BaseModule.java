@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,10 @@ public final class BaseModule extends StdLibModule {
 
   public static VmClass getDataSizeClass() {
     return DataSizeClass.instance;
+  }
+
+  public static VmClass getBytesClass() {
+    return BytesClass.instance;
   }
 
   public static VmClass getIntSeqClass() {
@@ -257,6 +261,10 @@ public final class BaseModule extends StdLibModule {
 
   private static final class DataSizeClass {
     static final VmClass instance = loadClass("DataSize");
+  }
+
+  private static final class BytesClass {
+    static final VmClass instance = loadClass("Bytes");
   }
 
   private static final class IntSeqClass {

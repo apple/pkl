@@ -115,6 +115,13 @@ public final class VmValueRenderer {
     }
 
     @Override
+    public void visitBytes(VmBytes value) {
+      append("Bytes(");
+      visitString(value.base64());
+      append(")");
+    }
+
+    @Override
     public void visitPair(VmPair value) {
       append("Pair(");
       visit(value.getFirst());

@@ -18,6 +18,12 @@ facts {
     !str1.isBlank
   }
 
+  ["isBase64"] {
+    "".isBase64
+    "AQIDBA==".isBase64
+    !"hello there".isBase64
+  }
+
   ["lastIndex"] {
     for (s in List(str1, str2, str3)) {
       s.length == s.lastIndex + 1

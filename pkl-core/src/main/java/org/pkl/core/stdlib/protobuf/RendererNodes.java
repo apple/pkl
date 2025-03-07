@@ -44,6 +44,7 @@ import org.pkl.core.ast.type.TypeNode.UnionOfStringLiteralsTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
@@ -516,6 +517,14 @@ public final class RendererNodes {
 
     @Override
     public void visitDataSize(VmDataSize value) {
+      throw new VmExceptionBuilder()
+          .evalError("cannotRenderTypeAddConverter", "DataSize", "Protobuf")
+          .withProgramValue("Value", value)
+          .build();
+    }
+
+    @Override
+    public void visitBytes(VmBytes value) {
       throw new VmExceptionBuilder()
           .evalError("cannotRenderTypeAddConverter", "DataSize", "Protobuf")
           .withProgramValue("Value", value)

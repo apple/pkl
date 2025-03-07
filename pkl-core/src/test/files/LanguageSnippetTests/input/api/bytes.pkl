@@ -1,0 +1,38 @@
+amends "../snippetTest.pkl"
+
+examples {
+  ["basic"] {
+    Bytes(List(1, 2, 3, 4))
+    Bytes("AQIDBA==")
+  }
+  ["equality"] {
+    Bytes(List()) == Bytes("")
+    Bytes(List(1, 2, 3, 4)) == Bytes("AQIDBA==")
+    Bytes(List(1, 2)) != Bytes(List(1, 2, 3, 4))
+  }
+  ["md5"] {
+    Bytes(List(1, 2, 3, 4)).md5
+    Bytes(List()).md5
+  }
+  ["sha256"] {
+    Bytes("AQIDBA==").sha256
+    Bytes("").sha256
+  }
+  ["sha1"] {
+    Bytes("AQIDBA==").sha1
+    Bytes("").sha1
+  }
+  ["toString"] {
+    Bytes(List(1, 2, 3, 4)).toString()
+    Bytes("AQIDBA==").toString()
+    Bytes("").toString()
+  }
+  ["base64"] {
+    Bytes("AQIDBA==").base64
+    Bytes("").base64
+  }
+  ["hex"] {
+    Bytes("AQIDBA==").hex
+    Bytes("").hex
+  }
+}

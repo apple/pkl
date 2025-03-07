@@ -16,19 +16,22 @@
 package org.pkl.cli
 
 import java.io.File
-import java.io.Reader
-import java.io.Writer
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.writeBytes
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.currentWorkingDir
 import org.pkl.commons.writeString
 import org.pkl.core.Closeables
+import org.pkl.core.Evaluator
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
@@ -47,8 +50,8 @@ constructor(
   private val options: CliEvaluatorOptions,
   // use System.{in,out}() rather than System.console()
   // because the latter returns null when output is sent through a unix pipe
-  private val consoleReader: Reader = System.`in`.reader(),
-  private val consoleWriter: Writer = System.out.writer(),
+  private val inputStream: InputStream = System.`in`,
+  private val outputStream: OutputStream = System.out,
 ) : CliCommand(options.base) {
   /**
    * Output files for the modules to be evaluated. Returns `null` if `options.outputPath` is `null`
@@ -83,11 +86,12 @@ constructor(
   /**
    * Evaluates source modules according to [options].
    *
-   * If [CliEvaluatorOptions.outputPath] is set, each module's `output.text` is written to the
-   * module's [output file][outputFiles]. If [CliEvaluatorOptions.multipleFileOutputPath] is set,
-   * each module's `output.files` are written to the module's [output directory][outputDirectories].
-   * Otherwise, each module's `output.text` is written to [consoleWriter] (which defaults to
-   * standard out).
+   * If [CliEvaluatorOptions.outputPath] is set, each module's `output.bytes` is written to the
+   * module's [output file][outputFiles].
+   *
+   * If [CliEvaluatorOptions.multipleFileOutputPath] is set, each module's `output.files` are
+   * written to the module's [output directory][outputDirectories]. Otherwise, each module's
+   * `output.bytes` is written to [outputStream] (which defaults to standard out).
    *
    * Throws [CliException] in case of an error.
    */
@@ -138,10 +142,29 @@ constructor(
     }
   }
 
-  /** Renders each module's `output.text`, writing it to the specified output file. */
+  private fun Evaluator.writeOutput(moduleSource: ModuleSource, writeTo: Path): Boolean {
+    if (options.expression == null) {
+      val bytes = evaluateOutputBytes(moduleSource)
+      writeTo.writeBytes(bytes)
+      return bytes.isNotEmpty()
+    }
+    val text = evaluateExpressionString(moduleSource, options.expression)
+    writeTo.writeString(text)
+    return text.isNotEmpty()
+  }
+
+  private fun Evaluator.evalOutput(moduleSource: ModuleSource): ByteArray {
+    if (options.expression == null) {
+      val bytes = evaluateOutputBytes(moduleSource)
+      return bytes
+    }
+    return evaluateExpressionString(moduleSource, options.expression).toByteArray()
+  }
+
+  /** Renders each module's `output.bytes`, writing it to the specified output file. */
   private fun writeOutput(builder: EvaluatorBuilder) {
     val evaluator = builder.setOutputFormat(options.outputFormat).build()
-    evaluator.use {
+    evaluator.use { ev ->
       val outputFiles = fileOutputPaths
       if (outputFiles != null) {
         // files that we've written non-empty output to
@@ -150,16 +173,15 @@ constructor(
         val writtenFiles = mutableSetOf<Path>()
 
         for ((moduleUri, outputFile) in outputFiles) {
-          val moduleSource = toModuleSource(moduleUri, consoleReader)
-          val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
+          val moduleSource = toModuleSource(moduleUri, inputStream)
           outputFile.createParentDirectories()
           if (!writtenFiles.contains(outputFile)) {
             // write file even if output is empty to overwrite output from previous runs
-            outputFile.writeString(output)
-            if (output.isNotEmpty()) {
+            if (ev.writeOutput(moduleSource, outputFile)) {
               writtenFiles.add(outputFile)
             }
           } else {
+            val output = ev.evalOutput(moduleSource)
             if (output.isNotEmpty()) {
               outputFile.writeString(
                 options.moduleOutputSeparator + '\n',
@@ -167,33 +189,46 @@ constructor(
                 StandardOpenOption.WRITE,
                 StandardOpenOption.APPEND,
               )
-              outputFile.writeString(
-                output,
-                Charsets.UTF_8,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.APPEND,
-              )
+              outputFile.writeBytes(output, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
             }
           }
         }
       } else {
         var outputWritten = false
         for (moduleUri in options.base.normalizedSourceModules) {
-          val moduleSource = toModuleSource(moduleUri, consoleReader)
-          val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
-          if (output.isNotEmpty()) {
-            if (outputWritten) consoleWriter.appendLine(options.moduleOutputSeparator)
-            consoleWriter.write(output)
-            consoleWriter.flush()
-            outputWritten = true
+          val moduleSource = toModuleSource(moduleUri, inputStream)
+          if (options.expression != null) {
+            val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
+            if (output.isNotEmpty()) {
+              if (outputWritten) outputStream.writeLine(options.moduleOutputSeparator)
+              outputStream.writeText(output)
+              outputStream.flush()
+              outputWritten = true
+            }
+          } else {
+            val outputBytes = evaluator.evaluateOutputBytes(moduleSource)
+            if (outputBytes.isNotEmpty()) {
+              if (outputWritten) outputStream.writeLine(options.moduleOutputSeparator)
+              outputStream.write(outputBytes)
+              outputStream.flush()
+              outputWritten = true
+            }
           }
         }
       }
     }
   }
 
-  private fun toModuleSource(uri: URI, reader: Reader) =
-    if (uri == VmUtils.REPL_TEXT_URI) ModuleSource.create(uri, reader.readText())
+  private fun OutputStream.writeText(text: String) = write(text.toByteArray())
+
+  private fun OutputStream.writeLine(text: String) {
+    writeText(text)
+    writeText("\n")
+  }
+
+  private fun toModuleSource(uri: URI, reader: InputStream) =
+    if (uri == VmUtils.REPL_TEXT_URI)
+      ModuleSource.create(uri, reader.readAllBytes().toString(StandardCharsets.UTF_8))
     else ModuleSource.uri(uri)
 
   private fun checkPathSpec(pathSpec: String) {
@@ -216,7 +251,7 @@ constructor(
       if (outputDir.exists() && !outputDir.isDirectory()) {
         throw CliException("Output path `$outputDir` exists and is not a directory.")
       }
-      val moduleSource = toModuleSource(moduleUri, consoleReader)
+      val moduleSource = toModuleSource(moduleUri, inputStream)
       val output = evaluator.evaluateOutputFiles(moduleSource)
       for ((pathSpec, fileOutput) in output) {
         checkPathSpec(pathSpec)
@@ -240,12 +275,12 @@ constructor(
         }
         writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
         realPath.createParentDirectories()
-        realPath.writeString(fileOutput.text)
-        consoleWriter.write(
+        realPath.writeBytes(fileOutput.bytes)
+        outputStream.writeText(
           IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
             IoUtils.getLineSeparator()
         )
-        consoleWriter.flush()
+        outputStream.flush()
       }
     }
   }
