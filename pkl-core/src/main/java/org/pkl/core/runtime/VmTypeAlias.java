@@ -21,6 +21,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PObject;
@@ -271,7 +272,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @Override
-  public int hashCode() {
+  int computeHashCode(Set<VmValue> seenValues) {
     return qualifiedName.hashCode();
   }
 

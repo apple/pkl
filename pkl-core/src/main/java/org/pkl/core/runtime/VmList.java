@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import org.organicdesign.fp.collections.RrbTree;
 import org.organicdesign.fp.collections.RrbTree.ImRrbt;
 import org.organicdesign.fp.collections.RrbTree.MutRrbt;
@@ -443,9 +444,17 @@ public final class VmList extends VmCollection {
   }
 
   @Override
-  @TruffleBoundary
-  public int hashCode() {
-    return rrbt.hashCode();
+  int computeHashCode(Set<VmValue> seenValues) {
+    int ret = 1;
+
+    for (Object item : rrbt) {
+      ret *= 31;
+      if (item != null) {
+        ret += VmUtils.computeHashCode(item, seenValues);
+      }
+    }
+
+    return ret;
   }
 
   private static final class Builder implements VmCollection.Builder<VmList> {
