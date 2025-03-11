@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 abstract module GradleJob
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.1.2#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.5.0#/Config.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3#/URI.pkl"
 
 /// Whether this is a release build or not.
