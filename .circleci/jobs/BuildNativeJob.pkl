@@ -158,7 +158,7 @@ job {
     macos {
       xcode = "15.3.0"
     }
-    resource_class = "macos.m1.large.gen1"
+    resource_class = "m2pro.large"
     environment {
       ["JAVA_HOME"] = "/Users/distiller/jdk/Contents/Home"
     }
