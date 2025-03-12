@@ -1,0 +1,24 @@
+public final class org/pkl/config/kotlin/ConfigExtensionsKt {
+	public static final fun forKotlin (Lorg/pkl/config/java/ConfigEvaluator;)Lorg/pkl/config/java/ConfigEvaluator;
+	public static final fun forKotlin (Lorg/pkl/config/java/ConfigEvaluatorBuilder;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public static final fun forKotlin (Lorg/pkl/config/java/mapper/ValueMapperBuilder;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+}
+
+public final class org/pkl/config/kotlin/mapper/KotlinConversions {
+	public static final field INSTANCE Lorg/pkl/config/kotlin/mapper/KotlinConversions;
+	public final fun getAll ()Ljava/util/Collection;
+	public final fun getPIntToUByte ()Lorg/pkl/config/java/mapper/Conversion;
+	public final fun getPIntToUInt ()Lorg/pkl/config/java/mapper/Conversion;
+	public final fun getPIntToULong ()Lorg/pkl/config/java/mapper/Conversion;
+	public final fun getPIntToUShort ()Lorg/pkl/config/java/mapper/Conversion;
+	public final fun getPRegexToKotlinRegex ()Lorg/pkl/config/java/mapper/Conversion;
+	public final fun getPStringToKotlinRegex ()Lorg/pkl/config/java/mapper/Conversion;
+}
+
+public final class org/pkl/config/kotlin/mapper/KotlinConverterFactories {
+	public static final field INSTANCE Lorg/pkl/config/kotlin/mapper/KotlinConverterFactories;
+	public final fun getAll ()Ljava/util/Collection;
+	public final fun getPObjectToDataObject ()Lorg/pkl/config/java/mapper/ConverterFactory;
+	public final fun getPPairToKotlinPair ()Lorg/pkl/config/java/mapper/ConverterFactory;
+}
+

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ plugins {
   alias(libs.plugins.ideaExt)
   alias(libs.plugins.jmh) apply false
   alias(libs.plugins.nexusPublish)
+  alias(libs.plugins.abiCheck)
 }
 
 nexusPublishing {
@@ -79,3 +80,10 @@ val formattedMessage =
   message.replace("\n====", "\n" + "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
 
 logger.info(formattedMessage)
+
+apiValidation {
+  ignoredProjects += listOf("bench", "docs")
+  nonPublicMarkers += "org.pkl.commons.annotations.PklExperimental"
+
+  @OptIn(kotlinx.validation.ExperimentalBCVApi::class) klib { enabled = true }
+}
