@@ -3,7 +3,6 @@ x = 10 // end-of-line comment
 y = 20 /*
 multi
 line
-/* nested */
 comment
 */ z = 30
 
