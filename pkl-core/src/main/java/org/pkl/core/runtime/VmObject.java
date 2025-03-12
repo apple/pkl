@@ -149,6 +149,12 @@ public abstract class VmObject extends VmObjectLike {
     }
     return true;
   }
+  
+  protected boolean doEquals(VmObject other, Set<VmValue> seenValues) {
+    if (seenValues.contains(this)) {
+      
+    }
+  }
 
   /** Evaluates this object's members. Skips local, hidden, and external members. */
   @Override

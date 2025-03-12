@@ -151,7 +151,7 @@ public final class VmDataSize extends VmValue implements Comparable<VmDataSize> 
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     return Double.hashCode(convertValueTo(DataSizeUnit.BYTES));
   }
 

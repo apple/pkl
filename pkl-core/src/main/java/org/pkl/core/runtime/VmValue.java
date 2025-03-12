@@ -15,9 +15,6 @@
  */
 package org.pkl.core.runtime;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmValue {
@@ -93,11 +90,4 @@ public abstract class VmValue {
   /** Enables calling `vmValue.equals()` when not behind a Truffle boundary. */
   @Override
   public abstract boolean equals(Object obj);
-
-  @Override
-  public final int hashCode() {
-    return computeHashCode(Collections.newSetFromMap(new IdentityHashMap<>()));
-  }
-
-  abstract int computeHashCode(Set<VmValue> seenValues);
 }

@@ -17,7 +17,6 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.pkl.core.ValueFormatter;
@@ -73,7 +72,7 @@ public final class VmRegex extends VmValue {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     return pattern.pattern().hashCode();
   }
 

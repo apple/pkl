@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
-import java.util.Set;
 import org.pkl.core.PNull;
 import org.pkl.core.util.Nullable;
 
@@ -83,7 +82,7 @@ public final class VmNull extends VmValue {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     return 0;
   }
 

@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import org.pkl.core.Pair;
 import org.pkl.core.util.Nullable;
 
@@ -108,9 +107,8 @@ public final class VmPair extends VmValue implements Iterable<Object> {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
-    return VmUtils.computeHashCode(first, seenValues) * 31
-        + VmUtils.computeHashCode(second, seenValues);
+  public int hashCode() {
+    return first.hashCode() * 31 + second.hashCode();
   }
 
   @Override

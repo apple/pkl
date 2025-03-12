@@ -147,7 +147,7 @@ public final class VmDuration extends VmValue implements Comparable<VmDuration> 
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     return Double.hashCode(getValue(DurationUnit.NANOS));
   }
 

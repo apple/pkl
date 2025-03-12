@@ -18,7 +18,6 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import java.util.Set;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
@@ -196,16 +195,19 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     if (cachedHash != 0) return cachedHash;
+    // Seed the cache s.t. we short-circuit when coming back to hash the same value.
+    // The cached hash will be updated again with the final hash code value.
     force(false);
+    cachedHash = -1;
 
     var result = 0;
 
     for (var key : clazz.getAllRegularPropertyNames()) {
       var value = getCachedValue(key);
       assert value != null;
-      result = 31 * result + VmUtils.computeHashCode(value, seenValues);
+      result = 31 * result + value.hashCode();
     }
 
     cachedHash = result;

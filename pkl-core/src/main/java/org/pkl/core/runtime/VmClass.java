@@ -803,7 +803,7 @@ public final class VmClass extends VmValue {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     return classInfo.hashCode();
   }
 }

@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -138,10 +137,13 @@ public final class VmListing extends VmListingOrMapping {
 
   @Override
   @TruffleBoundary
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     if (cachedHash != 0) return cachedHash;
 
     force(false);
+    // Seed the cache s.t. we short-circuit when coming back to hash the same value.
+    // The cached hash will be updated again with the final hash code value.
+    cachedHash = -1;
     var result = 0;
     var cursor = cachedValues.getEntries();
 
@@ -151,7 +153,7 @@ public final class VmListing extends VmListingOrMapping {
 
       var value = cursor.getValue();
       assert value != null;
-      result = 31 * result + VmUtils.computeHashCode(value, seenValues);
+      result = 31 * result + value.hashCode();
     }
 
     cachedHash = result;

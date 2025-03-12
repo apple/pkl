@@ -913,19 +913,4 @@ public final class VmUtils {
     return frame.getArguments().length != 4
         || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
   }
-
-  public static int computeHashCode(Object value, Set<VmValue> seenValues) {
-    if (value instanceof VmValue vmValue) {
-      if (seenValues.contains(vmValue)) {
-        return System.identityHashCode(value);
-      } else {
-        seenValues.add(vmValue);
-        var result = vmValue.computeHashCode(seenValues);
-        seenValues.remove(vmValue);
-        return result;
-      }
-    } else {
-      return value.hashCode();
-    }
-  }
 }

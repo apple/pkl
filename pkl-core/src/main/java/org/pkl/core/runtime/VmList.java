@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import org.organicdesign.fp.collections.RrbTree;
 import org.organicdesign.fp.collections.RrbTree.ImRrbt;
 import org.organicdesign.fp.collections.RrbTree.MutRrbt;
@@ -444,13 +443,13 @@ public final class VmList extends VmCollection {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     int ret = 1;
 
     for (Object item : rrbt) {
       ret *= 31;
       if (item != null) {
-        ret += VmUtils.computeHashCode(item, seenValues);
+        ret += item.hashCode();
       }
     }
 

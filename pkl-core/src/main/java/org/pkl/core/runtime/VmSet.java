@@ -343,13 +343,13 @@ public final class VmSet extends VmCollection {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     int ret = 1;
 
     for (Object item : set) {
       ret *= 31;
       if (item != null) {
-        ret += VmUtils.computeHashCode(item, seenValues);
+        ret += item.hashCode();
       }
     }
 

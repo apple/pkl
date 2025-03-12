@@ -20,7 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
-import java.util.Set;
 import org.pkl.core.util.Nullable;
 
 // Some code copied from kotlin.ranges.Progressions, kotlin.ranges.ProgressionIterators,
@@ -115,7 +114,7 @@ public final class VmIntSeq extends VmValue implements Iterable<Long> {
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     if (isEmpty()) return 1;
 
     var result = 1;

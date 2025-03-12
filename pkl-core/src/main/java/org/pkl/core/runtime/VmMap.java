@@ -18,7 +18,6 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import org.organicdesign.fp.collections.ImMap;
 import org.organicdesign.fp.collections.MutMap;
@@ -280,13 +279,12 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   }
 
   @Override
-  int computeHashCode(Set<VmValue> seenValues) {
+  public int hashCode() {
     var result = 0;
     for (var entry : map) {
       var key = entry.getKey();
       var value = entry.getValue();
-      result +=
-          VmUtils.computeHashCode(key, seenValues) ^ VmUtils.computeHashCode(value, seenValues);
+      result += key.hashCode() ^ value.hashCode();
     }
     return result;
   }
