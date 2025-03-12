@@ -526,7 +526,7 @@ public final class RendererNodes {
     @Override
     public void visitBytes(VmBytes value) {
       throw new VmExceptionBuilder()
-          .evalError("cannotRenderTypeAddConverter", "DataSize", "Protobuf")
+          .evalError("cannotRenderTypeAddConverter", "Bytes", "Protobuf")
           .withProgramValue("Value", value)
           .build();
     }
