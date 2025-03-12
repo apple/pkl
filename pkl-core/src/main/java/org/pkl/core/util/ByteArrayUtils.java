@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,15 @@ package org.pkl.core.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import org.pkl.core.runtime.VmExceptionBuilder;
 
 public final class ByteArrayUtils {
   private ByteArrayUtils() {}
+
+  public static String base64(byte[] input) {
+    return Base64.getEncoder().encodeToString(input);
+  }
 
   public static String md5(byte[] input) {
     return hash(input, "MD5");

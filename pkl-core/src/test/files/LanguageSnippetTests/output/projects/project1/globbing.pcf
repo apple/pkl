@@ -62,7 +62,7 @@ examples {
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg==")
       }
       ["@birds/catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -76,7 +76,7 @@ examples {
           favoriteFruit = apple
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg==")
       }
     }
     new {
@@ -92,7 +92,7 @@ examples {
           favoriteFruit: Fruit
           
           """
-        base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
+        bytes = Bytes("b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo=")
       }
       ["@birds/allFruit.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
@@ -103,7 +103,7 @@ examples {
           fruitFiles = read*("@fruities/catalog/*.pkl")
           
           """
-        base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
+        bytes = Bytes("bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg==")
       }
       ["@birds/catalog.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
@@ -114,7 +114,7 @@ examples {
           catalogFiles = read*("catalog/*.pkl")
           
           """
-        base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
+        bytes = Bytes("bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo=")
       }
     }
     new {
@@ -130,7 +130,7 @@ examples {
           favoriteFruit: Fruit
           
           """
-        base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
+        bytes = Bytes("b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo=")
       }
       ["@birds/allFruit.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
@@ -141,7 +141,7 @@ examples {
           fruitFiles = read*("@fruities/catalog/*.pkl")
           
           """
-        base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
+        bytes = Bytes("bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg==")
       }
       ["@birds/catalog.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
@@ -152,7 +152,7 @@ examples {
           catalogFiles = read*("catalog/*.pkl")
           
           """
-        base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
+        bytes = Bytes("bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo=")
       }
       ["@birds/catalog/Ostrich.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
@@ -166,7 +166,7 @@ examples {
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg==")
       }
       ["@birds/catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -180,7 +180,7 @@ examples {
           favoriteFruit = apple
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg==")
       }
       ["@birds/some/dir/Bird.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/some/dir/Bird.pkl"
@@ -194,7 +194,7 @@ examples {
           }
           
           """
-        base64 = "YW1lbmRzICIuLi4iCgpuYW1lID0gIkJpcmQiCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIkZydWl0Igp9Cg=="
+        bytes = Bytes("YW1lbmRzICIuLi4iCgpuYW1lID0gIkJpcmQiCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIkZydWl0Igp9Cg==")
       }
     }
   }
@@ -212,7 +212,7 @@ examples {
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg==")
       }
       ["catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -226,7 +226,7 @@ examples {
           favoriteFruit = apple
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg==")
       }
     }
   }
@@ -244,7 +244,7 @@ examples {
           }
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg==")
       }
       ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -258,7 +258,7 @@ examples {
           favoriteFruit = apple
           
           """
-        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
+        bytes = Bytes("YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg==")
       }
     }
   }

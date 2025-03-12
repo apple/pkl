@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.parser.Lexer;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmDynamic;
@@ -97,6 +98,13 @@ public final class PcfRenderer extends AbstractRenderer {
   @Override
   public void visitDataSize(VmDataSize value) {
     builder.append(value);
+  }
+
+  @Override
+  public void visitBytes(VmBytes value) {
+    builder.append("Bytes(");
+    visitString(value.base64());
+    builder.append(")");
   }
 
   @Override

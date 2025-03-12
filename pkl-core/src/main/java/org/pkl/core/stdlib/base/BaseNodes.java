@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import java.util.Base64;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmIntSeq;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
@@ -140,6 +142,25 @@ public final class BaseNodes {
     @Specialization
     protected VmIntSeq eval(VirtualFrame frame, VmTyped self, long first, long second) {
       return new VmIntSeq(first, second, 1L);
+    }
+  }
+
+  public abstract static class Bytes extends ExternalMethod1Node {
+    @Specialization
+    protected VmBytes eval(VmTyped ignored, String value) {
+      try {
+        return new VmBytes(Base64.getDecoder().decode(value));
+      } catch (IllegalArgumentException e) {
+        throw exceptionBuilder()
+            .evalError("invalidStringBase64", value)
+            .withHint(e.getMessage())
+            .build();
+      }
+    }
+
+    @Specialization
+    protected VmBytes eval(VmTyped ignored, VmList value) {
+      return new VmBytes(value);
     }
   }
 }

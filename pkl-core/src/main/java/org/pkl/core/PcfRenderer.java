@@ -93,6 +93,13 @@ final class PcfRenderer implements ValueRenderer {
     }
 
     @Override
+    public void visitBytes(Bytes value) {
+      write("Bytes(\"");
+      write(value.getBase64());
+      write(")");
+    }
+
+    @Override
     public void visitPair(Pair<?, ?> value) {
       doVisitIterable(value, "Pair(");
     }
