@@ -575,11 +575,11 @@ public class Lexer {
   private void lexBlockComment() {
     if (lookahead == EOF) throw unexpectedEndOfFile();
     var prev = nextChar();
-    // block comments in Pkl can stack
-    var stack = 1;
-    while (stack > 0 && lookahead != EOF) {
-      if (prev == '*' && lookahead == '/') stack--;
-      if (prev == '/' && lookahead == '*') stack++;
+    while (lookahead != EOF) {
+      if (prev == '*' && lookahead == '/') {
+        nextChar();
+        break;
+      }
       prev = nextChar();
     }
     if (lookahead == EOF) throw unexpectedEndOfFile();
