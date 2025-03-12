@@ -915,7 +915,7 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization
     protected String eval(String self) {
-      return Base64.getEncoder().encodeToString(self.getBytes(StandardCharsets.UTF_8));
+      return ByteArrayUtils.base64(self.getBytes(StandardCharsets.UTF_8));
     }
   }
 

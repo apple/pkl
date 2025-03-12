@@ -60,7 +60,7 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    * @since 0.29.0
    */
-  byte[] evaluateOutputBytes(ModuleSource moduleSource);
+  Bytes evaluateOutputBytes(ModuleSource moduleSource);
 
   /**
    * Evaluates a module's {@code output.value} property.

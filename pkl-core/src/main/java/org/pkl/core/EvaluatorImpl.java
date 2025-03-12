@@ -144,13 +144,13 @@ public class EvaluatorImpl implements Evaluator {
         });
   }
 
-  public byte[] evaluateOutputBytes(ModuleSource moduleSource) {
+  public Bytes evaluateOutputBytes(ModuleSource moduleSource) {
     return doEvaluate(
         moduleSource,
         (module) -> {
           var output = readModuleOutput(module);
           var vmBytes = VmUtils.readBytesProperty(output);
-          return vmBytes.getBytes();
+          return vmBytes.export();
         });
   }
 
@@ -290,7 +290,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(() -> VmUtils.readTextProperty(fileOutput));
   }
 
-  byte[] evaluateOutputBytes(VmTyped fileOutput) {
+  Bytes evaluateOutputBytes(VmTyped fileOutput) {
     return doEvaluate(() -> VmUtils.readBytesProperty(fileOutput).export());
   }
 

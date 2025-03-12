@@ -17,7 +17,7 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.Arrays;
-import java.util.Base64;
+import org.pkl.core.Bytes;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.Nullable;
 
@@ -52,8 +52,8 @@ public final class VmBytes extends VmValue {
   }
 
   @Override
-  public byte[] export() {
-    return bytes;
+  public Bytes export() {
+    return new Bytes(bytes);
   }
 
   @Override
@@ -92,7 +92,7 @@ public final class VmBytes extends VmValue {
 
   public String base64() {
     if (base64 == null) {
-      base64 = Base64.getEncoder().encodeToString(bytes);
+      base64 = ByteArrayUtils.base64(bytes);
     }
     return base64;
   }
