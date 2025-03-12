@@ -347,10 +347,15 @@ class KotlinCodeGenerator(
             .apply {
               add("%L", pClass.toKotlinPoetName().simpleName)
               add("(")
-              for ((index, propertyName) in allProperties.keys.withIndex()) {
+              for ((index, entry) in allProperties.entries.withIndex()) {
+                val (propertyName, property) = entry
                 add(if (index == 0) "%L" else ", %L", propertyName)
-                add("=$")
-                add("%N", propertyName)
+                if (property.type.isBytesClass) {
+                  add("=\${%T.toString(%L)}", Arrays::class, propertyName)
+                } else {
+                  add("=$")
+                  add("%N", propertyName)
+                }
               }
               add(")")
             }
@@ -579,6 +584,9 @@ class KotlinCodeGenerator(
   // generating idiomatic KDoc would require parsing doc comments, converting member links, etc.
   private fun renderAsKdoc(docComment: String): String = docComment
 
+  private val PType.isBytesClass: Boolean
+    get() = this is PType.Class && this.pClass.info == PClassInfo.Bytes
+
   private fun PClass.toKotlinPoetName(): ClassName {
     val (packageName, moduleTypeName) = nameMapper.map(moduleName)
     return if (isModuleClass) {
@@ -632,6 +640,7 @@ class KotlinCodeGenerator(
           PClassInfo.Float -> DOUBLE
           PClassInfo.Duration -> DURATION
           PClassInfo.DataSize -> DATA_SIZE
+          PClassInfo.Bytes -> BYTE_ARRAY
           PClassInfo.Pair ->
             KOTLIN_PAIR.parameterizedBy(
               if (typeArguments.isEmpty()) ANY_NULL else typeArguments[0].toKotlinPoetName(),

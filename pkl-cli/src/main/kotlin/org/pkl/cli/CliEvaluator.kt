@@ -145,8 +145,8 @@ constructor(
   private fun Evaluator.writeOutput(moduleSource: ModuleSource, writeTo: Path): Boolean {
     if (options.expression == null) {
       val bytes = evaluateOutputBytes(moduleSource)
-      writeTo.writeBytes(bytes)
-      return bytes.isNotEmpty()
+      writeTo.writeBytes(bytes.value)
+      return bytes.value.isNotEmpty()
     }
     val text = evaluateExpressionString(moduleSource, options.expression)
     writeTo.writeString(text)
@@ -156,7 +156,7 @@ constructor(
   private fun Evaluator.evalOutput(moduleSource: ModuleSource): ByteArray {
     if (options.expression == null) {
       val bytes = evaluateOutputBytes(moduleSource)
-      return bytes
+      return bytes.value
     }
     return evaluateExpressionString(moduleSource, options.expression).toByteArray()
   }
@@ -206,7 +206,7 @@ constructor(
               outputWritten = true
             }
           } else {
-            val outputBytes = evaluator.evaluateOutputBytes(moduleSource)
+            val outputBytes = evaluator.evaluateOutputBytes(moduleSource).value
             if (outputBytes.isNotEmpty()) {
               if (outputWritten) outputStream.writeLine(options.moduleOutputSeparator)
               outputStream.write(outputBytes)
@@ -275,7 +275,7 @@ constructor(
         }
         writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
         realPath.createParentDirectories()
-        realPath.writeBytes(fileOutput.bytes)
+        realPath.writeBytes(fileOutput.bytes.value)
         outputStream.writeText(
           IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
             IoUtils.getLineSeparator()

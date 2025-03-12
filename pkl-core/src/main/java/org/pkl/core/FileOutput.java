@@ -25,9 +25,9 @@ public interface FileOutput {
   String getText();
 
   /**
-   * Returns the byte array contents of this file.
+   * Returns the byte contents of this file.
    *
    * @throws PklException if an error occurs during evaluation.
    */
-  byte[] getBytes();
+  Bytes getBytes();
 }
