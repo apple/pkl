@@ -154,7 +154,7 @@ public interface Evaluator extends AutoCloseable {
    *     </tr>
    *     <tr>
    *       <td>Bytes</td>
-   *       <td>{@code byte[]}</td>
+   *       <td>{@link Bytes}</td>
    *     </tr>
    *   </tbody>
    * </table>
