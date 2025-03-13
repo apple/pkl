@@ -30,11 +30,14 @@ steps {
   new Config.RunStep {
     command = "./gradlew \(self.gradleArgs) \(module.command)"
   }
-  // add jpkl to workspace so it gets published as a GitHub release
+  // add Java executables to workspace so it they get published as a GitHub release
   new Config.PersistToWorkspaceStep {
     root = "."
     paths {
       "pkl-cli/build/executable/"
+      "pkl-doc/build/executable/"
+      "pkl-codegen-java/build/executable/"
+      "pkl-codegen-kotlin/build/executable/"
     }
   }
 }

@@ -23,7 +23,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -100,7 +100,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -131,7 +131,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -192,7 +192,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -269,7 +269,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -301,13 +301,326 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
         name: gradle buildNative
         shell: bash.exe
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: windows.large
+    machine:
+      image: windows-server-2022-gui:current
+  pkl-doc-macOS-amd64-release:
+    steps:
+    - checkout
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.3.0
+  pkl-doc-linux-amd64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: xlarge
+    docker:
+    - image: oraclelinux:8-slim
+  pkl-doc-macOS-aarch64-release:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.3.0
+  pkl-doc-linux-aarch64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-aarch64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/aarch64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-aarch64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: arm.xlarge
+    docker:
+    - image: arm64v8/oraclelinux:8-slim
+  pkl-doc-linux-alpine-amd64-release:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: xlarge
+    docker:
+    - image: oraclelinux:8-slim
+  pkl-doc-windows-amd64-release:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+          https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_windows_hotspot_21.0.5_11.zip -o /tmp/jdk.zip
+
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
+        name: Set up environment
+        shell: bash.exe
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+        name: gradle buildNative
+        shell: bash.exe
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
     - store_test_results:
         path: ~/test-results
     environment:
@@ -336,7 +649,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:macExecutableAmd64 pkl-core:testMacExecutableAmd64 pkl-server:testMacExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -413,7 +726,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:linuxExecutableAmd64 pkl-core:testLinuxExecutableAmd64 pkl-server:testLinuxExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -444,7 +757,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:macExecutableAarch64 pkl-core:testMacExecutableAarch64 pkl-server:testMacExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -505,7 +818,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:linuxExecutableAarch64 pkl-core:testLinuxExecutableAarch64 pkl-server:testLinuxExecutableAarch64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -582,7 +895,7 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:alpineExecutableAmd64 pkl-core:testAlpineExecutableAmd64 pkl-server:testAlpineExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
         name: gradle buildNative
     - persist_to_workspace:
         root: '.'
@@ -614,13 +927,326 @@ jobs:
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
-          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:windowsExecutableAmd64 pkl-core:testWindowsExecutableAmd64 pkl-server:testWindowsExecutableAmd64
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-cli:buildNative
         name: gradle buildNative
         shell: bash.exe
     - persist_to_workspace:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: windows.large
+    machine:
+      image: windows-server-2022-gui:current
+  pkl-doc-macOS-amd64-snapshot:
+    steps:
+    - checkout
+    - run:
+        command: /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+        name: Installing Rosetta 2
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.3.0
+  pkl-doc-linux-amd64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: xlarge
+    docker:
+    - image: oraclelinux:8-slim
+  pkl-doc-macOS-aarch64-snapshot:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_mac_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir $HOME/jdk \
+            && cd $HOME/jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /Users/distiller/jdk/Contents/Home
+    resource_class: macos.m1.large.gen1
+    macos:
+      xcode: 15.3.0
+  pkl-doc-linux-aarch64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-aarch64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/aarch64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-aarch64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: arm.xlarge
+    docker:
+    - image: arm64v8/oraclelinux:8-slim
+  pkl-doc-linux-alpine-amd64-snapshot:
+    steps:
+    - checkout
+    - restore_cache:
+        key: staticdeps-amd64
+        name: Restore static deps from cache
+    - run:
+        command: |-
+          sed -ie '/\[ol8_codeready_builder\]/,/^$/s/enabled=0/enabled=1/g' /etc/yum.repos.d/oracle-linux-ol8.repo \
+            && microdnf -y install util-linux tree coreutils-single findutils curl tar gzip git zlib-devel gcc-c++ make openssl glibc-langpack-en libstdc++-static \
+            && microdnf clean all \
+            && rm -rf /var/cache/dnf
+
+          # install jdk
+          curl -Lf \
+           https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz -o /tmp/jdk.tar.gz
+
+          mkdir /jdk \
+            && cd /jdk \
+            && cat /tmp/jdk.tar.gz | tar --strip-components=1 -xzC .
+
+          mkdir -p ~/staticdeps/bin
+
+          cp /usr/lib/gcc/x86_64-redhat-linux/8/libstdc++.a ~/staticdeps
+
+          # install zlib
+          if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+            curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+            mkdir -p /tmp/dep_zlib-1.2.13 \
+            && cd /tmp/dep_zlib-1.2.13 \
+            && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "zlib-1.2.13: make..." && make -s -j4 \
+            && echo "zlib-1.2.13: make install..." && make -s install \
+            && rm -rf /tmp/dep_zlib-1.2.13
+          fi
+
+          # install musl
+          if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+            curl -Lf https://musl.libc.org/releases/musl-1.2.2.tar.gz -o /tmp/musl.tar.gz
+
+            mkdir -p /tmp/dep_musl-1.2.2 \
+            && cd /tmp/dep_musl-1.2.2 \
+            && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+            && echo "musl-1.2.2: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+            && echo "musl-1.2.2: make..." && make -s -j4 \
+            && echo "musl-1.2.2: make install..." && make -s install \
+            && rm -rf /tmp/dep_musl-1.2.2
+
+            # native-image expects to find an executable at this path.
+            ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+          fi
+        name: Set up environment
+        shell: '#!/bin/bash -exo pipefail'
+    - save_cache:
+        paths:
+        - ~/staticdeps
+        key: staticdeps-amd64
+        name: Save statics deps to cache
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
+        name: gradle buildNative
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
+    - store_test_results:
+        path: ~/test-results
+    environment:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    resource_class: xlarge
+    docker:
+    - image: oraclelinux:8-slim
+  pkl-doc-windows-amd64-snapshot:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          # install jdk
+          curl -Lf \
+          https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_windows_hotspot_21.0.5_11.zip -o /tmp/jdk.zip
+
+          unzip /tmp/jdk.zip -d /tmp/jdk \
+            && cd /tmp/jdk/jdk-* \
+            && mkdir /jdk \
+            && cp -r . /jdk
+        name: Set up environment
+        shell: bash.exe
+    - run:
+        command: |-
+          export PATH=~/staticdeps/bin:$PATH
+          ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-doc:buildNative
+        name: gradle buildNative
+        shell: bash.exe
+    - persist_to_workspace:
+        root: '.'
+        paths:
+        - pkl-doc/build/executable/
     - store_test_results:
         path: ~/test-results
     environment:
@@ -704,6 +1330,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+        - pkl-doc/build/executable/
+        - pkl-codegen-java/build/executable/
+        - pkl-codegen-kotlin/build/executable/
     - store_test_results:
         path: ~/test-results
     environment:
@@ -721,6 +1350,9 @@ jobs:
         root: '.'
         paths:
         - pkl-cli/build/executable/
+        - pkl-doc/build/executable/
+        - pkl-codegen-java/build/executable/
+        - pkl-codegen-kotlin/build/executable/
     - store_test_results:
         path: ~/test-results
     environment:
@@ -734,16 +1366,15 @@ jobs:
     - run:
         command: |-
           # exclude build_artifacts.txt from publish
-          rm -f pkl-cli/build/executable/*.build_artifacts.txt
-          find pkl-cli/build/executable/* -type d | xargs rm -rf 
-          rm -f pkl-cli/build/executable/resources
+          rm -f */build/executable/*.build_artifacts.txt
+          find */build/executable/* -type d | xargs rm -rf 
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
             --verify-tag \
             --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${CIRCLE_TAG}" \
             --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
-            pkl-cli/build/executable/*
+            */build/executable/*
         name: Publish release on GitHub
     docker:
     - image: maniator/gh:v2.40.1
@@ -786,6 +1417,42 @@ workflows:
     - gradle-check-windows:
         requires:
         - hold
+    - pkl-cli-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-windows-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-windows-amd64-snapshot:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -794,26 +1461,38 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
-    - bench
-    - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
     - pkl-cli-linux-amd64-snapshot
     - pkl-cli-macOS-aarch64-snapshot
     - pkl-cli-linux-aarch64-snapshot
     - pkl-cli-linux-alpine-amd64-snapshot
     - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-linux-alpine-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
+    - bench
+    - gradle-compatibility
     - deploy-snapshot:
         requires:
         - gradle-check
         - gradle-check-windows
-        - bench
-        - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
         - pkl-cli-linux-amd64-snapshot
         - pkl-cli-macOS-aarch64-snapshot
         - pkl-cli-linux-aarch64-snapshot
         - pkl-cli-linux-alpine-amd64-snapshot
         - pkl-cli-windows-amd64-snapshot
+        - pkl-doc-macOS-amd64-snapshot
+        - pkl-doc-linux-amd64-snapshot
+        - pkl-doc-macOS-aarch64-snapshot
+        - pkl-doc-linux-aarch64-snapshot
+        - pkl-doc-linux-alpine-amd64-snapshot
+        - pkl-doc-windows-amd64-snapshot
+        - bench
+        - gradle-compatibility
         context: pkl-maven-release
     - trigger-docsite-build:
         requires:
@@ -833,6 +1512,78 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-windows:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-windows-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-alpine-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -886,10 +1637,58 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-aarch64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-aarch64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-alpine-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-windows-amd64-release:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - github-release:
         requires:
         - gradle-check
         - gradle-check-windows
+        - pkl-cli-macOS-amd64-snapshot
+        - pkl-cli-linux-amd64-snapshot
+        - pkl-cli-macOS-aarch64-snapshot
+        - pkl-cli-linux-aarch64-snapshot
+        - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
+        - pkl-doc-macOS-amd64-snapshot
+        - pkl-doc-linux-amd64-snapshot
+        - pkl-doc-macOS-aarch64-snapshot
+        - pkl-doc-linux-aarch64-snapshot
+        - pkl-doc-linux-alpine-amd64-snapshot
+        - pkl-doc-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -898,6 +1697,12 @@ workflows:
         - pkl-cli-linux-aarch64-release
         - pkl-cli-linux-alpine-amd64-release
         - pkl-cli-windows-amd64-release
+        - pkl-doc-macOS-amd64-release
+        - pkl-doc-linux-amd64-release
+        - pkl-doc-macOS-aarch64-release
+        - pkl-doc-linux-aarch64-release
+        - pkl-doc-linux-alpine-amd64-release
+        - pkl-doc-windows-amd64-release
         context: pkl-github-release
         filters:
           branches:
@@ -927,6 +1732,18 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-linux-alpine-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
@@ -935,6 +1752,12 @@ workflows:
     - pkl-cli-linux-aarch64-release
     - pkl-cli-linux-alpine-amd64-release
     - pkl-cli-windows-amd64-release
+    - pkl-doc-macOS-amd64-release
+    - pkl-doc-linux-amd64-release
+    - pkl-doc-macOS-aarch64-release
+    - pkl-doc-linux-aarch64-release
+    - pkl-doc-linux-alpine-amd64-release
+    - pkl-doc-windows-amd64-release
     when:
       matches:
         value: << pipeline.git.branch >>

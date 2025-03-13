@@ -16,10 +16,24 @@
 plugins {
   pklAllProjects
   pklKotlinLibrary
-  pklPublishLibrary
+  pklJavaExecutable
+  pklNativeExecutable
   pklHtmlValidator
-  @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
   alias(libs.plugins.kotlinxSerialization)
+}
+
+executable {
+  mainClass = "org.pkl.doc.Main"
+  name = "pkldoc"
+  javaName = "jpkldoc"
+  documentationName = "Pkldoc CLI"
+  publicationName = "pkldoc"
+  javaPublicationName = "jpkldoc"
+  website = "https://pkl-lang.org/main/current/pkl-doc/index.html"
+}
+
+tasks.withType<NativeImageBuild> {
+  extraNativeImageArgs = listOf("--initialize-at-run-time=org.pkl.doc")
 }
 
 dependencies {

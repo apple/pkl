@@ -5,7 +5,7 @@ import org.pkl.core.ModuleSource;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unused")
-// the pkl/pkl-examples repo has a similar example
+// the pkl-jvm-examples repo has a similar example
 public class JavaConfigExample {
   @Test
   public void usage() {

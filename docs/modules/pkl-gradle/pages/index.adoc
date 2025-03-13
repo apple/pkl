@@ -134,7 +134,7 @@ $ ./gradlew evalPkl
 ----
 
 For a ready-to-go example with full source code,
-see link:{uri-build-eval-example}[codegen-java] in the _pkl/pkl-examples_ repository.
+see link:{uri-build-eval-example}[codegen-java] in the _pkl-jvm-examples_ repository.
 
 === Configuration Options
 
@@ -361,7 +361,7 @@ $ ./gradlew genJava
 ----
 
 For a ready-to-go example with full source code,
-see link:{uri-codegen-java-example}[codegen-java] in the _pkl/pkl-examples_ repository.
+see link:{uri-codegen-java-example}[codegen-java] in the _pkl-jvm-examples_ repository.
 
 === Configuration Options
 
@@ -451,7 +451,7 @@ $ ./gradlew genKotlin
 ----
 
 For a ready-to-go example with full source code,
-see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl/pkl-examples_ repository.
+see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl-jvm-examples_ repository.
 
 === Configuration Options
 
@@ -520,7 +520,7 @@ $ ./gradlew pkldoc
 ----
 
 For a ready-to-go example with full source code,
-see link:{uri-pkldoc-example}[pkldoc] in the _pkl/pkl-examples_ repository.
+see link:{uri-pkldoc-example}[pkldoc] in the _pkl-jvm-examples_ repository.
 
 === Configuration Options
 

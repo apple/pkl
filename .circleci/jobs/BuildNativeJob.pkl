@@ -24,7 +24,19 @@ arch: "amd64"|"aarch64"
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean = false
 
+/// The Gradle project under which to generate the executable
+project: String
+
 javaVersion = "21.0"
+
+extraGradleArgs {
+  when (os == "macOS" && arch == "amd64") {
+    "-Dpkl.targetArch=\(arch)"
+  }
+  when (musl) {
+    "-Dpkl.musl=true"
+  }
+}
 
 local setupLinuxEnvironment: Config.RunStep =
   let (muslVersion = "1.2.2")
@@ -131,24 +143,18 @@ steps {
   }
   new Config.RunStep {
     name = "gradle buildNative"
-    local _os =
-      if (module.os == "macOS") "mac"
-      else if (musl) "alpine"
-      else if (module.os == "windows") "windows"
-      else "linux"
-    local jobName = "\(_os)Executable\(arch.capitalize())"
     when (module.os == "windows") {
       shell = "bash.exe"
     }
     command = #"""
       export PATH=~/staticdeps/bin:$PATH
-      ./gradlew \#(module.gradleArgs) pkl-cli:\#(jobName) pkl-core:test\#(jobName.capitalize()) pkl-server:test\#(jobName.capitalize())
+      ./gradlew \#(module.gradleArgs) \#(project):buildNative
       """#
   }
   new Config.PersistToWorkspaceStep {
     root = "."
     paths {
-      "pkl-cli/build/executable/"
+      "\(project)/build/executable/"
     }
   }
 }

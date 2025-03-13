@@ -66,7 +66,10 @@ val javadocJar by
     archiveClassifier.set("javadoc")
   }
 
-tasks.shadowJar { archiveBaseName.set("pkl-tools-all") }
+tasks.shadowJar {
+  dependsOn(":pkl-doc:shadowJar")
+  archiveBaseName.set("pkl-tools-all")
+}
 
 private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
   dependsOn(tasks.shadowJar)
