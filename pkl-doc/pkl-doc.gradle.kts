@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,24 @@
 plugins {
   pklAllProjects
   pklKotlinLibrary
-  pklPublishLibrary
+  pklJavaExecutable
+  pklNativeExecutable
   pklHtmlValidator
-  @Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
   alias(libs.plugins.kotlinxSerialization)
+}
+
+executable {
+  mainClass = "org.pkl.doc.Main"
+  name = "pkldoc"
+  javaName = "jpkldoc"
+  documentationName = "Pkldoc CLI"
+  publicationName = "pkldoc"
+  javaPublicationName = "jpkldoc"
+  website = "https://pkl-lang.org/main/current/pkl-doc/index.html"
+}
+
+tasks.withType<NativeImageBuild> {
+  extraNativeImageArgs = listOf("--initialize-at-run-time=org.pkl.doc")
 }
 
 dependencies {

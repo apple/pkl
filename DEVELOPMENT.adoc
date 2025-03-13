@@ -45,12 +45,11 @@ install {uri-native-prerequisites-windows}[Prerequisites For Native Image on Win
 [source,shell]
 ----
 gw clean
-gw test          # run all tests except native executable tests
-gw testNative    # run native executable tests
-gw spotlessApply # fix code formatting
-gw build         # build everything except native executables
-gw buildNative   # build native executable(s) for current platform
-                 # (Alpine executable is only built if ~/staticdeps/bin/musl-gcc exists)
+gw test                 # run all tests except native executable tests
+gw spotlessApply        # fix code formatting
+gw build                # build everything except native executables
+gw pkl-cli:testNative   # run native executable tests
+gw pkl-cli:buildNative  # build native executable for current platform
 
 pkl-cli/build/executable/jpkl                   # run Java executable
 pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
