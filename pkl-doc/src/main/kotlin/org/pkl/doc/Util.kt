@@ -22,9 +22,9 @@ import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.outputStream
 import org.pkl.core.*
-import org.pkl.core.parser.Lexer
 import org.pkl.core.util.IoUtils
 import org.pkl.core.util.json.JsonWriter
+import org.pkl.parser.Lexer
 
 // overwrites any existing file
 internal fun copyResource(resourceName: String, targetDir: Path) {

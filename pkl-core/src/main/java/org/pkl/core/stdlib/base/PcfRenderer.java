@@ -16,7 +16,6 @@
 package org.pkl.core.stdlib.base;
 
 import org.pkl.core.ValueFormatter;
-import org.pkl.core.parser.Lexer;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
@@ -37,6 +36,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.AbstractRenderer;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.LateInit;
+import org.pkl.parser.Lexer;
 
 public final class PcfRenderer extends AbstractRenderer {
   private final ValueFormatter valueFormatter;
