@@ -49,7 +49,7 @@ idea {
         testRunner = PLATFORM
       }
       configure<TaskTriggersConfig> {
-        afterSync(provider { project(":pkl-core").tasks.named("makeIntelliJAntlrPluginHappy") })
+        afterSync(provider { project(":pkl-parser").tasks.named("makeIntelliJAntlrPluginHappy") })
       }
     }
   }
