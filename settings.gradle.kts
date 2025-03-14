@@ -43,6 +43,8 @@ include("pkl-executor")
 
 include("pkl-gradle")
 
+include("pkl-parser")
+
 include("pkl-server")
 
 include("pkl-tools")

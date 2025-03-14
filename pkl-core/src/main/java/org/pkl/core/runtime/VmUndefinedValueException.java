@@ -22,8 +22,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import org.pkl.core.StackFrame;
-import org.pkl.core.parser.Lexer;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.Lexer;
 
 public final class VmUndefinedValueException extends VmEvalException {
   private final @Nullable Object receiver;

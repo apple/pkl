@@ -157,81 +157,6 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
-import org.pkl.core.parser.Span;
-import org.pkl.core.parser.syntax.Annotation;
-import org.pkl.core.parser.syntax.ArgumentList;
-import org.pkl.core.parser.syntax.Class;
-import org.pkl.core.parser.syntax.ClassMethod;
-import org.pkl.core.parser.syntax.ClassProperty;
-import org.pkl.core.parser.syntax.Expr;
-import org.pkl.core.parser.syntax.Expr.AmendsExpr;
-import org.pkl.core.parser.syntax.Expr.BinaryOperatorExpr;
-import org.pkl.core.parser.syntax.Expr.BoolLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.FloatLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.FunctionLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.IfExpr;
-import org.pkl.core.parser.syntax.Expr.ImportExpr;
-import org.pkl.core.parser.syntax.Expr.IntLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.LetExpr;
-import org.pkl.core.parser.syntax.Expr.LogicalNotExpr;
-import org.pkl.core.parser.syntax.Expr.ModuleExpr;
-import org.pkl.core.parser.syntax.Expr.MultiLineStringLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.NewExpr;
-import org.pkl.core.parser.syntax.Expr.NonNullExpr;
-import org.pkl.core.parser.syntax.Expr.NullLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.OuterExpr;
-import org.pkl.core.parser.syntax.Expr.ParenthesizedExpr;
-import org.pkl.core.parser.syntax.Expr.QualifiedAccessExpr;
-import org.pkl.core.parser.syntax.Expr.ReadExpr;
-import org.pkl.core.parser.syntax.Expr.SingleLineStringLiteralExpr;
-import org.pkl.core.parser.syntax.Expr.SubscriptExpr;
-import org.pkl.core.parser.syntax.Expr.SuperAccessExpr;
-import org.pkl.core.parser.syntax.Expr.SuperSubscriptExpr;
-import org.pkl.core.parser.syntax.Expr.ThisExpr;
-import org.pkl.core.parser.syntax.Expr.ThrowExpr;
-import org.pkl.core.parser.syntax.Expr.TraceExpr;
-import org.pkl.core.parser.syntax.Expr.TypeCastExpr;
-import org.pkl.core.parser.syntax.Expr.TypeCheckExpr;
-import org.pkl.core.parser.syntax.Expr.UnaryMinusExpr;
-import org.pkl.core.parser.syntax.Expr.UnqualifiedAccessExpr;
-import org.pkl.core.parser.syntax.ExtendsOrAmendsClause;
-import org.pkl.core.parser.syntax.Identifier;
-import org.pkl.core.parser.syntax.ImportClause;
-import org.pkl.core.parser.syntax.Modifier;
-import org.pkl.core.parser.syntax.Modifier.ModifierValue;
-import org.pkl.core.parser.syntax.Module;
-import org.pkl.core.parser.syntax.Node;
-import org.pkl.core.parser.syntax.ObjectBody;
-import org.pkl.core.parser.syntax.ObjectMember.ForGenerator;
-import org.pkl.core.parser.syntax.ObjectMember.MemberPredicate;
-import org.pkl.core.parser.syntax.ObjectMember.ObjectElement;
-import org.pkl.core.parser.syntax.ObjectMember.ObjectEntry;
-import org.pkl.core.parser.syntax.ObjectMember.ObjectMethod;
-import org.pkl.core.parser.syntax.ObjectMember.ObjectProperty;
-import org.pkl.core.parser.syntax.ObjectMember.ObjectSpread;
-import org.pkl.core.parser.syntax.ObjectMember.WhenGenerator;
-import org.pkl.core.parser.syntax.Parameter;
-import org.pkl.core.parser.syntax.Parameter.TypedIdentifier;
-import org.pkl.core.parser.syntax.ParameterList;
-import org.pkl.core.parser.syntax.QualifiedIdentifier;
-import org.pkl.core.parser.syntax.StringConstant;
-import org.pkl.core.parser.syntax.StringPart;
-import org.pkl.core.parser.syntax.StringPart.StringChars;
-import org.pkl.core.parser.syntax.StringPart.StringInterpolation;
-import org.pkl.core.parser.syntax.Type;
-import org.pkl.core.parser.syntax.Type.ConstrainedType;
-import org.pkl.core.parser.syntax.Type.DeclaredType;
-import org.pkl.core.parser.syntax.Type.FunctionType;
-import org.pkl.core.parser.syntax.Type.ModuleType;
-import org.pkl.core.parser.syntax.Type.NothingType;
-import org.pkl.core.parser.syntax.Type.NullableType;
-import org.pkl.core.parser.syntax.Type.ParenthesizedType;
-import org.pkl.core.parser.syntax.Type.StringConstantType;
-import org.pkl.core.parser.syntax.Type.UnionType;
-import org.pkl.core.parser.syntax.Type.UnknownType;
-import org.pkl.core.parser.syntax.TypeAlias;
-import org.pkl.core.parser.syntax.TypeAnnotation;
-import org.pkl.core.parser.syntax.TypeParameterList;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
@@ -256,6 +181,81 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
+import org.pkl.parser.Span;
+import org.pkl.parser.syntax.Annotation;
+import org.pkl.parser.syntax.ArgumentList;
+import org.pkl.parser.syntax.Class;
+import org.pkl.parser.syntax.ClassMethod;
+import org.pkl.parser.syntax.ClassProperty;
+import org.pkl.parser.syntax.Expr;
+import org.pkl.parser.syntax.Expr.AmendsExpr;
+import org.pkl.parser.syntax.Expr.BinaryOperatorExpr;
+import org.pkl.parser.syntax.Expr.BoolLiteralExpr;
+import org.pkl.parser.syntax.Expr.FloatLiteralExpr;
+import org.pkl.parser.syntax.Expr.FunctionLiteralExpr;
+import org.pkl.parser.syntax.Expr.IfExpr;
+import org.pkl.parser.syntax.Expr.ImportExpr;
+import org.pkl.parser.syntax.Expr.IntLiteralExpr;
+import org.pkl.parser.syntax.Expr.LetExpr;
+import org.pkl.parser.syntax.Expr.LogicalNotExpr;
+import org.pkl.parser.syntax.Expr.ModuleExpr;
+import org.pkl.parser.syntax.Expr.MultiLineStringLiteralExpr;
+import org.pkl.parser.syntax.Expr.NewExpr;
+import org.pkl.parser.syntax.Expr.NonNullExpr;
+import org.pkl.parser.syntax.Expr.NullLiteralExpr;
+import org.pkl.parser.syntax.Expr.OuterExpr;
+import org.pkl.parser.syntax.Expr.ParenthesizedExpr;
+import org.pkl.parser.syntax.Expr.QualifiedAccessExpr;
+import org.pkl.parser.syntax.Expr.ReadExpr;
+import org.pkl.parser.syntax.Expr.SingleLineStringLiteralExpr;
+import org.pkl.parser.syntax.Expr.SubscriptExpr;
+import org.pkl.parser.syntax.Expr.SuperAccessExpr;
+import org.pkl.parser.syntax.Expr.SuperSubscriptExpr;
+import org.pkl.parser.syntax.Expr.ThisExpr;
+import org.pkl.parser.syntax.Expr.ThrowExpr;
+import org.pkl.parser.syntax.Expr.TraceExpr;
+import org.pkl.parser.syntax.Expr.TypeCastExpr;
+import org.pkl.parser.syntax.Expr.TypeCheckExpr;
+import org.pkl.parser.syntax.Expr.UnaryMinusExpr;
+import org.pkl.parser.syntax.Expr.UnqualifiedAccessExpr;
+import org.pkl.parser.syntax.ExtendsOrAmendsClause;
+import org.pkl.parser.syntax.Identifier;
+import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.Modifier;
+import org.pkl.parser.syntax.Modifier.ModifierValue;
+import org.pkl.parser.syntax.Module;
+import org.pkl.parser.syntax.Node;
+import org.pkl.parser.syntax.ObjectBody;
+import org.pkl.parser.syntax.ObjectMember.ForGenerator;
+import org.pkl.parser.syntax.ObjectMember.MemberPredicate;
+import org.pkl.parser.syntax.ObjectMember.ObjectElement;
+import org.pkl.parser.syntax.ObjectMember.ObjectEntry;
+import org.pkl.parser.syntax.ObjectMember.ObjectMethod;
+import org.pkl.parser.syntax.ObjectMember.ObjectProperty;
+import org.pkl.parser.syntax.ObjectMember.ObjectSpread;
+import org.pkl.parser.syntax.ObjectMember.WhenGenerator;
+import org.pkl.parser.syntax.Parameter;
+import org.pkl.parser.syntax.Parameter.TypedIdentifier;
+import org.pkl.parser.syntax.ParameterList;
+import org.pkl.parser.syntax.QualifiedIdentifier;
+import org.pkl.parser.syntax.StringConstant;
+import org.pkl.parser.syntax.StringPart;
+import org.pkl.parser.syntax.StringPart.StringChars;
+import org.pkl.parser.syntax.StringPart.StringInterpolation;
+import org.pkl.parser.syntax.Type;
+import org.pkl.parser.syntax.Type.ConstrainedType;
+import org.pkl.parser.syntax.Type.DeclaredType;
+import org.pkl.parser.syntax.Type.FunctionType;
+import org.pkl.parser.syntax.Type.ModuleType;
+import org.pkl.parser.syntax.Type.NothingType;
+import org.pkl.parser.syntax.Type.NullableType;
+import org.pkl.parser.syntax.Type.ParenthesizedType;
+import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.UnionType;
+import org.pkl.parser.syntax.Type.UnknownType;
+import org.pkl.parser.syntax.TypeAlias;
+import org.pkl.parser.syntax.TypeAnnotation;
+import org.pkl.parser.syntax.TypeParameterList;
 
 public class AstBuilder extends AbstractAstBuilder<Object> {
   private final VmLanguage language;
@@ -1097,7 +1097,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return Pair.of(elementNodes, isConstantNodes);
   }
 
-  public GeneratorMemberNode visitObjectMember(org.pkl.core.parser.syntax.ObjectMember member) {
+  public GeneratorMemberNode visitObjectMember(org.pkl.parser.syntax.ObjectMember member) {
     return (GeneratorMemberNode) member.accept(this);
   }
 
@@ -2375,7 +2375,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorMemberNode[] doVisitGeneratorMemberNodes(
-      List<? extends org.pkl.core.parser.syntax.ObjectMember> members) {
+      List<? extends org.pkl.parser.syntax.ObjectMember> members) {
     var result = new GeneratorMemberNode[members.size()];
     for (var i = 0; i < result.length; i++) {
       result[i] = visitObjectMember(members.get(i));
@@ -2666,7 +2666,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
     var forExprCtx = ctx.parent();
     while (forExprCtx != null
-        && forExprCtx.getClass() != org.pkl.core.parser.syntax.ObjectMember.ForGenerator.class) {
+        && forExprCtx.getClass() != org.pkl.parser.syntax.ObjectMember.ForGenerator.class) {
       forExprCtx = forExprCtx.parent();
     }
     assert forExprCtx != null;
@@ -2674,7 +2674,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         .evalError(errorMessageKey)
         .withSourceSection(
             createSourceSection(
-                ((org.pkl.core.parser.syntax.ObjectMember.ForGenerator) forExprCtx).forSpan()))
+                ((org.pkl.parser.syntax.ObjectMember.ForGenerator) forExprCtx).forSpan()))
         .build();
   }
 

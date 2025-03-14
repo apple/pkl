@@ -24,21 +24,21 @@ import java.util.List;
 import org.pkl.core.ast.builder.ImportsAndReadsParser.Entry;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.syntax.Expr;
-import org.pkl.core.parser.syntax.Expr.ImportExpr;
-import org.pkl.core.parser.syntax.Expr.ReadExpr;
-import org.pkl.core.parser.syntax.Expr.ReadType;
-import org.pkl.core.parser.syntax.Expr.SingleLineStringLiteralExpr;
-import org.pkl.core.parser.syntax.ExtendsOrAmendsClause;
-import org.pkl.core.parser.syntax.ExtendsOrAmendsClause.Type;
-import org.pkl.core.parser.syntax.ImportClause;
-import org.pkl.core.parser.syntax.StringPart.StringChars;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.Parser;
+import org.pkl.parser.ParserError;
+import org.pkl.parser.syntax.Expr;
+import org.pkl.parser.syntax.Expr.ImportExpr;
+import org.pkl.parser.syntax.Expr.ReadExpr;
+import org.pkl.parser.syntax.Expr.ReadType;
+import org.pkl.parser.syntax.Expr.SingleLineStringLiteralExpr;
+import org.pkl.parser.syntax.ExtendsOrAmendsClause;
+import org.pkl.parser.syntax.ExtendsOrAmendsClause.Type;
+import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.StringPart.StringChars;
 
 /**
  * Collects module uris and resource uris imported within a module.

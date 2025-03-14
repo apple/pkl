@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.regex.Pattern;
-import org.pkl.core.parser.Lexer;
+import org.pkl.parser.Lexer;
 
 // To instantiate this class, use ValueRenderers.pcf().
 final class PcfRenderer implements ValueRenderer {

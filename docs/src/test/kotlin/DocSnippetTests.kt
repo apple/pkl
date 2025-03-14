@@ -21,9 +21,9 @@ import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
 import org.pkl.core.util.IoUtils
 import org.pkl.core.http.HttpClient
-import org.pkl.core.parser.Parser
-import org.pkl.core.parser.ParserError
-import org.pkl.core.parser.syntax.ClassProperty
+import org.pkl.parser.Parser
+import org.pkl.parser.ParserError
+import org.pkl.parser.syntax.ClassProperty
 import org.pkl.core.resource.ResourceReaders
 import java.nio.file.Files
 import kotlin.io.path.isDirectory
@@ -302,7 +302,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
 
       override fun getType() = Type.TEST
 
-      private val parsed: org.pkl.core.parser.syntax.Node by lazy {
+      private val parsed: org.pkl.parser.syntax.Node by lazy {
         when (language) {
           "pkl" -> Parser().parseModule(code)
           "pkl-expr" -> Parser().parseExpressionInput(code)

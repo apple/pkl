@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ dependencies {
   implementation(projects.pklCore)
   implementation(projects.pklCommonsCli)
   implementation(projects.pklCommons)
+  implementation(projects.pklParser)
   implementation(libs.commonMark)
   implementation(libs.commonMarkTables)
   implementation(libs.kotlinxHtml)
