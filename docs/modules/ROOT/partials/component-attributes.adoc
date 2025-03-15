@@ -145,3 +145,5 @@ endif::[]
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
 
 :uri-pkl-roadmap: https://github.com/orgs/apple/projects/12/views/1
+
+:uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}

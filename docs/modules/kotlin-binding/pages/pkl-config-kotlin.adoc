@@ -116,7 +116,7 @@ include::{examplesdir}/KotlinConfigExample.kt[tags=nullable]
 Converting to `String` would result in a `ConversionException`.
 
 For a ready-to-go example with full source code,
-see link:{uri-config-kotlin-example}[config-kotlin] in the _pkl/pkl-examples_ repository.
+see link:{uri-config-kotlin-example}[config-kotlin] in the _pkl-jvm-examples_ repository.
 
 == Further Information
 

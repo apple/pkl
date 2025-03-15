@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ plugins {
   pklAllProjects
   pklKotlinLibrary
   pklPublishLibrary
+  pklJavaExecutable
 }
 
 dependencies {
@@ -29,6 +30,14 @@ dependencies {
 
   testImplementation(projects.pklConfigJava)
   testImplementation(projects.pklCommonsTest)
+}
+
+executable {
+  javaName = "pkl-codegen-java"
+  documentationName = "Pkl Codegen Java"
+  javaPublicationName = "pkl-cli-codegen-java"
+  mainClass = "org.pkl.codegen.java.Main"
+  website = "https://pkl-lang.org/main/current/java-binding/codegen.html"
 }
 
 // with `org.gradle.parallel=true` and without the line below, `test` strangely runs into:
