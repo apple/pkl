@@ -85,8 +85,8 @@ abstract class NativeImageBuild : DefaultTask() {
     }
 
   init {
-    // ensure native-image builds run in serial (parallel builds is causing some weird issues;
-    // leads to false positive errors around things in the heap).
+    // ensure native-image builds run in serial (prevent `gw buildNative` from consuming all host
+    // CPU resources).
     usesService(buildService)
 
     group = "build"
