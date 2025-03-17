@@ -19,7 +19,7 @@ import kotlin.io.path.writeText
 plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
-  id("pklNativeBuild")
+  id("pklNativeLifecycle")
   id("pklPublishLibrary")
   id("com.github.johnrengelman.shadow")
 }
@@ -150,6 +150,7 @@ val testStartNativeExecutable by
     }
   }
 
+// Expose underlying task's outputs
 private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
   dependsOn(other)
   outputs.files(other)

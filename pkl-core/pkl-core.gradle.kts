@@ -20,7 +20,7 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklPublishLibrary
-  pklNativeBuild
+  pklNativeLifecycle
   idea
 }
 

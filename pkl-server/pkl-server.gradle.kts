@@ -17,7 +17,7 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklKotlinLibrary
-  pklNativeBuild
+  pklNativeLifecycle
 }
 
 dependencies {

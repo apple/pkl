@@ -1,10 +1,10 @@
 = Kotlin Code Generator
 include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-kotlin-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-kotlin
-:uri-pkl-codegen-kotlin-download: {uri-sonatype-snapshot-download}&a=pkl-codegen-kotlin&e=jar
+:uri-pkl-codegen-kotlin-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-kotlin&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-codegen-kotlin-download: {github-releases}/pkl-codegen-kotlin
+:uri-pkl-codegen-kotlin-download: {github-releases}/pkl-cli-codegen-kotlin
 endif::[]
 
 The Kotlin source code generator reads Pkl classes and generates corresponding Kotlin classes with equally named properties.
@@ -101,7 +101,7 @@ macOS/Linux::
 [source,shell]
 [subs="+attributes"]
 ----
-curl -L -o jpkl '{uri-pkl-codegen-kotlin-download}'
+curl -L -o pkl-codegen-kotlin '{uri-pkl-codegen-kotlin-download}'
 chmod +x pkl-codegen-kotlin
 ./pkl-codegen-kotlin --version
 ----
