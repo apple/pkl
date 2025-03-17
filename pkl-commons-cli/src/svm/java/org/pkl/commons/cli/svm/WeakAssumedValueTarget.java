@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.cli.svm;
+package org.pkl.commons.cli.svm;
 
 import com.oracle.svm.core.annotate.TargetClass;
 import com.oracle.svm.truffle.TruffleFeature;
 
-/** Makes non-public class PolyglotThreadInfo usable above. */
+/** Makes non-public class WeakAssumedValue usable. */
 @TargetClass(
-    className = "com.oracle.truffle.polyglot.PolyglotThreadInfo",
+    className = "com.oracle.truffle.polyglot.WeakAssumedValue",
     onlyWith = {TruffleFeature.IsEnabled.class})
-public final class PolyglotThreadInfoTarget {}
+public final class WeakAssumedValueTarget {}

@@ -47,8 +47,6 @@ publishing {
 }
 
 dependencies {
-  compileOnly(libs.svm)
-  compileOnly(libs.truffleSvm)
   implementation(libs.truffleRuntime)
   compileOnly(libs.graalSdk)
 

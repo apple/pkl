@@ -32,10 +32,6 @@ executable {
   website = "https://pkl-lang.org/main/current/pkl-doc/index.html"
 }
 
-tasks.withType<NativeImageBuild> {
-  extraNativeImageArgs = listOf("--initialize-at-run-time=org.pkl.doc")
-}
-
 dependencies {
   implementation(projects.pklCore)
   implementation(projects.pklCommonsCli)

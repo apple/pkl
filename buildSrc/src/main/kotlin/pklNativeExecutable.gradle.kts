@@ -62,6 +62,9 @@ private fun NativeImageBuild.aarch64() {
 
 private fun NativeImageBuild.setClasspath() {
   classpath.from(sourceSets.main.map { it.output })
+  classpath.from(
+    project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
+  )
   classpath.from(configurations.runtimeClasspath)
 }
 
