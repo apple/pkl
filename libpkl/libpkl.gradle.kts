@@ -79,7 +79,6 @@ fun Exec.configureLibrary(
         add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
         add("--no-fallback")
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
-        add("-H:IncludeResources=org/jline/utils/.*")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
         add("-H:Features=org.pkl.nativeapi.InitFeature")
