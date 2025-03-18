@@ -21,8 +21,6 @@ plugins {
   idea
 }
 
-val generatorSourceSet = sourceSets.register("generator")
-
 sourceSets { test { java { srcDir(file("testgenerated/antlr")) } } }
 
 idea {
