@@ -19,6 +19,8 @@ include("bench")
 
 include("docs")
 
+include("libpkl")
+
 include("pkl-cli")
 
 include("pkl-codegen-java")
