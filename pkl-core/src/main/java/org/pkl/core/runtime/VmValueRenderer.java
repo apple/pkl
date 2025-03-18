@@ -18,8 +18,8 @@ package org.pkl.core.runtime;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.pkl.core.ValueFormatter;
-import org.pkl.core.parser.Lexer;
 import org.pkl.core.util.MutableBoolean;
+import org.pkl.parser.Lexer;
 
 /**
  * Renders values for use in REPL and error messages. Does not force values to avoid consecutive

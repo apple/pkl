@@ -18,14 +18,14 @@ package org.pkl.core.ast.builder;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
-import org.pkl.core.parser.BaseParserVisitor;
-import org.pkl.core.parser.Span;
-import org.pkl.core.parser.syntax.DocComment;
-import org.pkl.core.parser.syntax.Modifier;
-import org.pkl.core.parser.syntax.Modifier.ModifierValue;
-import org.pkl.core.parser.syntax.Node;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.BaseParserVisitor;
+import org.pkl.parser.Span;
+import org.pkl.parser.syntax.DocComment;
+import org.pkl.parser.syntax.Modifier;
+import org.pkl.parser.syntax.Modifier.ModifierValue;
+import org.pkl.parser.syntax.Node;
 
 public abstract class AbstractAstBuilder<T> extends BaseParserVisitor<T> {
 
