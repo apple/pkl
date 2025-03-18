@@ -16,6 +16,7 @@
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -24,6 +25,7 @@ import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -49,7 +51,7 @@ abstract class NativeImageBuild : DefaultTask() {
 
   @get:InputFiles abstract val classpath: ConfigurableFileCollection
 
-  private val outputDir = project.layout.buildDirectory.dir("executable")
+  @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
   @get:OutputFile val outputFile = outputDir.flatMap { it.file(imageName) }
 
@@ -88,6 +90,8 @@ abstract class NativeImageBuild : DefaultTask() {
     // ensure native-image builds run in serial (prevent `gw buildNative` from consuming all host
     // CPU resources).
     usesService(buildService)
+
+    outputDir.convention(project.layout.buildDirectory.dir("executable"))
 
     group = "build"
 
