@@ -16,6 +16,9 @@
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -24,42 +27,47 @@ import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.withNormalizer
 import org.gradle.process.ExecOperations
 
-enum class Architecture {
-  AMD64,
-  AARCH64,
-}
-
 abstract class NativeImageBuildService : BuildService<BuildServiceParameters.None>
 
 abstract class NativeImageBuild : DefaultTask() {
-  @get:Input abstract val imageName: Property<String>
+  @get:Input abstract val outputName: Property<String>
 
   @get:Input abstract val extraNativeImageArgs: ListProperty<String>
 
-  @get:Input abstract val arch: Property<Architecture>
+  @get:Input abstract val arch: Property<Target.Arch>
 
-  @get:Input abstract val mainClass: Property<String>
+  /**
+   * The main class entrypoint for the executable.
+   *
+   * This option is not necessary if [sharedLibrary] is true.
+   */
+  @get:Optional @get:Input abstract val mainClass: Property<String>
+
+  /** Create a shared library, instead of an executable. */
+  @get:Input abstract val sharedLibrary: Property<Boolean>
 
   @get:InputFiles abstract val classpath: ConfigurableFileCollection
 
-  private val outputDir = project.layout.buildDirectory.dir("executable")
-
-  @get:OutputFile val outputFile = outputDir.flatMap { it.file(imageName) }
+  @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
   @get:Inject protected abstract val execOperations: ExecOperations
+
+  @get:Inject protected abstract val objectFactory: ObjectFactory
 
   private val graalVm: Provider<BuildInfo.GraalVm> =
     arch.map { a ->
       when (a) {
-        Architecture.AMD64 -> buildInfo.graalVmAmd64
-        Architecture.AARCH64 -> buildInfo.graalVmAarch64
+        Target.Arch.AMD64 -> buildInfo.graalVmAmd64
+        Target.Arch.AARCH64 -> buildInfo.graalVmAarch64
       }
     }
 
@@ -89,6 +97,10 @@ abstract class NativeImageBuild : DefaultTask() {
     // CPU resources).
     usesService(buildService)
 
+    sharedLibrary.convention(false)
+
+    outputDir.convention(project.layout.buildDirectory.dir("executable"))
+
     group = "build"
 
     inputs
@@ -99,6 +111,33 @@ abstract class NativeImageBuild : DefaultTask() {
       .files(nativeImageExecutable)
       .withPropertyName("graalVmNativeImage")
       .withPathSensitivity(PathSensitivity.ABSOLUTE)
+  }
+
+  @Suppress("unused")
+  @OutputFiles
+  fun getEffectiveOutputFiles(): FileCollection {
+    return objectFactory
+      .fileCollection()
+      .from(
+        sharedLibrary.map { isLibrary ->
+          val dir = outputDir.get()
+          val libraryName = outputName.get()
+          // if building a library, native-image outputs five files (four headers, and dynamic lib)
+          // otherwise, it outputs just the one file
+          if (isLibrary) {
+            val sharedLibrarySuffix = buildInfo.os.sharedLibrarySuffix
+            dir.files(
+              "$libraryName.$sharedLibrarySuffix",
+              "$libraryName.h",
+              "${libraryName}_dynamic.h",
+              "graal_isolate.h",
+              "graal_isolate_dynamic.h",
+            )
+          } else {
+            dir.file(libraryName)
+          }
+        }
+      )
   }
 
   @TaskAction
@@ -124,9 +163,14 @@ abstract class NativeImageBuild : DefaultTask() {
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResourceBundles=org.pkl.parser.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
-        add("-H:Class=${mainClass.get()}")
+        if (mainClass.isPresent) {
+          add("-H:Class=${mainClass.get()}")
+        }
+        if (sharedLibrary.get()) {
+          add("--shared")
+        }
         add("-o")
-        add(imageName.get())
+        add(outputName.get())
         // the actual limit (currently) used by native-image is this number + 1400 (idea is to
         // compensate for Truffle's own nodes)
         add("-H:MaxRuntimeCompileMethods=1800")
@@ -156,7 +200,7 @@ abstract class NativeImageBuild : DefaultTask() {
         // make sure dev machine stays responsive (15% slowdown on my laptop)
         val processors =
           Runtime.getRuntime().availableProcessors() /
-            if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
+            if (buildInfo.os.isMacOS && !buildInfo.isCiBuild) 4 else 1
         add("-J-XX:ActiveProcessorCount=${processors}")
         // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed
         // tools.
