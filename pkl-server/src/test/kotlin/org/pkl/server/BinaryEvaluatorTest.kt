@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pkl.commons.test.msgpackDebugRendering
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
@@ -55,7 +56,7 @@ class BinaryEvaluatorTest {
   @Test
   fun `evaluate whole module`() {
     val bytes = evaluate("foo = 1", null)
-    assertThat(bytes.debugRendering)
+    assertThat(bytes.msgpackDebugRendering)
       .isEqualTo(
         """
       - 1

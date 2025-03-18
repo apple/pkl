@@ -29,6 +29,9 @@ project: String
 
 javaVersion = "21.0"
 
+/// The build directory that artifacts are written to
+buildDir: String
+
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(arch)"
@@ -150,6 +153,14 @@ steps {
     }
     setupMacEnvironment
   }
+  when (os == "windows") {
+    new Config.RunStep {
+      name = "Installing mingw"
+      command = """
+        choco install mingw
+        """
+    }
+  }
   new Config.RunStep {
     name = "gradle buildNative"
     when (module.os == "windows") {
@@ -158,13 +169,14 @@ steps {
     command =
       #"""
       export PATH=~/staticdeps/bin:$PATH
+      export PATH=/c/ProgramData/mingw64/mingw64/bin:$PATH
       ./gradlew \#(module.gradleArgs) \#(project):buildNative
       """#
   }
   new Config.PersistToWorkspaceStep {
     root = "."
     paths {
-      "\(project)/build/executable/"
+      buildDir
     }
   }
 }

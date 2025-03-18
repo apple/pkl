@@ -18,6 +18,8 @@ package org.pkl.server
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.pkl.commons.test.Executables
+import org.pkl.commons.test.server.AbstractServerTest
+import org.pkl.commons.test.server.TestTransport
 import org.pkl.core.messaging.MessageTransports
 
 class NativeServerTest : AbstractServerTest() {
