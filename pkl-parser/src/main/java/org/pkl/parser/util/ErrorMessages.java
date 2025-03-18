@@ -24,7 +24,7 @@ public final class ErrorMessages {
 
   public static String create(String messageName, Object... args) {
     var locale = Locale.getDefault();
-    String errorMessage =
+    var errorMessage =
         ResourceBundle.getBundle("org.pkl.parser.errorMessages", locale).getString(messageName);
 
     // only format if `errorMessage` is a format string

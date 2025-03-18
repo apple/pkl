@@ -40,8 +40,6 @@ configurations.api.get().let { apiConfig ->
 }
 
 dependencies {
-  annotationProcessor(generatorSourceSet.get().runtimeClasspath)
-
   compileOnly(libs.jsr305)
 
   antlr(libs.antlr)
@@ -76,8 +74,6 @@ tasks.generateTestGrammarSource {
 }
 
 tasks.generateGrammarSource { enabled = false }
-
-tasks.named("generateGeneratorGrammarSource") { enabled = false }
 
 tasks.compileTestKotlin { dependsOn(tasks.generateTestGrammarSource) }
 
