@@ -30,11 +30,7 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
 }
 
-fun Exec.configureLibrary(
-  graalVm: BuildInfo.GraalVm,
-  outputFile: Provider<RegularFile>,
-  extraArgs: List<String> = listOf(),
-) {
+fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = listOf()) {
   inputs
     .files(sourceSets.main.map { it.output })
     .withPropertyName("mainSourceSets")
@@ -48,10 +44,21 @@ fun Exec.configureLibrary(
     .files(file(graalVm.baseDir).resolve("bin/$nativeImageCommandName"))
     .withPropertyName("graalVmNativeImage")
     .withPathSensitivity(PathSensitivity.ABSOLUTE)
-  outputs.file(outputFile)
+
+  val outputDir = layout.buildDirectory.dir("libs/${graalVm.osName}-${graalVm.arch}")
+  val outputFile: Provider<RegularFile> =
+    outputDir.map { it.file("libpkl-${graalVm.osName}-${graalVm.arch}.dylib") }
+
+  outputs.files(
+    outputFile,
+    // GraalVM shared headers.
+    outputDir.map { it.file("graal_isolate.h") },
+    outputDir.map { it.file("graal_isolate_dynamic.h") },
+  )
+
   outputs.cacheIf { true }
 
-  workingDir(outputFile.map { it.asFile.parentFile })
+  workingDir(outputDir)
   executable = "${graalVm.baseDir}/bin/$nativeImageCommandName"
 
   // For any system properties starting with `pkl.native`, strip off that prefix and pass the rest
@@ -84,7 +91,8 @@ fun Exec.configureLibrary(
         add("-H:Features=org.pkl.nativeapi.InitFeature")
 
         add("-o")
-        add(outputFile.get().asFile.name)
+        // Need te remove the extension, as that gets added by native-image.
+        add(outputFile.get().asFile.name.substringBeforeLast("."))
 
         // Build our shared library
         add("--shared")
@@ -135,11 +143,7 @@ val macNativeLibraryAmd64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAmd64")
 
-    val localBuildInfo = buildInfo.graalVmAmd64
-    configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-mac-${localBuildInfo.arch}"),
-    )
+    configureLibrary(buildInfo.graalVmAmd64)
   }
 
 /** Builds the pkl native library for macOS/aarch64. */
@@ -147,10 +151,8 @@ val macNativeLibraryAarch64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAarch64")
 
-    val localBuildInfo = buildInfo.graalVmAarch64
     configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-${localBuildInfo.osName}-${localBuildInfo.arch}"),
+      buildInfo.graalVmAarch64,
       listOf("-H:+AllowDeprecatedBuilderClassesOnImageClasspath"),
     )
   }
@@ -160,11 +162,7 @@ val linuxNativeLibraryAmd64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAmd64")
 
-    val localBuildInfo = buildInfo.graalVmAmd64
-    configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-linux-${localBuildInfo.arch}"),
-    )
+    configureLibrary(buildInfo.graalVmAmd64)
   }
 
 /**
@@ -177,10 +175,8 @@ val linuxNativeLibraryAarch64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAarch64")
 
-    val localBuildInfo = buildInfo.graalVmAarch64
     configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-linux-${localBuildInfo.arch}"),
+      buildInfo.graalVmAarch64,
       listOf(
         // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
         // (e.g. Raspberry Pi 5, Asahi Linux)
@@ -201,24 +197,14 @@ val alpineNativeLibraryAmd64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAmd64")
 
-    val localBuildInfo = buildInfo.graalVmAmd64
-    configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-alpine-${localBuildInfo.arch}"),
-      listOf("--libc=musl"),
-    )
+    configureLibrary(buildInfo.graalVmAmd64, listOf("--libc=musl"))
   }
 
 val windowsNativeLibraryAmd64: TaskProvider<Exec> by
   tasks.registering(Exec::class) {
     dependsOn(":installGraalVmAmd64")
 
-    val localBuildInfo = buildInfo.graalVmAmd64
-    configureLibrary(
-      localBuildInfo,
-      layout.buildDirectory.file("lib/libpkl-windows-${localBuildInfo.arch}"),
-      listOf("-Dfile.encoding=UTF-8"),
-    )
+    configureLibrary(buildInfo.graalVmAmd64, listOf("-Dfile.encoding=UTF-8"))
   }
 
 tasks.assembleNative {
