@@ -47,7 +47,21 @@ fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = 
 
   val outputDir = layout.buildDirectory.dir("libs/${graalVm.osName}-${graalVm.arch}")
   val outputFile: Provider<RegularFile> =
-    outputDir.map { it.file("libpkl-${graalVm.osName}-${graalVm.arch}.dylib") }
+    outputDir.map {
+      val extension =
+        when (graalVm.osName) {
+          "linux" -> "so"
+          "macos" -> "dylib"
+          "unix" -> "so"
+          "windows" -> "dll"
+          else -> {
+            throw StopExecutionException(
+              "Don't know how to construct library extension for OS: ${graalVm.osName}"
+            )
+          }
+        }
+      it.file("libpkl-${graalVm.osName}-${graalVm.arch}.${extension}")
+    }
 
   outputs.files(
     outputFile,
