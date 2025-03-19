@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.nativeapi;
+package org.pkl.libpkl;
 
 import org.graalvm.nativeimage.hosted.Feature;
 import org.pkl.core.runtime.BaseModule;

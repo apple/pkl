@@ -46,7 +46,9 @@ fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = 
     .withPathSensitivity(PathSensitivity.ABSOLUTE)
 
   val outputDir = layout.buildDirectory.dir("libs/${graalVm.osName}-${graalVm.arch}")
-  val outputFile: Provider<RegularFile> =
+
+  val libraryName = "libpkl-${graalVm.osName}-${graalVm.arch}"
+  val libraryOutput: Provider<RegularFile> =
     outputDir.map {
       val extension =
         when (graalVm.osName) {
@@ -60,11 +62,13 @@ fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = 
             )
           }
         }
-      it.file("libpkl-${graalVm.osName}-${graalVm.arch}.${extension}")
+      it.file("${libraryName}.${extension}")
     }
 
   outputs.files(
-    outputFile,
+    libraryOutput,
+    outputDir.map { it.file("${libraryName}.h") },
+    outputDir.map { it.file("${libraryName}_dynamic.h") },
     // GraalVM shared headers.
     outputDir.map { it.file("graal_isolate.h") },
     outputDir.map { it.file("graal_isolate_dynamic.h") },
@@ -102,11 +106,12 @@ fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = 
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
         add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
-        add("-H:Features=org.pkl.nativeapi.InitFeature")
+        add("-H:Features=org.pkl.libpkl.InitFeature")
+        add("-H:Class=org.pkl.libpkl.LibPkl")
 
         add("-o")
         // Need te remove the extension, as that gets added by native-image.
-        add(outputFile.get().asFile.name.substringBeforeLast("."))
+        add(libraryName)
 
         // Build our shared library
         add("--shared")
