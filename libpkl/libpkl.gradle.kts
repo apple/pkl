@@ -15,10 +15,21 @@
  */
 plugins {
   pklAllProjects
+  pklGraalVm
   pklJavaLibrary
-  pklKotlinLibrary
-  pklNativeBuild
+  pklJavaExecutable
+  pklNativeLifecycle
 }
+
+// assumes that `pklJavaExecutable` is also applied
+val executableSpec = project.extensions.getByType<ExecutableSpec>()
+
+val stagedMacAmd64NativeLibrary: Configuration by configurations.creating
+val stagedMacAarch64NativeLibrary: Configuration by configurations.creating
+val stagedLinuxAmd64NativeLibrary: Configuration by configurations.creating
+val stagedLinuxAarch64NativeLibrary: Configuration by configurations.creating
+val stagedAlpineLinuxAmd64NativeLibrary: Configuration by configurations.creating
+val stagedWindowsAmd64NativeLibrary: Configuration by configurations.creating
 
 dependencies {
   implementation(projects.pklCore)
@@ -28,236 +39,174 @@ dependencies {
   implementation(libs.truffleApi)
 
   testImplementation(projects.pklCommonsTest)
+
+  fun sharedLibrary(osAndArch: String) = files(nativeLibraryOutputFiles(osAndArch))
+
+  stagedMacAarch64NativeLibrary(sharedLibrary("macos-aarch64"))
+  stagedMacAmd64NativeLibrary(sharedLibrary("macos-amd64"))
+  stagedLinuxAmd64NativeLibrary(sharedLibrary("linux-amd64"))
+  stagedLinuxAarch64NativeLibrary(sharedLibrary("linux-aarch64"))
+  stagedAlpineLinuxAmd64NativeLibrary(sharedLibrary("alpine-linux-amd64"))
+  stagedWindowsAmd64NativeLibrary(sharedLibrary("windows-amd64.exe"))
 }
 
-fun Exec.configureLibrary(graalVm: BuildInfo.GraalVm, extraArgs: List<String> = listOf()) {
-  inputs
-    .files(sourceSets.main.map { it.output })
-    .withPropertyName("mainSourceSets")
-    .withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs
-    .files(configurations.runtimeClasspath)
-    .withPropertyName("runtimeClasspath")
-    .withNormalizer(ClasspathNormalizer::class)
-  val nativeImageCommandName = if (buildInfo.os.isWindows) "native-image.cmd" else "native-image"
-  inputs
-    .files(file(graalVm.baseDir).resolve("bin/$nativeImageCommandName"))
-    .withPropertyName("graalVmNativeImage")
-    .withPathSensitivity(PathSensitivity.ABSOLUTE)
+executable {
+  name = "libpkl"
 
-  val outputDir = layout.buildDirectory.dir("libs/${graalVm.osName}-${graalVm.arch}")
-
-  val libraryName = "libpkl-${graalVm.osName}-${graalVm.arch}"
-  val libraryOutput: Provider<RegularFile> =
-    outputDir.map {
-      val extension =
-        when (graalVm.osName) {
-          "linux" -> "so"
-          "macos" -> "dylib"
-          "unix" -> "so"
-          "windows" -> "dll"
-          else -> {
-            throw StopExecutionException(
-              "Don't know how to construct library extension for OS: ${graalVm.osName}"
-            )
-          }
-        }
-      it.file("${libraryName}.${extension}")
-    }
-
-  outputs.files(
-    libraryOutput,
-    outputDir.map { it.file("${libraryName}.h") },
-    outputDir.map { it.file("${libraryName}_dynamic.h") },
-    // GraalVM shared headers.
-    outputDir.map { it.file("graal_isolate.h") },
-    outputDir.map { it.file("graal_isolate_dynamic.h") },
-  )
-
-  outputs.cacheIf { true }
-
-  workingDir(outputDir)
-  executable = "${graalVm.baseDir}/bin/$nativeImageCommandName"
-
-  // For any system properties starting with `pkl.native`, strip off that prefix and pass the rest
-  // through as arguments to native-image.
-  //
-  // Allow setting args using flags like
-  // (-Dpkl.native-Dpolyglot.engine.userResourceCache=/my/cache/dir) when building through Gradle.
-  val extraArgsFromProperties =
-    System.getProperties()
-      .filter { it.key.toString().startsWith("pkl.native") }
-      .map { "${it.key}=${it.value}".substring("pkl.native".length) }
-
-  // JARs to exclude from the class path for the native-image build.
-  val exclusions = listOf(libs.graalSdk).map { it.get().module.name }
-  // https://www.graalvm.org/22.0/reference-manual/native-image/Options/
-  argumentProviders.add(
-    CommandLineArgumentProvider {
-      buildList {
-        // must be emitted before any experimental options are used
-        add("-H:+UnlockExperimentalVMOptions")
-        // currently gives a deprecation warning, but we've been told
-        // that the "initialize everything at build time" *CLI* option is likely here to stay
-        add("--initialize-at-build-time=")
-        // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
-        add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
-        add("--no-fallback")
-        add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
-        add("-H:IncludeResourceBundles=org.pkl.core.errorMessages")
-        add("-H:IncludeResources=org/pkl/commons/cli/PklCARoots.pem")
-        add("-H:Features=org.pkl.libpkl.InitFeature")
-        add("-H:Class=org.pkl.libpkl.LibPkl")
-
-        add("-o")
-        // Need te remove the extension, as that gets added by native-image.
-        add(libraryName)
-
-        // Build our shared library
-        add("--shared")
-
-        // the actual limit (currently) used by native-image is this number + 1400 (idea is to
-        // compensate for Truffle's own nodes)
-        add("-H:MaxRuntimeCompileMethods=1800")
-        add("-H:+EnforceMaxRuntimeCompileMethods")
-        add("--enable-url-protocols=http,https")
-        add("-H:+ReportExceptionStackTraces")
-        // disable automatic support for JVM CLI options
-        add("-H:-ParseRuntimeOptions")
-        // quick build mode: 40% faster compilation, 20% smaller (but presumably also slower)
-        // library
-        if (!buildInfo.isReleaseBuild) {
-          add("-Ob")
-        }
-        if (buildInfo.isNativeArch) {
-          add("-march=native")
-        } else {
-          add("-march=compatibility")
-        }
-        // native-image rejects non-existing class path entries -> filter
-        add("--class-path")
-        val pathInput =
-          sourceSets.main.get().output +
-            configurations.runtimeClasspath.get().filter {
-              it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }
-            }
-        add(pathInput.asPath)
-        // make sure dev machine stays responsive (15% slowdown on my laptop)
-        val processors =
-          Runtime.getRuntime().availableProcessors() /
-            if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
-        add("-J-XX:ActiveProcessorCount=${processors}")
-        // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed
-        // tools.
-        addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
-        addAll(extraArgs)
-        addAll(extraArgsFromProperties)
-      }
-    }
-  )
+  // TODO(kushal): Why is all of this necessary now? Can it be stripped back?
+  javaName = "libpkl"
+  documentationName = "Pkl Native Library"
+  publicationName = "libpkl"
+  javaPublicationName = "libpkl"
+  mainClass = "org.pkl.libpkl.LibPkl"
+  website = "TODO"
 }
 
-/** Builds the pkl native library for macOS/amd64. */
-val macNativeLibraryAmd64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAmd64")
-
-    configureLibrary(buildInfo.graalVmAmd64)
+private fun extension(osAndArch: String) =
+  when (osAndArch.split("-").first()) {
+    "linux" -> "so"
+    "macos" -> "dylib"
+    "unix" -> "so"
+    "windows" -> "dll"
+    else -> {
+      throw StopExecutionException(
+        "Don't know how to construct library extension for OS: ${osAndArch.split("-").first()}"
+      )
+    }
   }
 
-/** Builds the pkl native library for macOS/aarch64. */
-val macNativeLibraryAarch64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAarch64")
-
-    configureLibrary(
-      buildInfo.graalVmAarch64,
-      listOf("-H:+AllowDeprecatedBuilderClassesOnImageClasspath"),
-    )
-  }
-
-/** Builds the pkl native library for linux/amd64. */
-val linuxNativeLibraryAmd64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAmd64")
-
-    configureLibrary(buildInfo.graalVmAmd64)
-  }
-
-/**
- * Builds the pkl native library for linux/aarch64.
- *
- * Right now, this is built within a container on Mac using emulation because CI does not have ARM
- * instances.
- */
-val linuxNativeLibraryAarch64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAarch64")
-
-    configureLibrary(
-      buildInfo.graalVmAarch64,
+private fun nativeLibraryOutputFiles(osAndArch: String) =
+  project.layout.buildDirectory.dir("libs/$osAndArch").map { outputDir ->
+    // TODO(kushal): dashes/underscores for library files? C convention assumes underscores.
+    val libraryName = "libpkl-$osAndArch"
+    val libraryOutputFiles =
       listOf(
-        // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
-        // (e.g. Raspberry Pi 5, Asahi Linux)
-        "-H:PageSize=65536"
-      ),
-    )
+        "${libraryName}.${extension(osAndArch)}",
+        "${libraryName}_dynamic.h",
+        "${libraryName}.h",
+
+        // GraalVM shared headers.
+        "graal_isolate.h",
+        "graal_isolate_dynamic.h",
+      )
+
+    libraryOutputFiles.map { filename -> outputDir.file(filename) }
   }
 
-/**
- * TODO(kushal): https://github.com/oracle/graal/issues/3053
- *
- * Builds a statically linked pkl native library for linux/amd64.
- *
- * Note: we don't publish the same for linux/aarch64 because native-image doesn't support this.
- * Details: https://www.graalvm.org/22.0/reference-manual/native-image/ARM64/
- */
-val alpineNativeLibraryAmd64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAmd64")
-
-    configureLibrary(buildInfo.graalVmAmd64, listOf("--libc=musl"))
-  }
-
-val windowsNativeLibraryAmd64: TaskProvider<Exec> by
-  tasks.registering(Exec::class) {
-    dependsOn(":installGraalVmAmd64")
-
-    configureLibrary(buildInfo.graalVmAmd64, listOf("-Dfile.encoding=UTF-8"))
-  }
-
-tasks.assembleNative {
-  when {
-    buildInfo.os.isMacOsX -> {
-      dependsOn(macNativeLibraryAmd64)
-      if (buildInfo.arch == "aarch64") {
-        dependsOn(macNativeLibraryAarch64)
-      }
-    }
-
-    buildInfo.os.isWindows -> {
-      dependsOn(windowsNativeLibraryAmd64)
-    }
-
-    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
-      dependsOn(linuxNativeLibraryAarch64)
-    }
-
-    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
-      dependsOn(linuxNativeLibraryAmd64)
-      if (buildInfo.hasMuslToolchain) {
-        dependsOn(alpineNativeLibraryAmd64)
-      }
-    }
-  }
-
-  // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
-  finalizedBy(tasks.named("validateNativeLibraryFiles"))
+private fun NativeImageBuild.setOutputFiles(osAndArch: String) {
+  outputs.files(nativeLibraryOutputFiles(osAndArch))
 }
+
+private fun NativeImageBuild.amd64() {
+  arch = Architecture.AMD64
+  dependsOn(":installGraalVmAmd64")
+}
+
+private fun NativeImageBuild.aarch64() {
+  arch = Architecture.AARCH64
+  dependsOn(":installGraalVmAarch64")
+}
+
+private fun NativeImageBuild.setClasspath() {
+  classpath.from(sourceSets.main.map { it.output })
+  classpath.from(
+    project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
+  )
+  classpath.from(configurations.runtimeClasspath)
+}
+
+val macNativeLibraryAmd64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
+    imageName = executableSpec.name.map { "$it-macos-amd64" }
+    mainClass = executableSpec.mainClass
+    amd64()
+    setClasspath()
+    extraNativeImageArgs.addAll("--shared")
+
+    setOutputFiles("macos-amd64")
+  }
+
+val macNativeLibraryAarch64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
+    imageName = executableSpec.name.map { "$it-macos-aarch64" }
+    mainClass = executableSpec.mainClass
+    aarch64()
+    setClasspath()
+    extraNativeImageArgs.addAll("--shared")
+
+    setOutputFiles("macos-aarch64")
+  }
+
+val linuxNativeLibraryAmd64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
+    imageName = executableSpec.name.map { "$it-linux-amd64" }
+    mainClass = executableSpec.mainClass
+    amd64()
+    setClasspath()
+    extraNativeImageArgs.addAll("--shared")
+
+    setOutputFiles("linux-amd64")
+  }
+
+val linuxNativeLibraryAarch64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
+    imageName = executableSpec.name.map { "$it-linux-aarch64" }
+    mainClass = executableSpec.mainClass
+    aarch64()
+    setClasspath()
+
+    extraNativeImageArgs.addAll(
+      "--shared",
+      // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
+      // (e.g. Raspberry Pi 5, Asahi Linux)
+      "-H:PageSize=65536",
+    )
+
+    setOutputFiles("linux-aarch64")
+  }
+
+val alpineNativeLibraryAmd64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
+    imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
+    mainClass = executableSpec.mainClass
+    amd64()
+    setClasspath()
+
+    extraNativeImageArgs.addAll(
+      "--shared",
+      // TODO(kushal): https://github.com/oracle/graal/issues/3053
+      "--libc=musl",
+    )
+
+    setOutputFiles("alpine-linux-amd64")
+  }
+
+val windowsNativeLibraryAmd64 by
+  tasks.registering(NativeImageBuild::class) {
+    outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
+    imageName = executableSpec.name.map { "$it-windows-amd64" }
+    mainClass = executableSpec.mainClass
+    amd64()
+    setClasspath()
+    extraNativeImageArgs.addAll("--shared", "-Dfile.encoding=UTF-8")
+
+    setOutputFiles("windows-amd64")
+  }
+
+val assembleNative by
+  tasks.existing {
+    // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
+    finalizedBy(tasks.named("validateNativeLibraryFiles"))
+  }
 
 // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
 tasks.register("validateNativeLibraryFiles") {
-  val assembleTasks = mutableSetOf<TaskProvider<Exec>>()
+  val assembleTasks = mutableSetOf<TaskProvider<NativeImageBuild>>()
 
   when {
     buildInfo.os.isMacOsX -> {
@@ -296,3 +245,21 @@ tasks.register("validateNativeLibraryFiles") {
     }
   }
 }
+
+// Expose underlying task's outputs
+private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
+  dependsOn(other)
+  outputs.files(other)
+}
+
+val assembleNativeMacOsAarch64 by tasks.existing { wraps(macNativeLibraryAarch64) }
+
+val assembleNativeMacOsAmd64 by tasks.existing { wraps(macNativeLibraryAmd64) }
+
+val assembleNativeLinuxAarch64 by tasks.existing { wraps(linuxNativeLibraryAarch64) }
+
+val assembleNativeLinuxAmd64 by tasks.existing { wraps(linuxNativeLibraryAmd64) }
+
+val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineNativeLibraryAmd64) }
+
+val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsNativeLibraryAmd64) }
