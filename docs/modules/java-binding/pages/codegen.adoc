@@ -5,7 +5,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-java&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-cli-codegen-java-download: {github-releases}/pkl-cli-codegen-java
+:uri-pkl-cli-codegen-java-download: {github-releases}/pkl-codegen-java
 endif::[]
 
 The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.

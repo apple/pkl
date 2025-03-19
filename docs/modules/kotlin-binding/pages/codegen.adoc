@@ -4,7 +4,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-kotlin-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-kotlin&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-codegen-kotlin-download: {github-releases}/pkl-cli-codegen-kotlin
+:uri-pkl-codegen-kotlin-download: {github-releases}/pkl-codegen-kotlin
 endif::[]
 
 The Kotlin source code generator reads Pkl classes and generates corresponding Kotlin classes with equally named properties.
