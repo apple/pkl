@@ -245,4 +245,49 @@ tasks.assembleNative {
       }
     }
   }
+
+  // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
+  finalizedBy(tasks.named("validateNativeLibraryFiles"))
+}
+
+// TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
+tasks.register("validateNativeLibraryFiles") {
+  val assembleTasks = mutableSetOf<TaskProvider<Exec>>()
+
+  when {
+    buildInfo.os.isMacOsX -> {
+      assembleTasks.add(macNativeLibraryAmd64)
+      if (buildInfo.arch == "aarch64") {
+        assembleTasks.add(macNativeLibraryAarch64)
+      }
+    }
+
+    buildInfo.os.isWindows -> {
+      assembleTasks.add(windowsNativeLibraryAmd64)
+    }
+
+    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
+      assembleTasks.add(linuxNativeLibraryAarch64)
+    }
+
+    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
+      assembleTasks.add(linuxNativeLibraryAmd64)
+      if (buildInfo.hasMuslToolchain) {
+        assembleTasks.add(alpineNativeLibraryAmd64)
+      }
+    }
+  }
+
+  dependsOn(assembleTasks)
+
+  doLast {
+    for (taskProvider in assembleTasks) {
+      val task = taskProvider.get()
+      val outputFiles = task.outputs.files.files
+
+      println("==== Validating Native Library Files Exist ====")
+      println("${task.name} outputs:")
+      outputFiles.forEach { file -> println("- ${file.absolutePath} (exists: ${file.exists()})") }
+    }
+  }
 }
