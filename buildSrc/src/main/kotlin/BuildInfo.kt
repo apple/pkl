@@ -107,6 +107,18 @@ open class BuildInfo(private val project: Project) {
     }
   }
 
+  /** The target architecture to build, defaulting to the system architecture. */
+  val targetArch by lazy { System.getProperty("pkl.targetArch") ?: arch }
+
+  /** Tells if this is a cross-arch build (e.g. targeting amd64 when on an aarch64 machine). */
+  val isCrossArch by lazy { arch != targetArch }
+
+  /** Tells if cross-arch builds are supported on this machine. */
+  val isCrossArchSupported by lazy { os.isMacOsX }
+
+  /** Whether to build native executables using the musl toolchain or not. */
+  val musl: Boolean by lazy { java.lang.Boolean.getBoolean("pkl.musl") }
+
   /** Same logic as [org.gradle.internal.os.OperatingSystem#arch], which is protected. */
   val arch: String by lazy {
     when (val arch = System.getProperty("os.arch")) {

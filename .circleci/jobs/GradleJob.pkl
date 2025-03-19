@@ -51,7 +51,10 @@ fixed gradleArgs = new Listing {
   when (isRelease) {
     "-DreleaseBuild=true"
   }
+  ...extraGradleArgs
 }.join(" ")
+
+extraGradleArgs: Listing<String>
 
 steps: Listing<Config.Step>
 

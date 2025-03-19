@@ -5,6 +5,23 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-DocPackageInfo: {uri-pkl-stdlib-docs}/DocPackageInfo/
 :uri-CliDocGenerator: {uri-pkl-doc-main-sources}/CliDocGenerator.kt
 :uri-DocGenerator: {uri-pkl-doc-main-sources}/DocGenerator.kt
+:uri-pkldoc-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkldoc-macos-amd64&e=bin
+:uri-pkldoc-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkldoc-macos-aarch64&e=bin
+:uri-pkldoc-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkldoc-linux-amd64&e=bin
+:uri-pkldoc-linux-aarch64-download: {uri-sonatype-snapshot-download}&a=pkldoc-linux-aarch64&e=bin
+:uri-pkldoc-alpine-download: {uri-sonatype-snapshot-download}&a=pkldoc-alpine-linux-amd64&e=bin
+:uri-pkldoc-windows-download: {uri-sonatype-snapshot-download}&a=pkldoc-windows-amd64&e=exe
+:uri-pkldoc-java-download: {uri-sonatype-snapshot-download}&a=pkldoc-java&e=jar
+
+ifdef::is-release-version[]
+:uri-pkldoc-macos-amd64-download: {github-releases}/pkldoc-macos-amd64
+:uri-pkldoc-macos-aarch64-download: {github-releases}/pkldoc-macos-aarch64
+:uri-pkldoc-linux-amd64-download: {github-releases}/pkldoc-linux-amd64
+:uri-pkldoc-linux-aarch64-download: {github-releases}/pkldoc-linux-aarch64
+:uri-pkldoc-alpine-download: {github-releases}/pkldoc-alpine-linux-amd64
+:uri-pkldoc-windows-download: {github-releases}/pkldoc-windows-amd64.exe
+:uri-pkldoc-java-download: {github-releases}/jpkldoc
+endif::[]
 
 _Pkldoc_ is a documentation website generator that produces navigable and searchable API documentation for Pkl modules.
 
@@ -153,8 +170,33 @@ endif::[]
 [[install-cli]]
 === CLI
 
-The CLI is bundled with the library and does not currently ship as a native executable or a self-contained Jar.
-We recommend to provision it with a Maven compatible build tool as shown in <<install-library,Library Installation>>.
+The CLI comes in multiple flavors:
+
+* Native macOS executable for amd64 (tested on macOS 10.15)
+* Native Linux executable for amd64
+* Native Linux executable for aarch64
+* Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
+* Native Windows executable for amd64 (tested on Windows Server 2022)
+* Java executable (tested with Java 17/21 on macOS and Oracle Linux)
+
+.What is the Difference Between the Linux and Alpine Linux Executables?
+[NOTE]
+====
+The Linux executable is dynamically linked against _glibc_ and _libstdc{plus}{plus}_,
+whereas, the Alpine Linux executable is statically linked against _musl libc_ and _libstdc{plus}{plus}_.
+====
+
+The Java executable works on multiple platforms and has a smaller binary size than the native executables.
+However, it requires a Java 17 (or higher) runtime on the system path, and has a noticeable startup delay.
+
+Download links:
+
+* macOS aarch64: {uri-pkldoc-macos-aarch64-download}
+* macOS amd64: {uri-pkldoc-macos-amd64-download}
+* Linux aarch64: {uri-pkldoc-linux-aarch64-download}
+* Linux amd64: {uri-pkldoc-linux-amd64-download}
+* Alpine Linux amd64: {uri-pkldoc-alpine-download}
+* Windows amd64: {uri-pkldoc-windows-download}
 
 [[usage]]
 == Usage
@@ -216,10 +258,7 @@ For more information, refer to the Javadoc documentation.
 
 === CLI
 
-As mentioned in <<install-cli,CLI Installation>>, the CLI is bundled with the library.
-To run the CLI, execute the library Jar or its `org.pkl.doc.Main` class.
-
-*Synopsis:* `java -cp <classpath> -jar pkl-doc.jar [<options>] <modules>`
+*Synopsis:* `pkldoc [<options>] <modules>`
 
 `<modules>`::
 The absolute or relative URIs of docsite descriptors, package descriptors, and the modules for which to generate documentation.
@@ -252,4 +291,4 @@ include::../../pkl-cli/partials/cli-common-options.adoc[]
 == Full Example
 
 For a ready-to-go example with full source code and detailed walkthrough,
-see link:{uri-pkldoc-example}[pkldoc] in the _pkl/pkl-examples_ repository.
+see link:{uri-pkldoc-example}[pkldoc] in the _pkl-jvm-examples_ repository.

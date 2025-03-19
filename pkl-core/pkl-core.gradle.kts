@@ -20,7 +20,7 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklPublishLibrary
-  pklNativeBuild
+  pklNativeLifecycle
   idea
 }
 
@@ -175,28 +175,17 @@ val testWindowsExecutableAmd64 by
     configureExecutableTest("WindowsLanguageSnippetTestsEngine")
   }
 
-tasks.testNative {
-  when {
-    buildInfo.os.isMacOsX -> {
-      dependsOn(testMacExecutableAmd64)
-      if (buildInfo.arch == "aarch64") {
-        dependsOn(testMacExecutableAarch64)
-      }
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
-      dependsOn(testLinuxExecutableAarch64)
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
-      dependsOn(testLinuxExecutableAmd64)
-      if (buildInfo.hasMuslToolchain) {
-        dependsOn(testAlpineExecutableAmd64)
-      }
-    }
-    buildInfo.os.isWindows -> {
-      dependsOn(testWindowsExecutableAmd64)
-    }
-  }
-}
+tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
+
+tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
+
+tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
+
+tasks.testNativeLinuxAmd64 { dependsOn(testLinuxExecutableAmd64) }
+
+tasks.testNativeAlpineLinuxAmd64 { dependsOn(testAlpineExecutableAmd64) }
+
+tasks.testNativeWindowsAmd64 { dependsOn(testWindowsExecutableAmd64) }
 
 tasks.clean {
   delete("generated/")

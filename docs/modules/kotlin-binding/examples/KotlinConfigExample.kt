@@ -6,7 +6,7 @@ import org.pkl.config.kotlin.to
 import org.pkl.core.ModuleSource
 import org.junit.jupiter.api.Test
 
-// the pkl/pkl-examples repo has a similar example
+// the pkl-jvm-examples repo has a similar example
 class KotlinConfigExample {
   @Test
   fun usage() {

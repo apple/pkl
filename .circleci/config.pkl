@@ -81,25 +81,30 @@ triggerPackageDocsBuild = "release"
 
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
   for (_dist in List("release", "snapshot")) {
-    for (_arch in List("amd64", "aarch64")) {
-      for (_os in List("macOS", "linux")) {
-        ["pkl-cli-\(_os)-\(_arch)-\(_dist)"] {
-          arch = _arch 
-          os = _os
-          isRelease = _dist == "release"
+    for (_project in List("pkl-cli", "pkl-doc")) {
+      for (_arch in List("amd64", "aarch64")) {
+        for (_os in List("macOS", "linux")) {
+          ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
+            arch = _arch
+            os = _os
+            isRelease = _dist == "release"
+            project = _project
+          }
         }
       }
-    }
-    ["pkl-cli-linux-alpine-amd64-\(_dist)"] {
-      arch = "amd64"
-      os = "linux"
-      musl = true
-      isRelease = _dist == "release"
-    }
-    ["pkl-cli-windows-amd64-\(_dist)"] {
-      arch = "amd64"
-      os = "windows"
-      isRelease = _dist == "release"
+      ["\(_project)-linux-alpine-amd64-\(_dist)"] {
+        arch = "amd64"
+        os = "linux"
+        musl = true
+        isRelease = _dist == "release"
+        project = _project
+      }
+      ["\(_project)-windows-amd64-\(_dist)"] {
+        arch = "amd64"
+        os = "windows"
+        isRelease = _dist == "release"
+        project = _project
+      }
     }
   }
 }
@@ -147,16 +152,15 @@ jobs {
         name = "Publish release on GitHub"
         command = #"""
           # exclude build_artifacts.txt from publish
-          rm -f pkl-cli/build/executable/*.build_artifacts.txt
-          find pkl-cli/build/executable/* -type d | xargs rm -rf 
-          rm -f pkl-cli/build/executable/resources
+          rm -f */build/executable/*.build_artifacts.txt
+          find */build/executable/* -type d | xargs rm -rf 
           gh release create "${CIRCLE_TAG}" \
             --title "${CIRCLE_TAG}" \
             --target "${CIRCLE_SHA1}" \
             --verify-tag \
             --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${CIRCLE_TAG}" \
             --repo "${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}" \
-            pkl-cli/build/executable/*
+            */build/executable/*
           """#
       }
     }

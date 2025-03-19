@@ -1,6 +1,11 @@
 = Kotlin Code Generator
 include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-kotlin-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-kotlin
+:uri-pkl-codegen-kotlin-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-kotlin&e=jar
+
+ifdef::is-release-version[]
+:uri-pkl-codegen-kotlin-download: {github-releases}/pkl-codegen-kotlin
+endif::[]
 
 The Kotlin source code generator reads Pkl classes and generates corresponding Kotlin classes with equally named properties.
 
@@ -83,8 +88,41 @@ To use the library in a Maven project, declare the following dependency:
 [[install-cli]]
 === CLI
 
-The CLI is bundled with the library.
-As we do not currently ship the CLI as a self-contained Jar, we recommend to provision it with a Maven compatible build tool as shown in <<install-library>>.
+The CLI is available as a Java executable.
+
+It works on multiple platforms, and requires a Java 17 (or higher) runtime on the system path.
+
+To download:
+
+[tabs]
+====
+macOS/Linux::
++
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl-codegen-kotlin '{uri-pkl-codegen-kotlin-download}'
+chmod +x pkl-codegen-kotlin
+./pkl-codegen-kotlin --version
+----
+
+Windows::
++
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-codegen-kotlin-download}' -OutFile pkl-codegen-kotlin.bat
+.\pkl-codegen-kotlin --version
+----
+====
+
+This should print something similar to:
+
+[source,shell]
+[subs="+attributes"]
+----
+pkl-codegen-kotlin {pkl-version} (macOS 14.2, Java 17.0.10)
+----
 
 [[usage]]
 == Usage
@@ -103,10 +141,7 @@ For more information, refer to the KDoc documentation.
 
 === CLI
 
-As mentioned in <<install-cli,Installation>>, the CLI is bundled with the library.
-To run the CLI, execute the library Jar or its `org.pkl.codegen.kotlin.Main` main class.
-
-*Synopsis:* `java -cp <classpath> -jar pkl-codegen-kotlin.jar [<options>] <modules>`
+*Synopsis:* `pkl-codegen-kotlin [<options>] <modules>`
 
 `<modules>`::
 The absolute or relative URIs of the modules to generate classes for.
@@ -133,4 +168,4 @@ include::../../pkl-cli/partials/cli-common-options.adoc[]
 == Full Example
 
 For a ready-to-go example with full source code,
-see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl/pkl-examples_ repository.
+see link:{uri-codegen-kotlin-example}[codegen-kotlin] in the _pkl-jvm-examples_ repository.

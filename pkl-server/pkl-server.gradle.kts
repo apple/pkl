@@ -17,7 +17,7 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklKotlinLibrary
-  pklNativeBuild
+  pklNativeLifecycle
 }
 
 dependencies {
@@ -82,27 +82,14 @@ val testWindowsExecutableAmd64 by
     configureNativeTest()
   }
 
-val testNative by tasks.existing
+tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
 
-testNative {
-  when {
-    buildInfo.os.isMacOsX -> {
-      dependsOn(testMacExecutableAmd64)
-      if (buildInfo.arch == "aarch64") {
-        dependsOn(testMacExecutableAarch64)
-      }
-    }
-    buildInfo.os.isWindows -> {
-      dependsOn(testWindowsExecutableAmd64)
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
-      dependsOn(testLinuxExecutableAarch64)
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
-      dependsOn(testLinuxExecutableAmd64)
-      if (buildInfo.hasMuslToolchain) {
-        dependsOn(testAlpineExecutableAmd64)
-      }
-    }
-  }
-}
+tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
+
+tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
+
+tasks.testNativeLinuxAmd64 { dependsOn(testLinuxExecutableAmd64) }
+
+tasks.testNativeAlpineLinuxAmd64 { dependsOn(testAlpineExecutableAmd64) }
+
+tasks.testNativeWindowsAmd64 { dependsOn(testWindowsExecutableAmd64) }

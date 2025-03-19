@@ -19,6 +19,11 @@ plugins {
   pklPublishLibrary
 }
 
+val svmClasspath: Configuration by configurations.creating
+
+// used by pklNativeExecutable.gradle.kts
+@Suppress("unused") val svm: SourceSet by sourceSets.creating { compileClasspath = svmClasspath }
+
 dependencies {
   api(projects.pklCore)
   api(libs.clikt)
@@ -26,6 +31,10 @@ dependencies {
 
   implementation(projects.pklCommons)
   testImplementation(projects.pklCommonsTest)
+
+  svmClasspath(libs.svm)
+  svmClasspath(libs.truffleSvm)
+  svmClasspath(projects.pklCore)
 }
 
 publishing {
