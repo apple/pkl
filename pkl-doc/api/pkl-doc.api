@@ -1,0 +1,143 @@
+public final class org/pkl/doc/CliDocGenerator : org/pkl/commons/cli/CliCommand {
+	public fun <init> (Lorg/pkl/doc/CliDocGeneratorOptions;)V
+}
+
+public final class org/pkl/doc/CliDocGeneratorOptions {
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;)V
+	public fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Z)V
+	public synthetic fun <init> (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun component2 ()Ljava/nio/file/Path;
+	public final fun component3 ()Z
+	public final fun copy (Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;Z)Lorg/pkl/doc/CliDocGeneratorOptions;
+	public static synthetic fun copy$default (Lorg/pkl/doc/CliDocGeneratorOptions;Lorg/pkl/commons/cli/CliBaseOptions;Ljava/nio/file/Path;ZILjava/lang/Object;)Lorg/pkl/doc/CliDocGeneratorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBase ()Lorg/pkl/commons/cli/CliBaseOptions;
+	public final fun getNormalizedOutputDir ()Ljava/nio/file/Path;
+	public final fun getOutputDir ()Ljava/nio/file/Path;
+	public fun hashCode ()I
+	public final fun isTestMode ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/doc/DocCommand : org/pkl/commons/cli/commands/BaseCommand {
+	public fun <init> ()V
+	public fun run ()V
+}
+
+public final class org/pkl/doc/DocGenerator {
+	public static final field Companion Lorg/pkl/doc/DocGenerator$Companion;
+	public fun <init> (Lorg/pkl/doc/DocsiteInfo;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Ljava/util/Comparator;Ljava/nio/file/Path;Z)V
+	public synthetic fun <init> (Lorg/pkl/doc/DocsiteInfo;Ljava/util/Map;Lkotlin/jvm/functions/Function1;Ljava/util/Comparator;Ljava/nio/file/Path;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun run ()V
+}
+
+public final class org/pkl/doc/DocGenerator$Companion {
+}
+
+public final class org/pkl/doc/DocGeneratorException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/pkl/doc/DocPackageInfo {
+	public static final field Companion Lorg/pkl/doc/DocPackageInfo$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component12 ()Ljava/util/Map;
+	public final fun component13 ()Ljava/util/List;
+	public final fun component14 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/net/URI;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/net/URI;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun component9 ()Ljava/net/URI;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;)Lorg/pkl/doc/DocPackageInfo;
+	public static synthetic fun copy$default (Lorg/pkl/doc/DocPackageInfo;Ljava/lang/String;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/util/List;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lorg/pkl/doc/DocPackageInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotations ()Ljava/util/List;
+	public final fun getAuthors ()Ljava/util/List;
+	public final fun getDependencies ()Ljava/util/List;
+	public final fun getExtraAttributes ()Ljava/util/Map;
+	public final fun getImportUri ()Ljava/lang/String;
+	public final fun getIssueTracker ()Ljava/net/URI;
+	public final fun getModuleNamePrefix ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOverview ()Ljava/lang/String;
+	public final fun getOverviewImports ()Ljava/util/Map;
+	public final fun getSourceCode ()Ljava/net/URI;
+	public final fun getSourceCodeUrlScheme ()Ljava/lang/String;
+	public final fun getUri ()Ljava/net/URI;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/doc/DocPackageInfo$Companion {
+	public final fun fromPkl (Lorg/pkl/core/PModule;)Lorg/pkl/doc/DocPackageInfo;
+}
+
+public final class org/pkl/doc/DocPackageInfo$PackageDependency {
+	public fun <init> (Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/net/URI;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/net/URI;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/net/URI;
+	public final fun copy (Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;)Lorg/pkl/doc/DocPackageInfo$PackageDependency;
+	public static synthetic fun copy$default (Lorg/pkl/doc/DocPackageInfo$PackageDependency;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;Ljava/lang/String;Ljava/net/URI;ILjava/lang/Object;)Lorg/pkl/doc/DocPackageInfo$PackageDependency;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDocumentation ()Ljava/net/URI;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSourceCode ()Ljava/net/URI;
+	public final fun getSourceCodeUrlScheme ()Ljava/lang/String;
+	public final fun getUri ()Ljava/net/URI;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/doc/DocsiteInfo {
+	public static final field Companion Lorg/pkl/doc/DocsiteInfo$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Lorg/pkl/doc/DocsiteInfo;
+	public static synthetic fun copy$default (Lorg/pkl/doc/DocsiteInfo;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Lorg/pkl/doc/DocsiteInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOverview ()Ljava/lang/String;
+	public final fun getOverviewImports ()Ljava/util/Map;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/doc/DocsiteInfo$Companion {
+	public final fun fromPkl (Lorg/pkl/core/PModule;)Lorg/pkl/doc/DocsiteInfo;
+}
+
+public final class org/pkl/doc/SerializersKt {
+	public static final fun getSerializers ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public final class org/pkl/doc/UriSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lorg/pkl/doc/UriSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/net/URI;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/net/URI;)V
+}
+
+public final class org/pkl/doc/UtilKt {
+	public static final fun getModulePath (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+}
+
