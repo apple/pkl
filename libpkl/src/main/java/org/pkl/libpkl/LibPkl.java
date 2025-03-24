@@ -36,53 +36,39 @@ public class LibPkl {
   private static final Logger logger = new LibPklLogger();
   private static final NativeTransport transport =
       new NativeTransport(logger, LibPkl::handleSendMessageToNative);
-  private static final Server server = new Server(transport);
+  private static Server server;
   private static MessageCallbackFunctionPointer cb;
 
-  static {
-    server.start();
-  }
+  @CEntryPoint(name = "pkl_internal_init", builtin = CEntryPoint.Builtin.CREATE_ISOLATE)
+  static native IsolateThread pklInternalInit();
 
-  @CEntryPoint(
-      name = "pkl_init",
-      // TODO(kushal): This currently uses a builtin directly. We don't want to expose
-      // `graal_isolatethread_t` to our users.
-      builtin = CEntryPoint.Builtin.CREATE_ISOLATE,
-      documentation = {
-        "@brief Initialises and allocates a Pkl executor.",
-        "",
-        "@return non-zero value on failure.",
-        "@return 0 on success.",
-      })
-  static native IsolateThread createIsolate();
-
-  @CEntryPoint(
-      name = "pkl_send_message",
-      documentation = {
-        "@brief Send a message to Pkl, providing the length and a pointer to the first byte.",
-        "",
-        "@return -1 if the Pkl executor hasn't been initialised.",
-        "@return 0 on success.",
-      })
-  public static void sendMessage(IsolateThread thread, int length, CCharPointer ptr)
+  @CEntryPoint(name = "pkl_internal_send_message")
+  public static void pklInternalSendMessage(IsolateThread thread, int length, CCharPointer ptr)
       throws ProtocolException, IOException {
     logger.log("Got message from native");
     transport.sendMessage(length, ptr);
   }
 
-  @CEntryPoint(
-      name = "pkl_register_response_handler",
-      documentation = {
-        "@brief Registers a Message Handler that will receive the result of Pkl executions.",
-      })
-  public static void registerResponseHandler(
+  @CEntryPoint(name = "pkl_internal_register_response_handler")
+  public static void pklInternalRegisterResponseHandler(
       IsolateThread thread, LibPkl.MessageCallbackFunctionPointer cb) {
     logger.log("Got handler to call from Pkl");
     LibPkl.cb = cb;
   }
 
-  @CEntryPoint(name = "pkl_close", builtin = CEntryPoint.Builtin.TEAR_DOWN_ISOLATE)
-  public static native void tearDownIsolate(IsolateThread thread);
+  @CEntryPoint(name = "pkl_internal_close", builtin = CEntryPoint.Builtin.TEAR_DOWN_ISOLATE)
+  public static native void pklInternalClose(IsolateThread thread);
+
+  @CEntryPoint(name = "pkl_internal_server_start")
+  public static void pklInternalServerStart(IsolateThread thread) {
+    server = new Server(transport);
+    server.start();
+  }
+
+  @CEntryPoint(name = "pkl_internal_server_stop")
+  public static void pklInternalServerStop(IsolateThread thread) {
+    server.close();
+  }
 
   public static void handleSendMessageToNative(byte[] bytes) {
     try (var pin = PinnedObject.create(bytes)) {
