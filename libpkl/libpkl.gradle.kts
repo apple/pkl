@@ -122,7 +122,13 @@ val macNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs.addAll("--shared")
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+      )
 
     setOutputFiles("macos-amd64")
   }
@@ -134,7 +140,13 @@ val macNativeLibraryAarch64 by
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
-    extraNativeImageArgs.addAll("--shared")
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+      )
 
     setOutputFiles("macos-aarch64")
   }
@@ -146,7 +158,13 @@ val linuxNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs.addAll("--shared")
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+      )
 
     setOutputFiles("linux-amd64")
   }
@@ -159,12 +177,16 @@ val linuxNativeLibraryAarch64 by
     aarch64()
     setClasspath()
 
-    extraNativeImageArgs.addAll(
-      "--shared",
-      // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
-      // (e.g. Raspberry Pi 5, Asahi Linux)
-      "-H:PageSize=65536",
-    )
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+        // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
+        // (e.g. Raspberry Pi 5, Asahi Linux)
+        "-H:PageSize=65536",
+      )
 
     setOutputFiles("linux-aarch64")
   }
@@ -177,11 +199,15 @@ val alpineNativeLibraryAmd64 by
     amd64()
     setClasspath()
 
-    extraNativeImageArgs.addAll(
-      "--shared",
-      // TODO(kushal): https://github.com/oracle/graal/issues/3053
-      "--libc=musl",
-    )
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+        // TODO(kushal): https://github.com/oracle/graal/issues/3053
+        "--libc=musl",
+      )
 
     setOutputFiles("alpine-linux-amd64")
   }
@@ -193,7 +219,14 @@ val windowsNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs.addAll("--shared", "-Dfile.encoding=UTF-8")
+    extraNativeImageArgs =
+      listOf(
+        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
+        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
+        "--initialize-at-run-time=org.pkl.server.Server",
+        "--shared",
+        "-Dfile.encoding=UTF-8",
+      )
 
     setOutputFiles("windows-amd64")
   }

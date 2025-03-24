@@ -15,16 +15,17 @@
  */
 package org.pkl.libpkl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 import org.graalvm.nativeimage.c.type.CCharPointer;
-import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.msgpack.core.MessagePack;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.MessageTransports.AbstractMessageTransport;
 import org.pkl.core.messaging.MessageTransports.Logger;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.server.ServerMessagePackDecoder;
+import org.pkl.server.ServerMessagePackEncoder;
 
 public class NativeTransport extends AbstractMessageTransport {
   private final Consumer<byte[]> sendMessageToNative;
@@ -41,13 +42,21 @@ public class NativeTransport extends AbstractMessageTransport {
   protected void doClose() {}
 
   @Override
-  protected void doSend(Message message) throws ProtocolException, IOException {}
+  protected void doSend(Message message) throws IOException, ProtocolException {
+    try (var os = new ByteArrayOutputStream();
+        var packer = MessagePack.newDefaultPacker(os)) {
+      var encoder = new ServerMessagePackEncoder(packer);
+      encoder.encode(message);
+      sendMessageToNative.accept(os.toByteArray());
+    }
+  }
 
   public void sendMessage(int length, CCharPointer ptr) throws IOException, ProtocolException {
-    var buffer = CTypeConversion.asByteBuffer(ptr, length);
-    var unpacker = MessagePack.newDefaultUnpacker(buffer);
-    var message = new ServerMessagePackDecoder(unpacker).decode();
-
-    doSend(message);
+    try (var is = new NativeInputStream(length, ptr);
+        var unpacker = MessagePack.newDefaultUnpacker(is)) {
+      var message = new ServerMessagePackDecoder(unpacker).decode();
+      assert message != null;
+      accept(message);
+    }
   }
 }
