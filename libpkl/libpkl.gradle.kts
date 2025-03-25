@@ -63,7 +63,7 @@ executable {
 }
 
 private fun extension(osAndArch: String) =
-  when (osAndArch.split("-").first()) {
+  when (osAndArch.split("-").dropWhile { it == "alpine" }.first()) {
     "linux" -> "so"
     "macos" -> "dylib"
     "unix" -> "so"
