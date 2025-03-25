@@ -280,8 +280,8 @@ val macNativeFullLibraryAarch64 by tasks.registering(Exec::class) {
 
   workingDir = libraryOutputDir.asFile
 
-  // TODO: Make this portable. For now this is a demonstration using `clang`.
-  commandLine("/usr/bin/clang", "-shared",
+  // TODO: Make this portable.
+  commandLine("/usr/bin/cc", "-shared",
     "-o", "libpkl.dylib",
     "$projectDir/src/main/c/libpkl.c",
     "-I$projectDir/src/main/c",
