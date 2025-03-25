@@ -121,98 +121,98 @@ private fun NativeImageBuild.setClasspath() {
 }
 
 val macNativeLibraryAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
-    imageName = executableSpec.name.map { "$it-macos-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
+  imageName = executableSpec.name.map { "$it-macos-amd64" }
+  mainClass = executableSpec.mainClass
+  amd64()
+  setClasspath()
+  extraNativeImageArgs = listOf("--shared")
 
-    setOutputFiles("macos-amd64")
-  }
+  setOutputFiles("macos-amd64")
+}
 
 val macNativeLibraryAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
-    imageName = executableSpec.name.map { "$it-macos-aarch64" }
-    mainClass = executableSpec.mainClass
-    aarch64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
+  imageName = executableSpec.name.map { "$it-macos-aarch64" }
+  mainClass = executableSpec.mainClass
+  aarch64()
+  setClasspath()
+  extraNativeImageArgs = listOf("--shared")
 
-    setOutputFiles("macos-aarch64")
-  }
+  setOutputFiles("macos-aarch64")
+}
 
 val linuxNativeLibraryAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
-    imageName = executableSpec.name.map { "$it-linux-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
+  imageName = executableSpec.name.map { "$it-linux-amd64" }
+  mainClass = executableSpec.mainClass
+  amd64()
+  setClasspath()
+  extraNativeImageArgs = listOf("--shared")
 
-    setOutputFiles("linux-amd64")
-  }
+  setOutputFiles("linux-amd64")
+}
 
 val linuxNativeLibraryAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
-    imageName = executableSpec.name.map { "$it-linux-aarch64" }
-    mainClass = executableSpec.mainClass
-    aarch64()
-    setClasspath()
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
+  imageName = executableSpec.name.map { "$it-linux-aarch64" }
+  mainClass = executableSpec.mainClass
+  aarch64()
+  setClasspath()
 
-    extraNativeImageArgs =
-      listOf(
-        "--shared",
-        // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
-        // (e.g. Raspberry Pi 5, Asahi Linux)
-        "-H:PageSize=65536",
-      )
+  extraNativeImageArgs =
+    listOf(
+      "--shared",
+      // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
+      // (e.g. Raspberry Pi 5, Asahi Linux)
+      "-H:PageSize=65536",
+    )
 
-    setOutputFiles("linux-aarch64")
-  }
+  setOutputFiles("linux-aarch64")
+}
 
 val alpineNativeLibraryAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
-    imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
+  imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
+  mainClass = executableSpec.mainClass
+  amd64()
+  setClasspath()
 
-    extraNativeImageArgs =
-      listOf(
-        "--shared",
-        // TODO(kushal): https://github.com/oracle/graal/issues/3053
-        "--libc=musl",
-      )
+  extraNativeImageArgs =
+    listOf(
+      "--shared",
+      // TODO(kushal): https://github.com/oracle/graal/issues/3053
+      "--libc=musl",
+    )
 
-    setOutputFiles("alpine-linux-amd64")
-  }
+  setOutputFiles("alpine-linux-amd64")
+}
 
 val windowsNativeLibraryAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
-    imageName = executableSpec.name.map { "$it-windows-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared", "-Dfile.encoding=UTF-8")
+tasks.registering(NativeImageBuild::class) {
+  outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
+  imageName = executableSpec.name.map { "$it-windows-amd64" }
+  mainClass = executableSpec.mainClass
+  amd64()
+  setClasspath()
+  extraNativeImageArgs = listOf("--shared", "-Dfile.encoding=UTF-8")
 
-    setOutputFiles("windows-amd64")
-  }
+  setOutputFiles("windows-amd64")
+}
 
 val assembleNative by
-  tasks.existing {
-    // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
-    finalizedBy(tasks.named("validateNativeLibraryFiles"))
-  }
+tasks.existing {
+  // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
+  finalizedBy(validateNativeLibraryFilestasks)
+}
 
 // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
-tasks.register("validateNativeLibraryFiles") {
+val validateNativeLibraryFilestasks by tasks.registering {
   val assembleTasks = mutableSetOf<TaskProvider<NativeImageBuild>>()
 
   when {
@@ -270,3 +270,33 @@ val assembleNativeLinuxAmd64 by tasks.existing { wraps(linuxNativeLibraryAmd64) 
 val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineNativeLibraryAmd64) }
 
 val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsNativeLibraryAmd64) }
+
+val macNativeFullLibraryAarch64 by tasks.registering(Exec::class) {
+  dependsOn(macNativeLibraryAarch64)
+
+  val sharedLibraryBuildDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
+  val libraryOutputDir = sharedLibraryBuildDir.dir("full")
+  val projectDir = project.layout.projectDirectory.asFile.path
+
+  workingDir = libraryOutputDir.asFile
+
+  // TODO: Make this portable. For now this is a demonstration using `clang`.
+  commandLine("/usr/bin/clang", "-shared",
+    "-o", "libpkl.dylib",
+    "$projectDir/src/main/c/libpkl.c",
+    "-I$projectDir/src/main/c",
+    "-I$sharedLibraryBuildDir",
+    "-L$sharedLibraryBuildDir",
+    "-lpkl-macos-aarch64")
+  }
+
+val macNativeFullLibraryAarch64Copy by tasks.registering(Exec::class) {
+  dependsOn(macNativeFullLibraryAarch64)
+
+  val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64/full").get()
+  val projectDir = project.layout.projectDirectory.asFile.path
+
+  workingDir = libraryOutputDir.asFile
+
+  commandLine("cp", "$projectDir/src/main/c/libpkl.h", libraryOutputDir)
+}
