@@ -32,11 +32,16 @@ val stagedAlpineLinuxAmd64NativeLibrary: Configuration by configurations.creatin
 val stagedWindowsAmd64NativeLibrary: Configuration by configurations.creating
 
 dependencies {
+  compileOnly(libs.graalSdk)
+
   implementation(projects.pklCore)
   implementation(projects.pklServer)
 
+  api(projects.pklCommonsCli)
+
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
+  implementation(libs.truffleRuntime)
 
   testImplementation(projects.pklCommonsTest)
 
@@ -122,13 +127,7 @@ val macNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs =
-      listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
-        "--shared",
-      )
+    extraNativeImageArgs = listOf("--shared")
 
     setOutputFiles("macos-amd64")
   }
@@ -140,13 +139,7 @@ val macNativeLibraryAarch64 by
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
-    extraNativeImageArgs =
-      listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
-        "--shared",
-      )
+    extraNativeImageArgs = listOf("--shared")
 
     setOutputFiles("macos-aarch64")
   }
@@ -158,13 +151,7 @@ val linuxNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs =
-      listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
-        "--shared",
-      )
+    extraNativeImageArgs = listOf("--shared")
 
     setOutputFiles("linux-amd64")
   }
@@ -179,9 +166,6 @@ val linuxNativeLibraryAarch64 by
 
     extraNativeImageArgs =
       listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
         "--shared",
         // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
         // (e.g. Raspberry Pi 5, Asahi Linux)
@@ -201,9 +185,6 @@ val alpineNativeLibraryAmd64 by
 
     extraNativeImageArgs =
       listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
         "--shared",
         // TODO(kushal): https://github.com/oracle/graal/issues/3053
         "--libc=musl",
@@ -219,14 +200,7 @@ val windowsNativeLibraryAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs =
-      listOf(
-        "--initialize-at-run-time=org.pkl.core.EvaluatorImpl",
-        "--initialize-at-run-time=org.pkl.server.BinaryEvaluator",
-        "--initialize-at-run-time=org.pkl.server.Server",
-        "--shared",
-        "-Dfile.encoding=UTF-8",
-      )
+    extraNativeImageArgs = listOf("--shared", "-Dfile.encoding=UTF-8")
 
     setOutputFiles("windows-amd64")
   }
