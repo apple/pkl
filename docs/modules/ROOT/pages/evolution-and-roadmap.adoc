@@ -7,7 +7,7 @@
 
 Sometimes, a change to Pkl is large enough that it makes sense to create a proposal for the change so that it can be discussed in detail and vetted.
 
-Pkl has a process for managing such designs in a repository called {uri-pkl-evolution}[Pkl Evolutiuon].
+Pkl has a process for managing such designs in a repository called {uri-pkl-evolution}[Pkl Evolution].
 
 == Roadmap
 
@@ -17,4 +17,4 @@ The roadmap describes estimates.
 The Pkl team aims to cut a release in February, June, and October of each year.
 If an item is not complete by the release cutoff date, the roadmap item may be bumped to the next release.
 
-Additionally, as priorities change, it is possible that items can be moved around, or backlogged.
+Additionally, as priorities change, it is possible that items can be moved around or backlogged.
