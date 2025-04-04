@@ -56,7 +56,7 @@ dependencies {
 }
 
 executable {
-  name = "libpkl"
+  name = "libpkl-internal"
 
   // TODO(kushal): Why is all of this necessary now? Can it be stripped back?
   javaName = "libpkl"
@@ -274,8 +274,7 @@ val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsNativeLibraryAmd
 val macNativeFullLibraryAarch64 by tasks.registering(Exec::class) {
   dependsOn(macNativeLibraryAarch64)
 
-  val sharedLibraryBuildDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
-  val libraryOutputDir = sharedLibraryBuildDir.dir("full")
+  val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
   val projectDir = project.layout.projectDirectory.asFile.path
 
   workingDir = libraryOutputDir.asFile
@@ -285,15 +284,15 @@ val macNativeFullLibraryAarch64 by tasks.registering(Exec::class) {
     "-o", "libpkl.dylib",
     "$projectDir/src/main/c/libpkl.c",
     "-I$projectDir/src/main/c",
-    "-I$sharedLibraryBuildDir",
-    "-L$sharedLibraryBuildDir",
-    "-lpkl-macos-aarch64")
+    "-I$libraryOutputDir",
+    "-L$libraryOutputDir",
+    "-lpkl-internal-macos-aarch64")
   }
 
 val macNativeFullLibraryAarch64Copy by tasks.registering(Exec::class) {
   dependsOn(macNativeFullLibraryAarch64)
 
-  val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64/full").get()
+  val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
   val projectDir = project.layout.projectDirectory.asFile.path
 
   workingDir = libraryOutputDir.asFile
