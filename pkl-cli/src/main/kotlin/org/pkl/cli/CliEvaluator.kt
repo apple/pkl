@@ -19,6 +19,7 @@ import java.io.File
 import java.io.Reader
 import java.io.Writer
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.createParentDirectories
@@ -152,6 +153,12 @@ constructor(
         for ((moduleUri, outputFile) in outputFiles) {
           val moduleSource = toModuleSource(moduleUri, consoleReader)
           val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
+          if (Files.isDirectory(outputFile)) {
+            throw CliException(
+              "Ouput file is a directory ('$outputFile'). " +
+                "Did you mean '--multiple-file-output-path'?"
+            )
+          }
           outputFile.createParentDirectories()
           if (!writtenFiles.contains(outputFile)) {
             // write file even if output is empty to overwrite output from previous runs
