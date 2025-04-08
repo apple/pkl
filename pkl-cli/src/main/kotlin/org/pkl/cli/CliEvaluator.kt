@@ -155,8 +155,8 @@ constructor(
           val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
           if (Files.isDirectory(outputFile)) {
             throw CliException(
-              "Ouput file is a directory ('$outputFile'). " +
-                "Did you mean '--multiple-file-output-path'?"
+              "Output file `$outputFile` is a directory. " +
+                "Did you mean `--multiple-file-output-path`?"
             )
           }
           outputFile.createParentDirectories()
