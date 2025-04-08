@@ -726,6 +726,39 @@ result = someLib.x
   }
 
   @Test
+  fun `file output throws if output file is a directory`() {
+    val sourceFiles =
+      listOf(
+        writePklFile(
+          "test.pkl",
+          """
+          name = "test"
+          output {
+            files {
+              ["\(name).txt"] {
+                text = "test"
+              }
+            } 
+          }
+        """
+            .trimIndent(),
+        )
+      )
+    val err =
+      assertThrows<CliException> {
+        evalToFiles(
+          CliEvaluatorOptions(
+            CliBaseOptions(sourceModules = sourceFiles),
+            outputPath = tempDir.toString(),
+          )
+        )
+      }
+    assertThat(err)
+      .hasMessageContaining("Output file `$tempDir` is a directory. ")
+      .hasMessageContaining("Did you mean `--multiple-file-output-path`?")
+  }
+
+  @Test
   fun `multiple file output writes multiple files to the provided directory`() {
     val contents =
       """
