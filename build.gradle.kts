@@ -28,6 +28,7 @@ plugins {
   alias(libs.plugins.ideaExt)
   alias(libs.plugins.jmh) apply false
   alias(libs.plugins.nexusPublish)
+  alias(libs.plugins.abiCheck)
 }
 
 nexusPublishing {
@@ -79,3 +80,10 @@ val formattedMessage =
   message.replace("\n====", "\n" + "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
 
 logger.info(formattedMessage)
+
+apiValidation {
+  ignoredProjects += listOf("bench", "docs")
+  nonPublicMarkers += "org.pkl.commons.annotations.PklExperimental"
+
+  @OptIn(kotlinx.validation.ExperimentalBCVApi::class) klib { enabled = true }
+}
