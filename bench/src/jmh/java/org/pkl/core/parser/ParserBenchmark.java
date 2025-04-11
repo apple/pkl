@@ -24,6 +24,8 @@ import org.pkl.commons.test.FileTestUtils;
 import org.pkl.commons.test.FileTestUtilsKt;
 import org.pkl.core.Release;
 import org.pkl.core.util.IoUtils;
+import org.pkl.parser.Parser;
+import org.pkl.parser.ParserError;
 
 @SuppressWarnings("unused")
 @Warmup(iterations = 5, time = 2)
