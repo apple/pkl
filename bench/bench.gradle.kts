@@ -25,6 +25,7 @@ val graal: Configuration by configurations.creating
 dependencies {
   jmh(projects.pklCore)
   jmh(projects.pklCommonsTest)
+  jmh(projects.pklParser)
   truffle(libs.truffleApi)
   graal(libs.graalCompiler)
 }
