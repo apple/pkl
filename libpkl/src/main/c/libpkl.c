@@ -56,6 +56,7 @@ int pkl_close() {
 
   pkl_internal_server_stop(isolatethread);
   pkl_internal_close(isolatethread);
+  isolatethread = NULL;
 
   if (pthread_mutex_unlock(&graal_mutex) != 0) {
     return -1;
