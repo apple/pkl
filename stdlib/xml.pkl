@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// An XML renderer.
-@ModuleInfo { minPklVersion = "0.28.1" }
+@ModuleInfo { minPklVersion = "0.28.2" }
 module pkl.xml
 
 /// Renders values as XML.
