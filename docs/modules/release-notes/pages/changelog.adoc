@@ -6,6 +6,29 @@ include::ROOT:partial$component-attributes.adoc[]
 
 xref:0.29.adoc[Release notes]
 
+[[release-0.28.2]]
+== 0.28.2 (2025-04-17)
+
+=== Fixes
+
+* Adds an optimization when object bodies with generators produce no members (https://github.com/apple/pkl/pull/1013[#1013]).
+* Fixes a runtime crash when `--output-path` points to a directory (https://github.com/apple/pkl/pull/1038[#1038]).
+* Fixes a bug that sometimes causes pkl-doc to crash (https://github.com/apple/pkl/pull/1028[#1028]).
+
+=== Miscellaneous
+
+* Documentation improvements (https://github.com/apple/pkl/pull/982[#982], https://github.com/apple/pkl/pull/1010[#1010], https://github.com/apple/pkl/pull/1031[#1031]).
+* CI improvements (https://github.com/apple/pkl/pull/1020[#1020]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/JeroenSoeters[@JeroenSoeters]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/mbvissers[@mbvissers]
+* https://github.com/pepicrft[@pepicrft]
+
 [[release-0.28.1]]
 == 0.28.1 (2025-03-03)
 
