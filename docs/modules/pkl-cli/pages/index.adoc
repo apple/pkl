@@ -381,7 +381,7 @@ pkl eval -m . myFiles.pkl
 pkl eval -m "%{moduleName}" foo.pkl bar.pkl
 ----
 
-For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output] 
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output]
 in the language reference.
 ====
 
@@ -650,6 +650,22 @@ Same meaning as <<output-path>> in <<command-eval>>.
 ====
 
 This command also takes <<common-options,common options>>.
+
+[[command-completion]]
+=== `pkl completion`
+
+*Synopsis*: `pkl completion <shell>`
+
+Generate shell completion script. Supported shells are: `bash`, `zsh`, `fish`.
+
+[source,shell]
+----
+# Generate shell completion script for bash
+pkl completion bash
+
+# Generate shell completion script for zsh
+pkl completion zsh
+----
 
 [[common-options]]
 === Common options
