@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.runtime.*;
@@ -57,6 +58,21 @@ public final class ListingNodes {
     protected Object eval(VmListing self, long index) {
       if (index < 0 || index >= self.getLength()) {
         return VmNull.withoutDefault();
+      }
+      return VmUtils.readMember(self, index);
+    }
+  }
+
+  public abstract static class getOrDefault extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyNode = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected Object eval(VmListing self, long index) {
+      if (index < 0 || index >= self.getLength()) {
+        if (VmUtils.readMember(self, Identifier.DEFAULT) instanceof VmFunction defaultFn) {
+          return applyNode.execute(defaultFn, index);
+        }
+        throw PklBugException.unreachableCode();
       }
       return VmUtils.readMember(self, index);
     }
