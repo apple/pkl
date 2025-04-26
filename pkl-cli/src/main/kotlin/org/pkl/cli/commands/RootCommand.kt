@@ -50,7 +50,7 @@ class RootCommand : NoOpCliktCommand(name = "pkl") {
       DownloadPackageCommand(),
       AnalyzeCommand(),
       CompletionCommand(
-        name = "completion",
+        name = "shell-completion",
         help = "Generate shell completion scripts",
         epilog = "For more information, visit $helpLink",
       ),

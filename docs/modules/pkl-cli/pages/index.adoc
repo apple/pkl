@@ -651,20 +651,20 @@ Same meaning as <<output-path>> in <<command-eval>>.
 
 This command also takes <<common-options,common options>>.
 
-[[command-completion]]
-=== `pkl completion`
+[[command-shell-completion]]
+=== `pkl shell-completion`
 
-*Synopsis*: `pkl completion <shell>`
+*Synopsis*: `pkl shell-completion <shell>`
 
 Generate shell completion script. Supported shells are: `bash`, `zsh`, `fish`.
 
 [source,shell]
 ----
 # Generate shell completion script for bash
-pkl completion bash
+pkl shell-completion bash
 
 # Generate shell completion script for zsh
-pkl completion zsh
+pkl shell-completion zsh
 ----
 
 [[common-options]]

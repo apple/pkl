@@ -20,14 +20,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.cli.commands.RootCommand
 
-class CliCompletionTest {
+class CliShellCompletionTest {
   @Test
-  fun `completion command supports required shells`() {
+  fun `shell completion command supports required shells`() {
     val shellList = listOf("bash", "zsh", "fish")
 
     for (shell in shellList) {
       val command = RootCommand()
-      val result = command.test("completion ${shell}")
+      val result = command.test("shell-completion $shell")
 
       assertThat(result.stdout).contains("Command completion for pkl")
     }
