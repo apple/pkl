@@ -51,7 +51,7 @@ class RootCommand : NoOpCliktCommand(name = "pkl") {
       AnalyzeCommand(),
       CompletionCommand(
         name = "shell-completion",
-        help = "Generate shell completion scripts",
+        help = "Generate a completion script for the given shell",
         epilog = "For more information, visit $helpLink",
       ),
     )
