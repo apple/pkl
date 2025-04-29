@@ -23,7 +23,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.pkl.core.PklBugException;
 import org.pkl.core.TestResults;
 import org.pkl.core.runtime.VmDynamic;
@@ -32,7 +31,8 @@ public final class JUnitAggregateReport extends TestReport {
 
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
-    throw new PklBugException("One file report not supported for aggregate reporter.", new IOException());
+    throw new PklBugException(
+        "One file report not supported for aggregate reporter.", new IOException());
   }
 
   public void report(String name, List<TestResults> results, Writer writer) throws IOException {
@@ -47,10 +47,12 @@ public final class JUnitAggregateReport extends TestReport {
             "tests", totalTests,
             "failures", totalFailures);
 
-    var tests = results.stream().map(r -> reporter.buildSuite(r)).collect(Collectors.toCollection(ArrayList::new));
+    var tests =
+        results.stream()
+            .map(r -> reporter.buildSuite(r))
+            .collect(Collectors.toCollection(ArrayList::new));
 
-    var suite =
-        reporter.buildXmlElement("testsuites", attrs, tests.toArray(new VmDynamic[0]));
+    var suite = reporter.buildXmlElement("testsuites", attrs, tests.toArray(new VmDynamic[0]));
 
     writer.append(JUnitReport.renderXML("    ", "1.0", suite));
   }
