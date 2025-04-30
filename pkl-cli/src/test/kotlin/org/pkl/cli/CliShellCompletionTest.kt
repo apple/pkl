@@ -26,8 +26,7 @@ class CliShellCompletionTest {
     val shellList = listOf("bash", "zsh", "fish")
 
     for (shell in shellList) {
-      val command = RootCommand()
-      val result = command.test("shell-completion $shell")
+      val result = RootCommand().test("shell-completion $shell")
 
       assertThat(result.stdout).contains("Command completion for pkl")
     }
