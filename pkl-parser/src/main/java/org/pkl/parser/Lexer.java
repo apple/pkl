@@ -16,7 +16,9 @@
 package org.pkl.parser;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import org.pkl.parser.util.ErrorMessages;
 
 public class Lexer {
@@ -32,6 +34,7 @@ public class Lexer {
   private boolean isEscape = false;
   // how many newlines exist between two subsequent tokens
   protected int newLinesBetween = 0;
+  protected List<Integer> newlines = new ArrayList<>();
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -79,6 +82,7 @@ public class Lexer {
       sCursor = cursor;
       if (ch == '\n') {
         newLinesBetween++;
+        newlines.add(cursor);
       }
       ch = nextChar();
     }
@@ -265,10 +269,12 @@ public class Lexer {
         if (lookahead == '\n') {
           nextChar();
         }
+        newlines.add(cursor);
         return Token.STRING_NEWLINE;
       }
       if (lookahead == '\n') {
         nextChar();
+        newlines.add(cursor);
         return Token.STRING_NEWLINE;
       }
       lexMultiString(scope.pounds);
