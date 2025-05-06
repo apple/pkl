@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,13 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
   protected void packMapHeader(int size, @Nullable Object value1, @Nullable Object value2)
       throws IOException {
     packer.packMapHeader(size + (value1 != null ? 1 : 0) + (value2 != null ? 1 : 0));
+  }
+
+  protected void packMapHeader(
+      int size, @Nullable Object value1, @Nullable Object value2, @Nullable Object value3)
+      throws IOException {
+    packer.packMapHeader(
+        size + (value1 != null ? 1 : 0) + (value2 != null ? 1 : 0) + (value3 != null ? 1 : 0));
   }
 
   protected void packMapHeader(
