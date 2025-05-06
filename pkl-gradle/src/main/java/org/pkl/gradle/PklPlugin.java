@@ -473,6 +473,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getTestPort().set(spec.getTestPort());
     task.getHttpProxy().set(spec.getHttpProxy());
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
+    task.getHttpRewrites().set(spec.getHttpRewrites());
   }
 
   private List<File> getTransitiveModules(AnalyzeImportsTask analyzeTask) {

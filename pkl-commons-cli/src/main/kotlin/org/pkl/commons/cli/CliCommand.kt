@@ -178,6 +178,12 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       ?: settings.http?.proxy?.noProxy
   }
 
+  private val httpRewrites by lazy {
+    cliOptions.httpRewrites
+      ?: project?.evaluatorSettings?.http?.rewrites
+      ?: settings.http?.rewrites()
+  }
+
   private val externalModuleReaders by lazy {
     (project?.evaluatorSettings?.externalModuleReaders ?: emptyMap()) +
       cliOptions.externalModuleReaders
@@ -232,6 +238,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if ((proxyAddress ?: noProxy) != null) {
         setProxy(proxyAddress, noProxy ?: listOf())
       }
+      httpRewrites?.let(::setRewrites)
       // Lazy building significantly reduces execution time of commands that do minimal work.
       // However, it means that HTTP client initialization errors won't surface until an HTTP
       // request is made.

@@ -517,6 +517,18 @@ public final class EvaluatorBuilder {
                 procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
+    if (settings.http() != null) {
+      var httpClientBuilder = HttpClient.builder();
+      if (settings.http().proxy() != null) {
+        var noProxy = settings.http().proxy().noProxy();
+        if (noProxy == null) {
+          noProxy = Collections.emptyList();
+        }
+        httpClientBuilder.setProxy(settings.http().proxy().address(), noProxy);
+      }
+      httpClientBuilder.setRewrites(settings.http().rewrites());
+      setHttpClient(httpClientBuilder.buildLazily());
+    }
     return this;
   }
 
