@@ -280,6 +280,11 @@ examples {
     Set(1, 2, 3, 3, 2, 1).mapIndexed((i, n) -> i.isOdd && n.isEven)
   }
 
+  ["mapNonNullIndexed()"] {
+    Set(1, 2, 3, 4, 4, 3, 2, 1).mapNonNullIndexed((i, n) -> if (n.isOdd) null else n * i)
+    Set(1, 2, 3, 4, null, 4, 3, 2, 1).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i)
+  }
+
   ["flatMapIndexed()"] {
     Set(1, 2, 3, 3, 2, 1).flatMapIndexed((i, n) -> Set(n * i))
     Set(1, 2, 3, 3, 2, 1).flatMapIndexed((i, n) -> Set(i.isOdd && n.isEven))

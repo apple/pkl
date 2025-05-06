@@ -274,6 +274,10 @@ examples {
     List(0, 2, 6)
     List(false, true, false)
   }
+  ["mapNonNullIndexed()"] {
+    List(2, 12)
+    List(2, 12)
+  }
   ["flatMapIndexed()"] {
     List(0, 2, 6)
     List(false, true, false)
