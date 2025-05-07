@@ -23,6 +23,8 @@ import org.graalvm.nativeimage.c.function.CFunction.Transition;
 import org.graalvm.nativeimage.c.function.CFunctionPointer;
 import org.graalvm.nativeimage.c.function.InvokeCFunctionPointer;
 import org.graalvm.nativeimage.c.type.CCharPointer;
+import org.graalvm.nativeimage.c.type.VoidPointer;
+import org.graalvm.word.WordFactory;
 import org.pkl.core.messaging.MessageTransports.Logger;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.server.Server;
@@ -31,7 +33,7 @@ import org.pkl.server.Server;
 public class LibPkl {
   public interface MessageCallbackFunctionPointer extends CFunctionPointer {
     @InvokeCFunctionPointer(transition = Transition.TO_NATIVE)
-    void invoke(int length, CCharPointer msg);
+    void invoke(int length, CCharPointer msg, VoidPointer handlerContext);
   }
 
   private static final Logger logger = new LibPklLogger();
@@ -46,10 +48,11 @@ public class LibPkl {
   static native IsolateThread pklInternalInit();
 
   @CEntryPoint(name = "pkl_internal_send_message")
-  public static void pklInternalSendMessage(IsolateThread thread, int length, CCharPointer ptr)
+  public static void pklInternalSendMessage(
+      IsolateThread thread, int length, CCharPointer ptr, VoidPointer handlerContext)
       throws ProtocolException, IOException {
     logger.log("Got message from native");
-    transport.sendMessage(length, ptr);
+    transport.sendMessage(length, ptr, handlerContext);
   }
 
   @CEntryPoint(name = "pkl_internal_register_response_handler")
@@ -73,9 +76,10 @@ public class LibPkl {
     server.close();
   }
 
-  public static void handleSendMessageToNative(byte[] bytes) {
+  public static void handleSendMessageToNative(byte[] bytes, Object handlerContext) {
     try (var pin = PinnedObject.create(bytes)) {
-      cb.invoke(bytes.length, pin.addressOfArrayElement(0));
+      // TODO: Propagate `handlerContext` through instead of `nullPointer`.
+      cb.invoke(bytes.length, pin.addressOfArrayElement(0), WordFactory.nullPointer());
     }
   }
 
