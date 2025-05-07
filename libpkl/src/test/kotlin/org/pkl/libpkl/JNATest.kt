@@ -52,13 +52,13 @@ class JNATest {
   @BeforeEach
   fun beforeEach() {
     client = JNATestClient()
-    assertThat(ILibPklLibrary.INSTANCE.pkl_init(client)).isEqualTo(0)
+    assertThat(LibPklLibrary.INSTANCE.pkl_init(client)).isEqualTo(0)
   }
 
   @AfterEach
   fun afterEach() {
     client.close()
-    assertThat(ILibPklLibrary.INSTANCE.pkl_close()).isEqualTo(0)
+    assertThat(LibPklLibrary.INSTANCE.pkl_close()).isEqualTo(0)
   }
 
   @Test
