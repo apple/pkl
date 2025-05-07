@@ -3,7 +3,7 @@
 *
 * The resulting messages from `pkl_send` will be sent to this handler using a callback style.
 */
-typedef void (*PklMessageResponseHandler)(int length, char* message);
+typedef void (*PklMessageResponseHandler)(int length, char *message);
 
 /**
 * @brief Initialises and allocates a Pkl executor.
@@ -19,7 +19,7 @@ int pkl_init(PklMessageResponseHandler handler);
 * @return -1 on failure.
 * @return 0 on success.
 */
-int pkl_send_message(int length, char* message);
+int pkl_send_message(int length, char *message);
 
 /**
 * @brief Cleans up any resources that were created as part of the `pkl_init` process.
