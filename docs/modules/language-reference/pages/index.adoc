@@ -1059,7 +1059,7 @@ class Penguin extends Bird {
 <2> Error: modifier `fixed` cannot be applied to property `name`.
 
 The `fixed` modifier is useful for defining properties that are meant to be derived from other properties.
-In the following snippet, the property `result` is not meant to be assigned to, because it is derived
+In the following snippet, the property `wingspanWeightRatio` is not meant to be assigned to, because it is derived
 from other properties.
 
 [source%parsed,{pkl}]
