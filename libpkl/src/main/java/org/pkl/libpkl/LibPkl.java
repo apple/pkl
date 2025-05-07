@@ -27,6 +27,7 @@ import org.pkl.core.messaging.MessageTransports.Logger;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.server.Server;
 
+@SuppressWarnings("unused")
 public class LibPkl {
   public interface MessageCallbackFunctionPointer extends CFunctionPointer {
     @InvokeCFunctionPointer(transition = Transition.TO_NATIVE)
