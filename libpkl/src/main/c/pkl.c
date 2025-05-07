@@ -5,7 +5,7 @@
 #include <graal_isolate.h>
 #include <libpkl-internal-macos-aarch64.h>
 
-#include <libpkl.h>
+#include <pkl.h>
 
 #ifndef NULL
   #define NULL 0
