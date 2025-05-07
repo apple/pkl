@@ -36,7 +36,7 @@ import org.pkl.server.ServerMessagePackEncoder
 class JNATestClient : LibPklLibrary.PklMessageResponseHandler, Iterable<Message?>, AutoCloseable {
   val incoming: BlockingQueue<Message?> = ArrayBlockingQueue(10)
 
-  override fun invoke(length: Int, message: Pointer?) {
+  override fun invoke(length: Int, message: Pointer?, handlerContext: Pointer?) {
     when {
       message != null && length > 0 -> {
         val receivedBytes: ByteArray = message.getByteArray(0, length)
@@ -53,7 +53,8 @@ class JNATestClient : LibPklLibrary.PklMessageResponseHandler, Iterable<Message?
   override fun iterator(): Iterator<Message?> = incoming.iterator()
 
   fun send(message: Message): Int =
-    encode(message).let { LibPklLibrary.INSTANCE.pkl_send_message(it.size, it) }
+    // TODO: Propagate `handlerContext` through, and validate it.
+    encode(message).let { LibPklLibrary.INSTANCE.pkl_send_message(it.size, it, null) }
 
   inline fun <reified T : Message> receive(): T {
     val message = incoming.take()
