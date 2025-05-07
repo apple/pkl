@@ -82,6 +82,11 @@ public class LibPkl {
    * <p>Error: Method 'org.pkl.libpkl.LibPkl.main' is declared as the main entry point but it can
    * not be found. Make sure that class 'org.pkl.libpkl.LibPkl' is on the classpath and that method
    * 'main(String[])' exists in that class.
+   *
+   * <p>TODO: Clean this up once merged onto a feature-branch
+   *
+   * <p>This is because we are passing a main class to native-image using the -H:Class= arg. That
+   * argument is optional and not required when building a shared library.
    */
   public static void main(String[] argv) {}
 
