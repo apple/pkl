@@ -289,7 +289,7 @@ val macNativeFullLibraryAarch64 by
       "-shared",
       "-o",
       "libpkl.dylib",
-      "$projectDir/src/main/c/libpkl.c",
+      "$projectDir/src/main/c/pkl.c",
       "-I$projectDir/src/main/c",
       "-I$libraryOutputDir",
       "-L$libraryOutputDir",
@@ -306,7 +306,7 @@ val macNativeFullLibraryAarch64Copy by
 
     workingDir = libraryOutputDir.asFile
 
-    commandLine("cp", "$projectDir/src/main/c/libpkl.h", libraryOutputDir)
+    commandLine("cp", "$projectDir/src/main/c/pkl.h", libraryOutputDir)
   }
 
 tasks.withType<Test> {
