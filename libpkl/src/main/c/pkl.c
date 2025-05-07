@@ -38,12 +38,12 @@ int pkl_init(PklMessageResponseHandler handler) {
 };
 
 
-int pkl_send_message(int length, char* message) {
+int pkl_send_message(int length, char *message, void *handlerContext) {
   if (pthread_mutex_lock(&graal_mutex) != 0) {
     return -1;
   }
 
-  pkl_internal_send_message(isolatethread, length, message);
+  pkl_internal_send_message(isolatethread, length, message, handlerContext);
   pthread_mutex_unlock(&graal_mutex);
 
   return 0;
