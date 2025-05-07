@@ -40,6 +40,8 @@ public class LibPkl {
   private static Server server;
   private static MessageCallbackFunctionPointer cb;
 
+  private LibPkl() {}
+
   @CEntryPoint(name = "pkl_internal_init", builtin = CEntryPoint.Builtin.CREATE_ISOLATE)
   static native IsolateThread pklInternalInit();
 
@@ -90,6 +92,4 @@ public class LibPkl {
    * argument is optional and not required when building a shared library.
    */
   public static void main(String[] argv) {}
-
-  private LibPkl() {}
 }
