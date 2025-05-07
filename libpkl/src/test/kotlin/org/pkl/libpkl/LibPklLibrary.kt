@@ -20,9 +20,9 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 
-interface ILibPklLibrary : Library {
+interface LibPklLibrary : Library {
   companion object {
-    val INSTANCE: ILibPklLibrary = Native.load("pkl", ILibPklLibrary::class.java)
+    val INSTANCE: LibPklLibrary = Native.load("pkl", LibPklLibrary::class.java)
   }
 
   interface PklMessageResponseHandler : Callback {
