@@ -3,7 +3,7 @@
 #include <pthread.h>
 
 #include <graal_isolate.h>
-#include <libpkl-internal-macos-aarch64.h>
+#include <libpkl_internal.h>
 
 #include <pkl.h>
 

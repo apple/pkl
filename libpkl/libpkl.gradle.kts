@@ -58,7 +58,7 @@ dependencies {
 }
 
 executable {
-  name = "libpkl-internal"
+  name = "libpkl_internal"
 
   // TODO(kushal): Why is all of this necessary now? Can it be stripped back?
   javaName = "libpkl"
@@ -85,10 +85,10 @@ private fun extension(osAndArch: String) =
 private fun nativeLibraryOutputFiles(osAndArch: String) =
   project.layout.buildDirectory.dir("libs/$osAndArch").map { outputDir ->
     // TODO(kushal): dashes/underscores for library files? C convention assumes underscores.
-    val libraryName = "libpkl-$osAndArch"
+    val libraryName = executableSpec.name
     val libraryOutputFiles =
       listOf(
-        "${libraryName}.${extension(osAndArch)}",
+        "lib${libraryName}.${extension(osAndArch)}",
         "${libraryName}_dynamic.h",
         "${libraryName}.h",
 
@@ -125,7 +125,7 @@ private fun NativeImageBuild.setClasspath() {
 val macNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
-    imageName = executableSpec.name.map { "$it-macos-amd64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
@@ -137,7 +137,7 @@ val macNativeLibraryAmd64 by
 val macNativeLibraryAarch64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
-    imageName = executableSpec.name.map { "$it-macos-aarch64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
@@ -149,7 +149,7 @@ val macNativeLibraryAarch64 by
 val linuxNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
-    imageName = executableSpec.name.map { "$it-linux-amd64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
@@ -161,7 +161,7 @@ val linuxNativeLibraryAmd64 by
 val linuxNativeLibraryAarch64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
-    imageName = executableSpec.name.map { "$it-linux-aarch64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
@@ -180,7 +180,7 @@ val linuxNativeLibraryAarch64 by
 val alpineNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
-    imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
@@ -198,7 +198,7 @@ val alpineNativeLibraryAmd64 by
 val windowsNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
-    imageName = executableSpec.name.map { "$it-windows-amd64" }
+    imageName = executableSpec.name
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
@@ -293,7 +293,7 @@ val macNativeFullLibraryAarch64 by
       "-I$projectDir/src/main/c",
       "-I$libraryOutputDir",
       "-L$libraryOutputDir",
-      "-lpkl-internal-macos-aarch64",
+      "-lpkl_internal",
     )
   }
 
