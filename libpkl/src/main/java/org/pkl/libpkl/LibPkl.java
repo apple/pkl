@@ -78,8 +78,11 @@ public class LibPkl {
 
   public static void handleSendMessageToNative(byte[] bytes, Object handlerContext) {
     try (var pin = PinnedObject.create(bytes)) {
-      // TODO: Propagate `handlerContext` through instead of `nullPointer`.
-      cb.invoke(bytes.length, pin.addressOfArrayElement(0), WordFactory.nullPointer());
+      // TODO: Provide a meaningful error the user if they haven't run `pkl_init`.
+      if (cb != null) {
+        // TODO: Propagate `handlerContext` through instead of `nullPointer`.
+        cb.invoke(bytes.length, pin.addressOfArrayElement(0), WordFactory.nullPointer());
+      }
     }
   }
 
