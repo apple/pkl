@@ -2450,6 +2450,7 @@ abstract external class Collection<out Element> extends Any {
   /// List(1, 2, 3, 4).mapNonNullIndexed((i, n) -> if (n.isOdd) null else n * i) == List(2, 12)
   /// List(1, 2, 3, 4, null).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i) == List(2, 12)
   /// ```
+  @Since { version = "0.29.0" }
   abstract function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Collection<Result(this != null)>
 
   /// Applies a collection-generating [transform] to each element in this collection
@@ -2885,6 +2886,8 @@ external class List<out Element> extends Collection<Element> {
 
   external function filterIndexed(predicate: (Int, Element) -> Boolean): List<Element>
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
+
+  @Since { version = "0.29.0" }
   external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): List<Result(this != null)>
   external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): List<Result>
 
@@ -3094,6 +3097,8 @@ external class Set<out Element> extends Collection<Element> {
 
   external function filterIndexed(predicate: (Int, Element) -> Boolean): Set<Element>
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
+
+  @Since { version = "0.29.0" }
   external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Set<Result(this != null)>
   external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Set<Result>
 
