@@ -1,0 +1,184 @@
+/*
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.parser
+
+import java.util.EnumSet
+import org.pkl.parser.syntax.generic.GenNode
+import org.pkl.parser.syntax.generic.NodeType
+
+class GenericSexpRenderer(code: String) {
+  private var tab = ""
+  private var buf = StringBuilder()
+  private val source = code.toCharArray()
+
+  fun render(node: GenNode): String {
+    innerRender(node)
+    return buf.toString()
+  }
+
+  private fun innerRender(node: GenNode) {
+    if (node.type == NodeType.UNION_TYPE) {
+      renderUnionType(node)
+      return
+    }
+    buf.append(tab)
+    buf.append("(")
+    buf.append(name(node))
+    val oldTab = increaseTab()
+    for (child in collectChildren(node)) {
+      buf.append('\n')
+      innerRender(child)
+    }
+    tab = oldTab
+    buf.append(')')
+  }
+
+  private fun renderUnionType(node: GenNode) {
+    buf.append(tab)
+    buf.append("(")
+    buf.append(name(node))
+    val oldTab = increaseTab()
+    var previousTerminal: GenNode? = null
+    for (child in node.children) {
+      if (child.type == NodeType.TERMINAL) previousTerminal = child
+      if (child.type in IGNORED_CHILDREN) continue
+      buf.append('\n')
+      if (previousTerminal != null && previousTerminal.text(source) == "*") {
+        previousTerminal = null
+        renderDefaultUnionType(child)
+      } else {
+        innerRender(child)
+      }
+    }
+    tab = oldTab
+    buf.append(')')
+  }
+
+  private fun renderDefaultUnionType(node: GenNode) {
+    buf.append(tab)
+    buf.append("(defaultUnionType\n")
+    val oldTab = increaseTab()
+    innerRender(node)
+    tab = oldTab
+    buf.append(')')
+  }
+
+  private fun collectChildren(node: GenNode): List<GenNode> =
+    when (node.type) {
+      NodeType.MULTI_LINE_STRING_LITERAL_EXPR ->
+        node.children.filter { it.type !in IGNORED_CHILDREN && !it.type.isStringData() }
+      NodeType.SINGLE_LINE_STRING_LITERAL_EXPR -> {
+        val children = node.children.filter { it.type !in IGNORED_CHILDREN }
+        val res = mutableListOf<GenNode>()
+        var prev: GenNode? = null
+        for (child in children) {
+          val inARow = child.type.isStringData() && (prev != null && prev.type.isStringData())
+          if (!inARow) {
+            res += child
+          }
+          prev = child
+        }
+        res
+      }
+      NodeType.DOC_COMMENT -> listOf()
+      else -> node.children.filter { it.type !in IGNORED_CHILDREN }
+    }
+
+  private fun NodeType.isStringData(): Boolean =
+    this == NodeType.STRING_CONSTANT || this == NodeType.STRING_ESCAPE
+
+  private fun name(node: GenNode): String =
+    when (node.type) {
+      NodeType.MODULE_DECLARATION -> "moduleHeader"
+      NodeType.IMPORT -> importName(node, isExpr = false)
+      NodeType.IMPORT_EXPR -> importName(node, isExpr = true)
+      NodeType.BINARY_OP_EXPR -> binopName(node)
+      NodeType.CLASS -> "clazz"
+      NodeType.EXTENDS_CLAUSE,
+      NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
+      NodeType.TYPEALIAS -> "typeAlias"
+      NodeType.STRING_ESCAPE -> "stringConstant"
+      NodeType.QUALIFIED_ACCESS_EXPR -> {
+        val operator = node.children[1].text(source)
+        if (operator == ".") "qualifiedAccessExpr" else "nullableQualifiedAccessExpr"
+      }
+      NodeType.READ_EXPR -> {
+        val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
+        when (terminal) {
+          "read*" -> "readGlobExpr"
+          "read?" -> "readNullExpr"
+          else -> "readExpr"
+        }
+      }
+      else -> {
+        val names = node.type.name.split('_').map { it.lowercase() }
+        if (names.size > 1) {
+          val capitalized = names.drop(1).map { n -> n.replaceFirstChar { it.titlecase() } }
+          (listOf(names[0]) + capitalized).joinToString("")
+        } else names[0]
+      }
+    }
+
+  private fun importName(node: GenNode, isExpr: Boolean): String {
+    val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
+    val suffix = if (isExpr) "Expr" else "Clause"
+    return if (terminal == "import*") "importGlob$suffix" else "import$suffix"
+  }
+
+  private fun binopName(node: GenNode): String {
+    val op = node.children.find { it.type == NodeType.OPERATOR }!!.text(source)
+    return when (op) {
+      "**" -> "exponentiationExpr"
+      "*",
+      "/",
+      "~/",
+      "%" -> "multiplicativeExpr"
+      "+",
+      "-" -> "additiveExpr"
+      ">",
+      ">=",
+      "<",
+      "<=" -> "comparisonExpr"
+      "is" -> "typeCheckExpr"
+      "as" -> "typeCastExpr"
+      "==",
+      "!=" -> "equalityExpr"
+      "&&" -> "logicalAndExpr"
+      "||" -> "logicalOrExpr"
+      "|>" -> "pipeExpr"
+      "??" -> "nullCoalesceExpr"
+      else -> throw RuntimeException("Unknown operator: $op")
+    }
+  }
+
+  private fun increaseTab(): String {
+    val old = tab
+    tab += "  "
+    return old
+  }
+
+  companion object {
+    private val IGNORED_CHILDREN =
+      EnumSet.of(
+        NodeType.LINE_COMMENT,
+        NodeType.BLOCK_COMMENT,
+        NodeType.SHEBANG,
+        NodeType.SEMICOLON,
+        NodeType.TERMINAL,
+        NodeType.OPERATOR,
+      )
+  }
+}

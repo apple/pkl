@@ -48,6 +48,22 @@ interface ParserComparisonTestInterface {
   }
 
   @Test
+  fun compareSnippetTestsGeneric() {
+    SoftAssertions.assertSoftly { softly ->
+      getSnippets()
+        .parallelStream()
+        .map { Pair(it.pathString, it.readText()) }
+        .forEach { (path, snippet) ->
+          try {
+            compareGeneric(snippet, path, softly)
+          } catch (e: ParserError) {
+            softly.fail("path: $path. Message: ${e.message}", e)
+          }
+        }
+    }
+  }
+
+  @Test
   @Execution(ExecutionMode.CONCURRENT)
   fun compareSnippetTestsSpans() {
     SoftAssertions.assertSoftly { softly ->
@@ -75,6 +91,15 @@ interface ParserComparisonTestInterface {
     }
   }
 
+  fun compareGeneric(code: String, path: String? = null, softly: SoftAssertions? = null) {
+    val (sexp, genSexp) = renderBothGeneric(code)
+    when {
+      (path != null && softly != null) ->
+        softly.assertThat(genSexp).`as`("path: $path").isEqualTo(sexp)
+      else -> assertThat(genSexp).`as`("path: $path").isEqualTo(sexp)
+    }
+  }
+
   fun compareSpans(code: String, path: String, softly: SoftAssertions) {
     // Our ANTLR grammar always start doc comment spans in the beginning of the line,
     // even though they may have leading spaces.
@@ -93,6 +118,9 @@ interface ParserComparisonTestInterface {
 
   fun renderBoth(code: String): Pair<String, String> = Pair(renderCode(code), renderANTLRCode(code))
 
+  fun renderBothGeneric(code: String): Pair<String, String> =
+    Pair(renderCode(code), renderGenericCode(code))
+
   companion object {
     private fun renderCode(code: String): String {
       val parser = Parser()
@@ -106,6 +134,13 @@ interface ParserComparisonTestInterface {
       val parser = PklParser(CommonTokenStream(lexer))
       val mod = parser.module()
       val renderer = ANTLRSexpRenderer()
+      return renderer.render(mod)
+    }
+
+    private fun renderGenericCode(code: String): String {
+      val parser = GenericParser()
+      val mod = parser.parseModule(code)
+      val renderer = GenericSexpRenderer(code)
       return renderer.render(mod)
     }
   }
