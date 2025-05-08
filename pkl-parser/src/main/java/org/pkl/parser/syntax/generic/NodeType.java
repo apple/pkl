@@ -1,3 +1,18 @@
+/*
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.parser.syntax.generic;
 
 public enum NodeType {
@@ -7,9 +22,10 @@ public enum NodeType {
   BLOCK_COMMENT,
   SHEBANG,
   SEMICOLON,
-  
+
   MODULE,
   DOC_COMMENT,
+  DOC_COMMENT_LINE,
   MODIFIER,
   AMENDS_CLAUSE,
   EXTENDS_CLAUSE,
@@ -18,7 +34,6 @@ public enum NodeType {
   IDENTIFIER,
   QUALIFIED_IDENTIFIER,
   IMPORT,
-  IMPORT_GLOB,
   TYPEALIAS,
   CLASS,
   CLASS_BODY,
@@ -34,17 +49,18 @@ public enum NodeType {
   TYPE_PARAMETER,
   STRING_CONSTANT,
   OPERATOR,
-  
-  // member
-  MEMBER_ELEMENT,
-  MEMBER_PROPERTY,
-  MEMBER_METHOD,
+  STRING_ESCAPE,
+
+  // members
+  OBJECT_ELEMENT,
+  OBJECT_PROPERTY,
+  OBJECT_METHOD,
   MEMBER_PREDICATE,
-  MEMBER_ENTRY,
-  MEMBER_SPREAD,
-  MEMBER_WHEN_GENERATOR,
-  MEMBER_FOR_GENERATOR,
-  
+  OBJECT_ENTRY,
+  OBJECT_SPREAD,
+  WHEN_GENERATOR,
+  FOR_GENERATOR,
+
   // expressions
   THIS_EXPR,
   OUTER_EXPR,
@@ -60,7 +76,7 @@ public enum NodeType {
   FUNCTION_LITERAL_EXPR,
   PARENTHESIZED_EXPR,
   SUPER_SUBSCRIPT_EXPR,
-  SUPER_ACCCESS_EXPR,
+  SUPER_ACCESS_EXPR,
   SUBSCRIPT_EXPR,
   IF_EXPR,
   LET_EXPR,
@@ -74,7 +90,7 @@ public enum NodeType {
   NON_NULL_EXPR,
   AMENDS_EXPR,
   BINARY_OP_EXPR,
-  
+
   // types
   UNKNOWN_TYPE,
   NOTHING_TYPE,

@@ -29,7 +29,7 @@ public class GenNode {
   public GenNode(NodeType type, FullSpan span) {
     this(type, span, Collections.emptyList());
   }
-  
+
   public GenNode(NodeType type, FullSpan span, List<GenNode> children) {
     this.type = type;
     this.span = span;
@@ -49,7 +49,7 @@ public class GenNode {
       child.parent = this;
     }
   }
-  
+
   public String text(char[] source) {
     return new String(source, span.charIndex(), span.length());
   }
