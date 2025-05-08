@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReport implements TestReport {
+public final class SimpleReport extends TestReport {
 
   private static final String passingMark = "✔ ";
   private static final String failingMark = "✘ ";
