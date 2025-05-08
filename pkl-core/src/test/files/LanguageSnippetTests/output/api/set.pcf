@@ -227,6 +227,10 @@ examples {
     Set(0, 2, 6)
     Set(false, true)
   }
+  ["mapNonNullIndexed()"] {
+    Set(2, 12)
+    Set(2, 12)
+  }
   ["flatMapIndexed()"] {
     Set(0, 2, 6)
     Set(false, true)

@@ -332,6 +332,11 @@ examples {
     List(1, 2, 3).mapIndexed((i, n) -> i.isOdd && n.isEven)
   }
 
+  ["mapNonNullIndexed()"] {
+    List(1, 2, 3, 4).mapNonNullIndexed((i, n) -> if (n.isOdd) null else n * i)
+    List(1, 2, 3, 4, null).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i)
+  }
+
   ["flatMapIndexed()"] {
     List(1, 2, 3).flatMapIndexed((i, n) -> List(n * i))
     List(1, 2, 3).flatMapIndexed((i, n) -> List(i.isOdd && n.isEven))

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -554,6 +554,22 @@ public final class ListNodes {
     }
   }
 
+  public abstract static class mapIndexed extends ExternalMethod1Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    protected VmList eval(VmList self, VmFunction function) {
+      var builder = self.builder();
+      long index = 0;
+
+      for (var elem : self) {
+        builder.add(applyLambdaNode.execute(function, index++, elem));
+      }
+      LoopNode.reportLoopCount(this, self.getLength());
+      return builder.build();
+    }
+  }
+
   public abstract static class mapNonNull extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyLambdaNode = ApplyVmFunction1Node.create();
 
@@ -570,7 +586,7 @@ public final class ListNodes {
     }
   }
 
-  public abstract static class mapIndexed extends ExternalMethod1Node {
+  public abstract static class mapNonNullIndexed extends ExternalMethod1Node {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
@@ -579,7 +595,9 @@ public final class ListNodes {
       long index = 0;
 
       for (var elem : self) {
-        builder.add(applyLambdaNode.execute(function, index++, elem));
+        var newValue = applyLambdaNode.execute(function, index++, elem);
+        if (newValue instanceof VmNull) continue;
+        builder.add(newValue);
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.build();
