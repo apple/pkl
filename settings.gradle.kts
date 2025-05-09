@@ -41,6 +41,8 @@ include("pkl-doc")
 
 include("pkl-executor")
 
+include("pkl-formatter")
+
 include("pkl-gradle")
 
 include("pkl-parser")
