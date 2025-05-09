@@ -1,3 +1,0 @@
-import "pkl:analyze"
-
-result = analyze.importGraph(Set("http://localhost:0/foo.pkl"))
