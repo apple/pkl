@@ -15,11 +15,15 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
-import java.io.UnsupportedEncodingException;
-import org.pkl.core.PklBugException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import org.pkl.core.runtime.VmBytes;
+import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.util.ByteArrayUtils;
@@ -27,10 +31,10 @@ import org.pkl.core.util.ByteArrayUtils;
 public final class BytesNodes {
   private BytesNodes() {}
 
-  public abstract static class value extends ExternalPropertyNode {
+  public abstract static class toList extends ExternalMethod0Node {
     @Specialization
     protected VmList eval(VmBytes self) {
-      return self.vmList();
+      return self.toList();
     }
   }
 
@@ -38,6 +42,13 @@ public final class BytesNodes {
     @Specialization
     protected long eval(VmBytes self) {
       return self.getBytes().length;
+    }
+  }
+
+  public abstract static class size extends ExternalPropertyNode {
+    @Specialization
+    protected VmDataSize eval(VmBytes self) {
+      return self.getSize();
     }
   }
 
@@ -83,13 +94,16 @@ public final class BytesNodes {
     }
   }
 
-  public abstract static class encodeToStringWithCharset extends ExternalMethod1Node {
+  public abstract static class decodeToString extends ExternalMethod1Node {
     @Specialization
     protected String eval(VmBytes self, String charset) {
       try {
-        return new String(self.getBytes(), charset);
-      } catch (UnsupportedEncodingException e) {
-        throw PklBugException.unreachableCode();
+        var byteBuffer = ByteBuffer.wrap(self.getBytes());
+        var decoder = Charset.forName(charset).newDecoder();
+        return decoder.decode(byteBuffer).toString();
+      } catch (CharacterCodingException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("characterCodingException", charset).build();
       }
     }
   }

@@ -152,7 +152,7 @@ final class YamlRenderer implements ValueRenderer {
     }
 
     @Override
-    public void visitBytes(Bytes value) {
+    public void visitBytes(byte[] value) {
       throw new RendererException(
           String.format("Values of type `Bytes` cannot be rendered as YAML. Value: %s", value));
     }

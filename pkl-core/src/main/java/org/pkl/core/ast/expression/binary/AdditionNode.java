@@ -78,4 +78,9 @@ public abstract class AdditionNode extends BinaryExpressionNode {
   protected VmMap eval(VmMap left, VmMap right) {
     return left.concatenate(right);
   }
+
+  @Specialization
+  protected VmBytes eval(VmBytes left, VmBytes right) {
+    return left.concatenate(right);
+  }
 }

@@ -935,7 +935,23 @@ public final class StringNodes {
     }
   }
 
-  public abstract static class toBytesWithCharset extends ExternalMethod1Node {
+  public abstract static class base64DecodedBytes extends ExternalPropertyNode {
+    @TruffleBoundary
+    @Specialization
+    protected VmBytes eval(String self) {
+      try {
+        return new VmBytes(Base64.getDecoder().decode(self));
+      } catch (IllegalArgumentException e) {
+        throw exceptionBuilder()
+            .adhocEvalError(e.getMessage())
+            .withProgramValue("String", self)
+            .withCause(e)
+            .build();
+      }
+    }
+  }
+
+  public abstract static class encodeToBytes extends ExternalMethod1Node {
     @TruffleBoundary
     @Specialization
     protected VmBytes eval(String self, String charsetName) {

@@ -49,13 +49,13 @@ class EvaluateMultipleFileOutputTest {
     val output = evaluator.evaluateOutputFiles(text(program))
     assertThat(output.keys).isEqualTo(setOf("foo.yml", "bar.yml", "bar/biz.yml", "bar/../bark.yml"))
     assertThat(output["foo.yml"]?.text).isEqualTo("foo: foo text")
-    assertThat(output["foo.yml"]?.bytes?.value).isEqualTo("foo: foo text".toByteArray())
+    assertThat(output["foo.yml"]?.bytes).isEqualTo("foo: foo text".toByteArray())
     assertThat(output["bar.yml"]?.text).isEqualTo("bar: bar text")
-    assertThat(output["bar.yml"]?.bytes?.value).isEqualTo("bar: bar text".toByteArray())
+    assertThat(output["bar.yml"]?.bytes).isEqualTo("bar: bar text".toByteArray())
     assertThat(output["bar/biz.yml"]?.text).isEqualTo("biz: bar biz")
-    assertThat(output["bar/biz.yml"]?.bytes?.value).isEqualTo("biz: bar biz".toByteArray())
+    assertThat(output["bar/biz.yml"]?.bytes).isEqualTo("biz: bar biz".toByteArray())
     assertThat(output["bar/../bark.yml"]?.text).isEqualTo("bark: bark bark")
-    assertThat(output["bar/../bark.yml"]?.bytes?.value).isEqualTo("bark: bark bark".toByteArray())
+    assertThat(output["bar/../bark.yml"]?.bytes).isEqualTo("bark: bark bark".toByteArray())
   }
 
   @Test

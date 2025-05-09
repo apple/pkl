@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,5 +31,13 @@ class VmValueRendererTest {
   fun `render null with default`() {
     val none = VmNull.withDefault("default")
     assertThat(renderer.render(none)).isEqualTo("null")
+  }
+
+  @Test
+  fun `render bytes`() {
+    val renderer = VmValueRenderer.singleLine(5000)
+    val bytes = VmBytes((-128..127).map { it.toByte() }.toByteArray())
+    assertThat(renderer.render(bytes))
+      .isEqualTo("Bytes(128, 129, 130, 131, 132, 133, 134, 135, ... <248.b more bytes>)")
   }
 }

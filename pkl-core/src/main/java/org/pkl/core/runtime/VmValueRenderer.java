@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.pkl.core.DataSizeUnit;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.parser.Lexer;
@@ -117,8 +118,28 @@ public final class VmValueRenderer {
     @Override
     public void visitBytes(VmBytes value) {
       append("Bytes(");
-      visitString(value.base64());
+      // truncate bytes if over 40 bytes
+      renderByteElems(value, Math.min(value.getLength(), 8));
+      if (value.getLength() > 8) {
+        var remaining = value.getSize().subtract(new VmDataSize(8, DataSizeUnit.BYTES));
+        append(", ... <");
+        append(remaining);
+        append(" more bytes>");
+      }
       append(")");
+    }
+
+    private void renderByteElems(VmBytes value, int limit) {
+      var isFirst = true;
+      var bytes = value.getBytes();
+      for (var i = 0; i < Math.min(bytes.length, limit); i++) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          append(", ");
+        }
+        append(Byte.toUnsignedInt(bytes[i]));
+      }
     }
 
     @Override

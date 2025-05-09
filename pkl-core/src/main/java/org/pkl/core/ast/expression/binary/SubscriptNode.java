@@ -100,6 +100,13 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected long eval(VmBytes receiver, long index) {
+    if (index < 0 || index >= receiver.getLength()) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError("elementIndexOutOfRange", index, 0, receiver.getLength() - 1)
+          .withProgramValue("Collection", receiver)
+          .build();
+    }
     return receiver.getBytes()[(int) index];
   }
 

@@ -223,6 +223,10 @@ public final class BaseModule extends StdLibModule {
     return MixinTypeAlias.instance;
   }
 
+  public static VmTypeAlias getUInt8TypeAlias() {
+    return UInt8TypeAlias.instance;
+  }
+
   private static final class AnyClass {
     static final VmClass instance = loadClass("Any");
   }
@@ -389,6 +393,10 @@ public final class BaseModule extends StdLibModule {
 
   private static final class Int32TypeAlias {
     static final VmTypeAlias instance = loadTypeAlias("Int32");
+  }
+
+  private static final class UInt8TypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt8");
   }
 
   private static final class MixinTypeAlias {
