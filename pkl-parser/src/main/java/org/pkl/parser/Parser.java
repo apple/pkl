@@ -29,6 +29,7 @@ import org.pkl.parser.syntax.ClassProperty;
 import org.pkl.parser.syntax.DocComment;
 import org.pkl.parser.syntax.Expr;
 import org.pkl.parser.syntax.Expr.AmendsExpr;
+import org.pkl.parser.syntax.Expr.BinaryOperatorExpr;
 import org.pkl.parser.syntax.Expr.BoolLiteralExpr;
 import org.pkl.parser.syntax.Expr.FloatLiteralExpr;
 import org.pkl.parser.syntax.Expr.FunctionLiteralExpr;
@@ -41,7 +42,6 @@ import org.pkl.parser.syntax.Expr.MultiLineStringLiteralExpr;
 import org.pkl.parser.syntax.Expr.NewExpr;
 import org.pkl.parser.syntax.Expr.NonNullExpr;
 import org.pkl.parser.syntax.Expr.NullLiteralExpr;
-import org.pkl.parser.syntax.Expr.OperatorExpr;
 import org.pkl.parser.syntax.Expr.OuterExpr;
 import org.pkl.parser.syntax.Expr.ParenthesizedExpr;
 import org.pkl.parser.syntax.Expr.QualifiedAccessExpr;
@@ -800,54 +800,57 @@ public class Parser {
     return parseExpr(null);
   }
 
+  private record OpInfo(int prec, boolean isLeftAssoc) {}
+
+  private OpInfo getOpInfo(Operator operator) {
+    return switch (operator) {
+      case NULL_COALESCE -> new OpInfo(1, false);
+      case PIPE -> new OpInfo(2, true);
+      case OR -> new OpInfo(3, true);
+      case AND -> new OpInfo(4, true);
+      case EQ_EQ, NOT_EQ -> new OpInfo(5, true);
+      case IS, AS -> new OpInfo(6, true);
+      case LT, LTE, GT, GTE -> new OpInfo(7, true);
+      case PLUS, MINUS -> new OpInfo(8, true);
+      case MULT, DIV, INT_DIV, MOD -> new OpInfo(9, true);
+      case POW -> new OpInfo(10, false);
+      case DOT, QDOT -> new OpInfo(11, true);
+    };
+  }
+
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExpr(@Nullable String expectation) {
-    List<Expr> exprs = new ArrayList<>();
-    exprs.add(parseExprAtom(expectation));
+    return parseExpr(expectation, 1);
+  }
+
+  private Expr parseExpr(@Nullable String expectation, int minPrecedence) {
+    var expr = parseExprAtom(expectation);
     var op = getOperator();
-    loop:
     while (op != null) {
+      var opInfo = getOpInfo(op);
+      if (opInfo.prec < minPrecedence) break;
+      // `-` must be in the same line as the left operand and have no semicolons inbetween
+      if (op == Operator.MINUS && (precededBySemicolon || _lookahead.newLinesBetween > 0)) break;
+
+      next(); // operator
       switch (op) {
-        case IS, AS -> {
-          exprs.add(new OperatorExpr(op, next().span));
-          exprs.add(new Expr.TypeExpr(parseType()));
-          var precedence = OperatorResolver.getPrecedence(op);
-          exprs = OperatorResolver.resolveOperatorsHigherThan(exprs, precedence);
+        case IS -> {
+          var type = parseType();
+          expr = new Expr.TypeCheckExpr(expr, type, expr.span().endWith(type.span()));
         }
-        case MINUS -> {
-          if (!precededBySemicolon && _lookahead.newLinesBetween == 0) {
-            exprs.add(new OperatorExpr(op, next().span));
-            exprs.add(parseExprAtom(expectation));
-          } else {
-            break loop;
-          }
-        }
-        case DOT, QDOT -> {
-          // this exists just to keep backward compatibility with code as `x + y as List.distinct`
-          // which should be removed at some point
-          next();
-          var expr = exprs.remove(exprs.size() - 1);
-          var isNullable = op == Operator.QDOT;
-          var identifier = parseIdentifier();
-          ArgumentList argumentList = null;
-          if (lookahead == Token.LPAREN
-              && !precededBySemicolon
-              && _lookahead.newLinesBetween == 0) {
-            argumentList = parseArgumentList();
-          }
-          var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
-          exprs.add(
-              new QualifiedAccessExpr(
-                  expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan)));
+        case AS -> {
+          var type = parseType();
+          expr = new Expr.TypeCastExpr(expr, type, expr.span().endWith(type.span()));
         }
         default -> {
-          exprs.add(new OperatorExpr(op, next().span));
-          exprs.add(parseExprAtom(expectation));
+          var nextMinPrec = opInfo.isLeftAssoc ? opInfo.prec + 1 : opInfo.prec;
+          var rhs = parseExpr(expectation, nextMinPrec);
+          expr = new BinaryOperatorExpr(expr, rhs, op, expr.span().endWith(rhs.span()));
         }
       }
       op = getOperator();
     }
-    return OperatorResolver.resolveOperators(exprs);
+    return expr;
   }
 
   private @Nullable Operator getOperator() {

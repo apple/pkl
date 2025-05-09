@@ -381,10 +381,6 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(floatLiteralExpr)")
       }
-      is StringConstant -> {
-        buf.append(tab)
-        buf.append("(stringConstantExpr)")
-      }
       is SingleLineStringLiteralExpr -> renderSingleLineStringLiteral(expr)
       is MultiLineStringLiteralExpr -> renderMultiLineStringLiteral(expr)
       is ThrowExpr -> renderThrowExpr(expr)
@@ -412,8 +408,6 @@ class SexpRenderer {
       is BinaryOperatorExpr -> renderBinaryOpExpr(expr)
       is TypeCheckExpr -> renderTypeCheckExpr(expr)
       is TypeCastExpr -> renderTypeCastExpr(expr)
-      is OperatorExpr -> throw RuntimeException("Operator expr should not exist after parsing")
-      is TypeExpr -> throw RuntimeException("Type expr should not exist after parsing")
     }
   }
 
