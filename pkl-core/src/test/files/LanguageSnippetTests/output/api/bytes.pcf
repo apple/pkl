@@ -1,13 +1,4 @@
 examples {
-  ["basic"] {
-    Bytes("AQIDBA==")
-    Bytes("AQIDBA==")
-  }
-  ["equality"] {
-    true
-    true
-    true
-  }
   ["md5"] {
     "08d6c05a21512a79a1dfeb9d2a8f262f"
     "d41d8cd98f00b204e9800998ecf8427e"
@@ -21,16 +12,29 @@ examples {
     "da39a3ee5e6b4b0d3255bfef95601890afd80709"
   }
   ["toString"] {
-    "Bytes(\"AQIDBA==\")"
-    "Bytes(\"AQIDBA==\")"
-    "Bytes(\"\")"
+    "Bytes(1, 2, 3, 4)"
+    "Bytes()"
   }
   ["base64"] {
     "AQIDBA=="
     ""
+    "AQIDBA=="
   }
   ["hex"] {
     "01020304"
     ""
+  }
+  ["length"] {
+    0
+    4
+    1000
+  }
+  ["size"] {
+    0.b
+    4.b
+    1.kb
+  }
+  ["decodeToString()"] {
+    "foo bar"
   }
 }

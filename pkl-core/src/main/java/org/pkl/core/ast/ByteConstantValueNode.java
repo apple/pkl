@@ -13,18 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.config.java.mapper;
+package org.pkl.core.ast;
 
-import java.lang.reflect.Type;
-import java.util.Optional;
-import org.pkl.core.PClassInfo;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
-public class PBytesToByteArray implements ConverterFactory {
+public class ByteConstantValueNode extends ExpressionNode implements ConstantNode {
+
+  private final byte value;
+
+  public ByteConstantValueNode(SourceSection sourceSection, byte value) {
+    super(sourceSection);
+    this.value = value;
+  }
+
+  public ByteConstantValueNode(byte value) {
+    this.value = value;
+  }
+
   @Override
-  public Optional<Converter<?, ?>> create(PClassInfo<?> sourceType, Type targetType) {
-    if (sourceType != PClassInfo.Bytes) return Optional.empty();
-    var targetClass = Reflection.toRawType(targetType);
-    if (targetClass != byte[].class) return Optional.empty();
-    return Optional.of((value, valueMapper) -> value);
+  public Long getValue() {
+    return (long) value;
+  }
+
+  public byte getByteValue() {
+    return value;
+  }
+
+  @Override
+  public Object executeGeneric(VirtualFrame frame) {
+    return getValue();
   }
 }

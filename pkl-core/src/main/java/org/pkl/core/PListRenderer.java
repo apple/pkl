@@ -137,9 +137,9 @@ final class PListRenderer implements ValueRenderer {
     }
 
     @Override
-    public void visitBytes(Bytes value) {
+    public void visitBytes(byte[] value) {
       write("<data>");
-      write(value.getBase64());
+      write(Base64.getEncoder().encodeToString(value));
       write("</data>");
     }
 

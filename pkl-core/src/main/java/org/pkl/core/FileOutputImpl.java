@@ -46,7 +46,7 @@ final class FileOutputImpl implements FileOutput {
   }
 
   @Override
-  public Bytes getBytes() {
+  public byte[] getBytes() {
     try {
       return evaluator.evaluateOutputBytes(fileOutput);
     } catch (PolyglotException e) {

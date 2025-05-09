@@ -107,7 +107,7 @@ final class PropertiesRenderer implements ValueRenderer {
     }
 
     @Override
-    public String convertBytes(Bytes value) {
+    public String convertBytes(byte[] value) {
       throw new RendererException(
           String.format(
               "Values of type `Bytes` cannot be rendered as Properties. Value: %s", value));

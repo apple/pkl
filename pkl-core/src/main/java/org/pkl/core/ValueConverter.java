@@ -37,7 +37,7 @@ public interface ValueConverter<T> {
 
   T convertDataSize(DataSize value);
 
-  T convertBytes(Bytes value);
+  T convertBytes(byte[] value);
 
   T convertPair(Pair<?, ?> value);
 

@@ -34,6 +34,10 @@ facts {
     "".base64.base64Decoded == ""
     quickBrownFox.base64.base64Decoded == quickBrownFox
   }
+  
+  ["base64DecodedBytes"] {
+    "AQIDBA==".base64DecodedBytes == Bytes(1, 2, 3, 4)
+  }
 
   ["contains()"] {
     str1.contains(str2)
@@ -492,5 +496,20 @@ examples {
 
   ["base64Decoded"] {
     module.catch(() -> "~~~".base64Decoded)
+  }
+  
+  ["base64DecodedBytes"] {
+    module.catch(() -> "~~~".base64DecodedBytes)
+    "AQIDBA==".base64DecodedBytes
+  }
+  
+  ["encodeToBytes()"] {
+    "~~~".encodeToBytes("UTF-8")
+    "🏀".encodeToBytes("UTF-8")
+    "~~~".encodeToBytes("UTF-16")
+    "🏀".encodeToBytes("UTF-16")
+    "~~~".encodeToBytes("ISO-8859-1")
+    "🏀".encodeToBytes("ISO-8859-1")
+    "Parrot".encodeToBytes("UTF-8")
   }
 }

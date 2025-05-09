@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Expected an exception, but none was thrown.
+
+xx | module.catch(() -> Bytes(0, 1, 2, 0xff))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at bytes#examples["incorrectly sized constant values"][#1] (file:///$snippetsDir/input/basic/bytes.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

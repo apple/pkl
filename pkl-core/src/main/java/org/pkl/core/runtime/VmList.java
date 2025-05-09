@@ -103,7 +103,7 @@ public final class VmList extends VmCollection {
     if (elements.length == 0) return EMPTY;
     var vector = RrbTree.emptyMutable();
     for (var elem : elements) {
-      vector.append((long) elem);
+      vector.append(Byte.toUnsignedLong(elem));
     }
     return new VmList(vector.immutable());
   }

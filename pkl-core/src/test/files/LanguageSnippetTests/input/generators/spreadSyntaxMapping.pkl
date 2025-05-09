@@ -15,6 +15,7 @@ local list: List<Int> = List(1, 2, 3)
 local map: Map<String, Int> = Map("a", 1, "b", 2)
 local intseq: IntSeq = IntSeq(0, 5).step(2)
 local set: Set<Int> = Set(10, 20, 30)
+local bytes: Bytes = Bytes(1, 2, 3, 4)
 
 class Foo {
   names: Listing<String>
@@ -108,3 +109,5 @@ local foos = (makeFoos(List("bar"))) {
 res17 = new Mapping {
   ...foos
 }
+
+res18 = test.catch(() -> new Mapping { ...bytes })

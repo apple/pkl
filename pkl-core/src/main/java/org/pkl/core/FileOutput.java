@@ -29,5 +29,5 @@ public interface FileOutput {
    *
    * @throws PklException if an error occurs during evaluation.
    */
-  Bytes getBytes();
+  byte[] getBytes();
 }

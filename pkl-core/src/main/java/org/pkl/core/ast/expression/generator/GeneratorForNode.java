@@ -118,6 +118,14 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
     }
   }
 
+  @Specialization
+  protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmBytes iterable) {
+    long idx = 0;
+    for (var byt : iterable.getBytes()) {
+      executeIteration(frame, parent, data, idx++, (long) byt);
+    }
+  }
+
   @Fallback
   @SuppressWarnings("unused")
   protected void fallback(VirtualFrame frame, Object parent, ObjectData data, Object iterable) {

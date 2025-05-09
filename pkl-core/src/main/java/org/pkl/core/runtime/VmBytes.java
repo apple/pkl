@@ -15,30 +15,52 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.Arrays;
-import org.pkl.core.Bytes;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.PrimitiveIterator;
+import org.pkl.core.DataSizeUnit;
+import org.pkl.core.ast.ByteConstantValueNode;
+import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final class VmBytes extends VmValue {
+public final class VmBytes extends VmValue implements Iterable<Long> {
 
   private @Nullable VmList vmList;
   private @Nullable String base64;
   private @Nullable String hex;
   private final byte[] bytes;
+  private @Nullable VmDataSize size;
+
+  public static VmBytes EMPTY = new VmBytes(new byte[0]);
+
+  @TruffleBoundary
+  public static VmBytes createFromConstantNodes(ExpressionNode[] elements) {
+    if (elements.length == 0) {
+      return EMPTY;
+    }
+    var bytes = new byte[elements.length];
+    for (var i = 0; i < elements.length; i++) {
+      var exprNode = elements[i];
+      // guaranteed by AstBuilder
+      assert exprNode instanceof ByteConstantValueNode;
+      bytes[i] = ((ByteConstantValueNode) exprNode).getByteValue();
+    }
+    return new VmBytes(bytes);
+  }
 
   public VmBytes(byte[] bytes) {
     this.bytes = bytes;
   }
 
-  public VmBytes(VmList vmList) {
+  public VmBytes(VmList vmList, byte[] bytes) {
     this.vmList = vmList;
-    this.bytes = new byte[vmList.getLength()];
-    for (var i = 0; i < vmList.getLength(); i++) {
-      bytes[i] = ((Long) vmList.get(i)).byteValue();
-    }
+    this.bytes = bytes;
   }
 
   @Override
@@ -52,8 +74,8 @@ public final class VmBytes extends VmValue {
   }
 
   @Override
-  public Bytes export() {
-    return new Bytes(bytes);
+  public byte[] export() {
+    return bytes;
   }
 
   @Override
@@ -83,7 +105,14 @@ public final class VmBytes extends VmValue {
     return bytes;
   }
 
-  public VmList vmList() {
+  public VmBytes concatenate(VmBytes right) {
+    var newBytes = new byte[bytes.length + right.bytes.length];
+    System.arraycopy(bytes, 0, newBytes, 0, bytes.length);
+    System.arraycopy(right.bytes, 0, newBytes, bytes.length, right.bytes.length);
+    return new VmBytes(newBytes);
+  }
+
+  public VmList toList() {
     if (vmList == null) {
       vmList = VmList.create(bytes);
     }
@@ -104,8 +133,69 @@ public final class VmBytes extends VmValue {
     return hex;
   }
 
+  public int getLength() {
+    return bytes.length;
+  }
+
+  public VmDataSize getSize() {
+    if (size == null) {
+      if (getLength() == 0) {
+        // avoid log10(0), which gives us -Infinity
+        size = new VmDataSize(0, DataSizeUnit.BYTES);
+      } else {
+        var magnitude = (int) Math.floor(Math.log10(getLength()));
+        var unit =
+            switch (magnitude) {
+              case 0, 1, 2 -> DataSizeUnit.BYTES;
+              case 3, 4, 5 -> DataSizeUnit.KILOBYTES;
+              case 6, 7, 8 -> DataSizeUnit.MEGABYTES;
+              case 9, 10, 11 -> DataSizeUnit.GIGABYTES;
+              // in practice, can never happen (Java can only hold at most math.maxInt bytes).
+              case 12, 13, 14 -> DataSizeUnit.TERABYTES;
+              default -> DataSizeUnit.PETABYTES;
+            };
+        size = new VmDataSize(getLength(), DataSizeUnit.BYTES).convertTo(unit);
+      }
+    }
+    return size;
+  }
+
   @Override
   public String toString() {
-    return "Bytes(\"" + base64() + "\")";
+    var sb = new StringBuilder("Bytes(");
+    var isFirst = true;
+    for (var byt : bytes) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        sb.append(", ");
+      }
+      sb.append(Byte.toUnsignedInt(byt));
+    }
+    sb.append(")");
+    return sb.toString();
+  }
+
+  @Override
+  public Iterator<Long> iterator() {
+    return new PrimitiveIterator.OfLong() {
+      int index = 0;
+
+      @Override
+      public boolean hasNext() {
+        return index <= bytes.length - 1;
+      }
+
+      @Override
+      public long nextLong() {
+        if (!hasNext()) {
+          CompilerDirectives.transferToInterpreter();
+          throw new NoSuchElementException();
+        }
+        var result = Byte.toUnsignedLong(bytes[index]);
+        index += 1;
+        return result;
+      }
+    };
   }
 }

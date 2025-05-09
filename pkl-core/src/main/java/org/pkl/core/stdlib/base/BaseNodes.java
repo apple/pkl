@@ -20,8 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import java.util.Base64;
-import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmIntSeq;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
@@ -147,20 +145,10 @@ public final class BaseNodes {
 
   public abstract static class Bytes extends ExternalMethod1Node {
     @Specialization
-    protected VmBytes eval(VmTyped ignored, String value) {
-      try {
-        return new VmBytes(Base64.getDecoder().decode(value));
-      } catch (IllegalArgumentException e) {
-        throw exceptionBuilder()
-            .evalError("invalidStringBase64", value)
-            .withHint(e.getMessage())
-            .build();
-      }
-    }
-
-    @Specialization
-    protected VmBytes eval(VmTyped ignored, VmList value) {
-      return new VmBytes(value);
+    protected VmList eval(VirtualFrame frame, VmTyped self, Object args) {
+      // invocations of this method are handled specially in AstBuilder
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().bug("Node `BaseNodes.Bytes` should never be executed.").build();
     }
   }
 }

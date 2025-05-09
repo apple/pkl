@@ -53,7 +53,7 @@ public interface ValueVisitor {
     visitDefault(value);
   }
 
-  default void visitBytes(Bytes value) {
+  default void visitBytes(byte[] value) {
     visitDefault(value);
   }
 
@@ -112,6 +112,8 @@ public interface ValueVisitor {
       visitMap(map);
     } else if (value instanceof Pattern pattern) {
       visitRegex(pattern);
+    } else if (value instanceof byte[] bytes) {
+      visitBytes(bytes);
     } else {
       throw new IllegalArgumentException("Cannot visit value with unexpected type: " + value);
     }

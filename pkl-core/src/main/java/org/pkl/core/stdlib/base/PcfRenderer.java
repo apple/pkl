@@ -102,9 +102,7 @@ public final class PcfRenderer extends AbstractRenderer {
 
   @Override
   public void visitBytes(VmBytes value) {
-    builder.append("Bytes(");
-    visitString(value.base64());
-    builder.append(")");
+    builder.append(value);
   }
 
   @Override

@@ -93,9 +93,17 @@ final class PcfRenderer implements ValueRenderer {
     }
 
     @Override
-    public void visitBytes(Bytes value) {
+    public void visitBytes(byte[] value) {
       write("Bytes(\"");
-      write(value.getBase64());
+      var isFirst = true;
+      for (var byt : value) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          write(", ");
+        }
+        write(Integer.valueOf(Byte.toUnsignedInt(byt)).toString());
+      }
       write(")");
     }
 
