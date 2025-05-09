@@ -100,20 +100,21 @@ public class GenericParser {
   private GenNode parseModuleDecl(List<GenNode> preChildren) {
     var children = new ArrayList<>(preChildren);
     if (lookahead == Token.MODULE) {
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseQualifiedIdentifier());
-      ff(children);
+      var subChildren = new ArrayList<GenNode>();
+      subChildren.add(makeTerminal(next()));
+      ff(subChildren);
+      subChildren.add(parseQualifiedIdentifier());
+      children.add(new GenNode(NodeType.MODULE_DEFINITION, subChildren));
     }
-    if (lookahead == Token.AMENDS) {
-      var amends = makeTerminal(next());
-      var url = parseStringConstant();
-      children.add(new GenNode(NodeType.AMENDS_CLAUSE, List.of(amends, url)));
-    }
-    if (lookahead == Token.EXTENDS) {
-      var amends = makeTerminal(next());
-      var url = parseStringConstant();
-      children.add(new GenNode(NodeType.EXTENDS_CLAUSE, List.of(amends, url)));
+    var looka = lookahead();
+    if (looka == Token.AMENDS || looka == Token.EXTENDS) {
+      var type = looka == Token.AMENDS ? NodeType.AMENDS_CLAUSE : NodeType.EXTENDS_CLAUSE;
+      ff(children);
+      var subChildren = new ArrayList<GenNode>();
+      subChildren.add(makeTerminal(next()));
+      ff(subChildren);
+      subChildren.add(parseStringConstant());
+      children.add(new GenNode(type, subChildren));
     }
     return new GenNode(NodeType.MODULE_DECLARATION, children);
   }
