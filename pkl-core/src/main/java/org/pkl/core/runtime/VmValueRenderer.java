@@ -118,7 +118,7 @@ public final class VmValueRenderer {
     @Override
     public void visitBytes(VmBytes value) {
       append("Bytes(");
-      // truncate bytes if over 40 bytes
+      // truncate bytes if over 8 bytes
       renderByteElems(value, Math.min(value.getLength(), 8));
       if (value.getLength() > 8) {
         var remaining = value.getSize().subtract(new VmDataSize(8, DataSizeUnit.BYTES));

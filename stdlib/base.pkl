@@ -518,7 +518,6 @@ class Resource {
   /// The text content of this resource.
   text: String
 
-  // noinspection Deprecated
   /// The bytes of this resource.
   @Since { version = "0.29.0" }
   bytes: Bytes
@@ -3097,6 +3096,7 @@ external class List<out Element> extends Collection<Element> {
   /// Converts this list to [Bytes].
   ///
   /// Throws a type error if any elements are not [UInt8].
+  @Since { version = "0.29.0" }
   external function toBytes(): Bytes
 }
 
@@ -3411,6 +3411,21 @@ external class Bytes extends Any {
   /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) cryptographic hash of
   /// these bytes.
   external sha256Int: Int
+
+  /// Returns the element at [index].
+  ///
+  /// Returns [null] if [index] is outside the bounds of these Bytes.
+  ///
+  /// Facts:
+  /// ```
+  /// Bytes(3, 9, 6).getOrNull(0) == 3
+  /// Bytes(3, 9, 6).getOrNull(1) == 9
+  /// Bytes(3, 9, 6).getOrNull(2) == 6
+  /// Bytes(3, 9, 6).getOrNull(-1) == null
+  /// Bytes(3, 9, 6).getOrNull(3) == null
+  /// Bytes(3, 9, 6).getOrNull(99) == null
+  /// ```
+  external function getOrNull(index: Int): UInt8?
 
   /// Converts these bytes into a string using the given [charset].
   ///
