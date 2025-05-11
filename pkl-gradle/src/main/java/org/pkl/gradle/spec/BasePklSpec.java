@@ -22,6 +22,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.pkl.gradle.ExternalReader;
 
 /** Configuration options shared between plugin features. Documented in user manual. */
 public interface BasePklSpec {
@@ -59,4 +60,8 @@ public interface BasePklSpec {
   ListProperty<String> getHttpNoProxy();
 
   MapProperty<URI, URI> getHttpRewrites();
+  
+  MapProperty<String, ExternalReader> getExternalModuleReaders();
+
+  MapProperty<String, ExternalReader> getExternalResourceReaders();
 }

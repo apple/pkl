@@ -40,12 +40,15 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
+import org.pkl.gradle.ExternalReader;
 import org.pkl.gradle.utils.PluginUtils;
 
 public abstract class BasePklTask extends DefaultTask {
@@ -145,6 +148,14 @@ public abstract class BasePklTask extends DefaultTask {
   @Input
   @Optional
   public abstract MapProperty<URI, URI> getHttpRewrites();
+  
+  @Input
+  @Optional
+  public abstract MapProperty<String, ExternalReader> getExternalModuleReaders();
+
+  @Input
+  @Optional
+  public abstract MapProperty<String, ExternalReader> getExternalResourceReaders();
 
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
@@ -200,8 +211,8 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
-              Map.of(),
-              Map.of(),
+              parseExternalReaders(getExternalModuleReaders()),
+              parseExternalReaders(getExternalResourceReaders()),
               null);
     }
     return cachedOptions;
@@ -236,5 +247,16 @@ public abstract class BasePklTask extends DefaultTask {
   protected <T, U> @Nullable U mapAndGetOrNull(Provider<T> provider, Function<T, U> f) {
     @Nullable T value = provider.getOrNull();
     return value == null ? null : f.apply(value);
+  }
+
+  protected Map<String, PklEvaluatorSettings.ExternalReader> parseExternalReaders(
+      Provider<Map<String, ExternalReader>> provider) {
+    return provider.getOrElse(Map.of()).entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                (it) ->
+                    new PklEvaluatorSettings.ExternalReader(
+                        it.getValue().executable(), it.getValue().arguments())));
   }
 }
