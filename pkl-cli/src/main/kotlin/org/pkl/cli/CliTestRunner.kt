@@ -21,7 +21,6 @@ import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
 import org.pkl.core.TestResults
-import org.pkl.core.stdlib.test.report.JUnitAggregateReport
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
 import org.pkl.core.util.ErrorMessages
@@ -115,9 +114,9 @@ constructor(
         }
       }
       if (testOptions.junitAggregateReports && junitDir != null) {
-        val suite = testOptions.junitSuiteName ?: "test"
-        val fileName = "${suite}.xml"
-        JUnitAggregateReport().reportToPath(suite, allTestResults, junitDir.resolve(fileName))
+        val fileName = "${testOptions.junitAggregateSuiteName}.xml"
+        JUnitReport(testOptions.junitAggregateSuiteName)
+          .summarizeToPath(allTestResults, junitDir.resolve(fileName))
       }
       consoleWriter.append('\n')
       reporter.summarize(allTestResults, consoleWriter)

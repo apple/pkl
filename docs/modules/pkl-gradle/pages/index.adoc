@@ -306,8 +306,8 @@ Default: `false` +
 Aggregate JUnit reports into a single file.
 ====
 
-[[junit-suite-name]]
-.junitSuiteName: Property<String>
+[[junit-aggregate-suite-name]]
+.junitAggregateSuiteName: Property<String>
 [%collapsible]
 ====
 Default: `null` +

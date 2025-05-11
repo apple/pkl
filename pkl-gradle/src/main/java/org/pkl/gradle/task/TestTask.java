@@ -34,11 +34,14 @@ public abstract class TestTask extends ModulesTask {
   public abstract Property<Boolean> getJunitAggregateReports();
 
   @Input
-  @Optional
-  public abstract Property<String> getJunitSuiteName();
+  public abstract Property<String> getJunitAggregateSuiteName();
 
   @Input
   public abstract Property<Boolean> getOverwrite();
+
+  public TestTask() {
+    this.getJunitAggregateSuiteName().convention("pkl-tests");
+  }
 
   @Override
   protected void doRunTask() {
@@ -48,7 +51,7 @@ public abstract class TestTask extends ModulesTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
-                getJunitSuiteName().getOrElse(null)),
+                getJunitAggregateSuiteName().get()),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

@@ -48,8 +48,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
   public abstract Property<Boolean> getJunitAggregateReports();
 
   @Input
-  @Optional
-  public abstract Property<String> getJunitSuiteName();
+  public abstract Property<String> getJunitAggregateSuiteName();
 
   @Input
   public abstract Property<Boolean> getOverwrite();
@@ -57,6 +56,10 @@ public abstract class ProjectPackageTask extends BasePklTask {
   @Input
   @Optional
   public abstract Property<Boolean> getSkipPublishCheck();
+
+  public ProjectPackageTask() {
+    this.getJunitAggregateSuiteName().convention("pkl-tests");
+  }
 
   @Override
   protected void doRunTask() {
@@ -67,6 +70,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
     if (projectDirectories.isEmpty()) {
       throw new InvalidUserDataException("No project directories specified.");
     }
+
     new CliProjectPackager(
             getCliBaseOptions(),
             projectDirectories,
@@ -74,7 +78,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
-                getJunitSuiteName().getOrElse(null)),
+                getJunitAggregateSuiteName().get()),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),

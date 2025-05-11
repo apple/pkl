@@ -28,7 +28,7 @@ import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReport extends TestReport {
+public final class SimpleReport implements TestReport {
 
   private static final String passingMark = "✔ ";
   private static final String failingMark = "✘ ";
@@ -57,6 +57,7 @@ public final class SimpleReport extends TestReport {
     writer.append(builder.toString());
   }
 
+  @Override
   public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
     var totalTests = 0;
     var totalFailedTests = 0;

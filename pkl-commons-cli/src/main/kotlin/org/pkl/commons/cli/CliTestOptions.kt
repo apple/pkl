@@ -21,5 +21,5 @@ class CliTestOptions(
   val junitDir: Path? = null,
   val overwrite: Boolean = false,
   val junitAggregateReports: Boolean = false,
-  val junitSuiteName: String? = null,
+  val junitAggregateSuiteName: String = "pkl-tests",
 )

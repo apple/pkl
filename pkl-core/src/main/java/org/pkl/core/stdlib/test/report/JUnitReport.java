@@ -18,7 +18,9 @@ package org.pkl.core.stdlib.test.report;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
@@ -36,13 +38,48 @@ import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
 import org.pkl.core.util.EconomicMaps;
 
-public class JUnitReport extends TestReport {
+public final class JUnitReport implements TestReport {
+
+  private final String aggregateSuiteName;
+
+  public JUnitReport(String aggregateSuiteName) {
+    this.aggregateSuiteName = aggregateSuiteName;
+  }
+
+  public JUnitReport() {
+    this("");
+  }
+
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
     writer.append(renderXML("    ", "1.0", buildSuite(results)));
   }
 
-  public VmDynamic buildSuite(TestResults results) {
+  @Override
+  public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
+    var totalTests = allTestResults.stream().collect(Collectors.summingLong(r -> r.totalTests()));
+    var totalFailures =
+        allTestResults.stream().collect(Collectors.summingLong(r -> r.totalFailures()));
+
+    assert aggregateSuiteName != null;
+
+    var attrs =
+        buildAttributes(
+            "name", aggregateSuiteName,
+            "tests", totalTests,
+            "failures", totalFailures);
+
+    var tests =
+        allTestResults.stream()
+            .map(r -> buildSuite(r))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+    var suite = buildXmlElement("testsuites", attrs, tests.toArray(new VmDynamic[0]));
+
+    writer.append(renderXML("    ", "1.0", suite));
+  }
+
+  private VmDynamic buildSuite(TestResults results) {
     if (results.error() != null) {
       var testCase = rootTestCase(results, results.error());
       var attrs =
@@ -141,7 +178,7 @@ public class JUnitReport extends TestReport {
     return list;
   }
 
-  public VmDynamic buildXmlElement(String name, VmMapping attributes, VmDynamic... elements) {
+  private VmDynamic buildXmlElement(String name, VmMapping attributes, VmDynamic... elements) {
     return buildXmlElement(
         name,
         attributes,
@@ -172,7 +209,7 @@ public class JUnitReport extends TestReport {
         members.size() - 4);
   }
 
-  public VmMapping buildAttributes(Object... attributes) {
+  private VmMapping buildAttributes(Object... attributes) {
     EconomicMap<Object, ObjectMember> attrs = EconomicMaps.create(attributes.length);
     for (int i = 0; i < attributes.length; i += 2) {
       attrs.put(
@@ -200,7 +237,7 @@ public class JUnitReport extends TestReport {
     return str.replaceAll("\033\\[[;\\d]*m", "");
   }
 
-  public static String renderXML(String indent, String version, VmDynamic value) {
+  private static String renderXML(String indent, String version, VmDynamic value) {
     var builder = new StringBuilder();
     var converter = new PklConverter(VmMapping.empty());
     var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), converter);

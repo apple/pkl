@@ -20,15 +20,18 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 import org.pkl.core.PklBugException;
 import org.pkl.core.TestResults;
 import org.pkl.core.util.StringBuilderWriter;
 
-abstract class TestReport {
+public interface TestReport {
 
-  public abstract void report(TestResults results, Writer writer) throws IOException;
+  void report(TestResults results, Writer writer) throws IOException;
 
-  public String report(TestResults results) throws IOException {
+  void summarize(List<TestResults> allTestResults, Writer writer) throws IOException;
+
+  default String report(TestResults results) throws IOException {
     try {
       var builder = new StringBuilder();
       var writer = new StringBuilderWriter(builder);
@@ -39,9 +42,15 @@ abstract class TestReport {
     }
   }
 
-  public void reportToPath(TestResults results, Path path) throws IOException {
+  default void reportToPath(TestResults results, Path path) throws IOException {
     try (var writer = new FileWriter(path.toFile(), StandardCharsets.UTF_8)) {
       report(results, writer);
+    }
+  }
+
+  default void summarizeToPath(List<TestResults> allTestResults, Path path) throws IOException {
+    try (var writer = new FileWriter(path.toFile(), StandardCharsets.UTF_8)) {
+      summarize(allTestResults, writer);
     }
   }
 }

@@ -472,17 +472,17 @@ class CliTestRunnerTest {
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
 
-    assertThat(tempDir.resolve("test.xml")).isNotEmptyFile()
+    assertThat(tempDir.resolve("pkl-tests.xml")).isNotEmptyFile()
     assertThat(tempDir.resolve("test1.xml")).doesNotExist()
     assertThat(tempDir.resolve("test2.xml")).doesNotExist()
 
-    val junitReport = tempDir.resolve("test.xml").readString().stripFileAndLines(tempDir)
+    val junitReport = tempDir.resolve("pkl-tests.xml").readString().stripFileAndLines(tempDir)
 
     assertThat(junitReport)
       .isEqualTo(
         """
       <?xml version="1.0" encoding="UTF-8"?>
-      <testsuites name="test" tests="5" failures="3">
+      <testsuites name="pkl-tests" tests="5" failures="3">
           <testsuite name="test1" tests="2" failures="1">
               <testcase classname="test1.facts" name="foo"></testcase>
               <testcase classname="test1.facts" name="bar">
@@ -539,12 +539,16 @@ class CliTestRunnerTest {
         settings = URI("pkl:settings"),
       )
     val testOpts =
-      CliTestOptions(junitDir = tempDir, junitAggregateReports = true, junitSuiteName = "custom")
+      CliTestOptions(
+        junitDir = tempDir,
+        junitAggregateReports = true,
+        junitAggregateSuiteName = "custom",
+      )
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     runner.run()
 
     assertThat(tempDir.resolve("custom.xml")).isNotEmptyFile()
-    assertThat(tempDir.resolve("test.xml")).doesNotExist()
+    assertThat(tempDir.resolve("pkl-tests.xml")).doesNotExist()
     assertThat(tempDir.resolve("test1.xml")).doesNotExist()
     assertThat(tempDir.resolve("test2.xml")).doesNotExist()
   }
