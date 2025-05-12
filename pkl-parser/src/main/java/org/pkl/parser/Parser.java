@@ -823,6 +823,20 @@ public class Parser {
           var type = parseType();
           expr = new Expr.TypeCastExpr(expr, type, expr.span().endWith(type.span()));
         }
+        case DOT, QDOT -> {
+          var rhs = parseIdentifier();
+          var isNullable = op == Operator.QDOT;
+          ArgumentList argumentList = null;
+          if (lookahead == Token.LPAREN
+              && !precededBySemicolon
+              && _lookahead.newLinesBetween == 0) {
+            argumentList = parseArgumentList();
+          }
+          var lastSpan = argumentList != null ? argumentList.span() : rhs.span();
+          expr =
+              new QualifiedAccessExpr(
+                  expr, rhs, isNullable, argumentList, expr.span().endWith(lastSpan));
+        }
         default -> {
           var nextMinPrec = op.isLeftAssoc() ? op.getPrec() + 1 : op.getPrec();
           var rhs = parseExpr(expectation, nextMinPrec);
