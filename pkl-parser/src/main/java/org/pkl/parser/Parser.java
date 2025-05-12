@@ -800,24 +800,6 @@ public class Parser {
     return parseExpr(null);
   }
 
-  private record OpInfo(int prec, boolean isLeftAssoc) {}
-
-  private OpInfo getOpInfo(Operator operator) {
-    return switch (operator) {
-      case NULL_COALESCE -> new OpInfo(1, false);
-      case PIPE -> new OpInfo(2, true);
-      case OR -> new OpInfo(3, true);
-      case AND -> new OpInfo(4, true);
-      case EQ_EQ, NOT_EQ -> new OpInfo(5, true);
-      case IS, AS -> new OpInfo(6, true);
-      case LT, LTE, GT, GTE -> new OpInfo(7, true);
-      case PLUS, MINUS -> new OpInfo(8, true);
-      case MULT, DIV, INT_DIV, MOD -> new OpInfo(9, true);
-      case POW -> new OpInfo(10, false);
-      case DOT, QDOT -> new OpInfo(11, true);
-    };
-  }
-
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExpr(@Nullable String expectation) {
     return parseExpr(expectation, 1);
@@ -827,8 +809,7 @@ public class Parser {
     var expr = parseExprAtom(expectation);
     var op = getOperator();
     while (op != null) {
-      var opInfo = getOpInfo(op);
-      if (opInfo.prec < minPrecedence) break;
+      if (op.getPrec() < minPrecedence) break;
       // `-` must be in the same line as the left operand and have no semicolons inbetween
       if (op == Operator.MINUS && (precededBySemicolon || _lookahead.newLinesBetween > 0)) break;
 
@@ -843,7 +824,7 @@ public class Parser {
           expr = new Expr.TypeCastExpr(expr, type, expr.span().endWith(type.span()));
         }
         default -> {
-          var nextMinPrec = opInfo.isLeftAssoc ? opInfo.prec + 1 : opInfo.prec;
+          var nextMinPrec = op.isLeftAssoc() ? op.getPrec() + 1 : op.getPrec();
           var rhs = parseExpr(expectation, nextMinPrec);
           expr = new BinaryOperatorExpr(expr, rhs, op, expr.span().endWith(rhs.span()));
         }

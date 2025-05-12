@@ -16,25 +16,41 @@
 package org.pkl.parser.syntax;
 
 public enum Operator {
-  POW,
-  MULT,
-  DIV,
-  INT_DIV,
-  MOD,
-  PLUS,
-  MINUS,
-  LT,
-  GT,
-  LTE,
-  GTE,
-  IS,
-  AS,
-  EQ_EQ,
-  NOT_EQ,
-  AND,
-  OR,
-  PIPE,
-  NULL_COALESCE,
-  DOT,
-  QDOT,
+  NULL_COALESCE(1, false),
+  PIPE(2, true),
+  OR(3, true),
+  AND(4, true),
+  EQ_EQ(5, true),
+  NOT_EQ(5, true),
+  IS(6, true),
+  AS(6, true),
+  LT(7, true),
+  GT(7, true),
+  LTE(7, true),
+  GTE(7, true),
+  PLUS(8, true),
+  MINUS(8, true),
+  MULT(9, true),
+  DIV(9, true),
+  INT_DIV(9, true),
+  MOD(9, true),
+  POW(10, false),
+  DOT(11, true),
+  QDOT(11, true);
+
+  private final int prec;
+  private final boolean isLeftAssoc;
+
+  Operator(int prec, boolean isLeftAssoc) {
+    this.prec = prec;
+    this.isLeftAssoc = isLeftAssoc;
+  }
+
+  public int getPrec() {
+    return prec;
+  }
+
+  public boolean isLeftAssoc() {
+    return isLeftAssoc;
+  }
 }
