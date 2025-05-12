@@ -46,9 +46,4 @@ class LexerTest {
     assertThat(Lexer.maybeQuoteIdentifier("this")).isEqualTo("`this`")
     assertThat(Lexer.maybeQuoteIdentifier("😀")).isEqualTo("`😀`")
   }
-
-  @Test
-  fun `lexer keywords are sorted`() {
-    assertThat(Lexer.KEYWORDS).isSortedAccordingTo { a, b -> a.compareTo(b.name) }
-  }
 }

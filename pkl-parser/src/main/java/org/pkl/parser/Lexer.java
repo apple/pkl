@@ -16,7 +16,6 @@
 package org.pkl.parser;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Deque;
 import org.pkl.parser.util.ErrorMessages;
 
@@ -734,70 +733,57 @@ public class Lexer {
     return isRegularIdentifier(identifier) ? identifier : "`" + identifier + "`";
   }
 
-  @SuppressWarnings("SuspiciousArrayMethodCall")
   private static boolean isKeyword(String text) {
-    var index = Arrays.binarySearch(KEYWORDS, text);
-    return index >= 0;
+    return getKeywordOrIdentifier(text) != Token.IDENTIFIER;
   }
 
-  @SuppressWarnings("SuspiciousArrayMethodCall")
-  private static Token getKeywordOrIdentifier(String text) {
-    var index = Arrays.binarySearch(KEYWORDS, text);
-    if (index < 0) return Token.IDENTIFIER;
-    return KEYWORDS[index].token;
-  }
-
-  protected static final KeywordEntry[] KEYWORDS = {
-    new KeywordEntry("_", Token.UNDERSCORE),
-    new KeywordEntry("abstract", Token.ABSTRACT),
-    new KeywordEntry("amends", Token.AMENDS),
-    new KeywordEntry("as", Token.AS),
-    new KeywordEntry("case", Token.CASE),
-    new KeywordEntry("class", Token.CLASS),
-    new KeywordEntry("const", Token.CONST),
-    new KeywordEntry("delete", Token.DELETE),
-    new KeywordEntry("else", Token.ELSE),
-    new KeywordEntry("extends", Token.EXTENDS),
-    new KeywordEntry("external", Token.EXTERNAL),
-    new KeywordEntry("false", Token.FALSE),
-    new KeywordEntry("fixed", Token.FIXED),
-    new KeywordEntry("for", Token.FOR),
-    new KeywordEntry("function", Token.FUNCTION),
-    new KeywordEntry("hidden", Token.HIDDEN),
-    new KeywordEntry("if", Token.IF),
-    new KeywordEntry("import", Token.IMPORT),
-    new KeywordEntry("in", Token.IN),
-    new KeywordEntry("is", Token.IS),
-    new KeywordEntry("let", Token.LET),
-    new KeywordEntry("local", Token.LOCAL),
-    new KeywordEntry("module", Token.MODULE),
-    new KeywordEntry("new", Token.NEW),
-    new KeywordEntry("nothing", Token.NOTHING),
-    new KeywordEntry("null", Token.NULL),
-    new KeywordEntry("open", Token.OPEN),
-    new KeywordEntry("out", Token.OUT),
-    new KeywordEntry("outer", Token.OUTER),
-    new KeywordEntry("override", Token.OVERRIDE),
-    new KeywordEntry("protected", Token.PROTECTED),
-    new KeywordEntry("read", Token.READ),
-    new KeywordEntry("record", Token.RECORD),
-    new KeywordEntry("super", Token.SUPER),
-    new KeywordEntry("switch", Token.SWITCH),
-    new KeywordEntry("this", Token.THIS),
-    new KeywordEntry("throw", Token.THROW),
-    new KeywordEntry("trace", Token.TRACE),
-    new KeywordEntry("true", Token.TRUE),
-    new KeywordEntry("typealias", Token.TYPE_ALIAS),
-    new KeywordEntry("unknown", Token.UNKNOWN),
-    new KeywordEntry("vararg", Token.VARARG),
-    new KeywordEntry("when", Token.WHEN)
-  };
-
-  protected record KeywordEntry(String name, Token token) implements Comparable<String> {
-    @Override
-    public int compareTo(String o) {
-      return name.compareTo(o);
-    }
+  private static Token getKeywordOrIdentifier(String keyword) {
+    return switch (keyword) {
+      case "_" -> Token.UNDERSCORE;
+      case "abstract" -> Token.ABSTRACT;
+      case "amends" -> Token.AMENDS;
+      case "as" -> Token.AS;
+      case "case" -> Token.CASE;
+      case "class" -> Token.CLASS;
+      case "const" -> Token.CONST;
+      case "delete" -> Token.DELETE;
+      case "else" -> Token.ELSE;
+      case "extends" -> Token.EXTENDS;
+      case "external" -> Token.EXTERNAL;
+      case "false" -> Token.FALSE;
+      case "fixed" -> Token.FIXED;
+      case "for" -> Token.FOR;
+      case "function" -> Token.FUNCTION;
+      case "hidden" -> Token.HIDDEN;
+      case "if" -> Token.IF;
+      case "import" -> Token.IMPORT;
+      case "in" -> Token.IN;
+      case "is" -> Token.IS;
+      case "let" -> Token.LET;
+      case "local" -> Token.LOCAL;
+      case "module" -> Token.MODULE;
+      case "new" -> Token.NEW;
+      case "nothing" -> Token.NOTHING;
+      case "null" -> Token.NULL;
+      case "open" -> Token.OPEN;
+      case "out" -> Token.OUT;
+      case "outer" -> Token.OUTER;
+      case "override" -> Token.OVERRIDE;
+      case "protected" -> Token.PROTECTED;
+      case "read" -> Token.READ;
+      case "record" -> Token.RECORD;
+      case "super" -> Token.SUPER;
+      case "switch" -> Token.SWITCH;
+      case "this" -> Token.THIS;
+      case "throw" -> Token.THROW;
+      case "trace" -> Token.TRACE;
+      case "true" -> Token.TRUE;
+      case "typealias" -> Token.TYPE_ALIAS;
+      case "unknown" -> Token.UNKNOWN;
+      case "vararg" -> Token.VARARG;
+      case "when" -> Token.WHEN;
+      default -> Token.IDENTIFIER;
+    };
   }
 
   private static class InterpolationScope {
