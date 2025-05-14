@@ -17,10 +17,9 @@ package org.pkl.parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
+import org.pkl.parser.syntax.Operator;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.GenNode;
 import org.pkl.parser.syntax.generic.NodeType;
@@ -42,7 +41,7 @@ public class GenericParser {
     this.lexer = new Lexer(source);
     cursor = 0;
     while (true) {
-      var ft = forceNext();
+      var ft = new FullToken(lexer.next(), lexer.span(), lexer.newLinesBetween);
       tokens.add(ft);
       if (ft.token == Token.EOF) break;
     }
@@ -62,7 +61,7 @@ public class GenericParser {
     }
     var children = new ArrayList<GenNode>();
     var nodes = new ArrayList<GenNode>();
-    parseAffixes(nodes);
+    ff(nodes);
 
     var res = parseMemberHeader(children);
 
@@ -70,41 +69,54 @@ public class GenericParser {
       nodes.add(parseModuleDecl(children));
       children.clear();
       res = new HeaderResult(false, false, false);
-      parseAffixes(nodes);
+      ff(nodes);
     }
 
     // imports
+    var imports = new ArrayList<GenNode>();
     while (lookahead == Token.IMPORT || lookahead == Token.IMPORT_STAR) {
       if (res.hasDocComment || res.hasAnnotations || res.hasModifiers) {
         throw parserError("wrongHeaders", "Imports");
       }
-      nodes.add(parseImportDecl());
-      parseAffixes(nodes);
+      var lastImport = parseImportDecl();
+      imports.add(lastImport);
+      // keep trailling affixes as part of the import
+      while (lookahead.isAffix() && lastImport.span.sameLine(fromSpan(spanLookahead))) {
+        imports.add(makeAffix(next()));
+      }
+      if (!isImport()) break;
+      ff(imports);
+    }
+    if (!imports.isEmpty()) {
+      nodes.add(new GenNode(NodeType.IMPORT_LIST, imports));
+      ff(nodes);
     }
 
     // entries
     if (res.hasDocComment || res.hasAnnotations || res.hasModifiers) {
       nodes.add(parseModuleMember(children));
-      parseAffixes(nodes);
+      ff(nodes);
     }
 
     while (lookahead != Token.EOF) {
       children.clear();
       parseMemberHeader(children);
       nodes.add(parseModuleMember(children));
-      parseAffixes(nodes);
+      ff(nodes);
     }
     return new GenNode(NodeType.MODULE, nodes);
   }
 
   private GenNode parseModuleDecl(List<GenNode> preChildren) {
-    var children = new ArrayList<>(preChildren);
+    var children = new ArrayList<GenNode>();
     if (lookahead == Token.MODULE) {
-      var subChildren = new ArrayList<GenNode>();
+      var subChildren = new ArrayList<>(preChildren);
       subChildren.add(makeTerminal(next()));
       ff(subChildren);
       subChildren.add(parseQualifiedIdentifier());
       children.add(new GenNode(NodeType.MODULE_DEFINITION, subChildren));
+    } else {
+      children.addAll(preChildren);
     }
     var looka = lookahead();
     if (looka == Token.AMENDS || looka == Token.EXTENDS) {
@@ -134,7 +146,6 @@ public class GenericParser {
 
   private GenNode parseImportDecl() {
     var children = new ArrayList<GenNode>();
-    var type = NodeType.IMPORT;
     children.add(makeTerminal(next()));
     ff(children);
     children.add(parseStringConstant());
@@ -144,7 +155,7 @@ public class GenericParser {
       ff(children);
       children.add(parseIdentifier());
     }
-    return new GenNode(type, children);
+    return new GenNode(NodeType.IMPORT, children);
   }
 
   private HeaderResult parseMemberHeader(List<GenNode> children) {
@@ -581,40 +592,6 @@ public class GenericParser {
     return parseExpr(null, 1);
   }
 
-  private enum Assoc {
-    LEFT,
-    RIGHT
-  }
-
-  private record OpInfo(int prec, Assoc assoc) {}
-
-  // TODO: don't use map so it can be inlined
-  private static final Map<Token, OpInfo> PRECEDENCES = new HashMap<>();
-
-  static {
-    PRECEDENCES.put(Token.COALESCE, new OpInfo(1, Assoc.RIGHT));
-    PRECEDENCES.put(Token.PIPE, new OpInfo(2, Assoc.LEFT));
-    PRECEDENCES.put(Token.OR, new OpInfo(3, Assoc.LEFT));
-    PRECEDENCES.put(Token.AND, new OpInfo(4, Assoc.LEFT));
-    PRECEDENCES.put(Token.EQUAL, new OpInfo(5, Assoc.LEFT));
-    PRECEDENCES.put(Token.NOT_EQUAL, new OpInfo(5, Assoc.LEFT));
-    PRECEDENCES.put(Token.IS, new OpInfo(6, Assoc.LEFT));
-    PRECEDENCES.put(Token.AS, new OpInfo(6, Assoc.LEFT));
-    PRECEDENCES.put(Token.LT, new OpInfo(7, Assoc.LEFT));
-    PRECEDENCES.put(Token.LTE, new OpInfo(7, Assoc.LEFT));
-    PRECEDENCES.put(Token.GT, new OpInfo(7, Assoc.LEFT));
-    PRECEDENCES.put(Token.GTE, new OpInfo(7, Assoc.LEFT));
-    PRECEDENCES.put(Token.PLUS, new OpInfo(8, Assoc.LEFT));
-    PRECEDENCES.put(Token.MINUS, new OpInfo(8, Assoc.LEFT));
-    PRECEDENCES.put(Token.STAR, new OpInfo(9, Assoc.LEFT));
-    PRECEDENCES.put(Token.DIV, new OpInfo(9, Assoc.LEFT));
-    PRECEDENCES.put(Token.INT_DIV, new OpInfo(9, Assoc.LEFT));
-    PRECEDENCES.put(Token.MOD, new OpInfo(9, Assoc.LEFT));
-    PRECEDENCES.put(Token.POW, new OpInfo(10, Assoc.RIGHT));
-    PRECEDENCES.put(Token.DOT, new OpInfo(11, Assoc.LEFT));
-    PRECEDENCES.put(Token.QDOT, new OpInfo(11, Assoc.LEFT));
-  }
-
   private GenNode parseExpr(@Nullable String expectation) {
     return parseExpr(expectation, 1);
   }
@@ -622,12 +599,11 @@ public class GenericParser {
   private GenNode parseExpr(@Nullable String expectation, int minPrecedence) {
     var expr = parseExprAtom(expectation);
     var fullOpToken = fullLookahead();
-    var opToken = fullOpToken.tk.token;
-    while (opToken.isOperator()) {
-      var opInfo = PRECEDENCES.get(opToken);
-      if (opInfo.prec < minPrecedence) break;
+    var operator = getOperator(fullOpToken.tk);
+    while (operator != null) {
+      if (operator.getPrec() < minPrecedence) break;
       // `-` must be in the same line as the left operand and have no semicolons inbetween
-      if (opToken == Token.MINUS
+      if (operator == Operator.MINUS
           && (fullOpToken.hasSemicolon || !expr.span.sameLine(fromSpan(fullOpToken.tk.span))))
         break;
       var midChildren = new ArrayList<GenNode>();
@@ -635,7 +611,7 @@ public class GenericParser {
       var op = next();
       midChildren.add(make(NodeType.OPERATOR, op.span));
       ff(midChildren);
-      var nextMinPrec = opInfo.assoc == Assoc.LEFT ? opInfo.prec + 1 : opInfo.prec;
+      var nextMinPrec = operator.isLeftAssoc() ? operator.getPrec() + 1 : operator.getPrec();
       GenNode rhs;
       if (op.token == Token.IS || op.token == Token.AS) {
         rhs = parseType();
@@ -649,9 +625,36 @@ public class GenericParser {
       children.add(rhs);
       expr = new GenNode(NodeType.BINARY_OP_EXPR, children);
       fullOpToken = fullLookahead();
-      opToken = fullOpToken.tk.token;
+      operator = getOperator(fullOpToken.tk);
     }
     return expr;
+  }
+
+  private @Nullable Operator getOperator(FullToken tk) {
+    return switch (tk.token) {
+      case POW -> Operator.POW;
+      case STAR -> Operator.MULT;
+      case DIV -> Operator.DIV;
+      case INT_DIV -> Operator.INT_DIV;
+      case MOD -> Operator.MOD;
+      case PLUS -> Operator.PLUS;
+      case MINUS -> Operator.MINUS;
+      case GT -> Operator.GT;
+      case GTE -> Operator.GTE;
+      case LT -> Operator.LT;
+      case LTE -> Operator.LTE;
+      case IS -> Operator.IS;
+      case AS -> Operator.AS;
+      case EQUAL -> Operator.EQ_EQ;
+      case NOT_EQUAL -> Operator.NOT_EQ;
+      case AND -> Operator.AND;
+      case OR -> Operator.OR;
+      case PIPE -> Operator.PIPE;
+      case COALESCE -> Operator.NULL_COALESCE;
+      case DOT -> Operator.DOT;
+      case QDOT -> Operator.QDOT;
+      default -> null;
+    };
   }
 
   private GenNode parseExprAtom(@Nullable String expectation) {
@@ -1332,12 +1335,6 @@ public class GenericParser {
     return new ParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
 
-  private void parseAffixes(List<GenNode> nodes) {
-    while (lookahead.isAffix()) {
-      nodes.add(makeAffix(next()));
-    }
-  }
-
   private boolean isModuleDecl() {
     var _cursor = cursor;
     var ftk = tokens.get(_cursor);
@@ -1348,16 +1345,22 @@ public class GenericParser {
     return tk == Token.MODULE || tk == Token.EXTENDS || tk == Token.AMENDS;
   }
 
+  private boolean isImport() {
+    var _cursor = cursor;
+    var ftk = tokens.get(_cursor);
+    while (ftk.token.isAffix()) {
+      ftk = tokens.get(++_cursor);
+    }
+    var tk = ftk.token;
+    return tk == Token.IMPORT || tk == Token.IMPORT_STAR;
+  }
+
   private FullToken next() {
     var tmp = tokens.get(cursor++);
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
     spanLookahead = _lookahead.span;
     return tmp;
-  }
-
-  private FullToken forceNext() {
-    return new FullToken(lexer.next(), lexer.span(), lexer.newLinesBetween);
   }
 
   private boolean isPrecededBySemicolon() {
