@@ -57,9 +57,13 @@ class FormatterTest {
     checkFormat(
       code =
         """
-        import "@foo/Foo.pkl" as foo
-        import* "**.pkl"
+        // top level comment
         
+        import "@foo/Foo.pkl" as foo
+        // import comment
+        import* "**.pkl" // stragler
+        
+        // qux comment
         import "package://example.com/myPackage@1.0.0#/Qux.pkl"
         
         
@@ -69,13 +73,17 @@ class FormatterTest {
         """,
       expected =
         """
+        // top level comment
+        
         import "https://example.com/baz.pkl"
+        // qux comment
         import "package://example.com/myPackage@1.0.0#/Qux.pkl"
         
         import "@bar/Bar.pkl"
         import "@foo/Foo.pkl" as foo
         
-        import* "**.pkl"
+        // import comment
+        import* "**.pkl" // stragler
         import "..."
         
         """,
