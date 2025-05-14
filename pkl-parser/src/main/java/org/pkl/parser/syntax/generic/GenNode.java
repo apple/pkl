@@ -54,6 +54,13 @@ public class GenNode {
     return new String(source, span.charIndex(), span.length());
   }
 
+  public @Nullable GenNode findChildByType(NodeType type) {
+    for (var child : children) {
+      if (child.type == type) return child;
+    }
+    return null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

@@ -35,6 +35,7 @@ public enum NodeType {
   IDENTIFIER,
   QUALIFIED_IDENTIFIER,
   IMPORT,
+  IMPORT_LIST,
   TYPEALIAS,
   CLASS,
   CLASS_BODY,
@@ -102,5 +103,12 @@ public enum NodeType {
   DECLARED_TYPE,
   NULLABLE_TYPE,
   STRING_CONSTANT_TYPE,
-  CONSTRAINED_TYPE
+  CONSTRAINED_TYPE;
+
+  public boolean isAffix() {
+    return switch (this) {
+      case LINE_COMMENT, BLOCK_COMMENT, SEMICOLON, SHEBANG -> true;
+      default -> false;
+    };
+  }
 }
