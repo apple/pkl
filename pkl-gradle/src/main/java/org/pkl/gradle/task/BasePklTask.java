@@ -40,7 +40,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
@@ -148,13 +147,11 @@ public abstract class BasePklTask extends DefaultTask {
   @Input
   @Optional
   public abstract MapProperty<URI, URI> getHttpRewrites();
-  
+
   @Input
-  @Optional
   public abstract MapProperty<String, ExternalReader> getExternalModuleReaders();
 
   @Input
-  @Optional
   public abstract MapProperty<String, ExternalReader> getExternalResourceReaders();
 
   /**

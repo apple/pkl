@@ -16,12 +16,11 @@
 package org.pkl.gradle;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
-import org.pkl.core.util.Nullable;
 
-public record ExternalReader(String executable, @Nullable List<String> arguments)
-    implements Serializable {
+public record ExternalReader(String executable, List<String> arguments) implements Serializable {
   public ExternalReader(String executable) {
-    this(executable, null);
+    this(executable, Collections.emptyList());
   }
 }
