@@ -1,0 +1,238 @@
+public abstract interface class org/pkl/config/java/Config {
+	public abstract fun as (Ljava/lang/Class;)Ljava/lang/Object;
+	public abstract fun as (Ljava/lang/reflect/Type;)Ljava/lang/Object;
+	public abstract fun as (Lorg/pkl/config/java/JavaType;)Ljava/lang/Object;
+	public abstract fun get (Ljava/lang/String;)Lorg/pkl/config/java/Config;
+	public abstract fun getQualifiedName ()Ljava/lang/String;
+	public abstract fun getRawValue ()Ljava/lang/Object;
+}
+
+public abstract interface class org/pkl/config/java/ConfigEvaluator : java/lang/AutoCloseable {
+	public abstract fun close ()V
+	public abstract fun evaluate (Lorg/pkl/core/ModuleSource;)Lorg/pkl/config/java/Config;
+	public abstract fun getValueMapper ()Lorg/pkl/config/java/mapper/ValueMapper;
+	public static fun preconfigured ()Lorg/pkl/config/java/ConfigEvaluator;
+	public abstract fun setValueMapper (Lorg/pkl/config/java/mapper/ValueMapper;)Lorg/pkl/config/java/ConfigEvaluator;
+}
+
+public final class org/pkl/config/java/ConfigEvaluatorBuilder {
+	public fun addEnvironmentVariable (Ljava/lang/String;Ljava/lang/String;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun addEnvironmentVariables (Ljava/util/Map;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun addExternalProperties (Ljava/util/Map;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun addExternalProperty (Ljava/lang/String;Ljava/lang/String;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun applyFromProject (Lorg/pkl/core/project/Project;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun build ()Lorg/pkl/config/java/ConfigEvaluator;
+	public fun getAllowedModules ()Ljava/util/List;
+	public fun getAllowedResources ()Ljava/util/List;
+	public fun getEnvironmentVariables ()Ljava/util/Map;
+	public fun getEvaluatorBuilder ()Lorg/pkl/core/EvaluatorBuilder;
+	public fun getExternalProperties ()Ljava/util/Map;
+	public fun getRootDir ()Ljava/nio/file/Path;
+	public fun getSecurityManager ()Lorg/pkl/core/SecurityManager;
+	public fun getStackFrameTransformer ()Lorg/pkl/core/StackFrameTransformer;
+	public fun getTimeout ()Ljava/time/Duration;
+	public fun getValueMapperBuilder ()Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public static fun preconfigured ()Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setAllowedModules (Ljava/util/Collection;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setAllowedResources (Ljava/util/Collection;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setEnvironmentVariables (Ljava/util/Map;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setEvaluatorBuilder (Lorg/pkl/core/EvaluatorBuilder;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setExternalProperties (Ljava/util/Map;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setProjectDependencies (Lorg/pkl/core/project/DeclaredDependencies;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setRootDir (Ljava/nio/file/Path;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setSecurityManager (Lorg/pkl/core/SecurityManager;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setStackFrameTransformer (Lorg/pkl/core/StackFrameTransformer;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setTimeout (Ljava/time/Duration;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public fun setValueMapperBuilder (Lorg/pkl/config/java/mapper/ValueMapperBuilder;)Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+	public static fun unconfigured ()Lorg/pkl/config/java/ConfigEvaluatorBuilder;
+}
+
+public class org/pkl/config/java/InvalidMappingException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;)V
+	public fun getJavaName ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public fun getPklName ()Ljava/lang/String;
+}
+
+public class org/pkl/config/java/JavaType {
+	protected fun <init> ()V
+	public static fun arrayOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun arrayOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun collectionOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun collectionOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getType ()Ljava/lang/reflect/Type;
+	public fun hashCode ()I
+	public static fun iterableOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun iterableOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun listOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun listOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun mapOf (Ljava/lang/Class;Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun mapOf (Lorg/pkl/config/java/JavaType;Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun of (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun of (Ljava/lang/reflect/Type;)Lorg/pkl/config/java/JavaType;
+	public static fun optionalOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun optionalOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun pairOf (Ljava/lang/Class;Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun pairOf (Lorg/pkl/config/java/JavaType;Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public static fun setOf (Ljava/lang/Class;)Lorg/pkl/config/java/JavaType;
+	public static fun setOf (Lorg/pkl/config/java/JavaType;)Lorg/pkl/config/java/JavaType;
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/pkl/config/java/NoSuchChildException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun getChildName ()Ljava/lang/String;
+}
+
+public class org/pkl/config/java/mapper/ClassRegistry {
+}
+
+public final class org/pkl/config/java/mapper/Conversion {
+	public final field converter Lorg/pkl/config/java/mapper/Converter;
+	public final field sourceType Lorg/pkl/core/PClassInfo;
+	public final field targetType Ljava/lang/reflect/Type;
+	public static fun of (Lorg/pkl/core/PClassInfo;Ljava/lang/Class;Lorg/pkl/config/java/mapper/Converter;)Lorg/pkl/config/java/mapper/Conversion;
+	public static fun of (Lorg/pkl/core/PClassInfo;Ljava/lang/reflect/Type;Lorg/pkl/config/java/mapper/Converter;)Lorg/pkl/config/java/mapper/Conversion;
+}
+
+public class org/pkl/config/java/mapper/ConversionException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public final class org/pkl/config/java/mapper/Conversions {
+	public static final field all Ljava/util/Collection;
+	public static final field identities Ljava/util/Collection;
+	public static final field misc Ljava/util/Collection;
+	public static final field numeric Ljava/util/Collection;
+	public static final field pDurationToDuration Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pFloatToBigDecimal Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pFloatToFloat Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToBigDecimal Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToBigInteger Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToByte Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToDouble Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToFloat Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToInteger Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pIntToShort Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pRegexToString Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToCharacter Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToFile Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToPath Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToPattern Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToURI Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToURL Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pStringToVersion Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pVersionToString Lorg/pkl/config/java/mapper/Conversion;
+	public static final field pVersionToVersion Lorg/pkl/config/java/mapper/Conversion;
+}
+
+public abstract interface class org/pkl/config/java/mapper/Converter {
+	public abstract fun convert (Ljava/lang/Object;Lorg/pkl/config/java/mapper/ValueMapper;)Ljava/lang/Object;
+	public static fun identity ()Lorg/pkl/config/java/mapper/Converter;
+}
+
+public final class org/pkl/config/java/mapper/ConverterFactories {
+	public static final field all Ljava/util/Collection;
+	public static final field pAnyToOptional Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pCollectionToArray Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pCollectionToCollection Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pMapToMap Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pNullToAny Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pObjectToDataObject Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pObjectToMap Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pObjectToPObject Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pPairToPair Lorg/pkl/config/java/mapper/ConverterFactory;
+	public static final field pStringToEnum Lorg/pkl/config/java/mapper/ConverterFactory;
+}
+
+public abstract interface class org/pkl/config/java/mapper/ConverterFactory {
+	public abstract fun create (Lorg/pkl/core/PClassInfo;Ljava/lang/reflect/Type;)Ljava/util/Optional;
+	public fun when (Ljava/util/function/Predicate;)Lorg/pkl/config/java/mapper/ConverterFactory;
+}
+
+public abstract interface annotation class org/pkl/config/java/mapper/Named : java/lang/annotation/Annotation {
+	public abstract fun value ()Ljava/lang/String;
+}
+
+public abstract interface annotation class org/pkl/config/java/mapper/NonNull : java/lang/annotation/Annotation {
+}
+
+public class org/pkl/config/java/mapper/PObjectToDataObject : org/pkl/config/java/mapper/ConverterFactory {
+	protected fun <init> ()V
+	public final fun create (Lorg/pkl/core/PClassInfo;Ljava/lang/reflect/Type;)Ljava/util/Optional;
+	protected fun getParameterNames (Ljava/lang/reflect/Constructor;)Ljava/util/Optional;
+	protected fun selectConstructor (Ljava/lang/Class;)Ljava/util/Optional;
+}
+
+public final class org/pkl/config/java/mapper/PObjectToMap : org/pkl/config/java/mapper/ConverterFactory {
+	public fun <init> ()V
+	public fun create (Lorg/pkl/core/PClassInfo;Ljava/lang/reflect/Type;)Ljava/util/Optional;
+}
+
+public final class org/pkl/config/java/mapper/Reflection {
+	public static fun getArrayElementType (Ljava/lang/reflect/Type;)Ljava/lang/reflect/Type;
+	public static fun getExactParameterTypes (Ljava/lang/reflect/Executable;Ljava/lang/reflect/Type;)[Ljava/lang/reflect/Type;
+	public static fun getExactSubtype (Ljava/lang/reflect/Type;Ljava/lang/Class;)Ljava/lang/reflect/Type;
+	public static fun getExactSupertype (Ljava/lang/reflect/Type;Ljava/lang/Class;)Ljava/lang/reflect/Type;
+	public static fun isMissingTypeArguments (Ljava/lang/reflect/Type;)Z
+	public static fun normalize (Ljava/lang/reflect/Type;)Ljava/lang/reflect/Type;
+	public static fun toRawType (Ljava/lang/reflect/Type;)Ljava/lang/Class;
+	public static fun toWrapperType (Ljava/lang/Class;)Ljava/lang/Class;
+	public static fun tryLoadClass (Ljava/lang/String;)Ljava/lang/Class;
+}
+
+public final class org/pkl/config/java/mapper/TypeMapping {
+	public final field implementationType Ljava/lang/Class;
+	public final field requestedType Ljava/lang/Class;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public static fun of (Ljava/lang/Class;Ljava/lang/Class;)Lorg/pkl/config/java/mapper/TypeMapping;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/config/java/mapper/TypeMappings {
+	public static final field all Ljava/util/Collection;
+	public static final field collections Ljava/util/Collection;
+}
+
+public final class org/pkl/config/java/mapper/Types {
+	public static fun arrayOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/Type;
+	public static fun collectionOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun iterableOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun listOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun mapOf (Ljava/lang/reflect/Type;Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun optionalOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun pairOf (Ljava/lang/reflect/Type;Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun parameterizedType (Ljava/lang/Class;[Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+	public static fun setOf (Ljava/lang/reflect/Type;)Ljava/lang/reflect/ParameterizedType;
+}
+
+public abstract interface class org/pkl/config/java/mapper/ValueMapper {
+	public fun getConverter (Lorg/pkl/core/PClassInfo;Ljava/lang/Class;)Lorg/pkl/config/java/mapper/Converter;
+	public abstract fun getConverter (Lorg/pkl/core/PClassInfo;Ljava/lang/reflect/Type;)Lorg/pkl/config/java/mapper/Converter;
+	public fun map (Ljava/lang/Object;Ljava/lang/Class;)Ljava/lang/Object;
+	public abstract fun map (Ljava/lang/Object;Ljava/lang/reflect/Type;)Ljava/lang/Object;
+	public static fun preconfigured ()Lorg/pkl/config/java/mapper/ValueMapper;
+	public abstract fun toBuilder ()Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+}
+
+public final class org/pkl/config/java/mapper/ValueMapperBuilder {
+	public fun addConversion (Lorg/pkl/config/java/mapper/Conversion;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun addConversions (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun addConverterFactories (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun addConverterFactory (Lorg/pkl/config/java/mapper/ConverterFactory;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun addTypeMapping (Lorg/pkl/config/java/mapper/TypeMapping;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun addTypeMappings (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun build ()Lorg/pkl/config/java/mapper/ValueMapper;
+	public fun getConversions ()Ljava/util/List;
+	public fun getConverterFactories ()Ljava/util/List;
+	public fun getTypeMappings ()Ljava/util/List;
+	public static fun preconfigured ()Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun setConversions (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun setConverterFactories (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public fun setTypeMappings (Ljava/util/Collection;)Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+	public static fun unconfigured ()Lorg/pkl/config/java/mapper/ValueMapperBuilder;
+}
+
