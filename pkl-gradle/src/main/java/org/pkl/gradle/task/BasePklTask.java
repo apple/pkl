@@ -145,14 +145,12 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract ListProperty<String> getHttpNoProxy();
 
-  @Input
-  @Optional
   @Nested
+  @Optional
   public abstract MapProperty<String, ExternalReader> getExternalModuleReaders();
 
-  @Input
-  @Optional
   @Nested
+  @Optional
   public abstract MapProperty<String, ExternalReader> getExternalResourceReaders();
 
   /**
