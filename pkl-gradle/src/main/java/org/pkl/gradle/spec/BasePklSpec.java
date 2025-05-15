@@ -60,7 +60,7 @@ public interface BasePklSpec {
   ListProperty<String> getHttpNoProxy();
 
   MapProperty<URI, URI> getHttpRewrites();
-  
+
   MapProperty<String, ExternalReader> getExternalModuleReaders();
 
   MapProperty<String, ExternalReader> getExternalResourceReaders();
