@@ -38,3 +38,7 @@ res4 {
     age = 5
   }
 }
+res5 {
+  name = "Bald Eagle"
+  age = 99
+}

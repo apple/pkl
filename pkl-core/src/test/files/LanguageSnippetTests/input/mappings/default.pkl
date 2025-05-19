@@ -38,3 +38,7 @@ res3: Mapping<String, Person> = new {
     age = 60
   }
 }
+
+res4 = (res3.getOrDefault("Bald Eagle")) {
+  age = 99
+}
