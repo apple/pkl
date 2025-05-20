@@ -19,6 +19,61 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class FormatterTest {
+  
+  @Test
+  fun `rule 0001 - Line width`() {
+    checkFormat(
+      code =
+        """
+        module reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly.loooooooooooooooooooooooooooooooog.naaaaaaaaaaaaaaaaaaaaaaaaaaaaame
+        extends "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
+        
+        /// this property has a reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly long doc comment
+        property = if (reallyLongVariableName) anotherReallyLongName else evenLongerVariableName + anotherReallyLongName
+        
+        longString = "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly long string"
+        
+        shortProperty = 1
+        
+        reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongVariableName = 10
+        
+        reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongVariableName2 =
+          if (reallyLongVariableName) anotherReallyLongName else evenLongerVariableName + anotherReallyLongName
+        """,
+      expected =
+        """
+        module
+          reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
+            .loooooooooooooooooooooooooooooooog
+            .naaaaaaaaaaaaaaaaaaaaaaaaaaaaame
+        extends
+          "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
+        
+        /// this property has a reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly long doc comment
+        property =
+          if (reallyLongVariableName)
+            anotherReallyLongName
+          else
+            evenLongerVariableName + anotherReallyLongName
+        
+        longString =
+          "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly long string"
+        
+        shortProperty = 1
+        
+        reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongVariableName
+          = 10
+        
+        reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongVariableName2
+          =
+          if (reallyLongVariableName)
+            anotherReallyLongName
+          else
+            evenLongerVariableName + anotherReallyLongName
+        
+        """,
+    )
+  }
 
   @Test
   fun `rule 0005 - Module definitions`() {
@@ -60,10 +115,8 @@ class FormatterTest {
         // top level comment
         
         import "@foo/Foo.pkl" as foo
-        // import comment
-        import* "**.pkl" // stragler
+        import* "**.pkl"
         
-        // qux comment
         import "package://example.com/myPackage@1.0.0#/Qux.pkl"
         
         
@@ -76,15 +129,92 @@ class FormatterTest {
         // top level comment
         
         import "https://example.com/baz.pkl"
-        // qux comment
         import "package://example.com/myPackage@1.0.0#/Qux.pkl"
         
         import "@bar/Bar.pkl"
         import "@foo/Foo.pkl" as foo
         
-        // import comment
-        import* "**.pkl" // stragler
+        import* "**.pkl"
         import "..."
+        
+        """,
+    )
+  }
+
+  @Test
+  fun `rule 0009 - Modifiers`() {
+    checkFormat(
+      code =
+        """
+        hidden const foo = 1
+        
+        open local class Foo {}
+        """,
+      expected =
+        """
+        const hidden foo = 1
+        
+        local open class Foo {}
+        
+        """,
+    )
+  }
+  
+  @Test
+  fun `rule 0012 - Object elements`() {
+    checkFormat(
+      code =
+        """
+        foo: Listing<Int> = new {1 2   3; 4;5 6  7}
+        
+        bar: Listing<Int> = new { 1 2
+          3
+          4
+        }
+        
+        lineIsTooBig: Listing<Int> = new { 999999; 1000000; 1000001; 1000002; 1000003; 1000004; 1000005; 1000006; 1000007; 1000008; 1000009 }
+        
+        lineIsTooBig2 { 999999; 1000000; 1000001; 1000002; 1000003; 1000004; 1000005; 1000006; 1000007; 1000008; 1000009; 1000010 }
+        """,
+      expected =
+        """
+        foo: Listing<Int> = new { 1; 2; 3; 4; 5; 6; 7 }
+        
+        bar: Listing<Int> = new {
+          1
+          2
+          3
+          4
+        }
+        
+        lineIsTooBig: Listing<Int> = new {
+          999999
+          1000000
+          1000001
+          1000002
+          1000003
+          1000004
+          1000005
+          1000006
+          1000007
+          1000008
+          1000009
+        }
+        
+        lineIsTooBig2 {
+          999999
+          1000000
+          1000001
+          1000002
+          1000003
+          1000004
+          1000005
+          1000006
+          1000007
+          1000008
+          1000009
+          1000010
+        }
         
         """,
     )
