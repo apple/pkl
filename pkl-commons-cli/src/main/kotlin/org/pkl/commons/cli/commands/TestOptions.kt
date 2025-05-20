@@ -16,6 +16,7 @@
 package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
@@ -31,8 +32,26 @@ class TestOptions : OptionGroup() {
       )
       .path()
 
+  private val junitAggregateReports: Boolean by
+    option(
+        names = arrayOf("--junit-aggregate-reports"),
+        help = "Aggregate JUnit reports into a single file.",
+      )
+      .flag()
+
+  private val junitAggregateSuiteName: String by
+    option(
+        names = arrayOf("--junit-aggregate-suite-name"),
+        metavar = "name",
+        help = "The name of the root JUnit test suite.",
+      )
+      .single()
+      .default("pkl-tests")
+
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
-  val cliTestOptions: CliTestOptions by lazy { CliTestOptions(junitReportDir, overwrite) }
+  val cliTestOptions: CliTestOptions by lazy {
+    CliTestOptions(junitReportDir, overwrite, junitAggregateReports, junitAggregateSuiteName)
+  }
 }
