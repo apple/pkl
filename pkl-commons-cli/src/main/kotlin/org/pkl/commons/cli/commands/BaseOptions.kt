@@ -235,6 +235,14 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val httpRewrites: Map<String, String> by
+    option(
+        names = arrayOf("--http-rewrite"),
+        metavar = "from=to",
+        help = "URL prefixes that should be rewritten.",
+      )
+      .associateProps()
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -289,6 +297,7 @@ class BaseOptions : OptionGroup() {
       caCertificates = caCertificates,
       httpProxy = proxy,
       httpNoProxy = noProxy ?: emptyList(),
+      httpRewrites = httpRewrites.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
     )

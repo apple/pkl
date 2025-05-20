@@ -163,6 +163,7 @@ public abstract class ModulesTask extends BasePklTask {
               Collections.emptyList(),
               null,
               List.of(),
+              getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of());
     }

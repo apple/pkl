@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,14 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.ThreadSafe;
 import org.pkl.core.util.HttpUtils;
+import org.pkl.core.util.Nullable;
 
 /**
  * An {@code HttpClient} decorator that
@@ -44,22 +49,42 @@ final class RequestRewritingClient implements HttpClient {
   final Duration requestTimeout;
   final int testPort;
   final HttpClient delegate;
+  private final List<Entry<String, String>> rewrites;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
   RequestRewritingClient(
-      String userAgent, Duration requestTimeout, int testPort, HttpClient delegate) {
+      String userAgent,
+      Duration requestTimeout,
+      int testPort,
+      HttpClient delegate,
+      Map<String, String> rewrites) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
     this.testPort = testPort;
     this.delegate = delegate;
+    this.rewrites =
+        rewrites.entrySet().stream()
+            .sorted(Comparator.comparingInt((entry) -> entry.getKey().length()))
+            .toList();
   }
 
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
       throws IOException {
     checkNotClosed(request);
-    return delegate.send(rewriteRequest(request), responseBodyHandler);
+    try {
+      return delegate.send(rewriteRequest(request), responseBodyHandler);
+    } catch (IOException e) {
+      var rewrittenUri = rewriteUri(request.uri());
+      if (rewrittenUri != request.uri()) {
+        throw new IOException(
+            e.getMessage()
+                + " (request was rewritten: %s -> %s)".formatted(request.uri(), rewrittenUri),
+            e);
+      }
+      throw e;
+    }
   }
 
   @Override
@@ -99,9 +124,24 @@ final class RequestRewritingClient implements HttpClient {
     return builder.build();
   }
 
+  private @Nullable Entry<String, String> findRewrite(URI uri) {
+    var uriStr = uri.toString();
+    for (var entry : rewrites) {
+      if (uriStr.startsWith(entry.getKey())) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
   private URI rewriteUri(URI uri) {
     if (testPort != -1 && uri.getPort() == 0) {
-      return HttpUtils.setPort(uri, testPort);
+      uri = HttpUtils.setPort(uri, testPort);
+    }
+    var rewrite = findRewrite(uri);
+    if (rewrite != null) {
+      var uriStr = uri.toString();
+      uri = URI.create(rewrite.getValue() + uriStr.substring(rewrite.getKey().length()));
     }
     return uri;
   }
