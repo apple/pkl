@@ -373,6 +373,16 @@ Example: `generateGetters = true` +
 Whether to generate private final fields and public getter methods rather than public final fields.
 ====
 
+.generateRecords: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `generateRecords = true` +
+Whether to generate Java records, the related interfaces, and JEP 468 like `withers`.
+If set to `true`, overrides Java class generation option `generateGetters`.
+
+====
+
 .paramsAnnotation: Property<String>
 [%collapsible]
 ====
