@@ -15,7 +15,11 @@
  */
 package org.pkl.config.scala.mapper
 
-import org.pkl.config.java.mapper.{ConverterFactory, PObjectToDataObject, ValueMapper}
+import org.pkl.config.java.mapper.{
+  ConverterFactory,
+  PObjectToDataObject,
+  ValueMapper
+}
 import org.pkl.config.scala.mapper.JavaReflectionSyntaxExtensions.ParametrizedTypeSyntaxExtension
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.{PClassInfo, PNull, PObject, Pair}
@@ -29,22 +33,22 @@ import scala.jdk.OptionConverters._
 import scala.language.implicitConversions
 
 /** Defines a set of PKL to Scala converter factories.
- */
+  */
 object ScalaConverterFactories {
 
   private type Conv1[S, T] = Type => (S, CachedSourceTypeInfo, ValueMapper) => T
 
   private type Conv2[S, T] = (Type, Type) => (
-    S,
+      S,
       (CachedSourceTypeInfo, CachedSourceTypeInfo),
       ValueMapper
-    ) => T
+  ) => T
 
   val pObjectToCaseClass: ConverterFactory = new PObjectToDataObject {
 
     override def selectConstructor(
-                                    clazz: Class[_]
-                                  ): Optional[Constructor[_]] = {
+        clazz: Class[_]
+    ): Optional[Constructor[_]] = {
       clazz.getDeclaredConstructors.headOption
         .filter(_ =>
           // case classes all implement Product
@@ -62,9 +66,9 @@ object ScalaConverterFactories {
         (value, s1, vm) => {
           value match {
             case _: PNull | null => None
-            case v: Option[_] => v.map(s1.updateAndGet(_, t1, vm))
-            case v: Optional[_] => v.toScala.map(s1.updateAndGet(_, t1, vm))
-            case v => Option(s1.updateAndGet(v, t1, vm))
+            case v: Option[_]    => v.map(s1.updateAndGet(_, t1, vm))
+            case v: Optional[_]  => v.toScala.map(s1.updateAndGet(_, t1, vm))
+            case v               => Option(s1.updateAndGet(v, t1, vm))
           }
         }
     )
@@ -91,8 +95,8 @@ object ScalaConverterFactories {
       }
 
   def pCollectionToMutableCollectionConv[T[_]](
-                                                toSpecific: IterableOnce[_] => T[_]
-                                              ): Conv1[java.util.Collection[_], T[_]] =
+      toSpecific: IterableOnce[_] => T[_]
+  ): Conv1[java.util.Collection[_], T[_]] =
     t1 =>
       (value, cache, vm) =>
         toSpecific(value.asScala.map(x => cache.updateAndGet(x, t1, vm)))
@@ -204,7 +208,7 @@ object ScalaConverterFactories {
     )
 
   val pCollectionToImmutableLazyList
-  : ConverterFactory = CachedConverterFactories
+      : ConverterFactory = CachedConverterFactories
     .forParametrizedType1[java.util.Collection[_], immutable.LazyList[_]](
       x =>
         x == PClassInfo.Collection | x == PClassInfo.Set | x == PClassInfo.List,
@@ -237,6 +241,6 @@ object ScalaConverterFactories {
   )
 
   private implicit def pClassInfoToPredicate(
-                                              x: PClassInfo[_]
-                                            ): PClassInfo[_] => Boolean = _ == x
+      x: PClassInfo[_]
+  ): PClassInfo[_] => Boolean = _ == x
 }

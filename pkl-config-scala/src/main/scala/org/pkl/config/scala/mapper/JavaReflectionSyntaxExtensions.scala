@@ -75,33 +75,36 @@ private[mapper] object JavaReflectionSyntaxExtensions {
       case _ => None
     }
 
-    /**
-     * Attempts to recover the full list of enumeration values from a given runtime class.
-     *
-     * This method is designed to work with Scala 2 `Enumeration` values that were defined
-     * using a custom subclass of `Enumeration.Val`, annotated with `@EnumOwner`, where the
-     * annotation holds a reference to the singleton `Enumeration` object.
-     *
-     * The method checks whether the provided `Type` is a subclass of
-     * `Enumeration#Value`, and if so, attempts to locate the `@EnumOwner` annotation on its class.
-     * If present, it uses reflection to access the singleton `Enumeration` instance and returns
-     * its list of values.
-     *
-     * @example
-     * {{{
-     * object SimpleEnum extends Enumeration {
-     *
-     *   @EnumOwner(classOf[SimpleEnum.type])
-     *   case class V() extends Val(nextId)
-     *
-     *   val Aaa = V()
-     *   val Bbb = V()
-     *   val Ccc = V()
-     * }
-     * }}}
-     * 
-     * @return Some(list of `Enumeration#Value`) if the enumeration can be resolved, None otherwise
-     */
+    /** Attempts to recover the full list of enumeration values from a given
+      * runtime class.
+      *
+      * This method is designed to work with Scala 2 `Enumeration` values that
+      * were defined using a custom subclass of `Enumeration.Val`, annotated
+      * with `@EnumOwner`, where the annotation holds a reference to the
+      * singleton `Enumeration` object.
+      *
+      * The method checks whether the provided `Type` is a subclass of
+      * `Enumeration#Value`, and if so, attempts to locate the `@EnumOwner`
+      * annotation on its class. If present, it uses reflection to access the
+      * singleton `Enumeration` instance and returns its list of values.
+      *
+      * @example
+      *   {{{
+      * object SimpleEnum extends Enumeration {
+      *
+      *   @EnumOwner(classOf[SimpleEnum.type])
+      *   case class V() extends Val(nextId)
+      *
+      *   val Aaa = V()
+      *   val Bbb = V()
+      *   val Ccc = V()
+      * }
+      *   }}}
+      *
+      * @return
+      *   Some(list of `Enumeration#Value`) if the enumeration can be resolved,
+      *   None otherwise
+      */
     def asCustomEnum: Option[List[Enumeration#Value]] = {
 
       def derive(enumClass: Class[_]): Option[List[Enumeration#Value]] = {
@@ -115,14 +118,14 @@ private[mapper] object JavaReflectionSyntaxExtensions {
           case _: Throwable => None
         }
       }
-      
+
       x match {
         case x: Class[_] if classOf[Enumeration#Value].isAssignableFrom(x) =>
           for {
             anno <- Option(x.getAnnotation(classOf[EnumOwner]))
             enum <- derive(anno.value())
           } yield enum
-          
+
         case _ =>
           None
       }

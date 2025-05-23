@@ -1,3 +1,18 @@
+/*
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.pkl.config.scala
 
 import org.pkl.config.java.ConfigEvaluator
@@ -20,7 +35,7 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
   import ScalaObjectMapperSpec._
 
   test("evaluate scala types") {
-    
+
     val code =
       """
         |module ObjectMappingTestContainer
@@ -186,12 +201,12 @@ object ScalaObjectMapperSpec {
   object SimpleEnum extends Enumeration {
     @EnumOwner(classOf[SimpleEnum.type])
     case class V() extends Val(nextId)
-    
+
     val Aaa = V()
     val Bbb = V()
     val Ccc = V()
   }
-  
+
   case class ObjectMappingTestContainer(
       // Options
       optionalVal1: Option[String],
@@ -247,7 +262,10 @@ object ScalaObjectMapperSpec {
       // Map & Mapping with structured keys
       intListingStringMapping: Map[List[Int], String],
       intSetListStringMapping: Map[List[Set[Int]], String],
-      thisOneGoesToEleven: Map[List[Set[Int]], Map[List[Int], Map[Int, String]]],
+      thisOneGoesToEleven: Map[
+        List[Set[Int]],
+        Map[List[Int], Map[Int, String]]
+      ],
       // enums
       simpleEnumViaString: SimpleEnum.V,
       simpleEnumViaInt: SimpleEnum.V
@@ -255,6 +273,7 @@ object ScalaObjectMapperSpec {
 
   object ObjectMappingTestContainer {
     implicit def anyDiffx[T]: Diff[T] = Diff.useEquals[T]
-    implicit val diffx: Diff[ObjectMappingTestContainer] = Diff.derived[ObjectMappingTestContainer]
+    implicit val diffx: Diff[ObjectMappingTestContainer] =
+      Diff.derived[ObjectMappingTestContainer]
   }
 }
