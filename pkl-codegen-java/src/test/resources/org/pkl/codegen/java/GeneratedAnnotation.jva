@@ -1,0 +1,63 @@
+package my;
+
+import java.lang.Object;
+import java.lang.Override;
+import java.lang.String;
+import java.lang.StringBuilder;
+import java.util.Objects;
+import org.pkl.config.java.mapper.Generated;
+import org.pkl.config.java.mapper.Named;
+
+@Generated("JavaCodeGenerator")
+public final class Mod {
+  private Mod() {
+  }
+
+  private static void appendProperty(StringBuilder builder, String name, Object value) {
+    builder.append("\n  ").append(name).append(" = ");
+    String[] lines = Objects.toString(value).split("\n");
+    builder.append(lines[0]);
+    for (int i = 1; i < lines.length; i++) {
+      builder.append("\n  ").append(lines[i]);
+    }
+  }
+
+  @Generated("JavaCodeGenerator")
+  public static final class GeneratedAnnotation {
+    public final boolean test;
+
+    public GeneratedAnnotation(@Named("test") boolean test) {
+      this.test = test;
+    }
+
+    public GeneratedAnnotation withTest(boolean test) {
+      return new GeneratedAnnotation(test);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (this.getClass() != obj.getClass()) return false;
+      GeneratedAnnotation other = (GeneratedAnnotation) obj;
+      if (!Objects.equals(this.test, other.test)) return false;
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = 1;
+      result = 31 * result + Objects.hashCode(this.test);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder builder = new StringBuilder(100);
+      builder.append(GeneratedAnnotation.class.getSimpleName()).append(" {");
+      appendProperty(builder, "test", this.test);
+      builder.append("\n}");
+      return builder.toString();
+    }
+  }
+}

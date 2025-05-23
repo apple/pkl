@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.gradle.spec;
+package org.pkl.config.java.mapper;
 
-import org.gradle.api.provider.Property;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/** Configuration options for Java code generators. Documented in user manual. */
-public interface JavaCodeGenSpec extends CodeGenSpec {
-  Property<Boolean> getGeneratedAnnotation();
-
-  Property<Boolean> getGenerateGetters();
-
-  Property<Boolean> getGenerateJavadoc();
-
-  Property<String> getParamsAnnotation();
-
-  Property<String> getNonNullAnnotation();
+/** Annotation marking this type as generated. */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.CLASS)
+public @interface Generated {
+  /**
+   * @return who generated the annotated type
+   */
+  String value();
 }

@@ -190,6 +190,7 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(spec);
           configureCodeGenSpec(spec);
 
+          spec.getGeneratedAnnotation().convention(false);
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
           // Not using `convention()` so that users can disable generation of
@@ -206,6 +207,7 @@ public class PklPlugin implements Plugin<Project> {
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
+                    task.getGeneratedAnnotation().set(spec.getGeneratedAnnotation());
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
                     task.getParamsAnnotation().set(spec.getParamsAnnotation());

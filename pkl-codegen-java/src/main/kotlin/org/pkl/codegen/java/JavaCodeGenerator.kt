@@ -47,6 +47,9 @@ data class JavaCodeGeneratorOptions(
   /** The characters to use for indenting generated Java code. */
   val indent: String = "  ",
 
+  /** Whether to add a <code>@Generated</code> annotation to the types to be generated. */
+  val generatedAnnotation: Boolean = false,
+
   /**
    * Whether to generate public getter methods and protected final fields instead of public final
    * fields.
@@ -551,6 +554,12 @@ class JavaCodeGenerator(
     fun generateClass(): TypeSpec.Builder {
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
+      if (codegenOptions.generatedAnnotation) {
+        val name = ClassName.get("org.pkl.config.java.mapper", "Generated")
+        val generated =
+          AnnotationSpec.builder(name).addMember("value", "\$S", javaClass.simpleName).build()
+        builder.addAnnotation(generated)
+      }
 
       // stateless final module classes are non-instantiable by choice
       val isInstantiable =
