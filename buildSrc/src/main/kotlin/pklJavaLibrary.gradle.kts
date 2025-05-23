@@ -15,6 +15,7 @@
  */
 @file:Suppress("HttpUrlsUsage", "unused")
 
+import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
@@ -54,6 +55,12 @@ spotless {
     googleJavaFormat(libs.versions.googleJavaFormat.get())
     target("src/*/java/**/*.java")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
+  }
+  scala {
+    scalafmt(libs.versions.scalafmt.get())
+    target("src/*/scala/**/*.scala")
+    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"),
+      "package ")
   }
   kotlin {
     ktfmt(libs.versions.ktfmt.get()).googleStyle()

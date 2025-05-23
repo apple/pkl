@@ -3,6 +3,7 @@ assertj = "3.+"
 checksumPlugin = "1.4.0"
 clikt = "5.+"
 commonMark = "0.+"
+diffx = "0.9.0"
 downloadTaskPlugin = "5.6.0"
 geantyref = "1.+"
 googleJavaFormat = "1.25.2"
@@ -43,6 +44,10 @@ msgpack = "0.9.8"
 nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
 paguro = "3.+"
+scala = "2.13.16"
+scalafmt = "3.9.6"
+scalaTest = "3.2.19"
+scalaTestPlusJunit = "3.2.19.0"
 shadowPlugin = "9.+"
 slf4j = "1.+"
 snakeYaml = "2.+"
@@ -55,6 +60,7 @@ clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt
 cliktMarkdown = { group = "com.github.ajalt.clikt", name = "clikt-markdown", version.ref = "clikt" }
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
+diffx = { group = "com.softwaremill.diffx", name = "diffx-scalatest-should_2.13", version.ref = "diffx" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
@@ -87,6 +93,10 @@ nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuVal
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
+scalaLibrary = { group = "org.scala-lang", name = "scala-library", version.ref = "scala" }
+scalaReflect = { group = "org.scala-lang", name = "scala-reflect", version.ref = "scala" }
+scalaTest = { group = "org.scalatest", name = "scalatest_2.13", version.ref = "scalaTest" }
+scalaTestPlusJunit = { group = "org.scalatestplus", name = "junit-5-12_2.13", version.ref = "scalaTestPlusJunit" }
 shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
