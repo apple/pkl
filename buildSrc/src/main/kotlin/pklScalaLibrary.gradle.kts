@@ -20,7 +20,6 @@ import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
-
 plugins {
   id("pklJavaLibrary")
   scala
@@ -46,8 +45,6 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 tasks.test {
   useJUnitPlatform {
     includeEngines("scalatest")
-    testLogging {
-      events("passed", "skipped", "failed")
-    }
+    testLogging { events("passed", "skipped", "failed") }
   }
 }
