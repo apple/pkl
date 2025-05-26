@@ -37,6 +37,7 @@ sealed interface FormatNode {
       is Text -> text.length
       is SpaceOrLine -> 1
       is SemicolonOrLine -> 2
+      is ForceLine -> Generator.MAX
       else -> 0
     }
 }
