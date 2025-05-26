@@ -1,0 +1,6 @@
+// comment
+// one
+
+/// doc comment
+open module foo.bar
+amends "baz.pkl"
