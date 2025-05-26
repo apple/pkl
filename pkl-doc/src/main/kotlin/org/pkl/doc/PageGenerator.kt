@@ -526,11 +526,7 @@ internal abstract class PageGenerator<out S>(
         for (dep in dependencies) {
           if (first) first = false else +", "
           a {
-            href =
-              dep.documentation?.toString()
-                ?: pageScope.relativeSiteUrl
-                  .resolve("${dep.name}/${dep.version}/index.html")
-                  .toString()
+            href = getDependencyLink(dep)
             +dep.name
             +":"
             +dep.version
@@ -554,6 +550,21 @@ internal abstract class PageGenerator<out S>(
     }
 
     return result
+  }
+
+  private fun getDependencyLink(dep: DocPackageInfo.PackageDependency): String {
+    if (dep.documentation != null) return dep.documentation.toString()
+
+    val uri = dep.uri
+    if (uri == null) {
+      return pageScope.relativeSiteUrl.resolve("${dep.name}/${dep.version}/index.html").toString()
+    }
+
+    val uriPath = uri.path
+    val atIndex = uriPath.lastIndexOf('@')
+    if (atIndex < 0) throw DocGeneratorException("Invalid package URI: $uri")
+    val (path, version) = uriPath.substring(1, atIndex) to uriPath.substring(atIndex + 1)
+    return pageScope.relativeSiteUrl.resolve("$path/$version/index.html").toString()
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())
