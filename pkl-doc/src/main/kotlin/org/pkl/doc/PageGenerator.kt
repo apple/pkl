@@ -15,6 +15,7 @@
  */
 package org.pkl.doc
 
+import java.net.URLEncoder
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createParentDirectories
 import kotlinx.html.*
@@ -563,8 +564,10 @@ internal abstract class PageGenerator<out S>(
     val uriPath = uri.path
     val atIndex = uriPath.lastIndexOf('@')
     if (atIndex < 0) throw DocGeneratorException("Invalid package URI: $uri")
-    val (path, version) = uriPath.substring(1, atIndex) to uriPath.substring(atIndex + 1)
-    return pageScope.relativeSiteUrl.resolve("$path/$version/index.html").toString()
+
+    val (path, version) = uriPath.substring(0, atIndex) to uriPath.substring(atIndex + 1)
+    val authority = URLEncoder.encode(uri.authority, Charsets.UTF_8)
+    return pageScope.relativeSiteUrl.resolve("$authority$path/$version/index.html").toString()
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())
