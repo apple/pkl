@@ -17,11 +17,11 @@ package org.pkl.formatter
 
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.ForceWrap
+import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.Line
-import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.SemicolonOrLine
 import org.pkl.formatter.ast.SpaceOrLine

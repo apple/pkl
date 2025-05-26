@@ -19,7 +19,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class FormatterTest {
-  
+
   @Test
   fun `rule 0001 - Line width`() {
     checkFormat(
@@ -159,7 +159,7 @@ class FormatterTest {
         """,
     )
   }
-  
+
   @Test
   fun `rule 0012 - Object elements`() {
     checkFormat(
