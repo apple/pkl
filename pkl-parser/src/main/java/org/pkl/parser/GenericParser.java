@@ -282,8 +282,7 @@ public class GenericParser {
       throw new ParserError(
           ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
     }
-    var end = expect(Token.RBRACE, "missingDelimiter", "}");
-    children.add(makeTerminal(end));
+    expect(Token.RBRACE, children, "missingDelimiter", "}");
     return new GenNode(NodeType.CLASS_BODY, children);
   }
 
@@ -1229,30 +1228,25 @@ public class GenericParser {
 
   private GenNode parseTypeParameterList() {
     var children = new ArrayList<GenNode>();
-    var start = expect(Token.LT, "unexpectedToken", "<");
-    children.add(makeTerminal(start));
+    expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     parseListOf(Token.COMMA, children, this::parseTypeParameter);
-    var end = expect(Token.GT, "unexpectedToken2", ",", ">");
-    children.add(makeTerminal(end));
+    expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_PARAMETER_LIST, children);
   }
 
   private GenNode parseTypeArgumentList() {
     var children = new ArrayList<GenNode>();
-    var start = expect(Token.LT, "unexpectedToken", "<");
-    children.add(makeTerminal(start));
+    expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     parseListOf(Token.COMMA, children, this::parseType);
-    var end = expect(Token.GT, "unexpectedToken2", ",", ">");
-    children.add(makeTerminal(end));
+    expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_ARGUMENT_LIST, children);
   }
 
   private GenNode parseArgumentList() {
     var children = new ArrayList<GenNode>();
-    var lpar = expect(Token.LPAREN, "unexpectedToken", "(");
-    children.add(makeTerminal(lpar));
+    expect(Token.LPAREN, children, "unexpectedToken", "(");
     ff(children);
     if (lookahead == Token.RPAREN) {
       children.add(makeTerminal(next()));
@@ -1260,8 +1254,7 @@ public class GenericParser {
     }
     parseListOf(Token.COMMA, children, this::parseExpr);
     ff(children);
-    var rpar = expect(Token.RPAREN, "unexpectedToken2", ",", ")");
-    children.add(makeTerminal(rpar));
+    expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
     return new GenNode(NodeType.ARGUMENT_LIST, children);
   }
 
