@@ -1,0 +1,3 @@
+const hidden foo = 1
+
+local open class Foo {}
