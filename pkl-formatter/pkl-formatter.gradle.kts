@@ -26,6 +26,11 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
 }
 
+tasks.test {
+  configureTest()
+  useJUnitPlatform()
+}
+
 publishing {
   publications {
     named<MavenPublication>("library") {
@@ -35,4 +40,15 @@ publishing {
       }
     }
   }
+}
+
+private fun Test.configureTest() {
+  inputs
+    .dir("src/test/files/FormatterSnippetTests/input")
+    .withPropertyName("formatterSnippetTestsInput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs
+    .dir("src/test/files/FormatterSnippetTests/output")
+    .withPropertyName("formatterSnippetTestsOutput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
 }
