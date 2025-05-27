@@ -242,21 +242,23 @@ public class GenericParser {
   }
 
   private GenNode parseClass(List<GenNode> preChildren) {
-    var children = new ArrayList<>(preChildren);
+    var children = new ArrayList<GenNode>();
+    var headers = new ArrayList<>(preChildren);
     // class keyword
-    children.add(makeTerminal(next()));
-    ff(children);
-    children.add(parseIdentifier());
-    ff(children);
-    if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
-      ff(children);
+    headers.add(makeTerminal(next()));
+    ff(headers);
+    headers.add(parseIdentifier());
+    if (lookahead() == Token.LT) {
+      ff(headers);
+      headers.add(parseTypeParameterList());
     }
-    if (lookahead == Token.EXTENDS) {
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseType());
+    if (lookahead() == Token.EXTENDS) {
+      ff(headers);
+      headers.add(makeTerminal(next()));
+      ff(headers);
+      headers.add(parseType());
     }
+    children.add(new GenNode(NodeType.CLASS_HEADER, headers));
     if (lookahead() == Token.LBRACE) {
       ff(children);
       children.add(parseClassBody());
@@ -268,19 +270,23 @@ public class GenericParser {
     var children = new ArrayList<GenNode>();
     children.add(makeTerminal(next()));
     ff(children);
+    var elements = new ArrayList<GenNode>();
     while (lookahead != Token.RBRACE && lookahead != Token.EOF) {
       var preChildren = new ArrayList<GenNode>();
       parseMemberHeader(preChildren);
       if (lookahead == Token.FUNCTION) {
-        children.add(parseClassMethod(preChildren));
+        elements.add(parseClassMethod(preChildren));
       } else {
-        children.add(parseClassProperty(preChildren));
+        elements.add(parseClassProperty(preChildren));
       }
-      ff(children);
+      ff(elements);
     }
     if (lookahead == Token.EOF) {
       throw new ParserError(
           ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
+    }
+    if (!elements.isEmpty()) {
+      children.add(new GenNode(NodeType.CLASS_BODY_ELEMENTS, elements));
     }
     expect(Token.RBRACE, children, "missingDelimiter", "}");
     return new GenNode(NodeType.CLASS_BODY, children);
@@ -311,6 +317,8 @@ public class GenericParser {
         ff(children);
         children.add(parseObjectBody());
       }
+    } else {
+      children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
     }
     return new GenNode(NodeType.CLASS_PROPERTY, children);
   }
@@ -443,33 +451,35 @@ public class GenericParser {
 
   private GenNode parseObjectProperty(@Nullable List<GenNode> preChildren) {
     var children = new ArrayList<GenNode>();
+    var header = new ArrayList<GenNode>();
     if (preChildren != null) {
-      children.addAll(preChildren);
+      header.addAll(preChildren);
     }
-    ff(children);
+    ff(header);
     var modifierList = new ArrayList<GenNode>();
     while (lookahead.isModifier()) {
       modifierList.add(make(NodeType.MODIFIER, next().span));
       ff(modifierList);
     }
     if (!modifierList.isEmpty()) {
-      children.add(new GenNode(NodeType.MODIFIER_LIST, modifierList));
+      header.add(new GenNode(NodeType.MODIFIER_LIST, modifierList));
     }
-    children.add(parseIdentifier());
-    ff(children);
+    header.add(parseIdentifier());
     var hasTypeAnnotation = false;
-    if (lookahead == Token.COLON) {
-      children.add(parseTypeAnnotation());
-      ff(children);
+    if (lookahead() == Token.COLON) {
+      ff(header);
+      header.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
-    if (hasTypeAnnotation || lookahead == Token.ASSIGN) {
-      var assign = expect(Token.ASSIGN, "unexpectedToken", "=");
-      children.add(makeTerminal(assign));
+    if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
+      ff(header);
+      expect(Token.ASSIGN, header, "unexpectedToken", "=");
+      children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
       ff(children);
       children.add(parseExpr("}"));
       return new GenNode(NodeType.OBJECT_PROPERTY, children);
     }
+    ff(children);
     children.addAll(parseBodyList());
     return new GenNode(NodeType.OBJECT_PROPERTY, children);
   }
@@ -527,19 +537,21 @@ public class GenericParser {
 
   private GenNode parseObjectEntry() {
     var children = new ArrayList<GenNode>();
-    var start = expect(Token.LBRACK, "unexpectedToken", "[");
-    children.add(makeTerminal(start));
-    ff(children);
-    children.add(parseExpr());
-    var rbrack = expect(Token.RBRACK, "unexpectedToken", "]");
-    children.add(makeTerminal(rbrack));
-    ff(children);
-    if (lookahead == Token.ASSIGN) {
-      children.add(makeTerminal(next()));
+    var header = new ArrayList<GenNode>();
+    expect(Token.LBRACK, header, "unexpectedToken", "[");
+    ff(header);
+    header.add(parseExpr());
+    expect(Token.RBRACK, header, "unexpectedToken", "]");
+    if (lookahead() == Token.ASSIGN) {
+      ff(header);
+      header.add(makeTerminal(next()));
+      children.add(new GenNode(NodeType.OBJECT_ENTRY_HEADER, header));
       ff(children);
       children.add(parseExpr());
       return new GenNode(NodeType.OBJECT_ENTRY, children);
     }
+    children.add(new GenNode(NodeType.OBJECT_ENTRY_HEADER, header));
+    ff(children);
     children.addAll(parseBodyList());
     return new GenNode(NodeType.OBJECT_ENTRY, children);
   }
@@ -1438,7 +1450,7 @@ public class GenericParser {
   }
 
   private GenNode makeTerminal(FullToken tk) {
-    return new GenNode(NodeType.TERMINAL, fromSpan(tk.span));
+    return new GenNode(NodeType.TERMINAL, fromSpan(tk.span), tk.text(lexer));
   }
 
   // fast-forward over affix tokens
