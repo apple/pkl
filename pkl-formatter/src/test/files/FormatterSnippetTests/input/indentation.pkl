@@ -1,0 +1,7 @@
+foo = new {
+bar = 1
+}
+
+class Foo {
+    baz: Int
+}
