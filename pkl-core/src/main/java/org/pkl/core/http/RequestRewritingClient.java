@@ -17,6 +17,7 @@ package org.pkl.core.http;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
@@ -25,9 +26,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.ThreadSafe;
+import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -49,7 +53,7 @@ final class RequestRewritingClient implements HttpClient {
   final Duration requestTimeout;
   final int testPort;
   final HttpClient delegate;
-  private final List<Entry<String, String>> rewrites;
+  private final List<Entry<URI, URI>> rewrites;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -58,14 +62,14 @@ final class RequestRewritingClient implements HttpClient {
       Duration requestTimeout,
       int testPort,
       HttpClient delegate,
-      Map<String, String> rewrites) {
+      Map<URI, URI> rewrites) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
     this.testPort = testPort;
     this.delegate = delegate;
     this.rewrites =
         rewrites.entrySet().stream()
-            .sorted(Comparator.comparingInt((entry) -> entry.getKey().length()))
+            .sorted(Comparator.comparingInt((entry) -> -entry.getKey().toString().length()))
             .toList();
   }
 
@@ -124,10 +128,37 @@ final class RequestRewritingClient implements HttpClient {
     return builder.build();
   }
 
-  private @Nullable Entry<String, String> findRewrite(URI uri) {
-    var uriStr = uri.toString();
+  public static boolean matchesRewriteRule(URI uri, URI rule) {
+    if (!Objects.equals(uri.getScheme(), rule.getScheme())) {
+      return false;
+    }
+    if (!Objects.equals(uri.getUserInfo(), rule.getUserInfo())) {
+      return false;
+    }
+    if (!Objects.equals(uri.getHost(), rule.getHost())) {
+      return false;
+    }
+    if (!Objects.equals(uri.getPath(), rule.getPath())) {
+      if (uri.getPath() != null && rule.getPath() != null && rule.getQuery() == null && rule.getFragment() == null) {
+        return uri.getPath().startsWith(rule.getPath());
+      }
+      return false;
+    }
+    if (!Objects.equals(uri.getQuery(), rule.getQuery())) {
+      if (uri.getQuery() != null && rule.getQuery() != null && rule.getFragment() == null) {
+        return uri.getQuery().startsWith(rule.getQuery());
+      }
+      return false;
+    }
+    if (uri.getFragment() != null && rule.getFragment() != null) {
+      return uri.getFragment().startsWith(rule.getFragment());
+    }
+    return Objects.equals(uri.getFragment(), rule.getFragment());
+  }
+
+  private @Nullable Entry<URI, URI> findRewrite(URI uri) {
     for (var entry : rewrites) {
-      if (uriStr.startsWith(entry.getKey())) {
+      if (matchesRewriteRule(uri, entry.getKey())) {
         return entry;
       }
     }
@@ -135,13 +166,29 @@ final class RequestRewritingClient implements HttpClient {
   }
 
   private URI rewriteUri(URI uri) {
-    if (testPort != -1 && uri.getPort() == 0) {
-      uri = HttpUtils.setPort(uri, testPort);
+    try {
+      uri = new URI(
+        uri.getScheme().toLowerCase(),
+        uri.getUserInfo(),
+        uri.getHost().toLowerCase(),
+        uri.getPort(),
+        uri.getPath(),
+        uri.getQuery(),
+        uri.getFragment()
+      );
+    } catch (URISyntaxException e) {
+      // impossible condition, we started from a valid URI to begin with
+      throw PklBugException.unreachableCode();
     }
     var rewrite = findRewrite(uri);
     if (rewrite != null) {
-      var uriStr = uri.toString();
-      uri = URI.create(rewrite.getValue() + uriStr.substring(rewrite.getKey().length()));
+      var fromUri = rewrite.getKey();
+      var toUri = rewrite.getValue();
+      var relativePath = fromUri.relativize(uri);
+      uri = toUri.resolve(relativePath); 
+    }
+    if (testPort != -1 && uri.getPort() == 0) {
+      uri = HttpUtils.setPort(uri, testPort);
     }
     return uri;
   }

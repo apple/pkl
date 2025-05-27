@@ -34,6 +34,7 @@ import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
+import java.io.IOException
 
 @Suppress("MemberVisibilityCanBePrivate")
 class BaseOptions : OptionGroup() {
@@ -235,13 +236,41 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
-  val httpRewrites: Map<String, String> by
+  val httpRewrites: Map<URI, URI> by
     option(
         names = arrayOf("--http-rewrite"),
         metavar = "from=to",
         help = "URL prefixes that should be rewritten.",
       )
-      .associateProps()
+      .convert { it ->
+        val uris = it.split("=", limit = 2)
+        require(uris.size == 2) {
+          "Rewrites must be in the form of <from>=<to>"
+        }
+        try {
+          val (fromSpec, toSpec) = uris
+          val fromUri = URI(fromSpec).also { validateRewrite(it) }
+          val toUri = URI(toSpec).also { validateRewrite(it) }
+          fromUri to toUri
+        } catch (e: URISyntaxException) {
+          fail("Invalid URI: $e")
+        }
+      }
+      .multiple()
+      .toMap()
+
+  private fun OptionCallTransformContext.validateRewrite(rewrite: URI) {
+    val uriStr = rewrite.toString()
+    require(uriStr.startsWith("http://") || uriStr.startsWith("https://")) {
+      "Rewrite target must start with 'http://' or 'https://', but got '$rewrite'"
+    }
+    require(rewrite.toString().endsWith("/")) {
+      "Rewrite target '$rewrite' should end with '/'"
+    }
+    require(rewrite.host == rewrite.host.lowercase()) {
+      "Rewrite target should have a lowercased hostname, but got '${rewrite.host}'"
+    }
+  }
 
   val externalModuleReaders: Map<String, ExternalReader> by
     option(

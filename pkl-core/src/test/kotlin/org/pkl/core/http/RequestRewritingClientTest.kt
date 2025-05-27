@@ -24,6 +24,7 @@ import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
+import org.pkl.core.util.IoUtils
 
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
@@ -33,7 +34,7 @@ class RequestRewritingClientTest {
       Duration.ofSeconds(42),
       -1,
       captured,
-      mapOf("https://foo" to "https://bar"),
+      mapOf(URI("https://foo/") to URI("https://bar/")),
     )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
@@ -139,9 +140,57 @@ class RequestRewritingClientTest {
   }
 
   @Test
+  fun `matches rewrite rule`() {
+    fun matchesRewriteRule(uri: String, rule: String) =
+      assertThat(RequestRewritingClient.matchesRewriteRule(URI(uri), URI(rule))).`as`("$uri matches $rule")
+
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    matchesRewriteRule("HTTPS://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    matchesRewriteRule("HTTPS://WWW.FOO.COM/path/to/qux.html", "https://www.foo.com/").isTrue
+
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/path/").isTrue
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/PATH/").isFalse
+    matchesRewriteRule("https://www.foo.com", "https://www.foo.com/").isFalse
+
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html?foo&bar", "https://www.foo.com/path/to/qux.html?foo&bar").isTrue
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html?foo&baz", "https://www.foo.com/path/to/qux.html?foo&bar").isFalse
+
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html?foo&bar#qux", "https://www.foo.com/path/to/qux.html?foo&bar#q").isTrue
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html?foo&bar#qux", "https://www.foo.com/path/to/qux.html?foo&bar#w").isFalse
+    matchesRewriteRule("https://www.foo.com/path/to/qux.html?foo&bar", "https://www.foo.com/path/to/qux.html?foo&bar#w").isFalse
+
+    matchesRewriteRule("https:///", "https:///").isTrue
+    matchesRewriteRule("https:///", "http:///").isFalse
+
+    // userinfo
+    matchesRewriteRule("https://foo@foo.com/", "http://foo.com/").isFalse
+    matchesRewriteRule("https://foo@foo.com/", "http://foo@foo.com/").isFalse
+    matchesRewriteRule("https://foo@foo.com/", "http://FOO@foo.com/").isFalse
+  }
+
+  @Test
   fun `rewrites URIs`() {
-    val request = HttpRequest.newBuilder(URI("https://foo.com")).build()
-    client.send(request, BodyHandlers.discarding())
-    assertThat(captured.request.uri().toString()).isEqualTo("https://bar.com")
+    fun rewrittenRequest(uri: String, rule: Pair<String, String>): String {
+      val captured = RequestCapturingClient()
+      val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, mapOf(URI(rule.first) to URI(rule.second)))
+      val request = HttpRequest.newBuilder(URI(uri)).build()
+      client.send(request, BodyHandlers.discarding())
+      return captured.request.uri().toString()
+    }
+
+    assertThat(rewrittenRequest("https://foo.com/bar/baz", "https://foo.com/" to "https://bar.com/"))
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(rewrittenRequest("https://FOO.COM/bar/baz", "https://foo.com/" to "https://bar.com/"))
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(rewrittenRequest("https://foo.com/bar/baz", "https://foo.com/" to "https://bar.com/qux/baz/"))
+      .isEqualTo("https://bar.com/qux/baz/bar/baz")
+
+    assertThat(rewrittenRequest("https://foo.com/bar/baz", "https://foo.com/" to "https://bar.com/qux/baz/"))
+      .isEqualTo("https://bar.com/qux/baz/bar/baz")
+
+    assertThat(rewrittenRequest("https://foo.com/bar/baz?qux=foo", "https://foo.com/" to "https://bar.com/?qux=foo"))
+      .isEqualTo("https://foo.com/bar/baz?qux=foo")
   }
 }

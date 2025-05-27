@@ -119,6 +119,24 @@ class CliMainTest {
     assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
   }
 
+  @Test
+  fun `invalid rewrites -- non-HTTP URI`() {
+    val ex = assertThrows<BadParameterValue> { rootCmd.parse(arrayOf("eval", "--http-rewrite", "foo=bar", "mymodule.pkl"))}
+    assertThat(ex.message).contains("Rewrite target must start with 'http://' or 'https://', but got 'foo'")
+  }
+
+  @Test
+  fun `invalid rewrites -- capitalized hostname`() {
+    val ex = assertThrows<BadParameterValue> { rootCmd.parse(arrayOf("eval", "--http-rewrite", "https://www.FOO.com/=https://bar.com/", "mymodule.pkl"))}
+    assertThat(ex.message).contains("Rewrite target should have a lowercased hostname, but got 'www.FOO.com'")
+  }
+
+  @Test
+  fun `invalid rewrites -- doesn't end with slash`() {
+    val ex = assertThrows<BadParameterValue> { rootCmd.parse(arrayOf("eval", "--http-rewrite", "http://foo.com", "mymodule.pkl")) }
+    assertThat(ex.message).contains("Rewrite target 'http://foo.com' should end with '/'")
+  }
+
   private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {
     val code = "x = 1"
     return tempDir.resolve(fileName).writeString(code).toString()

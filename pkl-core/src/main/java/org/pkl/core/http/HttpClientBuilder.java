@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
@@ -36,7 +37,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
-  private Map<String, String> rewrites = new HashMap<>();
+  private Map<URI, URI> rewrites = new HashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -91,15 +92,33 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public Builder setRewrites(Map<String, String> rewrites) {
+  public Builder setRewrites(Map<URI, URI> rewrites) {
+    for (var entry : rewrites.entrySet()) {
+      validateRewrite(entry.getKey());
+      validateRewrite(entry.getValue());
+    }
     this.rewrites = new HashMap<>(rewrites);
     return this;
   }
 
   @Override
-  public Builder addRewrite(String sourcePrefix, String targetPrefix) {
+  public Builder addRewrite(URI sourcePrefix, URI targetPrefix) {
+    validateRewrite(sourcePrefix);
+    validateRewrite(targetPrefix);
     this.rewrites.put(sourcePrefix, targetPrefix);
     return this;
+  }
+
+  private void validateRewrite(URI rewrite) {
+    if (!rewrite.getScheme().equals("http") && !rewrite.getScheme().equals("https")) {
+      throw new IllegalArgumentException("Rewrite rule must start with https://, but was '%s'".formatted(rewrite));
+    }
+    if (rewrite.getHost().equals(rewrite.getHost().toLowerCase(Locale.ROOT))) {
+      throw new IllegalArgumentException("Rewrite rule must have a lowercased hostname, but was '%s'".formatted(rewrite.getHost()));
+    }
+    if (!rewrite.getPath().endsWith("/")) {
+      throw new IllegalArgumentException("Rewrite rule must end with `/`, but was '%s'".formatted(rewrite));
+    }
   }
 
   @Override

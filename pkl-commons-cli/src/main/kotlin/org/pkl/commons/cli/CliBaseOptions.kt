@@ -141,7 +141,7 @@ data class CliBaseOptions(
   val httpNoProxy: List<String>? = null,
 
   /** URL prefixes to rewrite. */
-  val httpRewrites: Map<String, String>? = null,
+  val httpRewrites: Map<URI, URI>? = null,
 
   /** External module reader process specs */
   val externalModuleReaders: Map<String, ExternalReader> = mapOf(),

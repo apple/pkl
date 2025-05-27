@@ -119,9 +119,9 @@ public interface HttpClient extends AutoCloseable {
      */
     Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
 
-    Builder setRewrites(Map<String, String> rewrites);
+    Builder setRewrites(Map<URI, URI> rewrites);
 
-    Builder addRewrite(String sourcePrefix, String targetPrefix);
+    Builder addRewrite(URI sourcePrefix, URI targetPrefix);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

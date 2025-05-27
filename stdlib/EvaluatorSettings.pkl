@@ -109,6 +109,27 @@ externalModuleReaders: Mapping<String, ExternalReader>?
 @Since { version = "0.27.0" }
 externalResourceReaders: Mapping<String, ExternalReader>?
 
+const local hostnameRegex = Regex(#"https?://([^/?#]*)"#)
+
+const local hasNonEmptyLowercasedHostname = (it: String) ->
+  let (hostname = hostnameRegex.findMatchesIn(it).getOrNull(0)?.groups?.getOrNull(1)?.value)
+    hostname != null
+      && hostname.length > 0
+      && hostname.toLowerCase() == hostname
+
+/// A key or value in [Http.rewrites].
+///
+/// Rewrite targets must satisfy the following:
+///
+/// * It starts with either `http://`, or `https://`.
+/// * It ends with `/`.
+/// * It has a non-empty and lowercased hostname.
+typealias HttpRewrite = String(
+  startsWith(Regex("https?://")),
+  endsWith("/"),
+  hasNonEmptyLowercasedHostname
+)
+
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
   /// Configuration of the HTTP proxy to use.
@@ -130,13 +151,15 @@ class Http {
   /// In the following example, an original request for `https://pkg.pkl-lang.org/my/pkg@1.0.0` is
   /// replaced with `https://my.internal.mirror/my/pkg@1.0.0`.
   ///
+  /// This does not affect `3XX` status code redirect following.
+  ///
   /// ```
   /// rewrites {
-  ///   ["https://pkg.pkl-lang.org"] = "https://my.internal.mirror"
+  ///   ["https://pkg.pkl-lang.org/"] = "https://my.internal.mirror/"
   /// }
   /// ```
   @Since { version = "0.29.0" }
-  rewrites: Mapping<String, String>?
+  rewrites: Mapping<HttpRewrite, HttpRewrite>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.

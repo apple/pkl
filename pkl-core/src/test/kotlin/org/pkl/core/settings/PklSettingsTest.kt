@@ -62,7 +62,7 @@ class PklSettingsTest {
           }
         }
         rewrites {
-          ["https://foo.com"] = "https://bar.com"
+          ["https://foo.com/"] = "https://bar.com/"
         }
       }
       """
@@ -76,7 +76,7 @@ class PklSettingsTest {
           URI("http://localhost:8080"),
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
-        mapOf("https://foo.com" to "https://bar.com"),
+        mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
       )
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
