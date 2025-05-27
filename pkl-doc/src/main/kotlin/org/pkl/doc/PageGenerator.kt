@@ -567,7 +567,8 @@ internal abstract class PageGenerator<out S>(
 
     val (path, version) = uriPath.substring(0, atIndex) to uriPath.substring(atIndex + 1)
     val authority = URLEncoder.encode(uri.authority, Charsets.UTF_8)
-    return pageScope.relativeSiteUrl.resolve("$authority$path/$version/index.html").toString()
+    val fullPath = IoUtils.encodePath("$authority$path/$version")
+    return pageScope.relativeSiteUrl.resolve("$fullPath/index.html").toString()
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())
