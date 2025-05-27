@@ -1,0 +1,9 @@
+class Foo {}
+
+class Bar {
+  qux = 1
+}
+
+class Baz {
+  prop = 0
+}
