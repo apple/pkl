@@ -30,37 +30,44 @@ import org.pkl.server.ServerMessagePackEncoder;
 
 public class NativeTransport extends AbstractMessageTransport {
   private final BiConsumer<byte[], Object> sendMessageToNative;
+  private final Logger logger;
 
   protected NativeTransport(Logger logger, BiConsumer<byte[], Object> sendMessageToNative) {
     super(logger);
+    this.logger = logger;
     this.sendMessageToNative = sendMessageToNative;
   }
 
   @Override
-  protected void doStart() throws ProtocolException, IOException {}
+  protected void doStart() {}
 
   @Override
   protected void doClose() {}
 
   @Override
-  protected void doSend(Message message) throws IOException, ProtocolException {
+  protected void doSend(Message message) {
     try (var os = new ByteArrayOutputStream();
         var packer = MessagePack.newDefaultPacker(os)) {
       var encoder = new ServerMessagePackEncoder(packer);
       encoder.encode(message);
       // TODO: Propagate `handlerContext` through to `sendMessageToNative`
       sendMessageToNative.accept(os.toByteArray(), null);
+    } catch (IOException | ProtocolException e) {
+      // TODO: Test that this error message is visible.
+      logger.log(e.getMessage());
     }
   }
 
   // TODO: Propagate `handlerContext` through to `sendMessageToNative`
-  public void sendMessage(int length, CCharPointer ptr, VoidPointer handlerContext)
-      throws IOException, ProtocolException {
+  public void sendMessage(int length, CCharPointer ptr, VoidPointer handlerContext) {
     try (var is = new NativeInputStream(length, ptr);
         var unpacker = MessagePack.newDefaultUnpacker(is)) {
       var message = new ServerMessagePackDecoder(unpacker).decode();
       assert message != null;
       accept(message);
+    } catch (IOException | ProtocolException e) {
+      // TODO: Test that this error message is visible.
+      logger.log(e.getMessage());
     }
   }
 }
