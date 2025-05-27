@@ -25,9 +25,15 @@ public class GenNode {
   public final FullSpan span;
   public final NodeType type;
   public @Nullable GenNode parent;
+  private @Nullable String text;
 
   public GenNode(NodeType type, FullSpan span) {
     this(type, span, Collections.emptyList());
+  }
+
+  public GenNode(NodeType type, FullSpan span, String text) {
+    this(type, span, Collections.emptyList());
+    this.text = text;
   }
 
   public GenNode(NodeType type, FullSpan span, List<GenNode> children) {
@@ -51,6 +57,7 @@ public class GenNode {
   }
 
   public String text(char[] source) {
+    if (text != null) return text;
     return new String(source, span.charIndex(), span.length());
   }
 
