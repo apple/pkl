@@ -34,13 +34,8 @@ val libs = the<LibrariesForLibs>()
 val info = project.extensions.getByType<BuildInfo>()
 
 java {
-  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
-
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
-
-  sourceCompatibility = jvmTarget
-  targetCompatibility = jvmTarget
 
   toolchain {
     languageVersion = info.jdkToolchainVersion
@@ -112,10 +107,8 @@ tasks.compileJava {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
   javaCompiler = info.javaCompiler
-  sourceCompatibility = jvmTarget.majorVersion
-  targetCompatibility = jvmTarget.majorVersion
+  options.release = info.jvmTarget
 }
 
 tasks.withType<JavaExec>().configureEach { jvmArgs(info.jpmsAddModulesFlags) }
