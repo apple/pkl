@@ -16,7 +16,7 @@
 import com.diffplug.gradle.spotless.KotlinGradleExtension
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins { id("com.diffplug.spotless") }
 
@@ -52,15 +52,14 @@ configurations.all {
 }
 
 plugins.withType(JavaPlugin::class).configureEach {
-  val java = project.extensions.getByType<JavaPluginExtension>()
-  java.sourceCompatibility = JavaVersion.VERSION_17
-  java.targetCompatibility = JavaVersion.VERSION_17
+  tasks.withType<JavaCompile>().configureEach { options.release = 17 }
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+tasks.withType<KotlinJvmCompile>().configureEach {
   compilerOptions {
     jvmTarget = JvmTarget.JVM_17
     freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all")
+    freeCompilerArgs.add("-Xjdk-release=17")
   }
 }
 
