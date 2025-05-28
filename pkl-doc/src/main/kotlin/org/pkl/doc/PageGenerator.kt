@@ -15,7 +15,6 @@
  */
 package org.pkl.doc
 
-import java.net.URLEncoder
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createParentDirectories
 import kotlinx.html.*
@@ -526,11 +525,16 @@ internal abstract class PageGenerator<out S>(
         var first = true
         for (dep in dependencies) {
           if (first) first = false else +", "
-          a {
-            href = getDependencyLink(dep)
-            +dep.name
-            +":"
-            +dep.version
+          val link = getDependencyLink(dep)
+          if (link != null) {
+            a {
+              href = link
+              +dep.name
+              +":"
+              +dep.version
+            }
+          } else {
+            span { +"${dep.name}:${dep.version}" }
           }
         }
       }
@@ -553,22 +557,12 @@ internal abstract class PageGenerator<out S>(
     return result
   }
 
-  private fun getDependencyLink(dep: DocPackageInfo.PackageDependency): String {
-    if (dep.documentation != null) return dep.documentation.toString()
-
-    val uri = dep.uri
-    if (uri == null) {
-      return pageScope.relativeSiteUrl.resolve("${dep.name}/${dep.version}/index.html").toString()
-    }
-
-    val uriPath = uri.path
-    val atIndex = uriPath.lastIndexOf('@')
-    if (atIndex < 0) throw DocGeneratorException("Invalid package URI: $uri")
-
-    val (path, version) = uriPath.substring(0, atIndex) to uriPath.substring(atIndex + 1)
-    val authority = URLEncoder.encode(uri.authority, Charsets.UTF_8)
-    val fullPath = IoUtils.encodePath("$authority$path/$version")
-    return pageScope.relativeSiteUrl.resolve("$fullPath/index.html").toString()
+  private fun getDependencyLink(dep: DocPackageInfo.PackageDependency): String? {
+    val siteScope = pageScope.siteScope ?: return null
+    return siteScope.packageScopes.values
+      .find { it.name == dep.qualifiedName }
+      ?.urlForVersionRelativeTo(pageScope, dep.version)
+      ?.toString()
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())
