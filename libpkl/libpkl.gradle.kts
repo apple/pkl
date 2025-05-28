@@ -1,28 +1,26 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     https://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+@file:Suppress("unused")
+
 plugins {
   pklAllProjects
   pklGraalVm
   pklJavaLibrary
-  pklJavaExecutable
   pklNativeLifecycle
 }
-
-// assumes that `pklJavaExecutable` is also applied
-val executableSpec = project.extensions.getByType<ExecutableSpec>()
 
 val stagedMacAmd64NativeLibrary: Configuration by configurations.creating
 val stagedMacAarch64NativeLibrary: Configuration by configurations.creating
@@ -57,18 +55,6 @@ dependencies {
   stagedWindowsAmd64NativeLibrary(sharedLibrary("windows-amd64.exe"))
 }
 
-executable {
-  name = "libpkl_internal"
-
-  // TODO(kushal): Why is all of this necessary now? Can it be stripped back?
-  javaName = "libpkl"
-  documentationName = "Pkl Native Library"
-  publicationName = "libpkl"
-  javaPublicationName = "libpkl"
-  mainClass = "org.pkl.libpkl.LibPkl"
-  website = "TODO"
-}
-
 private fun extension(osAndArch: String) =
   when (osAndArch.split("-").dropWhile { it == "alpine" }.first()) {
     "linux" -> "so"
@@ -85,7 +71,7 @@ private fun extension(osAndArch: String) =
 private fun nativeLibraryOutputFiles(osAndArch: String) =
   project.layout.buildDirectory.dir("libs/$osAndArch").map { outputDir ->
     // TODO(kushal): dashes/underscores for library files? C convention assumes underscores.
-    val libraryName = executableSpec.name
+    val libraryName = "libpkl_internal"
     val libraryOutputFiles =
       listOf(
         "lib${libraryName}.${extension(osAndArch)}",
@@ -125,8 +111,8 @@ private fun NativeImageBuild.setClasspath() {
 val macNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     amd64()
     setClasspath()
     extraNativeImageArgs = listOf("--shared")
@@ -137,8 +123,8 @@ val macNativeLibraryAmd64 by
 val macNativeLibraryAarch64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     aarch64()
     setClasspath()
     extraNativeImageArgs = listOf("--shared")
@@ -149,8 +135,8 @@ val macNativeLibraryAarch64 by
 val linuxNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     amd64()
     setClasspath()
     extraNativeImageArgs = listOf("--shared")
@@ -161,8 +147,8 @@ val linuxNativeLibraryAmd64 by
 val linuxNativeLibraryAarch64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     aarch64()
     setClasspath()
 
@@ -180,8 +166,8 @@ val linuxNativeLibraryAarch64 by
 val alpineNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     amd64()
     setClasspath()
 
@@ -198,8 +184,8 @@ val alpineNativeLibraryAmd64 by
 val windowsNativeLibraryAmd64 by
   tasks.registering(NativeImageBuild::class) {
     outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
-    imageName = executableSpec.name
-    mainClass = executableSpec.mainClass
+    imageName = "libpkl_internal"
+    mainClass = "org.pkl.libpkl.LibPkl"
     amd64()
     setClasspath()
     extraNativeImageArgs = listOf("--shared", "-Dfile.encoding=UTF-8")
@@ -316,4 +302,15 @@ tasks.withType<Test> {
   jvmArgs("-Djna.library.path=${nativeLibsDir.absolutePath}")
 
   useJUnitPlatform()
+}
+
+private val licenseHeaderFile by lazy {
+  rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt")
+}
+
+spotless {
+  cpp {
+    licenseHeaderFile(licenseHeaderFile, "// ")
+    target("src/main/c/*.c", "src/main/c/*.h")
+  }
 }

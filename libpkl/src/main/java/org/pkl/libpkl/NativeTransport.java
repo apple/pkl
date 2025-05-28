@@ -17,9 +17,8 @@ package org.pkl.libpkl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.graalvm.nativeimage.c.type.CCharPointer;
-import org.graalvm.nativeimage.c.type.VoidPointer;
 import org.msgpack.core.MessagePack;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.MessageTransports.AbstractMessageTransport;
@@ -29,10 +28,10 @@ import org.pkl.server.ServerMessagePackDecoder;
 import org.pkl.server.ServerMessagePackEncoder;
 
 public class NativeTransport extends AbstractMessageTransport {
-  private final BiConsumer<byte[], Object> sendMessageToNative;
+  private final Consumer<byte[]> sendMessageToNative;
   private final Logger logger;
 
-  protected NativeTransport(Logger logger, BiConsumer<byte[], Object> sendMessageToNative) {
+  protected NativeTransport(Logger logger, Consumer<byte[]> sendMessageToNative) {
     super(logger);
     this.logger = logger;
     this.sendMessageToNative = sendMessageToNative;
@@ -50,16 +49,14 @@ public class NativeTransport extends AbstractMessageTransport {
         var packer = MessagePack.newDefaultPacker(os)) {
       var encoder = new ServerMessagePackEncoder(packer);
       encoder.encode(message);
-      // TODO: Propagate `handlerContext` through to `sendMessageToNative`
-      sendMessageToNative.accept(os.toByteArray(), null);
+      sendMessageToNative.accept(os.toByteArray());
     } catch (IOException | ProtocolException e) {
       // TODO: Test that this error message is visible.
       logger.log(e.getMessage());
     }
   }
 
-  // TODO: Propagate `handlerContext` through to `sendMessageToNative`
-  public void sendMessage(int length, CCharPointer ptr, VoidPointer handlerContext) {
+  public void sendMessage(int length, CCharPointer ptr) {
     try (var is = new NativeInputStream(length, ptr);
         var unpacker = MessagePack.newDefaultUnpacker(is)) {
       var message = new ServerMessagePackDecoder(unpacker).decode();

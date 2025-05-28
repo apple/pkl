@@ -26,12 +26,12 @@ interface LibPklLibrary : Library {
   }
 
   interface PklMessageResponseHandler : Callback {
-    fun invoke(length: Int, message: Pointer?, handlerContext: Pointer?)
+    fun invoke(length: Int, message: Pointer, userData: Pointer?)
   }
 
-  fun pkl_init(handler: PklMessageResponseHandler?): Int
+  fun pkl_init(handler: PklMessageResponseHandler, userData: Pointer?): Int
 
-  fun pkl_send_message(length: Int, message: ByteArray?, handlerContext: Pointer?): Int
+  fun pkl_send_message(length: Int, message: ByteArray): Int
 
   fun pkl_close(): Int
 }

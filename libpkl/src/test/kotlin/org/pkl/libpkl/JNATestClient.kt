@@ -34,18 +34,13 @@ import org.pkl.server.ServerMessagePackDecoder
 import org.pkl.server.ServerMessagePackEncoder
 
 class JNATestClient : LibPklLibrary.PklMessageResponseHandler, Iterable<Message?>, AutoCloseable {
-  val incoming: BlockingQueue<Message?> = ArrayBlockingQueue(10)
+  val incoming: BlockingQueue<Message> = ArrayBlockingQueue(10)
 
-  override fun invoke(length: Int, message: Pointer?, handlerContext: Pointer?) {
-    when {
-      message != null && length > 0 -> {
-        val receivedBytes: ByteArray = message.getByteArray(0, length)
-        val message = decode(receivedBytes)
-        assertThat(message).isInstanceOf(Message::class.java)
-        incoming.add(message!!)
-      }
-      else -> incoming.add(null)
-    }
+  override fun invoke(length: Int, message: Pointer, userData: Pointer?) {
+    val receivedBytes: ByteArray = message.getByteArray(0, length)
+    val message = decode(receivedBytes)
+    assertThat(message).isInstanceOf(Message::class.java)
+    incoming.add(message!!)
   }
 
   override fun close() = incoming.clear()
@@ -54,7 +49,7 @@ class JNATestClient : LibPklLibrary.PklMessageResponseHandler, Iterable<Message?
 
   fun send(message: Message): Int =
     // TODO: Propagate `handlerContext` through, and validate it.
-    encode(message).let { LibPklLibrary.INSTANCE.pkl_send_message(it.size, it, null) }
+    encode(message).let { LibPklLibrary.INSTANCE.pkl_send_message(it.size, it) }
 
   inline fun <reified T : Message> receive(): T {
     val message = incoming.take()
