@@ -44,8 +44,8 @@ import kotlin.io.path.*
 @OptIn(ExperimentalPathApi::class)
 class PackageServer : AutoCloseable {
   companion object {
-    const val BIRDS_SHA = "6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e"
-    const val FRUIT_SHA = "34a15b02346e6acb85da5bd71d8b0738a79008b38a7fc805e5869d9129ad27d2"
+    const val BIRDS_SHA = "b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de"
+    const val FRUIT_SHA = "8ff80e5ac882650e817f261c8af024bf0db9b07888c9d18c20017457e04ffe06"
     const val FRUIT_1_1_SHA = "8d982761d182f2185e4180c82190791d9a60c721cb3393bb2e946fab90131e8c"
 
     fun populateCacheDir(cacheDir: Path) {

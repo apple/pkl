@@ -525,15 +525,16 @@ internal abstract class PageGenerator<out S>(
         var first = true
         for (dep in dependencies) {
           if (first) first = false else +", "
-          a {
-            href =
-              dep.documentation?.toString()
-                ?: pageScope.relativeSiteUrl
-                  .resolve("${dep.name}/${dep.version}/index.html")
-                  .toString()
-            +dep.name
-            +":"
-            +dep.version
+          val link = getDependencyLink(dep)
+          if (link != null) {
+            a {
+              href = link
+              +dep.name
+              +":"
+              +dep.version
+            }
+          } else {
+            span { +"${dep.name}:${dep.version}" }
           }
         }
       }
@@ -554,6 +555,14 @@ internal abstract class PageGenerator<out S>(
     }
 
     return result
+  }
+
+  private fun getDependencyLink(dep: DocPackageInfo.PackageDependency): String? {
+    val siteScope = pageScope.siteScope ?: return null
+    return siteScope.packageScopes.values
+      .find { it.name == dep.qualifiedName }
+      ?.urlForVersionRelativeTo(pageScope, dep.version)
+      ?.toString()
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())
