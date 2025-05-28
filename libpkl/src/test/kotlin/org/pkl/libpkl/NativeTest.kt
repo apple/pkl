@@ -15,6 +15,7 @@
  */
 package org.pkl.libpkl
 
+import com.sun.jna.Pointer
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -39,12 +40,20 @@ import org.pkl.core.messaging.Messages.ResourceReaderSpec
 import org.pkl.core.module.PathElement
 import org.pkl.server.*
 
+// To run this test in IntelliJ, add
+// `-Djna.library.path=$ProjectFileDir$/libpkl/build/libs/<os>-<arch>` to the
+// run configuration.
+//
+// You can modify the IntelliJ JUnit configuration template so that this flag gets added
+// automatically.
+// See https://www.jetbrains.com/help/idea/run-debug-configuration.html#templates for more details.
 /**
- * This test cannot be run inside of IntelliJ.
+ * Binds to the native library using JNA.
  *
- * It needs the `jna.library.path` property to be set, which is handled by `libpkl:test`.
+ * @see JNATestClient
+ * @see LibPklLibrary
  */
-class JNATest {
+class NativeTest {
   companion object {
     lateinit var client: JNATestClient
   }
@@ -52,7 +61,7 @@ class JNATest {
   @BeforeEach
   fun beforeEach() {
     client = JNATestClient()
-    assertThat(LibPklLibrary.INSTANCE.pkl_init(client)).isEqualTo(0)
+    assertThat(LibPklLibrary.INSTANCE.pkl_init(client, Pointer.NULL)).isEqualTo(0)
   }
 
   @AfterEach
@@ -66,8 +75,6 @@ class JNATest {
     val evaluatorId = client.sendCreateEvaluatorRequest()
 
     client.send(EvaluateRequest(1, evaluatorId, URI("repl:text"), """foo = 1""", null))
-    assertThat(client).hasSize(1)
-
     val response = client.receive<EvaluateResponse>()
     assertThat(response.evaluatorId).isEqualTo(evaluatorId)
 

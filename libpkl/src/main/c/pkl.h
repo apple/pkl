@@ -1,30 +1,52 @@
-/**
-* @brief The Pkl Message Response Handler that a user should implement.
-*
-* The resulting messages from `pkl_send` will be sent to this handler using a callback style.
-*/
-typedef void (*PklMessageResponseHandler)(int length, char *message, void *handlerContext);
+/*
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+// pkl.h
 
 /**
-* @brief Initialises and allocates a Pkl executor.
-*
-* @return -1 on failure.
-* @return 0 on success.
-*/
-int pkl_init(PklMessageResponseHandler handler);
+ * The callback that gets called when a message is received from Pkl.
+ *
+ * @param length    The length the message bytes
+ * @param message   The message itself
+ * @param payload   User-defined data passed to pkl_init.
+ */
+typedef void (*PklMessageResponseHandler)(int length, char *message, void *payload);
 
 /**
-* @brief Send a message to Pkl, providing the length and a pointer to the first byte.
-*
-* @return -1 on failure.
-* @return 0 on success.
-*/
-int pkl_send_message(int length, char *message, void *handlerContext);
+ * Initialises and allocates a Pkl executor.
+ *
+ * @param handler   The callback that gets called when a message is received from Pkl.
+ * @param payload   User-defined data that gets passed to handler.
+ *
+ * @return -1 on failure, 0 on success.
+ */
+int pkl_init(PklMessageResponseHandler handler, void *payload);
 
 /**
-* @brief Cleans up any resources that were created as part of the `pkl_init` process.
-*
-* @return -1 on failure.
-* @return 0 on success.
-*/
+ * Send a message to Pkl, providing the length and a pointer to the first byte.
+ *
+ * @param length    The length of the message, in bytes.
+ * @param message   The message to send to Pkl.
+ *
+ * @return -1 on failure, 0 on success.
+ */
+int pkl_send_message(int length, char *message);
+
+/**
+ * Cleans up any resources that were created as part of the `pkl_init` process.
+ *
+ * @return -1 on failure, 0 on success.
+ */
 int pkl_close();

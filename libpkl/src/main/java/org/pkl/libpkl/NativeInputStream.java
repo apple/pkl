@@ -23,21 +23,24 @@ public class NativeInputStream extends InputStream {
   private final int length;
   private final CCharPointer ptr;
 
+  public NativeInputStream(int length, CCharPointer ptr) {
+    super();
+    this.length = length;
+    this.ptr = ptr;
+  }
+
   @Override
   public int read() {
+    if (available() <= 0) {
+      return -1;
+    }
     var result = ptr.read(offset);
     offset++;
-    return result;
+    return result & 0xFF;
   }
 
   @Override
   public int available() {
     return length - offset;
-  }
-
-  public NativeInputStream(int length, CCharPointer ptr) {
-    super();
-    this.length = length;
-    this.ptr = ptr;
   }
 }
