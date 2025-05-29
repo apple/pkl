@@ -219,6 +219,8 @@ val nativeTest by
         )
       }
     )
+    
+    environment("LD_LIBRARY_PATH", buildInfo.targetMachine.outputDir.get().asFile.absolutePath)
 
     useJUnitPlatform()
   }
