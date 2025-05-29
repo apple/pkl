@@ -52,31 +52,13 @@ val assembleNative by
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
     }
 
-    when {
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
-        wraps(assembleNativeMacOsAarch64)
-      }
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "amd64" -> {
-        wraps(assembleNativeMacOsAmd64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
-        wraps(assembleNativeLinuxAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "amd64" -> {
-        if (buildInfo.musl) wraps(assembleNativeAlpineLinuxAmd64)
-        else wraps(assembleNativeLinuxAmd64)
-      }
-      buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
-        wraps(assembleNativeWindowsAmd64)
-      }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
-      else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
-      }
+    when (buildInfo.targetMachine) {
+      Machine.MacosAarch64 -> wraps(assembleNativeMacOsAarch64)
+      Machine.MacosAmd64 -> wraps(assembleNativeMacOsAmd64)
+      Machine.LinuxAarch64 -> wraps(assembleNativeLinuxAarch64)
+      Machine.LinuxAmd64 -> wraps(assembleNativeAlpineLinuxAmd64)
+      Machine.AlpineLinuxAmd64 -> wraps(assembleNativeLinuxAmd64)
+      Machine.WindowsAmd64 -> wraps(assembleNativeWindowsAmd64)
     }
   }
 
@@ -84,35 +66,18 @@ val testNative by
   tasks.registering {
     group = "verification"
 
+    @Suppress("DuplicatedCode")
     if (!buildInfo.isCrossArchSupported && buildInfo.isCrossArch) {
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
     }
 
-    when {
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
-        dependsOn(testNativeMacOsAarch64)
-      }
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "amd64" -> {
-        dependsOn(testNativeMacOsAmd64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
-        dependsOn(testNativeLinuxAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "amd64" -> {
-        if (buildInfo.musl) dependsOn(testNativeAlpineLinuxAmd64)
-        else dependsOn(testNativeLinuxAmd64)
-      }
-      buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
-        dependsOn(testNativeWindowsAmd64)
-      }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
-      else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
-      }
+    when (buildInfo.targetMachine) {
+      Machine.MacosAarch64 -> wraps(testNativeMacOsAarch64)
+      Machine.MacosAmd64 -> wraps(testNativeMacOsAmd64)
+      Machine.LinuxAarch64 -> wraps(testNativeLinuxAarch64)
+      Machine.LinuxAmd64 -> wraps(testNativeAlpineLinuxAmd64)
+      Machine.AlpineLinuxAmd64 -> wraps(testNativeLinuxAmd64)
+      Machine.WindowsAmd64 -> wraps(testNativeWindowsAmd64)
     }
   }
 

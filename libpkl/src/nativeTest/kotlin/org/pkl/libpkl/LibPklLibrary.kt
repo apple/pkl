@@ -20,6 +20,7 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 
+@Suppress("FunctionName")
 interface LibPklLibrary : Library {
   companion object {
     val INSTANCE: LibPklLibrary = Native.load("pkl", LibPklLibrary::class.java)

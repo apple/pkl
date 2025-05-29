@@ -28,6 +28,7 @@ jimfs = "1.+"
 jline = "3.23.0"
 jmh = "1.+"
 jmhPlugin = "0.7.2"
+jna = "5.+"
 jsr305 = "3.+"
 junit = "5.+"
 kotlin = "2.0.21"
@@ -69,6 +70,8 @@ jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
 jlineTerminalJansi = { group = "org.jline", name = "jline-terminal-jansi", version.ref = "jline" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+jnaPlatform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }

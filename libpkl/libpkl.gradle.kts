@@ -1,18 +1,18 @@
 /*
-* Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     https://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 @file:Suppress("unused")
 
 plugins {
@@ -29,6 +29,17 @@ val stagedLinuxAarch64NativeLibrary: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64NativeLibrary: Configuration by configurations.creating
 val stagedWindowsAmd64NativeLibrary: Configuration by configurations.creating
 
+val nativeTestSourceSet = sourceSets.create("nativeTest")
+
+val nativeTestImplementation: Configuration by
+  configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+    isCanBeResolved = true
+  }
+
+val nativeTestRuntimeOnly: Configuration by
+  configurations.getting { extendsFrom(configurations.testRuntimeOnly.get()) }
+
 dependencies {
   compileOnly(libs.graalSdk)
 
@@ -41,268 +52,176 @@ dependencies {
   implementation(libs.truffleApi)
   implementation(libs.truffleRuntime)
 
-  testImplementation(projects.pklCommonsTest)
-  testImplementation("net.java.dev.jna:jna:5.17.0")
-  testImplementation("net.java.dev.jna:jna-platform:5.17.0")
-
-  fun sharedLibrary(osAndArch: String) = files(nativeLibraryOutputFiles(osAndArch))
-
-  stagedMacAarch64NativeLibrary(sharedLibrary("macos-aarch64"))
-  stagedMacAmd64NativeLibrary(sharedLibrary("macos-amd64"))
-  stagedLinuxAmd64NativeLibrary(sharedLibrary("linux-amd64"))
-  stagedLinuxAarch64NativeLibrary(sharedLibrary("linux-aarch64"))
-  stagedAlpineLinuxAmd64NativeLibrary(sharedLibrary("alpine-linux-amd64"))
-  stagedWindowsAmd64NativeLibrary(sharedLibrary("windows-amd64.exe"))
+  nativeTestImplementation(projects.pklCommonsTest)
+  nativeTestImplementation(libs.jna)
+  nativeTestImplementation(libs.jnaPlatform)
+  nativeTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-private fun extension(osAndArch: String) =
-  when (osAndArch.split("-").dropWhile { it == "alpine" }.first()) {
-    "linux" -> "so"
-    "macos" -> "dylib"
-    "unix" -> "so"
-    "windows" -> "dll"
-    else -> {
-      throw StopExecutionException(
-        "Don't know how to construct library extension for OS: ${osAndArch.split("-").first()}"
-      )
-    }
+private fun NativeImageBuild.configure(machine: Machine) {
+  arch = machine.arch
+
+  if (machine.arch == Machine.Arch.AARCH64) {
+    dependsOn(":installGraalVmAarch64")
+  } else {
+    dependsOn(":installGraalVmAmd64")
   }
 
-private fun nativeLibraryOutputFiles(osAndArch: String) =
-  project.layout.buildDirectory.dir("libs/$osAndArch").map { outputDir ->
-    // TODO(kushal): dashes/underscores for library files? C convention assumes underscores.
-    val libraryName = "libpkl_internal"
-    val libraryOutputFiles =
-      listOf(
-        "lib${libraryName}.${extension(osAndArch)}",
-        "${libraryName}_dynamic.h",
-        "${libraryName}.h",
+  outputDir = machine.outputDir
+  outputName = "libpkl_internal"
 
-        // GraalVM shared headers.
-        "graal_isolate.h",
-        "graal_isolate_dynamic.h",
-      )
-
-    libraryOutputFiles.map { filename -> outputDir.file(filename) }
-  }
-
-private fun NativeImageBuild.setOutputFiles(osAndArch: String) {
-  outputs.files(nativeLibraryOutputFiles(osAndArch))
-}
-
-private fun NativeImageBuild.amd64() {
-  arch = Architecture.AMD64
-  dependsOn(":installGraalVmAmd64")
-}
-
-private fun NativeImageBuild.aarch64() {
-  arch = Architecture.AARCH64
-  dependsOn(":installGraalVmAarch64")
-}
-
-private fun NativeImageBuild.setClasspath() {
   classpath.from(sourceSets.main.map { it.output })
   classpath.from(
     project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
   )
   classpath.from(configurations.runtimeClasspath)
+
+  sharedLibrary = true
 }
 
-val macNativeLibraryAmd64 by
+val macNativeImageAmd64 by
+  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAmd64) }
+
+val macNativeImageAarch64 by
+  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAarch64) }
+
+val linuxNativeImageAmd64 by
+  tasks.registering(NativeImageBuild::class) { configure(Machine.LinuxAmd64) }
+
+val linuxNativeImageAarch64 by
   tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/macos-amd64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
-
-    setOutputFiles("macos-amd64")
-  }
-
-val macNativeLibraryAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/macos-aarch64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    aarch64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
-
-    setOutputFiles("macos-aarch64")
-  }
-
-val linuxNativeLibraryAmd64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/linux-amd64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared")
-
-    setOutputFiles("linux-amd64")
-  }
-
-val linuxNativeLibraryAarch64 by
-  tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/linux-aarch64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    aarch64()
-    setClasspath()
-
+    configure(Machine.LinuxAarch64)
     extraNativeImageArgs =
       listOf(
-        "--shared",
         // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
         // (e.g. Raspberry Pi 5, Asahi Linux)
-        "-H:PageSize=65536",
+        "-H:PageSize=65536"
       )
-
-    setOutputFiles("linux-aarch64")
   }
 
-val alpineNativeLibraryAmd64 by
+val alpineNativeImageAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/alpine-linux-amd64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    amd64()
-    setClasspath()
-
+    configure(Machine.AlpineLinuxAmd64)
     extraNativeImageArgs =
       listOf(
-        "--shared",
         // TODO(kushal): https://github.com/oracle/graal/issues/3053
-        "--libc=musl",
+        "--libc=musl"
       )
-
-    setOutputFiles("alpine-linux-amd64")
   }
 
-val windowsNativeLibraryAmd64 by
+val windowsNativeImageAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    outputDir = project.layout.buildDirectory.dir("libs/windows-amd64")
-    imageName = "libpkl_internal"
-    mainClass = "org.pkl.libpkl.LibPkl"
-    amd64()
-    setClasspath()
-    extraNativeImageArgs = listOf("--shared", "-Dfile.encoding=UTF-8")
-
-    setOutputFiles("windows-amd64")
+    configure(Machine.WindowsAmd64)
+    extraNativeImageArgs = listOf("-Dfile.encoding=UTF-8")
   }
 
-val assembleNative by
-  tasks.existing {
-    // TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
-    finalizedBy(validateNativeLibraryFilestasks)
-  }
+val Machine.outputDir
+  get() = layout.buildDirectory.dir("native-libs/$targetName")
 
-// TODO(kushal): Remove this later. Only exists to debug output files are in the graph.
-val validateNativeLibraryFilestasks by
-  tasks.registering {
-    val assembleTasks = mutableSetOf<TaskProvider<NativeImageBuild>>()
+fun Exec.configureCompile(machine: Machine) {
+  val projectDir = project.layout.projectDirectory.asFile.path
 
-    when {
-      buildInfo.os.isMacOsX -> {
-        assembleTasks.add(macNativeLibraryAmd64)
-        if (buildInfo.arch == "aarch64") {
-          assembleTasks.add(macNativeLibraryAarch64)
-        }
-      }
+  workingDir = machine.outputDir.get().asFile
 
-      buildInfo.os.isWindows -> {
-        assembleTasks.add(windowsNativeLibraryAmd64)
-      }
+  enabled = buildInfo.targetMachine == machine
 
-      buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
-        assembleTasks.add(linuxNativeLibraryAarch64)
-      }
+  val outputFile = "libpkl.${buildInfo.os.sharedLibrarySuffix}"
 
-      buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
-        assembleTasks.add(linuxNativeLibraryAmd64)
-        if (buildInfo.hasMuslToolchain) {
-          assembleTasks.add(alpineNativeLibraryAmd64)
-        }
-      }
+  executable = if (machine.musl) "musl-gcc" else "gcc"
+
+  argumentProviders.add(
+    CommandLineArgumentProvider {
+      listOf(
+        "-shared",
+        "-o",
+        outputFile,
+        "$projectDir/src/main/c/pkl.c",
+        "-I$projectDir/src/main/c",
+        "-I${machine.outputDir.get()}",
+        "-L${machine.outputDir.get()}",
+        "-lpkl_internal",
+      )
     }
+  )
 
-    dependsOn(assembleTasks)
+  outputs.files(machine.outputDir.map { it.files(outputFile, "pkl.h") })
 
-    doLast {
-      for (taskProvider in assembleTasks) {
-        val task = taskProvider.get()
-        val outputFiles = task.outputs.files.files
-
-        println("==== Validating Native Library Files Exist ====")
-        println("${task.name} outputs:")
-        outputFiles.forEach { file -> println("- ${file.absolutePath} (exists: ${file.exists()})") }
-      }
+  doLast {
+    copy {
+      from(file("src/c/pkl.h"))
+      into(machine.outputDir)
     }
   }
-
-// Expose underlying task's outputs
-private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
-  dependsOn(other)
-  outputs.files(other)
 }
 
-val assembleNativeMacOsAarch64 by tasks.existing { wraps(macNativeLibraryAarch64) }
-
-val assembleNativeMacOsAmd64 by tasks.existing { wraps(macNativeLibraryAmd64) }
-
-val assembleNativeLinuxAarch64 by tasks.existing { wraps(linuxNativeLibraryAarch64) }
-
-val assembleNativeLinuxAmd64 by tasks.existing { wraps(linuxNativeLibraryAmd64) }
-
-val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineNativeLibraryAmd64) }
-
-val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsNativeLibraryAmd64) }
-
-val macNativeFullLibraryAarch64 by
+val macCCompileAarch64 by
   tasks.registering(Exec::class) {
-    dependsOn(macNativeLibraryAarch64)
+    dependsOn(macNativeImageAarch64)
+    configureCompile(Machine.MacosAarch64)
+  }
 
-    val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
-    val projectDir = project.layout.projectDirectory.asFile.path
+val macCCompileAmd64 by
+  tasks.registering(Exec::class) {
+    dependsOn(macNativeImageAmd64)
+    configureCompile(Machine.MacosAarch64)
+  }
 
-    workingDir = libraryOutputDir.asFile
+val linuxCCompileAmd64 by
+  tasks.registering(Exec::class) {
+    dependsOn(linuxNativeImageAmd64)
+    configureCompile(Machine.LinuxAmd64)
+  }
 
-    // TODO: Make this portable.
-    commandLine(
-      "/usr/bin/cc",
-      "-shared",
-      "-o",
-      "libpkl.dylib",
-      "$projectDir/src/main/c/pkl.c",
-      "-I$projectDir/src/main/c",
-      "-I$libraryOutputDir",
-      "-L$libraryOutputDir",
-      "-lpkl_internal",
+val linuxCCompileAarch64 by
+  tasks.registering(Exec::class) {
+    dependsOn(linuxNativeImageAarch64)
+    configureCompile(Machine.LinuxAarch64)
+  }
+
+val alpineLinuxCCompileAmd64 by
+  tasks.registering(Exec::class) {
+    dependsOn(alpineNativeImageAmd64)
+    configureCompile(Machine.AlpineLinuxAmd64)
+  }
+
+val windowsCCompileAmd64 by
+  tasks.registering(Exec::class) {
+    dependsOn(windowsNativeImageAmd64)
+    configureCompile(Machine.WindowsAmd64)
+  }
+
+tasks.assembleNativeMacOsAarch64 { dependsOn(macCCompileAarch64) }
+
+tasks.assembleNativeMacOsAmd64 { dependsOn(macCCompileAmd64) }
+
+tasks.assembleNativeLinuxAmd64 { dependsOn(linuxCCompileAmd64) }
+
+tasks.assembleNativeLinuxAarch64 { dependsOn(linuxCCompileAarch64) }
+
+tasks.assembleNativeAlpineLinuxAmd64 { dependsOn(alpineLinuxCCompileAmd64) }
+
+tasks.assembleNativeWindowsAmd64 { dependsOn(windowsCCompileAmd64) }
+
+val nativeTest by
+  tasks.registering(Test::class) {
+    dependsOn(tasks.assembleNative)
+
+    description = "Test native libraries"
+    group = "verification"
+
+    testClassesDirs = nativeTestSourceSet.output.classesDirs
+    classpath = nativeTestSourceSet.runtimeClasspath
+
+    jvmArgumentProviders.add(
+      CommandLineArgumentProvider {
+        listOf("-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath)
+      }
     )
+
+    useJUnitPlatform()
   }
 
-val macNativeFullLibraryAarch64Copy by
-  tasks.registering(Exec::class) {
-    dependsOn(macNativeFullLibraryAarch64)
-
-    val libraryOutputDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get()
-    val projectDir = project.layout.projectDirectory.asFile.path
-
-    workingDir = libraryOutputDir.asFile
-
-    commandLine("cp", "$projectDir/src/main/c/pkl.h", libraryOutputDir)
-  }
-
-tasks.withType<Test> {
-  dependsOn(macNativeFullLibraryAarch64Copy)
-
-  val nativeLibsDir = project.layout.buildDirectory.dir("libs/macos-aarch64").get().asFile
-  jvmArgs("-Djna.library.path=${nativeLibsDir.absolutePath}")
-
-  useJUnitPlatform()
-}
+tasks.testNative { dependsOn(nativeTest) }
 
 private val licenseHeaderFile by lazy {
   rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt")
