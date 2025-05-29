@@ -214,6 +214,7 @@ val nativeTest by
       CommandLineArgumentProvider {
         listOf(
           "-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
+          "-Djava.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
           "-Djna.debug_load=true"
         )
       }
