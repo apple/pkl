@@ -136,6 +136,7 @@ fun Exec.configureCompile(machine: Machine) {
         "-I$projectDir/src/main/c",
         "-I${machine.outputDir.get()}",
         "-L${machine.outputDir.get()}",
+        "-fPIC",
         "-lpkl_internal",
       )
     }

@@ -19,9 +19,9 @@ enum class Machine(val os: OS, val arch: Arch, val musl: Boolean) {
   MacosAarch64(os = OS.MacOS, arch = Arch.AARCH64, musl = false),
   MacosAmd64(os = OS.MacOS, arch = Arch.AMD64, musl = false),
   LinuxAarch64(os = OS.Linux, arch = Arch.AARCH64, musl = false),
-  LinuxAmd64(os = OS.MacOS, arch = Arch.AMD64, musl = false),
+  LinuxAmd64(os = OS.Linux, arch = Arch.AMD64, musl = false),
   AlpineLinuxAmd64(os = OS.Linux, arch = Arch.AMD64, musl = true),
-  WindowsAmd64(os = OS.Linux, arch = Arch.AMD64, musl = false);
+  WindowsAmd64(os = OS.Windows, arch = Arch.AMD64, musl = false);
 
   companion object {
     fun from(os: OS, arch: Arch, musl: Boolean): Machine {
