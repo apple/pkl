@@ -159,6 +159,7 @@ steps {
     }
     command = #"""
       export PATH=~/staticdeps/bin:$PATH
+      export PATH=/c/ProgramData/mingw64/mingw64/bin:$PATH
       ./gradlew \#(module.gradleArgs) \#(project):buildNative
       """#
   }

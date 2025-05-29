@@ -124,21 +124,30 @@ fun Exec.configureCompile(machine: Machine) {
 
   val outputFile = "libpkl.${buildInfo.os.sharedLibrarySuffix}"
 
-  executable = if (machine.musl) "musl-gcc" else "gcc"
+  executable =
+    when {
+      machine.os.isMacOS -> "clang"
+      machine.musl -> "musl-gcc"
+      else -> "gcc"
+    }
 
   argumentProviders.add(
     CommandLineArgumentProvider {
-      listOf(
-        "-shared",
-        "-o",
-        outputFile,
-        "$projectDir/src/main/c/pkl.c",
-        "-I$projectDir/src/main/c",
-        "-I${machine.outputDir.get()}",
-        "-L${machine.outputDir.get()}",
-        "-fPIC",
-        "-lpkl_internal",
-      )
+      buildList {
+        add("-shared")
+        add("-o")
+        add(outputFile)
+        add("$projectDir/src/main/c/pkl.c")
+        add("-I$projectDir/src/main/c")
+        add("-I${machine.outputDir.get()}")
+        add("-L${machine.outputDir.get()}")
+        add("-fPIC")
+        add("-lpkl_internal")
+        if (machine == Machine.MacosAmd64) {
+          add("-target")
+          add("-x86_64-apple-darwin")
+        }
+      }
     }
   )
 
@@ -161,7 +170,7 @@ val macCCompileAarch64 by
 val macCCompileAmd64 by
   tasks.registering(Exec::class) {
     dependsOn(macNativeImageAmd64)
-    configureCompile(Machine.MacosAarch64)
+    configureCompile(Machine.MacosAmd64)
   }
 
 val linuxCCompileAmd64 by
