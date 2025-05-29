@@ -212,7 +212,10 @@ val nativeTest by
 
     jvmArgumentProviders.add(
       CommandLineArgumentProvider {
-        listOf("-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath)
+        listOf(
+          "-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
+          "-Djna.debug_load=true"
+        )
       }
     )
 
