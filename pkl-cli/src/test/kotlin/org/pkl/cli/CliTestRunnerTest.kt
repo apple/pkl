@@ -386,6 +386,174 @@ class CliTestRunnerTest {
   }
 
   @Test
+  fun `CliTestRunner test per module`(@TempDir tempDir: Path) {
+    val code1 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["foo"] {
+          true
+        }
+      }
+    """
+        .trimIndent()
+
+    val code2 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["bar"] {
+          true
+        }
+      }
+    """
+        .trimIndent()
+    val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
+    val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
+    val noopWriter = noopWriter()
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input1.toUri(), input2.toUri()),
+        settings = URI("pkl:settings"),
+      )
+    val testOpts = CliTestOptions(junitDir = tempDir)
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
+    runner.run()
+
+    assertThat(tempDir.resolve("test1.xml")).isNotEmptyFile()
+    assertThat(tempDir.resolve("test2.xml")).isNotEmptyFile()
+  }
+
+  @Test
+  fun `CliTestRunner test aggregate`(@TempDir tempDir: Path) {
+    val code1 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["foo"] {
+          true
+        }
+        ["bar"] {
+          5 == 9
+        }
+      }
+    """
+        .trimIndent()
+
+    val code2 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["xxx"] {
+          false
+        }
+        ["yyy"] {
+          false
+        }
+        ["zzz"] {
+          true
+        }
+      }
+    """
+        .trimIndent()
+    val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
+    val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
+    val noopWriter = noopWriter()
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input1.toUri(), input2.toUri()),
+        settings = URI("pkl:settings"),
+      )
+    val testOpts = CliTestOptions(junitDir = tempDir, junitAggregateReports = true)
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
+    assertThatCode { runner.run() }.hasMessageContaining("failed")
+
+    assertThat(tempDir.resolve("pkl-tests.xml")).isNotEmptyFile()
+    assertThat(tempDir.resolve("test1.xml")).doesNotExist()
+    assertThat(tempDir.resolve("test2.xml")).doesNotExist()
+
+    val junitReport = tempDir.resolve("pkl-tests.xml").readString().stripFileAndLines(tempDir)
+
+    assertThat(junitReport)
+      .isEqualTo(
+        """
+      <?xml version="1.0" encoding="UTF-8"?>
+      <testsuites name="pkl-tests" tests="5" failures="3">
+          <testsuite name="test1" tests="2" failures="1">
+              <testcase classname="test1.facts" name="foo"></testcase>
+              <testcase classname="test1.facts" name="bar">
+                  <failure message="Fact Failure">5 == 9 (/tempDir/test1.pkl, line xx)</failure>
+              </testcase>
+          </testsuite>
+          <testsuite name="test2" tests="3" failures="2">
+              <testcase classname="test2.facts" name="xxx">
+                  <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)</failure>
+              </testcase>
+              <testcase classname="test2.facts" name="yyy">
+                  <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)</failure>
+              </testcase>
+              <testcase classname="test2.facts" name="zzz"></testcase>
+          </testsuite>
+      </testsuites>
+      
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `CliTestRunner test aggregate suite name`(@TempDir tempDir: Path) {
+    val code1 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["foo"] {
+          true
+        }
+      }
+    """
+        .trimIndent()
+
+    val code2 =
+      """
+      amends "pkl:test"
+
+      facts {
+        ["bar"] {
+          true
+        }
+      }
+    """
+        .trimIndent()
+    val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
+    val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
+    val noopWriter = noopWriter()
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input1.toUri(), input2.toUri()),
+        settings = URI("pkl:settings"),
+      )
+    val testOpts =
+      CliTestOptions(
+        junitDir = tempDir,
+        junitAggregateReports = true,
+        junitAggregateSuiteName = "custom",
+      )
+    val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
+    runner.run()
+
+    assertThat(tempDir.resolve("custom.xml")).isNotEmptyFile()
+    assertThat(tempDir.resolve("pkl-tests.xml")).doesNotExist()
+    assertThat(tempDir.resolve("test1.xml")).doesNotExist()
+    assertThat(tempDir.resolve("test2.xml")).doesNotExist()
+  }
+
+  @Test
   fun `no source modules specified has same message as pkl eval`() {
     val e1 = assertThrows<CliException> { CliTestRunner(CliBaseOptions(), CliTestOptions()).run() }
     val e2 = RootCommand().test("eval")

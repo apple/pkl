@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,22 @@ public abstract class ProjectPackageTask extends BasePklTask {
   public abstract DirectoryProperty getJunitReportsDir();
 
   @Input
+  @Optional
+  public abstract Property<Boolean> getJunitAggregateReports();
+
+  @Input
+  public abstract Property<String> getJunitAggregateSuiteName();
+
+  @Input
   public abstract Property<Boolean> getOverwrite();
 
   @Input
   @Optional
   public abstract Property<Boolean> getSkipPublishCheck();
+
+  public ProjectPackageTask() {
+    this.getJunitAggregateSuiteName().convention("pkl-tests");
+  }
 
   @Override
   protected void doRunTask() {
@@ -59,12 +70,15 @@ public abstract class ProjectPackageTask extends BasePklTask {
     if (projectDirectories.isEmpty()) {
       throw new InvalidUserDataException("No project directories specified.");
     }
+
     new CliProjectPackager(
             getCliBaseOptions(),
             projectDirectories,
             new CliTestOptions(
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
-                getOverwrite().get()),
+                getOverwrite().get(),
+                getJunitAggregateReports().getOrElse(false),
+                getJunitAggregateSuiteName().get()),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),
