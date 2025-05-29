@@ -144,6 +144,14 @@ steps {
     }
     setupMacEnvironment
   }
+  when (os == "windows") {
+    new Config.RunStep {
+      name = "Installing mingw"
+      command = """
+        choco install mingw
+        """
+    }
+  }
   new Config.RunStep {
     name = "gradle buildNative"
     when (module.os == "windows") {

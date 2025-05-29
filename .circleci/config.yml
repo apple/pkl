@@ -299,6 +299,9 @@ jobs:
         name: Set up environment
         shell: bash.exe
     - run:
+        command: choco install mingw
+        name: Installing mingw
+    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
@@ -611,6 +614,9 @@ jobs:
             && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
+    - run:
+        command: choco install mingw
+        name: Installing mingw
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -925,6 +931,9 @@ jobs:
         name: Set up environment
         shell: bash.exe
     - run:
+        command: choco install mingw
+        name: Installing mingw
+    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true libpkl:buildNative
@@ -1237,6 +1246,9 @@ jobs:
             && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
+    - run:
+        command: choco install mingw
+        name: Installing mingw
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
@@ -1551,6 +1563,9 @@ jobs:
         name: Set up environment
         shell: bash.exe
     - run:
+        command: choco install mingw
+        name: Installing mingw
+    - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH
           ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -1863,6 +1878,9 @@ jobs:
             && cp -r . /jdk
         name: Set up environment
         shell: bash.exe
+    - run:
+        command: choco install mingw
+        name: Installing mingw
     - run:
         command: |-
           export PATH=~/staticdeps/bin:$PATH

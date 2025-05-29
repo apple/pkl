@@ -52,14 +52,16 @@ val assembleNative by
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
     }
 
-    when (buildInfo.targetMachine) {
-      Machine.MacosAarch64 -> wraps(assembleNativeMacOsAarch64)
-      Machine.MacosAmd64 -> wraps(assembleNativeMacOsAmd64)
-      Machine.LinuxAarch64 -> wraps(assembleNativeLinuxAarch64)
-      Machine.LinuxAmd64 -> wraps(assembleNativeAlpineLinuxAmd64)
-      Machine.AlpineLinuxAmd64 -> wraps(assembleNativeLinuxAmd64)
-      Machine.WindowsAmd64 -> wraps(assembleNativeWindowsAmd64)
-    }
+    val underlyingTask =
+      when (buildInfo.targetMachine) {
+        Machine.MacosAarch64 -> assembleNativeMacOsAarch64
+        Machine.MacosAmd64 -> assembleNativeMacOsAmd64
+        Machine.LinuxAarch64 -> assembleNativeLinuxAarch64
+        Machine.LinuxAmd64 -> assembleNativeLinuxAmd64
+        Machine.AlpineLinuxAmd64 -> assembleNativeAlpineLinuxAmd64
+        Machine.WindowsAmd64 -> assembleNativeWindowsAmd64
+      }
+    wraps(underlyingTask)
   }
 
 val testNative by
@@ -71,14 +73,16 @@ val testNative by
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
     }
 
-    when (buildInfo.targetMachine) {
-      Machine.MacosAarch64 -> wraps(testNativeMacOsAarch64)
-      Machine.MacosAmd64 -> wraps(testNativeMacOsAmd64)
-      Machine.LinuxAarch64 -> wraps(testNativeLinuxAarch64)
-      Machine.LinuxAmd64 -> wraps(testNativeAlpineLinuxAmd64)
-      Machine.AlpineLinuxAmd64 -> wraps(testNativeLinuxAmd64)
-      Machine.WindowsAmd64 -> wraps(testNativeWindowsAmd64)
-    }
+    val underlyingTask =
+      when (buildInfo.targetMachine) {
+        Machine.MacosAarch64 -> testNativeMacOsAarch64
+        Machine.MacosAmd64 -> testNativeMacOsAmd64
+        Machine.LinuxAarch64 -> testNativeLinuxAarch64
+        Machine.LinuxAmd64 -> testNativeLinuxAmd64
+        Machine.AlpineLinuxAmd64 -> testNativeAlpineLinuxAmd64
+        Machine.WindowsAmd64 -> testNativeWindowsAmd64
+      }
+    wraps(underlyingTask)
   }
 
 val checkNative by

@@ -215,11 +215,11 @@ val nativeTest by
         listOf(
           "-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
           "-Djava.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
-          "-Djna.debug_load=true"
+          "-Djna.debug_load=true",
         )
       }
     )
-    
+
     environment("LD_LIBRARY_PATH", buildInfo.targetMachine.outputDir.get().asFile.absolutePath)
 
     useJUnitPlatform()
