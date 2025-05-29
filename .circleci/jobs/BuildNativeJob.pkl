@@ -29,6 +29,9 @@ project: String
 
 javaVersion = "21.0"
 
+/// The build directory that artifacts are written to
+buildDir: String
+
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(arch)"
@@ -154,7 +157,7 @@ steps {
   new Config.PersistToWorkspaceStep {
     root = "."
     paths {
-      "\(project)/build/executable/"
+      buildDir
     }
   }
 }

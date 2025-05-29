@@ -32,10 +32,7 @@ val stagedWindowsAmd64NativeLibrary: Configuration by configurations.creating
 val nativeTestSourceSet = sourceSets.create("nativeTest")
 
 val nativeTestImplementation: Configuration by
-  configurations.getting {
-    extendsFrom(configurations.testImplementation.get())
-    isCanBeResolved = true
-  }
+  configurations.getting { extendsFrom(configurations.testImplementation.get()) }
 
 val nativeTestRuntimeOnly: Configuration by
   configurations.getting { extendsFrom(configurations.testRuntimeOnly.get()) }
