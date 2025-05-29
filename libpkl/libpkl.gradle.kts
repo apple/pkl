@@ -55,16 +55,16 @@ dependencies {
   nativeTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-private fun NativeImageBuild.configure(machine: Machine) {
-  arch = machine.arch
+private fun NativeImageBuild.configure(target: Target) {
+  arch = target.arch
 
-  if (machine.arch == Machine.Arch.AARCH64) {
+  if (target.arch == Target.Arch.AARCH64) {
     dependsOn(":installGraalVmAarch64")
   } else {
     dependsOn(":installGraalVmAmd64")
   }
 
-  outputDir = machine.outputDir
+  outputDir = target.outputDir
   outputName = "libpkl_internal"
 
   classpath.from(sourceSets.main.map { it.output })
@@ -77,17 +77,17 @@ private fun NativeImageBuild.configure(machine: Machine) {
 }
 
 val macNativeImageAmd64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAmd64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.MacosAmd64) }
 
 val macNativeImageAarch64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAarch64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.MacosAarch64) }
 
 val linuxNativeImageAmd64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.LinuxAmd64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.LinuxAmd64) }
 
 val linuxNativeImageAarch64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.LinuxAarch64)
+    configure(Target.LinuxAarch64)
     extraNativeImageArgs =
       listOf(
         // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
@@ -98,7 +98,7 @@ val linuxNativeImageAarch64 by
 
 val alpineNativeImageAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.AlpineLinuxAmd64)
+    configure(Target.AlpineLinuxAmd64)
     extraNativeImageArgs =
       listOf(
         // TODO(kushal): https://github.com/oracle/graal/issues/3053
@@ -108,25 +108,25 @@ val alpineNativeImageAmd64 by
 
 val windowsNativeImageAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.WindowsAmd64)
+    configure(Target.WindowsAmd64)
     extraNativeImageArgs = listOf("-Dfile.encoding=UTF-8")
   }
 
-val Machine.outputDir
+val Target.outputDir
   get() = layout.buildDirectory.dir("native-libs/$targetName")
 
-fun Exec.configureCompile(machine: Machine) {
+fun Exec.configureCompile(target: Target) {
   val projectDir = project.layout.projectDirectory.asFile.path
 
-  workingDir = machine.outputDir.get().asFile
+  workingDir = target.outputDir.get().asFile
 
-  enabled = buildInfo.targetMachine == machine
+  enabled = buildInfo.targetMachine == target
 
   val outputFile = "libpkl.${buildInfo.os.sharedLibrarySuffix}"
 
   executable =
     when {
-      machine.musl -> "musl-gcc"
+      target.musl -> "musl-gcc"
       else -> "gcc"
     }
 
@@ -143,15 +143,15 @@ fun Exec.configureCompile(machine: Machine) {
         add("-Wall")
         add("$projectDir/src/main/c/pkl.c")
         add("-I$projectDir/src/main/c")
-        add("-I${machine.outputDir.get()}")
-        add("-L${machine.outputDir.get()}")
+        add("-I${target.outputDir.get()}")
+        add("-L${target.outputDir.get()}")
         add("-fPIC")
         add("-lpkl_internal")
-        if (machine.os.isMacOS) {
+        if (target.os.isMacOS) {
           val archStr =
-            when (machine.arch) {
-              Machine.Arch.AMD64 -> "x86_64"
-              Machine.Arch.AARCH64 -> "arm64"
+            when (target.arch) {
+              Target.Arch.AMD64 -> "x86_64"
+              Target.Arch.AARCH64 -> "arm64"
             }
           add("-target")
           add("$archStr-apple-darwin")
@@ -160,12 +160,12 @@ fun Exec.configureCompile(machine: Machine) {
     }
   )
 
-  outputs.files(machine.outputDir.map { it.files(outputFile, "pkl.h") })
+  outputs.files(target.outputDir.map { it.files(outputFile, "pkl.h") })
 
   doLast {
     copy {
       from(file("src/c/pkl.h"))
-      into(machine.outputDir)
+      into(target.outputDir)
     }
   }
 }
@@ -173,37 +173,37 @@ fun Exec.configureCompile(machine: Machine) {
 val macCCompileAarch64 by
   tasks.registering(Exec::class) {
     dependsOn(macNativeImageAarch64)
-    configureCompile(Machine.MacosAarch64)
+    configureCompile(Target.MacosAarch64)
   }
 
 val macCCompileAmd64 by
   tasks.registering(Exec::class) {
     dependsOn(macNativeImageAmd64)
-    configureCompile(Machine.MacosAmd64)
+    configureCompile(Target.MacosAmd64)
   }
 
 val linuxCCompileAmd64 by
   tasks.registering(Exec::class) {
     dependsOn(linuxNativeImageAmd64)
-    configureCompile(Machine.LinuxAmd64)
+    configureCompile(Target.LinuxAmd64)
   }
 
 val linuxCCompileAarch64 by
   tasks.registering(Exec::class) {
     dependsOn(linuxNativeImageAarch64)
-    configureCompile(Machine.LinuxAarch64)
+    configureCompile(Target.LinuxAarch64)
   }
 
 val alpineLinuxCCompileAmd64 by
   tasks.registering(Exec::class) {
     dependsOn(alpineNativeImageAmd64)
-    configureCompile(Machine.AlpineLinuxAmd64)
+    configureCompile(Target.AlpineLinuxAmd64)
   }
 
 val windowsCCompileAmd64 by
   tasks.registering(Exec::class) {
     dependsOn(windowsNativeImageAmd64)
-    configureCompile(Machine.WindowsAmd64)
+    configureCompile(Target.WindowsAmd64)
   }
 
 tasks.assembleNativeMacOsAarch64 { dependsOn(macCCompileAarch64) }

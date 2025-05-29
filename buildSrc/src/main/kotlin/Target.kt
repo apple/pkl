@@ -15,7 +15,12 @@
  */
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-enum class Machine(val os: OS, val arch: Arch, val musl: Boolean) {
+/**
+ * A build target when building native libraries or executables.
+ *
+ * Pkl only builds for the following listed targets.
+ */
+enum class Target(val os: OS, val arch: Arch, val musl: Boolean) {
   MacosAarch64(os = OS.MacOS, arch = Arch.AARCH64, musl = false),
   MacosAmd64(os = OS.MacOS, arch = Arch.AMD64, musl = false),
   LinuxAarch64(os = OS.Linux, arch = Arch.AARCH64, musl = false),
@@ -24,7 +29,7 @@ enum class Machine(val os: OS, val arch: Arch, val musl: Boolean) {
   WindowsAmd64(os = OS.Windows, arch = Arch.AMD64, musl = false);
 
   companion object {
-    fun from(os: OS, arch: Arch, musl: Boolean): Machine {
+    fun from(os: OS, arch: Arch, musl: Boolean): Target {
       for (target in values()) {
         if (target.os == os && target.arch == arch && target.musl == musl) {
           return target

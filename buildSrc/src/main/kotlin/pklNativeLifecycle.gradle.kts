@@ -54,12 +54,12 @@ val assembleNative by
 
     val underlyingTask =
       when (buildInfo.targetMachine) {
-        Machine.MacosAarch64 -> assembleNativeMacOsAarch64
-        Machine.MacosAmd64 -> assembleNativeMacOsAmd64
-        Machine.LinuxAarch64 -> assembleNativeLinuxAarch64
-        Machine.LinuxAmd64 -> assembleNativeLinuxAmd64
-        Machine.AlpineLinuxAmd64 -> assembleNativeAlpineLinuxAmd64
-        Machine.WindowsAmd64 -> assembleNativeWindowsAmd64
+        Target.MacosAarch64 -> assembleNativeMacOsAarch64
+        Target.MacosAmd64 -> assembleNativeMacOsAmd64
+        Target.LinuxAarch64 -> assembleNativeLinuxAarch64
+        Target.LinuxAmd64 -> assembleNativeLinuxAmd64
+        Target.AlpineLinuxAmd64 -> assembleNativeAlpineLinuxAmd64
+        Target.WindowsAmd64 -> assembleNativeWindowsAmd64
       }
     wraps(underlyingTask)
   }
@@ -75,12 +75,12 @@ val testNative by
 
     val underlyingTask =
       when (buildInfo.targetMachine) {
-        Machine.MacosAarch64 -> testNativeMacOsAarch64
-        Machine.MacosAmd64 -> testNativeMacOsAmd64
-        Machine.LinuxAarch64 -> testNativeLinuxAarch64
-        Machine.LinuxAmd64 -> testNativeLinuxAmd64
-        Machine.AlpineLinuxAmd64 -> testNativeAlpineLinuxAmd64
-        Machine.WindowsAmd64 -> testNativeWindowsAmd64
+        Target.MacosAarch64 -> testNativeMacOsAarch64
+        Target.MacosAmd64 -> testNativeMacOsAmd64
+        Target.LinuxAarch64 -> testNativeLinuxAarch64
+        Target.LinuxAmd64 -> testNativeLinuxAmd64
+        Target.AlpineLinuxAmd64 -> testNativeAlpineLinuxAmd64
+        Target.WindowsAmd64 -> testNativeWindowsAmd64
       }
     wraps(underlyingTask)
   }

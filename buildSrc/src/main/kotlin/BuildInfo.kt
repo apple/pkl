@@ -15,8 +15,8 @@
  */
 @file:Suppress("MemberVisibilityCanBePrivate")
 
-import Machine.Arch
-import Machine.OS
+import Target.Arch
+import Target.OS
 import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -110,7 +110,7 @@ open class BuildInfo(private val project: Project) {
   }
 
   /** The target machine to build, defaulting to the host system machine. */
-  val targetMachine: Machine by lazy { Machine.from(os = os, arch = targetArch, musl = musl) }
+  val targetMachine: Target by lazy { Target.from(os = os, arch = targetArch, musl = musl) }
 
   /** The target architecture to build, defaulting to the system architecture. */
   val targetArch: Arch by lazy { System.getProperty("pkl.targetArch")?.let(Arch::fromName) ?: arch }

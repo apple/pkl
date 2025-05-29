@@ -43,7 +43,7 @@ abstract class NativeImageBuild : DefaultTask() {
 
   @get:Input abstract val extraNativeImageArgs: ListProperty<String>
 
-  @get:Input abstract val arch: Property<Machine.Arch>
+  @get:Input abstract val arch: Property<Target.Arch>
 
   /**
    * The main class entrypoint for the executable.
@@ -66,8 +66,8 @@ abstract class NativeImageBuild : DefaultTask() {
   private val graalVm: Provider<BuildInfo.GraalVm> =
     arch.map { a ->
       when (a) {
-        Machine.Arch.AMD64 -> buildInfo.graalVmAmd64
-        Machine.Arch.AARCH64 -> buildInfo.graalVmAarch64
+        Target.Arch.AMD64 -> buildInfo.graalVmAmd64
+        Target.Arch.AARCH64 -> buildInfo.graalVmAarch64
       }
     }
 

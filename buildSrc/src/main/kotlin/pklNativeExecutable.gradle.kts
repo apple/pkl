@@ -36,32 +36,32 @@ val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
 dependencies {
-  fun executableFile(machine: Machine) =
+  fun executableFile(target: Target) =
     files(
       layout.buildDirectory.dir("executable").map { dir ->
         dir.file(
           executableSpec.name.map { name ->
-            if (machine.os.isWindows) "$name-${machine.targetName}.exe"
-            else "$name-${machine.targetName}"
+            if (target.os.isWindows) "$name-${target.targetName}.exe"
+            else "$name-${target.targetName}"
           }
         )
       }
     )
-  stagedMacAarch64Executable(executableFile(Machine.MacosAarch64))
-  stagedMacAmd64Executable(executableFile(Machine.MacosAmd64))
-  stagedLinuxAarch64Executable(executableFile(Machine.LinuxAarch64))
-  stagedLinuxAmd64Executable(executableFile(Machine.LinuxAmd64))
-  stagedAlpineLinuxAmd64Executable(executableFile(Machine.AlpineLinuxAmd64))
-  stagedWindowsAmd64Executable(executableFile(Machine.WindowsAmd64))
+  stagedMacAarch64Executable(executableFile(Target.MacosAarch64))
+  stagedMacAmd64Executable(executableFile(Target.MacosAmd64))
+  stagedLinuxAarch64Executable(executableFile(Target.LinuxAarch64))
+  stagedLinuxAmd64Executable(executableFile(Target.LinuxAmd64))
+  stagedAlpineLinuxAmd64Executable(executableFile(Target.AlpineLinuxAmd64))
+  stagedWindowsAmd64Executable(executableFile(Target.WindowsAmd64))
 }
 
-private fun NativeImageBuild.configure(machine: Machine) {
-  arch = machine.arch
+private fun NativeImageBuild.configure(target: Target) {
+  arch = target.arch
 
-  outputName = executableSpec.name.map { "$it-${machine.targetName}" }
+  outputName = executableSpec.name.map { "$it-${target.targetName}" }
   mainClass = executableSpec.mainClass
 
-  if (machine.arch == Machine.Arch.AARCH64) {
+  if (target.arch == Target.Arch.AARCH64) {
     dependsOn(":installGraalVmAarch64")
   } else {
     dependsOn(":installGraalVmAmd64")
@@ -75,17 +75,17 @@ private fun NativeImageBuild.configure(machine: Machine) {
 }
 
 val macExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAmd64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.MacosAmd64) }
 
 val macExecutableAarch64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.MacosAarch64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.MacosAarch64) }
 
 val linuxExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) { configure(Machine.LinuxAmd64) }
+  tasks.registering(NativeImageBuild::class) { configure(Target.LinuxAmd64) }
 
 val linuxExecutableAarch64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.LinuxAarch64)
+    configure(Target.LinuxAarch64)
     // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
     // (e.g. Raspberry Pi 5, Asahi Linux)
     extraNativeImageArgs.add("-H:PageSize=65536")
@@ -93,13 +93,13 @@ val linuxExecutableAarch64 by
 
 val alpineExecutableAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.AlpineLinuxAmd64)
+    configure(Target.AlpineLinuxAmd64)
     extraNativeImageArgs.addAll(listOf("--static", "--libc=musl"))
   }
 
 val windowsExecutableAmd64 by
   tasks.registering(NativeImageBuild::class) {
-    configure(Machine.WindowsAmd64)
+    configure(Target.WindowsAmd64)
     extraNativeImageArgs.add("-Dfile.encoding=UTF-8")
   }
 
@@ -156,7 +156,7 @@ val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineExecutableAmd
 @Suppress("unused")
 val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64) }
 
-private fun MavenPublication.configurePublication(target: Machine, configuration: Configuration) {
+private fun MavenPublication.configurePublication(target: Target, configuration: Configuration) {
   artifactId = "${executableSpec.publicationName.get()}-${target.targetName}"
   pom {
     name = "${executableSpec.publicationName.get()}-${target.targetName}"
@@ -184,27 +184,27 @@ publishing {
     // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
     project.afterEvaluate {
       create<MavenPublication>("macExecutableAmd64") {
-        configurePublication(Machine.MacosAmd64, stagedMacAmd64Executable)
+        configurePublication(Target.MacosAmd64, stagedMacAmd64Executable)
       }
 
       create<MavenPublication>("macExecutableAarch64") {
-        configurePublication(Machine.MacosAarch64, stagedMacAarch64Executable)
+        configurePublication(Target.MacosAarch64, stagedMacAarch64Executable)
       }
 
       create<MavenPublication>("linuxExecutableAmd64") {
-        configurePublication(Machine.LinuxAmd64, stagedLinuxAmd64Executable)
+        configurePublication(Target.LinuxAmd64, stagedLinuxAmd64Executable)
       }
 
       create<MavenPublication>("linuxExecutableAarch64") {
-        configurePublication(Machine.LinuxAarch64, stagedLinuxAarch64Executable)
+        configurePublication(Target.LinuxAarch64, stagedLinuxAarch64Executable)
       }
 
       create<MavenPublication>("alpineLinuxExecutableAmd64") {
-        configurePublication(Machine.AlpineLinuxAmd64, stagedAlpineLinuxAmd64Executable)
+        configurePublication(Target.AlpineLinuxAmd64, stagedAlpineLinuxAmd64Executable)
       }
 
       create<MavenPublication>("windowsExecutableAmd64") {
-        configurePublication(Machine.WindowsAmd64, stagedWindowsAmd64Executable)
+        configurePublication(Target.WindowsAmd64, stagedWindowsAmd64Executable)
       }
     }
   }
