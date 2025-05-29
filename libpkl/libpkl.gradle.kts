@@ -126,7 +126,6 @@ fun Exec.configureCompile(machine: Machine) {
 
   executable =
     when {
-      machine.os.isMacOS -> "clang"
       machine.musl -> "musl-gcc"
       else -> "gcc"
     }
@@ -137,15 +136,25 @@ fun Exec.configureCompile(machine: Machine) {
         add("-shared")
         add("-o")
         add(outputFile)
+        if (buildInfo.isReleaseBuild) {
+          add("-O2")
+        }
+        add("-g")
+        add("-Wall")
         add("$projectDir/src/main/c/pkl.c")
         add("-I$projectDir/src/main/c")
         add("-I${machine.outputDir.get()}")
         add("-L${machine.outputDir.get()}")
         add("-fPIC")
         add("-lpkl_internal")
-        if (machine == Machine.MacosAmd64) {
+        if (machine.os.isMacOS) {
+          val archStr =
+            when (machine.arch) {
+              Machine.Arch.AMD64 -> "x86_64"
+              Machine.Arch.AARCH64 -> "arm64"
+            }
           add("-target")
-          add("-x86_64-apple-darwin")
+          add("$archStr-apple-darwin")
         }
       }
     }
@@ -219,12 +228,13 @@ val nativeTest by
     testClassesDirs = nativeTestSourceSet.output.classesDirs
     classpath = nativeTestSourceSet.runtimeClasspath
 
+    // It's not good enough to just provide `jna.library.path` on Linux; need to also provide
+    // `LD_LIBRARY_PATH` or `java.library.path` so that transitive libraries can be loaded.
     jvmArgumentProviders.add(
       CommandLineArgumentProvider {
         listOf(
           "-Djna.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
           "-Djava.library.path=" + buildInfo.targetMachine.outputDir.get().asFile.absolutePath,
-          "-Djna.debug_load=true",
         )
       }
     )
