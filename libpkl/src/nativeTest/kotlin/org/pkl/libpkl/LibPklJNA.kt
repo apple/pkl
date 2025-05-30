@@ -21,9 +21,9 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 @Suppress("FunctionName")
-interface LibPklLibrary : Library {
+interface LibPklJNA : Library {
   companion object {
-    val INSTANCE: LibPklLibrary = Native.load("pkl", LibPklLibrary::class.java)
+    val INSTANCE: LibPklJNA = Native.load("pkl", LibPklJNA::class.java)
   }
 
   interface PklMessageResponseHandler : Callback {

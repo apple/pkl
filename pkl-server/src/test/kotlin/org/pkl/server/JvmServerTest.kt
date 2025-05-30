@@ -19,6 +19,8 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.pkl.commons.test.server.AbstractServerTest
+import org.pkl.commons.test.server.TestTransport
 import org.pkl.core.messaging.MessageTransport
 import org.pkl.core.messaging.MessageTransports
 import org.pkl.core.util.Pair
