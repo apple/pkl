@@ -20,19 +20,19 @@
  *
  * @param length    The length the message bytes
  * @param message   The message itself
- * @param payload   User-defined data passed to pkl_init.
+ * @param userData  User-defined data passed in from pkl_init.
  */
-typedef void (*PklMessageResponseHandler)(int length, char *message, void *payload);
+typedef void (*PklMessageResponseHandler)(int length, char *message, void *userData);
 
 /**
  * Initialises and allocates a Pkl executor.
  *
  * @param handler   The callback that gets called when a message is received from Pkl.
- * @param payload   User-defined data that gets passed to handler.
+ * @param userData  User-defined data that gets passed to handler.
  *
  * @return -1 on failure, 0 on success.
  */
-int pkl_init(PklMessageResponseHandler handler, void *payload);
+int pkl_init(PklMessageResponseHandler handler, void *userData);
 
 /**
  * Send a message to Pkl, providing the length and a pointer to the first byte.

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.commons.test
 
 import java.lang.IllegalStateException
 import org.msgpack.core.MessagePack
@@ -73,7 +73,7 @@ class MessagePackDebugRenderer(bytes: ByteArray) {
           sb.append("[]")
           return
         }
-        for (i in 0 until size) {
+        repeat(size) {
           newline()
           sb.append("- ")
           incIndent()
@@ -87,7 +87,7 @@ class MessagePackDebugRenderer(bytes: ByteArray) {
           sb.append("{}")
           return
         }
-        for (i in 0 until size) {
+        repeat(size) {
           newline()
           renderKey()
           incIndent()
@@ -105,3 +105,6 @@ class MessagePackDebugRenderer(bytes: ByteArray) {
     sb.toString().removePrefix("\n")
   }
 }
+
+val ByteArray.msgpackDebugRendering: String
+  get() = MessagePackDebugRenderer(this).output
