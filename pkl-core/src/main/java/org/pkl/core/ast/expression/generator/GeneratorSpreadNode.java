@@ -29,6 +29,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.Iterators.TruffleIterator;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmCollection;
 import org.pkl.core.runtime.VmDynamic;
@@ -161,6 +162,16 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     doEvalIntSeq(frame, parent, data, iterable);
   }
 
+  @Specialization
+  protected void eval(VirtualFrame frame, VmObject parent, ObjectData data, VmBytes iterable) {
+    doEvalBytes(frame, parent.getVmClass(), data, iterable);
+  }
+
+  @Specialization
+  protected void eval(VirtualFrame frame, VmClass parent, ObjectData data, VmBytes iterable) {
+    doEvalBytes(frame, parent, data, iterable);
+  }
+
   @Fallback
   @SuppressWarnings("unused")
   protected void fallback(VirtualFrame frame, Object parent, ObjectData data, Object iterable) {
@@ -260,6 +271,18 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
       throw exceptionBuilder()
           .evalError("cannotSpreadObject", iterable.getVmClass(), parent)
           .withHint("`IntSeq` can only be spread into objects of type `Dynamic` and `Listing`.")
+          .withProgramValue("Value", iterable)
+          .build();
+    }
+    spreadIterable(frame, data, iterable);
+  }
+
+  private void doEvalBytes(VirtualFrame frame, VmClass parent, ObjectData data, VmBytes iterable) {
+    if (isTypedObjectClass(parent) || parent == getMappingClass()) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError("cannotSpreadObject", iterable.getVmClass(), parent)
+          .withHint("`Bytes` can only be spread into objects of type `Dynamic` and `Listing`.")
           .withProgramValue("Value", iterable)
           .build();
     }

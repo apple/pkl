@@ -226,6 +226,13 @@ res11d {
   Pair(1, 2)
   Pair(2, 3)
 }
+res12a {
+  1
+  2
+  3
+  4
+}
+res12b {}
 valueForOverProperties {
   ["Foo!"] = "Foo!"
   [42] = 42

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,15 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   String evaluateOutputText(ModuleSource moduleSource);
+
+  /**
+   * Evaluates a module's {@code output.bytes} property.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.29.0
+   */
+  byte[] evaluateOutputBytes(ModuleSource moduleSource);
 
   /**
    * Evaluates a module's {@code output.value} property.
@@ -142,6 +151,10 @@ public interface Evaluator extends AutoCloseable {
    *     <tr>
    *       <td>TypeAlias</td>
    *       <td>{@link TypeAlias}</td>
+   *     </tr>
+   *     <tr>
+   *       <td>Bytes</td>
+   *       <td>{@code byte[]}</td>
    *     </tr>
    *   </tbody>
    * </table>

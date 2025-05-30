@@ -1,0 +1,2 @@
+ex1 = Bytes()
+ex2 = Bytes(1, 2, 3, 4)

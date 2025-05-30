@@ -9,6 +9,11 @@ facts {
     true
     true
   }
+  ["isBase64"] {
+    true
+    true
+    true
+  }
   ["lastIndex"] {
     true
     true
@@ -16,6 +21,9 @@ facts {
   }
   ["base64Decoded"] {
     true
+    true
+  }
+  ["base64DecodedBytes"] {
     true
   }
   ["contains()"] {
@@ -416,5 +424,18 @@ examples {
   }
   ["base64Decoded"] {
     "Illegal base64 character 7e String: \"~~~\""
+  }
+  ["base64DecodedBytes"] {
+    "Illegal base64 character 7e String: \"~~~\""
+    Bytes(1, 2, 3, 4)
+  }
+  ["encodeToBytes()"] {
+    Bytes(126, 126, 126)
+    Bytes(240, 159, 143, 128)
+    Bytes(254, 255, 0, 126, 0, 126, 0, 126)
+    Bytes(254, 255, 216, 60, 223, 192)
+    Bytes(126, 126, 126)
+    Bytes(63)
+    Bytes(80, 97, 114, 114, 111, 116)
   }
 }

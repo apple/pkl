@@ -44,7 +44,7 @@ examples {
         Swallow.pkl
         
         """
-      base64 = "T3N0cmljaC5wa2wKU3dhbGxvdy5wa2wK"
+      bytes = Bytes(79, 115, 116, 114, 105, 99, 104, 46, 112, 107, 108, 10, 83, 119, 97, 108, 108, 111, 119, 46, 112, 107, 108, 10)
     }
     new {
       uri = "projectpackage://localhost:0/birds@0.5.0#/"
@@ -56,7 +56,7 @@ examples {
         some
         
         """
-      base64 = "QmlyZC5wa2wKYWxsRnJ1aXQucGtsCmNhdGFsb2cKY2F0YWxvZy5wa2wKc29tZQo="
+      bytes = Bytes(66, 105, 114, 100, 46, 112, 107, 108, 10, 97, 108, 108, 70, 114, 117, 105, 116, 46, 112, 107, 108, 10, 99, 97, 116, 97, 108, 111, 103, 10, 99, 97, 116, 97, 108, 111, 103, 46, 112, 107, 108, 10, 115, 111, 109, 101, 10)
     }
   }
 }

@@ -37,5 +37,3 @@ examples {
     module.catch(() -> list1[3])
   }
 }
-
-

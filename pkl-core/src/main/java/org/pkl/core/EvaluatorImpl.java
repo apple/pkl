@@ -144,6 +144,16 @@ public class EvaluatorImpl implements Evaluator {
         });
   }
 
+  public byte[] evaluateOutputBytes(ModuleSource moduleSource) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          var output = readModuleOutput(module);
+          var vmBytes = VmUtils.readBytesProperty(output);
+          return vmBytes.export();
+        });
+  }
+
   @Override
   public Object evaluateOutputValue(ModuleSource moduleSource) {
     return doEvaluate(
@@ -183,32 +193,31 @@ public class EvaluatorImpl implements Evaluator {
 
   @Override
   public Object evaluateExpression(ModuleSource moduleSource, String expression) {
-    // optimization: if the expression is `output.text` or `output.value` (the common cases), read
-    // members directly instead of creating new truffle nodes.
-    if (expression.equals("output.text")) {
-      return evaluateOutputText(moduleSource);
-    }
-    if (expression.equals("output.value")) {
-      return evaluateOutputValue(moduleSource);
-    }
-    return doEvaluate(
-        moduleSource,
-        (module) -> {
-          var expressionResult =
-              VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
-          if (expressionResult instanceof VmValue value) {
-            value.force(false);
-            return value.export();
-          }
-          return expressionResult;
-        });
+    // optimization: if the expression is `output.text`, `output.value` or `output.bytes` (the
+    // common cases), read members directly instead of creating new truffle nodes.
+    return switch (expression) {
+      case "output.text" -> evaluateOutputText(moduleSource);
+      case "output.value" -> evaluateOutputValue(moduleSource);
+      case "output.bytes" -> evaluateOutputBytes(moduleSource);
+      default ->
+          doEvaluate(
+              moduleSource,
+              (module) -> {
+                var expressionResult =
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
+                if (expressionResult instanceof VmValue value) {
+                  value.force(false);
+                  return value.export();
+                }
+                return expressionResult;
+              });
+    };
   }
 
   @Override
   public String evaluateExpressionString(ModuleSource moduleSource, String expression) {
     // optimization: if the expression is `output.text` (the common case), read members
-    // directly
-    // instead of creating new truffle nodes.
+    // directly instead of creating new truffle nodes.
     if (expression.equals("output.text")) {
       return evaluateOutputText(moduleSource);
     }
@@ -278,6 +287,10 @@ public class EvaluatorImpl implements Evaluator {
 
   String evaluateOutputText(VmTyped fileOutput) {
     return doEvaluate(() -> VmUtils.readTextProperty(fileOutput));
+  }
+
+  byte[] evaluateOutputBytes(VmTyped fileOutput) {
+    return doEvaluate(() -> VmUtils.readBytesProperty(fileOutput).export());
   }
 
   private <T> T doEvaluate(Supplier<T> supplier) {

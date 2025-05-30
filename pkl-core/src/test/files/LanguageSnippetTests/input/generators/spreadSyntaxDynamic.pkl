@@ -15,6 +15,7 @@ local list: List<Int> = List(1, 2, 3)
 local map: Map<String, Int> = Map("zz", 1, "yy", 2)
 local intseq: IntSeq = IntSeq(0, 5).step(2)
 local set: Set<Int> = Set(10, 20, 30)
+local bytes: Bytes = Bytes(1, 2, 3, 4)
 
 examples {
   ["inferred Dynamic parent"] {
@@ -29,6 +30,7 @@ examples {
       ...map
       ...intseq
       ...set
+      ...bytes
     }
   }
   ["explicit Dynamic type"] {
@@ -43,6 +45,7 @@ examples {
       ...map
       ...intseq
       ...set
+      ...bytes
     }
   }
   ["legacy syntax"] {
@@ -52,6 +55,7 @@ examples {
     (Dynamic) { ...map }
     (Dynamic) { ...intseq }
     (Dynamic) { ...set }
+    (Dynamic) { ...bytes }
   }
 }
 
