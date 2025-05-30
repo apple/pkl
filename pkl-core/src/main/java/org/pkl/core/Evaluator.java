@@ -15,8 +15,6 @@
  */
 package org.pkl.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import org.pkl.core.runtime.VmEvalException;
 

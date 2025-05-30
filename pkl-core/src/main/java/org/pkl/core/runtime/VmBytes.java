@@ -105,6 +105,10 @@ public final class VmBytes extends VmValue implements Iterable<Long> {
     return bytes;
   }
 
+  public long get(long index) {
+    return getBytes()[(int) index];
+  }
+
   public VmBytes concatenate(VmBytes right) {
     var newBytes = new byte[bytes.length + right.bytes.length];
     System.arraycopy(bytes, 0, newBytes, 0, bytes.length);

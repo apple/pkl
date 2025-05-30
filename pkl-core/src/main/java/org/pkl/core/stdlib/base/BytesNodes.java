@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmNull;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
@@ -91,6 +92,16 @@ public final class BytesNodes {
     @Specialization
     protected long eval(VmBytes self) {
       return ByteArrayUtils.sha256Int(self.getBytes());
+    }
+  }
+
+  public abstract static class getOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmBytes self, long index) {
+      if (index < 0 || index >= self.getLength()) {
+        return VmNull.withoutDefault();
+      }
+      return self.get(index);
     }
   }
 

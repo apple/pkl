@@ -107,7 +107,7 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
           .withProgramValue("Collection", receiver)
           .build();
     }
-    return receiver.getBytes()[(int) index];
+    return receiver.get(index);
   }
 
   private Object readMember(VmObject object, Object key, IndirectCallNode callNode) {
