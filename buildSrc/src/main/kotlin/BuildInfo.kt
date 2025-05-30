@@ -15,7 +15,10 @@
  */
 @file:Suppress("MemberVisibilityCanBePrivate")
 
+import Target.Arch
+import Target.OS
 import java.io.File
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -79,11 +82,10 @@ open class BuildInfo(private val project: Project) {
     val graalVmJdkVersion: String by lazy { libs.findVersion("graalVmJdkVersion").get().toString() }
 
     val osName: String by lazy {
-      when {
-        os.isMacOsX -> "macos"
-        os.isLinux -> "linux"
-        os.isWindows -> "windows"
-        else -> throw RuntimeException("${os.familyName} is not supported.")
+      when (os) {
+        OS.MacOS -> "macos"
+        OS.Linux -> "linux"
+        OS.Windows -> "windows"
       }
     }
 
@@ -103,29 +105,31 @@ open class BuildInfo(private val project: Project) {
     val installDir: File by lazy { File(homeDir, baseName) }
 
     val baseDir: String by lazy {
-      if (os.isMacOsX) "$installDir/Contents/Home" else installDir.toString()
+      if (os.isMacOS) "$installDir/Contents/Home" else installDir.toString()
     }
   }
 
+  /** The target machine to build, defaulting to the host system machine. */
+  val targetMachine: Target by lazy { Target.from(os = os, arch = targetArch, musl = musl) }
+
   /** The target architecture to build, defaulting to the system architecture. */
-  val targetArch by lazy { System.getProperty("pkl.targetArch") ?: arch }
+  val targetArch: Arch by lazy { System.getProperty("pkl.targetArch")?.let(Arch::fromName) ?: arch }
 
   /** Tells if this is a cross-arch build (e.g. targeting amd64 when on an aarch64 machine). */
   val isCrossArch by lazy { arch != targetArch }
 
   /** Tells if cross-arch builds are supported on this machine. */
-  val isCrossArchSupported by lazy { os.isMacOsX }
+  val isCrossArchSupported by lazy { os.isMacOS }
 
   /** Whether to build native executables using the musl toolchain or not. */
   val musl: Boolean by lazy { java.lang.Boolean.getBoolean("pkl.musl") }
 
-  /** Same logic as [org.gradle.internal.os.OperatingSystem#arch], which is protected. */
-  val arch: String by lazy {
+  val arch: Arch by lazy {
     when (val arch = System.getProperty("os.arch")) {
-      "x86" -> "i386"
-      "x86_64" -> "amd64"
-      "powerpc" -> "ppc"
-      else -> arch
+      "x86_64",
+      "amd64" -> Arch.AMD64
+      "aarch64" -> Arch.AARCH64
+      else -> throw GradleException("Cannot build Pkl on arch: $arch")
     }
   }
 
@@ -356,8 +360,14 @@ open class BuildInfo(private val project: Project) {
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
   }
 
-  val os: org.gradle.internal.os.OperatingSystem by lazy {
-    org.gradle.internal.os.OperatingSystem.current()
+  val os: OS by lazy {
+    val currentOs = org.gradle.internal.os.OperatingSystem.current()
+    when {
+      currentOs.isMacOsX -> OS.MacOS
+      currentOs.isLinux -> OS.Linux
+      currentOs.isWindows -> OS.Windows
+      else -> throw GradleException("Cannot build on ${currentOs.name}")
+    }
   }
 
   // could be `commitId: Provider<String> = project.provider { ... }`
