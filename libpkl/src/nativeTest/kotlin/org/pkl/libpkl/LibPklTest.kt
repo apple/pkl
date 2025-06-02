@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,37 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.libpkl
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.pkl.commons.test.PklExecutablePaths
 import org.pkl.commons.test.server.AbstractServerTest
 import org.pkl.commons.test.server.TestTransport
-import org.pkl.core.messaging.MessageTransports
 
-class NativeServerTest : AbstractServerTest() {
-  private lateinit var server: Process
+/**
+ * Tests libpkl bindings by using JNA (see [LibPklJNA] and [LibPklMessageTransport]).
+ *
+ * To run these tests in IntelliJ, add
+ * `-Djna.library.path=$ProjectFileDir$/libpkl/build/native-libs/<os>-<arch>` to the run
+ * configuration.
+ *
+ * You can modify the IntelliJ JUnit configuration template so that this flag gets added
+ * automatically. See https://www.jetbrains.com/help/idea/run-debug-configuration.html#templates for
+ * more details.
+ */
+class LibPklTest : AbstractServerTest() {
   override lateinit var client: TestTransport
 
   @BeforeEach
   fun beforeEach() {
-    val executable = PklExecutablePaths.firstExisting.toString()
-    server = ProcessBuilder(executable, "server").start()
-    client =
-      TestTransport(
-        MessageTransports.stream(
-          ServerMessagePackDecoder(server.inputStream),
-          ServerMessagePackEncoder(server.outputStream),
-        ) { _ ->
-        }
-      )
-    executor.execute { client.start() }
+    client = TestTransport(LibPklMessageTransport()).also { it.start() }
   }
 
   @AfterEach
   fun afterEach() {
     client.close()
-    server.destroy()
   }
 }
