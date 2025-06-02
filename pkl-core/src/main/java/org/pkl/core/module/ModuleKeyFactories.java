@@ -173,7 +173,7 @@ public final class ModuleKeyFactories {
 
   private static class File implements ModuleKeyFactory {
     @Override
-    public Optional<ModuleKey> create(URI uri) {
+    public Optional<ModuleKey> create(URI uri) throws URISyntaxException {
       // skip loading providers if the scheme is `file`.
       if (uri.getScheme().equalsIgnoreCase("file")) {
         return Optional.of(ModuleKeys.file(uri));

@@ -835,4 +835,10 @@ public final class IoUtils {
     }
     return index;
   }
+
+  public static void validateFileUri(URI uri) throws URISyntaxException {
+    if (!uri.getSchemeSpecificPart().startsWith("/")) {
+      throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidFileUri"));
+    }
+  }
 }
