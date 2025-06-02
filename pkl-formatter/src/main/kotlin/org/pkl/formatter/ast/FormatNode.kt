@@ -30,9 +30,9 @@ sealed interface FormatNode {
       is Nodes -> nodes.sumOf { it.width(wrapped) }
       is Group -> nodes.sumOf { it.width(wrapped) }
       is Indent -> nodes.sumOf { it.width(wrapped) }
-      is IfWrap -> if (wrapped.contains(id)) ifWrap.width(wrapped) else ifNotWrap.width(wrapped)
       is Text -> text.length
-      is SpaceOrLine -> 1
+      is SpaceOrLine,
+      is Space -> 1
       is SemicolonOrLine -> 2
       is ForceLine -> Generator.MAX
       else -> 0
@@ -47,6 +47,8 @@ object ForceLine : FormatNode
 
 object SpaceOrLine : FormatNode
 
+object Space : FormatNode
+
 object SemicolonOrLine : FormatNode
 
 data class Indent(val nodes: List<FormatNode>) : FormatNode
@@ -54,5 +56,3 @@ data class Indent(val nodes: List<FormatNode>) : FormatNode
 data class Nodes(val nodes: List<FormatNode>) : FormatNode
 
 data class Group(val id: Int, val nodes: List<FormatNode>) : FormatNode
-
-data class IfWrap(val id: Int, val ifWrap: FormatNode, val ifNotWrap: FormatNode) : FormatNode
