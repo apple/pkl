@@ -18,11 +18,11 @@ package org.pkl.formatter
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
-import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.SemicolonOrLine
+import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
 import org.pkl.formatter.ast.Wrap
@@ -51,13 +51,6 @@ class Generator {
           }
         node.nodes.forEach { node(it, wrap) }
       }
-      is IfWrap -> {
-        if (node.id in wrapped) {
-          node(node.ifWrap, Wrap.ENABLED)
-        } else {
-          node(node.ifNotWrap, wrap)
-        }
-      }
       is Text -> text(node.text)
       is Line -> {
         if (wrap.isEnabled()) {
@@ -72,6 +65,7 @@ class Generator {
           text(" ")
         }
       }
+      is Space -> text(" ")
       is Indent -> {
         if (wrap.isEnabled()) {
           size += INDENT.length
