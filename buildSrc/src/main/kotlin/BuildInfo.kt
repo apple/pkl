@@ -210,10 +210,18 @@ open class BuildInfo(private val project: Project) {
   // Assembles a collection of JDK versions which tests can be run against, considering ancillary
   // parameters like `testAllJdks` and `testExperimentalJdks`.
   val jdkTestRange: Collection<JavaLanguageVersion> by lazy {
-    JavaVersionRange.inclusive(jdkTestFloor, jdkTestCeiling).filter { version ->
-      // unless we are instructed to test all JDKs, tests only include LTS releases and
-      // versions above the toolchain version.
-      testAllJdks || (JavaVersionRange.isLTS(version) || version >= jdkToolchainVersion)
+    JavaVersionRange.inclusive(jdkTestFloor, jdkTestCeiling).toList()
+  }
+
+  val JavaLanguageVersion.isEnabled: Boolean
+    get() = isVersionEnabled(this)
+
+  fun isVersionEnabled(version: JavaLanguageVersion): Boolean {
+    return when {
+      testAllJdks -> true
+      multiJdkTesting -> JavaVersionRange.isLTS(version)
+      testExperimentalJdks -> version > jdkToolchainVersion
+      else -> false
     }
   }
 
@@ -287,13 +295,6 @@ open class BuildInfo(private val project: Project) {
             // multiply out by jdk vendor
             testJdkVendors.map { vendor -> (targetVersion to vendor) }
           }
-          .filter { (jdkTarget, vendor) ->
-            // only include experimental tasks in the return suite if the flag is set. if the task
-            // is withheld from the returned list, it will not be executed by default with `gradle
-            // check`.
-            testExperimentalJdks ||
-              (!namer(jdkTarget, vendor.takeIf { isMultiVendor }).contains("Experimental"))
-          }
           .map { (jdkTarget, vendor) ->
             if (jdkToolchainVersion == jdkTarget)
               tasks.register(namer(jdkTarget, vendor)) {
@@ -310,10 +311,10 @@ open class BuildInfo(private val project: Project) {
               ) {
                 targets.all {
                   testTask.configure {
+                    enabled = jdkTarget.isEnabled
                     group = Category.VERIFICATION
                     description = "Run tests against JDK ${jdkTarget.asInt()}"
                     applyConfig(jdkTarget to toolchains.launcherFor { languageVersion = jdkTarget })
-
                     // fix: on jdk17, we must force the polyglot module on to the modulepath
                     if (jdkTarget.asInt() == 17)
                       jvmArgumentProviders.add(
@@ -342,9 +343,8 @@ open class BuildInfo(private val project: Project) {
   }
 
   val multiJdkTesting: Boolean by lazy {
-    // By default, Pkl is tested against a full range of JDK versions, past and present, within the
-    // supported bounds of `PKL_TEST_JDK_TARGET` and `PKL_TEST_JDK_MAXIMUM`. To opt-out of this
-    // behavior, set `-DpklMultiJdkTesting=false` on the Gradle command line.
+    // Test Pkl against a full range of JDK versions, past and present, within the
+    // supported bounds of `PKL_TEST_JDK_TARGET` and `PKL_TEST_JDK_MAXIMUM`.
     //
     // In CI, this defaults to `true` to catch potential cross-JDK compat regressions or other bugs.
     // In local dev, this defaults to `false` to speed up the build and reduce contributor load.
