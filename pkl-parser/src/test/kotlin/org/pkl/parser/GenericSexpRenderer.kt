@@ -94,7 +94,18 @@ class GenericSexpRenderer(code: String) {
         res
       }
       NodeType.DOC_COMMENT -> listOf()
-      else -> node.children.filter { it.type !in IGNORED_CHILDREN }
+      else -> {
+        val nodes = mutableListOf<GenNode>()
+        for (child in node.children) {
+          if (child.type in IGNORED_CHILDREN) continue
+          if (child.type in UNPACK_CHILDREN) {
+            nodes += collectChildren(child)
+          } else {
+            nodes += child
+          }
+        }
+        nodes
+      }
     }
 
   private fun NodeType.isStringData(): Boolean =
@@ -179,6 +190,30 @@ class GenericSexpRenderer(code: String) {
         NodeType.SEMICOLON,
         NodeType.TERMINAL,
         NodeType.OPERATOR,
+      )
+
+    private val UNPACK_CHILDREN =
+      EnumSet.of(
+        NodeType.MODULE_DEFINITION,
+        NodeType.IMPORT_LIST,
+        NodeType.TYPEALIAS_HEADER,
+        NodeType.TYPEALIAS_BODY,
+        NodeType.CLASS_PROPERTY_HEADER,
+        NodeType.CLASS_METHOD_HEADER,
+        NodeType.CLASS_HEADER,
+        NodeType.CLASS_BODY_ELEMENTS,
+        NodeType.MODIFIER_LIST,
+        NodeType.NEW_HEADER,
+        NodeType.OBJECT_MEMBER_LIST,
+        NodeType.OBJECT_ENTRY_HEADER,
+        NodeType.OBJECT_PROPERTY_HEADER,
+        NodeType.OBJECT_PARAMETER_LIST,
+        NodeType.FOR_GENERATOR_HEADER,
+        NodeType.WHEN_GENERATOR_HEADER,
+        NodeType.IF_HEADER,
+        NodeType.IF_CONDITION,
+        NodeType.IF_THEN_EXPR,
+        NodeType.IF_ELSE_EXPR,
       )
   }
 }

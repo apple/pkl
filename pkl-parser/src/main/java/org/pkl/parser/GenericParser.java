@@ -223,27 +223,35 @@ public class GenericParser {
   }
 
   private GenNode parseTypeAlias(List<GenNode> preChildren) {
-    var children = new ArrayList<GenNode>();
-    var header = new ArrayList<>(preChildren);
-    // typealias keyword
-    header.add(makeTerminal(next()));
-    ff(header);
-    header.add(parseIdentifier());
-    ff(header);
-    if (lookahead == Token.LT) {
-      header.add(parseTypeParameterList());
-      ff(header);
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
+    var headers = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      headers.add(headerParts.modifierList);
     }
-    expect(Token.ASSIGN, header, "unexpectedToken", "=");
-    children.add(new GenNode(NodeType.TYPEALIAS_HEADER, header));
+    // typealias keyword
+    headers.add(makeTerminal(next()));
+    ff(headers);
+    headers.add(parseIdentifier());
+    ff(headers);
+    if (lookahead == Token.LT) {
+      headers.add(parseTypeParameterList());
+      ff(headers);
+    }
+    expect(Token.ASSIGN, headers, "unexpectedToken", "=");
+    children.add(new GenNode(NodeType.TYPEALIAS_HEADER, headers));
     ff(children);
-    children.add(parseType());
+    children.add(new GenNode(NodeType.TYPEALIAS_BODY, List.of(parseType())));
     return new GenNode(NodeType.TYPEALIAS, children);
   }
 
   private GenNode parseClass(List<GenNode> preChildren) {
-    var children = new ArrayList<GenNode>();
-    var headers = new ArrayList<>(preChildren);
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
+    var headers = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      headers.add(headerParts.modifierList);
+    }
     // class keyword
     headers.add(makeTerminal(next()));
     ff(headers);
@@ -293,8 +301,12 @@ public class GenericParser {
   }
 
   private GenNode parseClassProperty(List<GenNode> preChildren) {
-    var children = new ArrayList<>(preChildren);
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
     var header = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      header.add(headerParts.modifierList);
+    }
     header.add(parseIdentifier());
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
@@ -324,26 +336,33 @@ public class GenericParser {
   }
 
   private GenNode parseClassMethod(List<GenNode> preChildren) {
-    var children = new ArrayList<>(preChildren);
-    var func = expect(Token.FUNCTION, "unexpectedToken", "function");
-    children.add(makeTerminal(func));
-    ff(children);
-    children.add(parseIdentifier());
-    ff(children);
-    if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
-      ff(children);
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
+    var headers = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      headers.add(headerParts.modifierList);
     }
-    children.add(parseParameterList());
+    expect(Token.FUNCTION, headers, "unexpectedToken", "function");
+    ff(headers);
+    headers.add(parseIdentifier());
+    ff(headers);
+    if (lookahead == Token.LT) {
+      headers.add(parseTypeParameterList());
+      ff(headers);
+    }
+    headers.add(parseParameterList());
     if (lookahead() == Token.COLON) {
-      ff(children);
-      children.add(parseTypeAnnotation());
+      ff(headers);
+      headers.add(parseTypeAnnotation());
     }
     if (lookahead() == Token.ASSIGN) {
-      ff(children);
-      children.add(makeTerminal(next()));
+      ff(headers);
+      headers.add(makeTerminal(next()));
+      children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
       ff(children);
       children.add(parseExpr());
+    } else {
+      children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
     }
     return new GenNode(NodeType.CLASS_METHOD, children);
   }
@@ -478,6 +497,8 @@ public class GenericParser {
       ff(children);
       children.add(parseExpr("}"));
       return new GenNode(NodeType.OBJECT_PROPERTY, children);
+    } else {
+      children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
     }
     ff(children);
     children.addAll(parseBodyList());
@@ -566,15 +587,15 @@ public class GenericParser {
 
   private GenNode parseWhenGenerator() {
     var children = new ArrayList<GenNode>();
-    children.add(makeTerminal(next()));
-    ff(children);
-    var lpar = expect(Token.LPAREN, "unexpectedToken", "(");
-    children.add(makeTerminal(lpar));
-    ff(children);
-    children.add(parseExpr());
-    ff(children);
-    var rpar = expect(Token.RPAREN, "unexpectedToken", ")");
-    children.add(makeTerminal(rpar));
+    var header = new ArrayList<GenNode>();
+    header.add(makeTerminal(next()));
+    ff(header);
+    expect(Token.LPAREN, header, "unexpectedToken", "(");
+    ff(header);
+    header.add(parseExpr());
+    ff(header);
+    expect(Token.RPAREN, header, "unexpectedToken", ")");
+    children.add(new GenNode(NodeType.WHEN_GENERATOR_HEADER, header));
     ff(children);
     children.add(parseObjectBody());
     if (lookahead() == Token.ELSE) {
@@ -588,26 +609,25 @@ public class GenericParser {
 
   private GenNode parseForGenerator() {
     var children = new ArrayList<GenNode>();
-    children.add(makeTerminal(next()));
-    ff(children);
-    var lpar = expect(Token.LPAREN, "unexpectedToken", "(");
-    children.add(makeTerminal(lpar));
-    ff(children);
-    children.add(parseParameter());
-    ff(children);
+    var header = new ArrayList<GenNode>();
+    header.add(makeTerminal(next()));
+    ff(header);
+    expect(Token.LPAREN, header, "unexpectedToken", "(");
+    ff(header);
+    header.add(parseParameter());
+    ff(header);
     if (lookahead == Token.COMMA) {
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseParameter());
-      ff(children);
+      header.add(makeTerminal(next()));
+      ff(header);
+      header.add(parseParameter());
+      ff(header);
     }
-    var in = expect(Token.IN, "unexpectedToken", "in");
-    children.add(makeTerminal(in));
-    ff(children);
-    children.add(parseExpr());
-    ff(children);
-    var rpar = expect(Token.RPAREN, "unexpectedToken", ")");
-    children.add(makeTerminal(rpar));
+    expect(Token.IN, header, "unexpectedToken", "in");
+    ff(header);
+    header.add(parseExpr());
+    ff(header);
+    expect(Token.RPAREN, header, "unexpectedToken", ")");
+    children.add(new GenNode(NodeType.FOR_GENERATOR_HEADER, header));
     ff(children);
     children.add(parseObjectBody());
     return new GenNode(NodeType.FOR_GENERATOR, children);
@@ -1171,15 +1191,13 @@ public class GenericParser {
       return parseTypeEnd(res);
     }
     // constrained types: have to start in the same line as the type
-    if (lookahead() == Token.LPAREN
-        && !isPrecededBySemicolon()
-        && _lookahead.newLinesBetween == 0) {
+    var fla = fullLookahead();
+    if (fla.tk.token == Token.LPAREN && !isPrecededBySemicolon() && fla.tk.newLinesBetween == 0) {
       ff(children);
       children.add(makeTerminal(next()));
       ff(children);
       parseListOf(Token.COMMA, children, () -> parseExpr(")"));
-      var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")");
-      children.add(makeTerminal(end));
+      expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
       var res = new GenNode(NodeType.CONSTRAINED_TYPE, children);
       return parseTypeEnd(res);
     }
@@ -1441,6 +1459,17 @@ public class GenericParser {
 
   private record LookaheadSearch(FullToken tk, boolean hasSemicolon) {}
 
+  private record HeaderParts(List<GenNode> preffixes, @Nullable GenNode modifierList) {}
+
+  private HeaderParts getHeaderParts(List<GenNode> nodes) {
+    if (nodes.isEmpty()) return new HeaderParts(nodes, null);
+    var last = nodes.get(nodes.size() - 1);
+    if (last.type == NodeType.MODIFIER_LIST) {
+      return new HeaderParts(nodes.subList(0, nodes.size() - 1), last);
+    }
+    return new HeaderParts(nodes, null);
+  }
+
   private GenNode make(NodeType type, Span span) {
     return new GenNode(type, fromSpan(span));
   }
@@ -1483,7 +1512,7 @@ public class GenericParser {
       case BLOCK_COMMENT -> NodeType.BLOCK_COMMENT;
       case SHEBANG -> NodeType.SHEBANG;
       case SEMICOLON -> NodeType.SEMICOLON;
-      case DOC_COMMENT -> NodeType.DOC_COMMENT;
+      case DOC_COMMENT -> NodeType.DOC_COMMENT_LINE;
       default -> throw new RuntimeException("Unreacheable code");
     };
   }
