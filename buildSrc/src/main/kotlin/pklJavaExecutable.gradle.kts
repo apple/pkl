@@ -84,6 +84,7 @@ val testStartJavaExecutable by tasks.registering { setupTestStartJavaExecutable(
 val testStartJavaExecutableOnOtherJdks =
   buildInfo.jdkTestRange.map { jdkTarget ->
     tasks.register("testStartJavaExecutableJdk${jdkTarget.asInt()}") {
+      enabled = buildInfo.isVersionEnabled(jdkTarget)
       val toolChainService: JavaToolchainService = serviceOf()
       val launcher = toolChainService.launcherFor { languageVersion = jdkTarget }
       setupTestStartJavaExecutable(launcher)
@@ -94,9 +95,7 @@ tasks.assemble { dependsOn(javaExecutable) }
 
 tasks.check {
   dependsOn(testStartJavaExecutable)
-  if (buildInfo.multiJdkTesting) {
-    dependsOn(testStartJavaExecutableOnOtherJdks)
-  }
+  dependsOn(testStartJavaExecutableOnOtherJdks)
 }
 
 publishing {

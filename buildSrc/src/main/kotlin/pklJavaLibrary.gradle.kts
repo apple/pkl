@@ -20,6 +20,7 @@ import org.gradle.accessors.dm.LibrariesForLibs
 plugins {
   `java-library`
   `jvm-toolchains`
+  `jvm-test-suite`
   id("pklKotlinTest")
   id("com.diffplug.spotless")
 }
@@ -135,4 +136,4 @@ tasks.test { configureJdkTestTask(info.javaTestLauncher) }
 // inherits the configuration of the default `test` task (aside from an overridden launcher).
 val jdkTestTasks = info.multiJdkTestingWith(tasks.test) { (_, jdk) -> configureJdkTestTask(jdk) }
 
-if (info.multiJdkTesting) tasks.check { dependsOn(jdkTestTasks) }
+tasks.check { dependsOn(jdkTestTasks) }
