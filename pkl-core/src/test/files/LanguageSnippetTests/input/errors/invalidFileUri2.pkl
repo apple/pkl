@@ -1,0 +1,1 @@
+res = read*("file:path/to/foo.txt")

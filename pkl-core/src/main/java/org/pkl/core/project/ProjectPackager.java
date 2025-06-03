@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -443,7 +443,7 @@ public final class ProjectPackager {
 
   private @Nullable List<ImportsAndReadsParser.Entry> getImportsAndReads(Path pklModulePath) {
     try {
-      var moduleKey = ModuleKeys.file(pklModulePath.toUri());
+      var moduleKey = ModuleKeys.file(pklModulePath);
       var resolvedModuleKey = ResolvedModuleKeys.file(moduleKey, moduleKey.getUri(), pklModulePath);
       return ImportsAndReadsParser.parse(moduleKey, resolvedModuleKey);
     } catch (IOException e) {
