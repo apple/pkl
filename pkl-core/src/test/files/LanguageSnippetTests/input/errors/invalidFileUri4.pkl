@@ -1,1 +1,9 @@
+// Ideally, this should have the same error message as `invalidFileUri2`; the error is that the glob
+// pattern is invalid.
+//
+// But, this is somewhat challenging to fix, because the `URISyntaxException` gets thrown before
+// `ImportGlobNode` is initialized.
+//
+// Regardless, this error is good enough (given this error message, users know what to do), and we
+// can afford to be pragmatic here.
 res = import*("file:path/to/foo.pkl")
