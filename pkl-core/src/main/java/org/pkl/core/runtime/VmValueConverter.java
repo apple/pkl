@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,8 @@ public interface VmValueConverter<T> {
   T convertDuration(VmDuration value, Iterable<Object> path);
 
   T convertDataSize(VmDataSize value, Iterable<Object> path);
+
+  T convertBytes(VmBytes vmBytes, Iterable<Object> path);
 
   T convertIntSeq(VmIntSeq value, Iterable<Object> path);
 

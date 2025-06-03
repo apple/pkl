@@ -357,6 +357,13 @@ examples {
     list1.toDynamic()
     List().toDynamic()
   }
+  
+  ["toBytes()"] {
+    list1.toBytes()
+    List().toBytes()
+    module.catch(() -> List(null).toBytes())
+    module.catch(() -> List(-1).toBytes())
+  }
 
   ["filterNonNull()"] {
     list1.filterNonNull()

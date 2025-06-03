@@ -120,6 +120,7 @@ class KotlinCodeGeneratorTest {
           any: Any
           nonNull: NonNull
           enum: Direction
+          bytes: Bytes
         }
 
         open class Other {
@@ -204,7 +205,8 @@ class KotlinCodeGeneratorTest {
           """set2=[Other(name=pigeon)], map={1=one, 2=two}, map2={one=Other(name=pigeon), """ +
           """two=Other(name=pigeon)}, container={1=one, 2=two}, container2={one=Other(name=pigeon), """ +
           """two=Other(name=pigeon)}, other=Other(name=pigeon), regex=(i?)\w*, any=Other(name=pigeon), """ +
-          """nonNull=Other(name=pigeon), enum=north)"""
+          """nonNull=Other(name=pigeon), enum=north, """ +
+          """bytes=[1, 2, 3, 4])"""
       )
   }
 
@@ -412,6 +414,7 @@ class KotlinCodeGeneratorTest {
     assertThat(readProperty(propertyTypes, "regex")).isInstanceOf(Regex::class.java)
     assertThat(readProperty(propertyTypes, "any")).isEqualTo(other)
     assertThat(readProperty(propertyTypes, "nonNull")).isEqualTo(other)
+    assertThat(readProperty(propertyTypes, "bytes")).isEqualTo(byteArrayOf(1, 2, 3, 4))
   }
 
   private fun readProperty(receiver: Any, name: String): Any? {
@@ -2078,6 +2081,7 @@ class KotlinCodeGeneratorTest {
         other,
         other,
         enumValue,
+        byteArrayOf(1, 2, 3, 4),
       )
 
     return other to propertyTypes

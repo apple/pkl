@@ -93,6 +93,21 @@ final class PcfRenderer implements ValueRenderer {
     }
 
     @Override
+    public void visitBytes(byte[] value) {
+      write("Bytes(\"");
+      var isFirst = true;
+      for (var byt : value) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          write(", ");
+        }
+        write(Integer.valueOf(Byte.toUnsignedInt(byt)).toString());
+      }
+      write(")");
+    }
+
+    @Override
     public void visitPair(Pair<?, ?> value) {
       doVisitIterable(value, "Pair(");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,6 +140,15 @@ public final class BaseNodes {
     @Specialization
     protected VmIntSeq eval(VirtualFrame frame, VmTyped self, long first, long second) {
       return new VmIntSeq(first, second, 1L);
+    }
+  }
+
+  public abstract static class Bytes extends ExternalMethod1Node {
+    @Specialization
+    protected VmList eval(VirtualFrame frame, VmTyped self, Object args) {
+      // invocations of this method are handled specially in AstBuilder
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().bug("Node `BaseNodes.Bytes` should never be executed.").build();
     }
   }
 }

@@ -37,6 +37,10 @@ examples {
       10
       20
       30
+      1
+      2
+      3
+      4
     }
   }
   ["explicit Dynamic type"] {
@@ -69,6 +73,10 @@ examples {
       10
       20
       30
+      1
+      2
+      3
+      4
     }
   }
   ["legacy syntax"] {
@@ -104,6 +112,12 @@ examples {
       10
       20
       30
+    }
+    new {
+      1
+      2
+      3
+      4
     }
   }
 }

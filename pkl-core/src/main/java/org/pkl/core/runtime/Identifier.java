@@ -75,6 +75,11 @@ public final class Identifier implements Comparable<Identifier> {
   // XmlCData}
   public static final Identifier TEXT = get("text");
 
+  public static final Identifier BYTES_CONSTRUCTOR = get("Bytes");
+
+  // members of pkl.base#{FileOutput}
+  public static final Identifier BYTES = get("bytes");
+
   // members of pkl.base#ModuleOutput, pkl.base#Resource, pkl.base#String
   public static final Identifier BASE64 = get("base64");
 

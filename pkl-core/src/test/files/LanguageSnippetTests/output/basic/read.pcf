@@ -22,7 +22,7 @@ examples {
         file1
         
         """
-      base64 = "ZmlsZTEK"
+      bytes = Bytes(102, 105, 108, 101, 49, 10)
     }
     "Cannot find resource `other.txt`."
     new {
@@ -31,7 +31,7 @@ examples {
         file1
         
         """
-      base64 = "ZmlsZTEK"
+      bytes = Bytes(102, 105, 108, 101, 49, 10)
     }
     null
   }
@@ -42,7 +42,7 @@ examples {
         resource
         
         """
-      base64 = "cmVzb3VyY2UK"
+      bytes = Bytes(114, 101, 115, 111, 117, 114, 99, 101, 10)
     }
     new {
       uri = "file:///$snippetsDir/input-helper/basic/read/resource.txt"
@@ -50,7 +50,7 @@ examples {
         resource
         
         """
-      base64 = "cmVzb3VyY2UK"
+      bytes = Bytes(114, 101, 115, 111, 117, 114, 99, 101, 10)
     }
   }
   ["read non-allowed resource"] {
@@ -64,7 +64,7 @@ examples {
         file1
         
         """
-      base64 = "ZmlsZTEK"
+      bytes = Bytes(102, 105, 108, 101, 49, 10)
     }
     new {
       uri = "file:///$snippetsDir/input/basic/globtest/file2.txt"
@@ -72,7 +72,7 @@ examples {
         file2
         
         """
-      base64 = "ZmlsZTIK"
+      bytes = Bytes(102, 105, 108, 101, 50, 10)
     }
   }
   ["read different resources with same relative resource URI"] {
@@ -82,7 +82,7 @@ examples {
         resource
         
         """
-      base64 = "cmVzb3VyY2UK"
+      bytes = Bytes(114, 101, 115, 111, 117, 114, 99, 101, 10)
     }
     new {
       uri = "file:///$snippetsDir/input-helper/basic/read/child/resource.txt"
@@ -90,7 +90,7 @@ examples {
         child resource
         
         """
-      base64 = "Y2hpbGQgcmVzb3VyY2UK"
+      bytes = Bytes(99, 104, 105, 108, 100, 32, 114, 101, 115, 111, 117, 114, 99, 101, 10)
     }
   }
 }
