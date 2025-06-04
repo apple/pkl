@@ -20,8 +20,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.attributes.Category
-import org.gradle.api.plugins.JvmTestSuitePlugin
-import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
@@ -30,7 +28,6 @@ import org.gradle.jvm.toolchain.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.kotlin.dsl.support.serviceOf
 import org.gradle.process.CommandLineArgumentProvider
-import org.gradle.testing.base.TestingExtension
 
 /**
  * JVM bytecode target; this is pinned at a reasonable version, because downstream JVM projects
@@ -260,9 +257,6 @@ open class BuildInfo(private val project: Project) {
     configurator: MultiJdkTestConfigurator = {},
   ): Iterable<Provider<out Any>> =
     with(project) {
-      // force the `jvm-test-suite` plugin to apply first
-      project.pluginManager.apply(JvmTestSuitePlugin::class.java)
-
       val isMultiVendor = testJdkVendors.count() > 1
       val baseNameProvider = { templateTask.get().name }
       val namer = testNamer(baseNameProvider)
@@ -305,25 +299,18 @@ open class BuildInfo(private val project: Project) {
                   "Alias for regular '${baseNameProvider()}' task, on JDK ${jdkTarget.asInt()}"
               }
             else
-              the<TestingExtension>().suites.register(
-                namer(jdkTarget, vendor.takeIf { isMultiVendor }),
-                JvmTestSuite::class,
-              ) {
-                targets.all {
-                  testTask.configure {
-                    enabled = jdkTarget.isEnabled
-                    group = Category.VERIFICATION
-                    description = "Run tests against JDK ${jdkTarget.asInt()}"
-                    applyConfig(jdkTarget to toolchains.launcherFor { languageVersion = jdkTarget })
-                    // fix: on jdk17, we must force the polyglot module on to the modulepath
-                    if (jdkTarget.asInt() == 17)
-                      jvmArgumentProviders.add(
-                        CommandLineArgumentProvider {
-                          buildList { listOf("--add-modules=org.graalvm.polyglot") }
-                        }
-                      )
-                  }
-                }
+              tasks.register(namer(jdkTarget, vendor.takeIf { isMultiVendor }), Test::class) {
+                enabled = jdkTarget.isEnabled
+                group = Category.VERIFICATION
+                description = "Run tests against JDK ${jdkTarget.asInt()}"
+                applyConfig(jdkTarget to toolchains.launcherFor { languageVersion = jdkTarget })
+                // fix: on jdk17, we must force the polyglot module on to the modulepath
+                if (jdkTarget.asInt() == 17)
+                  jvmArgumentProviders.add(
+                    CommandLineArgumentProvider {
+                      buildList { listOf("--add-modules=org.graalvm.polyglot") }
+                    }
+                  )
               }
           }
           .toList()
