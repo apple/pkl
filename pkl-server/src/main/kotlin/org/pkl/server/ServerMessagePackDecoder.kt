@@ -95,7 +95,13 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
     val httpMap = getNullable(this, "http")?.asMapValue()?.map() ?: return null
     val proxy = httpMap.unpackProxy()
     val caCertificates = getNullable(httpMap, "caCertificates")?.asBinaryValue()?.asByteArray()
-    return Http(caCertificates, proxy)
+    val rewrites =
+      getNullable(httpMap, "rewrites")
+        ?.asMapValue()
+        ?.map()
+        ?.mapKeys { it.key.asStringValue().asString() }
+        ?.mapValues { it.value.asStringValue().asString() }
+    return Http(caCertificates, proxy, rewrites)
   }
 
   private fun Map<Value, Value>.unpackProxy(): Proxy? {

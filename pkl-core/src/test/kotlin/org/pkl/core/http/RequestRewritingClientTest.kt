@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,14 @@ import org.junit.jupiter.api.Test
 
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
-  private val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured)
+  private val client =
+    RequestRewritingClient(
+      "Pkl",
+      Duration.ofSeconds(42),
+      -1,
+      captured,
+      mapOf("https://foo" to "https://bar"),
+    )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
 
@@ -114,7 +121,7 @@ class RequestRewritingClientTest {
   @Test
   fun `rewrites port 0 if test port is set`() {
     val captured = RequestCapturingClient()
-    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured)
+    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf())
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
@@ -129,5 +136,12 @@ class RequestRewritingClientTest {
     client.send(request, BodyHandlers.discarding())
 
     assertThat(captured.request.uri().port).isEqualTo(0)
+  }
+
+  @Test
+  fun `rewrites URIs`() {
+    val request = HttpRequest.newBuilder(URI("https://foo.com")).build()
+    client.send(request, BodyHandlers.discarding())
+    assertThat(captured.request.uri().toString()).isEqualTo("https://bar.com")
   }
 }
