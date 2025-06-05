@@ -163,8 +163,8 @@ public abstract class ModulesTask extends BasePklTask {
               Collections.emptyList(),
               null,
               List.of(),
-              Map.of(),
-              Map.of());
+              parseExternalReaders(getExternalModuleReaders()),
+              parseExternalReaders(getExternalResourceReaders()));
     }
     return cachedOptions;
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.pkl.gradle.ExternalReader;
 
 /** Configuration options shared between plugin features. Documented in user manual. */
 public interface BasePklSpec {
@@ -57,4 +58,8 @@ public interface BasePklSpec {
   Property<URI> getHttpProxy();
 
   ListProperty<String> getHttpNoProxy();
+
+  MapProperty<String, ExternalReader> getExternalModuleReaders();
+
+  MapProperty<String, ExternalReader> getExternalResourceReaders();
 }
