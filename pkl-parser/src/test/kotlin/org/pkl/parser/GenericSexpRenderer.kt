@@ -200,6 +200,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.TYPEALIAS_BODY,
         NodeType.CLASS_PROPERTY_HEADER,
         NodeType.CLASS_METHOD_HEADER,
+        NodeType.CLASS_METHOD_BODY,
         NodeType.CLASS_HEADER,
         NodeType.CLASS_BODY_ELEMENTS,
         NodeType.MODIFIER_LIST,
@@ -214,6 +215,10 @@ class GenericSexpRenderer(code: String) {
         NodeType.IF_CONDITION,
         NodeType.IF_THEN_EXPR,
         NodeType.IF_ELSE_EXPR,
+        NodeType.ARGUMENT_LIST_ELEMENTS,
+        NodeType.PARAMETER_LIST_ELEMENTS,
+        NodeType.CONSTRAINED_TYPE_ELEMENTS,
+        NodeType.TYPE_PARAMETER_LIST_ELEMENTS,
       )
   }
 }

@@ -18,6 +18,7 @@ package org.pkl.formatter
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
+import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.Nodes
@@ -50,6 +51,13 @@ class Generator {
             Wrap.DETECT
           }
         node.nodes.forEach { node(it, wrap) }
+      }
+      is IfWrap -> {
+        if (wrapped.contains(node.id)) {
+          node(node.ifWrap, Wrap.ENABLED)
+        } else {
+          node(node.ifNotWrap, wrap)
+        }
       }
       is Text -> text(node.text)
       is Line -> {
