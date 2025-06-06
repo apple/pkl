@@ -24,6 +24,7 @@ plugins {
 val toolchainVersion = 21
 
 dependencies {
+  implementation(libs.abiCheckPlugin)
   implementation(libs.downloadTaskPlugin)
   implementation(libs.spotlessPlugin)
   implementation(libs.kotlinPlugin) { exclude(module = "kotlin-android-extensions") }
