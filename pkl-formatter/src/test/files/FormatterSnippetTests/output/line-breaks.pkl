@@ -1,0 +1,31 @@
+module foo.bar.baz
+amends "bar.pkl"
+
+import "@foo/Foo.pkl" as foo
+
+local open class Bar {}
+
+const local baz = 10
+
+local function fun(x) = x
+
+const local
+prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty:
+String = "foo"
+
+local function function2(
+  parameter1: Parameter1Type,
+  parameter2: Parameter2Type,
+  parameter3: Parameter3Type,
+  parameter4: Parameter4Type
+): String = ""
+
+prop =
+  function2(
+    loooooooooooooooooogParameter1,
+    loooooooooooooooooogParameter2,
+    loooooooooooooooooogParameter3,
+    loooooooooooooooooogParameter4
+  )
+
+prop2: String|Int|Boolean
