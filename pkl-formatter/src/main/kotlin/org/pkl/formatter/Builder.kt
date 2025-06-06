@@ -19,6 +19,7 @@ import java.util.EnumSet
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
+import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.Nodes
@@ -59,7 +60,11 @@ class Builder(sourceText: String) {
       NodeType.TYPEALIAS_HEADER -> formatTypealiasHeader(node)
       NodeType.TYPEALIAS_BODY -> formatTypealiasBody(node)
       NodeType.MODIFIER_LIST -> formatModifierList(node)
-      NodeType.PARAMETER_LIST -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.PARAMETER_LIST -> formatParameterList(node)
+      NodeType.PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
+      NodeType.TYPE_PARAMETER_LIST -> formatTypeParameterList(node)
+      NodeType.TYPE_PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
+      NodeType.TYPE_PARAMETER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.PARAMETER -> formatParameter(node)
       NodeType.EXTENDS_CLAUSE,
       NodeType.AMENDS_CLAUSE -> formatAmendsExtendsClause(node)
@@ -73,6 +78,7 @@ class Builder(sourceText: String) {
       NodeType.CLASS_PROPERTY_HEADER -> formatClassPropertyHeader(node)
       NodeType.CLASS_METHOD -> formatClassMethod(node)
       NodeType.CLASS_METHOD_HEADER -> formatClassMethodHeader(node)
+      NodeType.CLASS_METHOD_BODY -> formatClassMethodBody(node)
       NodeType.OBJECT_BODY -> formatObjectBody(node)
       NodeType.OBJECT_MEMBER_LIST -> formatObjectMemberList(node)
       NodeType.OBJECT_ELEMENT -> format(node.children[0]) // has a single element
@@ -81,14 +87,15 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_PROPERTY -> formatObjectProperty(node)
       NodeType.OBJECT_PROPERTY_HEADER -> formatObjectPropertyHeader(node)
       NodeType.FOR_GENERATOR -> formatForGenerator(node)
-      NodeType.FOR_GENERATOR_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.FOR_GENERATOR_HEADER -> formatParameterList(node)
       NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
-      NodeType.WHEN_GENERATOR_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.WHEN_GENERATOR_HEADER -> formatParameterList(node)
       NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
-      NodeType.ARGUMENT_LIST -> formatArgumentList(node)
+      NodeType.ARGUMENT_LIST -> formatParameterList(node)
+      NodeType.ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
       NodeType.IF_EXPR -> formatIf(node)
       NodeType.IF_HEADER -> formatIfHeader(node)
-      NodeType.IF_CONDITION -> formatIfCondition(node)
+      NodeType.IF_CONDITION -> formatParameterList(node)
       NodeType.IF_THEN_EXPR,
       NodeType.IF_ELSE_EXPR -> formatIfThenElse(node)
       NodeType.NEW_EXPR -> formatNewExpr(node)
@@ -101,10 +108,11 @@ class Builder(sourceText: String) {
       NodeType.TRACE_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
-      NodeType.TYPE_ANNOTATION -> Nodes(formatGeneric(node.children, SpaceOrLine))
+      NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
       NodeType.TYPE_ARGUMENT_LIST -> formatTypeArgumentList(node)
       NodeType.DECLARED_TYPE -> formatDeclaredType(node)
       NodeType.CONSTRAINED_TYPE -> formatConstrainedType(node)
+      NodeType.CONSTRAINED_TYPE_ELEMENTS -> formatParameterListElements(node)
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.UNION_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
@@ -178,10 +186,6 @@ class Builder(sourceText: String) {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
-  private fun formatArgumentList(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, SpaceOrLine))
-  }
-
   private fun formatTypeArgumentList(node: GenNode): FormatNode {
     val first = node.children[0]
     val last = node.children.last()
@@ -228,6 +232,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassProperty(node: GenNode): FormatNode {
+    val hasBody = node.children.last().type != NodeType.CLASS_PROPERTY_HEADER
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
@@ -235,14 +240,19 @@ class Builder(sourceText: String) {
             children,
             { prev, next ->
               if (next.type == NodeType.OBJECT_BODY || next.type == NodeType.NEW_EXPR) Space
-              else SpaceOrLine
+              else if (prev.type == NodeType.CLASS_PROPERTY_HEADER) null else SpaceOrLine
             },
           ) { node, next ->
             if (next == null) {
               when (node.type) {
                 NodeType.OBJECT_BODY -> formatObjectBody(node)
                 NodeType.NEW_EXPR -> group(format(node))
-                else -> indent(format(node))
+                else ->
+                  if (hasBody) {
+                    group(SpaceOrLine, indent(format(node)))
+                  } else {
+                    group(SpaceOrLine, format(node))
+                  }
               }
             } else format(node)
           }
@@ -257,28 +267,53 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassMethod(node: GenNode): FormatNode {
-    if (node.children.size == 1) return format(node.children[0])
-
     val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (next == null) indent(format(node)) else format(node)
+      formatGeneric(node.children) { prev, next ->
+        if (next.type == NodeType.CLASS_METHOD_BODY) null else SpaceOrLine
       }
     return Group(newId(), nodes)
   }
 
   private fun formatClassMethodHeader(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (next.type == NodeType.TYPE_PARAMETER_LIST || next.type == NodeType.PARAMETER_LIST) {
-          EMPTY_NODE
-        } else SpaceOrLine
-      }
+    val nodes = formatGeneric(node.children, SpaceOrLine)
     return Group(newId(), nodes)
+  }
+
+  private fun formatClassMethodBody(node: GenNode): FormatNode {
+    val id = newId()
+    val node = format(node.children[0])
+    return Group(id, listOf(SpaceOrLine, IfWrap(id, indent(node), node)))
   }
 
   private fun formatParameter(node: GenNode): FormatNode {
     if (node.children.size == 1) return format(node.children[0]) // underscore
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+  }
+
+  private fun formatParameterList(node: GenNode): FormatNode {
+    val id = newId()
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) {
+          IfWrap(id, SpaceOrLine, EMPTY_NODE)
+        } else SpaceOrLine
+      }
+    return Group(id, nodes)
+  }
+
+  private fun formatParameterListElements(node: GenNode): FormatNode {
+    return Indent(formatGeneric(node.children, SpaceOrLine))
+  }
+
+  private fun formatTypeParameterList(node: GenNode): FormatNode {
+    val id = newId()
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("<") || next.isTerminal(">")) {
+          IfWrap(id, SpaceOrLine, EMPTY_NODE)
+        } else SpaceOrLine
+      }
+    return Group(id, nodes)
   }
 
   private fun formatObjectBody(node: GenNode): FormatNode {
@@ -345,10 +380,6 @@ class Builder(sourceText: String) {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
-  private fun formatIfCondition(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
   private fun formatIfThenElse(node: GenNode): FormatNode {
     return Indent(formatGeneric(node.children, SpaceOrLine))
   }
@@ -373,11 +404,19 @@ class Builder(sourceText: String) {
   }
 
   private fun formatConstrainedType(node: GenNode): FormatNode {
+    val id = newId()
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (next.isTerminal("(")) EMPTY_NODE else SpaceOrLine
+        if (next.isTerminal("(")) null
+        else if (prev.isTerminal("(") || next.isTerminal(")")) {
+          IfWrap(id, SpaceOrLine, EMPTY_NODE)
+        } else SpaceOrLine
       }
-    return Group(newId(), nodes)
+    return Group(id, nodes)
+  }
+
+  private fun formatTypeAnnotation(node: GenNode): FormatNode {
+    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
   private fun formatModifierList(node: GenNode): FormatNode {
@@ -387,7 +426,7 @@ class Builder(sourceText: String) {
       nodes += formatGeneric(children[true]!!, SpaceOrLine)
     }
     val modifiers = children[false]!!.sortedBy(::modifierPrecedence)
-    nodes += formatGeneric(modifiers, SpaceOrLine)
+    nodes += formatGeneric(modifiers, Space)
     return Nodes(nodes)
   }
 
@@ -540,10 +579,8 @@ class Builder(sourceText: String) {
       }
       prev.type == NodeType.BLOCK_COMMENT ->
         if (prev.linesBetween(next) > 0) ForceLine else SpaceOrLine
-      next.type == NodeType.TYPE_ARGUMENT_LIST ||
-        next.type == NodeType.TYPE_ANNOTATION ||
-        prev.isTerminal("[", "(", "!") ||
-        next.isTerminal("]", ")", "?", ",") -> EMPTY_NODE
+      next.type in EMPTY_SUFFIXES || prev.isTerminal("[", "!") || next.isTerminal("]", "?", ",") ->
+        null
       next.isTerminal("=", "{") -> Space
       else -> separatorFn(prev, next)
     }
@@ -601,6 +638,14 @@ class Builder(sourceText: String) {
         NodeType.SHEBANG,
         NodeType.DOC_COMMENT_LINE,
         NodeType.DOC_COMMENT,
+      )
+
+    private val EMPTY_SUFFIXES =
+      EnumSet.of(
+        NodeType.TYPE_ARGUMENT_LIST,
+        NodeType.TYPE_ANNOTATION,
+        NodeType.TYPE_PARAMETER_LIST,
+        NodeType.PARAMETER_LIST,
       )
   }
 }

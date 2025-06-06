@@ -345,24 +345,22 @@ public class GenericParser {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    ff(headers);
+    children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
+    ff(children);
     if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
-      ff(headers);
+      children.add(parseTypeParameterList());
+      ff(children);
     }
-    headers.add(parseParameterList());
+    children.add(parseParameterList());
     if (lookahead() == Token.COLON) {
-      ff(headers);
-      headers.add(parseTypeAnnotation());
+      ff(children);
+      children.add(parseTypeAnnotation());
     }
     if (lookahead() == Token.ASSIGN) {
-      ff(headers);
-      headers.add(makeTerminal(next()));
-      children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
       ff(children);
-      children.add(parseExpr());
-    } else {
-      children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
+      children.add(makeTerminal(next()));
+      ff(children);
+      children.add(new GenNode(NodeType.CLASS_METHOD_BODY, List.of(parseExpr())));
     }
     return new GenNode(NodeType.CLASS_METHOD, children);
   }
@@ -1064,7 +1062,9 @@ public class GenericParser {
   private GenNode parseFunctionLiteral(List<GenNode> preChildren) {
     // the open parens is already parsed
     var paramListChildren = new ArrayList<>(preChildren);
-    parseListOf(Token.COMMA, paramListChildren, this::parseParameter);
+    var elements = new ArrayList<GenNode>();
+    parseListOf(Token.COMMA, elements, this::parseParameter);
+    paramListChildren.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.RPAREN, paramListChildren, "unexpectedToken2", ",", ")");
     var children = new ArrayList<GenNode>();
     children.add(new GenNode(NodeType.PARAMETER_LIST, paramListChildren));
@@ -1196,7 +1196,9 @@ public class GenericParser {
       ff(children);
       children.add(makeTerminal(next()));
       ff(children);
-      parseListOf(Token.COMMA, children, () -> parseExpr(")"));
+      var elements = new ArrayList<GenNode>();
+      parseListOf(Token.COMMA, elements, () -> parseExpr(")"));
+      children.add(new GenNode(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
       expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
       var res = new GenNode(NodeType.CONSTRAINED_TYPE, children);
       return parseTypeEnd(res);
@@ -1239,7 +1241,9 @@ public class GenericParser {
     if (lookahead == Token.RPAREN) {
       children.add(makeTerminal(next()));
     } else {
-      parseListOf(Token.COMMA, children, this::parseParameter);
+      var elements = new ArrayList<GenNode>();
+      parseListOf(Token.COMMA, elements, this::parseParameter);
+      children.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
       expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
     }
     return new GenNode(NodeType.PARAMETER_LIST, children);
@@ -1260,7 +1264,9 @@ public class GenericParser {
     var children = new ArrayList<GenNode>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
-    parseListOf(Token.COMMA, children, this::parseTypeParameter);
+    var elements = new ArrayList<GenNode>();
+    parseListOf(Token.COMMA, elements, this::parseTypeParameter);
+    children.add(new GenNode(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_PARAMETER_LIST, children);
   }
@@ -1282,7 +1288,9 @@ public class GenericParser {
       children.add(makeTerminal(next()));
       return new GenNode(NodeType.ARGUMENT_LIST, children);
     }
-    parseListOf(Token.COMMA, children, this::parseExpr);
+    var elements = new ArrayList<GenNode>();
+    parseListOf(Token.COMMA, elements, this::parseExpr);
+    children.add(new GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, elements));
     ff(children);
     expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
     return new GenNode(NodeType.ARGUMENT_LIST, children);
