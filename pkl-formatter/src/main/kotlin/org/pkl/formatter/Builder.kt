@@ -70,6 +70,7 @@ class Builder(sourceText: String) {
       NodeType.AMENDS_CLAUSE -> formatAmendsExtendsClause(node)
       NodeType.IMPORT_LIST -> formatImportList(node)
       NodeType.IMPORT -> formatImport(node)
+      NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.CLASS -> formatClass(node)
       NodeType.CLASS_HEADER -> formatClassHeader(node)
       NodeType.CLASS_BODY -> formatClassBody(node)
@@ -109,12 +110,14 @@ class Builder(sourceText: String) {
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
-      NodeType.TYPE_ARGUMENT_LIST -> formatTypeArgumentList(node)
+      NodeType.TYPE_ARGUMENT_LIST -> formatTypeParameterList(node)
+      NodeType.TYPE_ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
       NodeType.DECLARED_TYPE -> formatDeclaredType(node)
       NodeType.CONSTRAINED_TYPE -> formatConstrainedType(node)
+      NodeType.CONSTRAINED_TYPE_CONSTRAINT -> formatParameterList(node)
       NodeType.CONSTRAINED_TYPE_ELEMENTS -> formatParameterListElements(node)
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
-      NodeType.UNION_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
@@ -131,7 +134,7 @@ class Builder(sourceText: String) {
     val (prefixes, nodes) = splitPrefixes(node.children)
     val fnodes =
       formatGenericWithGen(nodes, SpaceOrLine) { node, next ->
-        if (node.type == NodeType.QUALIFIED_IDENTIFIER) {
+        if (next == null) {
           indent(format(node))
         } else {
           format(node)
@@ -183,17 +186,12 @@ class Builder(sourceText: String) {
   }
 
   private fun formatImport(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatTypeArgumentList(node: GenNode): FormatNode {
-    val first = node.children[0]
-    val last = node.children.last()
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev == first || next == last) EMPTY_NODE else SpaceOrLine
-      }
-    return Nodes(nodes)
+    return Group(
+      newId(),
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (node.isTerminal("import")) format(node) else indent(format(node))
+      },
+    )
   }
 
   private fun formatTypealias(node: GenNode): FormatNode {
@@ -215,7 +213,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return groupOnSpace(formatGeneric(node.children, SpaceOrLine))
   }
 
   private fun formatClassBody(node: GenNode): FormatNode {
@@ -295,7 +293,7 @@ class Builder(sourceText: String) {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("(") || next.isTerminal(")")) {
-          IfWrap(id, SpaceOrLine, EMPTY_NODE)
+          Line
         } else SpaceOrLine
       }
     return Group(id, nodes)
@@ -310,7 +308,7 @@ class Builder(sourceText: String) {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("<") || next.isTerminal(">")) {
-          IfWrap(id, SpaceOrLine, EMPTY_NODE)
+          Line
         } else SpaceOrLine
       }
     return Group(id, nodes)
@@ -404,19 +402,25 @@ class Builder(sourceText: String) {
   }
 
   private fun formatConstrainedType(node: GenNode): FormatNode {
-    val id = newId()
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (next.isTerminal("(")) null
-        else if (prev.isTerminal("(") || next.isTerminal(")")) {
-          IfWrap(id, SpaceOrLine, EMPTY_NODE)
-        } else SpaceOrLine
+        if (next.type == NodeType.CONSTRAINED_TYPE_CONSTRAINT) null else SpaceOrLine
       }
-    return Group(id, nodes)
+    return Group(newId(), nodes)
+  }
+
+  private fun formatUnionType(node: GenNode): FormatNode {
+    val nodes =
+      formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else EMPTY_NODE }
+    return Group(newId(), nodes)
   }
 
   private fun formatTypeAnnotation(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    val nodes =
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (next == null) indent(format(node)) else format(node)
+      }
+    return Group(newId(), nodes)
   }
 
   private fun formatModifierList(node: GenNode): FormatNode {
@@ -607,6 +611,19 @@ class Builder(sourceText: String) {
   private fun splitPrefixes(nodes: List<GenNode>): Pair<List<GenNode>, List<GenNode>> {
     val splitPoint = nodes.indexOfFirst { !it.type.isAffix && it.type != NodeType.DOC_COMMENT }
     return nodes.subList(0, splitPoint) to nodes.subList(splitPoint, nodes.size)
+  }
+
+  private fun groupOnSpace(fnodes: List<FormatNode>): FormatNode {
+    val res = mutableListOf<FormatNode>()
+    for ((i, node) in fnodes.withIndex()) {
+      if (i > 0 && node is SpaceOrLine) {
+        res += groupOnSpace(fnodes.subList(i, fnodes.size))
+        break
+      } else {
+        res += node
+      }
+    }
+    return Group(newId(), res)
   }
 
   private fun GenNode.linesBetween(next: GenNode): Int = next.span.lineBegin - span.lineEnd
