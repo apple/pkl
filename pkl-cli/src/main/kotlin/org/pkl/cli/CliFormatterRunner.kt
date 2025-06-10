@@ -24,7 +24,6 @@ import org.pkl.commons.cli.CliException
 import org.pkl.formatter.Formatter
 
 class CliFormatterRunner(
-  private val check: Boolean,
   private val list: Boolean,
   private val overwrite: Boolean,
   private val paths: List<Path>,
@@ -55,7 +54,6 @@ class CliFormatterRunner(
           }
         }
       }
-      check -> throw CliException("`check` option not yet supported.")
     }
   }
 }
