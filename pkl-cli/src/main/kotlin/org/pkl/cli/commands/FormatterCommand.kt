@@ -17,23 +17,73 @@ package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.validate
 import com.github.ajalt.clikt.parameters.types.path
+import java.io.IOException
 import java.nio.file.Path
-import org.pkl.cli.CliFormatterRunner
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
+import kotlin.system.exitProcess
+import org.pkl.commons.cli.CliException
+import org.pkl.formatter.Formatter
 
-class FormatterCommand : CliktCommand(name = "format") {
-  override fun help(context: Context) =
-    "Run the formatter with the given options on the given files."
+class FormatterCommand : NoOpCliktCommand(name = "format") {
+  override fun help(context: Context) = "Run commands related to formatting"
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
-  val files: List<Path> by
+  init {
+    subcommands(CheckCommand(), ApplyCommand())
+  }
+}
+
+class CheckCommand : CliktCommand(name = "check") {
+  override fun help(context: Context) =
+    "Check if the given files are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure."
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+
+  val paths: List<Path> by
+    argument(name = "paths", help = "File paths to check.")
+      .path(mustExist = true, canBeDir = false)
+      .multiple()
+      .validate { files ->
+        if (files.isEmpty()) {
+          fail("No files provided.")
+        }
+      }
+
+  override fun run() {
+    for (path in paths) {
+      writer.appendLine("Checking file: $path")
+      val contents = path.readText()
+      val formatted = Formatter().format(contents)
+      var status = 0
+      if (contents != formatted) {
+        writer.appendLine(path.toAbsolutePath().toString())
+        status = 1
+      }
+      writer.flush()
+      exitProcess(status)
+    }
+  }
+
+  private val writer = System.out.writer()
+}
+
+class ApplyCommand : CliktCommand(name = "apply") {
+  override fun help(context: Context) =
+    "Overwrite all the files in place with the formatted version."
+
+  override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
+
+  val paths: List<Path> by
     argument(name = "paths", help = "File paths to format.")
       .path(mustExist = true, canBeDir = false)
       .multiple()
@@ -43,33 +93,28 @@ class FormatterCommand : CliktCommand(name = "format") {
         }
       }
 
-  private val list: Boolean by
+  val silent: Boolean by
     option(
-        names = arrayOf("-l", "--list"),
-        help =
-          "Check if the inputs are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure.",
+        names = arrayOf("-s", "--silent"),
+        help = "Do not write the name of the files that failed formatting to stdout.",
       )
       .flag()
-      .validate {
-        if (overwrite) {
-          fail("Option is mutually exclusive with -w.")
-        }
-      }
-
-  private val overwrite: Boolean by
-    option(
-        names = arrayOf("-w", "--overwrite"),
-        help = "Overwrite all the files in place with the formatted version.",
-      )
-      .flag()
-      .validate {
-        if (list) {
-          fail("Option is mutually exclusive with -l.")
-        }
-      }
 
   override fun run() {
-    val shouldList = if (!overwrite) true else list
-    CliFormatterRunner(shouldList, overwrite, files).run()
+    for (path in paths) {
+      val contents = path.readText()
+      val formatted = Formatter().format(contents)
+      if (!silent && contents != formatted) {
+        writer.appendLine(path.toAbsolutePath().toString())
+      }
+      writer.flush()
+      try {
+        path.writeText(formatted, Charsets.UTF_8)
+      } catch (e: IOException) {
+        throw CliException("Could not overwrite `$path`: ${e.message}")
+      }
+    }
   }
+
+  private val writer = System.out.writer()
 }
