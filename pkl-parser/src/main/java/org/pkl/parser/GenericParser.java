@@ -150,9 +150,11 @@ public class GenericParser {
     children.add(parseStringConstant());
     if (lookahead() == Token.AS) {
       ff(children);
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseIdentifier());
+      var alias = new ArrayList<GenNode>();
+      alias.add(makeTerminal(next()));
+      ff(alias);
+      alias.add(parseIdentifier());
+      children.add(new GenNode(NodeType.IMPORT_ALIAS, alias));
     }
     return new GenNode(NodeType.IMPORT, children);
   }
@@ -1194,12 +1196,14 @@ public class GenericParser {
     var fla = fullLookahead();
     if (fla.tk.token == Token.LPAREN && !isPrecededBySemicolon() && fla.tk.newLinesBetween == 0) {
       ff(children);
-      children.add(makeTerminal(next()));
-      ff(children);
+      var constraint = new ArrayList<GenNode>();
+      constraint.add(makeTerminal(next()));
+      ff(constraint);
       var elements = new ArrayList<GenNode>();
       parseListOf(Token.COMMA, elements, () -> parseExpr(")"));
-      children.add(new GenNode(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
-      expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
+      constraint.add(new GenNode(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
+      expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
+      children.add(new GenNode(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
       var res = new GenNode(NodeType.CONSTRAINED_TYPE, children);
       return parseTypeEnd(res);
     }
@@ -1275,7 +1279,9 @@ public class GenericParser {
     var children = new ArrayList<GenNode>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
-    parseListOf(Token.COMMA, children, this::parseType);
+    var elements = new ArrayList<GenNode>();
+    parseListOf(Token.COMMA, elements, this::parseType);
+    children.add(new GenNode(NodeType.TYPE_ARGUMENT_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_ARGUMENT_LIST, children);
   }

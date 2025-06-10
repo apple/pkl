@@ -11,7 +11,7 @@ local function fun(x) = x
 
 const local
 prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty:
-String = "foo"
+  String = "foo"
 
 local function function2(
   parameter1: Parameter1Type,
