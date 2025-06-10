@@ -119,7 +119,7 @@ class Builder(sourceText: String) {
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      else -> throw RuntimeException("Unknown node type: ${node.type}")
+      else -> Text(node.text())//throw RuntimeException("Unknown node type: ${node.type}")
     }
 
   private fun formatModule(node: GenNode): FormatNode {
