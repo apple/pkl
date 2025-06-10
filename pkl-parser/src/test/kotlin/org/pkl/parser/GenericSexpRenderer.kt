@@ -196,6 +196,7 @@ class GenericSexpRenderer(code: String) {
       EnumSet.of(
         NodeType.MODULE_DEFINITION,
         NodeType.IMPORT_LIST,
+        NodeType.IMPORT_ALIAS,
         NodeType.TYPEALIAS_HEADER,
         NodeType.TYPEALIAS_BODY,
         NodeType.CLASS_PROPERTY_HEADER,
@@ -217,8 +218,10 @@ class GenericSexpRenderer(code: String) {
         NodeType.IF_ELSE_EXPR,
         NodeType.ARGUMENT_LIST_ELEMENTS,
         NodeType.PARAMETER_LIST_ELEMENTS,
+        NodeType.CONSTRAINED_TYPE_CONSTRAINT,
         NodeType.CONSTRAINED_TYPE_ELEMENTS,
         NodeType.TYPE_PARAMETER_LIST_ELEMENTS,
+        NodeType.TYPE_ARGUMENT_LIST_ELEMENTS,
       )
   }
 }
