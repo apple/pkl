@@ -733,6 +733,34 @@ pkl shell-completion bash
 pkl shell-completion zsh
 ----
 
+[[command-format]]
+=== `pkl format`
+
+*Synopsis*: `pkl format <options> <paths>`
+
+This command formats the given files according to Pkl's cannonical formatter.
+
+==== Options
+
+.-w, --overwrite
+[%collapsible]
+====
+Overwrite all the files in place with the formatted version.
+====
+
+.-c, --check
+[%collapsible]
+====
+Check if the inputs are properly formatted, printing a diff to stdout. Returns non-zero in case of failure.
+====
+
+.-l, --list
+[%collapsible]
+====
+Check if the inputs are properly formatted, printing the file name to stdout in case they are not.
+Returns non-zero in case of failure.
+====
+
 [[common-options]]
 === Common options
 
