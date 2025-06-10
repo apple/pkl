@@ -39,6 +39,7 @@ com.jayway.jsonpath:json-path:2.9.0=testCompileClasspath,testImplementationDepen
 com.networknt:json-schema-validator:1.5.6=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 commons-fileupload:commons-fileupload:1.5=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 commons-io:commons-io:2.11.0=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
+io.github.java-diff-utils:java-diff-utils:4.15=runtimeClasspath,testRuntimeClasspath
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 net.java.dev.jna:jna:5.14.0=runtimeClasspath,testRuntimeClasspath
 net.javacrumbs.json-unit:json-unit-core:2.40.1=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
