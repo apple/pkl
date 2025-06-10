@@ -60,18 +60,18 @@ class CheckCommand : CliktCommand(name = "check") {
       }
 
   override fun run() {
+    var status = 0
     for (path in paths) {
       writer.appendLine("Checking file: $path")
       val contents = path.readText()
       val formatted = Formatter().format(contents)
-      var status = 0
       if (contents != formatted) {
         writer.appendLine(path.toAbsolutePath().toString())
         status = 1
       }
       writer.flush()
-      exitProcess(status)
     }
+    exitProcess(status)
   }
 
   private val writer = System.out.writer()
