@@ -748,12 +748,6 @@ This command formats the given files according to Pkl's cannonical formatter.
 Overwrite all the files in place with the formatted version.
 ====
 
-.-c, --check
-[%collapsible]
-====
-Check if the inputs are properly formatted, printing a diff to stdout. Returns non-zero in case of failure.
-====
-
 .-l, --list
 [%collapsible]
 ====

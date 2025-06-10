@@ -43,19 +43,6 @@ class FormatterCommand : CliktCommand(name = "format") {
         }
       }
 
-  private val check: Boolean by
-    option(
-        names = arrayOf("-c", "--check"),
-        help =
-          "Check if the inputs are properly formatted, printing a diff to stdout. Returns non-zero in case of failure.",
-      )
-      .flag()
-      .validate {
-        if (list || overwrite) {
-          fail("Option is mutually exclusive with -l and -r.")
-        }
-      }
-
   private val list: Boolean by
     option(
         names = arrayOf("-l", "--list"),
@@ -64,8 +51,8 @@ class FormatterCommand : CliktCommand(name = "format") {
       )
       .flag()
       .validate {
-        if (check || overwrite) {
-          fail("Option is mutually exclusive with -c and -r.")
+        if (overwrite) {
+          fail("Option is mutually exclusive with -w.")
         }
       }
 
@@ -76,13 +63,13 @@ class FormatterCommand : CliktCommand(name = "format") {
       )
       .flag()
       .validate {
-        if (check || list) {
-          fail("Option is mutually exclusive with -c and -l.")
+        if (list) {
+          fail("Option is mutually exclusive with -l.")
         }
       }
 
   override fun run() {
-    val shouldList = if (!check && !overwrite) true else list
-    CliFormatterRunner(check, shouldList, overwrite, files).run()
+    val shouldList = if (!overwrite) true else list
+    CliFormatterRunner(shouldList, overwrite, files).run()
   }
 }
