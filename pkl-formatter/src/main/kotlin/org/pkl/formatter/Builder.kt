@@ -56,6 +56,7 @@ class Builder(sourceText: String) {
       NodeType.OPERATOR -> Text(node.text())
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
+      NodeType.ANNOTATION -> formatAnnotation(node)
       NodeType.TYPEALIAS -> formatTypealias(node)
       NodeType.TYPEALIAS_HEADER -> formatTypealiasHeader(node)
       NodeType.TYPEALIAS_BODY -> formatTypealiasBody(node)
@@ -97,8 +98,8 @@ class Builder(sourceText: String) {
       NodeType.IF_EXPR -> formatIf(node)
       NodeType.IF_HEADER -> formatIfHeader(node)
       NodeType.IF_CONDITION -> formatParameterList(node)
-      NodeType.IF_THEN_EXPR,
-      NodeType.IF_ELSE_EXPR -> formatIfThenElse(node)
+      NodeType.IF_THEN_EXPR -> formatIfThen(node)
+      NodeType.IF_ELSE_EXPR -> formatIfElse(node)
       NodeType.NEW_EXPR -> formatNewExpr(node)
       NodeType.NEW_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
@@ -109,6 +110,10 @@ class Builder(sourceText: String) {
       NodeType.TRACE_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.PARENTHESIZED_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.LET_EXPR -> formatLetExpr(node)
+      NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
+      NodeType.LET_PARAMETER -> formatLetParameter(node)
       NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
       NodeType.TYPE_ARGUMENT_LIST -> formatTypeParameterList(node)
       NodeType.TYPE_ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
@@ -119,7 +124,8 @@ class Builder(sourceText: String) {
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      else -> Text(node.text()) // throw RuntimeException("Unknown node type: ${node.type}")
+      NodeType.PARENTHESIZED_TYPE -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
 
   private fun formatModule(node: GenNode): FormatNode {
@@ -184,6 +190,10 @@ class Builder(sourceText: String) {
         if (node.isTerminal("import")) format(node) else indent(format(node))
       },
     )
+  }
+
+  private fun formatAnnotation(node: GenNode): FormatNode {
+    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
   private fun formatTypealias(node: GenNode): FormatNode {
@@ -267,12 +277,7 @@ class Builder(sourceText: String) {
 
   private fun formatParameterList(node: GenNode): FormatNode {
     val id = newId()
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) {
-          Line
-        } else SpaceOrLine
-      }
+    val nodes = formatGeneric(node.children, SpaceOrLine)
     return Group(id, nodes)
   }
 
@@ -348,15 +353,32 @@ class Builder(sourceText: String) {
   }
 
   private fun formatIf(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) {
+          Space
+        } else SpaceOrLine
+      }
+    return Group(newId(), nodes)
   }
 
   private fun formatIfHeader(node: GenNode): FormatNode {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
-  private fun formatIfThenElse(node: GenNode): FormatNode {
-    return Indent(formatGeneric(node.children, SpaceOrLine))
+  private fun formatIfThen(node: GenNode): FormatNode {
+    return indent(format(node.children[0]))
+  }
+
+  private fun formatIfElse(node: GenNode): FormatNode {
+    val expr = node.children[0]
+    return if (expr.type == NodeType.IF_EXPR) {
+      // unpack the group
+      val group = formatIf(expr) as Group
+      Nodes(group.nodes)
+    } else {
+      indent(format(expr))
+    }
   }
 
   private fun formatNewExpr(node: GenNode): FormatNode {
@@ -372,6 +394,31 @@ class Builder(sourceText: String) {
         if (next == null) indent(format(node)) else format(node)
       }
     return Group(newId(), nodes)
+  }
+  
+  private fun formatLetExpr(node: GenNode): FormatNode {
+    val nodes = formatGenericWithGen(node.children, { prev, next ->
+      if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else SpaceOrLine
+    }) { node, next ->
+      if (next == null && node.type == NodeType.LET_EXPR) {
+        // unpack the lets
+        val group = formatLetExpr(node) as Group
+        Nodes(group.nodes)
+      } else format(node)
+    }
+    return Group(newId(), nodes)
+  }
+  
+  private fun formatLetParameterDefinition(node: GenNode): FormatNode {
+    val nodes = formatGeneric(node.children, SpaceOrLine)
+    return Group(newId(), nodes)
+  }
+  
+  private fun formatLetParameter(node: GenNode): FormatNode {
+    val nodes = formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+      if (next == null) indent(format(node)) else format(node)
+    }
+    return indent(Group(newId(), nodes))
   }
 
   private fun formatDeclaredType(node: GenNode): FormatNode {
@@ -560,11 +607,13 @@ class Builder(sourceText: String) {
       }
       prev.type == NodeType.BLOCK_COMMENT ->
         if (prev.linesBetween(next) > 0) ForceLine else SpaceOrLine
-      next.type in EMPTY_SUFFIXES || prev.isTerminal("[", "!") || next.isTerminal("]", "?", ",") ->
-        null
+      next.type in EMPTY_SUFFIXES ||
+        prev.isTerminal("[", "!", "@") ||
+        next.isTerminal("]", "?", ",") -> null
       next.isTerminal("=", "{") ||
         next.type == NodeType.OBJECT_BODY ||
         next.type == NodeType.NEW_EXPR -> Space
+      prev.isTerminal("(") || next.isTerminal(")") -> Line
       else -> separatorFn(prev, next)
     }
   }
