@@ -158,7 +158,8 @@ constructor(
     if (options.expression == null) {
       return evaluateOutputBytes(moduleSource)
     }
-    return evaluateExpressionString(moduleSource, options.expression).toByteArray()
+    return evaluateExpressionString(moduleSource, options.expression)
+      .toByteArray(StandardCharsets.UTF_8)
   }
 
   /** Renders each module's `output.bytes`, writing it to the specified output file. */
