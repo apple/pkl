@@ -112,7 +112,7 @@ public final class VmBytes extends VmValue implements Iterable<Long> {
   public VmBytes concatenate(VmBytes right) {
     if (bytes.length == 0) return right;
     if (right.bytes.length == 0) return this;
-    
+
     var newBytes = new byte[bytes.length + right.bytes.length];
     System.arraycopy(bytes, 0, newBytes, 0, bytes.length);
     System.arraycopy(right.bytes, 0, newBytes, bytes.length, right.bytes.length);
