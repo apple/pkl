@@ -898,6 +898,50 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result5.task(":evalTestGatherImports")).isNull()
   }
 
+  @Test
+  fun `external module reader`() {
+    writePklFile("import \"foo:test.pkl\"")
+    writeBuildFile(
+      "json",
+      additionalContents =
+        """
+      allowedModules = ["foo:", "file:", "repl:text"]
+      externalModuleReaders = ["foo": new org.pkl.gradle.ExternalReader("echo")]
+    """
+          .trimIndent(),
+    )
+
+    // this is not actually a valid external reader, so we expect this to fail
+    // this test is just asserting that Pkl is configured to use the external process
+    // and that it does attempt to do so
+    val result = runTask("evalTest", true)
+    assertThat(result.output).contains("IOException")
+    // unix: "Stream closed", windows: "The pipe is being closed"
+    assertThat(result.output).contains("closed")
+  }
+
+  @Test
+  fun `external resource reader`() {
+    writePklFile("result = read(\"foo:test\")")
+    writeBuildFile(
+      "json",
+      additionalContents =
+        """
+      allowedResources = ["foo:", "prop:"]
+      externalResourceReaders = ["foo": new org.pkl.gradle.ExternalReader("echo", ["arg1", "arg2"])]
+    """
+          .trimIndent(),
+    )
+
+    // this is not actually a valid external reader, so we expect this to fail
+    // this test is just asserting that Pkl is configured to use the external process
+    // and that it does attempt to do so
+    val result = runTask("evalTest", true)
+    assertThat(result.output).contains("IOException")
+    // unix: "Stream closed", windows: "The pipe is being closed"
+    assertThat(result.output).contains("closed")
+  }
+
   private fun writeBuildFile(
     // don't use `org.pkl.core.OutputFormat`
     // because test compile class path doesn't contain pkl-core
