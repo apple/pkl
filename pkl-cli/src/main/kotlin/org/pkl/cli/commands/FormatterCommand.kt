@@ -43,7 +43,11 @@ class FormatterCommand : NoOpCliktCommand(name = "format") {
   }
 }
 
-class CheckCommand : CliktCommand(name = "check") {
+abstract class FormatSubcommand(name: String) : CliktCommand(name = name) {
+  protected val writer = System.out.writer()
+}
+
+class CheckCommand : FormatSubcommand(name = "check") {
   override fun help(context: Context) =
     "Check if the given files are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure."
 
@@ -62,7 +66,6 @@ class CheckCommand : CliktCommand(name = "check") {
   override fun run() {
     var status = 0
     for (path in paths) {
-      writer.appendLine("Checking file: $path")
       val contents = path.readText()
       val formatted = Formatter().format(contents)
       if (contents != formatted) {
@@ -73,11 +76,9 @@ class CheckCommand : CliktCommand(name = "check") {
     }
     exitProcess(status)
   }
-
-  private val writer = System.out.writer()
 }
 
-class ApplyCommand : CliktCommand(name = "apply") {
+class ApplyCommand : FormatSubcommand(name = "apply") {
   override fun help(context: Context) =
     "Overwrite all the files in place with the formatted version."
 
@@ -115,6 +116,4 @@ class ApplyCommand : CliktCommand(name = "apply") {
       }
     }
   }
-
-  private val writer = System.out.writer()
 }

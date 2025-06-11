@@ -108,15 +108,23 @@ public class GenericParser {
   }
 
   private GenNode parseModuleDecl(List<GenNode> preChildren) {
-    var children = new ArrayList<GenNode>();
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
+    var headers = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      headers.add(headerParts.modifierList);
+    }
     if (lookahead == Token.MODULE) {
-      var subChildren = new ArrayList<>(preChildren);
+      var subChildren = new ArrayList<>(headers);
       subChildren.add(makeTerminal(next()));
       ff(subChildren);
       subChildren.add(parseQualifiedIdentifier());
       children.add(new GenNode(NodeType.MODULE_DEFINITION, subChildren));
     } else {
-      children.addAll(preChildren);
+      children.addAll(headers);
+      if (headerParts.modifierList != null) {
+        throw parserError("wrongHeaders", "Amends or extends declaration");
+      }
     }
     var looka = lookahead();
     if (looka == Token.AMENDS || looka == Token.EXTENDS) {
@@ -317,9 +325,9 @@ public class GenericParser {
       hasTypeAnnotation = true;
     }
     if (lookahead() == Token.ASSIGN) {
-      ff(header);
-      header.add(makeTerminal(next()));
       children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
+      ff(children);
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseExpr());
     } else if (lookahead() == Token.LBRACE) {

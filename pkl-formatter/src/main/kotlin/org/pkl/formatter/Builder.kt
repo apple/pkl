@@ -38,9 +38,9 @@ class Builder(sourceText: String) {
     when (node.type) {
       NodeType.MODULE -> formatModule(node)
       NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, ForceLine))
-      NodeType.DOC_COMMENT_LINE -> formatLineComment("///", node)
-      NodeType.LINE_COMMENT -> formatLineComment("//", node)
-      NodeType.BLOCK_COMMENT -> formatBlockComment(node)
+      NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
+      NodeType.LINE_COMMENT,
+      NodeType.BLOCK_COMMENT,
       NodeType.TERMINAL,
       NodeType.MODIFIER,
       NodeType.IDENTIFIER,
@@ -119,7 +119,7 @@ class Builder(sourceText: String) {
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      else -> Text(node.text())//throw RuntimeException("Unknown node type: ${node.type}")
+      else -> Text(node.text()) // throw RuntimeException("Unknown node type: ${node.type}")
     }
 
   private fun formatModule(node: GenNode): FormatNode {
@@ -149,21 +149,13 @@ class Builder(sourceText: String) {
     }
   }
 
-  private fun formatLineComment(prefix: String, node: GenNode): FormatNode {
+  private fun formatDocComment(node: GenNode): FormatNode {
     val txt = node.text()
     val index = txt.indexOfFirst { it != '/' }
-    if (index <= 0) return Text(prefix)
-    val comment = txt.substring(index).trim()
-    return Text("$prefix $comment")
-  }
-
-  private fun formatBlockComment(node: GenNode): FormatNode {
-    val fullTxt = node.text().drop(1).dropLast(1)
-    val start = fullTxt.indexOfFirst { it != '*' }
-    val end = fullTxt.length - fullTxt.reversed().indexOfFirst { it != '*' }
-    if (start < 0) return Text("/**/")
-    val txt = fullTxt.substring(start, end).trim()
-    return Text("/* $txt */")
+    if (index <= 0) return Text("///")
+    var comment = txt.substring(index)
+    if (!comment.startsWith(" ")) comment = " $comment"
+    return Text("///$comment")
   }
 
   private fun formatQualifiedIdentifier(node: GenNode): FormatNode {
@@ -230,31 +222,16 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassProperty(node: GenNode): FormatNode {
-    val hasBody = node.children.last().type != NodeType.CLASS_PROPERTY_HEADER
+    val shouldIndent =
+      node.children.last().type !in
+        EnumSet.of(NodeType.OBJECT_BODY, NodeType.NEW_EXPR, NodeType.CLASS_PROPERTY_HEADER)
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
-          formatGenericWithGen(
-            children,
-            { prev, next ->
-              if (next.type == NodeType.OBJECT_BODY || next.type == NodeType.NEW_EXPR) Space
-              else if (prev.type == NodeType.CLASS_PROPERTY_HEADER) null else SpaceOrLine
-            },
-          ) { node, next ->
-            if (next == null) {
-              when (node.type) {
-                NodeType.OBJECT_BODY -> formatObjectBody(node)
-                NodeType.NEW_EXPR -> group(format(node))
-                else ->
-                  if (hasBody) {
-                    group(SpaceOrLine, indent(format(node)))
-                  } else {
-                    group(SpaceOrLine, format(node))
-                  }
-              }
-            } else format(node)
+          formatGenericWithGen(children, SpaceOrLine) { node, next ->
+            if (next == null && shouldIndent) indent((format(node))) else format(node)
           }
-        Group(newId(), nodes)
+        groupOnSpace(nodes)
       }
     return Nodes(nodes)
   }
@@ -573,7 +550,7 @@ class Builder(sourceText: String) {
   ): FormatNode? {
     return when {
       hasTraillingAffix(prev, next) -> SpaceOrLine
-      prev.type == NodeType.DOC_COMMENT -> ForceLine
+      prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
       prev.type in FORCE_LINE_AFFIXES -> {
         if (prev.linesBetween(next) > 1) {
           nodes(ForceLine, ForceLine)
@@ -585,7 +562,9 @@ class Builder(sourceText: String) {
         if (prev.linesBetween(next) > 0) ForceLine else SpaceOrLine
       next.type in EMPTY_SUFFIXES || prev.isTerminal("[", "!") || next.isTerminal("]", "?", ",") ->
         null
-      next.isTerminal("=", "{") -> Space
+      next.isTerminal("=", "{") ||
+        next.type == NodeType.OBJECT_BODY ||
+        next.type == NodeType.NEW_EXPR -> Space
       else -> separatorFn(prev, next)
     }
   }
@@ -654,7 +633,6 @@ class Builder(sourceText: String) {
         NodeType.SEMICOLON,
         NodeType.SHEBANG,
         NodeType.DOC_COMMENT_LINE,
-        NodeType.DOC_COMMENT,
       )
 
     private val EMPTY_SUFFIXES =

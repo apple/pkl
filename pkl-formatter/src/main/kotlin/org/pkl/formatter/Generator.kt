@@ -33,6 +33,7 @@ class Generator {
   private var indent: Int = 0
   private var size: Int = 0
   private val wrapped: MutableSet<Int> = mutableSetOf()
+  private var shouldAddIndent = false
 
   fun generate(node: FormatNode) {
     node(node, Wrap.DETECT)
@@ -75,10 +76,10 @@ class Generator {
       }
       is Space -> text(" ")
       is Indent -> {
-        if (wrap.isEnabled()) {
+        if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
           indent++
-          buf.append(INDENT)
+          shouldAddIndent = true
           node.nodes.forEach { node(it, wrap) }
           indent--
         } else {
@@ -96,6 +97,10 @@ class Generator {
   }
 
   private fun text(value: String) {
+    if (shouldAddIndent) {
+      repeat(times = indent) { buf.append(INDENT) }
+      shouldAddIndent = false
+    }
     size += value.length
     buf.append(value)
   }
@@ -103,7 +108,7 @@ class Generator {
   private fun newline() {
     size = INDENT.length * indent
     buf.append('\n')
-    repeat(times = indent) { buf.append(INDENT) }
+    shouldAddIndent = true
   }
 
   override fun toString(): String {
