@@ -1,12 +1,12 @@
 import "foo.pkl"
 
-bar = new Listing<Int>(!isEmpty) { 1; 2 } // a bar
+bar = new Listing<Int>(!isEmpty) { 1; 2 } //a bar
 
 /// a baz
 /// returns its parameter
 baz = (x) -> x
 
-function fun(x: Int?, b: Boolean) = if (b) /* return x */ x else x + bar [0]
+function fun(x: Int?, b: Boolean) = if (b) /***return x**/ x else x + bar [0]
 
 prop = trace(1) + super.foo + module.foo
 
