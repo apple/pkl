@@ -21,7 +21,6 @@ plugins {
 
 dependencies {
   api(projects.pklParser)
-  implementation(libs.diffUtils)
 
   testImplementation(projects.pklCommonsTest)
 }
