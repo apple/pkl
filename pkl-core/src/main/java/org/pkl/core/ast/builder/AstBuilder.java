@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
@@ -37,6 +38,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.TypeParameter.Variance;
+import org.pkl.core.ast.ByteConstantValueNode;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
@@ -77,6 +79,7 @@ import org.pkl.core.ast.expression.generator.GeneratorSpreadNodeGen;
 import org.pkl.core.ast.expression.generator.GeneratorWhenNode;
 import org.pkl.core.ast.expression.generator.RestoreForBindingsNode;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
+import org.pkl.core.ast.expression.literal.BytesLiteralNode;
 import org.pkl.core.ast.expression.literal.CheckIsAnnotationClassNode;
 import org.pkl.core.ast.expression.literal.ConstantEntriesLiteralNodeGen;
 import org.pkl.core.ast.expression.literal.ElementsEntriesLiteralNodeGen;
@@ -160,6 +163,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
+import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmDataSize;
@@ -524,9 +528,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
   }
 
-  @Override
-  public IntLiteralNode visitIntLiteralExpr(IntLiteralExpr expr) {
-    var section = createSourceSection(expr);
+  private <T> T parseNumber(IntLiteralExpr expr, BiFunction<String, Integer, T> parser) {
     var text = remove_(expr.getNumber());
 
     var radix = 10;
@@ -547,11 +549,17 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       // also moves negation from runtime to parse time
       text = "-" + text;
     }
+    return parser.apply(text, radix);
+  }
 
+  @Override
+  public IntLiteralNode visitIntLiteralExpr(IntLiteralExpr expr) {
+    var section = createSourceSection(expr);
     try {
-      var num = Long.parseLong(text, radix);
+      var num = parseNumber(expr, Long::parseLong);
       return new IntLiteralNode(section, num);
     } catch (NumberFormatException e) {
+      var text = expr.getNumber();
       throw exceptionBuilder().evalError("intTooLarge", text).withSourceSection(section).build();
     }
   }
@@ -637,8 +645,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     // TODO: make sure that no user-defined List/Set/Map method is in scope
-    // TODO: support qualified calls (e.g., `import "pkl:base"; x = base.List()/Set()/Map()`) for
-    // correctness
+    // TODO: support qualified calls (e.g., `import "pkl:base"; x =
+    // base.List()/Set()/Map()/Bytes()`) for correctness
     if (identifier == org.pkl.core.runtime.Identifier.LIST) {
       return doVisitListLiteral(expr, argList);
     }
@@ -649,6 +657,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     if (identifier == org.pkl.core.runtime.Identifier.MAP) {
       return doVisitMapLiteral(expr, argList);
+    }
+
+    if (identifier == org.pkl.core.runtime.Identifier.BYTES_CONSTRUCTOR) {
+      return doVisitBytesLiteral(expr, argList);
     }
 
     var scope = symbolTable.getCurrentScope();
@@ -1083,6 +1095,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         : new MapLiteralNode(createSourceSection(expr), keyAndValueNodes.first);
   }
 
+  private ExpressionNode doVisitBytesLiteral(Expr expr, ArgumentList argList) {
+    var elementNodes = createCollectionArgumentBytesNodes(argList);
+
+    if (elementNodes.first.length == 0) {
+      return new ConstantValueNode(VmBytes.EMPTY);
+    }
+    return elementNodes.second
+        ? new ConstantValueNode(
+            createSourceSection(expr), VmBytes.createFromConstantNodes(elementNodes.first))
+        : new BytesLiteralNode(createSourceSection(expr), elementNodes.first);
+  }
+
   private Pair<ExpressionNode[], Boolean> createCollectionArgumentNodes(ArgumentList exprs) {
     var args = exprs.getArguments();
     var elementNodes = new ExpressionNode[args.size()];
@@ -1095,6 +1119,32 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     return Pair.of(elementNodes, isConstantNodes);
+  }
+
+  private Pair<ExpressionNode[], Boolean> createCollectionArgumentBytesNodes(ArgumentList exprs) {
+    var args = exprs.getArguments();
+    var expressionNodes = new ExpressionNode[args.size()];
+    var isAllByteLiterals = true;
+
+    for (var i = 0; i < args.size(); i++) {
+      var expr = args.get(i);
+      if (expr instanceof IntLiteralExpr intLiteralExpr && isAllByteLiterals) {
+        try {
+          var byt = parseNumber(intLiteralExpr, Byte::parseByte);
+          expressionNodes[i] = new ByteConstantValueNode(byt);
+        } catch (NumberFormatException e) {
+          // proceed with initializing a constant value node; we'll throw an error inside
+          // BytesLiteralNode.
+          isAllByteLiterals = false;
+          expressionNodes[i] = visitExpr(expr);
+        }
+      } else {
+        isAllByteLiterals = false;
+        expressionNodes[i] = visitExpr(expr);
+      }
+    }
+
+    return Pair.of(expressionNodes, isAllByteLiterals);
   }
 
   public GeneratorMemberNode visitObjectMember(org.pkl.parser.syntax.ObjectMember member) {

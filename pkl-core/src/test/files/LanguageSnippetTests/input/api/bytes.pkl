@@ -1,0 +1,51 @@
+amends "../snippetTest.pkl"
+
+local megaBytes = IntSeq(0, 999).map((_) -> 0).toBytes()
+
+examples {
+  ["md5"] {
+    Bytes(1, 2, 3, 4).md5
+    Bytes().md5
+  }
+  ["sha256"] {
+    Bytes(1, 2, 3, 4).sha256
+    Bytes().sha256
+  }
+  ["sha1"] {
+    Bytes(1, 2, 3, 4).sha1
+    Bytes().sha1
+  }
+  ["toString"] {
+    Bytes(1, 2, 3, 4).toString()
+    Bytes().toString()
+  }
+  ["base64"] {
+    Bytes(1, 2, 3, 4).base64
+    Bytes().base64
+    "AQIDBA==".base64DecodedBytes.base64
+  }
+  ["hex"] {
+    Bytes(1, 2, 3, 4).hex
+    Bytes().hex
+  }
+  ["length"] {
+    Bytes().length
+    Bytes(1, 2, 3, 4).length
+    megaBytes.length
+  }
+  ["size"] {
+    Bytes().size
+    Bytes(1, 2, 3, 4).size
+    megaBytes.size
+  }
+  ["decodeToString()"] {
+    Bytes(0x66, 0x6f, 0x6f, 0x20, 0x62, 0x61, 0x72).decodeToString("UTF-8")
+    "foo bar".encodeToBytes("UTF-8").decodeToString("UTF-8")
+  }
+  ["getOrNull()"] {
+    Bytes(1, 2, 3).getOrNull(0)
+    Bytes(1, 2, 3).getOrNull(1)
+    Bytes(1, 2, 3).getOrNull(2)
+    Bytes(1, 2, 3).getOrNull(3)
+  }
+}

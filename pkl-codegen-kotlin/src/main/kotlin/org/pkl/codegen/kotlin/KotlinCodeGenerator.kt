@@ -226,6 +226,9 @@ class KotlinCodeGenerator(
     fun PClass.Property.isRegex(): Boolean =
       (this.type as? PType.Class)?.pClass?.info == PClassInfo.Regex
 
+    fun PClass.Property.isByteArray(): Boolean =
+      (this.type as? PType.Class)?.pClass?.info == PClassInfo.Bytes
+
     fun generateConstructor(): FunSpec {
       val builder = FunSpec.constructorBuilder()
       for ((name, property) in allProperties) {
@@ -302,12 +305,20 @@ class KotlinCodeGenerator(
           .addStatement("other as %T", kotlinPoetClassName)
 
       for ((propertyName, property) in allProperties) {
-        val accessor = if (property.isRegex()) "%N.pattern" else "%N"
-        builder.addStatement(
-          "if (this.$accessor != other.$accessor) return false",
-          propertyName,
-          propertyName,
-        )
+        if (property.isByteArray()) {
+          builder.addStatement(
+            "if (!this.%N.contentEquals(other.%N)) return false",
+            propertyName,
+            propertyName,
+          )
+        } else {
+          val accessor = if (property.isRegex()) "%N.pattern" else "%N"
+          builder.addStatement(
+            "if (this.$accessor != other.$accessor) return false",
+            propertyName,
+            propertyName,
+          )
+        }
       }
 
       builder.addStatement("return true")
@@ -322,14 +333,18 @@ class KotlinCodeGenerator(
           .addStatement("var result = 1")
 
       for ((propertyName, property) in allProperties) {
-        val accessor = if (property.isRegex()) "this.%N.pattern" else "this.%N"
-        // use Objects.hashCode() because Kotlin's Any?.hashCode()
-        // doesn't work for platform types (will get NPE if null)
-        builder.addStatement(
-          "result = 31 * result + %T.hashCode($accessor)",
-          Objects::class,
-          propertyName,
-        )
+        if (property.isByteArray()) {
+          builder.addStatement("result = 31 * result + this.%N.contentHashCode()", propertyName)
+        } else {
+          val accessor = if (property.isRegex()) "this.%N.pattern" else "this.%N"
+          // use Objects.hashCode() because Kotlin's Any?.hashCode()
+          // doesn't work for platform types (will get NPE if null)
+          builder.addStatement(
+            "result = 31 * result + %T.hashCode($accessor)",
+            Objects::class,
+            propertyName,
+          )
+        }
       }
 
       builder.addStatement("return result")
@@ -347,10 +362,15 @@ class KotlinCodeGenerator(
             .apply {
               add("%L", pClass.toKotlinPoetName().simpleName)
               add("(")
-              for ((index, propertyName) in allProperties.keys.withIndex()) {
+              for ((index, entry) in allProperties.entries.withIndex()) {
+                val (propertyName, property) = entry
                 add(if (index == 0) "%L" else ", %L", propertyName)
-                add("=$")
-                add("%N", propertyName)
+                if (property.isByteArray()) {
+                  add("=\${%T.toString(%L)}", Arrays::class, propertyName)
+                } else {
+                  add("=$")
+                  add("%N", propertyName)
+                }
               }
               add(")")
             }
@@ -488,16 +508,16 @@ class KotlinCodeGenerator(
         builder.addKdoc(renderAsKdoc(docComment))
       }
 
-      var hasRegex = false
+      var hasRegexOrByteArray = false
       for ((name, property) in properties) {
-        hasRegex = hasRegex || property.isRegex()
+        hasRegexOrByteArray = hasRegexOrByteArray || property.isRegex() || property.isByteArray()
         builder.addProperty(generateProperty(name, property))
       }
 
-      // kotlin.text.Regex (and java.util.regex.Pattern) defines equality as identity.
-      // To match Pkl semantics and compare regexes by their String pattern,
-      // override equals and hashCode if the data class has a property of type Regex.
-      if (hasRegex) {
+      // Regex and ByteArray define equaltiy as identity.
+      // To match Pkl semantics, override equals and hashCode if the data class has a property of
+      // type Regex or ByteArray.
+      if (hasRegexOrByteArray) {
         builder.addFunction(generateEqualsMethod()).addFunction(generateHashCodeMethod())
       }
 
@@ -632,6 +652,7 @@ class KotlinCodeGenerator(
           PClassInfo.Float -> DOUBLE
           PClassInfo.Duration -> DURATION
           PClassInfo.DataSize -> DATA_SIZE
+          PClassInfo.Bytes -> BYTE_ARRAY
           PClassInfo.Pair ->
             KOTLIN_PAIR.parameterizedBy(
               if (typeArguments.isEmpty()) ANY_NULL else typeArguments[0].toKotlinPoetName(),

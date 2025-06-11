@@ -161,6 +161,24 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+
+|link:{uri-stdlib-Function}[Function]
+|`0xE`
+|
+|
+|
+|
+|
+|
+
+|link:{uri-stdlib-Bytes}[Bytes]
+|`0xF`
+|link:{uri-messagepack-bin}[bin]
+|Binary contents
+|
+|
+|
+|
 |===
 
 [[object-members]]

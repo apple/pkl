@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,10 @@ public interface ValueVisitor {
   }
 
   default void visitDataSize(DataSize value) {
+    visitDefault(value);
+  }
+
+  default void visitBytes(byte[] value) {
     visitDefault(value);
   }
 
@@ -108,6 +112,8 @@ public interface ValueVisitor {
       visitMap(map);
     } else if (value instanceof Pattern pattern) {
       visitRegex(pattern);
+    } else if (value instanceof byte[] bytes) {
+      visitBytes(bytes);
     } else {
       throw new IllegalArgumentException("Cannot visit value with unexpected type: " + value);
     }

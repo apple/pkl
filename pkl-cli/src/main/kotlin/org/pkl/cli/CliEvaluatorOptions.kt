@@ -74,9 +74,9 @@ data class CliEvaluatorOptions(
    *
    * If set, the said expression is evaluated under the context of the enclosing module.
    *
-   * If unset, the module's `output.text` property evaluated.
+   * If unset, the module's `output.bytes` property is evaluated.
    */
-  val expression: String = "output.text",
+  val expression: String? = null,
 ) {
 
   companion object {

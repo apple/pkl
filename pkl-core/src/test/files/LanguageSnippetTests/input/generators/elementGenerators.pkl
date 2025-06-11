@@ -326,6 +326,18 @@ res11d = new Dynamic {
   for (i, n in IntSeq(1, 3)) { Pair(i, n) }
 }
 
+res12a = new Listing {
+  for (i in Bytes(1, 2, 3, 4)) {
+    i
+  }
+}
+
+res12b = new Listing {
+  for (i in Bytes()) {
+    i
+  }
+}
+
 local dynamicWithOnlyProperties = new Dynamic {
   foo = "Foo!"
   bar = 42
