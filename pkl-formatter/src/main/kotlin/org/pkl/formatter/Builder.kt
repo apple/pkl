@@ -111,7 +111,8 @@ class Builder(sourceText: String) {
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.BINARY_OP_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
-      NodeType.SUBSCRIPT_EXPR -> Nodes(formatGeneric(node.children, SpaceOrLine))
+      NodeType.SUBSCRIPT_EXPR,
+      NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
       NodeType.TRACE_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.THROW_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.READ_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
@@ -408,30 +409,37 @@ class Builder(sourceText: String) {
       }
     return Group(newId(), nodes)
   }
-  
+
   private fun formatLetExpr(node: GenNode): FormatNode {
-    val nodes = formatGenericWithGen(node.children, { prev, next ->
-      if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else SpaceOrLine
-    }) { node, next ->
-      if (next == null && node.type == NodeType.LET_EXPR) {
-        // unpack the lets
-        val group = formatLetExpr(node) as Group
-        Nodes(group.nodes)
-      } else format(node)
-    }
+    val nodes =
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else SpaceOrLine },
+      ) { node, next ->
+        if (next == null && node.type == NodeType.LET_EXPR) {
+          // unpack the lets
+          val group = formatLetExpr(node) as Group
+          Nodes(group.nodes)
+        } else format(node)
+      }
     return Group(newId(), nodes)
   }
-  
+
   private fun formatLetParameterDefinition(node: GenNode): FormatNode {
     val nodes = formatGeneric(node.children, SpaceOrLine)
     return Group(newId(), nodes)
   }
-  
+
   private fun formatLetParameter(node: GenNode): FormatNode {
-    val nodes = formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-      if (next == null) indent(format(node)) else format(node)
-    }
+    val nodes =
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (next == null) indent(format(node)) else format(node)
+      }
     return indent(Group(newId(), nodes))
+  }
+
+  private fun formatSubscriptExpr(node: GenNode): FormatNode {
+    return Nodes(formatGeneric(node.children, EMPTY_NODE))
   }
 
   private fun formatDeclaredType(node: GenNode): FormatNode {
