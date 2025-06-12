@@ -300,7 +300,7 @@ public class GenericParser {
       ff(elements);
     }
     if (lookahead == Token.EOF) {
-      throw new ParserError(
+      throw parserError(
           ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
     }
     if (!elements.isEmpty()) {
@@ -393,7 +393,7 @@ public class GenericParser {
     var members = new ArrayList<GenNode>();
     while (lookahead != Token.RBRACE) {
       if (lookahead == Token.EOF) {
-        throw new ParserError(
+        throw parserError(
             ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
       }
       members.add(parseObjectMember());
@@ -451,7 +451,7 @@ public class GenericParser {
       case WHEN -> parseWhenGenerator();
       case FOR -> parseForGenerator();
       case TYPE_ALIAS, CLASS ->
-          throw new ParserError(
+          throw parserError(
               ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
       default -> {
         var preChildren = new ArrayList<GenNode>();
@@ -550,7 +550,7 @@ public class GenericParser {
       // There shouldn't be any whitespace between the first and second ']'.
       var span = firstBrack.span.endWith(secondbrack.span);
       var text = lexer.textFor(span.charIndex(), span.length());
-      throw new ParserError(ErrorMessages.create("unexpectedToken", text, "]]"), firstBrack.span);
+      throw parserError(ErrorMessages.create("unexpectedToken", text, "]]"), firstBrack.span);
     }
     ff(children);
     if (lookahead == Token.ASSIGN) {
@@ -913,7 +913,7 @@ public class GenericParser {
             yield new GenNode(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
           }
           case EOF ->
-              throw new ParserError(
+              throw parserError(
                   ErrorMessages.create("unexpectedEndOfFile"), prev().span.stopSpan().move(1));
           default -> {
             var text = _lookahead.text(lexer);
@@ -1108,8 +1108,7 @@ public class GenericParser {
 
     if (lookahead != Token.UNION) {
       if (hasDefault) {
-        throw new ParserError(
-            ErrorMessages.create("notAUnion"), start.endWith(first.span.toSpan()));
+        throw parserError(ErrorMessages.create("notAUnion"), start.endWith(first.span.toSpan()));
       }
       return first;
     }
@@ -1380,7 +1379,7 @@ public class GenericParser {
         args[0] = lookahead == Token.EOF ? "EOF" : _lookahead.text(lexer);
         System.arraycopy(messageArgs, 0, args, 1, messageArgs.length);
       }
-      throw new ParserError(ErrorMessages.create(errorKey, args), span);
+      throw parserError(ErrorMessages.create(errorKey, args), span);
     }
     return next();
   }
@@ -1402,8 +1401,12 @@ public class GenericParser {
     }
   }
 
-  private ParserError parserError(String messageKey, Object... args) {
-    return new ParserError(ErrorMessages.create(messageKey, args), spanLookahead);
+  private GenericParserError parserError(String messageKey, Object... args) {
+    return new GenericParserError(ErrorMessages.create(messageKey, args), fromSpan(spanLookahead));
+  }
+
+  private GenericParserError parserError(String message, Span span) {
+    return new GenericParserError(message, fromSpan(span));
   }
 
   private boolean isModuleDecl() {

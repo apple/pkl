@@ -13,33 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.parser.syntax.generic;
+package org.pkl.parser;
 
-import org.pkl.parser.Span;
+import org.pkl.parser.syntax.generic.FullSpan;
 
-public record FullSpan(
-    int charIndex, int length, int lineBegin, int colBegin, int lineEnd, int colEnd) {
+public class GenericParserError extends RuntimeException {
+  private final FullSpan span;
 
-  public FullSpan endWith(FullSpan end) {
-    return new FullSpan(
-        charIndex,
-        end.charIndex - charIndex + end.length,
-        lineBegin,
-        colBegin,
-        end.lineEnd,
-        end.colEnd);
+  public GenericParserError(String msg, FullSpan span) {
+    super(msg);
+    this.span = span;
   }
 
-  public Span toSpan() {
-    return new Span(charIndex, length);
-  }
-
-  public boolean sameLine(FullSpan other) {
-    return lineEnd == other.lineBegin;
+  public FullSpan getSpan() {
+    return span;
   }
 
   @Override
   public String toString() {
-    return "(%d:%d - %d:%d)".formatted(lineBegin, colBegin, lineEnd, colEnd);
+    return getMessage() + " at " + span;
   }
 }
