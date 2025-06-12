@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,35 +23,33 @@ import org.pkl.core.util.Nullable;
 final class ExternalReaderMessages {
   private ExternalReaderMessages() {}
 
-  public record InitializeModuleReaderRequest(long requestId, String scheme)
-      implements Server.Request {
+  record InitializeModuleReaderRequest(long requestId, String scheme) implements Server.Request {
     public Type type() {
       return Type.INITIALIZE_MODULE_READER_REQUEST;
     }
   }
 
-  public record InitializeResourceReaderRequest(long requestId, String scheme)
-      implements Server.Request {
+  record InitializeResourceReaderRequest(long requestId, String scheme) implements Server.Request {
     public Type type() {
       return Type.INITIALIZE_RESOURCE_READER_REQUEST;
     }
   }
 
-  public record InitializeModuleReaderResponse(long requestId, @Nullable ModuleReaderSpec spec)
+  record InitializeModuleReaderResponse(long requestId, @Nullable ModuleReaderSpec spec)
       implements Client.Response {
     public Type type() {
       return Type.INITIALIZE_MODULE_READER_RESPONSE;
     }
   }
 
-  public record InitializeResourceReaderResponse(long requestId, @Nullable ResourceReaderSpec spec)
+  record InitializeResourceReaderResponse(long requestId, @Nullable ResourceReaderSpec spec)
       implements Client.Response {
     public Type type() {
       return Type.INITIALIZE_RESOURCE_READER_RESPONSE;
     }
   }
 
-  public record CloseExternalProcess() implements Server.OneWay {
+  record CloseExternalProcess() implements Server.OneWay {
     public Type type() {
       return Type.CLOSE_EXTERNAL_PROCESS;
     }

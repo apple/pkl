@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.core.project.Project
+import org.pkl.core.resource.TestResourceReader
 
 class EvaluatorBuilderTest {
   @Test
@@ -33,6 +34,12 @@ class EvaluatorBuilderTest {
   fun `preconfigured builder sets system properties`() {
     val builder = EvaluatorBuilder.preconfigured()
     assertThat(builder.externalProperties).isEqualTo(System.getProperties())
+  }
+
+  @Test
+  fun `preconfigured builder adds resource readers from service providers`() {
+    val builder = EvaluatorBuilder.preconfigured()
+    assertThat(builder.resourceReaders).hasAtLeastOneElementOfType(TestResourceReader::class.java)
   }
 
   @Test

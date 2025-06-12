@@ -20,16 +20,13 @@ import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
 import java.time.Duration
-import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.msgpack.core.MessagePack
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageDecoder
 import org.pkl.core.messaging.MessageEncoder
-import org.pkl.core.messaging.Messages.*
+import org.pkl.core.messaging.Messages
 import org.pkl.core.packages.Checksums
 
 class ServerMessagePackCodecTest {
@@ -52,18 +49,16 @@ class ServerMessagePackCodecTest {
 
   @Test
   fun `round-trip CreateEvaluatorRequest`() {
-    val resourceReader1 = ResourceReaderSpec("resourceReader1", true, true)
-    val resourceReader2 = ResourceReaderSpec("resourceReader2", true, false)
-    val moduleReader1 = ModuleReaderSpec("moduleReader1", true, true, true)
-    val moduleReader2 = ModuleReaderSpec("moduleReader2", true, false, false)
+    val resourceReader1 = Messages.ResourceReaderSpec("resourceReader1", true, true)
+    val resourceReader2 = Messages.ResourceReaderSpec("resourceReader2", true, false)
+    val moduleReader1 = Messages.ModuleReaderSpec("moduleReader1", true, true, true)
+    val moduleReader2 = Messages.ModuleReaderSpec("moduleReader2", true, false, false)
     val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
     roundtrip(
       CreateEvaluatorRequest(
         requestId = 123,
-        allowedModules = listOf("pkl", "file", "https").map(Pattern::compile),
-        allowedResources =
-          listOf("pkl", "file", "https", "resourceReader1", "resourceReader2")
-            .map(Pattern::compile),
+        allowedModules = listOf("pkl", "file", "https"),
+        allowedResources = listOf("pkl", "file", "https", "resourceReader1", "resourceReader2"),
         clientResourceReaders = listOf(resourceReader1, resourceReader2),
         clientModuleReaders = listOf(moduleReader1, moduleReader2),
         modulePaths = listOf(Path.of("some/path.zip"), Path.of("other/path.zip")),
@@ -99,7 +94,7 @@ class ServerMessagePackCodecTest {
           ),
         http =
           Http(
-            proxy = PklEvaluatorSettings.Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
+            proxy = Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
             caCertificates = byteArrayOf(1, 2, 3, 4),
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),

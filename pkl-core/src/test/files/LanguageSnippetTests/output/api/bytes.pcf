@@ -1,0 +1,47 @@
+examples {
+  ["md5"] {
+    "08d6c05a21512a79a1dfeb9d2a8f262f"
+    "d41d8cd98f00b204e9800998ecf8427e"
+  }
+  ["sha256"] {
+    "9f64a747e1b97f131fabb6b447296c9b6f0201e79fb3c5356e6c77e89b6a806a"
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+  ["sha1"] {
+    "12dada1fff4d4787ade3333147202c3b443e376f"
+    "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  }
+  ["toString"] {
+    "Bytes(1, 2, 3, 4)"
+    "Bytes()"
+  }
+  ["base64"] {
+    "AQIDBA=="
+    ""
+    "AQIDBA=="
+  }
+  ["hex"] {
+    "01020304"
+    ""
+  }
+  ["length"] {
+    0
+    4
+    1000
+  }
+  ["size"] {
+    0.b
+    4.b
+    1.kb
+  }
+  ["decodeToString()"] {
+    "foo bar"
+    "foo bar"
+  }
+  ["getOrNull()"] {
+    1
+    2
+    3
+    null
+  }
+}

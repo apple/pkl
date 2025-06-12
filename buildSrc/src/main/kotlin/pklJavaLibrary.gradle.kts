@@ -20,6 +20,7 @@ import org.gradle.accessors.dm.LibrariesForLibs
 plugins {
   `java-library`
   `jvm-toolchains`
+  `jvm-test-suite`
   id("pklKotlinTest")
   id("com.diffplug.spotless")
 }
@@ -34,13 +35,8 @@ val libs = the<LibrariesForLibs>()
 val info = project.extensions.getByType<BuildInfo>()
 
 java {
-  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
-
   withSourcesJar() // creates `sourcesJar` task
   withJavadocJar()
-
-  sourceCompatibility = jvmTarget
-  targetCompatibility = jvmTarget
 
   toolchain {
     languageVersion = info.jdkToolchainVersion
@@ -112,10 +108,8 @@ tasks.compileJava {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-  val jvmTarget = JavaVersion.toVersion(info.jvmTarget)
   javaCompiler = info.javaCompiler
-  sourceCompatibility = jvmTarget.majorVersion
-  targetCompatibility = jvmTarget.majorVersion
+  options.release = info.jvmTarget
 }
 
 tasks.withType<JavaExec>().configureEach { jvmArgs(info.jpmsAddModulesFlags) }
@@ -142,4 +136,4 @@ tasks.test { configureJdkTestTask(info.javaTestLauncher) }
 // inherits the configuration of the default `test` task (aside from an overridden launcher).
 val jdkTestTasks = info.multiJdkTestingWith(tasks.test) { (_, jdk) -> configureJdkTestTask(jdk) }
 
-if (info.multiJdkTesting) tasks.check { dependsOn(jdkTestTasks) }
+tasks.check { dependsOn(jdkTestTasks) }

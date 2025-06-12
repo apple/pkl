@@ -87,6 +87,7 @@ internal class BinaryEvaluator(
       private const val CODE_CLASS: Byte = 0xC
       private const val CODE_TYPEALIAS: Byte = 0xD
       private const val CODE_FUNCTION: Byte = 0xE
+      private const val CODE_BYTES: Byte = 0xF
       private const val CODE_PROPERTY: Byte = 0x10
       private const val CODE_ENTRY: Byte = 0x11
       private const val CODE_ELEMENT: Byte = 0x12
@@ -120,6 +121,13 @@ internal class BinaryEvaluator(
       packer.packInt(CODE_DATASIZE.toInt())
       packer.packDouble(value.value)
       packer.packString(value.unit.toString())
+    }
+
+    override fun visitBytes(value: VmBytes) {
+      packer.packArrayHeader(2)
+      packer.packInt(CODE_BYTES.toInt())
+      packer.packBinaryHeader(value.bytes.size)
+      packer.addPayload(value.bytes)
     }
 
     override fun visitIntSeq(value: VmIntSeq) {

@@ -20,43 +20,31 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklPublishLibrary
-  pklNativeBuild
-  antlr
+  pklNativeLifecycle
   idea
 }
 
 val generatorSourceSet = sourceSets.register("generator")
 
-sourceSets { test { java { srcDir(file("testgenerated/antlr")) } } }
-
 idea {
   module {
-    // mark src/test/antlr as source dir
-    // mark generated/antlr as generated source dir
     // mark generated/truffle as generated source dir
     sourceDirs = sourceDirs + files("generated/truffle")
-    generatedSourceDirs = generatedSourceDirs + files("testgenerated/antlr", "generated/truffle")
-    testSources.from(files("src/test/antlr", "testgenerated/antlr"))
+    generatedSourceDirs = generatedSourceDirs + files("generated/truffle")
   }
 }
 
 val javaExecutableConfiguration: Configuration = configurations.create("javaExecutable")
 
-// workaround for https://github.com/gradle/gradle/issues/820
-configurations.api.get().let { apiConfig ->
-  apiConfig.setExtendsFrom(apiConfig.extendsFrom.filter { it.name != "antlr" })
-}
-
 dependencies {
   annotationProcessor(libs.truffleDslProcessor)
   annotationProcessor(generatorSourceSet.get().runtimeClasspath)
-
-  antlr(libs.antlr)
 
   compileOnly(libs.jsr305)
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
   compileOnly(projects.pklExecutor)
 
+  implementation(projects.pklParser)
   implementation(libs.msgpack)
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
@@ -65,7 +53,6 @@ dependencies {
 
   implementation(libs.snakeYaml)
 
-  testImplementation(libs.antlrRuntime)
   testImplementation(projects.pklCommonsTest)
 
   add("generatorImplementation", libs.javaPoet)
@@ -92,35 +79,6 @@ publishing {
     }
   }
 }
-
-tasks.generateTestGrammarSource {
-  maxHeapSize = "64m"
-
-  // generate only visitor
-  arguments = arguments + listOf("-visitor", "-no-listener")
-
-  // Due to https://github.com/antlr/antlr4/issues/2260,
-  // we can't put .g4 files into src/test/antlr/org/pkl/core/parser/antlr.
-  // Instead, we put .g4 files into src/test/antlr, adapt output dir below,
-  // and use @header directives in .g4 files (instead of setting `-package` argument here)
-  // and task makeIntelliJAntlrPluginHappy to fix up the IDE story.
-  outputDirectory = file("testgenerated/antlr/org/pkl/core/parser/antlr")
-}
-
-tasks.generateGrammarSource { enabled = false }
-
-tasks.named("generateGeneratorGrammarSource") { enabled = false }
-
-tasks.compileTestKotlin { dependsOn(tasks.generateTestGrammarSource) }
-
-// Satisfy expectations of IntelliJ ANTLR plugin,
-// which can't otherwise cope with our ANTLR setup.
-val makeIntelliJAntlrPluginHappy by
-  tasks.registering(Copy::class) {
-    dependsOn(tasks.generateGrammarSource)
-    into("test/antlr")
-    from("testgenerated/antlr/org/pkl/core/parser/antlr") { include("PklLexer.tokens") }
-  }
 
 tasks.processResources {
   inputs.property("version", buildInfo.pklVersion)
@@ -217,39 +175,21 @@ val testWindowsExecutableAmd64 by
     configureExecutableTest("WindowsLanguageSnippetTestsEngine")
   }
 
-tasks.testNative {
-  when {
-    buildInfo.os.isMacOsX -> {
-      dependsOn(testMacExecutableAmd64)
-      if (buildInfo.arch == "aarch64") {
-        dependsOn(testMacExecutableAarch64)
-      }
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "aarch64" -> {
-      dependsOn(testLinuxExecutableAarch64)
-    }
-    buildInfo.os.isLinux && buildInfo.arch == "amd64" -> {
-      dependsOn(testLinuxExecutableAmd64)
-      if (buildInfo.hasMuslToolchain) {
-        dependsOn(testAlpineExecutableAmd64)
-      }
-    }
-    buildInfo.os.isWindows -> {
-      dependsOn(testWindowsExecutableAmd64)
-    }
-  }
-}
+tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
+
+tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
+
+tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
+
+tasks.testNativeLinuxAmd64 { dependsOn(testLinuxExecutableAmd64) }
+
+tasks.testNativeAlpineLinuxAmd64 { dependsOn(testAlpineExecutableAmd64) }
+
+tasks.testNativeWindowsAmd64 { dependsOn(testWindowsExecutableAmd64) }
 
 tasks.clean {
   delete("generated/")
   delete(layout.buildDirectory.dir("test-packages"))
-}
-
-spotless {
-  antlr4 {
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
-    target(files("src/test/antlr/PklParser.g4", "src/test/antlr/PklLexer.g4"))
-  }
 }
 
 private fun Test.configureTest() {

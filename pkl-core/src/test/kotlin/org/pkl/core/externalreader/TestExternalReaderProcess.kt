@@ -25,10 +25,7 @@ import java.util.concurrent.Future
 import kotlin.random.Random
 import org.pkl.core.externalreader.ExternalReaderMessages.*
 import org.pkl.core.messaging.MessageTransport
-import org.pkl.core.messaging.MessageTransportModuleResolver
-import org.pkl.core.messaging.MessageTransportResourceResolver
 import org.pkl.core.messaging.MessageTransports
-import org.pkl.core.messaging.Messages.*
 import org.pkl.core.messaging.ProtocolException
 
 class TestExternalReaderProcess(private val transport: MessageTransport) : ExternalReaderProcess {
@@ -42,11 +39,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
     transport.close()
   }
 
-  override fun getModuleResolver(evaluatorId: Long): MessageTransportModuleResolver =
-    MessageTransportModuleResolver(transport, evaluatorId)
+  override fun getModuleResolver(evaluatorId: Long): ExternalModuleResolver =
+    ExternalModuleResolver.of(transport, evaluatorId)
 
-  override fun getResourceResolver(evaluatorId: Long): MessageTransportResourceResolver =
-    MessageTransportResourceResolver(transport, evaluatorId)
+  override fun getResourceResolver(evaluatorId: Long): ExternalResourceResolver =
+    ExternalResourceResolver.of(transport, evaluatorId)
 
   fun run() {
     try {
@@ -69,7 +66,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
           transport.send(request) { response ->
             when (response) {
               is InitializeModuleReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ModuleReaderSpec(it.scheme, it.hasHierarchicalUris, it.isLocal, it.isGlobbable)
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }
@@ -86,7 +87,11 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
           transport.send(request) { response ->
             when (response) {
               is InitializeResourceReaderResponse -> {
-                complete(response.spec)
+                val spec =
+                  response.spec?.let {
+                    ResourceReaderSpec(it.scheme, it.hasHierarchicalUris, it.isGlobbable)
+                  }
+                complete(spec)
               }
               else -> completeExceptionally(ProtocolException("unexpected response"))
             }
@@ -97,9 +102,9 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
 
   companion object {
     fun initializeTestHarness(
-      moduleReaders: List<ExternalModuleReader>,
-      resourceReaders: List<ExternalResourceReader>,
-    ): Pair<TestExternalReaderProcess, ExternalReaderRuntime> {
+      externalModuleReaders: List<ExternalModuleReader>,
+      externalResourceReaders: List<ExternalResourceReader>,
+    ): Pair<TestExternalReaderProcess, ExternalReaderClient> {
       val rxIn = PipedInputStream(10240)
       val rxOut = PipedOutputStream(rxIn)
       val txIn = PipedInputStream(10240)
@@ -115,13 +120,14 @@ class TestExternalReaderProcess(private val transport: MessageTransport) : Exter
           ExternalReaderMessagePackEncoder(rxOut),
         ) {}
 
-      val runtime = ExternalReaderRuntime(moduleReaders, resourceReaders, clientTransport)
+      val client =
+        ExternalReaderClient(externalModuleReaders, externalResourceReaders, clientTransport)
       val proc = TestExternalReaderProcess(serverTransport)
 
-      Thread(runtime::run).start()
+      Thread(client::run).start()
       Thread(proc::run).start()
 
-      return proc to runtime
+      return proc to client
     }
   }
 }

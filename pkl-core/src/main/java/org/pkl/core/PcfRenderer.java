@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import java.util.regex.Pattern;
-import org.pkl.core.parser.Lexer;
+import org.pkl.parser.Lexer;
 
 // To instantiate this class, use ValueRenderers.pcf().
 final class PcfRenderer implements ValueRenderer {
@@ -90,6 +90,21 @@ final class PcfRenderer implements ValueRenderer {
     @Override
     public void visitDataSize(DataSize value) {
       write(value.toString());
+    }
+
+    @Override
+    public void visitBytes(byte[] value) {
+      write("Bytes(\"");
+      var isFirst = true;
+      for (var byt : value) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          write(", ");
+        }
+        write(Integer.valueOf(Byte.toUnsignedInt(byt)).toString());
+      }
+      write(")");
     }
 
     @Override

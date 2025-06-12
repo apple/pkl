@@ -24,16 +24,16 @@ import com.oracle.truffle.api.source.Source;
 import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.syntax.Module;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.Parser;
+import org.pkl.parser.ParserError;
+import org.pkl.parser.syntax.Module;
 
 @TruffleLanguage.Registration(
     id = "pkl",
     name = "Pkl",
-    version = "0.28.0-dev",
+    version = "0.29.0-dev",
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
 public final class VmLanguage extends TruffleLanguage<VmContext> {

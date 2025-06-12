@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.context
@@ -48,6 +49,11 @@ class RootCommand : NoOpCliktCommand(name = "pkl") {
       ProjectCommand(),
       DownloadPackageCommand(),
       AnalyzeCommand(),
+      CompletionCommand(
+        name = "shell-completion",
+        help = "Generate a completion script for the given shell",
+        epilog = "For more information, visit $helpLink",
+      ),
     )
   }
 }

@@ -1,0 +1,13 @@
+–– Pkl Error ––
+Module URI `file:path/to/foo.pkl` has invalid syntax.
+
+x | res = import*("file:path/to/foo.pkl")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidFileUri4#res (file:///$snippetsDir/input/errors/invalidFileUri4.pkl)
+
+File URIs must have a path that starts with `/` (e.g. file:/path/to/my_module.pkl).
+To resolve relative paths, remove the scheme prefix (remove "file:").
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

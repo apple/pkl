@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.core.externalreader
 import java.net.URI
 import org.pkl.core.messaging.Messages.ResourceReaderSpec
 
-/** An external resource reader, to be used with [ExternalReaderRuntime]. */
+/** An external resource reader, to be used with [ExternalReaderClient]. */
 interface ExternalResourceReader : ExternalReaderBase {
   fun read(uri: URI): ByteArray
 

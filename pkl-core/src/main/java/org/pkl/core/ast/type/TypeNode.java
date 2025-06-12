@@ -2153,52 +2153,71 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class UIntTypeAliasTypeNode extends IntSlotTypeNode {
-    private final VmTypeAlias typeAlias;
-    private final long mask;
+  protected abstract static class IntMaskSlotTypeNode extends IntSlotTypeNode {
+    protected final long mask;
 
-    public UIntTypeAliasTypeNode(VmTypeAlias typeAlias, long mask) {
-
+    IntMaskSlotTypeNode(long mask) {
       super(VmUtils.unavailableSourceSection());
-      this.typeAlias = typeAlias;
       this.mask = mask;
     }
 
     @Override
-    protected Object executeLazily(VirtualFrame frame, Object value) {
+    protected final Object executeLazily(VirtualFrame frame, Object value) {
+      var typealias = getVmTypeAlias();
+      assert typealias != null;
       if (value instanceof Long l) {
         if ((l & mask) == l) return value;
 
-        throw new VmTypeMismatchException.Constraint(typeAlias.getConstraintSection(), value);
+        throw new VmTypeMismatchException.Constraint(typealias.getConstraintSection(), value);
       }
 
       throw new VmTypeMismatchException.Simple(
-          typeAlias.getBaseTypeSection(), value, BaseModule.getIntClass());
+          typealias.getBaseTypeSection(), value, BaseModule.getIntClass());
     }
 
     @Override
-    public VmClass getVmClass() {
+    public final VmClass getVmClass() {
       return BaseModule.getIntClass();
+    }
+
+    @Override
+    public final VmTyped getMirror() {
+      return MirrorFactories.typeAliasTypeFactory.create(this);
+    }
+
+    @Override
+    public final boolean doIsEquivalentTo(TypeNode other) {
+      return other instanceof UIntTypeAliasTypeNode aliasTypeNode && mask == aliasTypeNode.mask;
+    }
+
+    @Override
+    protected final boolean acceptTypeNode(TypeNodeConsumer consumer) {
+      return consumer.accept(this);
+    }
+  }
+
+  public static final class UIntTypeAliasTypeNode extends IntMaskSlotTypeNode {
+    private final VmTypeAlias typeAlias;
+
+    public UIntTypeAliasTypeNode(VmTypeAlias typeAlias, long mask) {
+      super(mask);
+      this.typeAlias = typeAlias;
     }
 
     @Override
     public VmTypeAlias getVmTypeAlias() {
       return typeAlias;
     }
+  }
 
-    @Override
-    public VmTyped getMirror() {
-      return MirrorFactories.typeAliasTypeFactory.create(this);
+  public static final class UInt8TypeAliasTypeNode extends IntMaskSlotTypeNode {
+    public UInt8TypeAliasTypeNode() {
+      super(0x00000000000000FFL);
     }
 
     @Override
-    public boolean doIsEquivalentTo(TypeNode other) {
-      return other instanceof UIntTypeAliasTypeNode aliasTypeNode && mask == aliasTypeNode.mask;
-    }
-
-    @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
-      return consumer.accept(this);
+    public VmTypeAlias getVmTypeAlias() {
+      return BaseModule.getUInt8TypeAlias();
     }
   }
 
@@ -2538,9 +2557,17 @@ public abstract class TypeNode extends PklNode {
 
     @ExplodeLoop
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      var customThisSlot =
-          frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
-
+      int customThisSlot;
+      var numberOfAuxiliarySlots = frame.getFrameDescriptor().getNumberOfAuxiliarySlots();
+      if (numberOfAuxiliarySlots == 0) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        customThisSlot =
+            frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
+      } else {
+        // assertion: we only use auxiliary slots for custom `this`.
+        assert numberOfAuxiliarySlots == 1;
+        customThisSlot = 0;
+      }
       var ret = childNode.executeLazily(frame, value);
 
       var localContext = language.localContext.get();

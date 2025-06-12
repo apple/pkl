@@ -1,0 +1,20 @@
+res1 {
+  prop = "hello"
+}
+res2 {
+  prop = "hello"
+}
+res3 {
+  prop = "hello"
+}
+res4 {
+  prop = "hello"
+}
+res5 {
+  prop = "hello"
+}
+res6 {}
+res7 {}
+res8 {}
+res9 {}
+pkl: TRACE: "hello" = "hello" (file:///$snippetsDir/input/generators/generatorNoMembers.pkl)

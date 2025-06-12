@@ -18,8 +18,8 @@ package org.pkl.core.runtime;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import org.pkl.core.ValueFormatter;
-import org.pkl.core.parser.Lexer;
 import org.pkl.core.util.MutableBoolean;
+import org.pkl.parser.Lexer;
 
 /**
  * Renders values for use in REPL and error messages. Does not force values to avoid consecutive
@@ -112,6 +112,45 @@ public final class VmValueRenderer {
     @Override
     public void visitDataSize(VmDataSize value) {
       append(value);
+    }
+
+    private void renderByteSize(VmDataSize size) {
+      var value = size.getValue();
+      if (value % 1 == 0) {
+        append((int) value);
+      } else if ((value * 10) % 1 == 0) {
+        append(String.format("%.1f", value));
+      } else {
+        append(String.format("%.2f", value));
+      }
+      append(".");
+      append(size.getUnit());
+    }
+
+    @Override
+    public void visitBytes(VmBytes value) {
+      append("Bytes(");
+      // truncate bytes if over 8 bytes
+      renderByteElems(value, Math.min(value.getLength(), 8));
+      if (value.getLength() > 8) {
+        append(", ... <total size: ");
+        renderByteSize(value.getSize());
+        append(">");
+      }
+      append(")");
+    }
+
+    private void renderByteElems(VmBytes value, int limit) {
+      var isFirst = true;
+      var bytes = value.getBytes();
+      for (var i = 0; i < limit; i++) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          append(", ");
+        }
+        append(Byte.toUnsignedInt(bytes[i]));
+      }
     }
 
     @Override

@@ -436,7 +436,8 @@ public final class GlobResolver {
 
   /** Split a glob pattern into the base, non-wildcard parts, and the wildcard parts. */
   private static Pair<String, String[]> splitGlobPatternIntoBaseAndWildcards(
-      ReaderBase reader, String globPattern, boolean hasAbsoluteGlob) {
+      ReaderBase reader, String globPattern, boolean hasAbsoluteGlob)
+      throws InvalidGlobPatternException {
     var effectiveGlobPattern = globPattern;
     var basePathSb = new StringBuilder();
     if (hasAbsoluteGlob) {
@@ -446,6 +447,10 @@ public final class GlobResolver {
         basePathSb.append(IoUtils.stripFragment(globUri)).append('#');
       } else {
         effectiveGlobPattern = globUri.getPath();
+        if (effectiveGlobPattern == null) {
+          throw new InvalidGlobPatternException(
+              ErrorMessages.create("invalidGlobNonHierarchicalUri", globUri.getScheme()));
+        }
         basePathSb.append(globUri.getScheme()).append(':');
       }
     }

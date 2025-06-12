@@ -19,8 +19,6 @@ include("bench")
 
 include("docs")
 
-include("stdlib")
-
 include("pkl-cli")
 
 include("pkl-codegen-java")
@@ -41,13 +39,17 @@ include("pkl-core")
 
 include("pkl-doc")
 
+include("pkl-executor")
+
 include("pkl-gradle")
 
-include("pkl-executor")
+include("pkl-parser")
+
+include("pkl-server")
 
 include("pkl-tools")
 
-include("pkl-server")
+include("stdlib")
 
 pluginManagement {
   repositories {

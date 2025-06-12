@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,6 +91,7 @@ public final class EvaluatorBuilder {
    *   <li>{@link ResourceReaders#https}
    *   <li>{@link ResourceReaders#pkg}
    *   <li>{@link ResourceReaders#projectpackage}
+   *   <li>{@link ResourceReaders#fromServiceProviders}
    *   <li>{@link System#getProperties}
    * </ul>
    */
@@ -108,6 +109,7 @@ public final class EvaluatorBuilder {
         .addResourceReader(ResourceReaders.https())
         .addResourceReader(ResourceReaders.pkg())
         .addResourceReader(ResourceReaders.projectpackage())
+        .addResourceReaders(ResourceReaders.fromServiceProviders())
         .addModuleKeyFactory(ModuleKeyFactories.standardLibrary);
 
     if (!TruffleOptions.AOT) {

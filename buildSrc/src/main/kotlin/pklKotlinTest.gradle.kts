@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import java.net.URI
+import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
@@ -23,13 +24,16 @@ plugins {
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-dependencies {
-  testImplementation(buildInfo.libs.findLibrary("assertj").get())
-  testImplementation(buildInfo.libs.findLibrary("junitApi").get())
-  testImplementation(buildInfo.libs.findLibrary("junitParams").get())
-  testImplementation(buildInfo.libs.findLibrary("kotlinStdLib").get())
+val libs = the<LibrariesForLibs>()
 
-  testRuntimeOnly(buildInfo.libs.findLibrary("junitEngine").get())
+dependencies {
+  testImplementation(libs.assertj)
+  testImplementation(libs.junitApi)
+  testImplementation(libs.junitParams)
+  testImplementation(libs.kotlinStdLib)
+
+  testRuntimeOnly(libs.junitEngine)
+  testRuntimeOnly(libs.junitLauncher)
 }
 
 tasks.withType<Test>().configureEach {

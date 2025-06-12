@@ -18,6 +18,12 @@ facts {
     !str1.isBlank
   }
 
+  ["isBase64"] {
+    "".isBase64
+    "AQIDBA==".isBase64
+    !"hello there".isBase64
+  }
+
   ["lastIndex"] {
     for (s in List(str1, str2, str3)) {
       s.length == s.lastIndex + 1
@@ -27,6 +33,10 @@ facts {
   ["base64Decoded"] {
     "".base64.base64Decoded == ""
     quickBrownFox.base64.base64Decoded == quickBrownFox
+  }
+  
+  ["base64DecodedBytes"] {
+    "AQIDBA==".base64DecodedBytes == Bytes(1, 2, 3, 4)
   }
 
   ["contains()"] {
@@ -486,5 +496,20 @@ examples {
 
   ["base64Decoded"] {
     module.catch(() -> "~~~".base64Decoded)
+  }
+  
+  ["base64DecodedBytes"] {
+    module.catch(() -> "~~~".base64DecodedBytes)
+    "AQIDBA==".base64DecodedBytes
+  }
+  
+  ["encodeToBytes()"] {
+    "~~~".encodeToBytes("UTF-8")
+    "🏀".encodeToBytes("UTF-8")
+    "~~~".encodeToBytes("UTF-16")
+    "🏀".encodeToBytes("UTF-16")
+    "~~~".encodeToBytes("ISO-8859-1")
+    "🏀".encodeToBytes("ISO-8859-1")
+    "Parrot".encodeToBytes("UTF-8")
   }
 }

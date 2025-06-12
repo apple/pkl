@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 /// A renderer for [Protocol Buffers](https://developers.google.com/protocol-buffers).
 /// Note: This module is _experimental_ and not ready for production use.
-@ModuleInfo { minPklVersion = "0.28.0" }
+@ModuleInfo { minPklVersion = "0.29.0" }
 module pkl.protobuf
 
 import "pkl:reflect"

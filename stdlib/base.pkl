@@ -17,7 +17,7 @@
 /// Fundamental properties, methods, and classes for writing Pkl programs.
 ///
 /// Members of this module are automatically available in every Pkl module.
-@ModuleInfo { minPklVersion = "0.28.0" }
+@ModuleInfo { minPklVersion = "0.29.0" }
 module pkl.base
 
 import "pkl:jsonnet"
@@ -104,6 +104,7 @@ abstract external class Module {
         else if (format == "yaml") new YamlRenderer {}
         else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`.")
     text = renderer.renderDocument(value)
+    bytes = text.encodeToBytes("UTF-8")
   }
 }
 
@@ -217,8 +218,14 @@ open class FileOutput {
   /// The renderer for [value].
   renderer: ValueRenderer = new PcfRenderer {}
 
-  /// The final rendered output.
+  /// The textual rendered output.
   text: String = renderer.renderDocument(value)
+
+  /// The underlying byte output.
+  ///
+  /// If unset, defaults to the UTF-8 encoding of [text].
+  @Since { version = "0.29.0" }
+  bytes: Bytes = text.encodeToBytes("UTF-8")
 }
 
 /// The contents and appearance of a module's output.
@@ -513,28 +520,37 @@ class Resource {
   /// The text content of this resource.
   text: String
 
+  /// The bytes of this resource.
+  @Since { version = "0.29.0" }
+  bytes: Bytes
+
   /// The content of this resource in Base64.
-  base64: String
+  @Deprecated { since = "0.29.0"; message = "Use bytes.base64 instead" }
+  hidden base64: String = bytes.base64
 
   /// The [MD5](https://en.wikipedia.org/wiki/MD5)
   /// hash of this resource as hexadecimal string.
   ///
   /// MD5 is cryptographically broken and should not be used for secure applications.
-  external md5: String
+  @Deprecated { since = "0.29.0"; message = "Use bytes.md5 instead" }
+  hidden fixed md5: String = bytes.md5
 
   /// The [SHA-1](https://en.wikipedia.org/wiki/SHA-1)
   /// hash of this resource as hexadecimal string.
   ///
   /// SHA-1 is cryptographically broken and should not be used for secure applications.
-  external sha1: String
+  @Deprecated { since = "0.29.0"; message = "Use bytes.sha1 instead" }
+  hidden fixed sha1: String = bytes.sha1
 
   /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
   /// cryptographic hash of this resource as hexadecimal string.
-  external sha256: String
+  @Deprecated { since = "0.29.0"; message = "Use bytes.sha256 instead" }
+  hidden fixed sha256: String = bytes.sha256
 
   /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2)
   /// cryptographic hash of this resource.
-  external sha256Int: Int
+  @Deprecated { since = "0.29.0"; message = "Use bytes.sha256Int instead" }
+  hidden fixed sha256Int: Int = bytes.sha256Int
 }
 
 /// Common base class of [Int] and [Float].
@@ -1123,6 +1139,16 @@ external class String extends Any {
   /// Tells if this string is a valid regular expression according to [Regex].
   external isRegex: Boolean
 
+  /// Tells if this is a valid base64-encoded string.
+  ///
+  /// Facts:
+  /// ```
+  /// "AQIDBA==".isBase64
+  /// !"hello there".isBase64
+  /// ```
+  @Since { version = "0.29.0" }
+  external isBase64: Boolean
+
   /// The [MD5](https://en.wikipedia.org/wiki/MD5)
   /// hash of this string's UTF-8 byte sequence
   /// as hexadecimal string.
@@ -1155,6 +1181,15 @@ external class String extends Any {
   /// "abc".base64.base64Decoded == "abc"
   /// ```
   external base64Decoded: String
+
+  /// Converts this base64-format string into [Bytes].
+  ///
+  /// Facts:
+  /// ```
+  /// "AQIDBA==".base64DecodedBytes = Bytes(1, 2, 3, 4)
+  /// ```
+  @Since { version = "0.29.0" }
+  external base64DecodedBytes: Bytes
 
   /// The Unicode characters in this string.
   ///
@@ -1433,7 +1468,24 @@ external class String extends Any {
   ///
   /// Returns [null] if this string is neither `"true"` nor `"false"` (case-insensitive).
   external function toBooleanOrNull(): Boolean?
+
+  /// Returns the bytes of this string, encoded using [charset]. 
+  ///
+  /// Facts:
+  /// ```
+  /// "Parrot".encodeToBytes("UTF-8") == Bytes(80, 97, 114, 114, 111, 116)
+  /// ```
+  @Since { version = "0.29.0" }
+  external function encodeToBytes(charset: Charset): Bytes
 }
+
+/// An identifier for a [character encoding](https://en.wikipedia.org/wiki/Character_encoding).
+///
+/// * `"UTF-8"`: <https://en.wikipedia.org/wiki/UTF-8>
+/// * `"UTF-16"`: <https://en.wikipedia.org/wiki/UTF-16>
+/// * `"ISO-8859-1"` (also known as latin1): <https://en.wikipedia.org/wiki/ISO/IEC_8859-1> 
+@Since { version = "0.29.0" }
+typealias Charset = "UTF-8"|"UTF-16"|"ISO-8859-1"
 
 /// A string representing a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
 typealias Uri = String
@@ -2441,6 +2493,18 @@ abstract external class Collection<out Element> extends Any {
   @AlsoKnownAs { names { "filterMap" } }
   abstract function mapNonNull<Result>(transform: (Element) -> Result): Collection<Result(this != null)>
 
+  /// Transforms this collection by applying [transform] to each element and removing resulting [null] elements.
+  ///
+  /// [transform] takes two arguments: the index of the element, and the element itself.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3, 4).mapNonNullIndexed((i, n) -> if (n.isOdd) null else n * i) == List(2, 12)
+  /// List(1, 2, 3, 4, null).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i) == List(2, 12)
+  /// ```
+  @Since { version = "0.29.0" }
+  abstract function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Collection<Result(this != null)>
+
   /// Applies a collection-generating [transform] to each element in this collection
   /// and concatenates the resulting collections.
   ///
@@ -2874,6 +2938,9 @@ external class List<out Element> extends Collection<Element> {
 
   external function filterIndexed(predicate: (Int, Element) -> Boolean): List<Element>
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
+
+  @Since { version = "0.29.0" }
+  external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): List<Result(this != null)>
   external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): List<Result>
 
   external function filterIsInstance<Type>(clazz: Class<Type>): List<Type>
@@ -3027,6 +3094,12 @@ external class List<out Element> extends Collection<Element> {
   external function toListing(): Listing<Element>
 
   external function toDynamic(): Dynamic
+
+  /// Converts this list to [Bytes].
+  ///
+  /// Throws a type error if any of its elements are not [UInt8].
+  @Since { version = "0.29.0" }
+  external function toBytes(): Bytes
 }
 
 /// Creates a set containing the given [elements].
@@ -3082,6 +3155,9 @@ external class Set<out Element> extends Collection<Element> {
 
   external function filterIndexed(predicate: (Int, Element) -> Boolean): Set<Element>
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
+
+  @Since { version = "0.29.0" }
+  external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Set<Result(this != null)>
   external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Set<Result>
 
   external function filterIsInstance<Type>(clazz: Class<Type>): Set<Type>
@@ -3282,4 +3358,80 @@ external class Map<out Key, out Value> extends Any {
 
   /// Converts this map to a [Mapping].
   external function toMapping(): Mapping<Key, Value>
+}
+
+/// Creates [Bytes] from the given numbers.
+///
+/// Examples:
+/// ```
+/// bytes = Bytes(0x1, 0x2, 0x3, 0x4)
+/// ```
+@Since { version = "0.29.0" }
+external const function Bytes(values: VarArgs<UInt8>): Bytes
+
+/// A sequence of [UInt8] values.
+///
+/// Bytes can hold up to [math.maxInt] amount of bytes.
+///
+/// The following operators are supported for [Bytes]:
+/// ```
+/// bytes1 + bytes2  // concatenation
+/// bytes[3]         // subscript
+/// ```
+///
+/// For other list-like procedures, convert this into a [List] using [toList()].
+@Since { version = "0.29.0" }
+external class Bytes extends Any {
+  /// The length of these bytes.
+  external length: Int
+
+  /// The number of bytes as [DataSize].
+  external size: DataSize
+
+  /// The bytes in base64 encoding.
+  external base64: String(isBase64)
+
+  /// The bytes in hexadecimal encoding.
+  external hex: String
+
+  /// The [MD5](https://en.wikipedia.org/wiki/MD5) hash of these bytes as hexadecimal string.
+  ///
+  /// MD5 is cryptographically broken and should not be used for secure applications.
+  external md5: String
+
+  /// The [SHA-1](https://en.wikipedia.org/wiki/SHA-1) hash of these bytes as hexadecimal string.
+  ///
+  /// SHA-1 is cryptographically broken and should not be used for secure applications.
+  external sha1: String
+
+  /// The [SHA-256](https://en.wikipedia.org/wiki/SHA-2) cryptographic hash of these bytes as
+  /// hexadecimal string.
+  external sha256: String
+
+  /// The first 64 bits of the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) cryptographic hash of
+  /// these bytes.
+  external sha256Int: Int
+
+  /// Returns the element at [index].
+  ///
+  /// Returns [null] if [index] is outside the bounds of these Bytes.
+  ///
+  /// Facts:
+  /// ```
+  /// Bytes(3, 9, 6).getOrNull(0) == 3
+  /// Bytes(3, 9, 6).getOrNull(1) == 9
+  /// Bytes(3, 9, 6).getOrNull(2) == 6
+  /// Bytes(3, 9, 6).getOrNull(-1) == null
+  /// Bytes(3, 9, 6).getOrNull(3) == null
+  /// Bytes(3, 9, 6).getOrNull(99) == null
+  /// ```
+  external function getOrNull(index: Int): UInt8?
+
+  /// Converts these bytes into a string using the given [charset].
+  ///
+  /// Throws if these bytes are invalid according to the given [charset].
+  external function decodeToString(charset: Charset): String
+
+  /// Converts these bytes into a [List].
+  external function toList(): List<UInt8>
 }

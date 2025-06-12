@@ -24,12 +24,12 @@ import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.parser.Lexer;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.Lexer;
 
 public final class SymbolTable {
   private Scope currentScope;

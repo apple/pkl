@@ -19,7 +19,6 @@ import java.net.URI
 import java.nio.file.Path
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.regex.Pattern
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
 import kotlin.io.path.writeText
@@ -633,7 +632,7 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          base64 = "Y29udGVudAo="
+          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
         }
         res2 {
           uri = "modulepath:/dir1/resource1.txt"
@@ -641,7 +640,7 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          base64 = "Y29udGVudAo="
+          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
         }
         res3 {
           ressy = "the module2 output"
@@ -947,8 +946,8 @@ abstract class AbstractServerTest {
     val message =
       CreateEvaluatorRequest(
         123,
-        listOf(Pattern.compile(".*")),
-        listOf(Pattern.compile(".*")),
+        listOf(".*"),
+        listOf(".*"),
         moduleReaders,
         resourceReaders,
         modulePaths,

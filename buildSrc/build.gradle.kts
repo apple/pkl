@@ -35,16 +35,18 @@ dependencies {
 }
 
 java {
-  sourceCompatibility = JavaVersion.toVersion(toolchainVersion)
-  targetCompatibility = JavaVersion.toVersion(toolchainVersion)
-
   toolchain {
     languageVersion = JavaLanguageVersion.of(toolchainVersion)
     vendor = JvmVendorSpec.ADOPTIUM
   }
 }
 
+tasks.withType<JavaCompile>().configureEach { options.release = toolchainVersion }
+
 kotlin {
   jvmToolchain(toolchainVersion)
-  compilerOptions { jvmTarget = JvmTarget.fromTarget(toolchainVersion.toString()) }
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(toolchainVersion.toString())
+    freeCompilerArgs.add("-Xjdk-release=$toolchainVersion")
+  }
 }

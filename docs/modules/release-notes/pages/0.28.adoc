@@ -1,14 +1,20 @@
-= Pkl 0.XX Release Notes
-:version: 0.XX
-:version-minor: 0.XX.0
-:release-date: TBD
+= Pkl 0.28 Release Notes
+:version: 0.28
+:version-minor: 0.28.2
+:release-date: February 26th, 2025
 
-link:ROOT:partial$component-attributes.adoc[role=include]
+include::ROOT:partial$component-attributes.adoc[]
+
+:uri-snippet-tests: {uri-github-tree}/pkl-core/src/test/files/LanguageSnippetTests/input
+:uri-standard-library: {uri-github-tree}/stdlib/
+:uri-antlr: https://www.antlr.org
+:wbr: pass:[<wbr />]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-The next release (0.XX) is scheduled for ???..
+The next release (0.29) is scheduled for June 2025.
+To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
 Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
@@ -19,33 +25,354 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 News you don't want to miss.
 
-=== XXX
+=== New parser
+
+Pkl has new parser (https://github.com/apple/pkl/pull/917[#917], https://github.com/apple/pkl/pull/957[#957], https://github.com/apple/pkl/pull/962[#962])!
+
+The first step to evaluating a program is to parse its source code into a parse tree.
+Currently, Pkl uses link:{uri-antlr}[ANTLR] to generate parser code from grammar files.
+
+Using this approach has allowed for rapidly iterating and changing the language's grammar.
+However, Pkl's grammar has matured; it's not as likely that the grammar will change from one version to the next.
+Additionally, the current parser's performance has become more painful as projects written in Pkl grow in size.
+In many cases, parsing can take up most of the time spent during evaluation.
+
+In 0.28, the ANTLR-generated parser is being replaced by a handwritten parser.
+In benchmarking tests, this has shown to improve parsing speed by around two orders of magnitude.
+Here are some quick comparisons between the two parsers, run on a MacBook Pro M4 Max machine, with 5 warmup iterations, and run for 10 iterations:
+
+|===
+||Old parser |New parser
+
+|link:{uri-snippet-tests}[Language snippet tests]
+|440.8ms
+|5.9ms
+
+|link:{uri-standard-library}[Standard library]
+|136.7msfootnote:[In the `pkl` CLI, the standard library is parsed during compilation rather than during evaluation. As a result, there is no parsing overhead.]
+|0.8ms
+
+|All https://github.com/apple/pkl-pantry[pkl-pantry] modules
+|1424.2ms
+|7.0ms
+|===
 
 == Noteworthy [small]#🎶#
 
 Ready when you need them.
 
-=== XXX
+=== CLI improvements
+
+==== Colored help messages
+
+The `pkl`, `pkldoc`, `pkl-codegen-java`, and `pkl-codegen-kotlin` CLIs now emits help text with colors (https://github.com/apple/pkl/pull/947[#947]).
+
+Here is a sneak peek:
+
+image::pkl-cli-help-new.png[new pkl cli help output]
+
+Thanks to https://github.com/gordonbondon[@gordonbondon] for their contribution!
+
+==== `jpkl` support on Windows
+
+The `jpkl` executable is now supported on Windows (https://github.com/apple/pkl/pull/872[#872]).
+
+`jpkl` is a fat jar that can be executed directly when on macOS and Linux, but current users of Windows are required to execute it with `java -jar <path/to/jpkl>`.
+
+In 0.28, Windows users can also call execute this command directly.
+To do so, the filename should be called `jpkl.bat`, and placed in `PATH`.
+
+=== Type constraint changes
+
+Type annotations that are executed as a result of calling a constraint expressions now perform an eager typecheck (https://github.com/apple/pkl/pull/964[#964]).
+
+In Pkl 0.27, we changed how xref:0.27.adoc#typecheck-improvements[typechecks are executed for `Listing` and `Mapping`] types.
+
+However, this had two unintended side effects:
+
+For one, error messages from certain failing constraints show `?` in place of values that are failing.
+
+The following snippet:
+
+[source%parsed,pkl]
+----
+class Bird { name: String }
+
+bird: Listing<Bird>(firstOneIsQuail) = new {
+  new { name = "Pigeon" }
+  new { name = "Quail" }
+}
+
+local firstOneIsQuail = (it: Listing<Bird>) -> it[0].name == "Quail"
+----
+
+Produces the following error message:
+
+[source]
+----
+–– Pkl Error ––
+Type constraint `firstOneIsQuail` violated.
+Value: new Listing { ?; ? }
+
+3 | bird: Listing<Bird>(firstOneIsQuail) = new {
+                        ^^^^^^^^^^^^^^^
+----
+
+:fn-typecheck-details: footnote:[See https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0010-overhauled-mapping-listing-typechecks.adoc#delegating-objects[delegating objects] in SPICE-0010 for more details on this behavior.]
+
+This is happening because lazy typechecks of mappings and listings will return a _new_ listing. Because the lambda's argument is defined as ``it: Listing<Bird>``, the value being passed into the function body is this new listing{fn-typecheck-details}.
+
+Secondly, some constraints became less strict, allowing more values to pass.
+
+The following snippet fails in Pkl 0.26, but passes in Pkl 0.27:
+
+[source%parsed,pkl]
+----
+class Bird { name: String }
+
+local nonEmpty = (it: Listing<Bird>) -> !it.isEmpty
+
+birds: Listing(nonEmpty) = new { 1; 2; 3 }
+----
+
+This is because the function parameter `it: Listing<Bird>` does not actually check members of the argument until they are accessed, and the function body `!it.isEmpty` does not access any members.
+
+To address both of these issues, the rule for executing type constraints has changed.
+When executing a type annotation, mapping and listing typechecks are always _eager_.
+This means that Pkl will check that each member of the mapping/listing conforms to the type parameter.
+
+=== Java 22+ support
+
+Pkl's Java libraries now support Java 22 and higher (https://github.com/apple/pkl/pull/876[#876]).
+
+Thanks to https://github.com/sgammon[@sgammon] for their contribution!
+
+=== New standard library method
+
+The `pkl:math` standard library module has a new method, called {uri-stdlib-mathModule}/index.html#atan2()[atan2] (https://github.com/apple/pkl/pull/819[#819]).
+It computes the https://en.wikipedia.org/wiki/Atan2[2-argument arctangent].
+
+Thanks to https://github.com/gordonbondon[@gordonbondon] for their contribution!
+
+=== Overhauled for-generator implementation
+
+The implementation of xref:language-reference:index.adoc#for-generators[for-generators] has been overhauled (https://github.com/apple/pkl/pull/844[#844]).
+
+This fixes some known bugs with the current for-generator implementation, and also improves code health by reducing complexity and removing workarounds and band-aids.
+
+Thanks to https://github.com/odenix[@odenix] for their contribution!
+
+=== Java code generator improvements
+
+Improvements have been made to the Java code generator (https://github.com/apple/pkl/pull/792[#792]).
+
+In pkl-codegen-java, the `--params-annotation` flag now accepts `none` as a value, which causes the code generator to skip adding annotations to a constructor's parameters.
+Additionally, the Kotlin API `org.pkl.codegen.java.JavaCodeGeneratorOptions.paramsAnnotation` is now nullable.
+If null, this also skips adding annotations.
+
+By default, this annotation is set to `org.pkl.config.java.mapper.Named`, or none if the `--generate-spring-boot-config` flag is set.
+
+This is useful for those compiling Java code with the `-parameters` flag set, because the pkl-config-java library is able to map into these classes without any extra annotations.
+
+Thanks to https://github.com/odenix[@odenix] for their contribution!
+
+=== Kotlin code generator improvements
+
+Improvements have been made to the Kotlin code generator (https://github.com/apple/pkl/pull/793[#793]).
+
+Currently, the output of `toString()` on a generated Kotlin class differs depending on if it was generated as a data class or as a regular class.
+
+In Pkl 0.28, this method produces the same format, and matches the format used by data classes.
+
+Thanks to https://github.com/odenix[@odenix] for their contribution!
+
+=== pkldoc improvements
+
+pkldoc has a new flag to write real files instead of symlinks (https://github.com/apple/pkl/pull/824[#824]).
+
+Currently, pkldoc creates a symlink called "current", which points to the latest non-prerelease version of a package.
+However, these symlinks can be problematic for some systems.
+
+A new flag, `--no-symlinks`, and a similarly named Gradle property, `noSymlinks`, instructs pkldoc to write real files instead of symlinks. 
+
+Thanks to https://github.com/netvl[@netvl] for their contributions!
+
+=== `jar:nested:` URIs are accepted by default
+
+To improve integration with Spring Boot, the Pkl evaluator by default now accepts module URIs starting with `jar:nested:` (https://github.com/apple/pkl/pull/895[#895]).
+
+The `--allowed-modules` flag (and the equally named option in other APIs) can be used to configure the set of allowed modules.
 
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.
 
-=== XXX
+=== Stricter grammar
+
+As a result of implementing a new parser, the following previously accepted grammar is no longer valid (https://github.com/apple/pkl/pull/917[#917]).
+
+==== Inline object entries
+
+When declaring multiple xref:language-tutorial:01_basic_config.adoc#entries[entries] on the same line, a semicolon is now required to separate them.
+
+The following code snippet is currently valid, and becomes a syntax error in 0.28.
+
+[source,pkl]
+----
+obj { ["one"] = 1 ["two"] = 2 }
+----
+
+To fix, insert a semicolon between the two entries:
+
+[source,diff]
+----
+-obj { ["one"] = 1 ["two"] = 2 }
++obj { ["one"] = 1; ["two"] = 2 }
+----
+
+==== String escapes
+
+When using xref:language-reference:index.adoc#custom-string-delimiters[custom string delimiters], the escape sequence becomes backslash (`\`) plus the number of pounds used to delimit the string.
+
+Due to a parser bug, any extra pounds after this escape sequence are also permitted.
+
+In Pkl 0.28, this becomes a syntax error.
+
+[source,pkl]
+----
+foo = "foo \#(bar)" // Invalid character escape sequence `\#`.
+----
+
+==== Whitespace between generator members
+
+Inline object spreads, for generators, and when generators all now require either whitespace or a semicolon separator.
+
+[source,pkl]
+----
+foo { ...bar...baz } // Syntax error
+----
+
+=== Minimum Gradle version bump
+
+The minimum Gradle version for the xref:main:pkl-gradle:index.adoc[Gradle Plugin] has been bumped to 8.2 (https://github.com/apple/pkl/pull/901[#901]).
+
+=== Minimum Kotlin version bump
+
+For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.0 (https://github.com/apple/pkl/pull/900[#900]).
+
+=== Java/Kotlin API breaking changes
+
+Breaking changes have been made to the Java/Kotlin APIs (https://github.com/apple/pkl/pull/748[#748], https://github.com/apple/pkl/pull/749[#749], https://github.com/apple/pkl/pull/776[#776], https://github.com/apple/pkl/pull/793[#793], https://github.com/apple/pkl/pull/808[#808], https://github.com/apple/pkl/pull/810[#810]).
+
+|===
+|API |Breakage
+
+| org.pkl.core.resource{wbr}.Resource 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.project{wbr}.Package 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.Member{wbr}.SourceLocation 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core{wbr}.Release 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.Release{wbr}.SourceCode 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.Release{wbr}.Documentation 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.Release{wbr}.StandardLibrary 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.project{wbr}.DeclaredDependencies 
+| Converted into a record; previous getter methods are deprecated.
+
+| org.pkl.core.evaluatorSettings{wbr}.PklEvaluatorSettings{wbr}.Proxy{wbr}.create 
+| Deprecated; use the constructor instead.
+
+| org.pkl.core.module{wbr}.ExternalModuleResolver 
+| Moved into package org.pkl.core.externalreader
+
+| org.pkl.core.resource{wbr}.ExternalResourceResolver 
+| Moved into package org.pkl.core.externalreader
+
+| org.pkl.core.messaging{wbr}.MessageTransportModuleResolver 
+| Renamed to ExternalModuleResolverImpl, made package-private
+
+| org.pkl.core.messaging{wbr}.MessageTransportResourceResolver 
+| Renamed to ExternalResourceResolverImpl, made package-private
+
+| org.pkl.core.module{wbr}.ExternalModuleResolver{wbr}.Spec 
+| Replaced with record org.pkl.core.externalreader.ModuleReaderSpec
+
+| org.pkl.core.resource{wbr}.ExternalResourceResolver{wbr}.Spec 
+| Replaced with record org.pkl.core.externalreader.ResourceReaderSpec
+
+| org.pkl.core.messaging{wbr}.CreateEvaluatorRequest 
+| Changed properties `allowedModules` and `allowedResources` to be of type `List<String>` instead of `List<Pattern>`
+
+| org.pkl.codegen.kotlin{wbr}.KotlinCodegenOptions
+| Renamed to org.pkl.codegen.kotlin.KotlinCodeGeneratorOptions
+
+| org.pkl.codegen.kotlin{wbr}.CliKotlinCodeGeneratorOptions{wbr}.toKotlinCodegenOptions
+| Deprecated without replacement
+
+| org.pkl.codegen.java{wbr}.JavaCodegenOptions
+| Renamed to org.pkl.codegen.java.JavaCodeGeneratorOptions
+
+| org.pkl.codegen.java{wbr}.CliJavaCodeGeneratorOptions{wbr}.toJavaCodegenOptions()
+| Deprecated without replacement 
+|===
+
+=== Fat jars no longer shade Truffle
+
+Pkl publishes two fat jars to Maven Central: https://central.sonatype.com/artifact/org.pkl-lang/pkl-tools[pkl-tools], and https://central.sonatype.com/artifact/org.pkl-lang/pkl-config-java-all[pkl-config-java-all].
+
+Due a version bump in the Truffle library, the package `com.oracle.truffle` can no longer be shaded.
+
+For users that use both Pkl and other Truffle languages, this means that their version of Truffle should match Pkl's version.
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Documentation improvements (https://github.com/apple/pkl/pull/792[#792], https://github.com/apple/pkl/pull/846[#846], https://github.com/apple/pkl/pull/860[#860], https://github.com/apple/pkl/pull/892[#892], https://github.com/apple/pkl/pull/921[#921], https://github.com/apple/pkl/pull/937[#937], https://github.com/apple/pkl/pull/943[#943], https://github.com/apple/pkl/pull/944[#944], https://github.com/apple/pkl/pull/955[#955], https://github.com/apple/pkl/pull/956[#956], https://github.com/apple/pkl/pull/973[#973]).
+* The repository now requires Java 21 or higher to build (https://github.com/apple/pkl/pull/876[#876]).
+* Enable multi-jdk testing via `-DmultiJdkTesting=true` flag when building Pkl (https://github.com/apple/pkl/pull/876[#876]).
+* Allow setting commit id via `-DcommitId` flag when building Pkl (https://github.com/apple/pkl/pull/954[#954]).
 
 == Bugs fixed [small]#🐜#
 
-XXX Bugs down, Inbox Zero in sight ...
+The following bugs have been fixed.
 
 [smaller]
-* XXX (https://github.com/apple/pkl/issues/new[XXX])
+* Optimization: `const` members should be cached for all children in the prototype chain (https://github.com/apple/pkl/issues/508[#508])
+* codegen-kotlin: Use same toString() representation for data classes and regular classes (https://github.com/apple/pkl/issues/717[#717])
+* Late-bound values of iteratees within nested for/spread fail to resolve for-generator variables (https://github.com/apple/pkl/issues/741[#741])
+* codegen-java/kotlin: Fix generation of equals/hashCode methods (https://github.com/apple/pkl/pull/802[#802]) 
+* Not possible to render mapping with Int keys in YAML (https://github.com/apple/pkl/issues/878[#878])
+* Parser accepts wrong string escapes (https://github.com/apple/pkl/issues/888[#888])
+* Downstream native-image embedders are broken (https://github.com/apple/pkl/issues/907[#907])
+* Failed type constraint error messages do not show forced members (https://github.com/apple/pkl/issues/918[#918])
+* ANTLR incompatibilities (https://github.com/apple/pkl/issues/927[#927])
+* Doc comments with interleaving comments result in an error (https://github.com/apple/pkl/issues/931[#931])
+* Spread elements inside an object body don't need separators (https://github.com/apple/pkl/issues/932[#932])
+* Correctly set allowed modules/resoures when external reader scheme contain regex control characters (https://github.com/apple/pkl/pull/941[#941])
+* Bad import analysis fails with "None (cause has no message)" (https://github.com/apple/pkl/issues/949[#949])
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/gordonbondon[@gordonbondon]
+* https://github.com/HT154[@HT154]
+* https://github.com/jsoref[@jsoref]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/netvl[@netvl]
+* https://github.com/odenix[@odenix]
+* https://github.com/romacafe[@romacafe]
+* https://github.com/sgammon[@sgammon]
+* https://github.com/sorcix[@sorcix]
+* https://github.com/stanleyycheung[@stanleyycheung]

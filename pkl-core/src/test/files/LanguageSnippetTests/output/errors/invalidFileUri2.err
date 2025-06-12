@@ -1,0 +1,12 @@
+–– Pkl Error ––
+Invalid glob pattern `file:path/to/foo.txt`.
+
+x | res = read*("file:path/to/foo.txt")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidFileUri2#res (file:///$snippetsDir/input/errors/invalidFileUri2.pkl)
+
+Scheme `file` requires a hierarchical path (there must be a `/` after the first colon).
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)

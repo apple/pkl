@@ -2,6 +2,12 @@
 include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-java-maven-module: {uri-maven-docsite}/artifact/org.pkl-lang/pkl-codegen-java
 
+:uri-pkl-codegen-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-java&e=jar
+
+ifdef::is-release-version[]
+:uri-pkl-cli-codegen-java-download: {github-releases}/pkl-codegen-java
+endif::[]
+
 The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.
 
 The benefits of code generation are:
@@ -104,8 +110,41 @@ endif::[]
 [[install-cli]]
 === CLI
 
-The CLI is bundled with the Java library.
-As we do not currently ship the CLI as a self-contained Jar, we recommend to provision it with a Maven compatible build tool as shown in <<install-library>>.
+The CLI is available as a Java executable.
+
+It works on multiple platforms, and requires a Java 17 (or higher) runtime on the system path.
+
+To download:
+
+[tabs]
+====
+macOS/Linux::
++
+[source,shell]
+[subs="+attributes"]
+----
+curl -L -o pkl-codegen-java '{uri-pkl-codegen-java-download}'
+chmod +x pkl-codegen-java
+./pkl-codegen-java --version
+----
+
+Windows::
++
+[source,PowerShell]
+[subs="+attributes"]
+----
+Invoke-WebRequest '{uri-pkl-codegen-java-download}' -OutFile pkl-codegen-java.bat
+.\pkl-codegen-java --version
+----
+====
+
+This should print something similar to:
+
+[source,shell]
+[subs="+attributes"]
+----
+pkl-codegen-java {pkl-version} (macOS 14.2, Java 17.0.10)
+----
 
 [[codegen-java-usage]]
 == Usage
@@ -125,10 +164,7 @@ For more information, refer to the Javadoc documentation.
 
 === CLI
 
-As explained in <<install-cli,Installation>>, the CLI is bundled with the Java library.
-To run the CLI, execute the library Jar or its `org.pkl.codegen.java.Main` main class.
-
-*Synopsis:* `java -cp <classpath> -jar pkl-codegen-java.jar [<options>] <modules>`
+*Synopsis:* `pkl-codegen-java [<options>] <modules>`
 
 `<modules>`::
 The absolute or relative URIs of the modules to generate classes for.
@@ -190,4 +226,4 @@ include::../../pkl-cli/partials/cli-common-options.adoc[]
 == Full Example
 
 For a ready-to-go example with full source code,
-see link:{uri-codegen-java-example}[codegen-java] in the _pkl/pkl-examples_ repository.
+see link:{uri-codegen-java-example}[codegen-java] in the _pkl-jvm-examples_ repository.

@@ -23,6 +23,7 @@ import org.pkl.core.Member.SourceLocation
 import org.pkl.core.PModule
 import org.pkl.core.PObject
 import org.pkl.core.TypeAlias
+import org.pkl.core.packages.PackageUri
 
 /** API equivalent of standard library module `pkl.DocPackageInfo`. */
 data class DocPackageInfo(
@@ -197,6 +198,12 @@ data class DocPackageInfo(
     val documentation: @Contextual URI?,
   ) {
     internal val prefix = "$name."
+
+    val qualifiedName: String =
+      if (uri != null) {
+        val packageUri = PackageUri(uri)
+        "${uri.authority}${packageUri.pathWithoutVersion}"
+      } else name
 
     /** Note: Returns an absolute URI, or an URI relative to the current site. */
     internal fun getModuleDocUrl(moduleName: String): URI? =

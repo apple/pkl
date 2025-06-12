@@ -1,8 +1,8 @@
 = CLI
 include::ROOT:partial$component-attributes.adoc[]
 :uri-homebrew: https://brew.sh
+:uri-mise: https://mise.jdx.dev
 
-:uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}
 :uri-pkl-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-amd64&e=bin
 :uri-pkl-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-aarch64&e=bin
 :uri-pkl-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-amd64&e=bin
@@ -77,6 +77,29 @@ To update Pkl, run:
 ----
 brew update
 brew upgrade pkl   # or just `brew upgrade`
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
+
+[[mise]]
+=== Mise
+
+On macOS, Linux, and Windows, release versions can be installed with {uri-mise}[Mise].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+[subs="+attributes"]
+----
+# Install and activate Pkl globally
+mise use -g pkl@{pkl-version}
+
+# Install and activate Pkl locally
+mise use pkl@{pkl-version}
 ----
 endif::[]
 
@@ -358,7 +381,7 @@ pkl eval -m . myFiles.pkl
 pkl eval -m "%{moduleName}" foo.pkl bar.pkl
 ----
 
-For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output] 
+For additional details, see xref:language-reference:index.adoc#multiple-file-output[Multiple File Output]
 in the language reference.
 ====
 
@@ -442,7 +465,29 @@ Default: (none) +
 Example: `./build/test-results` +
 Directory where to store JUnit reports.
 
+By default, one file will be created for each test module. This behavior can be changed with `--junit-aggregate-reports`, which will instead create a single JUnit report file with all test results.
+
 No JUnit reports will be generated if this option is not present.
+====
+
+[[junit-aggregate-reports]]
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
+====
+
+[[junit-aggregate-suite-name]]
+.--junit-aggregate-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
 ====
 
 [[overwrite]]
@@ -530,6 +575,26 @@ Example: `./build/test-results` +
 Directory where to store JUnit reports.
 
 No JUnit reports will be generated if this option is not present.
+====
+
+[[junit-aggregate-reports]]
+.--junit-aggregate-reports
+[%collapsible]
+====
+Aggregate JUnit reports into a single file.
+
+By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
+====
+
+[[junit-aggregate-suite-name]]
+.--junit-aggregate-suite-name
+[%collapsible]
+====
+Default: (none) +
+Example: `my-tests` +
+The name of the root JUnit test suite.
+
+Used in combination with `--junit-aggregate-reports` flag.
 ====
 
 .--overwrite
@@ -627,6 +692,22 @@ Same meaning as <<output-path>> in <<command-eval>>.
 ====
 
 This command also takes <<common-options,common options>>.
+
+[[command-shell-completion]]
+=== `pkl shell-completion`
+
+*Synopsis*: `pkl shell-completion <shell>`
+
+Generate shell completion script. Supported shells are: `bash`, `zsh`, `fish`.
+
+[source,shell]
+----
+# Generate shell completion script for bash
+pkl shell-completion bash
+
+# Generate shell completion script for zsh
+pkl shell-completion zsh
+----
 
 [[common-options]]
 === Common options

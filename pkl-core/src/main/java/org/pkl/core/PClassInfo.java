@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ public final class PClassInfo<T> implements Serializable {
   public static final PClassInfo<Double> Float = pklBaseClassInfo("Float", double.class);
   public static final PClassInfo<Duration> Duration = pklBaseClassInfo("Duration", Duration.class);
   public static final PClassInfo<DataSize> DataSize = pklBaseClassInfo("DataSize", DataSize.class);
+  public static final PClassInfo<byte[]> Bytes = pklBaseClassInfo("Bytes", byte[].class);
   public static final PClassInfo<Pair> Pair = pklBaseClassInfo("Pair", Pair.class);
   public static final PClassInfo<Void> Collection = pklBaseClassInfo("Collection", Void.class);
   public static final PClassInfo<ArrayList> List = pklBaseClassInfo("List", ArrayList.class);
@@ -115,6 +116,7 @@ public final class PClassInfo<T> implements Serializable {
     if (value instanceof Set) return (PClassInfo<T>) Set;
     if (value instanceof Map) return (PClassInfo<T>) Map;
     if (value instanceof Pattern) return (PClassInfo<T>) Regex;
+    if (value instanceof byte[]) return (PClassInfo<T>) Bytes;
 
     throw new IllegalArgumentException("Not a Pkl value: " + value);
   }

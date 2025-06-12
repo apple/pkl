@@ -274,6 +274,10 @@ examples {
     List(0, 2, 6)
     List(false, true, false)
   }
+  ["mapNonNullIndexed()"] {
+    List(2, 12)
+    List(2, 12)
+  }
   ["flatMapIndexed()"] {
     List(0, 2, 6)
     List(false, true, false)
@@ -298,6 +302,12 @@ examples {
       3
     }
     new {}
+  }
+  ["toBytes()"] {
+    Bytes(1, 2, 3)
+    Bytes()
+    "Expected value of type `Int`, but got `null`."
+    "Type constraint `isBetween(0, 255)` violated. Value: -1"
   }
   ["filterNonNull()"] {
     List(1, 2, 3)

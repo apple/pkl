@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,5 +31,27 @@ class VmValueRendererTest {
   fun `render null with default`() {
     val none = VmNull.withDefault("default")
     assertThat(renderer.render(none)).isEqualTo("null")
+  }
+
+  @Test
+  fun `render bytes`() {
+    val bytes = VmBytes((-128..127).map { it.toByte() }.toByteArray())
+    assertThat(renderer.render(bytes))
+      .isEqualTo("Bytes(128, 129, 130, 131, 132, 133, 134, 135, ... <total size: 256.b>)")
+  }
+
+  @Test
+  fun `render bytes - precisions`() {
+    val oneKbExactly = VmBytes(ByteArray(1000))
+    assertThat(renderer.render(oneKbExactly))
+      .isEqualTo("Bytes(0, 0, 0, 0, 0, 0, 0, 0, ... <total size: 1.kb>)")
+
+    val over1Kb = VmBytes(ByteArray(123467))
+    assertThat(renderer.render(over1Kb))
+      .isEqualTo("Bytes(0, 0, 0, 0, 0, 0, 0, 0, ... <total size: 123.47.kb>)")
+
+    val oneTenthPrecision = VmBytes(ByteArray(1100))
+    assertThat(renderer.render(oneTenthPrecision))
+      .isEqualTo("Bytes(0, 0, 0, 0, 0, 0, 0, 0, ... <total size: 1.1.kb>)")
   }
 }

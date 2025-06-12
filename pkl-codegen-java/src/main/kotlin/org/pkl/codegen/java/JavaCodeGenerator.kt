@@ -286,13 +286,22 @@ class JavaCodeGenerator(
 
       var builderSize = 50
       val appendBuilder = CodeBlock.builder()
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
         builderSize += 50
-        appendBuilder.addStatement(
-          "appendProperty(builder, \$S, this.\$N)",
-          propertyName,
-          propertyName,
-        )
+        if (property.type.isBytesClass) {
+          appendBuilder.addStatement(
+            "appendProperty(builder, \$S, \$T.toString(this.\$N))",
+            propertyName,
+            Arrays::class.java,
+            propertyName,
+          )
+        } else {
+          appendBuilder.addStatement(
+            "appendProperty(builder, \$S, this.\$N)",
+            propertyName,
+            propertyName,
+          )
+        }
       }
 
       builder
@@ -669,6 +678,9 @@ class JavaCodeGenerator(
     }
   }
 
+  private val PType.isBytesClass: Boolean
+    get() = this is PType.Class && this.pClass.info == PClassInfo.Bytes
+
   private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName =
     when (this) {
       PType.UNKNOWN -> OBJECT.nullableIf(nullable)
@@ -688,6 +700,7 @@ class JavaCodeGenerator(
           PClassInfo.Float -> TypeName.DOUBLE.boxIf(boxed).nullableIf(nullable)
           PClassInfo.Duration -> DURATION.nullableIf(nullable)
           PClassInfo.DataSize -> DATA_SIZE.nullableIf(nullable)
+          PClassInfo.Bytes -> ArrayTypeName.of(TypeName.BYTE)
           PClassInfo.Pair ->
             ParameterizedTypeName.get(
                 PAIR,

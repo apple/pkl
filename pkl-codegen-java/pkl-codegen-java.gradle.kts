@@ -17,6 +17,7 @@ plugins {
   pklAllProjects
   pklKotlinLibrary
   pklPublishLibrary
+  pklJavaExecutable
 }
 
 dependencies {
@@ -29,6 +30,14 @@ dependencies {
 
   testImplementation(projects.pklConfigJava)
   testImplementation(projects.pklCommonsTest)
+}
+
+executable {
+  javaName = "pkl-codegen-java"
+  documentationName = "Pkl Codegen Java"
+  javaPublicationName = "pkl-cli-codegen-java"
+  mainClass = "org.pkl.codegen.java.Main"
+  website = "https://pkl-lang.org/main/current/java-binding/codegen.html"
 }
 
 // with `org.gradle.parallel=true` and without the line below, `test` strangely runs into:

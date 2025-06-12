@@ -56,11 +56,11 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
-import org.pkl.core.parser.Parser;
-import org.pkl.core.parser.ParserError;
-import org.pkl.core.parser.syntax.Expr;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
+import org.pkl.parser.Parser;
+import org.pkl.parser.ParserError;
+import org.pkl.parser.syntax.Expr;
 
 public final class VmUtils {
   /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
@@ -173,6 +173,10 @@ public final class VmUtils {
   public static String readTextProperty(Object receiver) {
     assert receiver instanceof VmObjectLike;
     return (String) VmUtils.readMember((VmObjectLike) receiver, Identifier.TEXT);
+  }
+
+  public static VmBytes readBytesProperty(VmObjectLike receiver) {
+    return (VmBytes) VmUtils.readMember(receiver, Identifier.BYTES);
   }
 
   @TruffleBoundary

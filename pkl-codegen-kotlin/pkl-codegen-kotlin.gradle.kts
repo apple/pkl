@@ -17,6 +17,7 @@ plugins {
   pklAllProjects
   pklKotlinLibrary
   pklPublishLibrary
+  pklJavaExecutable
 }
 
 publishing {
@@ -52,4 +53,12 @@ dependencies {
   testImplementation(projects.pklConfigKotlin)
   testImplementation(projects.pklCommonsTest)
   testRuntimeOnly(libs.kotlinScripting)
+}
+
+executable {
+  javaName = "pkl-codegen-kotlin"
+  documentationName = "Pkl Codegen Kotlin"
+  javaPublicationName = "pkl-cli-codegen-kotlin"
+  mainClass = "org.pkl.codegen.kotlin.Main"
+  website = "https://pkl-lang.org/main/current/kotlin-binding/codegen.html"
 }

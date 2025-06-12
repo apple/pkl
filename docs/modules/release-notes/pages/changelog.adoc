@@ -1,8 +1,50 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.29.0]]
+== 0.29.0 (TBD)
+
+xref:0.29.adoc[Release notes]
+
+[[release-0.28.2]]
+== 0.28.2 (2025-04-17)
+
+=== Fixes
+
+* Adds an optimization when object bodies with generators produce no members (https://github.com/apple/pkl/pull/1013[#1013]).
+* Fixes a runtime crash when `--output-path` points to a directory (https://github.com/apple/pkl/pull/1038[#1038]).
+* Fixes a bug that sometimes causes pkl-doc to crash (https://github.com/apple/pkl/pull/1028[#1028]).
+
+=== Miscellaneous
+
+* Documentation improvements (https://github.com/apple/pkl/pull/982[#982], https://github.com/apple/pkl/pull/1010[#1010], https://github.com/apple/pkl/pull/1031[#1031]).
+* CI improvements (https://github.com/apple/pkl/pull/1020[#1020]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/JeroenSoeters[@JeroenSoeters]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/mbvissers[@mbvissers]
+* https://github.com/pepicrft[@pepicrft]
+
+[[release-0.28.1]]
+== 0.28.1 (2025-03-03)
+
+=== Fixes
+
+* Fixes an issue where Pkl Gradle tasks can possibly fail with `java.lang.UnsatisfiedLinkError` (https://github.com/apple/pkl/pull/995[#995]).
+* Fixes an issue where the artifacts pkl-tools and pkl-config-java-all fail with `java.lang.ClassFormatError` (https://github.com/apple/pkl/pull/998[#998]).
+
+=== Changes
+
+* Adds the ability to configure `native-image` build with Gradle system properties (https://github.com/apple/pkl/pull/1001[#1001]).
++
+Now, any system property starting with `"pkl.native"` will have that prefix stripped, and the rest passed as CLI arguments to `native-image`. For example, the native-image resource cache can be configured by passing Gradle flag `-Dpkl.native-Dpolyglot.engine.userResourceCache=/my/cache/dir`.
+
 [[release-0.28.0]]
-== 0.28.0 (UNRELEASED)
+== 0.28.0 (2025-02-26)
 
 xref:0.28.adoc[Release notes]
 

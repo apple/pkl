@@ -3,7 +3,7 @@
 // the following attributes must be updated immediately before a release
 
 // pkl version corresponding to current git commit without -dev suffix or git hash
-:pkl-version-no-suffix: 0.28.0
+:pkl-version-no-suffix: 0.29.0
 // tells whether pkl version corresponding to current git commit
 // is a release version (:is-release-version: '') or dev version (:!is-release-version:)
 :!is-release-version:
@@ -71,6 +71,7 @@ endif::[]
 :uri-stdlib-analyzeModule: {uri-pkl-stdlib-docs}/analyze
 :uri-stdlib-jsonnetModule: {uri-pkl-stdlib-docs}/jsonnet
 :uri-stdlib-reflectModule: {uri-pkl-stdlib-docs}/reflect
+:uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
@@ -137,8 +138,13 @@ endif::[]
 :uri-stdlib-Function3: {uri-stdlib-baseModule}/Function3
 :uri-stdlib-Function4: {uri-stdlib-baseModule}/Function4
 :uri-stdlib-Function5: {uri-stdlib-baseModule}/Function5
+:uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
+
+:uri-pkl-roadmap: https://github.com/orgs/apple/projects/12/views/1
+
+:uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}
