@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
@@ -34,6 +36,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
+  private Map<String, String> rewrites = new HashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -88,6 +91,18 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
+  public Builder setRewrites(Map<String, String> rewrites) {
+    this.rewrites = new HashMap<>(rewrites);
+    return this;
+  }
+
+  @Override
+  public Builder addRewrite(String sourcePrefix, String targetPrefix) {
+    this.rewrites.put(sourcePrefix, targetPrefix);
+    return this;
+  }
+
+  @Override
   public HttpClient build() {
     return doBuild().get();
   }
@@ -105,7 +120,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
     return () -> {
       var jdkClient =
           new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
-      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
+      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient, rewrites);
     };
   }
 }

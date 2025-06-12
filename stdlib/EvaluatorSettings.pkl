@@ -113,6 +113,30 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 class Http {
   /// Configuration of the HTTP proxy to use.
   proxy: Proxy?
+
+  /// Replace outbound requests from one URL with another URL.
+  ///
+  /// Each key describes the prefix of a request, and each value describes the replacement prefix.
+  ///
+  /// This can be useful for setting up mirroring of packages, which are fetched over HTTPS.
+  //
+  /// In the case of multiple matches, the longest prefix is is used.
+  ///
+  /// The URL hostname is case-insensitive.
+  ///
+  /// A replacement only happens once when resolving URLs.
+  /// Therefore, the first replacement is the final URL that is used for the outbound request.
+  ///
+  /// In the following example, an original request for `https://pkg.pkl-lang.org/my/pkg@1.0.0` is
+  /// replaced with `https://my.internal.mirror/my/pkg@1.0.0`.
+  ///
+  /// ```
+  /// rewrites {
+  ///   ["https://pkg.pkl-lang.org"] = "https://my.internal.mirror"
+  /// }
+  /// ```
+  @Since { version = "0.29.0" }
+  rewrites: Mapping<String, String>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.
